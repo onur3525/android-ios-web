@@ -1,0 +1,705 @@
+# HizmetCep — Codemagic yapılandırması
+#
+# ⚠ `flutter create --platforms=android .` ADIMI YOKTUR.
+# O komut build.gradle.kts dosyalarını yeniden üretir ve mevcut
+# Groovy dosyalarıyla çakışır:
+#   "Both build.gradle and build.gradle.kts exist" uyarısı
+# Proje TEK DSL kullanır: Groovy (android/*.gradle).
+#
+# Sürüm kombinasyonu (android/ altında sabitlenmiştir):
+#   Flutter 3.47.x · Gradle 9.5.0 · AGP 9.3.0 · Kotlin 2.4.10
+#   Java 17 · compileSdk 36
+#
+#   ⚠ ARTIK MİNİMUMDA DEĞİL, GÜNCEL STABİLDE. Önceki üç yükseltme
+#      tepki olarak yapılmıştı (Flutter minimumu yükseldi → derleme
+#      kırıldı → bir basamak çıktık). Bu kombinasyon bilerek seçildi.
+#
+#   ⚠ SÜRÜMLER BAĞIMSIZ DEĞİL: AGP 9.3.0 Gradle 9.5.0 ister, AGP 9
+#      Kotlin desteğini YERLEŞİK sunar (`kotlin-android` kaldırıldı,
+#      `android.builtInKotlin=true`). Birini yükseltip ötekini
+#      bırakmak derlemeyi kırar.
+#
+#   ⚠ `flutter: stable` HÂLÂ KULLANILIYOR. Built-in Kotlin Flutter
+#      3.47+ gerektiriyor ve şu an 3.47.0 geliyor; ama stable
+#      ilerledikçe yine habersiz sürüm değişikliği gelir. Flutter'ı
+#      sabitlemek ayrı bir ürün kararıdır (önerildi, henüz alınmadı).
+
+workflows:
+  android-debug:
+    name: HizmetCep Android Debug
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17          # AGP 8.x zorunlu
+
+    scripts:
+      - name: Gradle wrapper JAR (ikili dosya depoda olmayabilir)
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
+            SURUM=$(grep -oE 'gradle-[0-9.]+' gradle/wrapper/gradle-wrapper.properties \
+                    | head -1 | cut -d- -f2)
+            echo "Gradle ${SURUM} wrapper indiriliyor"
+            curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
+              "https://raw.githubusercontent.com/gradle/gradle/v${SURUM}.0/gradle/wrapper/gradle-wrapper.jar"
+          fi
+          ls -la gradle/wrapper/
+
+      - name: DSL çakışması denetimi
+        script: |
+          KTS=$(find android -name "*.gradle.kts" | wc -l)
+          if [ "$KTS" -gt 0 ]; then
+            echo "HATA: .gradle.kts dosyaları bulundu — proje Groovy DSL kullanır"
+            find android -name "*.gradle.kts"
+            exit 1
+          fi
+          echo "DSL tekil: Groovy ✓"
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Statik analiz
+        # ⚠ GERÇEK EXIT CODE KORUNUR.
+        #
+        # Analyzer sonucu `grep` ile YENİDEN YORUMLANMAZ; build
+        # başarılı/başarısız kararını `flutter analyze`'ın kendi çıkış
+        # kodu verir (${PIPESTATUS[0]}). Böylece:
+        #   • beklenmeyen SDK/paket/çalışma hatası GİZLENMEZ,
+        #   • gerçek analyzer error non-zero olarak korunur,
+        #   • warning/info tek başına build'i düşürmez
+        #     (--no-fatal-warnings --no-fatal-infos).
+        #
+        # `grep` yalnız RAPORLAMA amaçlıdır: error satırları log
+        # sonunda ayrıca listelenir, karara ETKİ ETMEZ.
+        script: |
+          set +e
+          flutter analyze --no-fatal-warnings --no-fatal-infos 2>&1 | tee /tmp/flutter_analyze.log
+          STATUS=${PIPESTATUS[0]}
+
+          echo "===== GERCEK ANALYZER ERROR SATIRLARI ====="
+          grep -n -i -E 'error[[:space:]]*[•:]|^Error:|^ERROR:' /tmp/flutter_analyze.log || true
+
+          echo "===== ANALYZER EXIT CODE: ${STATUS} ====="
+          exit ${STATUS}
+
+      - name: Testler
+        script: flutter test
+
+      - name: Debug APK
+        # ⚠ MOCK ZORUNLU: `--dart-define` verilmezse `ApiConfig.mode`
+        # gerçek API'ye düşer ve açılış var olmayan backend'i bekler
+        # (config + connectivity + session). Gerçek cihazda splash
+        # uzuyor ve fail-safe sonrası spinner görünüyordu.
+        script: flutter build apk --debug --dart-define=DATA_SOURCE=mock
+
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - flutter_drive.log
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS WORKFLOW — IMPELLER A/B
+  #
+  # ⚠ YALNIZ TEŞHİS AMAÇLIDIR. Üretim davranışını DEĞİŞTİRMEZ:
+  # manifest'e `EnableImpeller=false` satırı build sırasında geçici
+  # olarak eklenir, depodaki dosya değişmez.
+  #
+  # Amaç: klavye açılma/kapanma yavaşlığının kaynağı Flutter'ın
+  # Impeller renderer'ı mı, yoksa uygulama kodu mu?
+  #
+  # Karşılaştırma: `android-debug` (Impeller varsayılan) ile bu
+  # workflow'un APK'sı AYNI cihazda, AYNI ekranda denenir.
+  # ═══════════════════════════════════════════════════════════════
+  teshis-impeller-kapali:
+    name: TEŞHİS B — Debug / Impeller KAPALI
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Impeller'ı KAPAT (yalnız bu build için)
+        script: |
+          M=android/app/src/main/AndroidManifest.xml
+          cp "$M" /tmp/manifest.orig
+          python3 - <<'EOF'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'EnableImpeller' not in s:
+              s = s.replace('</application>',
+                  '        <meta-data\n'
+                  '            android:name="io.flutter.embedding.android.EnableImpeller"\n'
+                  '            android:value="false" />\n'
+                  '    </application>')
+              open(p, 'w', encoding='utf-8').write(s)
+              print('  Impeller KAPATILDI (geçici)')
+          EOF
+          grep -A 2 'EnableImpeller' "$M"
+
+      - name: Debug APK (Impeller kapalı)
+        script: flutter build apk --debug --dart-define=DATA_SOURCE=mock
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-B-debug-impeller-KAPALI.apk"
+          echo "→ TESHIS-B-debug-impeller-KAPALI.apk"
+
+      - name: Manifest'i GERİ AL
+        script: |
+          cp /tmp/manifest.orig android/app/src/main/AndroidManifest.xml
+          echo "manifest geri alındı"
+          grep -c 'EnableImpeller' android/app/src/main/AndroidManifest.xml || true
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS — C: PROFILE / IMPELLER AÇIK
+  #
+  # ⚠ YALNIZ TEŞHİS AMAÇLIDIR. Üretime çıkmaz.
+  #
+  # Neden gerekli: DEBUG mod Flutter'da JIT çalışır ve kare süreleri
+  # gerçeği YANSITMAZ. Debug'daki yavaşlığın Impeller'dan mı yoksa
+  # debug ek yükünden mi geldiğini ayırmak için PROFILE ölçüm şarttır.
+  # (Flutter resmi önerisi: performans teşhisi profile mode ile.)
+  #
+  # Bu workflow manifest'e DOKUNMAZ → Impeller varsayılan haliyle.
+  # ═══════════════════════════════════════════════════════════════
+  teshis-profile-impeller-acik:
+    name: TEŞHİS C — Profile / Impeller AÇIK
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Manifest DEĞİŞMEDİ doğrula
+        script: |
+          if grep -q 'EnableImpeller' android/app/src/main/AndroidManifest.xml; then
+            echo "HATA: manifest'te Impeller ayarı var, bu workflow varsayılanı ölçmeli"
+            exit 1
+          fi
+          echo "Impeller varsayılan (ayar yok) ✓"
+
+      - name: Profile APK
+        script: flutter build apk --profile --dart-define=DATA_SOURCE=mock
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-C-profile-impeller-ACIK.apk"
+          echo "→ TESHIS-C-profile-impeller-ACIK.apk"
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS — D: PROFILE / IMPELLER KAPALI   (İKİNCİ AŞAMA)
+  #
+  # ⚠ YALNIZ C sonucundan sonra çalıştırılır.
+  # C'de yavaşlık DEVAM EDİYORSA bu build renderer'ı kesinleştirir.
+  # C'de yavaşlık YOKSA bu build'e gerek yoktur (neden debug ek yükü).
+  # ═══════════════════════════════════════════════════════════════
+  teshis-profile-impeller-kapali:
+    name: TEŞHİS D — Profile / Impeller KAPALI
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Impeller'ı KAPAT (yalnız bu build için)
+        script: |
+          M=android/app/src/main/AndroidManifest.xml
+          cp "$M" /tmp/manifest.orig
+          python3 - <<'EOF'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          if 'EnableImpeller' not in s:
+              s = s.replace('</application>',
+                  '        <meta-data\n'
+                  '            android:name="io.flutter.embedding.android.EnableImpeller"\n'
+                  '            android:value="false" />\n'
+                  '    </application>')
+              open(p, 'w', encoding='utf-8').write(s)
+              print('  Impeller KAPATILDI (geçici)')
+          EOF
+          grep -A 2 'EnableImpeller' "$M"
+
+      - name: Profile APK (Impeller kapalı)
+        script: flutter build apk --profile --dart-define=DATA_SOURCE=mock
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-D-profile-impeller-KAPALI.apk"
+          echo "→ TESHIS-D-profile-impeller-KAPALI.apk"
+
+      - name: Manifest'i GERİ AL
+        script: |
+          cp /tmp/manifest.orig android/app/src/main/AndroidManifest.xml
+          grep -c 'EnableImpeller' android/app/src/main/AndroidManifest.xml || true
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS E1 — Focus logu (davranış AYNI)
+  #
+  # ⚠ YALNIZ TEŞHİS AMAÇLIDIR. Üretime çıkmaz.
+  # Hiçbir davranış değişmez. Odak kaybının ANINI ve primaryFocus
+  # geçişini kaydeder. Temel ölçüm budur.
+  #
+  # Loglar: adb logcat | grep FOCUS_LOG
+  # ═══════════════════════════════════════════════════════════════
+  teshis-e1-focus:
+    name: TEŞHİS E1 — Focus logu (davranış AYNI)
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Debug APK (E1)
+        script: |
+          flutter build apk --debug \\
+            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=FOCUS_LOG=true
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-E1-focus.apk"
+          echo "→ TESHIS-E1-focus.apk"
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS E2 — onChanged setState KAPALI
+  #
+  # ⚠ YALNIZ TEŞHİS AMAÇLIDIR. Üretime çıkmaz.
+  # YALNIZ altı alandaki `onChanged: setState` etkisizdir.
+  # autovalidateMode, RegionController, layout AYNI kalır.
+  # Normale dönerse: tuş başına tam ekran rebuild ana nedendir.
+  #
+  # Loglar: adb logcat | grep FOCUS_LOG
+  # ═══════════════════════════════════════════════════════════════
+  teshis-e2-focus:
+    name: TEŞHİS E2 — onChanged setState KAPALI
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Debug APK (E2)
+        script: |
+          flutter build apk --debug \\
+            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=FOCUS_LOG=true \\
+            --dart-define=NO_ONCHANGED=true
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-E2-focus.apk"
+          echo "→ TESHIS-E2-focus.apk"
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ═══════════════════════════════════════════════════════════════
+  # TEŞHİS E3 — RegionController watch İZOLE
+  #
+  # ⚠ YALNIZ TEŞHİS AMAÇLIDIR. Üretime çıkmaz.
+  # YALNIZ `context.watch<RegionController>()` tek seferlik okumaya
+  # çevrilir. onChanged/setState davranışı ESKİ HALİNDE kalır.
+  # E2 çözmediyse çalıştırılır.
+  #
+  # Loglar: adb logcat | grep FOCUS_LOG
+  # ═══════════════════════════════════════════════════════════════
+  teshis-e3-focus:
+    name: TEŞHİS E3 — RegionController watch İZOLE
+    max_build_duration: 45
+
+    environment:
+      flutter: stable
+      java: 17
+
+    scripts:
+      - name: Gradle wrapper JAR
+        script: |
+          cd android
+          mkdir -p gradle/wrapper
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
+              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
+          fi
+
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Debug APK (E3)
+        script: |
+          flutter build apk --debug \\
+            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=FOCUS_LOG=true \\
+            --dart-define=STATIC_REGION=true
+
+      - name: APK'yı TEŞHİS olarak adlandır
+        script: |
+          A=$(find build/app/outputs -name '*.apk' | head -1)
+          cp "$A" "$CM_BUILD_DIR/TESHIS-E3-focus.apk"
+          echo "→ TESHIS-E3-focus.apk"
+
+    artifacts:
+      - TESHIS-*.apk
+
+  # ── ⚠ SÜRÜM PAKETİ — SERTLEŞTİRİLMİŞ (RELEASE-HARDENED) ──
+  #
+  # ⚠ Bu iş akışı ELLE tetiklenir; her itmede koşmaz.
+  #
+  # Karartma (`--obfuscate`) Dart sınıf ve metot adlarını gizler:
+  # paket açıldığında uç noktalar ve iş kuralları doğrudan okunamaz.
+  #
+  # ⚠ SEMBOL DOSYALARI SAKLANMALIDIR (`build/symbols`). Yoksa çökme
+  # raporları çözülemez ve hata ayıklanamaz.
+  #
+  # ⚠ ÜÇ TANIM ZORUNLU:
+  #   API_BASE_URL          — release'te https:// olmalı (kod zorluyor)
+  #   CERT_PINS             — en az iki pin; boşsa sabitleme KAPALI
+  #   APK_SIGNATURE_SHA256  — boşsa imza denetimi KAPALI
+  release-hardened:
+    name: Sürüm APK (karartmalı)
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      java: 17
+    triggering:
+      events: []
+    scripts:
+      - name: Bağımlılıklar
+        script: flutter pub get
+      - name: İmzalama anahtarı
+        script: |
+          # ⚠ ANAHTAR DEPODA DURMAZ. CI'da gizli değişkenlerden yazılır.
+          #
+          # Gereken değişkenler (Codemagic → Environment variables,
+          # "secure" işaretli):
+          #   KEYSTORE_B64      — .jks dosyasının base64 hâli
+          #   KEYSTORE_PASSWORD
+          #   KEY_ALIAS
+          #   KEY_PASSWORD
+          #
+          # ⚠ Değişken yoksa iş akışı BURADA durur; sessizce imzasız
+          # paket üretilmez.
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "KEYSTORE_B64 tanımlı değil — imzalı paket üretilemez."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 --decode > "$CM_BUILD_DIR/hizmetcep.jks"
+          cat > "$CM_BUILD_DIR/android/key.properties" <<EOF
+          storeFile=$CM_BUILD_DIR/hizmetcep.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Sürüm APK
+        script: |
+          flutter build apk --release \
+            --obfuscate --split-debug-info=build/symbols \
+            --dart-define=DATA_SOURCE=api \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=CERT_PINS="$CERT_PINS" \
+            --dart-define=APK_SIGNATURE_SHA256="$APK_SIGNATURE_SHA256"
+
+      - name: Mağaza paketi (AAB)
+        script: |
+          # ⚠ PLAY STORE .aab İSTER, .apk KABUL ETMEZ.
+          #
+          # APK yalnız elle kurulum ve test içindir; mağazaya yüklenen
+          # paket budur.
+          flutter build appbundle --release \
+            --obfuscate --split-debug-info=build/symbols \
+            --dart-define=DATA_SOURCE=api \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=CERT_PINS="$CERT_PINS" \
+            --dart-define=APK_SIGNATURE_SHA256="$APK_SIGNATURE_SHA256"
+    artifacts:
+      # ⚠ MAĞAZAYA YÜKLENEN: .aab
+      - build/app/outputs/bundle/release/*.aab
+      # Elle kurulum ve test için.
+      - build/app/outputs/flutter-apk/*.apk
+      # ⚠ Semboller olmadan çökme raporu okunamaz.
+      - build/symbols/**
+
+  # ═══════════════════════════════════════════════════════════════
+  #  iOS SİMÜLATÖR — APPLE HESABI GEREKTİRMEZ
+  # ═══════════════════════════════════════════════════════════════
+  #
+  # ⚠ NİÇİN İLK BU: imzalama, sertifika ve Apple Developer üyeliği
+  # OLMADAN iOS tarafının GERÇEKTEN DERLENDİĞİNİ gösterir. Pod
+  # çakışması, eksik izin anahtarı, taban sürüm uyuşmazlığı gibi
+  # hataların tamamı burada çıkar.
+  #
+  # ⚠ ÇIKTI SİMÜLATÖR İÇİNDİR. `.app` klasörü gerçek telefona
+  # KURULAMAZ; cihazda denemek için aşağıdaki `ios-testflight`
+  # akışı ve Apple hesabı gerekir.
+  #
+  # ⚠ ANDROID İŞ AKIŞLARINA DOKUNULMADI. Codemagic her iş akışını
+  # ayrı koşturur; bu blok dosyanın SONUNA eklenmiştir.
+  ios-simulator:
+    name: HizmetCep iOS Simülatör (imzasız)
+    max_build_duration: 45
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Taban sürüm tutarlılığı (RAPOR — build'i DÜŞÜRMEZ)
+        # ⚠ SABİT SÜRÜM BEKLENMEZ. Taban sürüm kararı ERTELENDİ:
+        # bugün 12.0'dır ve gerçek `pod install` çıktısı görülmeden
+        # değiştirilmeyecek. Bu adım yalnız üç yerdeki değeri yan yana
+        # yazdırır; eşitsizlik burada değil, derlemenin sonunda hata
+        # verir ve o zaman bu çıktı nedeni gösterir.
+        script: |
+          echo "Podfile:"
+          grep -n "platform :ios" ios/Podfile
+          grep -n "IPHONEOS_DEPLOYMENT_TARGET" ios/Podfile
+          echo "Xcode projesi:"
+          grep -n "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Gizlilik bildirimi projede mi
+        # ⚠ Dosyayı diske koymak YETMEZ: Xcode hedefine ekli değilse
+        # pakete girmez ve Apple eksik görür.
+        script: |
+          test -f ios/Runner/PrivacyInfo.xcprivacy || \
+            { echo "HATA: PrivacyInfo.xcprivacy yok"; exit 1; }
+          grep -q "PrivacyInfo.xcprivacy in Resources" \
+            ios/Runner.xcodeproj/project.pbxproj || \
+            { echo "HATA: PrivacyInfo Xcode hedefine EKLİ DEĞİL"; exit 1; }
+          echo "Gizlilik bildirimi ✓"
+
+      - name: Pod kurulumu
+        script: |
+          cd ios
+          pod install --repo-update
+
+      - name: Simülatör derlemesi (imzasız)
+        script: |
+          flutter build ios --debug --simulator \
+            --dart-define=DATA_SOURCE=mock
+
+    artifacts:
+      - build/ios/iphonesimulator/*.app
+
+  # ═══════════════════════════════════════════════════════════════
+  #  iOS TESTFLIGHT — APPLE HESABI GEREKTİRİR
+  # ═══════════════════════════════════════════════════════════════
+  #
+  # ⚠ ÖNCE ŞUNLAR HAZIR OLMALI (bkz. docs/ios_yayin.md):
+  #   • Apple Developer Program üyeliği
+  #   • App Store Connect API anahtarı (Issuer ID + Key ID + .p8)
+  #   • com.hizmetcep.app kimliğinin kayıtlı olması
+  #
+  # ⚠ Bu akış ELLE tetiklenir. Otomatik tetikleyici YOKTUR: her
+  # yükleme bir derleme numarası harcar ve numara geri alınamaz.
+  ios-testflight:
+    name: HizmetCep iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - ios_signing        # APP_STORE_CONNECT_* değişkenleri
+        - api_config         # API_BASE_URL, CERT_PINS
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.hizmetcep.app
+
+    scripts:
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Pod kurulumu
+        script: |
+          cd ios
+          pod install --repo-update
+
+      - name: Google URL şeması yer tutucu mu
+        # ⚠ `REVERSED_CLIENT_ID_BURAYA` bırakılırsa Google ile giriş
+        # iOS'ta SESSİZCE ÇALIŞMAZ. Derleme yapılır, hata çıkmaz,
+        # kullanıcı düğmeye basar ve hiçbir şey olmaz.
+        script: |
+          if grep -q "REVERSED_CLIENT_ID_BURAYA" ios/Runner/Info.plist; then
+            echo "HATA: Google URL şeması hâlâ yer tutucu."
+            echo "GoogleService-Info.plist içindeki REVERSED_CLIENT_ID yazılmalı"
+            echo "ya da iOS'ta Google girişi kapatılmalı."
+            exit 1
+          fi
+          echo "Google URL şeması ✓"
+
+      - name: İmzalama profillerini al
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.hizmetcep.app" \
+            --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Derleme numarası ve IPA
+        # ⚠ TestFlight aynı numarayı iki kez KABUL ETMEZ ve numara
+        # geri alınamaz. En son yüklenenin bir fazlası kullanılır.
+        script: |
+          NUMARA=$(app-store-connect get-latest-testflight-build-number \
+            "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
+          echo "Son TestFlight numarası: $NUMARA"
+          flutter build ipa --release \
+            --build-number=$(($NUMARA + 1)) \
+            --obfuscate --split-debug-info=build/symbols \
+            --dart-define=DATA_SOURCE=api \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=CERT_PINS="$CERT_PINS" \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      # ⚠ Karartma açık; semboller olmadan çökme raporu okunamaz.
+      - build/symbols/**
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # ⚠ İncelemeye OTOMATİK GÖNDERİLMEZ: App Store incelemesi
+        # ayrı bir karardır (bkz. docs/ios_yayin.md).
+        submit_to_app_store: false
+
+  # ═══════════════════════════════════════════════════════════════
+  #  WEB — TEŞHİS DERLEMESİ
+  # ═══════════════════════════════════════════════════════════════
+  #
+  # ⚠ BU AKIŞIN İLK KOŞUSUNDA KIRILMASI BEKLENİR.
+  #
+  # `dart:io` on iki dosyada korumasız kullanılıyor (File, Platform,
+  # SocketException, HttpClient/X509). Web derleyicisi bunları kabul
+  # etmez. Amaç yayın almak DEĞİL, kırılan dosyaların GERÇEK listesini
+  # çıkarmaktır — tahminle değil ölçümle ilerlemek için.
+  #
+  # ⚠ ANDROID VE iOS AKIŞLARINA DOKUNULMADI. Bu blok dosyanın SONUNA
+  # eklenmiştir; Codemagic her iş akışını ayrı koşturur.
+  #
+  # ⚠ Elle tetiklenir: otomatik tetikleyici YOKTUR.
+  web-teshis:
+    name: HizmetCep Web (teşhis derlemesi)
+    max_build_duration: 30
+
+    environment:
+      flutter: stable
+
+    scripts:
+      - name: Bağımlılıklar
+        script: flutter pub get
+
+      - name: Web klasörü yerinde mi
+        script: |
+          test -f web/index.html || { echo "HATA: web/index.html yok"; exit 1; }
+          test -f web/manifest.json || { echo "HATA: web/manifest.json yok"; exit 1; }
+          echo "web/ iskeleti ✓"
+
+      - name: dart:io kullanan dosyalar (RAPOR)
+        # ⚠ Build'i DÜŞÜRMEZ. Web'e engel olan dosyaların güncel
+        # listesini her koşuda kayda geçirir.
+        script: |
+          echo "── dart:io içeren dosyalar ──"
+          grep -rl "import 'dart:io'" lib/ || true
+
+      - name: Web derlemesi (kırılması BEKLENİR)
+        # ⚠ `|| true` KULLANILMADI: gerçek çıkış kodu korunur, hata
+        # gizlenmez. Kırılırsa derleyicinin dosya/satır listesi
+        # günlükte görünür ve W2 paketi ona göre yapılır.
+        script: |
+          flutter build web --release \
+            --dart-define=DATA_SOURCE=mock
+
+    artifacts:
+      - build/web/**

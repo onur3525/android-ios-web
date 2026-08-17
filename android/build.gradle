@@ -1,0 +1,48 @@
+allprojects {
+    repositories { google(); mavenCentral() }
+}
+rootProject.buildDir = "../build"
+subprojects { project.buildDir = "${rootProject.buildDir}/${project.name}" }
+subprojects { project.evaluationDependsOn(":app") }
+
+// ── ⚠ LINT ÇÖKMESİ — RELEASE DERLEMESİNİ DURDURUYORDU ──
+//
+// `flutter build apk --release`, `:google_sign_in_android:
+// lintVitalAnalyzeRelease` görevinde ÇÖKTÜ. Gradle'ın kendi mesajı:
+// "Unexpected failure during lint analysis (this is a bug in lint or
+// one of the libraries it depends on)".
+//
+// ⚠ HATA BİZİM KODUMUZDA DEĞİL: çöken şey Android Lint'in
+// `CommentDetector` sınıfı, incelediği dosya da eklentinin kendi
+// kaynağı olan `GoogleSignInPlugin.java`. Yığın izi
+// `JavaDocParser.parseDataItem` içinde bitiyor — lint bir Javadoc
+// yorumunu ayrıştırırken patlıyor.
+//
+// ⚠ NİÇİN İLK KEZ ŞİMDİ GÖRÜLDÜ: `lintVital*` görevleri YALNIZ
+// release derlemesinde çalışır. Önceki koşular `--debug` idi, o
+// yüzden bu adıma hiç gelinmemişti. Hata yeni değil.
+//
+// ⚠ NİÇİN `android/app` DEĞİL DE BURASI: çöken görev EKLENTİNİN
+// modülüne aittir (`:google_sign_in_android`). Uygulama modülüne
+// yazılan `lint` bloğu o modülü ETKİLEMEZ — ilk denemem buydu ve
+// yanlıştı. Ayar tüm alt projelere uygulanmalıdır.
+//
+// ── EN DAR ÇÖZÜM ──
+//
+// Yalnız ÇÖKEN iki denetim kapatıldı; Gradle'ın hata çıktısında
+// önerdiği ikisi de bunlar. `lint` tamamen kapatılmadı,
+// `checkReleaseBuilds false` DA yapılmadı: ikisi de gerçek uyarıları
+// susturur ve bir daha kimse fark etmez.
+//
+// ⚠ GEÇİCİDİR: eklenti ya da AGP güncellenip çökme giderildiğinde bu
+// blok kaldırılmalı ve release derlemesi yeniden denenmelidir.
+subprojects {
+    afterEvaluate {
+        if (project.extensions.findByName("android") != null) {
+            project.extensions.getByName("android").lint {
+                disable += ["EasterEgg", "StopShip"]
+            }
+        }
+    }
+}
+tasks.register("clean", Delete) { delete rootProject.buildDir }
