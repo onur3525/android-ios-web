@@ -1,0 +1,387 @@
+import 'package:flutter/material.dart';
+import 'widgets/hata_gosterimi.dart';
+import '../domain/hata_mesajlari.dart';
+import 'package:provider/provider.dart';
+import '../data/controllers/auth_controller.dart';
+import '../data/controllers/notification_controller.dart';
+import '../data/models/account.dart';
+import '../data/models/notification.dart';
+import '../ui/ref_tokens.dart';
+import '../ui/ref_widgets.dart';
+import 'nav_actions.dart';
+
+/// ═══════════════════════════════════════════════════════════════
+/// BİLDİRİMLER — referans `vNotif()`
+///
+/// ```
+/// <div class="nt-wrap">
+///   <div class="nt-top">
+///     <h1 class="nt-title">Bildirimler</h1>
+///     <button class="nt-readall" onclick="ntReadAll()">Tümünü Okundu Yap</button>
+///   </div>
+///   <div class="nt-list">
+///     <div class="nt-card [un]" onclick="ntRead(i)">
+///       [<span class="nt-dot"></span>]
+///       <div class="nt-ic" style="background:...">ntIcon(n.ic)</div>
+///       <div class="nt-body">
+///         <div class="nt-head"><span class="nt-t">..</span><span class="nt-tm">..</span></div>
+///         <div class="nt-d">..</div>
+///       </div>
+///     </div>
+///   </div>
+/// </div>
+/// custNav('bildirim')
+/// ```
+///
+/// CSS:
+///   .nt-top     { justify-content:space-between; margin-bottom:14px }
+///   .nt-title   { 25px/700 #16233D; ls -.3 }
+///   .nt-readall { 13.5px/700 #1D6BE3 }
+///   .nt-list    { gap:10px }
+///   .nt-card    { radius:14px; padding:13px 13px 13px 22px; gap:12px }
+///   .nt-card.un { background:#F3F8FF }
+///   .nt-dot     { left:7px; 10×10; #1D6BE3; halka rgba(29,107,227,..) }
+///   .nt-ic      { 46×46; radius:12px }
+///   .nt-t       { 14.5px/700 #16233D }
+///   .nt-tm      { 11.5px #98A2B3 }
+///   .nt-d       { 12.5px/1.5 #5B6472; margin-top:3px }
+/// ═══════════════════════════════════════════════════════════════
+class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+  }
+
+  Future<void> _refresh() async {
+    final me = context.read<AuthController>().currentAccount;
+    if (me == null) {
+      return;
+    }
+    await context.read<NotificationController>().load(me.id);
+  }
+
+  /// Bildirim tipine göre ikon ve zemin — referans `ntIcon(n.ic)` ve
+  /// `style="background:${n.bg}"` karşılığı.
+  (String, Color, Color) _gorunum(NotifType t) => switch (t) {
+        // ⚠ Referans `ntIcon('doc')` → `IC_NDOC`. Yeni teklif bir
+        // BELGE bildirimidir; sohbet ikonu `newMessage`e aittir.
+        NotifType.newOffer => (
+            'assets/svg/ic_ndoc.svg',
+            const Color(0xFFEAF1FB),
+            RC.blue
+          ),
+        NotifType.offerSelected => (
+            'assets/svg/ic_checkc.svg',
+            const Color(0xFFE9F9EF),
+            RC.success
+          ),
+        NotifType.refund => (
+            'assets/svg/ic_walletg.svg',
+            const Color(0xFFE1F5EA),
+            RC.success
+          ),
+        NotifType.contactOpened => (
+            'assets/svg/ic_phone_f.svg',
+            const Color(0xFFE7EFFD),
+            RC.blue
+          ),
+        // `ntIcon('chat')` → `IC_NCHAT` (bildirim listesine özel 26px
+        // sürüm; sohbet çubuğundaki `ic_chat` DEĞİL).
+        NotifType.newMessage => (
+            'assets/svg/ic_nchat.svg',
+            const Color(0xFFEAF1FB),
+            RC.blue
+          ),
+        NotifType.listingExpired => (
+            'assets/svg/ic_clock.svg',
+            const Color(0xFFF2F4F7),
+            RC.grey
+          ),
+        // `ntIcon('shield')` → `IC_NSHIELD`.
+        NotifType.accountStatus => (
+            'assets/svg/ic_nshield.svg',
+            const Color(0xFFE7EFFD),
+            RC.blue
+          ),
+        NotifType.categoryRequest => (
+            'assets/svg/ic_wrenchp.svg',
+            const Color(0xFFF3E9FD),
+            const Color(0xFF7C4DBE)
+          ),
+        // ⚠ Referansta duyuru MEGAFONDUR (`IC_NMEGA`), zil değil;
+        // zil (`IC_NBELL`) genel hatırlatma bildirimine aittir.
+        NotifType.announcement => (
+            'assets/svg/ic_nmega.svg',
+            const Color(0xFFFDF3E1),
+            const Color(0xFFF5820C)
+          ),
+        // `ntIcon` varsayılanı → `IC_NBELL`.
+        NotifType.unknown => (
+            'assets/svg/ic_nbell.svg',
+            const Color(0xFFF2F4F7),
+            RC.grey
+          ),
+      };
+
+  /// Bildirim hedefi — mevcut yönlendirme kuralı KORUNDU.
+  void _openTarget(BuildContext context, NotifType t) {
+    switch (t) {
+      case NotifType.announcement:
+        // Duyuru detay ekranı YOK; geçersiz route üretilmez.
+        break;
+      case NotifType.accountStatus:
+      case NotifType.categoryRequest:
+        Navigator.pushNamed(context, '/provider/status');
+      case NotifType.newOffer:
+      case NotifType.offerSelected:
+      case NotifType.refund:
+      case NotifType.contactOpened:
+      case NotifType.newMessage:
+      case NotifType.listingExpired:
+      case NotifType.unknown:
+        break;
+    }
+  }
+
+  String _zaman(DateTime d) {
+    final f = DateTime.now().difference(d);
+    if (f.inMinutes < 60) {
+      return '${f.inMinutes} dk';
+    }
+    if (f.inHours < 24) {
+      return '${f.inHours} sa';
+    }
+    return '${f.inDays} g';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
+    final me = auth.currentAccount;
+    final ctl = context.watch<NotificationController>();
+    final liste = me == null
+        ? const <AppNotification>[]
+        : ctl.forUser(me.id);
+    final okunmamis = me == null ? 0 : ctl.unreadCount(me.id);
+
+    return RefShell(
+      nav: RefBottomNav(
+        activeKey: 'bildirim',
+        items: custNavItems(
+          context,
+          saglayici: auth.activeRole == Role.provider,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // .nt-top{margin-bottom:14px}
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Bildirimler',
+                    style: refText(
+                      size: RF.s25,
+                      weight: RF.w700,
+                      color: RC.text,
+                      letterSpacing: RF.lsM03,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10), // gap:10px
+                // .nt-readall — okunmamış varken anlamlıdır.
+                if (okunmamis > 0)
+                  RefTap(
+                    onTap: () => context
+                        .read<NotificationController>()
+                        .markAllRead(me!.id),
+                    borderRadius: BorderRadius.circular(RR.r8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        'Tümünü Okundu Yap',
+                        style: refText(
+                            size: RF.s135, weight: RF.w700, color: RC.blue),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // ── ⚠ HATA YALNIZ GERÇEKTEN OLUNCA ──
+          //
+          // Sıra önemli: BAŞARISIZ İSTEK önce, BOŞ LİSTE sonra.
+          // "Bildiriminiz yok" ile "bildirimler yüklenemedi" ayrı
+          // şeylerdir; ikincisinde kullanıcı tekrar deneyebilmeli.
+          if (hataGosterilsinMi(
+              yukleniyor: ctl.loading,
+              hata: ctl.lastError,
+              veriVar: liste.isNotEmpty))
+            HataTamEkran(hata: ctl.lastError!, onTekrar: _refresh)
+          // .nt-list{gap:10px}
+          else if (liste.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                'Henüz bildiriminiz yok.',
+                textAlign: TextAlign.center,
+                style: refText(
+                    size: RF.s14, weight: RF.w400, color: RC.greyLight),
+              ),
+            )
+          else
+            for (final n in liste) ...[
+              _BildirimKarti(
+                bildirim: n,
+                zaman: _zaman(n.createdAt),
+                gorunum: _gorunum(n.type),
+                onTap: () {
+                  context.read<NotificationController>().markRead(n.id);
+                  _openTarget(context, n.type);
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+/// `.nt-card` — tek bildirim.
+class _BildirimKarti extends StatelessWidget {
+  const _BildirimKarti({
+    required this.bildirim,
+    required this.zaman,
+    required this.gorunum,
+    required this.onTap,
+  });
+
+  final AppNotification bildirim;
+  final String zaman;
+  final (String, Color, Color) gorunum;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final (asset, zemin, renk) = gorunum;
+    final okunmamis = !bildirim.read;
+
+    return RefTap(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(RR.r14),
+      child: Container(
+        // .nt-card{padding:13px 13px 13px 22px}
+        padding: const EdgeInsets.fromLTRB(22, 13, 13, 13),
+        decoration: BoxDecoration(
+          // .nt-card.un{background:#F3F8FF}
+          color: okunmamis ? const Color(0xFFF3F8FF) : RC.white,
+          borderRadius: BorderRadius.circular(RR.r14),
+        ),
+        child: Stack(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // .nt-ic{46×46; radius:12px}
+                Container(
+                  width: 46,
+                  height: 46,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: zemin,
+                    borderRadius: BorderRadius.circular(RR.r12),
+                  ),
+                  child: RefSvg(asset, size: 22, color: renk),
+                ),
+                const SizedBox(width: 12), // gap:12px
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // .nt-head
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              bildirim.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: refText(
+                                  size: RF.s145,
+                                  weight: RF.w700,
+                                  color: RC.text),
+                            ),
+                          ),
+                          const SizedBox(width: 8), // gap:8px
+                          Text(
+                            zaman,
+                            style: refText(
+                                size: RF.s115,
+                                weight: RF.w400,
+                                color: RC.greyLight),
+                          ),
+                        ],
+                      ),
+                      // .nt-d{margin-top:3px}
+                      const SizedBox(height: 3),
+                      Text(
+                        bildirim.body,
+                        style: refText(
+                          size: RF.s125,
+                          weight: RF.w400,
+                          color: RC.textSoft,
+                          height: RF.lh150,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // .nt-dot{left:7px; top:50%; 10×10; halka 3px}
+            // Kap zaten 22px sol dolgulu olduğundan nokta -15px'te durur.
+            if (okunmamis)
+              Positioned(
+                left: -15,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: RC.blue,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: RC.blue.withValues(alpha: 0.18),
+                          spreadRadius: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
