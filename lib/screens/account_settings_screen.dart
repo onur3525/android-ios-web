@@ -257,7 +257,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       if (!mounted) {
         return;
       }
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (r) => false);
+      // ── ⚠ YÖNLENDİRME BİR SONRAKİ KAREDE ──
+      //
+      // Silme akışı ÜÇ alt panel açıyor (açıklama → şifre → son
+      // onay); dondurma akışında hiç panel yok. Son panelin kapanma
+      // animasyonu bitmeden tüm rota yığınını silmek, ağaçtan kalkan
+      // öğelerin hâlâ bağımlısı olmasına yol açıyor ve çerçeve
+      // doğrulaması patlıyordu (`_dependents.isEmpty`) — ekran
+      // kırmızıya dönüyordu.
+      //
+      // ⚠ Davranış DEĞİŞMEDİ: hedef yine `/home` ve yığın yine
+      // tamamen temizleniyor; yalnız SIRA güvenli hale geldi.
+      final gezgin = Navigator.of(context);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        gezgin.pushNamedAndRemoveUntil('/home', (r) => false);
+      });
     } catch (e) {
       if (!mounted) {
         return;
@@ -768,9 +782,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
       );
     } finally {
-      ctl.dispose();
-      hataNot.dispose();
-      doluNot.dispose();
+      // ⚠ NOTIFIER'LAR BİR SONRAKİ KAREDE BIRAKILIR.
+      //
+      // Panel kapanma animasyonu sürerken `ValueListenableBuilder`
+      // öğeleri hâlâ ağaçta ve bu notifier'ları dinliyor olabilir.
+      // Hemen `dispose` çağrılınca dinleyicisi olan bir nesne
+      // kapatılıyor ve ağaç yıkımı sırasında çerçeve doğrulaması
+      // patlıyordu (`_dependents.isEmpty`).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ctl.dispose();
+        hataNot.dispose();
+        doluNot.dispose();
+      });
     }
     return dogru;
   }

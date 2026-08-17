@@ -379,6 +379,25 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // ── ⚠ KATEGORİ SATIRI ──
+                            //
+                            // Hizmet adı tek başına AYIRT ETMİYOR:
+                            // "Sözleşme İnceleme" başlığını gören
+                            // kullanıcı bunun hukuk işi mi tesisat mı
+                            // olduğunu anlayamıyordu.
+                            //
+                            // ⚠ Çatı DEĞİL kategori yazılır; bulunamazsa
+                            // satır HİÇ çizilmez (uydurma ad yok).
+                            if (kategoriAdi(l.title) != null)
+                              Text(
+                                kategoriAdi(l.title)!,
+                                style: refText(
+                                  size: RF.s115,
+                                  weight: RF.w500,
+                                  color: RC.textSoft,
+                                  letterSpacing: RF.lsM01,
+                                ),
+                              ),
                             // .ld-title{15.5px/700;-.2px;margin-top:1px}
                             Padding(
                               padding: const EdgeInsets.only(top: 1),

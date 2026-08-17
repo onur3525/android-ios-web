@@ -9,6 +9,7 @@
 // ⚠ Kaynak metni denetleyen testlerde YORUM SATIRLARI ELENİR.
 
 import 'dart:convert';
+import 'support/test_config.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -34,10 +35,10 @@ void main() {
     test('özetler GERÇEKTEN doğrulanıyor', () {
       // ⚠ En kritik test: sabit yanlışsa demo hesaplar giriş yapamaz.
       expect(
-          PasswordHasher.verify('123456', kDemoMusteriTuz, kDemoMusteriOzet),
+          PasswordHasher.verify(kTestPass, kDemoMusteriTuz, kDemoMusteriOzet),
           isTrue,
           reason: 'müşteri özeti geçersiz');
-      expect(PasswordHasher.verify('123456', kDemoUstaTuz, kDemoUstaOzet),
+      expect(PasswordHasher.verify(kTestPass, kDemoUstaTuz, kDemoUstaOzet),
           isTrue,
           reason: 'usta özeti geçersiz');
     });
@@ -108,7 +109,7 @@ void main() {
 
     test('hazır özetle kurulan hesap normal yoldan giriş yapar', () {
       final auth = AuthRepository();
-      expect(auth.girisEposta('test@hizmetcep.com', '123456'), isNull,
+      expect(auth.girisEposta(kTestEmail, kTestPass), isNull,
           reason: 'demo müşteri giriş yapamıyor');
       expect(auth.currentAccount, isNotNull);
     });

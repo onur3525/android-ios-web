@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'support/test_config.dart';
 import 'package:hizmetcep/data/models/payment.dart';
 import 'package:hizmetcep/data/controllers/auth_controller.dart';
 import 'package:hizmetcep/data/controllers/contact_controller.dart';
@@ -95,7 +96,7 @@ void main() {
         'GET /profiles/me/address': (_) => null,
       });
       final ctl = AuthController(authPort(be.client(store: store)));
-      final msg = await ctl.girisEposta('test@hizmetcep.com', '123456');
+      final msg = await ctl.girisEposta(kTestEmail, kTestPass);
 
       // Açık hata döner…
       expect(msg, isNotNull);

@@ -766,7 +766,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const TextSpan(text: ' · Şifre: '),
                                 TextSpan(
-                                  text: '123456',
+                                  // ⚠ Depodaki tohum değerle AYNI olmalı;
+                                  // ikisi ayrı düşerse kutu yanlış şifre
+                                  // gösterir ve giriş denenemez.
+                                  text: '1986onur',
                                   style: refText(
                                     size: RF.s135,
                                     weight: RF.w700,

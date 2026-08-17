@@ -1801,7 +1801,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 if (googleGirisiGosterilir) ...[
                   const RefOrDivider(),
                   RefSecondaryButton(
-                    'Google ile Devam Et',
+                    // ⚠ KAYIT EKRANINDA "KAYDOL", GİRİŞTE "DEVAM ET".
+                    //
+                    // Aynı düğme iki ekranda da vardı ve ikisinde de
+                    // "Devam Et" yazıyordu. Kayıt akışında kullanıcı
+                    // hesap AÇIYOR; "devam et" ne yapacağını
+                    // söylemiyordu. Giriş ekranındaki metin DEĞİŞMEDİ.
+                    'Google ile Kaydol',
                     iconAsset: 'assets/svg/ic_google.svg',
                     busy: _busyGoogle,
                     onPressed: _busy ? null : _googleIleDevam,

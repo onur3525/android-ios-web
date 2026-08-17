@@ -10,6 +10,7 @@
 // ⚠ Kaynak metni denetleyen testlerde YORUM SATIRLARI ELENİR.
 
 import 'dart:convert';
+import 'support/test_config.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -210,7 +211,7 @@ void main() {
       // alanı doldurulunca giriş imkânsızdı. Gösterilen bilgi
       // tohumlanan hesapla AYNI olmak zorunda.
       final auth = AuthRepository();
-      expect(auth.girisEposta('test@hizmetcep.com', '123456'), isNull);
+      expect(auth.girisEposta(kTestEmail, kTestPass), isNull);
       expect(auth.loggedIn, isTrue);
     });
 
@@ -233,7 +234,7 @@ void main() {
 
     test('kutuda yazan TELEFON + şifre ile de giriş yapılır', () {
       final auth = AuthRepository();
-      expect(auth.girisTelefonSifre('0532 111 22 33', '123456'), isNull);
+      expect(auth.girisTelefonSifre('0532 111 22 33', kTestPass), isNull);
       expect(auth.loggedIn, isTrue);
     });
   });

@@ -1,7 +1,12 @@
 /// YALNIZ test ortamı kimlik bilgileri — lib/ altında tutulmaz.
 const String kTestOtp = '123456';
 const String kTestPhone = '5321112233';
-const String kTestPass = '123456';
+// ⚠ 16 Ağu: demo şifre 6 → 8 hane. Asgari uzunluk 8 olunca demo
+// hesabın kurala uymaması kuralı kâğıt üstünde bırakıyordu.
+// Depodaki tohum değer ve `demo_hesap_ozetleri.dart` içindeki
+// önceden hesaplanmış PBKDF2 özetleri de AYNI şifreye göre
+// yenilendi; üçü ayrı düşerse demo girişi çalışmaz.
+const String kTestPass = '1986onur';
 
 /// ⚠ ŞİFRELİ GİRİŞ ARTIK E-POSTA İLEDİR.
 ///

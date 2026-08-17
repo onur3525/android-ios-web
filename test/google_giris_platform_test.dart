@@ -88,14 +88,17 @@ void main() {
     );
   }
 
-  final dugme = find.text('Google ile Devam Et');
+  // ⚠ İKİ EKRANDA METİN FARKLI: girişte "Devam Et", kayıtta
+  // "Kaydol". Aynı bulucu ikisinde de kullanılamaz.
+  final girisDugmesi = find.text('Google ile Devam Et');
+  final kayitDugmesi = find.text('Google ile Kaydol');
 
   group('1 — ANDROID: düğme VAR', () {
     testWidgets('giriş ekranı', (t) async {
       await platformda(TargetPlatform.android, () async {
         await t.pumpWidget(loginApp());
         await t.pump();
-        expect(dugme, findsOneWidget,
+        expect(girisDugmesi, findsOneWidget,
             reason: 'Android\'de Google düğmesi kaldırılmış');
       });
     });
@@ -104,7 +107,7 @@ void main() {
       await platformda(TargetPlatform.android, () async {
         await t.pumpWidget(registerApp());
         await t.pump();
-        expect(dugme, findsOneWidget,
+        expect(kayitDugmesi, findsOneWidget,
             reason: 'Android\'de Google düğmesi kaldırılmış');
       });
     });
@@ -115,7 +118,7 @@ void main() {
       await platformda(TargetPlatform.iOS, () async {
         await t.pumpWidget(loginApp());
         await t.pump();
-        expect(dugme, findsNothing,
+        expect(girisDugmesi, findsNothing,
             reason: 'iOS\'ta Google düğmesi görünüyor — 4.8 riski');
       });
     });
@@ -124,7 +127,7 @@ void main() {
       await platformda(TargetPlatform.iOS, () async {
         await t.pumpWidget(registerApp());
         await t.pump();
-        expect(dugme, findsNothing,
+        expect(kayitDugmesi, findsNothing,
             reason: 'iOS\'ta Google düğmesi görünüyor — 4.8 riski');
       });
     });

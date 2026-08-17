@@ -76,12 +76,23 @@ class AuthRepository extends ChangeNotifier {
         _yetkiOmru = yetkiOmru,
         _now = nowProvider ?? DateTime.now {
     if (seedTestAccount) {
-      // Prototip test hesabı (532 111 22 33 / 123456)
+      // ⚠ DEMO ŞİFRE ŞİFRE KURALINA UYAR (16 Ağu).
+      //
+      // Eski değer `123456` idi: 6 hane, yeni asgari 8'in ALTINDA.
+      // Giriş ekranı şifrede yalnız DOLULUK aradığı için çalışmaya
+      // devam ediyordu (o kural bilinçli — kural değişince eski
+      // şifreli kullanıcı kendi hesabından kilitlenmesin diye).
+      // Ama demo hesabın kurala uymaması, kuralı kâğıt üstünde
+      // bırakıyordu: ekipteki herkes 6 haneyle çalışmaya devam ederdi.
+      //
+      // Yeni değer 8 hane ve doğrulayıcının üç zayıflık denetiminden
+      // de geçiyor (ardışık değil, tekrar değil, yaygın değil).
+      // Prototip test hesabı (532 111 22 33 / 1986onur)
       // ⚠ KURUCU `buildPorts` İÇİNDE, YANİ `runApp`'TEN ÖNCE ÇALIŞIR.
       // Burada PBKDF2 hesaplansaydı ilk Flutter karesi o kadar
       // gecikirdi; önceden hesaplanmış özet kullanılır.
       _seed(hazirTuz: kDemoMusteriTuz, hazirOzet: kDemoMusteriOzet,
-          phone: '5321112233', pass: '123456',
+          phone: '5321112233', pass: '1986onur',
           roles: {Role.customer}, name: 'Onur Bütün',
           // ⚠ Demo hesabın e-postası da doldurulur: profil ekranı
           // gerçek veriyle denenebilsin, boş alan yüzünden e-posta

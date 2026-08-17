@@ -50,12 +50,12 @@
 /// ═══════════════════════════════════════════════════════════════
 library;
 
-/// Test MÜŞTERİSİ — 532 111 22 33 / `123456`
+/// Test MÜŞTERİSİ — 532 111 22 33 / `1986onur`
 const String kDemoMusteriTuz = 'hc-demo-musteri-v1';
 const String kDemoMusteriOzet =
-    'pbkdf2\$20000\$01a5a1e48a169adab83494fa8c2f49f588c0e6ec854df733d22b5ca95355e59a';
+    'pbkdf2\$20000\$0919fc3769c1d7a9aaed3da0f6fee4d616f7ff076e25ce015548fde9db13e7f5';
 
-/// Test HİZMET VERENİ — 550 765 43 21 / `123456`
+/// Test HİZMET VERENİ — 550 765 43 21 / `1986onur`
 const String kDemoUstaTuz = 'hc-demo-usta-v1';
 const String kDemoUstaOzet =
-    'pbkdf2\$20000\$2b736dc218f159c6a9be4977154dbc3cdd3e3d71bae0570e20bee39ee0872745';
+    'pbkdf2\$20000\$000dcfccaf91ab9b3f2660edc7630b141c96a8c3c0b03f6468a4f34740ff96b0';

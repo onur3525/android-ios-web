@@ -426,7 +426,7 @@ void _seedDemo(AuthRepository auth) {
       // ⚠ Kayıt sözleşmesinin geri kalanı DEĞİŞMEDİ: OTP, sözleşme
       // onayı ve tüm doğrulamalar aynen işler.
       hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet,
-      phone: '5507654321', pass: '123456', role: Role.provider,
+      phone: '5507654321', pass: '1986onur', role: Role.provider,
       otpVerified: true, name: 'Ali Usta', termsAccepted: true,
       // Demo hesabın e-postası da doldurulur — profil ekranı boş
       // alanla değil gerçek veriyle denenebilsin.

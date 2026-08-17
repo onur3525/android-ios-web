@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
 import '../data/category_tree.dart';
+import '../data/services/search_service.dart';
 
 
 /// Kategori adı → asset slug'ı.
@@ -255,3 +256,60 @@ class CategoryBadge extends StatelessWidget {
 /// bileşeninin kodda kalması yanlışlıkla yeniden kullanılma riski
 /// taşıyordu. Kapak gerekirse SVG rozetiyle (`CategoryBadge`)
 /// yapılmalıdır.
+
+/// ── ⚠ İLAN BAŞLIĞINDAN KATEGORİ ADI ──
+///
+/// İlan kartlarında ve detay ekranlarında hizmet adının ÜSTÜNDE
+/// gösterilir. Sebep: hizmet adı tek başına AYIRT ETMİYOR.
+/// "Sözleşme İnceleme" başlığını gören kullanıcı bunun hukuk işi mi,
+/// tesisat mı, elektrik mi olduğunu anlayamıyordu.
+///
+/// ⚠ ÇATI DEĞİL KATEGORİ gösterilir. "Sözleşme İnceleme" için çatı
+/// "Mühendislik & Danışmanlık"tır ve hiçbir şeyi ayırt etmez;
+/// ayırt eden ad "Avukatlık ve Hukuk"tur.
+///
+/// ⚠ KATEGORİ İLANDA SAKLANMIYOR: `Listing` modelinde kategori alanı
+/// yok, yalnız `title` var. Ad katalogda geriye aranarak bulunuyor —
+/// ikon seçimi de bugün aynı yolu kullanıyor (`_ldIkon`), yani yeni
+/// bir kırılganlık EKLENMİYOR, var olan yol paylaşılıyor.
+///
+/// ⚠ Bulunamazsa `null` döner ve çağıran taraf satırı HİÇ ÇİZMEZ —
+/// boş bir etiket ya da "Diğer" gibi uydurma bir ad gösterilmez.
+///
+/// ⚠ Başlık zaten kategori adının kendisiyse (kullanıcı ana kategori
+/// seçtiyse) `null` döner: aynı ad iki kez alt alta yazılmaz.
+String? kategoriAdi(String baslik) {
+  final t = baslik.trim();
+  if (t.isEmpty) {
+    return null;
+  }
+  if (kCategoryTree.containsKey(t)) {
+    return null; // başlığın kendisi kategori
+  }
+  // ── ⚠ ÖNCE KESİN EŞLEŞME ──
+  //
+  // Eskiden doğrudan `SearchService.services(t).first.category`
+  // okunuyordu. Arama SIRALAMA yapar: alias, kısmi eşleşme ve
+  // kategori niyeti aynı listeye girer, dolayısıyla ilk vuruş her
+  // zaman ARANAN HİZMETİN kendisi olmayabilir — yanlış kategori
+  // yazılabilirdi.
+  //
+  // Katalogda birebir aynı adı taşıyan hizmet varsa kategorisi
+  // TARTIŞMASIZDIR; önce ona bakılır.
+  for (final h in kTreeServices) {
+    if (h.service == t) {
+      return h.category == t ? null : h.category;
+    }
+  }
+
+  // ── SONRA ARAMA ──
+  //
+  // Başlık katalogda birebir yoksa (kullanıcı düzenlemiş olabilir)
+  // arama son çare olarak denenir.
+  final vurus = SearchService.services(t);
+  if (vurus.isEmpty) {
+    return null;
+  }
+  final ad = vurus.first.category;
+  return ad == t ? null : ad;
+}

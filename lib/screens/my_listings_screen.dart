@@ -370,6 +370,21 @@ class _IlanKarti extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // ⚠ KATEGORİ SATIRI — kullanıcı ilana GİRMEDEN
+                      // hangi işle ilgili olduğunu anlamalı
+                      // (bkz. category_ui.kategoriAdi).
+                      if (kategoriAdi(listing.title) != null)
+                        Text(
+                          kategoriAdi(listing.title)!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: refText(
+                            size: RF.s11,
+                            weight: RF.w500,
+                            color: RC.textSoft,
+                            letterSpacing: RF.lsM01,
+                          ),
+                        ),
                       Text(
                         listing.title,
                         style: refText(

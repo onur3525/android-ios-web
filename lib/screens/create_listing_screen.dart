@@ -984,6 +984,16 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 // ⚠ Kartta seçilen adın GÖRÜNEN hâli yazar; ızgaradaki
                 // kısa adla aynı olsun diye `kategoriEtiketi` geçer.
                 // Alt hizmet seçildiyse ad olduğu gibi kalır.
+                // ⚠ KATEGORİ SATIRI — hizmet adı tek başına ayırt
+                // etmiyor; kullanıcı ilanı OLUŞTURURKEN de hangi
+                // alanda ilan verdiğini görmeli.
+                if (kategoriAdi(_cat ?? '') != null)
+                  Text(kategoriAdi(_cat ?? '')!,
+                      style: refText(
+                          size: RF.s115,
+                          weight: RF.w500,
+                          color: RC.textSoft,
+                          letterSpacing: RF.lsM01)),
                 Text(kategoriEtiketi(_cat ?? ''),
                     style: refText(
                         size: 16.5, weight: RF.w700, color: RC.text)),
@@ -1182,6 +1192,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // ⚠ KATEGORİ SATIRI — yayınlanacak ilan neye ait,
+                // önizlemede de görünür.
+                if (kategoriAdi(_cat ?? '') != null)
+                  Text(kategoriAdi(_cat ?? '')!,
+                      style: refText(
+                          size: RF.s115,
+                          weight: RF.w500,
+                          color: RC.textSoft,
+                          letterSpacing: RF.lsM01)),
                 Text(kategoriEtiketi(_cat ?? ''),
                     style: refText(
                         size: RF.s16, weight: RF.w700, color: RC.text)),

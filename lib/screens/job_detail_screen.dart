@@ -274,6 +274,15 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // ⚠ KATEGORİ SATIRI — hizmet adı tek başına
+                          // ayırt etmiyor (bkz. category_ui.kategoriAdi).
+                          if (kategoriAdi(l.title) != null)
+                            Text(kategoriAdi(l.title)!,
+                                style: refText(
+                                    size: RF.s115,
+                                    weight: RF.w500,
+                                    color: RC.textSoft,
+                                    letterSpacing: -0.1)),
                           // .ld-title{15.5px/700;ls -.2}
                           Text(l.title,
                               style: refText(

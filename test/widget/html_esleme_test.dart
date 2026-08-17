@@ -136,9 +136,13 @@ void main() {
       expect(src.contains("'slug': 'privacy'"), isTrue);
     });
 
-    test('veya ayırıcı + Google ile Devam Et', () {
+    test('veya ayırıcı + Google ile Kaydol', () {
       expect(src.contains('RefOrDivider'), isTrue);
-      expect(src.contains('Google ile Devam Et'), isTrue);
+      // ⚠ KAYIT ekranında metin "Kaydol"dur; "Devam Et" GİRİŞ
+      // ekranına aittir. Kullanıcı burada hesap AÇIYOR.
+      expect(src.contains('Google ile Kaydol'), isTrue);
+      expect(src.contains('Google ile Devam Et'), isFalse,
+          reason: 'kayıt ekranında giriş metni kalmış');
       // Yalnız görsel buton DEĞİL: gerçek akış bağlı.
       expect(src.contains('GoogleAuthService().signInIdToken()'), isTrue);
       expect(src.contains('googleLogin('), isTrue);

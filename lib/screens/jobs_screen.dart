@@ -15,6 +15,7 @@ import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
+import 'category_ui.dart';
 import 'nav_actions.dart';
 import '../domain/config.dart';
 import '../domain/eslestirme.dart';
@@ -554,6 +555,17 @@ class _JobsScreenState extends State<JobsScreen> {
             child: Row(children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  // ⚠ KATEGORİ SATIRI — hizmet veren ilana GİRMEDEN
+                  // işin hangi alana ait olduğunu görmeli.
+                  if (kategoriAdi(l.title) != null)
+                    Text(kategoriAdi(l.title)!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: refText(
+                            size: RF.s11,
+                            weight: RF.w500,
+                            color: RC.textSoft,
+                            letterSpacing: RF.lsM01)),
                   Text(l.title,
                       style: TextStyle(
                           fontSize: 14.5,

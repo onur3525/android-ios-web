@@ -80,7 +80,7 @@ void main() {
 
     test('Mock OTP: debug derlemede doğru kod kabul, yanlış kod ret', () async {
       final svc = MockOtpService();
-      expect(await svc.verify('5321112233', '123456'), kDebugMode);
+      expect(await svc.verify(kTestPhone, kTestPass), kDebugMode);
       expect(await svc.verify('5321112233', '000000'), isFalse);
       // Release güvenlik kuralı: verify kDebugMode && kod eşitliği ister;
       // release derlemede kDebugMode=false olduğundan test kodu KABUL EDİLMEZ.
