@@ -36,13 +36,4 @@ subprojects { project.evaluationDependsOn(":app") }
 //
 // ⚠ GEÇİCİDİR: eklenti ya da AGP güncellenip çökme giderildiğinde bu
 // blok kaldırılmalı ve release derlemesi yeniden denenmelidir.
-subprojects {
-    afterEvaluate {
-        if (project.extensions.findByName("android") != null) {
-            project.extensions.getByName("android").lint {
-                disable += ["EasterEgg", "StopShip"]
-            }
-        }
-    }
-}
 tasks.register("clean", Delete) { delete rootProject.buildDir }
