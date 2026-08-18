@@ -150,7 +150,12 @@ void main() {
       expect(l.status, ListingStatus.open); // değişmedi
     });
 
-    test('seçim: providerSelected, diğerleri iptal + açılmamış bloke İADE', () async {
+    test('seçim: ilan TAMAMLANIR, diğerleri iptal + açılmamış bloke İADE',
+        () async {
+      // ⚠ ÜRÜN KARARI (18 Ağu): seçim ilanı doğrudan "tamamlanan
+      // işler"e taşır. Ara durum `providerSelected` durum makinesinde
+      // GEÇERLİLİĞİNİ KORUR (backend gönderebilir, eski kayıtlar
+      // taşır) ama istemci artık onu ÜRETMEZ.
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'a');
       await offerCtl.placeOffer(listingId: l.id, providerId: p2, amount: 800, note: 'b');
@@ -160,7 +165,7 @@ void main() {
       final a1 = w1.avail;
 
       expect(await offerCtl.selectOffer(listingId: l.id, offerId: o2.id, actorId: cust), isNull);
-      expect(l.status, ListingStatus.providerSelected);
+      expect(l.status, ListingStatus.completed);
       expect(l.selectedOfferId, o2.id);
       expect(o2.status, OfferStatus.selected);
       expect(o1.status, OfferStatus.cancelled);
@@ -198,7 +203,7 @@ void main() {
       expect(ListingStateMachine.canDelete(ListingStatus.completed), isFalse);
     });
 
-    test('akış: open→providerSelected→completed (ara adım YOK)', () async {
+    test('akış: open→completed (seçim doğrudan tamamlar)', () async {
       // ⚠ ÜRÜN KARARI: ayrı "İşi Başlat" adımı KALDIRILDI.
       //
       // Teklif seçildikten sonra iş fiilen başlamıştır; ayrıca
@@ -211,9 +216,9 @@ void main() {
           isA<InvalidStateError>());
       await offerCtl.selectOffer(
           listingId: l.id, offerId: offerCtl.myOfferFor(l.id, p1)!.id, actorId: cust);
-      expect(l.status, ListingStatus.providerSelected);
-      // Doğrudan tamamlanır.
-      expect(await listingCtl.completeWork(l.id, actorId: cust), isNull);
+      // ⚠ SEÇİM İLANI DOĞRUDAN TAMAMLAR (18 Ağu): ayrı bir
+      // "tamamla" adımı yok, ilan seçimle birlikte "tamamlanan
+      // işler"e taşınır.
       expect(l.status, ListingStatus.completed);
       // İkinci kez tamamlanamaz (uç durum).
       expect(await listingCtl.completeWork(l.id, actorId: cust),
@@ -296,8 +301,8 @@ void main() {
     });
 
     test('AYNI İLANDA İKİNCİ SEÇİM YAPILAMAZ', () async {
-      // İki teklif; biri seçilince ilan `providerSelected` olur ve
-      // o durumdan tekrar `providerSelected`'e geçiş YOKTUR.
+      // İki teklif; biri seçilince ilan `completed` olur ve o durumdan
+      // yeni bir seçim geçişi YOKTUR (durum makinesi kapatır).
       final l = await yeniIlan();
       await offerCtl.placeOffer(
           listingId: l.id, providerId: p1, amount: 900, note: 'a');
@@ -333,7 +338,7 @@ void main() {
       final o = offerCtl.myOfferFor(l.id, p1)!;
       await offerCtl.selectOffer(
           listingId: l.id, offerId: o.id, actorId: cust);
-      expect(l.status, ListingStatus.providerSelected);
+      expect(l.status, ListingStatus.completed);
       expect(l.selectedOfferId, isNotNull);
 
       // Veri tutarsızlığı simüle edilir: seçim kaydı kaybolmuş.
@@ -345,8 +350,8 @@ void main() {
       expect(err!.message.contains('seçilmiş teklif'), isTrue,
           reason: 'hata sebebi anlaşılır olmalı');
       // ⚠ EN ÖNEMLİSİ: ilan TUTARSIZ duruma DÜŞMEDİ.
-      expect(l.status, ListingStatus.providerSelected,
-          reason: 'denetim geçişten ÖNCE yapılır');
+      expect(l.status, ListingStatus.completed,
+          reason: 'denetim geçişten ÖNCE yapılır — durum bozulmadı');
     });
 
     test('inProgress geçişi KORUNUR (eski kayıt / backend uyumu)', () async {
@@ -366,6 +371,13 @@ void main() {
               ListingStatus.providerSelected, ListingStatus.completed),
           isTrue,
           reason: 'ara adım olmadan tamamlanabilmeli');
+      // ⚠ YENİ (18 Ağu): seçim ilanı DOĞRUDAN tamamladığı için
+      // `open → completed` geçişi de açıktır.
+      expect(
+          ListingStateMachine.canTransition(
+              ListingStatus.open, ListingStatus.completed),
+          isTrue,
+          reason: 'seçim ilanı doğrudan tamamlar');
     });
 
     test('İLETİŞİM: iki taraftan biri açar, ücret YALNIZ sağlayıcıdan', () async {

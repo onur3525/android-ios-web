@@ -745,7 +745,22 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     child: Text(
                         'İletişimi taraflardan biri açtığında iki taraf için de açılır; bloke yalnızca bir kez kullanılır.')),
               ],
-              if (mine.status == OfferStatus.active) ...[
+              // ── ⚠ İLETİŞİM AÇILDIYSA HİZMET VERENİN AKIŞI BİTER ──
+              //
+              // Ürün kararı: iletişim açıldıktan sonra bu ekranda
+              // HİÇBİR düğme kalmaz — ne "İletişimi Aç" ne "Teklifi
+              // Geri Çek". Yerinde yalnız durum yazısı durur.
+              //
+              // Gerekçe: bedel tahsil edilmiştir ve iki taraf da
+              // birbirine ulaşabilir. Geri çekme düğmesinin durması,
+              // ücreti geri alınabilirmiş izlenimi veriyordu — oysa
+              // tüketilmiş ücret İADE EDİLMEZ.
+              if (contactCtl.isOpen(mine.id)) ...[
+                const SizedBox(height: 10),
+                const InfoBox(child: Text('Teklif verildi')),
+              ],
+              if (mine.status == OfferStatus.active &&
+                  !contactCtl.isOpen(mine.id)) ...[
                 const SizedBox(height: 10),
                 RefDangerButton(
                   'Teklifi Geri Çek',

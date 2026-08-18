@@ -7,6 +7,11 @@ abstract final class ListingStateMachine {
   static const Map<ListingStatus, Set<ListingStatus>> transitions = {
     ListingStatus.open: {
       ListingStatus.providerSelected,
+      // ⚠ DOĞRUDAN TAMAMLANMA (ürün kararı): teklif seçimi ilanı
+      // "tamamlanan işler"e taşır. Ara durum `providerSelected`
+      // GEÇERLİLİĞİNİ KORUR — backend hâlâ o durumu gönderebilir ve
+      // eski kayıtlar onu taşıyor.
+      ListingStatus.completed,
       ListingStatus.cancelled,
       ListingStatus.expired,
     },

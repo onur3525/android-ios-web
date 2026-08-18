@@ -541,7 +541,7 @@ class MockOfferPort extends OfferPort {
     if (actorId != l.ownerId) {
       return const UnauthorizedError('Teklifi yalnızca ilan sahibi seçebilir');
     }
-    if (!ListingStateMachine.canTransition(l.status, ListingStatus.providerSelected)) {
+    if (!ListingStateMachine.canTransition(l.status, ListingStatus.completed)) {
       return const InvalidStateError('Bu ilan için seçim yapılamaz');
     }
 
@@ -573,7 +573,16 @@ class MockOfferPort extends OfferPort {
       _refundIfUnconsumed(o, reason: 'Teklif seçilmedi — İlan: ${l.title}');
     }
     l.selectedOfferId = offerId;
-    listings.setStatus(listingId, ListingStatus.providerSelected);
+    // ── ⚠ SEÇİM İLANI DOĞRUDAN TAMAMLAR (ürün kararı) ──
+    //
+    // Referans `submitReviewDo`: seçim yapıldığında ilan `done` olur.
+    // Bizde ara durum `providerSelected` idi ve ilanı `completed`
+    // yapan hiçbir istemci eylemi yoktu; ilan "tamamlanan işler"e
+    // geçmiyor, değerlendirme kapısı da hiç açılmıyordu.
+    //
+    // ⚠ Hizmet veren tarafında da aynı anda "Kazandığım işler"e
+    // geçer — teklif `selected` olduğu için.
+    listings.setStatus(listingId, ListingStatus.completed);
     offers.touch();
     notifs?.push(
         userId: chosen.providerId, type: NotifType.offerSelected, refId: listingId,
@@ -1021,52 +1030,28 @@ class MockReviewPort extends ReviewPort {
     if (actorId != l.ownerId) {
       return const UnauthorizedError('Değerlendirmeyi yalnızca ilan sahibi yapabilir');
     }
-    // ── ⚠ REFERANS: SEÇİM VE DEĞERLENDİRME TEK ADIMDIR ──
+    // ── ⚠ ÖNKOŞUL: TEKLİF SEÇİLMİŞ OLMALI (ürün kararı) ──
     //
-    // HTML `submitReviewDo()`: değerlendirme gönderilince ilan
-    // `done` olur, seçilen teklif yazılır ve SEÇİLMEYENLERİN
-    // açılmamış blokesi O ANDA iade edilir. Yani "Teklifi Seç"
-    // düğmesi `openReview()` çağırır; seçim ayrı bir eylem DEĞİLDİR.
+    // Referans prototipinde seçim ile yorum tek adımdı
+    // (`submitReviewDo` seçimi de yazıyordu). Ürün kararı ikiye
+    // ayırdı: "Teklifi Seç" seçimi yapar, yorum SONRA ve dilendiği
+    // zaman yazılır.
     //
-    // Eski hâlde önce `completed` ve `selected` şartı aranıyordu; ama
-    // ilanı tamamlayan hiçbir istemci eylemi yoktu, dolayısıyla bu iki
-    // şart hiçbir zaman sağlanmıyor ve değerlendirmeye ULAŞILAMIYORDU.
-    //
-    // ⚠ İLETİŞİM ÖNKOŞULU KORUNUR: referansta "Teklifi Seç" düğmesi
-    // yalnız iletişim AÇIKKEN çizilir. Aynı kapı burada da var.
-    if (!contacts.isOpen(offerId)) {
+    // ⚠ Eski koşul `l.status == completed` idi ve ilanı tamamlayan
+    // hiçbir istemci eylemi olmadığı için değerlendirmeye HİÇ
+    // ulaşılamıyordu. Doğru kapı SEÇİMDİR: seçim ancak iletişim
+    // açıkken yapılabildiği için zincir zaten tamdır.
+    if (o.status != OfferStatus.selected || l.selectedOfferId != offerId) {
       return const InvalidStateError(
-          'Önce iletişimi açmanız gerekir');
+          'Yalnızca seçtiğiniz teklifi değerlendirebilirsiniz');
     }
     if (stars < 1 || stars > 5) {
       return const ValidationError('Lütfen 1-5 arası bir puan seçin');
     }
+    // ⚠ BİR KEZ: aynı teklif için ikinci yorum yazılamaz.
     if (reviews.byOffer(offerId) != null) {
       return const InvalidStateError(
           'Bu iş için değerlendirmeniz zaten alındı — değerlendirme bir kez yapılabilir');
-    }
-
-    // ── SEÇİM: yalnız ilan hâlâ AÇIKSA yazılır ──
-    //
-    // Referanstaki `if(x.st==='open')` kapısının karşılığı: ilan zaten
-    // kapanmışsa seçim tekrar yazılmaz, yalnız değerlendirme eklenir.
-    if (l.status == ListingStatus.open) {
-      o.status = OfferStatus.selected;
-      for (final d in offers.forListing(listingId)) {
-        if (d.id == offerId) {
-          continue;
-        }
-        d.status = OfferStatus.cancelled;
-        // ⚠ Açılmamış bloke iade edilir; TÜKETİLMİŞ ücret iade EDİLMEZ.
-        if (d.escrowBlocked && !d.escrowConsumed) {
-          d.escrowBlocked = false;
-          wallets.refund(d.providerId, DomainConfig.contactFee,
-              reason: 'Teklif seçilmedi — İlan: ${l.title}');
-        }
-      }
-      l.selectedOfferId = offerId;
-      listings.setStatus(listingId, ListingStatus.completed);
-      offers.touch();
     }
 
     reviews.create(

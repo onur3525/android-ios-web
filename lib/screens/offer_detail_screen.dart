@@ -38,6 +38,7 @@ class OfferDetailScreen extends StatefulWidget {
 class _OfferDetailScreenState extends State<OfferDetailScreen>
  {
   bool _busyContact = false;
+  bool _busySelect = false;
 
   @override
   Widget build(BuildContext context) {
@@ -441,31 +442,42 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 RefPrimaryButton(
                   'Teklifi Seç',
                   iconAsset: 'assets/svg/ic_checkw.svg',
-                  // ── ⚠ REFERANSA HİZALANDI (HTML `vOffer`) ──
+                  busy: _busySelect,
+                  // ── ⚠ SEÇİM VE YORUM AYRI ADIMLAR (ürün kararı) ──
                   //
-                  // Referansta `.pr-cta` üç durumludur ve "Teklifi Seç"
-                  // düğmesinin işlevi `openReview()`'dır — yani SEÇİM
-                  // VE DEĞERLENDİRME TEK ADIMDIR. İlan ancak
-                  // değerlendirme gönderilince "tamamlandı" olur;
-                  // seçim, iade ve iptal o anda yazılır
-                  // (`submitReviewDo`).
+                  // Referans prototipinde "Teklifi Seç" doğrudan
+                  // değerlendirme panelini açıyordu (`openReview`).
+                  // Ürün kararı bunu ikiye ayırdı: önce SEÇİM yapılır,
+                  // yorum SONRA ve DİLENDİĞİ ZAMAN yazılır.
                   //
-                  // Bizde ikisi ayrıydı: seçim ilanı hemen kapatıyor,
-                  // değerlendirme ayrı bir adım oluyordu. Bu yüzden
-                  // "seçildi ama değerlendirilmedi" diye referansta
-                  // BULUNMAYAN bir ara durum oluşuyordu.
-                  //
-                  // ⚠ SEÇİM ARTIK BURADA YAPILMAZ. Değerlendirme
-                  // ekranı açılır; seçimi o ekran gönderim anında
-                  // yapar. Böylece rakip tekliflerin blokesi de tam o
-                  // anda iade edilir — referanstaki sıra budur.
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) =>
-                          ReviewScreen(listingId: l.id, offerId: offer.id),
-                    ),
-                  ),
+                  // ⚠ Bu düğme yalnız İLETİŞİM AÇIKKEN çizilir (üstteki
+                  // `if (!open)` dalı). Yani iletişimi açılmamış bir
+                  // teklif SEÇİLEMEZ.
+                  onPressed: () async {
+                    setState(() => _busySelect = true);
+                    final err = await context
+                        .read<OfferController>()
+                        .selectOffer(
+                            listingId: l.id,
+                            offerId: offer.id,
+                            actorId: me.id);
+                    if (!mounted) {
+                      return;
+                    }
+                    setState(() => _busySelect = false);
+                    if (!context.mounted) {
+                      return;
+                    }
+                    if (err != null) {
+                      sysToastErr(context, SysKind.genericError,
+                          extra: err.message);
+                      return;
+                    }
+                    // ⚠ EKRAN KAPANMAZ: düğme yerinde "Yorum Yaz"a
+                    // dönüşür, kullanıcı dilediği zaman yazar.
+                    sysToastOk(context,
+                        'Teklif seçildi — hizmet veren ile çalışmaya başlayabilirsiniz');
+                  },
                 ),
                 const _UcretsizSerit('Teklif seçmek ücretsizdir.'),
               ] else if (offer.status == OfferStatus.selected) ...[
@@ -480,49 +492,39 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 // altındaki şeritte durum yazar (referanstaki
                 // `reviewed ? ... : ...` dalı).
                 const SizedBox(height: 13),
+                // ── ⚠ YORUM YAPILDIYSA DÜĞME HİÇ ÇİZİLMEZ ──
+                //
+                // Eskiden düğme kalıyor ama tıklanamıyordu ("Değerlendirme
+                // Yapıldı"). Ürün kararı: düğme YERİNDE DURMASIN, yerinde
+                // yalnız durum yazısı kalsın. Tıklanamaz bir düğme
+                // kullanıcıya hâlâ yapılacak bir iş varmış izlenimi
+                // veriyordu.
+                if (!reviewed)
                 RefPrimaryButton(
-                  reviewed ? 'Değerlendirme Yapıldı' : 'Hizmeti Değerlendir',
-                  iconAsset: reviewed
-                      ? 'assets/svg/ic_checkw.svg'
-                      : 'assets/svg/ic_starw.svg',
-                  // ⚠ İKİ KİLİT:
+                  'Yorum Yaz',
+                  iconAsset: 'assets/svg/ic_starw.svg',
+                  // ⚠ YORUM BİR KEZDİR: gönderildikten sonra bu dal
+                  // hiç çizilmez (`if (!reviewed)`), yerinde yalnız
+                  // durum yazısı kalır. Hizmet alan yorumunu sonradan
+                  // silemez, düzeltemez, yeniden puanlayamaz.
                   //
-                  // 1) Değerlendirme yalnız iş TAMAMLANDIKTAN sonra
-                  //    yapılabilir — erken aşamada düğme pasiftir.
-                  // 2) DEĞERLENDİRME BİR KEZDİR. Gönderildikten sonra
-                  //    düğme SON HÂLİNİ alır ve TIKLANAMAZ: hizmet alan
-                  //    yorumunu sonradan silemez, düzeltemez, yeniden
-                  //    puanlayamaz.
-                  // ⚠ SEÇİMDEN SONRA AKTİF (17 Ağu, ürün kararı).
-                  //
-                  // Koşul yalnız `completed` idi; ama ilanı
-                  // "tamamlandı" yapan HİÇBİR istemci eylemi yok.
-                  // Sonuç: düğme hiçbir zaman açılmıyordu ve
-                  // değerlendirme akışına ULAŞILAMIYORDU.
-                  //
-                  // Durum makinesindeki karar da bu yönde: teklif
-                  // seçildikten sonra iş fiilen başlamış sayılıyor.
-                  // `completed` da kabul edilir — backend o durumu
-                  // göndermeye devam edebilir.
-                  // ⚠ Referansta bu dal `reviewed` iken metin
-                  // "Değerlendirme" olur ve şeritte "Bu hizmeti
-                  // değerlendirdiniz." yazar; düğme TIKLANAMAZ.
-                  // Değerlendirilmemişse — ki seçilmiş teklifte bu
-                  // durum yalnız eski verilerde olur — yol açık kalır.
-                  onPressed: !reviewed
-                          ? () => Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (_) => ReviewScreen(
-                                      listingId: l.id, offerId: offer.id),
-                                ),
-                              )
-                          : null,
+                  // ⚠ Düğme yalnız SEÇİLMİŞ teklifte görünür
+                  // (`offer.status == OfferStatus.selected` dalı) ve
+                  // seçim ancak iletişim açıkken yapılabildiği için
+                  // zincir tamdır: iletişim → seçim → yorum.
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          ReviewScreen(listingId: l.id, offerId: offer.id),
+                    ),
+                  ),
                 ),
+                // ⚠ DÜĞME YOKKEN DE DURUM YAZISI KALIR: "Yorum Yapıldı".
                 _UcretsizSerit(reviewed
-                    ? 'Bu hizmeti değerlendirdiniz. '
-                        '(${reviewCtl.byOffer(offer.id)!.stars} yıldız)'
-                    : 'Değerlendirme yapmak ücretsizdir.'),
+                    ? 'Yorum Yapıldı '
+                        '(${reviewCtl.byOffer(offer.id)!.stars} puan)'
+                    : 'Yorum yazmak ücretsizdir.'),
               ],
             ],
           ),

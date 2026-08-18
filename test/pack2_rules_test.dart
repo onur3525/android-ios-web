@@ -85,21 +85,23 @@ void main() {
       final l = await ilan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
       final o = offerCtl.myOfferFor(l.id, p1)!;
-      // ⚠ REFERANS SIRASI (HTML `vOffer` → `submitReviewDo`):
-      // önce İLETİŞİM açılır, sonra "Teklifi Seç" düğmesi çıkar ve o
-      // düğme değerlendirme panelini açar. Seçim, değerlendirme
-      // gönderilirken yazılır.
+      // ⚠ ZİNCİR: iletişim → seçim → yorum.
+      //
+      // "Teklifi Seç" düğmesi yalnız iletişim AÇIKKEN çizilir; seçim
+      // ilanı doğrudan "tamamlanan işler"e taşır; yorum sonra ve
+      // dilendiği zaman yazılır.
       await contactCtl.openShared(o.id, actorId: cust);
+      await offerCtl.selectOffer(listingId: l.id, offerId: o.id, actorId: cust);
       return (l: l, o: o);
     }
 
-    test('İLETİŞİM AÇILMADAN değerlendirme yapılamaz', () async {
+    test('SEÇİM YAPILMADAN değerlendirme yapılamaz', () async {
       // ⚠ ESKİ KURAL: "ilan completed olmadan değerlendirilemez".
       //
       // O kural uygulanamıyordu: ilanı tamamlayan hiçbir istemci
       // eylemi yoktu, dolayısıyla değerlendirmeye HİÇ ulaşılamıyordu.
-      // Referansta önkoşul farklı: `.pr-cta` iletişim açılmadan
-      // "Teklifi Seç" düğmesini ÇİZMEZ. Kapı artık iletişimdir.
+      // Doğru kapı SEÇİMDİR; seçim de ancak iletişim açıkken
+      // yapılabildiği için zincir tamdır.
       final l = await ilan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
       final o = offerCtl.myOfferFor(l.id, p1)!;
@@ -108,10 +110,7 @@ void main() {
           isA<InvalidStateError>());
     });
 
-    test('DEĞERLENDİRME SEÇİMİ DE YAZAR (referans submitReviewDo)', () async {
-      // Referans: değerlendirme gönderilince ilan `done` olur, seçilen
-      // teklif işaretlenir ve seçilmeyenlerin açılmamış blokesi iade
-      // edilir. Üçü de TEK adımda.
+    test('SEÇİM İLANI TAMAMLAR ve rakip blokeleri iade eder', () async {
       final l = await ilan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'a');
       await offerCtl.placeOffer(listingId: l.id, providerId: p2, amount: 800, note: 'b');
@@ -119,16 +118,19 @@ void main() {
       final o2 = offerCtl.myOfferFor(l.id, p2)!;
       await contactCtl.openShared(o1.id, actorId: cust);
 
-      expect(await reviewCtl.submit(
-              listingId: l.id, offerId: o1.id, actorId: cust,
-              stars: 5, text: 'iyi iş'),
+      expect(
+          await offerCtl.selectOffer(
+              listingId: l.id, offerId: o1.id, actorId: cust),
           isNull);
 
+      // ⚠ İlan doğrudan "tamamlanan işler"e taşınır; ara durum yok.
       expect(l.status, ListingStatus.completed, reason: 'ilan tamamlanmadı');
-      expect(l.selectedOfferId, o1.id, reason: 'seçim yazılmadı');
+      expect(l.selectedOfferId, o1.id);
       expect(o1.status, OfferStatus.selected);
       expect(o2.status, OfferStatus.cancelled, reason: 'rakip iptal edilmedi');
       expect(o2.escrowBlocked, isFalse, reason: 'rakip blokesi iade edilmedi');
+      // ⚠ Seçilenin ücreti iletişim açılırken TÜKETİLMİŞTİ; iade yok.
+      expect(o1.escrowConsumed, isTrue);
     });
 
     test('yalnız ilan sahibi ve yalnız seçilmiş teklif değerlendirilir', () async {
@@ -144,9 +146,8 @@ void main() {
       final o1 = offerCtl.myOfferFor(l2.id, p1)!;
       final o2 = offerCtl.myOfferFor(l2.id, p2)!;
       await contactCtl.openShared(o1.id, actorId: cust);
-      await reviewCtl.submit(
-          listingId: l2.id, offerId: o1.id, actorId: cust,
-          stars: 5, text: 'seçildi');
+      await offerCtl.selectOffer(
+          listingId: l2.id, offerId: o1.id, actorId: cust);
       expect(await reviewCtl.submit(
               listingId: l2.id, offerId: o2.id, actorId: cust, stars: 4, text: 'y'),
           isA<InvalidStateError>()); // seçilmemiş teklif
