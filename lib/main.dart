@@ -60,6 +60,7 @@ import 'data/repositories/demo_hesap_ozetleri.dart';
 import 'data/repositories/chat_repository.dart';
 import 'data/repositories/contact_repository.dart';
 import 'data/repositories/listing_repository.dart';
+import 'data/models/listing.dart';
 import 'data/repositories/notification_repository.dart';
 import 'data/repositories/offer_repository.dart';
 import 'data/repositories/review_repository.dart';
@@ -197,7 +198,8 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   // ZAMANI değişti: İLK KARE ÇİZİLDİKTEN sonra.
   if (kDebugMode) {
     demoTohumla(authRepo,
-        listings: listingRepo, offers: offerRepo, wallets: walletRepo);
+        listings: listingRepo, offers: offerRepo, wallets: walletRepo,
+        reviews: reviewRepo);
   }
 
   return AppPorts(
@@ -379,6 +381,7 @@ void demoTohumla(
   ListingRepository? listings,
   OfferRepository? offers,
   WalletRepository? wallets,
+  ReviewRepository? reviews,
 }) {
   if (_tohumlandi) {
     return;
@@ -409,12 +412,12 @@ void demoTohumla(
     // kategori/adres/hesap görmez.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       BootLog.olc('SEED_DEMO',
-          () => _seedDemo(auth, listings, offers, wallets));
+          () => _seedDemo(auth, listings, offers, wallets, reviews));
     });
   } on FlutterError {
     // Binding yok (birim testi) — doğrudan tohumla.
     BootLog.olc('SEED_DEMO',
-          () => _seedDemo(auth, listings, offers, wallets));
+          () => _seedDemo(auth, listings, offers, wallets, reviews));
   }
 }
 
@@ -423,6 +426,7 @@ void _seedDemo(
   ListingRepository? listings,
   OfferRepository? offers,
   WalletRepository? wallets,
+  ReviewRepository? reviews,
 ]) {
   // ⚠ Demo hesap da GERÇEK kayıt sözleşmesinden geçer:
   // sözleşme onayı zorunludur (`termsAccepted`), aksi hâlde
@@ -560,6 +564,62 @@ void _seedDemo(
           'çıkarsa ayrıca konuşuruz.');
   wallets.block(usta2.id, DomainConfig.contactFee,
       listingTitle: ilanA.title);
+
+  // ── GEÇMİŞ İŞLER VE DEĞERLENDİRMELER ──
+  //
+  // ⚠ PUAN VE YORUM EKRANLARI VERİSİZ BOŞ GÖRÜNÜYORDU.
+  //
+  // Teklif kartında yıldız ve ortalama, teklif detayında puan
+  // dağılımı ve yorum listesi ZATEN vardı; ama demo hizmet
+  // verenlerin hiç tamamlanmış işi olmadığı için ortalama "—",
+  // liste de "Henüz yorum yapılmamış." gösteriyordu. Özellik
+  // çalışmıyor sanılıyordu.
+  //
+  // Burada KAPANMIŞ üç iş ve onların değerlendirmeleri üretilir.
+  // Böylece müşteri, gelen tekliflerde hizmet verenin gerçek
+  // puanını ve yorumlarını görebilir.
+  //
+  // ⚠ Değerlendirme kuralı KORUNUR: yalnız ilan sahibi, tamamlanmış
+  // iş ve seçili teklif için, teklif başına tek yorum.
+  void gecmisIs({
+    required String baslik,
+    required String konum,
+    required String aciklama,
+    required String ustaId,
+    required int tutar,
+    required int yildiz,
+    required String yorum,
+  }) {
+    final ilan = listings.create(
+        ownerId: musteri.id, title: baslik, location: konum, desc: aciklama);
+    final teklif = offers.create(
+        listingId: ilan.id, providerId: ustaId, amount: tutar,
+        note: 'İş tamamlandı.');
+    listings.setStatus(ilan.id, ListingStatus.completed);
+    reviews?.create(
+        listingId: ilan.id, offerId: teklif.id, providerId: ustaId,
+        authorId: musteri.id, stars: yildiz, text: yorum);
+  }
+
+  gecmisIs(
+      baslik: 'Kombi Bakımı',
+      konum: 'Alsancak, Konak / İzmir',
+      aciklama: 'Yıllık bakım yaptırıldı.',
+      ustaId: usta1.id, tutar: 1300, yildiz: 5,
+      yorum: 'Randevu saatinde geldi, işini titiz yaptı. '
+          'Kullandığı parçaların faturasını da verdi.');
+  gecmisIs(
+      baslik: 'Petek Temizliği',
+      konum: 'Bostanlı, Karşıyaka / İzmir',
+      aciklama: 'Sekiz petek temizlendi.',
+      ustaId: usta1.id, tutar: 900, yildiz: 4,
+      yorum: 'İş güzel oldu ama biraz geç geldi.');
+  gecmisIs(
+      baslik: 'Kombi Tamiri',
+      konum: 'Bostanlı, Karşıyaka / İzmir',
+      aciklama: 'Arıza giderildi.',
+      ustaId: usta2.id, tutar: 1100, yildiz: 5,
+      yorum: 'Sorunu hemen buldu, fiyatı da konuştuğumuz gibiydi.');
 
   // ── B. TEKLİFSİZ İLAN ──
   //

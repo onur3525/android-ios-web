@@ -299,7 +299,21 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         ),
       );
     }
-    final offers = offerCtl.offersForListing(l.id);
+    // ── ⚠ TEKLİF SEÇİLDİKTEN SONRA YALNIZ SEÇİLEN GÖRÜNÜR ──
+    //
+    // Seçim yapılınca rakip teklifler zaten iptal ediliyor ve
+    // blokeleri iade ediliyor; ama listede durmaya devam ediyorlardı.
+    // Kullanıcı işi kiminle yaptığını görmek isterken iptal olmuş
+    // teklifleri de görüyordu ve hangisinin seçildiği ancak rozetten
+    // anlaşılıyordu.
+    //
+    // ⚠ VERİ SİLİNMEZ: teklifler depoda duruyor (iade kayıtları ve
+    // hizmet verenin geçmişi için gerekli), yalnız BU LİSTEDE
+    // gösterilmiyor.
+    final tumTeklifler = offerCtl.offersForListing(l.id);
+    final offers = l.selectedOfferId == null
+        ? tumTeklifler
+        : tumTeklifler.where((o) => o.id == l.selectedOfferId).toList();
 
     // ── GÖRÜNÜM: referans `vListing()` ──
     //   .ld-topbar  geri + .ld-more (üç nokta)
@@ -506,7 +520,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             const SizedBox(height: 9),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text('Gelen Teklifler (${offers.length})',
+              child: Text(
+                  // ⚠ Seçimden sonra başlık de değişir: liste artık
+                  // "gelen teklifler" değil, seçilen hizmet verendir.
+                  l.selectedOfferId == null
+                      ? 'Gelen Teklifler (${offers.length})'
+                      : 'Seçilen Hizmet Veren',
                   style: refText(
                       size: 14.5,
                       weight: RF.w700,

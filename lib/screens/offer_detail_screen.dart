@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../core/ekran_korumasi.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,7 +13,6 @@ import '../data/controllers/review_controller.dart';
 import '../data/models/listing.dart';
 import '../data/models/offer.dart';
 import '../data/models/review.dart';
-import '../domain/config.dart';
 import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import 'chat_screen.dart';
@@ -38,7 +36,7 @@ class OfferDetailScreen extends StatefulWidget {
 // Bu ekranda açılan iletişim bilgisi görünür. Koruma açıkken ekran görüntüsü
 // alınamaz ve son uygulamalar listesinde önizleme çizilmez.
 class _OfferDetailScreenState extends State<OfferDetailScreen>
-    with EkranKorumaliState<OfferDetailScreen> {
+ {
   bool _busyContact = false;
   bool _busySelect = false;
 
@@ -435,15 +433,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   iconAsset: 'assets/svg/ic_checkw.svg',
                   busy: _busySelect,
                   onPressed: () async {
-                    // ⚠ `hcConfirm` bir async gap'tir (panel açılır).
-                    final ok = await hcConfirm(context,
-                        title: 'Bu teklif seçilsin mi?',
-                        desc:
-                            'Seçiminizle ilan kapanır; diğer teklifler iptal edilir ve iletişimi açılmamış blokeler (${DomainConfig.contactFee} TL) sahiplerine iade edilir.',
-                        yes: 'Teklifi Seç');
-                    if (!ok || !context.mounted) {
-                      return;
-                    }
+                    // ── ⚠ ONAY PANELİ KALDIRILDI (17 Ağu, ürün kararı) ──
+                    //
+                    // "Bu teklif seçilsin mi?" paneli çıkıyor, ilanın
+                    // kapanacağını ve blokelerin iade edileceğini
+                    // anlatıyordu. Kullanıcı düğmenin adını okuyup
+                    // basıyor; ikinci bir soru akışı yavaşlatmaktan
+                    // başka iş görmüyordu.
+                    //
+                    // ⚠ İŞ KURALI DEĞİŞMEDİ: seçim yine ilanı kapatır,
+                    // rakip teklifleri iptal eder ve iletişimi
+                    // açılmamış blokeleri iade eder. Değişen tek şey,
+                    // bunun ÖNCEDEN sorulmaması.
                     setState(() => _busySelect = true);
                     // ⚠ TEKLİF SEÇME: rakip teklifler kapanır ve
                     // blokeleri iade edilir. Sonuç gösterimi güvenli
@@ -471,9 +472,15 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       sysToastErr(context, SysKind.genericError,
                           extra: err.message);
                     } else {
+                      // ── ⚠ EKRAN KAPANMAZ ──
+                      //
+                      // Seçimden sonra `geriGit` çağrılıyordu; kullanıcı
+                      // ilan detayına düşüyor, değerlendirme düğmesini
+                      // görmek için tekrar teklife girmesi gerekiyordu.
+                      // Artık aynı ekranda kalınır ve düğme yerinde
+                      // "Hizmeti Değerlendir"e dönüşür.
                       sysToastOk(context,
                           'Teklif seçildi — hizmet veren ile çalışmaya başlayabilirsiniz');
-                      geriGit(context);
                     }
                   },
                 ),
@@ -503,8 +510,21 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   //    düğme SON HÂLİNİ alır ve TIKLANAMAZ: hizmet alan
                   //    yorumunu sonradan silemez, düzeltemez, yeniden
                   //    puanlayamaz.
-                  onPressed:
-                      (!reviewed && l.status == ListingStatus.completed)
+                  // ⚠ SEÇİMDEN SONRA AKTİF (17 Ağu, ürün kararı).
+                  //
+                  // Koşul yalnız `completed` idi; ama ilanı
+                  // "tamamlandı" yapan HİÇBİR istemci eylemi yok.
+                  // Sonuç: düğme hiçbir zaman açılmıyordu ve
+                  // değerlendirme akışına ULAŞILAMIYORDU.
+                  //
+                  // Durum makinesindeki karar da bu yönde: teklif
+                  // seçildikten sonra iş fiilen başlamış sayılıyor.
+                  // `completed` da kabul edilir — backend o durumu
+                  // göndermeye devam edebilir.
+                  onPressed: (!reviewed &&
+                          (l.status == ListingStatus.providerSelected ||
+                              l.status == ListingStatus.inProgress ||
+                              l.status == ListingStatus.completed))
                           ? () => Navigator.push(
                                 context,
                                 MaterialPageRoute<void>(
@@ -517,9 +537,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 _UcretsizSerit(reviewed
                     ? 'Bu hizmeti değerlendirdiniz. '
                         '(${reviewCtl.byOffer(offer.id)!.stars} yıldız)'
-                    : l.status == ListingStatus.completed
-                        ? 'Değerlendirme yapmak ücretsizdir.'
-                        : 'İş tamamlandığında değerlendirebilirsiniz.'),
+                    : 'Değerlendirme yapmak ücretsizdir.'),
               ],
             ],
           ),

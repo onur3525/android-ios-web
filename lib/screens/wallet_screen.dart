@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../core/ekran_korumasi.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
@@ -25,7 +24,7 @@ class WalletScreen extends StatefulWidget {
 // Bu ekranda bakiye ve işlem geçmişi görünür. Koruma açıkken ekran görüntüsü
 // alınamaz ve son uygulamalar listesinde önizleme çizilmez.
 class _WalletScreenState extends State<WalletScreen>
-    with EkranKorumaliState<WalletScreen> {
+ {
   /// SEÇİLİ İŞLEM TÜRÜ — `null`: tür ayrımı yok (tüm hareketler).
   TxKind? _filter;
 

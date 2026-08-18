@@ -72,6 +72,14 @@ void main() {
       expect(degerlendirme.contains('Değiştirilemez ve silinemez'), isTrue);
       // Teklif detayındaki düğme iki kilitle korunur.
       expect(teklifDetay.contains('!reviewed &&'), isTrue);
+      // ⚠ DURUM KOŞULU GENİŞLETİLDİ (17 Ağu).
+      //
+      // Eskiden YALNIZ `completed` kabul ediliyordu; ama ilanı
+      // "tamamlandı" yapan hiçbir istemci eylemi yok. Düğme hiçbir
+      // zaman açılmıyor, değerlendirme akışına ULAŞILAMIYORDU.
+      // Teklif seçildikten sonra iş fiilen başlamış sayılır
+      // (durum makinesindeki karar da bu yönde).
+      expect(teklifDetay.contains('ListingStatus.providerSelected'), isTrue);
       expect(teklifDetay.contains('ListingStatus.completed'), isTrue);
     });
 

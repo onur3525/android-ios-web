@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../core/ekran_korumasi.dart';
 import 'widgets/ilan_no_etiketi.dart';
 import '../domain/form_mesajlari.dart';
 import 'dart:io';
@@ -47,7 +46,7 @@ class JobDetailScreen extends StatefulWidget {
 //
 // Bu ekranda iletişim açıldıktan sonra ad ve telefon görünür.
 class _JobDetailScreenState extends State<JobDetailScreen>
-    with EkranKorumaliState<JobDetailScreen> {
+ {
   final _amt = TextEditingController();
   final _note = TextEditingController();
 

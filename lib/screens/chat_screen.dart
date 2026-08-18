@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../core/ekran_korumasi.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -29,7 +28,7 @@ class ChatScreen extends StatefulWidget {
 //
 // Bu ekranda karşı tarafın adı ve telefon numarası görünür.
 class _ChatScreenState extends State<ChatScreen>
-    with EkranKorumaliState<ChatScreen> {
+ {
   final _input = TextEditingController();
   final _scroll = ScrollController();
   DomainError? _accessError;

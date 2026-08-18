@@ -24,20 +24,27 @@ void main() {
   group('EKRAN KORUMASI', () {
     setUp(EkranKorumasi.sayaciSifirla);
 
-    test('HASSAS EKRANLARDA açık', () {
-      // Kart, bakiye ve iletişim bilgisi gösteren yüzeyler.
-      for (final yol in const [
-        'lib/screens/wallet_screen.dart',
-        'lib/screens/topup_screen.dart',
-        'lib/screens/offer_detail_screen.dart',
-      ]) {
-        expect(_kod(yol).contains('EkranKorumaliState'), isTrue, reason: yol);
-      }
+    test('YALNIZ KART BİLGİSİ EKRANINDA açık', () {
+      // ⚠ KAPSAM DARALTILDI (17 Ağu, ürün kararı).
+      //
+      // Koruma beş ekranda birden açıktı (cüzdan, bakiye yükleme,
+      // teklif detayı, sohbet, iş detayı). Kullanıcı kararı: yalnız
+      // KART BİLGİSİNİN girildiği/görüldüğü ekran korunsun.
+      //
+      // Gerekçe: ekran görüntüsü engeli kullanıcıyı da engelliyor —
+      // teklifini, sohbetini ya da cüzdan geçmişini paylaşamıyordu.
+      // Kart numarası ise gerçekten sızdırılmaması gereken tek veri.
+      expect(_kod('lib/screens/topup_screen.dart')
+          .contains('EkranKorumaliState'), isTrue);
     });
 
-    test('HER EKRANDA AÇILMAZ', () {
-      // ⚠ Kullanıcı ilanının ekran görüntüsünü alıp paylaşabilmeli.
+    test('DİĞER EKRANLARDA AÇILMAZ', () {
+      // ⚠ Kaldırılan dört ekran da burada: geri eklenirse test düşer.
       for (final yol in const [
+        'lib/screens/wallet_screen.dart',
+        'lib/screens/offer_detail_screen.dart',
+        'lib/screens/chat_screen.dart',
+        'lib/screens/job_detail_screen.dart',
         'lib/screens/home_screen.dart',
         'lib/screens/my_listings_screen.dart',
         'lib/screens/category_screen.dart',
@@ -143,14 +150,21 @@ void main() {
 
 
   group('EKRAN KORUMASI — İLETİŞİM BİLGİSİ EKRANLARI', () {
-    test('sohbet ve iş detayında AÇIK', () {
-      // ⚠ İletişim açıldıktan sonra karşı tarafın adı ve telefon
-      // numarası bu ekranlarda görünür.
+    test('⚠ sohbet ve iş detayında KAPATILDI', () {
+      // ⚠ ÖNCEKİ KARAR GERİ ALINDI (17 Ağu).
+      //
+      // Bu ekranlarda iletişim açıldıktan sonra ad ve telefon
+      // görünüyor; koruma o yüzden açılmıştı. Ama kullanıcı kendi
+      // sohbetinin ya da işinin ekran görüntüsünü de alamıyordu.
+      // Ürün kararı: koruma yalnız kart bilgisi ekranında kalsın.
+      //
+      // ⚠ Telefon zaten iletişim AÇILMADAN maskeli; asıl koruma
+      // maskelemedir, ekran görüntüsü engeli değildi.
       for (final yol in const [
         'lib/screens/chat_screen.dart',
         'lib/screens/job_detail_screen.dart',
       ]) {
-        expect(_kod(yol).contains('EkranKorumaliState'), isTrue, reason: yol);
+        expect(_kod(yol).contains('EkranKorumaliState'), isFalse, reason: yol);
       }
     });
   });
