@@ -64,6 +64,7 @@ import 'data/repositories/notification_repository.dart';
 import 'data/repositories/offer_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'data/repositories/wallet_repository.dart';
+import 'domain/config.dart';
 import 'data/services/listing_expiry_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
@@ -195,7 +196,8 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   // adres, aynı `register` sözleşmesinden geçerek üretilir — yalnız
   // ZAMANI değişti: İLK KARE ÇİZİLDİKTEN sonra.
   if (kDebugMode) {
-    demoTohumla(authRepo);
+    demoTohumla(authRepo,
+        listings: listingRepo, offers: offerRepo, wallets: walletRepo);
   }
 
   return AppPorts(
@@ -372,7 +374,12 @@ Future<void> main() async {
 /// DEĞİŞTİRİLMEDİ.
 bool _tohumlandi = false;
 
-void demoTohumla(AuthRepository auth) {
+void demoTohumla(
+  AuthRepository auth, {
+  ListingRepository? listings,
+  OfferRepository? offers,
+  WalletRepository? wallets,
+}) {
   if (_tohumlandi) {
     return;
   }
@@ -401,15 +408,22 @@ void demoTohumla(AuthRepository auth) {
     // ÖNCE tamamlanır. Kullanıcı hiçbir aşamada eksik
     // kategori/adres/hesap görmez.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      BootLog.olc('SEED_DEMO', () => _seedDemo(auth));
+      BootLog.olc('SEED_DEMO',
+          () => _seedDemo(auth, listings, offers, wallets));
     });
   } on FlutterError {
     // Binding yok (birim testi) — doğrudan tohumla.
-    BootLog.olc('SEED_DEMO', () => _seedDemo(auth));
+    BootLog.olc('SEED_DEMO',
+          () => _seedDemo(auth, listings, offers, wallets));
   }
 }
 
-void _seedDemo(AuthRepository auth) {
+void _seedDemo(
+  AuthRepository auth, [
+  ListingRepository? listings,
+  OfferRepository? offers,
+  WalletRepository? wallets,
+]) {
   // ⚠ Demo hesap da GERÇEK kayıt sözleşmesinden geçer:
   // sözleşme onayı zorunludur (`termsAccepted`), aksi hâlde
   // `register` `ValidationError` döner ve hesap oluşmaz.
@@ -465,21 +479,98 @@ void _seedDemo(AuthRepository auth) {
   }
   auth.logout();
 
-  // ⚠ DEMO İLAN ÜRETİLMEZ.
-  //
-  // Burada test müşterisi adına iki ilan açılıyordu ("Kombi Bakımı" ve
-  // "Boya"). Bunlar İlanlarım ekranında gerçek ilan gibi görünüyor,
-  // kullanıcıyı yanıltıyordu; ayrıca "Boya" katalogda BULUNMAYAN bir
-  // başlıktı (katalogda `Boya ve Badana` / `Boya Badana` var), yani
-  // kategori eşleştirmesinde de yanlış davranıyordu.
-  //
-  // Demo HESAPLAR korunur (giriş denemek için gerekli); demo İÇERİK
-  // üretilmez. İlan listeleri artık gerçekten boş açılır.
-  //
-  // ⚠ SONUÇ: mock modda hizmet verenin "Uygun İşler" ekranı da boş
-  // gelir. Doldurmak için müşteri hesabıyla ilan verilir — gerçek
-  // akışın kendisi denenmiş olur.
   assert(usta.account != null);
+
+  // ── ⚠ DEMO SENARYOSU — YALNIZ DEBUG ──
+  //
+  // Bir tur önce demo ilanlar TAMAMEN kaldırılmıştı; gerekçe geçerliydi
+  // ("Boya" katalogda yoktu, ilanlar gerçek sanılıyordu). Karar
+  // kullanıcı isteğiyle GERİ ALINDI, ama iki şart eklendi:
+  //
+  //   1. ⚠ YALNIZ DEBUG. Çağrı `kDebugMode` kapısının arkasında;
+  //      mağazaya giden release paketinde bu veri ÜRETİLMEZ. Gerçek
+  //      kullanıcı hiçbir zaman uydurma ilan görmez.
+  //   2. ⚠ BAŞLIKLAR KATALOGDAN. Eski hatanın tekrarı önlensin diye
+  //      seçilen adlar `kCategoryTree` içinde birebir vardır; kategori
+  //      satırı ve ikon bu yüzden doğru çözülür.
+  //
+  // ── SENARYO ──
+  //
+  // İki ilan açılır (müşteri: Onur Bütün):
+  //   A. "Kombi Bakımı" — İKİ TEKLİF gelmiş durumda. Müşteri tarafı
+  //      buradan teklif karşılaştırma, seçim, iletişim açma ve
+  //      değerlendirme akışını baştan sona gezebilir.
+  //   B. "Petek Temizliği" — HİÇ TEKLİF YOK. Hizmet veren tarafı
+  //      buradan gerçek teklif verme akışını kendisi deneyebilir;
+  //      "yeni ilan geldi" hâli korunmuş olur.
+  //
+  // ⚠ İKİNCİ USTA GEREKLİ: iki teklifin farklı hizmet verenlerden
+  // gelmesi için. Tek hesapla aynı ilana iki teklif verilemez ve
+  // teklif karşılaştırma ekranı gerçekçi olmaz.
+  //
+  // ⚠ BLOKE GERÇEKTEN DÜŞÜLÜR: teklif verince iletişim bedeli
+  // bloke edilir. Doğrudan kayıt eklemek cüzdanı tutarsız
+  // bırakırdı; `wallets.block` çağrılarak gerçek kural işletilir.
+  if (listings == null || offers == null || wallets == null) {
+    return; // birim testleri depo geçmeden çağırabilir
+  }
+
+  final ikinciUsta = auth.register(
+      phone: '5559998877', pass: '1986onur', role: Role.provider,
+      otpVerified: true, name: 'Mehmet Yıldız', termsAccepted: true,
+      email: 'mehmet.yildiz@example.com');
+  if (ikinciUsta.account != null) {
+    auth.setAddressFor(ikinciUsta.account!.id,
+        district: 'Karşıyaka', neighborhood: 'Bostanlı');
+    ikinciUsta.account!.categories
+      ..clear()
+      ..addAll({'Kombi Servis', 'Kombi Bakımı', 'Petek Temizliği'});
+    ikinciUsta.account!.serviceDistricts
+      ..clear()
+      ..addAll({'Karşıyaka', 'Konak'});
+  }
+  auth.logout();
+
+  final musteri = auth.findByPhone('5321112233');
+  final usta1 = usta.account;
+  final usta2 = ikinciUsta.account;
+  if (musteri == null || usta1 == null || usta2 == null) {
+    return;
+  }
+
+  // ── A. İKİ TEKLİFLİ İLAN ──
+  final ilanA = listings.create(
+      ownerId: musteri.id,
+      title: 'Kombi Bakımı',
+      location: 'Alsancak, Konak / İzmir',
+      desc: 'Kombi iki haftadır düzensiz yanıyor, radyatörler '
+          'alttan ısınmıyor. Bakım ve gerekiyorsa parça değişimi '
+          'için uygun gün arıyorum.');
+
+  offers.create(
+      listingId: ilanA.id, providerId: usta1.id, amount: 1450,
+      note: 'Bakım, petek havası alma ve basınç ayarı dâhildir. '
+          'Yedek parça gerekirse önce bilgi veririm.');
+  wallets.block(usta1.id, DomainConfig.contactFee,
+      listingTitle: ilanA.title);
+
+  offers.create(
+      listingId: ilanA.id, providerId: usta2.id, amount: 1200,
+      note: 'Aynı gün gelebilirim. Fiyata iş gücü dâhil, parça '
+          'çıkarsa ayrıca konuşuruz.');
+  wallets.block(usta2.id, DomainConfig.contactFee,
+      listingTitle: ilanA.title);
+
+  // ── B. TEKLİFSİZ İLAN ──
+  //
+  // ⚠ Hizmet veren tarafı için BİLEREK boş bırakıldı: teklif verme
+  // akışı gerçekten denensin, hazır teklifle atlanmasın.
+  listings.create(
+      ownerId: musteri.id,
+      title: 'Petek Temizliği',
+      location: 'Bostanlı, Karşıyaka / İzmir',
+      desc: 'Üç odalı dairede sekiz adet petek var. Isınma çok '
+          'zayıf, temizlik ve gerekirse vana değişimi istiyorum.');
 }
 
 class HizmetCepApp extends StatelessWidget {

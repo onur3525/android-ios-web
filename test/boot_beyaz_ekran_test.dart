@@ -413,7 +413,10 @@ void main() {
 
     test('demo tohumlama runApp\'i BEKLETMEZ', () {
       // PBKDF2 (20.000 tur) ilk kareyi geciktiriyordu.
-      expect(m.contains('demoTohumla(authRepo);'), isTrue);
+      // ⚠ İmza genişledi: tohumlama artık depoları da alıyor
+      // (demo ilan/teklif senaryosu için). Çağrının VARLIĞI ve
+      // post-frame'e alınmış olması aynen kilitli.
+      expect(m.contains('demoTohumla(authRepo,'), isTrue);
       expect(m.contains('addPostFrameCallback'), isTrue);
       // Doğrudan çağrı geri gelmemeli.
       final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
@@ -421,8 +424,35 @@ void main() {
           reason: 'tohumlama yine runApp öncesine alınmış');
     });
 
+    test('⚠ DEMO SENARYOSU YALNIZ DEBUG KAPISININ ARKASINDA', () {
+      // ⚠ EN ÖNEMLİ KİLİT: mağazaya giden release paketinde uydurma
+      // ilan ÜRETİLMEZ. Çağrı `kDebugMode` bloğunun içinde olmalı.
+      final i = mKod.indexOf('if (kDebugMode) {');
+      final j = mKod.indexOf('demoTohumla(authRepo,');
+      expect(i, greaterThan(0), reason: 'debug kapısı kalkmış');
+      expect(j, greaterThan(i),
+          reason: 'tohumlama debug kapısının DIŞINA çıkmış');
+      expect(j - i, lessThan(200),
+          reason: 'çağrı debug bloğunun içinde değil');
+    });
+
+    test('demo senaryosu: iki ilan + iki teklif', () {
+      // ⚠ BAŞLIKLAR KATALOGDAN SEÇİLİR. Eskiden "Boya" kullanılmıştı
+      // ve katalogda YOKTU; kategori satırı ve ikon yanlış çözülüyordu.
+      expect(mKod.contains("title: 'Kombi Bakımı'"), isTrue);
+      expect(mKod.contains("title: 'Petek Temizliği'"), isTrue);
+      // İki farklı hizmet verenden teklif.
+      expect(mKod.contains("phone: '5559998877'"), isTrue,
+          reason: 'ikinci demo usta yok — teklif karşılaştırması olmaz');
+      expect('offers.create('.allMatches(mKod).length, 2);
+      // ⚠ Bloke GERÇEKTEN düşülür; cüzdan tutarsız kalmaz.
+      expect('wallets.block('.allMatches(mKod).length, 2);
+      expect(mKod.contains('DomainConfig.contactFee'), isTrue,
+          reason: 'bedel elle yazılmış — tek kaynak kuralı bozulmuş');
+    });
+
     test('demo VERİSİ kaldırılmadı', () {
-      expect(m.contains('void _seedDemo(AuthRepository auth)'), isTrue);
+      expect(m.contains('void _seedDemo('), isTrue);
       expect(m.contains("phone: '5507654321'"), isTrue);
       expect(m.contains("'Kombi Servis'"), isTrue);
       expect(m.contains('setAddressFor'), isTrue);

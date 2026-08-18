@@ -31,6 +31,7 @@ import 'widgets/ilan_kayit_adimi.dart';
 import 'widgets/ilan_otp_adimi.dart';
 import '../core/validators.dart';
 import '../core/teshis.dart';
+import 'category_ui.dart';
 
 /// Müşteri — İlan Oluştur 3 adım (HTML vPost):
 /// 1 Kategori Seç · 2 Açıklama (en az 5 kelime) + konum · 3 Önizle & Yayınla.
@@ -722,15 +723,21 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // .po-step{#1D6BE3;14px/700}
-                          Text(
-                            widget.preLogin
-                                ? 'Adım $_step/4'
-                                : 'Adım $_step/3',
-                            style: refText(
-                                size: RF.s14, weight: RF.w700, color: RC.blue),
-                          ),
+                          // ── ⚠ "Adım x/3" METNİ KALDIRILDI ──
+                          //
+                          // Adım bilgisi hemen ALTTAKİ `RefStepper`
+                          // göstergesinde zaten var (dolu daireler +
+                          // etiketler); sağ üstteki metin aynı bilgiyi
+                          // ikinci kez söylüyordu.
+                          //
+                          // ⚠ YERİNE DENGE BOŞLUĞU KONDU, boşluk
+                          // silinmedi. Solda geri düğmesi 38 dp yer
+                          // kaplıyor (22 ikon + 8+8 dolgu); sağ taraf
+                          // tamamen boşaltılsaydı `Expanded` içindeki
+                          // başlık EKRANIN ORTASINDA DEĞİL, 38 dp sağa
+                          // kaymış görünürdü. Aynı genişlikte boşluk
+                          // bırakılınca başlık gerçekten ortalanır.
+                          const SizedBox(width: 38),
                         ],
                       ),
                     ),

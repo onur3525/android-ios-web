@@ -89,7 +89,24 @@ void main() {
       expect(cre.contains("'Kategori Seç',"), isTrue);
       expect(cre.contains("'Açıklama',"), isTrue);
       expect(cre.contains("'Önizle & Yayınla'"), isTrue);
-      expect(cre.contains("'Adım \$_step/3'"), isTrue);
+      // ⚠ SAĞ ÜSTTEKİ "Adım x/3" METNİ KALDIRILDI (17 Ağu).
+      //
+      // Adım bilgisi `RefStepper` göstergesinde zaten var; metin aynı
+      // şeyi ikinci kez söylüyordu. Gösterge KALDI, yalnız tekrar
+      // eden yazı gitti.
+      expect(cre.contains("'Adım \$_step/3'"), isFalse,
+          reason: 'kaldırılan adım metni geri gelmiş');
+      expect(cre.contains('RefStepper('), isTrue,
+          reason: 'adım göstergesi de kaldırılmış — bilgi tamamen kayboldu');
+    });
+
+    test('başlık GERÇEKTEN ortalı', () {
+      // ⚠ Adım metni kaldırılınca sağ taraf boşaldı. Denge boşluğu
+      // konmasaydı `Expanded` içindeki başlık, soldaki geri düğmesi
+      // kadar (38 dp) SAĞA KAYMIŞ görünürdü.
+      expect(cre.contains('textAlign: TextAlign.center'), isTrue);
+      expect(cre.contains('const SizedBox(width: 38)'), isTrue,
+          reason: 'denge boşluğu yok — başlık ortalı değil');
     });
 
     // ⚠ Hizmet ana sayfadan seçildiyse kategori adımı GÖSTERİLMEZ:
