@@ -64,7 +64,7 @@ class MockWiring {
     authPort = MockAuthPort(authRepo);
     chatPort = MockChatPort(chats, offers, listings,
         contacts: contacts, notifs: notifs);
-    reviewPort = MockReviewPort(reviews, listings, offers);
+    reviewPort = MockReviewPort(reviews, listings, offers, wallets, contacts);
     notifPort = MockNotificationPort(notifs);
 
     authCtl = AuthController(authPort);

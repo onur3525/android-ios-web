@@ -967,7 +967,14 @@ class MockReviewPort extends ReviewPort {
   final ReviewRepository reviews;
   final ListingRepository listings;
   final OfferRepository offers;
-  MockReviewPort(this.reviews, this.listings, this.offers) {
+
+  /// ⚠ SEÇİM DE BURADA YAPILIR (referans `submitReviewDo`): seçilmeyen
+  /// tekliflerin açılmamış blokesi iade edilir, iletişim önkoşulu
+  /// denetlenir. İkisi için depo erişimi gerekir.
+  final WalletRepository wallets;
+  final ContactRepository contacts;
+  MockReviewPort(this.reviews, this.listings, this.offers,
+      this.wallets, this.contacts) {
     reviews.addListener(notifyListeners);
   }
   @override
@@ -1014,11 +1021,22 @@ class MockReviewPort extends ReviewPort {
     if (actorId != l.ownerId) {
       return const UnauthorizedError('Değerlendirmeyi yalnızca ilan sahibi yapabilir');
     }
-    if (l.status != ListingStatus.completed) {
-      return const InvalidStateError('Değerlendirme yalnızca iş tamamlandıktan sonra yapılabilir');
-    }
-    if (o.status != OfferStatus.selected) {
-      return const InvalidStateError('Yalnızca seçtiğiniz teklifi değerlendirebilirsiniz');
+    // ── ⚠ REFERANS: SEÇİM VE DEĞERLENDİRME TEK ADIMDIR ──
+    //
+    // HTML `submitReviewDo()`: değerlendirme gönderilince ilan
+    // `done` olur, seçilen teklif yazılır ve SEÇİLMEYENLERİN
+    // açılmamış blokesi O ANDA iade edilir. Yani "Teklifi Seç"
+    // düğmesi `openReview()` çağırır; seçim ayrı bir eylem DEĞİLDİR.
+    //
+    // Eski hâlde önce `completed` ve `selected` şartı aranıyordu; ama
+    // ilanı tamamlayan hiçbir istemci eylemi yoktu, dolayısıyla bu iki
+    // şart hiçbir zaman sağlanmıyor ve değerlendirmeye ULAŞILAMIYORDU.
+    //
+    // ⚠ İLETİŞİM ÖNKOŞULU KORUNUR: referansta "Teklifi Seç" düğmesi
+    // yalnız iletişim AÇIKKEN çizilir. Aynı kapı burada da var.
+    if (!contacts.isOpen(offerId)) {
+      return const InvalidStateError(
+          'Önce iletişimi açmanız gerekir');
     }
     if (stars < 1 || stars > 5) {
       return const ValidationError('Lütfen 1-5 arası bir puan seçin');
@@ -1027,6 +1045,30 @@ class MockReviewPort extends ReviewPort {
       return const InvalidStateError(
           'Bu iş için değerlendirmeniz zaten alındı — değerlendirme bir kez yapılabilir');
     }
+
+    // ── SEÇİM: yalnız ilan hâlâ AÇIKSA yazılır ──
+    //
+    // Referanstaki `if(x.st==='open')` kapısının karşılığı: ilan zaten
+    // kapanmışsa seçim tekrar yazılmaz, yalnız değerlendirme eklenir.
+    if (l.status == ListingStatus.open) {
+      o.status = OfferStatus.selected;
+      for (final d in offers.forListing(listingId)) {
+        if (d.id == offerId) {
+          continue;
+        }
+        d.status = OfferStatus.cancelled;
+        // ⚠ Açılmamış bloke iade edilir; TÜKETİLMİŞ ücret iade EDİLMEZ.
+        if (d.escrowBlocked && !d.escrowConsumed) {
+          d.escrowBlocked = false;
+          wallets.refund(d.providerId, DomainConfig.contactFee,
+              reason: 'Teklif seçilmedi — İlan: ${l.title}');
+        }
+      }
+      l.selectedOfferId = offerId;
+      listings.setStatus(listingId, ListingStatus.completed);
+      offers.touch();
+    }
+
     reviews.create(
         listingId: listingId, offerId: offerId, providerId: o.providerId,
         authorId: actorId, stars: stars, text: text);

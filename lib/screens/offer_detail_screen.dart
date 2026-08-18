@@ -38,7 +38,6 @@ class OfferDetailScreen extends StatefulWidget {
 class _OfferDetailScreenState extends State<OfferDetailScreen>
  {
   bool _busyContact = false;
-  bool _busySelect = false;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +90,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
     final offer = o;
     final l = listingCtl.byId(offer.listingId)!;
     final prov = auth.accountById(offer.providerId);
-    final open = contactCtl.isOpen(offer.id);
+    // ── ⚠ SEÇİLEN TEKLİFİN İLETİŞİMİ AÇIK SAYILIR ──
+    //
+    // Referans `offersFor()`: ilan tamamlandığında seçilen teklif için
+    // `CONTACT_OPEN[...] = true` yazılır — yani tamamlanmış işte
+    // iletişim AÇIKTIR ve "İletişimi Aç" düğmesi bir daha çıkmaz.
+    //
+    // Bu bir kısayol değil, kuralın kendisi: iletişim açılmadan
+    // "Teklifi Seç" düğmesi zaten çizilmez, dolayısıyla seçilmiş bir
+    // teklifin iletişimi tanım gereği açılmıştır.
+    final open = contactCtl.isOpen(offer.id) ||
+        (l.selectedOfferId == offer.id &&
+            l.status == ListingStatus.completed);
     final revs = reviewCtl.byProvider(offer.providerId);
     final avg = revs.isEmpty
         ? null
@@ -431,58 +441,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 RefPrimaryButton(
                   'Teklifi Seç',
                   iconAsset: 'assets/svg/ic_checkw.svg',
-                  busy: _busySelect,
-                  onPressed: () async {
-                    // ── ⚠ ONAY PANELİ KALDIRILDI (17 Ağu, ürün kararı) ──
-                    //
-                    // "Bu teklif seçilsin mi?" paneli çıkıyor, ilanın
-                    // kapanacağını ve blokelerin iade edileceğini
-                    // anlatıyordu. Kullanıcı düğmenin adını okuyup
-                    // basıyor; ikinci bir soru akışı yavaşlatmaktan
-                    // başka iş görmüyordu.
-                    //
-                    // ⚠ İŞ KURALI DEĞİŞMEDİ: seçim yine ilanı kapatır,
-                    // rakip teklifleri iptal eder ve iletişimi
-                    // açılmamış blokeleri iade eder. Değişen tek şey,
-                    // bunun ÖNCEDEN sorulmaması.
-                    setState(() => _busySelect = true);
-                    // ⚠ TEKLİF SEÇME: rakip teklifler kapanır ve
-                    // blokeleri iade edilir. Sonuç gösterimi güvenli
-                    // olmalı; iş kuralı DEĞİŞMEDİ.
-                    final err = await context
-                        .read<OfferController>()
-                        .selectOffer(
-                            listingId: l.id,
-                            offerId: offer.id,
-                            actorId: me.id);
-                    // ⚠ İKİ AYRI DENETİM.
-                    //
-                    // `setState` STATE'in mounted'ını gerektirir;
-                    // `sysToast`/`geriGit` ise PARAMETRE olarak taşınan
-                    // `context`'in canlı olmasını. İkisi aynı şey
-                    // değildir — biri kalkmışken öteki canlı olabilir.
-                    if (!mounted) {
-                      return;
-                    }
-                    setState(() => _busySelect = false);
-                    if (!context.mounted) {
-                      return;
-                    }
-                    if (err != null) {
-                      sysToastErr(context, SysKind.genericError,
-                          extra: err.message);
-                    } else {
-                      // ── ⚠ EKRAN KAPANMAZ ──
-                      //
-                      // Seçimden sonra `geriGit` çağrılıyordu; kullanıcı
-                      // ilan detayına düşüyor, değerlendirme düğmesini
-                      // görmek için tekrar teklife girmesi gerekiyordu.
-                      // Artık aynı ekranda kalınır ve düğme yerinde
-                      // "Hizmeti Değerlendir"e dönüşür.
-                      sysToastOk(context,
-                          'Teklif seçildi — hizmet veren ile çalışmaya başlayabilirsiniz');
-                    }
-                  },
+                  // ── ⚠ REFERANSA HİZALANDI (HTML `vOffer`) ──
+                  //
+                  // Referansta `.pr-cta` üç durumludur ve "Teklifi Seç"
+                  // düğmesinin işlevi `openReview()`'dır — yani SEÇİM
+                  // VE DEĞERLENDİRME TEK ADIMDIR. İlan ancak
+                  // değerlendirme gönderilince "tamamlandı" olur;
+                  // seçim, iade ve iptal o anda yazılır
+                  // (`submitReviewDo`).
+                  //
+                  // Bizde ikisi ayrıydı: seçim ilanı hemen kapatıyor,
+                  // değerlendirme ayrı bir adım oluyordu. Bu yüzden
+                  // "seçildi ama değerlendirilmedi" diye referansta
+                  // BULUNMAYAN bir ara durum oluşuyordu.
+                  //
+                  // ⚠ SEÇİM ARTIK BURADA YAPILMAZ. Değerlendirme
+                  // ekranı açılır; seçimi o ekran gönderim anında
+                  // yapar. Böylece rakip tekliflerin blokesi de tam o
+                  // anda iade edilir — referanstaki sıra budur.
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          ReviewScreen(listingId: l.id, offerId: offer.id),
+                    ),
+                  ),
                 ),
                 const _UcretsizSerit('Teklif seçmek ücretsizdir.'),
               ] else if (offer.status == OfferStatus.selected) ...[
@@ -521,10 +504,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   // seçildikten sonra iş fiilen başlamış sayılıyor.
                   // `completed` da kabul edilir — backend o durumu
                   // göndermeye devam edebilir.
-                  onPressed: (!reviewed &&
-                          (l.status == ListingStatus.providerSelected ||
-                              l.status == ListingStatus.inProgress ||
-                              l.status == ListingStatus.completed))
+                  // ⚠ Referansta bu dal `reviewed` iken metin
+                  // "Değerlendirme" olur ve şeritte "Bu hizmeti
+                  // değerlendirdiniz." yazar; düğme TIKLANAMAZ.
+                  // Değerlendirilmemişse — ki seçilmiş teklifte bu
+                  // durum yalnız eski verilerde olur — yol açık kalır.
+                  onPressed: !reviewed
                           ? () => Navigator.push(
                                 context,
                                 MaterialPageRoute<void>(
@@ -978,7 +963,18 @@ class _YorumSatiri extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(width: 7),
-                      Text(review.stars.toStringAsFixed(1),
+                      // ── ⚠ "5.0" DEĞİL "5 puan" ──
+                      //
+                      // Yorum puanı HER ZAMAN tam sayıdır (1-5);
+                      // ondalıklı yazmak ORTALAMA izlenimi veriyordu.
+                      // Üstelik ekranın başındaki hizmet veren puanı
+                      // (`★ 5.0`) da aynı biçimde yazıldığı için satır
+                      // "bu yorumu yapanın puanı 5.0" diye okunuyordu.
+                      //
+                      // ⚠ Yıldızlar bu yorumun VERDİĞİ puandır; hizmet
+                      // alanların puanı diye bir kavram YOKTUR, yalnız
+                      // hizmet verenler puanlanır.
+                      Text('${review.stars} puan',
                           style: refText(
                               size: RF.s125,
                               weight: RF.w600,

@@ -70,17 +70,32 @@ void main() {
   group('Değerlendirme', () {
     test('TEK SEFERLİK — gönderilmiş değerlendirme değiştirilemez', () {
       expect(degerlendirme.contains('Değiştirilemez ve silinemez'), isTrue);
-      // Teklif detayındaki düğme iki kilitle korunur.
-      expect(teklifDetay.contains('!reviewed &&'), isTrue);
-      // ⚠ DURUM KOŞULU GENİŞLETİLDİ (17 Ağu).
+      // ⚠ TEK KİLİT KALDI: `reviewed`.
       //
-      // Eskiden YALNIZ `completed` kabul ediliyordu; ama ilanı
-      // "tamamlandı" yapan hiçbir istemci eylemi yok. Düğme hiçbir
-      // zaman açılmıyor, değerlendirme akışına ULAŞILAMIYORDU.
-      // Teklif seçildikten sonra iş fiilen başlamış sayılır
-      // (durum makinesindeki karar da bu yönde).
-      expect(teklifDetay.contains('ListingStatus.providerSelected'), isTrue);
-      expect(teklifDetay.contains('ListingStatus.completed'), isTrue);
+      // Referans `vOffer`: `reviewed ? "Değerlendirme" : "Teklifi Seç"`.
+      // Durum koşulu YOK — çünkü "Teklifi Seç" düğmesi zaten yalnız
+      // iletişim AÇIKKEN çiziliyor ve değerlendirme gönderimi ilanı o
+      // anda tamamlıyor (`submitReviewDo`).
+      expect(teklifDetay.contains('onPressed: !reviewed'), isTrue);
+    });
+
+    test('YORUM SATIRINDA "5 puan", ortalamada "5.0"', () {
+      // ⚠ İKİ AYRI SAYI, İKİ AYRI BİÇİM.
+      //
+      // Yorumun kendi puanı TAM SAYIDIR (1-5): "5 puan". Ondalıklı
+      // yazılınca ("5.0") ortalama sanılıyor ve satır "bu yorumu
+      // yapanın puanı 5.0" diye okunuyordu — oysa hizmet alanların
+      // puanı diye bir kavram YOK, yalnız hizmet verenler puanlanır.
+      //
+      // Hizmet verenin ORTALAMASI ise ondalıklı kalır: 4 ve 5'ten
+      // 4.5 çıkabilir.
+      expect(teklifDetay.contains("'\${review.stars} puan'"), isTrue,
+          reason: 'yorum puanı tam sayı olarak yazılmalı');
+      expect(teklifDetay.contains('review.stars.toStringAsFixed(1)'), isFalse,
+          reason: 'yorum puanı yine ondalıklı yazılmış');
+      // Ortalama gösterimleri KORUNUR.
+      expect(teklifDetay.contains('avg.toStringAsFixed(1)'), isTrue);
+      expect(teklifDetay.contains('ortalama!.toStringAsFixed(1)'), isTrue);
     });
 
     test('puan ZORUNLU, yorum İSTEĞE BAĞLI, en fazla 500 karakter', () {

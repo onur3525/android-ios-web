@@ -205,7 +205,8 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   return AppPorts(
     chat: MockChatPort(chatRepo, offerRepo, listingRepo,
         contacts: contactRepo, notifs: notifRepo),
-    reviews: MockReviewPort(reviewRepo, listingRepo, offerRepo),
+    reviews: MockReviewPort(
+        reviewRepo, listingRepo, offerRepo, walletRepo, contactRepo),
     notifications: MockNotificationPort(notifRepo),
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
