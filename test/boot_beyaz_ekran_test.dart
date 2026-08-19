@@ -436,6 +436,21 @@ void main() {
           reason: 'çağrı debug bloğunun içinde değil');
     });
 
+    test('⚠ TAMAMLANMIŞ demo işlerde ZİNCİR TAM', () {
+      // ⚠ Kullanıcının bildirdiği hatanın kaynağı buydu: tohum
+      // ilanı `completed` yapıyor ama teklifi SEÇİLİ işaretlemiyordu.
+      // `selectedOfferId` boş kalınca ekran "iletişim açılmamış"
+      // sayıyor ve tamamlanan işte "İletişimi Aç" düğmesi çıkıyordu.
+      //
+      // Tamamlanmış işte dördü birden yazılı olmalı.
+      expect(mKod.contains('teklif.status = OfferStatus.selected'), isTrue);
+      expect(mKod.contains('ilan.selectedOfferId = teklif.id'), isTrue);
+      expect(mKod.contains('teklif.escrowConsumed = true'), isTrue,
+          reason: 'bloke tüketilmemiş — cüzdan tutarsız kalır');
+      expect(mKod.contains('contacts?.open(teklif.id)'), isTrue,
+          reason: 'iletişim kaydı yazılmamış');
+    });
+
     test('demo senaryosu: iki ilan + iki teklif', () {
       // ⚠ BAŞLIKLAR KATALOGDAN SEÇİLİR. Eskiden "Boya" kullanılmıştı
       // ve katalogda YOKTU; kategori satırı ve ikon yanlış çözülüyordu.

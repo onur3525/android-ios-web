@@ -61,6 +61,7 @@ import 'data/repositories/chat_repository.dart';
 import 'data/repositories/contact_repository.dart';
 import 'data/repositories/listing_repository.dart';
 import 'data/models/listing.dart';
+import 'data/models/offer.dart';
 import 'data/repositories/notification_repository.dart';
 import 'data/repositories/offer_repository.dart';
 import 'data/repositories/review_repository.dart';
@@ -199,7 +200,7 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   if (kDebugMode) {
     demoTohumla(authRepo,
         listings: listingRepo, offers: offerRepo, wallets: walletRepo,
-        reviews: reviewRepo);
+        reviews: reviewRepo, contacts: contactRepo);
   }
 
   return AppPorts(
@@ -383,6 +384,7 @@ void demoTohumla(
   OfferRepository? offers,
   WalletRepository? wallets,
   ReviewRepository? reviews,
+  ContactRepository? contacts,
 }) {
   if (_tohumlandi) {
     return;
@@ -413,12 +415,12 @@ void demoTohumla(
     // kategori/adres/hesap görmez.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       BootLog.olc('SEED_DEMO',
-          () => _seedDemo(auth, listings, offers, wallets, reviews));
+          () => _seedDemo(auth, listings, offers, wallets, reviews, contacts));
     });
   } on FlutterError {
     // Binding yok (birim testi) — doğrudan tohumla.
     BootLog.olc('SEED_DEMO',
-          () => _seedDemo(auth, listings, offers, wallets, reviews));
+          () => _seedDemo(auth, listings, offers, wallets, reviews, contacts));
   }
 }
 
@@ -428,6 +430,7 @@ void _seedDemo(
   OfferRepository? offers,
   WalletRepository? wallets,
   ReviewRepository? reviews,
+  ContactRepository? contacts,
 ]) {
   // ⚠ Demo hesap da GERÇEK kayıt sözleşmesinden geçer:
   // sözleşme onayı zorunludur (`termsAccepted`), aksi hâlde
@@ -596,6 +599,23 @@ void _seedDemo(
     final teklif = offers.create(
         listingId: ilan.id, providerId: ustaId, amount: tutar,
         note: 'İş tamamlandı.');
+    // ── ⚠ TAMAMLANMIŞ İŞ = SEÇİLMİŞ TEKLİF ──
+    //
+    // Burada yalnız `setStatus(completed)` yazılıyordu; teklif hâlâ
+    // `active`, `selectedOfferId` ise BOŞTU. Ekran bu ilanı "iletişimi
+    // açılmamış" sayıp "İletişimi Aç" düğmesini çiziyordu —
+    // kullanıcının gördüğü hata tam olarak buydu ve kaynağı EKRAN
+    // DEĞİL, BU TOHUMDU.
+    //
+    // Tamamlanmış bir işte zincirin tamamı yazılı olmalıdır:
+    // teklif seçili · ilan o teklifi işaret ediyor · iletişim açık ·
+    // bloke tüketilmiş. Aksi hâlde ekran tutarsız bir durumu çizmek
+    // zorunda kalır.
+    teklif.status = OfferStatus.selected;
+    ilan.selectedOfferId = teklif.id;
+    teklif.escrowBlocked = false;
+    teklif.escrowConsumed = true;
+    contacts?.open(teklif.id);
     listings.setStatus(ilan.id, ListingStatus.completed);
     reviews?.create(
         listingId: ilan.id, offerId: teklif.id, providerId: ustaId,
