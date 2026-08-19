@@ -125,6 +125,7 @@ HataBilgisi hataBilgisi(DomainError hata) {
     case ListingClosedError():
     case OtpRequiredError():
     case WrongPasswordError():
+    case IletisimZatenAcikError():
     case AuthFailedError():
       return HataBilgisi(
         baslik: hata.message,
