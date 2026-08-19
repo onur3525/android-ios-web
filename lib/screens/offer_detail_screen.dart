@@ -100,9 +100,20 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
     // Bu bir kısayol değil, kuralın kendisi: iletişim açılmadan
     // "Teklifi Seç" düğmesi zaten çizilmez, dolayısıyla seçilmiş bir
     // teklifin iletişimi tanım gereği açılmıştır.
+    // ⚠ KOŞUL İLAN DURUMUNA BAĞLANMAZ.
+    //
+    // Önce `l.status == completed` şartı vardı; ama seçim yapılmış
+    // ESKİ kayıtlarda ilan `providerSelected` ya da `inProgress`
+    // kalmış olabiliyor (kural değişmeden önce üretilen veriler ve
+    // backend'in gönderdiği durumlar). O ilanlarda "İletişimi Aç"
+    // düğmesi yeniden çıkıyordu — oysa iletişim çoktan açılmıştı.
+    //
+    // Belirleyici olan tek şey SEÇİLMİŞ OLMAK: seçim ancak iletişim
+    // açıkken yapılabildiği için, seçilmiş teklifin iletişimi tanım
+    // gereği açıktır.
     final open = contactCtl.isOpen(offer.id) ||
-        (l.selectedOfferId == offer.id &&
-            l.status == ListingStatus.completed);
+        l.selectedOfferId == offer.id ||
+        offer.status == OfferStatus.selected;
     final revs = reviewCtl.byProvider(offer.providerId);
     final avg = revs.isEmpty
         ? null

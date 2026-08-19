@@ -67,6 +67,35 @@ void main() {
     });
   });
 
+  group('SEÇİLMİŞ TEKLİFTE "İletişimi Aç" ÇIKMAZ', () {
+    test('open bayrağı ilan durumuna BAĞLANMAZ', () {
+      // ⚠ Önce `l.status == completed` şartı vardı; seçim yapılmış
+      // ESKİ kayıtlarda ilan `providerSelected` kalabildiği için o
+      // ilanlarda düğme yeniden çıkıyordu. Belirleyici olan tek şey
+      // SEÇİLMİŞ OLMAKTIR — seçim ancak iletişim açıkken yapılır.
+      expect(teklifDetay.contains('l.selectedOfferId == offer.id ||'), isTrue);
+      expect(teklifDetay.contains('offer.status == OfferStatus.selected;'),
+          isTrue);
+      expect(
+          teklifDetay.contains(
+              "l.selectedOfferId == offer.id &&\n            l.status == ListingStatus.completed"),
+          isFalse,
+          reason: 'durum şartı geri gelmiş');
+    });
+
+    test('seçilmiş teklifte düğme YORUM dalına düşer', () {
+      // Zincir: `if (!open)` → `else if (ilan açık && teklif aktif)`
+      // → `else if (teklif seçili)`. Seçilmiş teklifte `open` daima
+      // true olduğu için ilk dal ATLANIR.
+      final i = teklifDetay.indexOf('if (!open) ...[');
+      final j = teklifDetay.indexOf('else if (offer.status == OfferStatus.selected)');
+      expect(i, greaterThan(0));
+      expect(j, greaterThan(i), reason: 'yorum dalı zincirin sonunda olmalı');
+      expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
+      expect(teklifDetay.contains("'Yorum Yapıldı "), isTrue);
+    });
+  });
+
   group('Değerlendirme', () {
     test('TEK SEFERLİK — gönderilmiş değerlendirme değiştirilemez', () {
       expect(degerlendirme.contains('Değiştirilemez ve silinemez'), isTrue);
