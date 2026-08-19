@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../domain/form_mesajlari.dart';
+import '../domain/config.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
@@ -32,6 +33,20 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
     if (_stars < 1) {
       setState(() => _error = FormMesaj.puanSec);
+      return;
+    }
+    // ── ⚠ EN AZ 5 KELİME (API sözleşmesi §14) ──
+    //
+    // Prototipte yorum İSTEĞE BAĞLIYDI ve alt sınır yoktu. Sözleşme
+    // asgari kelime sayısı koyuyor: tek kelimelik ("iyi") yorumlar
+    // hizmet veren hakkında bilgi taşımıyor.
+    final kelime = _text.text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((k) => k.isNotEmpty)
+        .length;
+    if (kelime < DomainConfig.kYorumMinKelime) {
+      setState(() => _error = FormMesaj.yorumKisa);
       return;
     }
     setState(() { _busy = true; _error = null; });
@@ -272,7 +287,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     RefTextField(
                       controller: _text,
                       maxLines: 6,
-                      maxLength: 500, // .rv-ta{maxlength="500"}
+                      // ⚠ SINIR 500 → 1000 (API sözleşmesi §14).
+                      //
+                      // Referans HTML'de `maxlength="500"` yazıyordu;
+                      // nihai sözleşme "en fazla 1000 karakter" diyor.
+                      // Sözleşme HTML'e ÜSTÜNDÜR (belge §31).
+                      maxLength: DomainConfig.kYorumMaxKarakter,
                       // Yerleşik sayaç gizlenir; referanstaki `.rv-cnt`
                       // kutunun İÇİNDE sağ altta durur.
                       buildCounter: (_,
@@ -286,7 +306,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     Positioned(
                       right: 13,
                       bottom: 10,
-                      child: Text('${_text.text.characters.length}/500',
+                      child: Text('${_text.text.characters.length}/${DomainConfig.kYorumMaxKarakter}',
                           style: refText(
                               size: RF.s12,
                               weight: RF.w400,

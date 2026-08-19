@@ -234,11 +234,17 @@ abstract class ListingPort extends ChangeNotifier {
     required String desc,
     List<String>? photoPaths,
   });
-  Future<DomainError?> startWork(String listingId, {required String actorId});
-  Future<DomainError?> completeWork(String listingId, {required String actorId});
+  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
+  //
+  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
+  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
+  // seçildiği anda iş tamamlanmış sayılır.
+  //
+  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
+  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
   /// [reason] — kullanıcının seçtiği gerekçe; denetim için taşınır.
-  Future<DomainError?> cancel(String listingId,
-      {required String actorId, String? reason});
+  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir
+  // (`DELETE /listings/{id}`). Aynı iş için iki uç bırakılmaz.
   Future<DomainError?> expire(String listingId, {required String actorId});
   Future<DomainError?> delete(String listingId,
       {required String actorId, String? reason});
@@ -253,18 +259,9 @@ abstract class OfferPort extends ChangeNotifier {
   Future<DomainError?> loadMine();
   Future<DomainError?> loadForListing(String listingId);
 
-  Future<DomainError?> placeOffer({
-    required String listingId,
-    required String providerId,
-    required int amount,
-    required String note,
-  });
-  Future<DomainError?> selectOffer({
-    required String listingId,
-    required String offerId,
-    required String actorId,
-  });
-  Future<DomainError?> withdrawOffer({required String offerId, required String actorId});
+  // ⚠ `withdrawOffer` KALDIRILDI (API sözleşmesi §1).
+  // Gönderilmiş teklif geri çekilemez; alternatif adla da eklenmez.
+
 }
 
 abstract class WalletPort extends ChangeNotifier {

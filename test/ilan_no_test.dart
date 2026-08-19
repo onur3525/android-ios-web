@@ -121,11 +121,11 @@ void main() {
     });
 
     test('kapanmış ilanın numarası yeni ilana verilmez', () {
-      // ⚠ Durum adı `closed` DEĞİL: katalogda `completed` (iş bitti)
-      // ve `cancelled` (iptal/silme) var. İkisi de "kapanmış" sayılır.
+      // ⚠ NİHAİ DURUMLAR (§24): kapanış `userDeleted`, `adminRemoved`
+      // veya `expired`tır. Numara sayacı durumdan bağımsız artar.
       final r = ListingRepository();
       final ilk = _ilan(r);
-      r.setStatus(ilk.id, ListingStatus.completed);
+      r.setStatus(ilk.id, ListingStatus.userDeleted);
       final yeni = _ilan(r, baslik: 'Başka iş');
       expect(yeni.ilanNo, isNot(ilk.ilanNo));
     });

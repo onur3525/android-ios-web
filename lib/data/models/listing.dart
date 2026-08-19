@@ -1,13 +1,37 @@
 import '../../domain/config.dart';
 
-/// İlan yaşam döngüsü.
+/// İLANIN YAŞAM DURUMU — nihai dört değer (API sözleşmesi §24).
+///
+/// ── ⚠ DURUM İLE TAMAMLANMIŞLIK AYRI KAVRAMLARDIR ──
+///
+/// Eskiden altı değer vardı: `open · providerSelected · inProgress ·
+/// completed · cancelled · expired`. Bunların dördü ilanın yaşamını
+/// değil, İŞİN GİDİŞATINI anlatıyordu ve iki kavram tek alanda
+/// karışıyordu.
+///
+/// Nihai ayrım şudur:
+///   · `ListingStatus`  → ilan yaşıyor mu, süresi mi doldu, silindi mi
+///   · `selectedOfferId` → iş tamamlandı mı
+///
+/// ⚠ TAMAMLANMIŞLIK ARTIK BİR DURUM DEĞİLDİR. `isTamamlanmisIs`
+/// yardımcısı (bu dosyanın altında) tek kaynaktır; ekranlar kendi
+/// koşulunu YAZMAZ.
+///
+/// ⚠ ESKİ DEĞERLER YENİ ADLA GERİ GETİRİLMEZ: `finished`, `done`,
+/// `working`, `selected`, `removed` gibi karşılıklar üretilmeyecek.
 enum ListingStatus {
-  open,             // teklif kabul ediyor
-  providerSelected, // müşteri bir teklifi seçti
-  inProgress,       // iş başladı
-  completed,        // iş tamamlandı
-  cancelled,        // müşteri iptal etti / ilan silindi
-  expired,          // süre doldu
+  /// Yaşıyor: teklif kabul edebilir. Seçilmiş teklifi olsa bile
+  /// ilanın kendisi ACTIVE kalır — tamamlanmışlık ayrı alandadır.
+  active,
+
+  /// 30 saat doldu; yeni teklif ve yeni iletişim açma yapılamaz.
+  expired,
+
+  /// Kullanıcı kendi ilanını sildi.
+  userDeleted,
+
+  /// Admin kaldırdı (gerekçeli).
+  adminRemoved,
 }
 
 
@@ -50,7 +74,7 @@ class Listing {
     required this.title,
     required this.location,
     required this.desc,
-    this.status = ListingStatus.open,
+    this.status = ListingStatus.active,
     List<String>? photoPaths,
     DateTime? createdAt,
   })  : photoPaths = photoPaths ?? [],
@@ -58,11 +82,40 @@ class Listing {
         expiresAt =
             (createdAt ?? DateTime.now()).add(DomainConfig.listingLifetime);
 
-  bool get acceptsOffers => status == ListingStatus.open;
+  /// İlan yeni teklif kabul ediyor mu?
+  ///
+  /// ── ⚠ İKİ KOŞUL BİRDEN (§22) ──
+  ///
+  /// Eskiden YALNIZ duruma bakıyordu. Ama nihai modelde seçim ilanın
+  /// durumunu DEĞİŞTİRMİYOR: teklif seçilmiş bir ilan `active`
+  /// kalmaya devam ediyor. Tek koşullu hâlde tamamlanmış işe yeni
+  /// teklif verilebiliyordu — "ACTIVE olduğu için teklif verilebilir"
+  /// yanılgısının domain katmanındaki karşılığı.
+  ///
+  /// ⚠ Bu, ekran koşullarının değil DOMAIN'in sorumluluğudur:
+  /// arayüzde düğmeyi gizlemek güvenlik değildir.
+  bool get acceptsOffers =>
+      status == ListingStatus.active && !isTamamlanmisIs;
 
   /// Ekranlarda gösterilecek biçim — TEK KAYNAK.
   ///
   /// ⚠ Ekranlar "İlan No: " önekini elle yazmaz; biçim değişirse
   /// tek yerden değişsin.
   String get ilanNoEtiketi => 'İlan No: $ilanNo';
+
+  /// ── ⚠ TAMAMLANMIŞ İŞ — TEK KAYNAK ──
+  ///
+  /// Eskiden `status == ListingStatus.completed` bakılıyordu. Nihai
+  /// sözleşmede tamamlanmışlık bir DURUM DEĞİL, bir İLİŞKİDİR:
+  /// ilanın seçilmiş bir teklifi varsa iş tamamlanmıştır (§11).
+  ///
+  /// ⚠ YAŞAM DURUMUNA BAĞLANMAZ. Tamamlanmış bir ilan sonradan
+  /// silinebilir ya da admin tarafından kaldırılabilir; bu, işin
+  /// tamamlanmış olduğu gerçeğini DEĞİŞTİRMEZ. Bu yüzden koşulda
+  /// `status` HİÇ geçmez.
+  ///
+  /// ⚠ TEK YERDE TUTULUR: onlarca ekranda `selectedOfferId != null`
+  /// yazılırsa biri güncellenip öteki unutulur. Sekme filtreleri,
+  /// rozetler ve kartlar hep buradan okur.
+  bool get isTamamlanmisIs => selectedOfferId != null;
 }

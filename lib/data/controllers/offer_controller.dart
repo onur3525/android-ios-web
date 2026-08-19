@@ -56,18 +56,8 @@ class OfferController extends BaseController {
         },
       );
 
-  /// KURAL: Yalnız kendi aktif teklifi geri çekilebilir; açılmış ücret
-  /// iade edilmez.
-  Future<DomainError?> withdrawOffer({
-    required String offerId,
-    required String actorId,
-  }) =>
-      runAction(
-        'offer:withdraw:$offerId',
-        () => _offers.withdrawOffer(offerId: offerId, actorId: actorId),
-        onSuccess: () async {
-          await _offers.loadMine();
-          await _wallets.load(actorId); // iade sunucudan okunur
-        },
-      );
+  // ⚠ `withdrawOffer` KALDIRILDI (API sözleşmesi §1, kabul testi 2).
+  //
+  // "Teklif geri çekilemez ve değiştirilemez." Aksiyon, çağırdığı
+  // port metodu, uç ve düğme birlikte kaldırıldı.
 }

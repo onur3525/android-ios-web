@@ -4,51 +4,46 @@ import '../data/models/listing.dart';
 /// completed uç durumdur: iptal/süre dolumu/silme YAPILAMAZ;
 /// tamamlanmış işin blokesi asla iade akışına giremez.
 abstract final class ListingStateMachine {
+  /// ── ⚠ NİHAİ GEÇİŞ TABLOSU (API sözleşmesi §24) ──
+  ///
+  /// Eski tablo altı durumluydu ve `open → providerSelected →
+  /// inProgress → completed` zincirini taşıyordu. O zincir İŞİN
+  /// GİDİŞATIYDI, ilanın yaşamı değil; ikisi tek alanda karışıyordu.
+  ///
+  /// Nihai tablo yalnız YAŞAM geçişlerini tanımlar:
+  ///   · `active` → süresi dolabilir, kullanıcı silebilir, admin
+  ///     kaldırabilir
+  ///   · kapanmış üç durumdan GERİ DÖNÜŞ YOKTUR
+  ///
+  /// ⚠ TEKLİF SEÇİMİ BU TABLODA YOKTUR. Seçim ilanın durumunu
+  /// değiştirmez; `selectedOfferId` yazar. Tamamlanmışlık
+  /// `Listing.isTamamlanmisIs` ile türetilir.
   static const Map<ListingStatus, Set<ListingStatus>> transitions = {
-    ListingStatus.open: {
-      ListingStatus.providerSelected,
-      // ⚠ DOĞRUDAN TAMAMLANMA (ürün kararı): teklif seçimi ilanı
-      // "tamamlanan işler"e taşır. Ara durum `providerSelected`
-      // GEÇERLİLİĞİNİ KORUR — backend hâlâ o durumu gönderebilir ve
-      // eski kayıtlar onu taşıyor.
-      ListingStatus.completed,
-      ListingStatus.cancelled,
+    ListingStatus.active: {
       ListingStatus.expired,
+      ListingStatus.userDeleted,
+      ListingStatus.adminRemoved,
     },
-    ListingStatus.providerSelected: {
-      // ⚠ AYRI "İŞİ BAŞLAT" ADIMI KALDIRILDI.
-      //
-      // Ürün kararı: teklif seçildikten sonra iş fiilen başlamıştır;
-      // ayrıca "başlat" demek kullanıcıya fazladan bir adım yüklüyor
-      // ve unutulduğunda ilan tamamlanamaz duruma düşüyordu.
-      //
-      // `inProgress` GEÇİŞİ KORUNUR: eski kayıtlar bu durumda olabilir
-      // ve backend bu durumu göndermeye devam edebilir.
-      ListingStatus.completed,
-      ListingStatus.inProgress,
-      ListingStatus.cancelled,
+    ListingStatus.expired: {
+      // Süresi dolmuş ilan kullanıcı tarafından silinebilir (§12) ve
+      // admin tarafından kaldırılabilir.
+      ListingStatus.userDeleted,
+      ListingStatus.adminRemoved,
     },
-    ListingStatus.inProgress: {
-      ListingStatus.completed,
-      ListingStatus.cancelled,
-    },
-    ListingStatus.completed: {},
-    ListingStatus.cancelled: {},
-    ListingStatus.expired: {},
+    ListingStatus.userDeleted: {},
+    ListingStatus.adminRemoved: {},
   };
 
   static bool canTransition(ListingStatus from, ListingStatus to) =>
       transitions[from]?.contains(to) ?? false;
 
-  /// Silinebilir durumlar: completed HARİÇ hepsi
-  /// (kapalı ilanların silinmesi arşiv temizliğidir; blokeler zaten çözülmüştür).
-  static const Set<ListingStatus> deletable = {
-    ListingStatus.open,
-    ListingStatus.providerSelected,
-    ListingStatus.inProgress,
-    ListingStatus.cancelled,
-    ListingStatus.expired,
-  };
-
-  static bool canDelete(ListingStatus s) => deletable.contains(s);
+  /// ⚠ TAMAMLANMIŞ İŞ SİLİNEMEZ.
+  ///
+  /// Eski kural "completed hariç hepsi silinebilir" idi ve `completed`
+  /// bir durumdu. Artık tamamlanmışlık `selectedOfferId` ile
+  /// belirlendiği için denetim de oradan yapılır — bu yüzden
+  /// `canDelete` artık İLANI alır, yalnız durumu değil.
+  static bool canDelete(Listing l) =>
+      l.selectedOfferId == null &&
+      (l.status == ListingStatus.active || l.status == ListingStatus.expired);
 }

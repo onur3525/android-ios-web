@@ -34,9 +34,13 @@ class ListingApi {
   Future<void> remove(String id, {String? reason}) => c.delete(
       '/listings/$id',
       body: reason == null || reason.isEmpty ? null : {'reason': reason});
-  Future<Map<String, dynamic>> cancel(String id, {String? reason}) =>
-      c.post('/listings/$id/cancel',
-          body: reason == null || reason.isEmpty ? null : {'reason': reason});
-  Future<Map<String, dynamic>> start(String id) => c.post('/listings/$id/start');
-  Future<Map<String, dynamic>> complete(String id) => c.post('/listings/$id/complete');
+  // ⚠ `cancel` UCU KALDIRILDI — tek kanonik silme
+  // `DELETE /listings/{id}` (`remove`). Aynı iş için iki uç
+  // bırakılmaz; sözleşmeden de çıkarıldı.
+  // ⚠ `start` / `complete` UÇLARI KALDIRILDI (§11, Paket 1).
+  //
+  // Paket 1'de port ve controller aksiyonları kaldırılmıştı ama API
+  // ve repository katmanında ÖLÜ KOD olarak kalmışlardı — hiçbir
+  // yerden çağrılmıyorlardı. Nihai akışta "İşi Başlat" ve "İşi
+  // Tamamla" aşamaları YOKTUR.
 }

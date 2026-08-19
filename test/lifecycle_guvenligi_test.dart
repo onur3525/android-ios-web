@@ -166,9 +166,12 @@ void main() {
       expect(k.contains('.selectOffer('), isTrue);
     });
 
-    test('işi tamamlama çağrısı korundu', () {
+    test('⚠ işi tamamlama çağrısı KALDIRILDI (§11)', () {
+      // Nihai akışta ayrı tamamlama adımı yok; teklif seçimi ilanı
+      // tamamlanmış duruma getirir.
       final k = _oku('lib/screens/listing_detail_screen.dart');
-      expect(k.contains('.completeWork(l.id, actorId: me.id)'), isTrue);
+      expect(k.contains('.completeWork('), isFalse);
+      expect(k.contains('.startWork('), isFalse);
     });
   });
 }

@@ -1,4 +1,5 @@
 import '../../domain/listing_state_machine.dart';
+import '../models/offer.dart';
 import '../models/listing.dart';
 import '../ports/mock_ports.dart';
 import '../models/notification.dart';
@@ -32,11 +33,12 @@ class ListingExpiryService {
     final t = now ?? DateTime.now();
     var n = 0;
     for (final l in _listings.all) {
-      if (l.status != ListingStatus.open) continue; // completed/cancelled/expired dokunulmaz
+      if (l.status != ListingStatus.active) continue; // completed/cancelled/expired dokunulmaz
       if (t.isBefore(l.expiresAt)) continue;        // 31s59dk → hâlâ açık
       if (!ListingStateMachine.canTransition(
           l.status, ListingStatus.expired)) continue;
-      _offerPort.cancelAllForListing(l.id, reason: 'İlan süresi doldu');
+      _offerPort.cancelAllForListing(l.id,
+          reason: 'İlan süresi doldu', yeniDurum: OfferStatus.expired);
       _listings.setStatus(l.id, ListingStatus.expired);
       _notifs?.push(
           userId: l.ownerId, type: NotifType.listingExpired, refId: l.id,

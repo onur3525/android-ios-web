@@ -9,6 +9,7 @@ import '../data/controllers/free_right_controller.dart';
 import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
+import 'listing_detail_screen.dart';
 
 /// Hizmet veren — Cüzdanım (HTML vWallet): kullanılabilir / blokeli /
 /// toplam bakiye + ledger hareketleri ve tür filtreleri.
@@ -355,11 +356,41 @@ class _WalletScreenState extends State<WalletScreen>
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(t.title,
-                                      style: const TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: HC.dark)),
+                                  // ── ⚠ İLGİLİ İLANA GİTME (§15) ──
+                                  //
+                                  // Bloke, tahsilat ve iade hareketleri
+                                  // bir ilana bağlıdır; kullanıcı hangi
+                                  // iş için para hareketi olduğunu
+                                  // görebilmeli.
+                                  //
+                                  // ⚠ BAĞLANTI YALNIZ İLİŞKİ VARSA
+                                  // çizilir. Yükleme hareketinin ilanı
+                                  // yoktur ve sunucu ilişkiyi
+                                  // göndermemişse de gösterilmez —
+                                  // bozuk yönlendirme üretilmez.
+                                  Row(children: [
+                                    Flexible(
+                                      child: Text(t.title,
+                                          style: const TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: HC.dark)),
+                                    ),
+                                    if (t.ilanaGidilebilir) ...[
+                                      const SizedBox(width: 5),
+                                      GestureDetector(
+                                        onTap: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => ListingDetailScreen(
+                                                listingId: t.listingId!),
+                                          ),
+                                        ),
+                                        child: const Icon(Icons.open_in_new,
+                                            size: 15, color: HC.blue),
+                                      ),
+                                    ],
+                                  ]),
                                   Text(t.sub,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

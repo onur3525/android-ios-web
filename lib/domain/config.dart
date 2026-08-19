@@ -16,6 +16,21 @@ const int kMesajMaxLength = 1000;
 const int kMinAciklamaKelime = 5;
 
 abstract final class DomainConfig {
+
+  // ── ⚠ YORUM KURALLARI (API sözleşmesi §14) ──
+  //
+  // Belge HTML prototipine ÜSTÜNDÜR (§31). Prototipte `maxlength=500`
+  // yazıyordu; sözleşme 1000 diyor. Asgari kelime kuralı prototipte
+  // HİÇ YOKTU.
+  static const int kYorumMinKelime = 5;
+  static const int kYorumMaxKarakter = 1000;
+
+  /// ⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14, kabul testi 15).
+  ///
+  /// Yorum anında kaydedilir ama hizmet verenin ortalamasına ve
+  /// yorum listesine bu süre dolmadan GİRMEZ. Amaç, sıcağı sıcağına
+  /// yazılan yorumun düzeltilme/silinme baskısı olmadan yerleşmesi.
+  static const Duration yorumYayinGecikmesi = Duration(days: 1);
   /// İletişim açma ücreti; teklif verilirken bu tutar bloke edilir.
   static const int contactFee = 50;
 

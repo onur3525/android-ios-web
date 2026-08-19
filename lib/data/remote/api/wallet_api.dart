@@ -35,7 +35,9 @@ class WalletApi {
             if (packageId != null) 'packageId': packageId,
             if (packageId == null && amountTl != null) 'amountTl': amountTl,
             if (savedCardToken != null) 'savedCardToken': savedCardToken,
-            'idempotencyKey': idempotencyKey,
+            // ⚠ ANAHTAR GÖVDEDEN ÇIKARILDI: yalnız `Idempotency-Key`
+            // BAŞLIĞINDA gider (§30). Aynı değeri iki yerde taşımak
+            // sunucuda hangisinin okunacağı belirsizliği yaratır.
             if (returnUrl != null) 'returnUrl': returnUrl,
           },
           idempotencyKey: idempotencyKey);
@@ -48,12 +50,29 @@ class WalletApi {
   // ⚠ Ham kart verisi GÖNDERİLMEZ/ALINMAZ; yalnız maskeli bilgi ve token.
   Future<Map<String, dynamic>> savedCards() => c.get('/wallet/cards');
 
-  Future<Map<String, dynamic>> startCardSetup() => c.post(
+  /// Kart kaydı oturumu başlatır.
+  ///
+  /// ── ⚠ IDEMPOTENCY ANAHTARI BAŞLIKTA GİDER ──
+  ///
+  /// Eskiden gövdede `idempotencyKey` alanı olarak gönderiliyordu ve
+  /// değer `DateTime.now().microsecondsSinceEpoch` ile ÜRETİLİYORDU.
+  /// İkisi de yanlıştı:
+  ///
+  ///   1. Gövdedeki alan tekrar korumasını SAĞLAMAZ — sözleşme
+  ///      `Idempotency-Key` BAŞLIĞINI okur (§30).
+  ///   2. Her çağrıda zaman damgasından yeni anahtar üretmek,
+  ///      korumayı tamamen ortadan kaldırır: aynı kullanıcı aksiyonu
+  ///      tekrarlandığında anahtar da değiştiği için sunucu bunu YENİ
+  ///      bir işlem sanar.
+  ///
+  /// Artık `ApiClient.newIdempotencyKey()` ile üretilen anahtar
+  /// başlığa yazılır ve gövdede idempotency alanı BULUNMAZ.
+  Future<Map<String, dynamic>> startCardSetup(
+          {required String idempotencyKey}) =>
+      c.post(
         '/wallet/cards/setup',
-        body: {
-          'returnUrl': 'hizmetcep://payment/return',
-          'idempotencyKey': DateTime.now().microsecondsSinceEpoch.toString(),
-        },
+        body: {'returnUrl': 'hizmetcep://payment/return'},
+        idempotencyKey: idempotencyKey,
       );
 
   Future<void> deleteCard(String token) => c.delete('/wallet/cards/$token');
@@ -68,11 +87,20 @@ class WalletApi {
     required String paymentToken,
     required String holderName,
     required bool makeDefault,
-  }) => c.post('/wallet/cards', body: {
-        'paymentToken': paymentToken,
-        'holderName': holderName,
-        'makeDefault': makeDefault,
-        'idempotencyKey': DateTime.now().microsecondsSinceEpoch.toString(),
-      });
+    required String idempotencyKey,
+  }) =>
+      // ⚠ ANAHTAR BAŞLIKTA (§30).
+      //
+      // Gövdedeki `idempotencyKey` alanı kaldırıldı ve zaman
+      // damgasından üretim BIRAKILDI: her çağrıda yeni anahtar
+      // üretmek, tekrar korumasını tamamen ortadan kaldırıyordu —
+      // kullanıcı iki kez basınca sunucu bunu iki AYRI işlem sanardı.
+      c.post('/wallet/cards',
+          body: {
+            'paymentToken': paymentToken,
+            'holderName': holderName,
+            'makeDefault': makeDefault,
+          },
+          idempotencyKey: idempotencyKey);
 
 }

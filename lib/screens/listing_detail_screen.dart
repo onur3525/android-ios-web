@@ -134,7 +134,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 size: 18, color: RC.danger),
             const SizedBox(width: 10),
             Text(
-                l.status == ListingStatus.open
+                l.status == ListingStatus.active
                     ? 'İlanı Sil'
                     : 'İlanı İptal Et',
                 style:
@@ -222,7 +222,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       gerekce = 'Diğer: ${metin.trim()}';
     }
 
-    final acik = l.status == ListingStatus.open;
+    final acik = l.status == ListingStatus.active;
     // ⚠ ONAY PENCERESİ SADE: yalnız SORU + iki düğme.
     //
     // Eskiden gerekçe tekrar yazılıyor, ardından iki cümlelik bir
@@ -235,9 +235,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
     await _run(context, () async {
       final ctl = context.read<ListingController>();
-      final err = acik
-          ? await ctl.delete(l.id, actorId: actorId, reason: gerekce)
-          : await ctl.cancel(l.id, actorId: actorId, reason: gerekce);
+      // ⚠ TEK KANONİK SİLME: `DELETE /listings/{id}`.
+      //
+      // Eskiden açık ilanda `delete`, kapanmış ilanda `cancel`
+      // çağrılıyordu — ikisi de aynı işi yapan iki ayrı uçtu.
+      // `cancel` kaldırıldı; durum ayrımı SUNUCUNUN işidir.
+      final err = await ctl.delete(l.id, actorId: actorId, reason: gerekce);
 
       // ⚠ `context.mounted` — `mounted` TEK BAŞINA YETMEZ.
       //
@@ -343,9 +346,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // Referans `listingMenu()`: üç nokta → "İlanı Sil" →
                 // neden seçimi (`askDelReason`) → silme.
                 RefTap(
-                  onTap: (l.status == ListingStatus.open ||
-                          l.status == ListingStatus.providerSelected ||
-                          l.status == ListingStatus.inProgress)
+                  // ⚠ Menü YAŞAYAN ilanda açılır. Eski koşul
+                  // `providerSelected`/`inProgress` de sayıyordu; o
+                  // durumlar kalktı (§24). Tamamlanmış işte silme
+                  // zaten domain katmanında reddedilir.
+                  onTap: l.status == ListingStatus.active
                       ? () => _ilanMenusu(context, l, me.id)
                       : null,
                   borderRadius: BorderRadius.circular(RR.circle),
@@ -512,7 +517,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
                   // stChip(x.st)
                   const SizedBox(height: 6),
-                  _DurumChipi(status: l.status),
+                  _DurumChipi(status: l.status, tamamlandi: l.isTamamlanmisIs),
                 ],
               ),
             ),
@@ -554,69 +559,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               ],
             const SizedBox(height: 8),
 
-            // ── Duruma göre aksiyonlar ──
+            // ── ⚠ "İŞİ TAMAMLA" AKSİYONU KALDIRILDI ──
             //
-            // ⚠ AYRI "İŞİ BAŞLAT" ADIMI KALDIRILDI.
+            // API sözleşmesi §11: nihai akış İletişimi Aç → Teklifi Seç
+            // → Yorum Yap. Ayrı bir "İşi Başlat" ya da "İşi Tamamla"
+            // aşaması YOKTUR; teklif seçildiği anda iş tamamlanmış
+            // sayılır ve Tamamlanan İşler'e geçer.
             //
-            // Teklif seçildikten sonra iş fiilen başlamıştır; ayrıca
-            // "başlat" demek fazladan bir adımdı ve unutulduğunda ilan
-            // tamamlanamaz duruma düşüyordu. Artık seçim sonrası tek
-            // aksiyon vardır: İŞİ TAMAMLA.
+            // ⚠ Değerlendirme düğmesi AŞAĞIDA DURUYOR — kaldırılan şey
+            // yalnız tamamlama aksiyonudur, değerlendirme akışı değil.
             //
-            // ⚠ `inProgress` durumu HÂLÂ DESTEKLENİR: eski kayıtlar ve
-            // backend bu durumu gönderebilir; o hâlde de aynı düğme
-            // görünür.
-            if (l.status == ListingStatus.providerSelected ||
-                l.status == ListingStatus.inProgress)
-              SysButton('İşi Tamamla',
-                  busy: _busy,
-                  onPressed: () => _run(context, () async {
-                        final err =
-                            await listingCtl.completeWork(l.id, actorId: me.id);
-                        if (err != null) {
-                          return err.message;
-                        }
-                        // ⚠ `context.mounted` — kapatma sırasında
-                        // State canlı ama bu alt ağaç kalkmış olabilir.
-                        if (!context.mounted) {
-                          return null;
-                        }
-                        sysToastOk(context, 'İşiniz tamamlandı');
-
-                        // ⚠ DEĞERLENDİRME EKRANI OTOMATİK AÇILIR.
-                        //
-                        // Kullanıcıyı "şimdi nereye?" sorusuyla baş başa
-                        // bırakmamak için tamamlama sonrası doğrudan
-                        // değerlendirmeye geçilir.
-                        //
-                        // ⚠ SEÇİLİ TEKLİF YOKSA SESSİZ GEÇİLMEZ.
-                        //
-                        // Önceki hâl `if (secili != null)` ile atlıyordu:
-                        // kullanıcı "İşiniz tamamlandı" görüyor, ama
-                        // değerlendirme ekranı hiç açılmıyordu. Ne
-                        // olduğunu anlamanın yolu yoktu.
-                        //
-                        // Bu durum zaten OLUŞMAMALIDIR — domain katmanı
-                        // `selectedOfferId` boşken `completed` geçişini
-                        // reddeder (bkz. `_transition`). Buraya
-                        // düşülüyorsa veri tutarsızdır ve kullanıcıya
-                        // AÇIKÇA söylenir.
-                        final secili = l.selectedOfferId;
-                        if (secili == null || secili.isEmpty) {
-                          return 'Bu ilanda seçilmiş teklif bulunamadı — '
-                              'değerlendirme açılamadı. Lütfen destek '
-                              'ekibiyle iletişime geçin.';
-                        }
-                        await Navigator.push<void>(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => ReviewScreen(
-                                listingId: l.id, offerId: secili),
-                          ),
-                        );
-                        return null;
-                      })),
-            if (l.status == ListingStatus.completed && l.selectedOfferId != null)
+            // ⚠ Bu paket enum göçü değildir: `providerSelected` ve
+            // `inProgress` sözleşmedeki adlara Paket 2'de geçecek.
+            // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
+            if (l.isTamamlanmisIs)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: SysButton('Hizmeti Değerlendir',
@@ -704,32 +660,49 @@ String _ldIkon(String baslik) {
 /// .ld-chip.exp {#F2F4F7 / #6B7683}  .ld-dot{#98A2B3}
 /// ```
 class _DurumChipi extends StatelessWidget {
-  const _DurumChipi({required this.status});
+  const _DurumChipi({required this.status, required this.tamamlandi});
+
+  /// ⚠ TAMAMLANMIŞLIK DURUMDAN GELMEZ (§24): `Listing.isTamamlanmisIs`
+  /// ile türetilir ve rozete AYRI parametre olarak geçer. "Tamamlandı"
+  /// etiketini `status` üzerinden çizmek eski modeli geri getirirdi.
+  final bool tamamlandi;
 
   final ListingStatus status;
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg, nokta, metin) = switch (status) {
-      ListingStatus.completed => (
-          const Color(0xFFEAF1FB),
-          const Color(0xFF1D6BE3),
-          const Color(0xFF1D6BE3),
-          'Tamamlandı',
-        ),
-      ListingStatus.expired || ListingStatus.cancelled => (
-          const Color(0xFFF2F4F7),
-          const Color(0xFF6B7683),
-          const Color(0xFF98A2B3),
-          'Süresi Doldu',
-        ),
-      _ => (
-          const Color(0xFFE9F9EF),
-          const Color(0xFF16A34A),
-          const Color(0xFF22C55E),
-          'Açık İlan',
-        ),
-    };
+    // ⚠ SIRA ÖNEMLİ: tamamlanmışlık yaşam durumundan ÖNCE bakılır.
+    // Tamamlanmış bir iş sonradan silinse de "Tamamlandı" kalır.
+    final (bg, fg, nokta, metin) = tamamlandi
+        ? (
+            const Color(0xFFEAF1FB),
+            const Color(0xFF1D6BE3),
+            const Color(0xFF1D6BE3),
+            'Tamamlandı',
+          )
+        : switch (status) {
+            ListingStatus.expired => (
+                const Color(0xFFF2F4F7),
+                const Color(0xFF6B7683),
+                const Color(0xFF98A2B3),
+                'Süresi Doldu',
+              ),
+            // ⚠ Silinen/kaldırılan ilan "süresi doldu" DEĞİLDİR;
+            // ayrı bir etikettir. Eskiden `cancelled` ile aynı kutuya
+            // konuyordu ve kullanıcı neden kapandığını anlayamıyordu.
+            ListingStatus.userDeleted || ListingStatus.adminRemoved => (
+                const Color(0xFFF2F4F7),
+                const Color(0xFF6B7683),
+                const Color(0xFF98A2B3),
+                'Kapatıldı',
+              ),
+            ListingStatus.active => (
+                const Color(0xFFE9F9EF),
+                const Color(0xFF16A34A),
+                const Color(0xFF22C55E),
+                'Açık İlan',
+              ),
+          };
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(

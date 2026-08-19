@@ -396,7 +396,7 @@ abstract final class SearchService {
     }
     return all
         .where((l) =>
-            l.status == ListingStatus.open &&
+            l.status == ListingStatus.active &&
             (_match(l.title, t) || _match(l.desc, t)))
         .toList();
   }

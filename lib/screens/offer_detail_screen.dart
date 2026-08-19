@@ -233,6 +233,25 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                                         weight: RF.w400,
                                         color: const Color(0xFF3A4658))),
                               ],
+                              // ── ⚠ TAMAMLANAN İŞ SAYISI (§11) ──
+                              //
+                              // "Teklif seçildiği anda tamamlanan iş
+                              // sayısı +1 olur." Sayı SAKLANMAZ,
+                              // türetilir: hizmet verenin seçilmiş
+                              // teklifi olan tamamlanmış ilanlar
+                              // sayılır. Böylece seçim anında
+                              // kendiliğinden artar ve saklanan sayı
+                              // ile gerçek veri ayrışamaz.
+                              if (_tamamlananIs(context, offer.providerId) >
+                                  0) ...[
+                                _prAyrac(),
+                                Text(
+                                    '${_tamamlananIs(context, offer.providerId)} iş tamamladı',
+                                    style: refText(
+                                        size: 11.8,
+                                        weight: RF.w400,
+                                        color: const Color(0xFF3A4658))),
+                              ],
                             ],
                           ),
                         ],
@@ -412,7 +431,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   'İletişimi Aç',
                   iconAsset: 'assets/svg/ic_lockw.svg',
                   busy: _busyContact,
-                  onPressed: offer.status == OfferStatus.cancelled
+                  // ⚠ Kapanmış teklifte iletişim AÇILAMAZ. Eski değer
+                  // `cancelled` idi; nihai sözleşmede kapanış iki
+                  // durumdur: `expired` (süre) ve `closed` (sistemsel).
+                  onPressed: (offer.status == OfferStatus.closed ||
+                          offer.status == OfferStatus.expired)
                       ? null
                       : () async {
                           if (_busyContact) {
@@ -447,7 +470,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 // ⚠ İŞ KURALI: müşteri ÖDEMEZ. İletişim bedeli hizmet
                 // verenin teklif blokesinden TEK SEFER tüketilir.
                 const _UcretsizSerit('İletişimi açmak ücretsizdir.'),
-              ] else if (l.status == ListingStatus.open &&
+              // ⚠ SEÇİM YAPILMIŞ İLANDA "Teklifi Seç" ÇIKMAZ (§22).
+              // İlan `active` kalsa bile seçilmiş teklifi varsa iş
+              // tamamlanmıştır; ikinci seçim yapılamaz.
+              ] else if (l.status == ListingStatus.active &&
+                  !l.isTamamlanmisIs &&
                   offer.status == OfferStatus.active) ...[
                 const SizedBox(height: 13),
                 RefPrimaryButton(
@@ -626,6 +653,30 @@ String _yorumcuAdi(String? tamAd, {required bool acik}) {
 
 /// `%N olumlu yorum` — 4 ve 5 yıldızlı yorumların oranı.
 /// Yorum yoksa `null` döner ve satır HİÇ çizilmez (uydurma yüzde yok).
+/// Hizmet verenin TAMAMLANAN İŞ sayısı (API sözleşmesi §11).
+///
+/// ⚠ TÜRETİLİR, SAKLANMAZ: seçilmiş teklifi bu hizmet verene ait olan
+/// ve tamamlanmış ilanlar sayılır. Saklanan bir sayaç, iptal/silme
+/// durumlarında gerçek veriyle ayrışırdı.
+int _tamamlananIs(BuildContext c, String providerId) {
+  final ilanlar = c.read<ListingController>().all;
+  final teklifler = c.read<OfferController>();
+  var n = 0;
+  for (final l in ilanlar) {
+    // ⚠ Tamamlanmışlık ilişkiden gelir (§24); yaşam durumuna bakılmaz.
+    if (!l.isTamamlanmisIs) {
+      continue;
+    }
+    final secili = teklifler
+        .offersForListing(l.id)
+        .where((o) => o.id == l.selectedOfferId);
+    if (secili.isNotEmpty && secili.first.providerId == providerId) {
+      n++;
+    }
+  }
+  return n;
+}
+
 int? _olumluOran(List<Review> revs) {
   if (revs.isEmpty) {
     return null;

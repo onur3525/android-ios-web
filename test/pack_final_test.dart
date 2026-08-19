@@ -43,7 +43,7 @@ void main() {
       final l3 = repo.create(
           ownerId: 'c', title: 'Tadilat', location: 'Konak',
           desc: 'Kombi dairesi tadilatı yapılacak hemen');
-      l3.status = ListingStatus.cancelled; // kapalı → sonuçta olmamalı
+      l3.status = ListingStatus.userDeleted; // kapalı → sonuçta olmamalı
       final r = SearchService.listings(repo.all, 'kombi');
       // Sözleşme: AÇIK ilanlarda başlık VEYA açıklama eşleşmesi.
       // l1 başlıktan, l2 açıklamadan eşleşir; l3 kapalı olduğu için elenir.

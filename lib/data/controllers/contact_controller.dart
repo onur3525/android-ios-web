@@ -21,13 +21,27 @@ class ContactController extends BaseController {
   Future<DomainError?> refresh(String offerId) =>
       runLoad(() => _contacts.refresh(offerId));
 
-  Future<DomainError?> openShared(String offerId, {required String actorId}) =>
-      runAction(
-        'contact:open:$offerId',
-        () => _contacts.openShared(offerId, actorId: actorId),
-        onSuccess: () async {
-          await _contacts.refresh(offerId);
-          await _wallets.load(actorId); // tüketim sonrası bakiye sunucudan
-        },
-      );
+  /// İLETİŞİM AÇMA — idempotent.
+  ///
+  /// ⚠ "ZATEN AÇIK" HATA SAYILMAZ (§10). Sunucu ikinci istekte
+  /// `COMMUNICATION_ALREADY_OPEN` dönebilir; istenen durum zaten
+  /// sağlandığı için bunu BAŞARI gibi ele alırız. Aksi hâlde
+  /// kullanıcı çift tıkladığında gereksiz kırmızı hata görürdü.
+  Future<DomainError?> openShared(String offerId,
+      {required String actorId}) async {
+    final err = await runAction(
+      'contact:open:$offerId',
+      () => _contacts.openShared(offerId, actorId: actorId),
+      onSuccess: () async {
+        await _contacts.refresh(offerId);
+        await _wallets.load(actorId); // tüketim sonrası bakiye sunucudan
+      },
+    );
+    if (err is IletisimZatenAcikError) {
+      // Durumu tazele ki ekran açık hâli çizsin.
+      await _contacts.refresh(offerId);
+      return null;
+    }
+    return err;
+  }
 }

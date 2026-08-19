@@ -116,12 +116,18 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           // Referans akış: bir teklif seçildiği anda ilan `done`
           // grubuna geçer (`submitReviewDo`: `x.st='done'`). Açık
           // sekmesi YALNIZ hâlâ teklif kabul eden ilanları gösterir.
-          0 => l.status == ListingStatus.open,
-          1 => l.status == ListingStatus.providerSelected ||
-              l.status == ListingStatus.inProgress ||
-              l.status == ListingStatus.completed ||
-              l.status == ListingStatus.cancelled,
-          _ => l.status == ListingStatus.expired,
+          // ── ⚠ SEKME FİLTRELERİ (§24) ──
+          //
+          // Açık işler: YAŞAYAN ve henüz teklif seçilmemiş ilanlar.
+          // Teklif seçilince ilan buradan çıkar ama durumu ACTIVE
+          // KALIR — tamamlanmışlık ayrı alandır.
+          0 => l.status == ListingStatus.active && !l.isTamamlanmisIs,
+          // Tamamlanan işler: seçilmiş teklifi olan HER ilan.
+          // ⚠ Yaşam durumuna BAKILMAZ: sonradan silinmiş ya da admin
+          // tarafından kaldırılmış olsa da iş tamamlanmıştır.
+          1 => l.isTamamlanmisIs,
+          // Süresi dolanlar: tamamlanmamış ve süresi geçmiş ilanlar.
+          _ => l.status == ListingStatus.expired && !l.isTamamlanmisIs,
         }).toList();
 
     int teklif(Listing l) => offerCtl.offersForListing(l.id).length;

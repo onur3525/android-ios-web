@@ -153,7 +153,7 @@ class _JobsScreenState extends State<JobsScreen> {
     // Kategori veya bölge seçimi HENÜZ YAPILMAMIŞSA o kısıt
     // uygulanmaz (onboarding tamamlanmadan ekran boş kalmasın).
     bool acikVeBaskasinin(Listing l) =>
-        l.status == ListingStatus.open && l.ownerId != me.id;
+        l.status == ListingStatus.active && l.ownerId != me.id;
 
     /// BÖLGE EŞLEŞMESİ
     ///
@@ -205,7 +205,10 @@ class _JobsScreenState extends State<JobsScreen> {
     // karşılığı yoktur, kopyalanmadı.
     final teklifVerdiklerim = offerCtl
         .offersByProvider(me.id)
-        .where((o) => o.status != OfferStatus.cancelled)
+        // ⚠ Kapanmış teklifler sayılmaz. Nihai sözleşmede kapanış
+        // iki durumdur (§24): `expired` ve `closed`.
+        .where((o) =>
+            o.status != OfferStatus.closed && o.status != OfferStatus.expired)
         .map((o) => o.listingId)
         .toSet();
     jobs = switch (_filtre) {

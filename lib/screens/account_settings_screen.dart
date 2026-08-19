@@ -622,11 +622,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (me == null) {
       return false;
     }
-    const canliIlan = {
-      ListingStatus.open,
-      ListingStatus.providerSelected,
-      ListingStatus.inProgress,
-    };
+    // ⚠ CANLI İLAN = YAŞAYAN İLAN (§24). Eski küme iş gidişatı
+    // durumlarını da sayıyordu; onlar kalktı. Tamamlanmış iş "canlı"
+    // sayılmaz — kullanıcıyı dondurmadan alıkoymaz.
+    const canliIlan = {ListingStatus.active};
     final ilanlar = context.read<ListingController>().byOwner(me.id);
     if (ilanlar.any((l) => canliIlan.contains(l.status))) {
       return true;

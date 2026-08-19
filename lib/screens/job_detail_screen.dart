@@ -34,7 +34,8 @@ import '../core/telefon_bicimi.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not) → teklifle 50 TL bloke;
-/// teklif verdiyse: teklif kartı, İletişim Bilgilerini Aç, Teklifi Geri Çek.
+/// teklif verdiyse: teklif kartı ve İletişim Bilgilerini Aç.
+/// ⚠ Teklif geri çekilemez (API sözleşmesi §1).
 class JobDetailScreen extends StatefulWidget {
   final String listingId;
   const JobDetailScreen({super.key, required this.listingId});
@@ -58,7 +59,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   bool get _zorunlularDolu =>
       _amt.text.trim().isNotEmpty && _note.text.trim().isNotEmpty;
   String? _amtError, _noteError, _formError;
-  bool _busyOffer = false, _busyContact = false, _busyWithdraw = false;
+  bool _busyOffer = false, _busyContact = false;
 
   /// Ücretsiz hak / cüzdan kaynak kararı yüklenirken `true`.
   /// `_kaynakDurumunuYukle()` tamamlandığında `false` olur.
@@ -202,7 +203,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       );
     }
     final mine = offerCtl.myOfferFor(l.id, me.id);
-    final (label, color) = listingStatusUi(l.status);
+    // ⚠ Rozet tamamlanmışlığı da kapsar (§24) — hizmet veren, işin
+    // tamamlandığını ilan durumundan değil ilişkiden görür.
+    final (label, color) = listingRozetiUi(l);
     final owner = auth.accountById(l.ownerId);
 
     // ⚠ MASKELEME: iletişim bilgisi AÇILMADAN önce ilan sahibinin adı
@@ -244,7 +247,8 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   // TAMAMLANMIŞ ilan sayısı hesaplanır.
                   tamamlananIs: listingCtl
                       .byOwner(l.ownerId)
-                      .where((x) => x.status == ListingStatus.completed)
+                      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
+                      .where((x) => x.isTamamlanmisIs)
                       .length,
                   teklifSayisi: offerCtl.offersForListing(l.id).length,
                 ),
@@ -419,16 +423,25 @@ class _JobDetailScreenState extends State<JobDetailScreen>
             // ── ONAY DURUMU UYARISI ──
             // Onaysız hesapta teklif formu GÖSTERİLMEZ; bunun yerine
             // durum ve gerekçe açıkça anlatılır.
+            // ── ⚠ ACTIVE + SEÇİLMİŞ TEKLİF = TEKLİF ALINMAZ (§22) ──
+            //
+            // İlan `active` kalmaya devam eder ama seçilmiş teklifi
+            // varsa iş TAMAMLANMIŞTIR. Yalnız duruma bakan koşul
+            // "ACTIVE olduğu için teklif verilebilir" yanılgısına
+            // düşüyordu; tamamlanmışlık ayrıca denetlenir.
             if (mine == null &&
-                l.status == ListingStatus.open &&
+                l.status == ListingStatus.active &&
+                !l.isTamamlanmisIs &&
                 _approval != null &&
                 !_approval!.canPlaceOffer) ...[
               ProviderStatusCard(state: _approval!),
               const SizedBox(height: 14),
             ],
 
+            // ⚠ Aynı kapı burada da: tamamlanmış işe teklif verilemez.
             if (mine == null &&
-                l.status == ListingStatus.open &&
+                l.status == ListingStatus.active &&
+                !l.isTamamlanmisIs &&
                 (_approval?.canPlaceOffer ?? false)) ...[
               const Text('Ücretsiz Teklif Ver',
                   style: TextStyle(
@@ -759,43 +772,16 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 const SizedBox(height: 10),
                 const InfoBox(child: Text('Teklif verildi')),
               ],
-              if (mine.status == OfferStatus.active &&
-                  !contactCtl.isOpen(mine.id)) ...[
-                const SizedBox(height: 10),
-                RefDangerButton(
-                  'Teklifi Geri Çek',
-                  onPressed: _busyWithdraw
-                      ? null
-                      : () async {
-                          final ok = await hcConfirm(context,
-                              title: 'Teklif geri çekilsin mi?',
-                              desc: mine.escrowConsumed
-                                  ? 'İletişim açıldığı için kullanılan ücret iade edilmez.'
-                                  : 'Bloke edilen ${DomainConfig.contactFee} TL kullanılabilir bakiyenize iade edilecek.',
-                              yes: 'Geri Çek');
-                          if (!ok || !mounted || !context.mounted) {
-                            return;
-                          }
-                          setState(() => _busyWithdraw = true);
-                          final err = await context
-                              .read<OfferController>()
-                              .withdrawOffer(offerId: mine.id, actorId: me.id);
-                          if (!mounted) {
-                            return;
-                          }
-                          setState(() => _busyWithdraw = false);
-                          if (!context.mounted) {
-                            return;
-                          }
-                          if (err != null) {
-                            sysToastErr(context, SysKind.genericError,
-                                extra: err.message);
-                          } else {
-                            sysToastOk(context, 'Teklifiniz geri çekildi');
-                          }
-                        },
-                ),
-              ],
+              // ── ⚠ "TEKLİFİ GERİ ÇEK" KALDIRILDI ──
+              //
+              // API sözleşmesi §1 ve kabul testi 2: "Teklif geri
+              // çekilemez ve değiştirilemez." Düğme referans HTML'de
+              // vardı; sözleşme HTML'e ÜSTÜNDÜR (§31).
+              //
+              // ⚠ Uç, repository metodu ve controller aksiyonu da
+              // KALDIRILDI — yalnız düğme gizlenmedi. Süresi dolmuş
+              // teklif KAYDINI silme (§12) ayrı bir iştir ve Paket
+              // 13'te ele alınacaktır; withdraw ile aynı şey değildir.
             ] else
               const SysEmpty(
                   title: 'Bu ilan teklif kabul etmiyor',

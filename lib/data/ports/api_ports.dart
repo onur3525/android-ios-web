@@ -1,4 +1,5 @@
 import '../../domain/failures.dart';
+import '../remote/api_client.dart';
 import '../models/account.dart';
 import '../models/payment.dart';
 import '../models/token_package.dart';
@@ -328,27 +329,16 @@ class ApiListingPort extends ListingPort {
     return (listing: l, error: err);
   }
 
-  @override
-  Future<DomainError?> startWork(String listingId, {required String actorId}) =>
-      repo.start(listingId);
-  /// ⚠ BACKEND NOTU — SEÇİLİ TEKLİF ZORUNLULUĞU.
-  ///
-  /// Mock tarafında `providerSelected`/`completed` geçişleri
-  /// `selectedOfferId` boşken REDDEDİLİR (bkz. `MockListingPort._transition`).
-  /// API modunda bu denetim SUNUCUNUN sorumluluğundadır; istemci
-  /// sunucunun döndürdüğü hatayı gösterir.
-  ///
-  /// ⚠ Ayrıca: Flutter nihai akışı `providerSelected → completed`
-  /// kullanır (ayrı "İşi Başlat" adımı YOKTUR). Backend state machine
-  /// bu doğrudan geçişi desteklemelidir; `inProgress` ara durumu
-  /// istemcide hâlâ kabul edilir ama zorunlu değildir.
-  @override
-  Future<DomainError?> completeWork(String listingId, {required String actorId}) =>
-      repo.complete(listingId);
-  @override
-  Future<DomainError?> cancel(String listingId,
-          {required String actorId, String? reason}) =>
-      repo.cancel(listingId, reason: reason);
+  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
+  //
+  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
+  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
+  // seçildiği anda iş tamamlanmış sayılır.
+  //
+  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
+  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
+  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir
+  // (`DELETE /listings/{id}`). Aynı iş için iki uç bırakılmaz.
 
   /// Süre dolumu SUNUCUDA (30 saat zamanlayıcısı) işlenir; istemci tetiklemez.
   @override
@@ -413,11 +403,8 @@ class ApiOfferPort extends OfferPort {
     required String offerId,
     required String actorId,
   }) =>
-      repo.select(offerId);
-
-  @override
-  Future<DomainError?> withdrawOffer({required String offerId, required String actorId}) =>
-      repo.withdraw(offerId);
+      // ⚠ Nihai uç ilana aittir; `listingId` artık ZORUNLU.
+      repo.select(listingId, offerId);
 }
 
 class ApiWalletPort extends WalletPort {
@@ -667,7 +654,9 @@ class ApiSavedCardsPort implements SavedCardsPort {
 
   @override
   Future<String?> startCardSetup() async {
-    final j = await _api.startCardSetup();
+    // ⚠ Anahtar İŞLEM BAŞINA üretilir ve BAŞLIKTA gider (§30).
+    final j =
+        await _api.startCardSetup(idempotencyKey: ApiClient.newIdempotencyKey());
     return j['redirectUrl'] as String?;
   }
 
@@ -697,6 +686,8 @@ class ApiSavedCardsPort implements SavedCardsPort {
       paymentToken: paymentToken,
       holderName: holderName,
       makeDefault: makeDefault,
+      // ⚠ İşlem başına tek anahtar; başlıkta gider (§30).
+      idempotencyKey: ApiClient.newIdempotencyKey(),
     );
     return SavedCard.fromJson(j);
   }

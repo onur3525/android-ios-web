@@ -79,8 +79,15 @@ class ApiClient {
   Future<Map<String, dynamic>> patch(String path, {Object? body}) =>
       _send('PATCH', path, body: body);
 
-  Future<Map<String, dynamic>> put(String path, {Object? body}) =>
-      _send('PUT', path, body: body);
+  /// ⚠ PUT DA IDEMPOTENCY ANAHTARI ALIR.
+  ///
+  /// Nihai sözleşmede teklif seçme `PUT /listings/{id}/selected-offer`
+  /// ile yapılır ve `Idempotency-Key` ZORUNLUDUR (§25). Anahtar
+  /// yalnız POST'a özgü değildir; durum değiştiren her istek
+  /// tekrarlanabilir olmalıdır.
+  Future<Map<String, dynamic>> put(String path,
+          {Object? body, String? idempotencyKey}) =>
+      _send('PUT', path, body: body, idempotencyKey: idempotencyKey);
 
   /// DELETE — bazı uçlar gövde bekler (ör. bekleyen yükleme iptali).
   Future<Map<String, dynamic>> delete(String path, {Object? body}) =>

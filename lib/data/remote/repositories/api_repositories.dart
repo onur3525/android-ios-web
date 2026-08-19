@@ -290,10 +290,9 @@ class ApiListingRepository extends ChangeNotifier {
     return (l, null);
   }
 
-  Future<DomainError?> cancel(String id, {String? reason}) =>
-      _mutate(() => _api.cancel(id, reason: reason));
-  Future<DomainError?> start(String id) => _mutate(() => _api.start(id));
-  Future<DomainError?> complete(String id) => _mutate(() => _api.complete(id));
+  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir
+  // (`DELETE /listings/{id}`). Aynı iş için iki uç bırakılmaz.
+  // ⚠ `start` / `complete` KALDIRILDI (§11, Paket 1 kalıntısı).
 
   Future<DomainError?> remove(String id, {String? reason}) async {
     final err = (await _guard(() => _api.remove(id, reason: reason))).$2;
@@ -377,10 +376,13 @@ class ApiOfferRepository extends ChangeNotifier {
     return (o, null);
   }
 
-  Future<DomainError?> select(String offerId) =>
-      _mutate(() => _api.select(offerId, idempotencyKey: ApiClient.newIdempotencyKey()));
-  Future<DomainError?> withdraw(String offerId) =>
-      _mutate(() => _api.withdraw(offerId, idempotencyKey: ApiClient.newIdempotencyKey()));
+  /// ⚠ NİHAİ UÇ İLANA AİTTİR: seçim, ilanın `selectedOffer` alanını
+  /// yazar. Bu yüzden `listingId` de gerekir (OpenAPI:
+  /// `PUT /listings/{listingId}/selected-offer`).
+  Future<DomainError?> select(String listingId, String offerId) =>
+      _mutate(() => _api.select(listingId,
+          offerId: offerId,
+          idempotencyKey: ApiClient.newIdempotencyKey()));
 
   Future<DomainError?> _mutate(Future<Map<String, dynamic>> Function() fn) async {
     final (res, err) = await _guard(fn);

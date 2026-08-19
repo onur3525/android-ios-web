@@ -244,19 +244,18 @@ void main() {
       expect(i, greaterThan(-1));
       final govde = k.substring(i, i + 900);
       for (final d in const [
-        'ListingStatus.open',
-        'ListingStatus.providerSelected',
-        'ListingStatus.inProgress',
+        // ⚠ CANLI = YAŞAYAN (§24). Eski küme iş gidişatı durumlarını
+        // da sayıyordu; onlar kalktı.
+        'ListingStatus.active',
         'OfferStatus.active',
         'OfferStatus.selected',
       ]) {
         expect(govde.contains(d), isTrue, reason: d);
       }
       for (final d in const [
-        'ListingStatus.completed',
-        'ListingStatus.cancelled',
+        'ListingStatus.userDeleted',
         'ListingStatus.expired',
-        'OfferStatus.cancelled',
+        'OfferStatus.closed',
       ]) {
         expect(govde.contains(d), isFalse, reason: '$d engel olmamalı');
       }

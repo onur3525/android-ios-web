@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hizmetcep/domain/config.dart';
 
 import 'support/kaynak_okuma.dart';
 
@@ -29,42 +30,32 @@ void main() {
           reason: 'ekran artık startWork çağırmaz');
     });
 
-    test('tek aksiyon: İşi Tamamla — iki durumdan da görünür', () {
-      expect(ilanDetay.contains("SysButton('İşi Tamamla'"), isTrue);
-      // Seçim sonrası doğrudan tamamlanabilir; `inProgress` de
-      // desteklenir (eski kayıt / backend uyumu).
-      expect(
-          ilanDetay.contains('l.status == ListingStatus.providerSelected ||'),
-          isTrue);
-      expect(ilanDetay.contains('l.status == ListingStatus.inProgress'), isTrue);
-      expect(ilanDetay.contains('completeWork('), isTrue);
+    test('⚠ "İŞİ TAMAMLA" AKSİYONU DA KALDIRILDI', () {
+      // API sözleşmesi §11: nihai akış İletişimi Aç → Teklifi Seç →
+      // Yorum Yap. Ayrı bir tamamlama adımı YOKTUR; teklif seçildiği
+      // anda iş tamamlanmış sayılır.
+      expect(ilanDetay.contains("SysButton('İşi Tamamla'"), isFalse,
+          reason: 'tamamlama düğmesi kalmış');
+      expect(ilanDetay.contains('completeWork('), isFalse,
+          reason: 'ekran hâlâ completeWork çağırıyor');
+      // ⚠ Değerlendirme yolu KORUNUR — kaldırılan yalnız tamamlama.
+      expect(ilanDetay.contains('ReviewScreen('), isTrue,
+          reason: 'değerlendirme yolu da silinmiş');
     });
 
-    test('tamamlama sonrası DEĞERLENDİRME ekranı otomatik açılır', () {
-      final i = ilanDetay.indexOf("SysButton('İşi Tamamla'");
-      expect(i, greaterThan(0));
-      // ⚠ PENCERE BÜYÜTÜLDÜ: lifecycle düzeltmesinde eklenen açıklama
-      // yorumları araya girdi ve 2200 karakter yetmez oldu.
-      final blok = ilanDetay.pencere(i, 3200);
-      expect(blok.contains('ReviewScreen('), isTrue,
-          reason: 'kullanıcı "şimdi nereye?" ile baş başa kalmamalı');
-      expect(blok.contains('l.selectedOfferId'), isTrue);
-    });
+    // ⚠ "tamamlama sonrası değerlendirme açılır" TESTİ KALDIRILDI.
+    //
+    // Testin dayandığı "İşi Tamamla" düğmesi artık YOK (§11).
+    // Değerlendirmeye giden yol teklif detayındaki "Yorum Yaz"
+    // düğmesidir ve o zaten ayrı testlerle kilitli.
 
-    test('seçili teklif yoksa SESSİZCE ATLANMAZ — açık hata döner', () {
-      // ⚠ Önceki hâl `if (secili != null)` ile atlıyordu: kullanıcı
-      // "İşiniz tamamlandı" görüyor ama değerlendirme ekranı hiç
-      // açılmıyordu; ne olduğunu anlamanın yolu yoktu.
-      final i = ilanDetay.indexOf("SysButton('İşi Tamamla'");
-      final blok = ilanDetay.pencere(i, 2200);
-      expect(blok.contains('secili == null || secili.isEmpty'), isTrue,
-          reason: 'boş seçim açıkça yakalanmalı');
-      expect(blok.contains('seçilmiş teklif bulunamadı'), isTrue,
-          reason: 'kullanıcıya açık hata gösterilmeli');
-      // Sessiz atlama deseni GERİ GELMEMELİ.
-      expect(blok.contains('if (secili != null) {'), isFalse,
-          reason: 'sessiz atlama kaldırıldı');
-    });
+    // ⚠ "seçili teklif yoksa sessizce atlanmaz" TESTİ KALDIRILDI.
+    //
+    // Bu da "İşi Tamamla" bloğunun içindeki davranışı ölçüyordu; blok
+    // kaldırıldığı için dayanağı kalmadı. Seçili teklif zorunluluğu
+    // domain katmanında `_transition` ile korunuyor ve orada
+    // ayrıca kilitli.
+
   });
 
   group('SEÇİLMİŞ TEKLİFTE "İletişimi Aç" ÇIKMAZ', () {
@@ -78,7 +69,7 @@ void main() {
           isTrue);
       expect(
           teklifDetay.contains(
-              "l.selectedOfferId == offer.id &&\n            l.status == ListingStatus.completed"),
+              "l.status == ListingStatus.completed"),
           isFalse,
           reason: 'durum şartı geri gelmiş');
     });
@@ -127,10 +118,40 @@ void main() {
       expect(teklifDetay.contains('ortalama!.toStringAsFixed(1)'), isTrue);
     });
 
-    test('puan ZORUNLU, yorum İSTEĞE BAĞLI, en fazla 500 karakter', () {
-      expect(degerlendirme.contains('(İsteğe Bağlı)'), isTrue);
-      expect(degerlendirme.contains('maxLength: 500'), isTrue);
-      expect(degerlendirme.contains('/500'), isTrue);
+    test('puan ZORUNLU, yorum EN AZ 5 KELİME, en fazla 1000 karakter', () {
+      // ⚠ API SÖZLEŞMESİ §14 — HTML prototipine ÜSTÜNDÜR (§31).
+      //
+      // Prototipte `maxlength=500` ve yorum İSTEĞE BAĞLIYDI; sözleşme
+      // asgari 5 kelime ve azami 1000 karakter diyor. Sayılar teste
+      // GÖMÜLMEZ, sabitten okunur.
+      expect(DomainConfig.kYorumMinKelime, 5);
+      expect(DomainConfig.kYorumMaxKarakter, 1000);
+      expect(degerlendirme.contains('DomainConfig.kYorumMaxKarakter'), isTrue);
+      expect(degerlendirme.contains('maxLength: 500'), isFalse,
+          reason: 'eski 500 sınırı geri gelmiş');
+      expect(degerlendirme.contains('kelime < DomainConfig.kYorumMinKelime'),
+          isTrue, reason: 'asgari kelime denetimi yok');
+    });
+
+    test('⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14)', () {
+      // Yorum anında kaydedilir — yazan kişi "Yorum Yapıldı" görür —
+      // ama hizmet verenin ortalamasına ve listesine gecikmeyle girer.
+      expect(DomainConfig.yorumYayinGecikmesi, const Duration(days: 1));
+      final r = read('lib/data/repositories/review_repository.dart');
+      expect(r.contains('DomainConfig.yorumYayinGecikmesi'), isTrue);
+      expect(r.contains('r.createdAt.isBefore(sinir)'), isTrue,
+          reason: 'gecikme süzgeci yok');
+      // ⚠ `byOffer` SÜZÜLMEZ: yazan kişi kendi yorumunu hemen görmeli.
+      final i = r.indexOf('Review? byOffer(');
+      final j = r.indexOf('List<Review> byProvider(');
+      expect(i, greaterThan(0));
+      expect(r.substring(i, j).contains('yorumYayinGecikmesi'), isFalse);
+    });
+
+    test('⚠ TEKLİF GERİ ÇEKİLEMEZ (§1, kabul testi 2)', () {
+      final j = read('lib/screens/job_detail_screen.dart');
+      expect(j.contains("'Teklifi Geri Çek'"), isFalse,
+          reason: 'geri çekme düğmesi geri gelmiş');
     });
 
     test('referans ölçüleri: 42px yıldız, 26px başlık, 16.5px bölüm', () {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../api_client.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -272,8 +273,17 @@ class ApiReviewRepository extends ChangeNotifier {
     required int stars,
     required String text,
   }) async {
-    final err =
-        (await _guard(() => _api.create(listingId: listingId, stars: stars, text: text))).$2;
+    // ⚠ ANAHTAR İŞLEM BAŞINA ÜRETİLİR (§25/30): kullanıcı "Gönder"e
+    // iki kez basarsa aynı istek tekrarlanır ve sunucu ikinci yorumu
+    // OLUŞTURMAZ. Her yeniden denemede YENİ anahtar üretmek bu
+    // korumayı ortadan kaldırırdı.
+    final err = (await _guard(() => _api.create(
+              listingId: listingId,
+              stars: stars,
+              text: text,
+              idempotencyKey: ApiClient.newIdempotencyKey(),
+            )))
+        .$2;
     if (err != null) {
       return err;
     }

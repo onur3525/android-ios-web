@@ -12,14 +12,35 @@ abstract final class Mappers {
   static DateTime _date(dynamic v) =>
       v == null ? DateTime.now() : DateTime.parse(v as String).toLocal();
 
+  /// ── ⚠ NİHAİ DURUM EŞLEMESİ (API sözleşmesi §24) ──
+  ///
+  /// Sunucu dört değer gönderir: ACTIVE · EXPIRED · USER_DELETED ·
+  /// ADMIN_REMOVED.
+  ///
+  /// ⚠ ESKİ DEĞERLER SESSİZCE ÇEVRİLMEZ. Backend geçiş döneminde
+  /// `OPEN`, `PROVIDER_SELECTED`, `IN_PROGRESS`, `COMPLETED` ya da
+  /// `CANCELLED` gönderirse:
+  ///   · `OPEN`     → `active` (ad değişikliği; anlam AYNI)
+  ///   · `CANCELLED`→ `userDeleted` (kullanıcı kapatması)
+  ///   · ötekiler   → `active` ama ⚠ TAMAMLANMIŞLIK BİLGİSİ BURADAN
+  ///     GELMEZ; `selectedOfferId` alanından türetilir. Yani
+  ///     `COMPLETED` gelen bir ilan sessizce "tamamlanmadı" sayılmaz —
+  ///     seçilmiş teklifi varsa tamamlanmış görünmeye devam eder.
+  ///
+  /// ⚠ BACKEND'E NOT: bu uyumluluk eşlemesi geçicidir. Sunucu nihai
+  /// dört değere geçtiğinde eski satırlar kaldırılmalıdır.
+  ///
+  /// ⚠ Tanınmayan değerde `active` seçilir — güvenli taraf: ilan
+  /// görünür kalır, kullanıcı verisi kaybolmuş gibi olmaz.
   static ListingStatus listingStatus(String s) => switch (s) {
-        'OPEN' => ListingStatus.open,
-        'PROVIDER_SELECTED' => ListingStatus.providerSelected,
-        'IN_PROGRESS' => ListingStatus.inProgress,
-        'COMPLETED' => ListingStatus.completed,
-        'CANCELLED' => ListingStatus.cancelled,
+        'ACTIVE' || 'OPEN' => ListingStatus.active,
         'EXPIRED' => ListingStatus.expired,
-        _ => ListingStatus.open,
+        'USER_DELETED' || 'CANCELLED' => ListingStatus.userDeleted,
+        'ADMIN_REMOVED' => ListingStatus.adminRemoved,
+        // Eski iş-gidişatı değerleri: yaşam durumu ACTIVE'dir.
+        'PROVIDER_SELECTED' || 'IN_PROGRESS' || 'COMPLETED' =>
+          ListingStatus.active,
+        _ => ListingStatus.active,
       };
 
   static Listing listing(Map<String, dynamic> j) => Listing(
@@ -39,9 +60,22 @@ abstract final class Mappers {
         createdAt: _date(j['createdAt']),
       )..selectedOfferId = j['selectedOfferId'] as String?;
 
+  /// ── ⚠ NİHAİ TEKLİF DURUMU (API sözleşmesi §24) ──
+  ///
+  /// ACTIVE · SELECTED · EXPIRED · CLOSED.
+  ///
+  /// ⚠ `WITHDRAWN` ve `CANCELLED` NİHAİ SÖZLEŞMEDE YOKTUR. Geçiş
+  /// döneminde sunucu gönderirse `closed`a eşlenir — ikisi de
+  /// "sistemsel kapanış" anlamına gelir. `expired` ile
+  /// KARIŞTIRILMAZ: o yalnız 30 saat dolumu içindir.
+  ///
+  /// ⚠ BACKEND'E NOT: eski iki değer sunucudan kalktığında bu satır
+  /// da kaldırılmalıdır.
   static OfferStatus offerStatus(String s) => switch (s) {
+        'ACTIVE' => OfferStatus.active,
         'SELECTED' => OfferStatus.selected,
-        'CANCELLED' || 'WITHDRAWN' => OfferStatus.cancelled,
+        'EXPIRED' => OfferStatus.expired,
+        'CLOSED' || 'CANCELLED' || 'WITHDRAWN' => OfferStatus.closed,
         _ => OfferStatus.active,
       };
 
@@ -77,6 +111,11 @@ abstract final class Mappers {
         // — sahte bir tarih UYDURULMAZ. Sunucu `createdAt` alanını
         // eklediğinde ekran kendiliğinden doğru tarihi gösterir.
         time: DateTime.tryParse((j['createdAt'] ?? '') as String)?.toLocal(),
+        // ⚠ İLİŞKİ SUNUCUDAN GELİR (§15); istemci tahmin etmez.
+        // Alan yoksa `null` kalır ve ekran yönlendirme bağlantısını
+        // göstermez — bozuk yönlendirme üretmekten iyidir.
+        listingId: j['listingId'] as String?,
+        offerId: j['offerId'] as String?,
       );
 
   /// Cüzdan + hareketler tek modele toplanır.
@@ -166,6 +205,15 @@ abstract final class Mappers {
         authorId: (j['authorId'] ?? '') as String,
         stars: (j['stars'] as num).toInt(),
         text: (j['text'] ?? '') as String,
+        // ⚠ YAYIN DURUMU SUNUCUDAN OKUNUR (§14).
+        //
+        // Alan gelmezse `null` bırakılır ve model yerel gecikme
+        // kuralına düşer. Burada VARSAYIM YAPILMAZ: gelmeyen alanı
+        // "yayınlandı" saymak, bekleyen yorumu erken göstermek olurdu.
+        status: ReviewStatus.fromJson(j['status'] as String?),
+        publishedAt: j['publishedAt'] == null
+            ? null
+            : DateTime.tryParse(j['publishedAt'] as String),
       );
 
   // ── bildirim ──

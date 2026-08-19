@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../domain/config.dart';
 import 'package:uuid/uuid.dart';
 import '../models/review.dart';
 
@@ -15,7 +16,33 @@ class ReviewRepository extends ChangeNotifier {
     return null;
   }
 
-  List<Review> byProvider(String providerId) =>
+  /// HİZMET VERENE ULAŞAN değerlendirmeler.
+  ///
+  /// ── ⚠ 1 GÜN YAYIN GECİKMESİ (API sözleşmesi §14) ──
+  ///
+  /// "Değerlendirme Hizmet Veren'e 1 gün sonra yansır." Yorum anında
+  /// KAYDEDİLİR — yazan kişi "Yorum Yapıldı" görür ve ikinci kez
+  /// yazamaz — ama hizmet verenin profiline, ortalamasına ve yorum
+  /// listesine süre dolmadan GİRMEZ.
+  ///
+  /// ⚠ Süzme TEK YERDE yapılır. Ortalama ve liste ayrı ayrı süzülseydi
+  /// biri güncellenip öteki unutulabilirdi; ikisi de bu metottan
+  /// beslenir.
+  List<Review> byProvider(String providerId) {
+    final sinir = DateTime.now().subtract(DomainConfig.yorumYayinGecikmesi);
+    return _items.values
+        .where((r) => r.providerId == providerId)
+        .where((r) => r.createdAt.isBefore(sinir))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  /// ⚠ YAYIN BEKLEYENLER DÂHİL — yalnız YAZAN kişiye gösterilir.
+  ///
+  /// Hizmet alan kendi yorumunu hemen görebilmeli ("Yorum Yapıldı"
+  /// bilgisi buna dayanır); gecikme yalnız KARŞI TARAFA yansımayı
+  /// erteler.
+  List<Review> byProviderTumu(String providerId) =>
       _items.values.where((r) => r.providerId == providerId).toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 

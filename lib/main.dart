@@ -616,7 +616,8 @@ void _seedDemo(
     teklif.escrowBlocked = false;
     teklif.escrowConsumed = true;
     contacts?.open(teklif.id);
-    listings.setStatus(ilan.id, ListingStatus.completed);
+    // ⚠ İLAN DURUMU DEĞİŞMEZ (§24): tamamlanmışlık `selectedOfferId`
+    // ile türetilir. Eskiden burada `completed` yazılıyordu.
     reviews?.create(
         listingId: ilan.id, offerId: teklif.id, providerId: ustaId,
         authorId: musteri.id, stars: yildiz, text: yorum);

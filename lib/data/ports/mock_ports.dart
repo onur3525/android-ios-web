@@ -381,42 +381,31 @@ class MockListingPort extends ListingPort {
     // ⚠ DENETİM GEÇİŞTEN ÖNCE yapılır: hata dönerse ilanın durumu
     // DEĞİŞMEZ. Sonradan kontrol etmek, ilanı bozuk duruma sokup
     // ardından hata göstermek olurdu.
-    const seciliGerektiren = {
-      ListingStatus.providerSelected,
-      ListingStatus.completed,
-    };
-    if (seciliGerektiren.contains(to) &&
-        (a.listing!.selectedOfferId ?? '').isEmpty) {
-      return const InvalidStateError(
-          'Bu ilan için seçilmiş teklif bulunamadı — işlem tamamlanamadı');
-    }
+    // ⚠ "SEÇİLİ TEKLİF GEREKTİREN DURUM" KAPISI KALDIRILDI.
+    //
+    // `providerSelected` ve `completed` durumları artık YOK; nihai
+    // durumların hiçbiri seçilmiş teklif gerektirmiyor (§24).
+    // Tamamlanmışlık `Listing.isTamamlanmisIs` ile türetiliyor.
 
     listings.setStatus(id, to);
     return null;
   }
 
-  @override
-  Future<DomainError?> startWork(String listingId, {required String actorId}) async =>
-      _transition(listingId, actorId, ListingStatus.inProgress);
-  @override
-  Future<DomainError?> completeWork(String listingId, {required String actorId}) async =>
-      _transition(listingId, actorId, ListingStatus.completed);
+  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
+  //
+  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
+  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
+  // seçildiği anda iş tamamlanmış sayılır.
+  //
+  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
+  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
 
   /// İptal: açılmamış blokeler iade edilir; completed İPTAL EDİLEMEZ.
-  @override
-  Future<DomainError?> cancel(String listingId,
-      {required String actorId, String? reason}) async {
-    final a = _authorize(listingId, actorId);
-    if (a.error != null) {
-      return a.error;
-    }
-    if (!ListingStateMachine.canTransition(a.listing!.status, ListingStatus.cancelled)) {
-      return const InvalidStateError('Bu ilan bu aşamada iptal edilemez');
-    }
-    offerPort.cancelAllForListing(listingId, reason: 'İlan iptal edildi');
-    listings.setStatus(listingId, ListingStatus.cancelled);
-    return null;
-  }
+  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir.
+  //
+  // İkisi de aynı işi yapıyordu: teklifleri kapat, açılmamış
+  // blokeleri iade et, ilanı `userDeleted` yap. Kanonik uç
+  // `DELETE /listings/{id}` olarak belirlendi.
 
   /// Süre dolumu: yalnız open ilanlar için. completed DOKUNULMAZ.
   @override
@@ -428,7 +417,8 @@ class MockListingPort extends ListingPort {
     if (!ListingStateMachine.canTransition(a.listing!.status, ListingStatus.expired)) {
       return const InvalidStateError('Bu ilanın süresi bu aşamada dolamaz');
     }
-    offerPort.cancelAllForListing(listingId, reason: 'İlan süresi doldu');
+    offerPort.cancelAllForListing(listingId,
+        reason: 'İlan süresi doldu', yeniDurum: OfferStatus.expired);
     listings.setStatus(listingId, ListingStatus.expired);
     return null;
   }
@@ -441,10 +431,11 @@ class MockListingPort extends ListingPort {
     if (a.error != null) {
       return a.error;
     }
-    if (!ListingStateMachine.canDelete(a.listing!.status)) {
+    if (!ListingStateMachine.canDelete(a.listing!)) {
       return const InvalidStateError('Tamamlanmış ilan silinemez');
     }
-    offerPort.cancelAllForListing(listingId, reason: 'İlan silindi');
+    offerPort.cancelAllForListing(listingId,
+        reason: 'İlan silindi', yeniDurum: OfferStatus.closed);
     final offerIds = offers.forListing(listingId).map((o) => o.id).toList();
     contacts.removeForOffers(offerIds);
     chats.removeForOffers(offerIds);
@@ -541,8 +532,18 @@ class MockOfferPort extends OfferPort {
     if (actorId != l.ownerId) {
       return const UnauthorizedError('Teklifi yalnızca ilan sahibi seçebilir');
     }
-    if (!ListingStateMachine.canTransition(l.status, ListingStatus.completed)) {
+    // ⚠ SEÇİM İLANIN DURUMUNU DEĞİŞTİRMEZ (§24, §11).
+    //
+    // Eskiden ilan `completed` yapılıyordu; nihai sözleşmede
+    // tamamlanmışlık bir durum değil, `selectedOfferId` ilişkisidir.
+    // İlan ACTIVE kalır. Seçim yalnız YAŞAYAN ilanda yapılabilir.
+    if (l.status != ListingStatus.active) {
       return const InvalidStateError('Bu ilan için seçim yapılamaz');
+    }
+    // ⚠ İKİNCİ SEÇİM REDDEDİLİR (kabul testi 12): ilk seçim bozulmaz.
+    if (l.selectedOfferId != null) {
+      return const InvalidStateError(
+          'Bu ilan için teklif zaten seçilmiş');
     }
 
     // ── ⚠ TEKLİF AKTİF OLMALIDIR ──
@@ -569,7 +570,9 @@ class MockOfferPort extends OfferPort {
       if (o.id == offerId) {
         continue;
       }
-      o.status = OfferStatus.cancelled;
+      // ⚠ `cancelled` → `closed` (§24): rakip teklif seçildiği için
+      // SİSTEMSEL kapanış. Süre dolumu ise `expired`tır.
+      o.status = OfferStatus.closed;
       _refundIfUnconsumed(o, reason: 'Teklif seçilmedi — İlan: ${l.title}');
     }
     l.selectedOfferId = offerId;
@@ -582,7 +585,6 @@ class MockOfferPort extends OfferPort {
     //
     // ⚠ Hizmet veren tarafında da aynı anda "Kazandığım işler"e
     // geçer — teklif `selected` olduğu için.
-    listings.setStatus(listingId, ListingStatus.completed);
     offers.touch();
     notifs?.push(
         userId: chosen.providerId, type: NotifType.offerSelected, refId: listingId,
@@ -592,24 +594,13 @@ class MockOfferPort extends OfferPort {
   }
 
   /// KURAL: Yalnız KENDİ AKTİF teklifi geri çekilebilir; açılmış ücret
-  /// iade EDİLMEZ.
-  @override
-  Future<DomainError?> withdrawOffer({required String offerId, required String actorId}) async {
-    final o = offers.byId(offerId);
-    if (o == null) {
-      return const NotFoundError('Teklif bulunamadı');
-    }
-    if (o.providerId != actorId) {
-      return const UnauthorizedError('Yalnızca kendi teklifinizi geri çekebilirsiniz');
-    }
-    if (o.status != OfferStatus.active) {
-      return const InvalidStateError('Yalnızca aktif teklifler geri çekilebilir');
-    }
-    o.status = OfferStatus.cancelled;
-    _refundIfUnconsumed(o, reason: 'Teklif geri çekildi');
-    offers.touch();
-    return null;
-  }
+  // ⚠ `withdrawOffer` KALDIRILDI (API sözleşmesi §1, kabul testi 2).
+  //
+  // Gönderilmiş teklif geri çekilemez. Metot iptal edilip blokeyi
+  // iade ediyordu; kural değiştiği için davranışın kendisi kalktı.
+  // ⚠ `_refundIfUnconsumed` DURUYOR: seçim, süre dolumu ve admin
+  // kaldırma yollarında hâlâ kullanılıyor.
+
 
   void _refundIfUnconsumed(Offer o, {required String reason}) {
     if (o.escrowBlocked && !o.escrowConsumed) {
@@ -623,10 +614,24 @@ class MockOfferPort extends OfferPort {
   }
 
   /// İlan iptal/silme/süre dolumunda çağrılır (yalnız MockListingPort).
-  void cancelAllForListing(String listingId, {required String reason}) {
+  /// İlanın açık tekliflerini kapatır ve açılmamış blokeleri iade eder.
+  ///
+  /// ── ⚠ `expired` İLE `closed` AYRIMI (§24) ──
+  ///
+  /// Sözleşme iki ayrı durum tanımlıyor ve anlamları farklı:
+  ///   · `expired` → ilanın 30 saati DOLDUĞU için kapanan teklif
+  ///   · `closed`  → başka bir sistemsel neden (ilan silindi, admin
+  ///     kaldırdı, rakip teklif seçildi)
+  ///
+  /// Bu yüzden çağıran taraf hangisi olduğunu SÖYLEMEK zorundadır;
+  /// tek bir "iptal" durumuna indirgenmez.
+  void cancelAllForListing(String listingId,
+      {required String reason, required OfferStatus yeniDurum}) {
+    assert(yeniDurum == OfferStatus.expired ||
+        yeniDurum == OfferStatus.closed);
     for (final o in offers.forListing(listingId)) {
       if (o.status == OfferStatus.active) {
-        o.status = OfferStatus.cancelled;
+        o.status = yeniDurum;
       }
       _refundIfUnconsumed(o, reason: reason);
     }

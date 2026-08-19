@@ -11,7 +11,10 @@ void main() {
       'status': 'IN_PROGRESS', 'photoPaths': <String>[],
       'createdAt': '2026-01-01T10:00:00.000Z', 'selectedOfferId': 'o9',
     });
-    expect(l.status, ListingStatus.inProgress);
+    // ⚠ Eski `IN_PROGRESS` değeri nihai sözleşmede YOK; yaşam durumu
+    // olarak `active`e eşlenir. Tamamlanmışlık `selectedOfferId`
+    // alanından gelir, durumdan DEĞİL (§24).
+    expect(l.status, ListingStatus.active);
     expect(l.selectedOfferId, 'o9');
     expect(l.desc, 'Mutfak musluğu damlatıyor');
   });

@@ -42,6 +42,21 @@ class OwnListingOfferError extends DomainError {
   const OwnListingOfferError();
 }
 
+/// İLETİŞİM ZATEN AÇIK — ⚠ BAŞARISIZLIK DEĞİL.
+///
+/// API sözleşmesi §10: iletişim açma İDEMPOTENTTİR. İkinci istek
+/// ikinci tahsilat yapmaz ve sunucu "zaten açık" der. İstenen durum
+/// zaten sağlandığı için çağıran taraf bunu BAŞARI gibi ele almalı,
+/// kullanıcıya kırmızı hata göstermemelidir.
+///
+/// ⚠ Ayrı bir tip olması şart: `InvalidStateError` ile karışırsa
+/// ekranlar bunu gerçek bir engel sanıp kullanıcıyı durdurur.
+class IletisimZatenAcikError extends DomainError {
+  @override
+  String get message => 'İletişim zaten açık';
+  const IletisimZatenAcikError();
+}
+
 class ListingClosedError extends DomainError {
   @override
   String get message => 'Bu ilan artık teklif kabul etmiyor';

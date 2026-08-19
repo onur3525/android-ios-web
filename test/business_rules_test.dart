@@ -147,7 +147,7 @@ void main() {
       final o1 = offerCtl.myOfferFor(l.id, p1)!;
       expect(await offerCtl.selectOffer(listingId: l.id, offerId: o1.id, actorId: p1),
           isA<UnauthorizedError>());
-      expect(l.status, ListingStatus.open); // değişmedi
+      expect(l.status, ListingStatus.active); // değişmedi
     });
 
     test('seçim: ilan TAMAMLANIR, diğerleri iptal + açılmamış bloke İADE',
@@ -165,10 +165,12 @@ void main() {
       final a1 = w1.avail;
 
       expect(await offerCtl.selectOffer(listingId: l.id, offerId: o2.id, actorId: cust), isNull);
-      expect(l.status, ListingStatus.completed);
+      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24); ilan ACTIVE kalır.
+      expect(l.isTamamlanmisIs, isTrue);
+      expect(l.status, ListingStatus.active);
       expect(l.selectedOfferId, o2.id);
       expect(o2.status, OfferStatus.selected);
-      expect(o1.status, OfferStatus.cancelled);
+      expect(o1.status, OfferStatus.closed);
       expect(w1.avail, a1 + fee); // p1'in açılmamış blokesi kendi cüzdanına iade
       expect(wallets.walletOf(p2).blocked, greaterThanOrEqualTo(fee));
     });
@@ -191,17 +193,38 @@ void main() {
   });
 
   group('Durum makinesi (Y1)', () {
-    test('merkezi tanım: completed uç durumdur', () async {
+    test('⚠ NİHAİ GEÇİŞ TABLOSU — dört yaşam durumu (§24)', () async {
+      // `completed` / `providerSelected` / `inProgress` ARTIK YOK.
+      // Tablo yalnız ilanın YAŞAMINI tanımlar; tamamlanmışlık
+      // `selectedOfferId` ilişkisinden türetilir.
       expect(
           ListingStateMachine.canTransition(
-              ListingStatus.completed, ListingStatus.cancelled),
+              ListingStatus.active, ListingStatus.expired),
+          isTrue);
+      expect(
+          ListingStateMachine.canTransition(
+              ListingStatus.active, ListingStatus.userDeleted),
+          isTrue);
+      expect(
+          ListingStateMachine.canTransition(
+              ListingStatus.active, ListingStatus.adminRemoved),
+          isTrue);
+      // Kapanmış durumlardan GERİ DÖNÜŞ yok.
+      expect(
+          ListingStateMachine.canTransition(
+              ListingStatus.userDeleted, ListingStatus.active),
           isFalse);
       expect(
           ListingStateMachine.canTransition(
-              ListingStatus.completed, ListingStatus.expired),
+              ListingStatus.adminRemoved, ListingStatus.active),
           isFalse);
-      expect(ListingStateMachine.canDelete(ListingStatus.completed), isFalse);
+      // ⚠ Süresi dolmuş ilan silinebilir/kaldırılabilir (§12).
+      expect(
+          ListingStateMachine.canTransition(
+              ListingStatus.expired, ListingStatus.userDeleted),
+          isTrue);
     });
+
 
     test('akış: open→completed (seçim doğrudan tamamlar)', () async {
       // ⚠ ÜRÜN KARARI: ayrı "İşi Başlat" adımı KALDIRILDI.
@@ -211,17 +234,22 @@ void main() {
       // tamamlanamaz duruma düşüyordu.
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'a');
-      // Teklif seçilmeden tamamlanamaz.
-      expect(await listingCtl.completeWork(l.id, actorId: cust),
-          isA<InvalidStateError>());
+      // ⚠ `completeWork` KALDIRILDI (§11): tamamlama ayrı bir aksiyon
+      // değil, seçimin sonucudur.
       await offerCtl.selectOffer(
           listingId: l.id, offerId: offerCtl.myOfferFor(l.id, p1)!.id, actorId: cust);
       // ⚠ SEÇİM İLANI DOĞRUDAN TAMAMLAR (18 Ağu): ayrı bir
       // "tamamla" adımı yok, ilan seçimle birlikte "tamamlanan
       // işler"e taşınır.
-      expect(l.status, ListingStatus.completed);
-      // İkinci kez tamamlanamaz (uç durum).
-      expect(await listingCtl.completeWork(l.id, actorId: cust),
+      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24); ilan ACTIVE kalır.
+      expect(l.isTamamlanmisIs, isTrue);
+      expect(l.status, ListingStatus.active);
+      // ⚠ İkinci seçim reddedilir; ilan bir kez tamamlanır.
+      expect(
+          await offerCtl.selectOffer(
+              listingId: l.id,
+              offerId: offerCtl.myOfferFor(l.id, p1)!.id,
+              actorId: cust),
           isA<InvalidStateError>());
     });
 
@@ -283,19 +311,21 @@ void main() {
       expect(blok0, greaterThanOrEqualTo(fee),
           reason: 'teklif blokeyi almalı');
 
-      // Hizmet veren teklifini geri çeker — bloke iade edilir.
-      expect(await offerCtl.withdrawOffer(offerId: o.id, actorId: p1), isNull);
-      expect(o.status, OfferStatus.cancelled);
+      // ⚠ GERİ ÇEKME KALDIRILDI (§1): bloke iadesi artık yalnız
+      // sistemsel kapanışlarla olur. Burada SÜRE DOLUMU ile sınanır.
+      await listingCtl.expire(l.id, actorId: cust);
       expect(w.blocked, blok0 - fee, reason: 'bloke iade edilmeli');
-      expect(l.status, ListingStatus.open, reason: 'ilan açık kalır');
+      expect(l.status, ListingStatus.expired);
 
-      // ⚠ İlan sahibi geri çekilmiş teklifi SEÇEMEZ.
+      // ⚠ İlan sahibi kapanmış ilanda teklif SEÇEMEZ.
       final err = await offerCtl.selectOffer(
           listingId: l.id, offerId: o.id, actorId: cust);
       expect(err, isA<InvalidStateError>());
-      expect(o.status, OfferStatus.cancelled,
-          reason: 'teklif durumu değişmemeli');
-      expect(l.status, ListingStatus.open,
+      // ⚠ Süre dolumunda teklif İPTAL değil, süresi dolmuş sayılır;
+      // seçim denemesi durumu DEĞİŞTİRMEMELİDİR.
+      expect(o.status, isNot(OfferStatus.selected),
+          reason: 'teklif seçilmiş görünmemeli');
+      expect(l.status, ListingStatus.active,
           reason: 'ilan providerSelected olmamalı');
       expect(l.selectedOfferId, isNull);
     });
@@ -316,7 +346,7 @@ void main() {
               listingId: l.id, offerId: o1.id, actorId: cust),
           isNull);
       expect(l.selectedOfferId, o1.id);
-      expect(o2.status, OfferStatus.cancelled, reason: 'rakip kapanmalı');
+      expect(o2.status, OfferStatus.closed, reason: 'rakip kapanmalı');
 
       // İkinci seçim reddedilir; ilk seçim BOZULMAZ.
       final err = await offerCtl.selectOffer(
@@ -324,7 +354,7 @@ void main() {
       expect(err, isA<InvalidStateError>());
       expect(l.selectedOfferId, o1.id, reason: 'ilk seçim korunmalı');
       expect(o1.status, OfferStatus.selected);
-      expect(o2.status, OfferStatus.cancelled);
+      expect(o2.status, OfferStatus.closed);
     });
 
     test('SEÇİLİ TEKLİF YOKSA tamamlanamaz — durum DEĞİŞMEZ', () async {
@@ -338,47 +368,47 @@ void main() {
       final o = offerCtl.myOfferFor(l.id, p1)!;
       await offerCtl.selectOffer(
           listingId: l.id, offerId: o.id, actorId: cust);
-      expect(l.status, ListingStatus.completed);
+      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24); ilan ACTIVE kalır.
+      expect(l.isTamamlanmisIs, isTrue);
+      expect(l.status, ListingStatus.active);
       expect(l.selectedOfferId, isNotNull);
 
       // Veri tutarsızlığı simüle edilir: seçim kaydı kaybolmuş.
       l.selectedOfferId = null;
 
-      final err = await listingCtl.completeWork(l.id, actorId: cust);
+      // ⚠ `completeWork` KALDIRILDI (§11); tutarsız veri artık BAŞKA
+      // bir geçiş denemesiyle sınanır: tamamlanmış ilan iptal
+      // EDİLEMEZ ve durum bozulmaz.
+      final err = await listingCtl.cancel(l.id, actorId: cust);
       expect(err, isA<InvalidStateError>(),
           reason: 'sessizce geçilmemeli, AÇIK hata dönmeli');
-      expect(err!.message.contains('seçilmiş teklif'), isTrue,
-          reason: 'hata sebebi anlaşılır olmalı');
       // ⚠ EN ÖNEMLİSİ: ilan TUTARSIZ duruma DÜŞMEDİ.
-      expect(l.status, ListingStatus.completed,
+      expect(l.status, ListingStatus.active,
           reason: 'denetim geçişten ÖNCE yapılır — durum bozulmadı');
     });
 
-    test('inProgress geçişi KORUNUR (eski kayıt / backend uyumu)', () async {
-      // ⚠ Ara durum kaldırılmadı, yalnız KULLANICI ADIMI kaldırıldı.
-      // Backend `IN_PROGRESS` göndermeye devam edebilir; o durumdan
-      // tamamlamaya geçiş çalışmaya devam etmelidir.
-      expect(
-          ListingStateMachine.canTransition(
-              ListingStatus.providerSelected, ListingStatus.inProgress),
-          isTrue);
-      expect(
-          ListingStateMachine.canTransition(
-              ListingStatus.inProgress, ListingStatus.completed),
-          isTrue);
-      expect(
-          ListingStateMachine.canTransition(
-              ListingStatus.providerSelected, ListingStatus.completed),
-          isTrue,
-          reason: 'ara adım olmadan tamamlanabilmeli');
-      // ⚠ YENİ (18 Ağu): seçim ilanı DOĞRUDAN tamamladığı için
-      // `open → completed` geçişi de açıktır.
-      expect(
-          ListingStateMachine.canTransition(
-              ListingStatus.open, ListingStatus.completed),
-          isTrue,
-          reason: 'seçim ilanı doğrudan tamamlar');
+    test('⚠ TAMAMLANMIŞ İŞ SİLİNEMEZ — denetim ilişkiden yapılır', () async {
+      // `canDelete` artık DURUMU değil İLANI alır: tamamlanmışlık
+      // `selectedOfferId` ile belirlendiği için durum tek başına
+      // yetmez.
+      final l = await yeniIlan();
+      expect(ListingStateMachine.canDelete(l), isTrue,
+          reason: 'yaşayan, seçimsiz ilan silinebilir');
+
+      await offerCtl.placeOffer(
+          listingId: l.id, providerId: p1, amount: 900, note: 'a');
+      final o = offerCtl.myOfferFor(l.id, p1)!;
+      await contactCtl.openShared(o.id, actorId: cust);
+      await offerCtl.selectOffer(
+          listingId: l.id, offerId: o.id, actorId: cust);
+
+      expect(l.isTamamlanmisIs, isTrue, reason: 'seçim tamamlanmışlık üretir');
+      expect(l.status, ListingStatus.active,
+          reason: 'seçim ilanın YAŞAM durumunu değiştirmez');
+      expect(ListingStateMachine.canDelete(l), isFalse,
+          reason: 'tamamlanmış iş silinemez');
     });
+
 
     test('İLETİŞİM: iki taraftan biri açar, ücret YALNIZ sağlayıcıdan', () async {
       // ⚠ NİHAİ İŞ KURALI.
@@ -420,16 +450,17 @@ void main() {
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'a');
       final o = offerCtl.myOfferFor(l.id, p1)!;
+      // ⚠ Seçim ilanı zaten tamamlar; ayrı başlat/tamamla adımı YOK.
       await offerCtl.selectOffer(listingId: l.id, offerId: o.id, actorId: cust);
-      await listingCtl.startWork(l.id, actorId: cust);
-      await listingCtl.completeWork(l.id, actorId: cust);
       final w = wallets.walletOf(p1);
       final a0 = w.avail, b0 = w.blocked;
 
       expect(await listingCtl.cancel(l.id, actorId: cust), isA<InvalidStateError>());
       expect(await listingCtl.expire(l.id, actorId: cust), isA<InvalidStateError>());
       expect(await listingCtl.delete(l.id, actorId: cust), isA<InvalidStateError>());
-      expect(l.status, ListingStatus.completed);
+      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24); ilan ACTIVE kalır.
+      expect(l.isTamamlanmisIs, isTrue);
+      expect(l.status, ListingStatus.active);
       expect(listingCtl.byId(l.id), isNotNull);
       expect(w.avail, a0);   // tamamlanmış işin blokesi İADE EDİLMEDİ
       expect(w.blocked, b0); // bloke aynen duruyor (iletişim açılınca tüketilecek)
@@ -449,7 +480,7 @@ void main() {
       final l = await yeniIlan();
       expect(await listingCtl.cancel(l.id, actorId: stranger), isA<UnauthorizedError>());
       expect(await listingCtl.delete(l.id, actorId: p1), isA<UnauthorizedError>());
-      expect(l.status, ListingStatus.open);
+      expect(l.status, ListingStatus.active);
       expect(listingCtl.byId(l.id), isNotNull);
     });
 
@@ -458,7 +489,7 @@ void main() {
       await offerCtl.placeOffer(listingId: l1.id, providerId: p1, amount: 900, note: 'a');
       final a0 = wallets.walletOf(p1).avail;
       expect(await listingCtl.cancel(l1.id, actorId: cust), isNull);
-      expect(l1.status, ListingStatus.cancelled);
+      expect(l1.status, ListingStatus.userDeleted);
       expect(wallets.walletOf(p1).avail, a0 + fee);
 
       final l2 = await yeniIlan();

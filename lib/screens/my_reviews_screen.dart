@@ -36,6 +36,10 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   bool _loading = true;
   bool _loadingMore = false;
   bool _hasMore = false;
+
+  /// ⚠ SON OKUNAN KAYDIN İMİ (§16). `null` iken ilk sayfa istenir.
+  /// Sayfa numarası tutulmaz — araya kayıt girdiğinde kayma olurdu.
+  String? _cursor;
   String? _error;
 
   @override
@@ -106,7 +110,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
       }
 
       final api = ReviewApi(context.read<ApiClient>());
-      final j = await api.mine(skip: 0, take: _pageSize);
+      // ⚠ Kanonik uç kimlik ister: "kendi yorumlarım" = kendi
+      // kimliğimle sorgulanan hizmet veren yorumları.
+      final benim = context.read<AuthController>().currentAccount;
+      if (benim == null) {
+        setState(() => _loading = false);
+        return;
+      }
+      final j = await api.mine(benim.id, limit: _pageSize);
       if (!mounted) {
         return;
       }
@@ -117,7 +128,10 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
         _items
           ..clear()
           ..addAll(_parseItems(j['items']));
-        _hasMore = (j['page'] as Map?)?['hasMore'] as bool? ?? false;
+        // ⚠ CURSOR SÖZLEŞMESİ (§16): `nextCursor` null ise liste
+        // bitmiştir; aynı cursor ile tekrar istek YAPILMAZ.
+        _cursor = j['nextCursor'] as String?;
+        _hasMore = _cursor != null;
         _loading = false;
       });
     } catch (e) {
@@ -138,13 +152,21 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
     setState(() => _loadingMore = true);
     try {
       final api = ReviewApi(context.read<ApiClient>());
-      final j = await api.mine(skip: _items.length, take: _pageSize);
+      final benim = context.read<AuthController>().currentAccount;
+      if (benim == null) {
+        setState(() => _loadingMore = false);
+        return;
+      }
+      final j = await api.mine(benim.id, cursor: _cursor, limit: _pageSize);
       if (!mounted) {
         return;
       }
       setState(() {
         _items.addAll(_parseItems(j['items']));
-        _hasMore = (j['page'] as Map?)?['hasMore'] as bool? ?? false;
+        // ⚠ CURSOR SÖZLEŞMESİ (§16): `nextCursor` null ise liste
+        // bitmiştir; aynı cursor ile tekrar istek YAPILMAZ.
+        _cursor = j['nextCursor'] as String?;
+        _hasMore = _cursor != null;
         _loadingMore = false;
       });
     } catch (_) {

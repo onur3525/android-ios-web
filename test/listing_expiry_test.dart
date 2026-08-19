@@ -61,7 +61,7 @@ void main() {
     final l = ilan();
     final n = expiry.sweep(now: t0.add(const Duration(hours: 29, minutes: 59)));
     expect(n, 0);
-    expect(l.status, ListingStatus.open);
+    expect(l.status, ListingStatus.active);
   });
 
   test('30 saatte EXPIRED olur ve Açık listesinden çıkar / Süresi Dolan filtresine girer', () async {
@@ -69,11 +69,9 @@ void main() {
     final n = expiry.sweep(now: t0.add(const Duration(hours: 30)));
     expect(n, 1);
     expect(l.status, ListingStatus.expired);
-    // Açık sekmesi filtresi (open/providerSelected/inProgress) → görünmez
-    final openTab = listings.byOwner(cust).where((x) =>
-        x.status == ListingStatus.open ||
-        x.status == ListingStatus.providerSelected ||
-        x.status == ListingStatus.inProgress);
+    // ⚠ Açık sekmesi: YAŞAYAN ve teklif seçilmemiş ilanlar (§24).
+    final openTab = listings.byOwner(cust).where(
+        (x) => x.status == ListingStatus.active && !x.isTamamlanmisIs);
     expect(openTab, isEmpty);
     // Süresi Dolan sekmesi filtresi → yalnız burada görünür
     final expiredTab =
@@ -90,7 +88,7 @@ void main() {
     expiry.sweep(now: t0.add(const Duration(hours: 33)));
     expect(wallets.walletOf(p1).avail, a1 + fee);
     expect(wallets.walletOf(p2).avail, a2 + fee);
-    expect(offerCtl.myOfferFor(l.id, p1)!.status, OfferStatus.cancelled);
+    expect(offerCtl.myOfferFor(l.id, p1)!.status, OfferStatus.closed);
   });
 
   test('iletişimi açılmış (tüketilmiş) teklif için KESİNLİKLE iade yapılmaz', () async {
@@ -137,8 +135,8 @@ void main() {
     await offerCtl.placeOffer(listingId: lc.id, providerId: p1, amount: 900, note: 'n');
     await offerCtl.selectOffer(
         listingId: lc.id, offerId: offerCtl.myOfferFor(lc.id, p1)!.id, actorId: cust);
-    await listingCtl.startWork(lc.id, actorId: cust);
-    await listingCtl.completeWork(lc.id, actorId: cust);
+    // ⚠ `startWork`/`completeWork` KALDIRILDI (API sözleşmesi §11).
+    // Seçim ilanı zaten tamamlanmış duruma getirir.
     // cancelled
     final lx = ilan();
     await listingCtl.cancel(lx.id, actorId: cust);
@@ -149,8 +147,10 @@ void main() {
     final a0 = w.avail, b0 = w.blocked;
 
     expect(expiry.sweep(now: t0.add(const Duration(hours: 100))), 0);
-    expect(lc.status, ListingStatus.completed); // dokunulmadı
-    expect(lx.status, ListingStatus.cancelled);
+    // ⚠ Tamamlanmış işe süre dolumu DOKUNMAZ; ilan ACTIVE kalır ama
+    // tamamlanmışlık ilişkisi korunur (§24).
+    expect(lc.isTamamlanmisIs, isTrue);
+    expect(lx.status, ListingStatus.userDeleted);
     expect(listings.byId(ld.id), isNull);
     expect(w.avail, a0); // hiçbir yeni iade oluşmadı
     expect(w.blocked, b0);

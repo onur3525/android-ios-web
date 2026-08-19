@@ -16,10 +16,32 @@ class WalletTx {
   /// Artık kaynak neyse o taşınır; verilmezse (yeni oluşturulan
   /// işlem) şimdiki zaman kullanılır.
   final DateTime time;
+
+  /// ── ⚠ İLGİLİ İLAN VE TEKLİF (§15) ──
+  ///
+  /// Cüzdan hareketinden ilgili ilana gidebilmek için gerekli.
+  /// Bloke, tahsilat ve iade hareketleri her zaman bir teklife
+  /// bağlıdır; bakiye yükleme hareketi ise bağlı DEĞİLDİR.
+  ///
+  /// ⚠ İSTEMCİ BU BİLGİYİ TAHMİN ETMEZ. Başlık metninden ilan adı
+  /// çıkarmak gibi bir yol izlenmez; ilişki SUNUCUDAN gelir.
+  /// Gelmezse `null` kalır ve ekran yönlendirme bağlantısını
+  /// GÖSTERMEZ — bozuk yönlendirme üretmek yerine hiç göstermemek
+  /// doğrudur.
+  final String? listingId;
+  final String? offerId;
+
+  /// İlgili ilana gidilebilir mi?
+  ///
+  /// ⚠ Ekranlar bu koşulu tek tek yazmaz; buradan okur.
+  bool get ilanaGidilebilir => listingId != null && listingId!.isNotEmpty;
+
   WalletTx({
     required this.id,
     required this.kind,
     required this.title,
+    this.listingId,
+    this.offerId,
     required this.sub,
     required this.amount,
     DateTime? time,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mock_wiring.dart';
@@ -10,6 +12,18 @@ import 'package:hizmetcep/data/models/offer.dart';
 import 'package:hizmetcep/data/repositories/wallet_repository.dart';
 import 'package:hizmetcep/domain/config.dart';
 import 'package:hizmetcep/domain/failures.dart';
+
+/// Yorumsuz kaynak metni.
+///
+/// ⚠ YOKLUK İDDİASI KURULACAĞI İÇİN YORUMLAR ELENİR: kaldırılan
+/// davranışı ANLATAN yorum satırları ham metinde "withdraw" içerir ve
+/// yanlış alarm verirdi.
+String _kodu(String yol) => File(yol)
+    .readAsStringSync()
+    .split('\n')
+    .where((l) =>
+        !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
+    .join('\n');
 
 void main() {
   late WalletRepository wallets;
@@ -37,46 +51,50 @@ void main() {
     return r;
   }
 
-  group('Teklif geri çekme', () {
-    test('açılmamış bloke İADE edilir; teklif cancelled olur', () async {
-      final l = await ilan();
-      await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
-      final o = offerCtl.myOfferFor(l.id, p1)!;
-      final w = wallets.walletOf(p1);
-      final a0 = w.avail;
-      expect(await offerCtl.withdrawOffer(offerId: o.id, actorId: p1), isNull);
-      expect(o.status, OfferStatus.cancelled);
-      expect(w.avail, a0 + fee);
-      expect(w.blocked, WalletRepository.demoBlocked);
+  group('⚠ TEKLİF GERİ ÇEKME KALDIRILDI', () {
+    // API sözleşmesi §1 ve kabul testi 2: "Teklif geri çekilemez ve
+    // değiştirilemez." Eskiden bu grupta dört test vardı ve geri
+    // çekmenin ÇALIŞTIĞINI kilitliyordu; kural tersine döndüğü için
+    // davranışın YOKLUĞU kilitlenir.
+    //
+    // ⚠ Aynı işi başka adla yapan bir uç da EKLENMEDİ: kural ad
+    // değiştirerek dolaşılmaz.
+    test('hiçbir katmanda geri çekme yok', () {
+      final yollar = {
+        'API': 'lib/data/remote/api/offer_api.dart',
+        'API repository': 'lib/data/remote/repositories/api_repositories.dart',
+        'port arayüzü': 'lib/data/ports/repository_ports.dart',
+        'API port': 'lib/data/ports/api_ports.dart',
+        'mock port': 'lib/data/ports/mock_ports.dart',
+        'controller': 'lib/data/controllers/offer_controller.dart',
+      };
+      yollar.forEach((ad, yol) {
+        final k = _kodu(yol);
+        expect(k.contains('withdraw'), isFalse, reason: '$ad: withdraw kalmış');
+      });
     });
 
-    test('iletişimi AÇILMIŞ ücret geri çekmede iade edilmez', () async {
-      final l = await ilan();
-      await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
-      final o = offerCtl.myOfferFor(l.id, p1)!;
-      await contactCtl.openShared(o.id, actorId: cust);
-      final w = wallets.walletOf(p1);
-      final a0 = w.avail, b0 = w.blocked;
-      expect(await offerCtl.withdrawOffer(offerId: o.id, actorId: p1), isNull);
-      expect(w.avail, a0); // iade YOK
-      expect(w.blocked, b0);
+    test('alternatif adla geri getirilmemiş', () {
+      for (final yol in const [
+        'lib/data/ports/repository_ports.dart',
+        'lib/data/controllers/offer_controller.dart',
+      ]) {
+        final k = _kodu(yol);
+        for (final ad in const [
+          'cancelOffer', 'deleteOffer', 'removeOffer', 'revokeOffer', 'undoOffer'
+        ]) {
+          expect(k.contains(ad), isFalse, reason: '$yol: $ad eklenmiş');
+        }
+      }
     });
 
-    test('yabancı geri çekemez; seçilmiş teklif geri çekilemez', () async {
+    test('teklif verme akışı BOZULMADI', () async {
       final l = await ilan();
-      await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
-      final o = offerCtl.myOfferFor(l.id, p1)!;
-      expect(await offerCtl.withdrawOffer(offerId: o.id, actorId: p2),
-          isA<UnauthorizedError>());
-      await offerCtl.selectOffer(listingId: l.id, offerId: o.id, actorId: cust);
-      expect(await offerCtl.withdrawOffer(offerId: o.id, actorId: p1),
-          isA<InvalidStateError>());
-      expect(o.status, OfferStatus.selected);
-    });
-
-    test('geçersiz offerId hiçbir state değiştirmez', () async {
-      expect(await offerCtl.withdrawOffer(offerId: 'yok', actorId: p1),
-          isA<NotFoundError>());
+      expect(
+          await offerCtl.placeOffer(
+              listingId: l.id, providerId: p1, amount: 900, note: 'n'),
+          isNull);
+      expect(offerCtl.myOfferFor(l.id, p1), isNotNull);
     });
   });
 
@@ -124,10 +142,12 @@ void main() {
           isNull);
 
       // ⚠ İlan doğrudan "tamamlanan işler"e taşınır; ara durum yok.
-      expect(l.status, ListingStatus.completed, reason: 'ilan tamamlanmadı');
+      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
+      expect(l.isTamamlanmisIs, isTrue, reason: 'ilan tamamlanmadı');
+      expect(l.status, ListingStatus.active);
       expect(l.selectedOfferId, o1.id);
       expect(o1.status, OfferStatus.selected);
-      expect(o2.status, OfferStatus.cancelled, reason: 'rakip iptal edilmedi');
+      expect(o2.status, OfferStatus.closed, reason: 'rakip iptal edilmedi');
       expect(o2.escrowBlocked, isFalse, reason: 'rakip blokesi iade edilmedi');
       // ⚠ Seçilenin ücreti iletişim açılırken TÜKETİLMİŞTİ; iade yok.
       expect(o1.escrowConsumed, isTrue);

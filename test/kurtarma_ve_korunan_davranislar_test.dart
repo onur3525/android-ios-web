@@ -128,7 +128,7 @@ void main() {
       expect(a.contains('bool _devamEdenIsVar() {'), isTrue);
       expect(a.contains('final engel = _devamEdenIsVar();'), isTrue,
           reason: 'dondurma engeli panel açılmadan ÖNCE denetlenmeli');
-      expect(a.contains('ListingStatus.open'), isTrue);
+      expect(a.contains('ListingStatus.active'), isTrue);
       expect(a.contains('OfferStatus.active'), isTrue);
     });
   });

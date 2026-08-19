@@ -18,9 +18,29 @@ class OfferApi {
           body: {'listingId': listingId, 'amountTl': amountTl, 'note': note},
           idempotencyKey: idempotencyKey);
 
-  Future<Map<String, dynamic>> select(String offerId, {required String idempotencyKey}) =>
-      c.post('/offers/$offerId/select', idempotencyKey: idempotencyKey);
+  /// TEKLİF SEÇME — nihai uç
+  /// (OpenAPI: `PUT /listings/{listingId}/selected-offer`).
+  ///
+  /// ⚠ ESKİ UÇ `POST /offers/{offerId}/select` İDİ. Nihai sözleşmede
+  /// işlem TEKLİFİN değil İLANIN bir özelliğini yazar: ilanın seçilmiş
+  /// teklifi. Bu yüzden yol ilana aittir, yöntem PUT'tur (aynı sonucu
+  /// yazan tekrar istekler aynı durumu üretir) ve seçilen teklif
+  /// GÖVDEDE gider.
+  ///
+  /// ⚠ Idempotency-Key ZORUNLU (§25): ikinci istek ikinci tamamlanan
+  /// iş, ikinci tahsilat ya da ikinci bildirim ÜRETMEZ.
+  Future<Map<String, dynamic>> select(
+    String listingId, {
+    required String offerId,
+    required String idempotencyKey,
+  }) =>
+      c.put('/listings/$listingId/selected-offer',
+          body: {'offerId': offerId}, idempotencyKey: idempotencyKey);
 
-  Future<Map<String, dynamic>> withdraw(String offerId, {required String idempotencyKey}) =>
-      c.post('/offers/$offerId/withdraw', idempotencyKey: idempotencyKey);
+  // ⚠ `withdraw` KALDIRILDI (API sözleşmesi §1, kabul testi 2).
+  //
+  // "Teklif geri çekilemez ve değiştirilemez." Uç, repository metodu,
+  // controller aksiyonu ve düğme birlikte kaldırıldı. Aynı işi başka
+  // adla yapan (cancel/delete/revoke) bir uç EKLENMEDİ — kural adı
+  // değiştirerek dolaşılmaz.
 }

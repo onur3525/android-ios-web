@@ -53,12 +53,50 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return ValidationError(text);
     case 'RATE_LIMITED':
       return ValidationError(text);
+
+    // ── ⚠ NİHAİ SÖZLEŞME KODLARI (§13) ──
+    //
+    // İstemci HTTP durumuna değil `code` alanına göre davranır.
+    // Aynı 409 iki farklı anlam taşıyabilir: "zaten teklif verdiniz"
+    // ile "iletişim zaten açık" kullanıcı için tamamen farklı
+    // sonuçlardır.
+    case 'FREE_RIGHTS_EXHAUSTED':
+      return const ValidationError('Ücretsiz iletişim hakkınız kalmadı');
+    case 'OFFER_ALREADY_EXISTS':
+      return const DuplicateOfferError();
+    case 'COMMUNICATION_ALREADY_OPEN':
+      // ⚠ HATA DEĞİL, İDEMPOTENT SONUÇ (§10).
+      //
+      // İletişim zaten açıksa istenen durum ZATEN sağlanmıştır.
+      // Kullanıcıya kırmızı hata göstermek yanlış olur; çağıran
+      // taraf bunu başarı gibi ele alır.
+      return const IletisimZatenAcikError();
+    case 'LISTING_EXPIRED':
+      return const ListingClosedError();
+    case 'LISTING_REMOVED':
+      return const ListingClosedError();
+    case 'BUSINESS_RULE_VIOLATION':
+      return InvalidStateError(text);
+    case 'CONFLICT':
+    case 'DUPLICATE_OPERATION':
+    case 'STATE_CONFLICT':
+      return InvalidStateError(text);
+    case 'UNAUTHENTICATED':
+      return UnauthorizedError(text);
+    case 'INTERNAL_ERROR':
+      return serverError();
+    case 'EXTERNAL_SERVICE_ERROR':
+      return serverError();
     default:
       if (status == 401 || status == 403) {
         return UnauthorizedError(text);
       }
       if (status == 404) {
         return NotFoundError(text);
+      }
+      // ⚠ 422 = iş kuralı ihlali; form doğrulama hatası DEĞİLDİR.
+      if (status == 422 || status == 409) {
+        return InvalidStateError(text);
       }
       // ⚠ SUNUCU HATASI FORM HATASI DEĞİLDİR.
       //

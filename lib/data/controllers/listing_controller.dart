@@ -48,22 +48,22 @@ class ListingController extends BaseController {
     return result;
   }
 
-  Future<DomainError?> startWork(String listingId, {required String actorId}) =>
-      runAction('listing:start:$listingId',
-          () => _listings.startWork(listingId, actorId: actorId),
-          onSuccess: () => _listings.loadOne(listingId));
-
-  Future<DomainError?> completeWork(String listingId, {required String actorId}) =>
-      runAction('listing:complete:$listingId',
-          () => _listings.completeWork(listingId, actorId: actorId),
-          onSuccess: () => _listings.loadOne(listingId));
+  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
+  //
+  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
+  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
+  // seçildiği anda iş tamamlanmış sayılır.
+  //
+  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
+  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
 
   /// ⚠ [reason] silme/iptal GEREKÇESİDİR ve yönetime iletilir.
-  Future<DomainError?> cancel(String listingId,
-          {required String actorId, String? reason}) =>
-      runAction('listing:cancel:$listingId',
-          () => _listings.cancel(listingId, actorId: actorId, reason: reason),
-          onSuccess: () => _listings.loadMine(actorId));
+  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir.
+  //
+  // İki uç aynı işi yapıyordu (`POST /listings/{id}/cancel` ve
+  // `DELETE /listings/{id}`). Kanonik uç DELETE olarak belirlendi.
+  // ⚠ `cancel` adında yeni bir durum ÜRETİLMEDİ ve eski `cancelled`
+  // durumu GERİ GETİRİLMEDİ: kullanıcı silmesi `USER_DELETED`tır.
 
   Future<DomainError?> expire(String listingId, {required String actorId}) =>
       runAction('listing:expire:$listingId',
