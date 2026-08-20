@@ -633,14 +633,22 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // ⚠ Değerlendirme YAPILMIŞSA düğme yerine durum yazısı.
                 // Tıklanamaz bir düğme, hâlâ yapılacak bir iş varmış
                 // izlenimi verirdi.
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
+                // ⚠ `const` KALDIRILDI.
+                //
+                // Derleyici bu ifadeyi sabit saymadı:
+                //   Error: Not a constant expression.
+                //
+                // `HC.grey` kaynakta `static const` olsa da bu bağlamda
+                // sabit değerlendirilmiyor. Sebebini kesinleştirmek
+                // yerine — tahminle uğraşmak derlemeyi bir tur daha
+                // kırardı — sabitlik kaldırıldı. Kazanç yalnız küçük
+                // bir bellek optimizasyonuydu; davranış AYNI.
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
                   child: Text('Değerlendirmeniz alındı',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: HC.grey)),
+                      style: refText(
+                          size: 13, weight: RF.w600, color: RC.textSoft)),
                 ),
             ],
           ]),

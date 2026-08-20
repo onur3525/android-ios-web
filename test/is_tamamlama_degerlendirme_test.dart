@@ -84,6 +84,15 @@ void main() {
       expect(j, greaterThan(i), reason: 'yorum dalı zincirin sonunda olmalı');
       expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
       expect(teklifDetay.contains("'Yorum Yapıldı "), isTrue);
+      // ⚠ "Yorum yazmak ücretsizdir." KALDIRILDI: ücretsizlik şeridi
+      // BEDEL ALINAN işlemler için var (teklif verme, iletişim açma).
+      // Yorum zaten hiç ücretli olmadı; cümle olmayan bir endişeyi
+      // akla getiriyordu.
+      expect(teklifDetay.contains('Yorum yazmak ücretsizdir'), isFalse,
+          reason: 'kaldırılan ücretsizlik yazısı geri gelmiş');
+      // ⚠ Bedel alınan iki işlemde şerit KALIR.
+      expect(teklifDetay.contains('İletişimi açmak ücretsizdir.'), isTrue);
+      expect(teklifDetay.contains('Teklif seçmek ücretsizdir.'), isTrue);
     });
   });
 
@@ -118,19 +127,45 @@ void main() {
       expect(teklifDetay.contains('ortalama!.toStringAsFixed(1)'), isTrue);
     });
 
-    test('puan ZORUNLU, yorum EN AZ 5 KELİME, en fazla 1000 karakter', () {
-      // ⚠ API SÖZLEŞMESİ §14 — HTML prototipine ÜSTÜNDÜR (§31).
+    test('⚠ PUAN ZORUNLU, YORUM TAMAMEN İSTEĞE BAĞLI', () {
+      // ── ÜRÜN KARARI ──
       //
-      // Prototipte `maxlength=500` ve yorum İSTEĞE BAĞLIYDI; sözleşme
-      // asgari 5 kelime ve azami 1000 karakter diyor. Sayılar teste
-      // GÖMÜLMEZ, sabitten okunur.
-      expect(DomainConfig.kYorumMinKelime, 5);
+      // Bir süre "yorum yazıldıysa en az 5 kelime olsun" kuralı
+      // vardı. Kısa ama geçerli yorumları ("işini iyi yaptı")
+      // engelliyor ve kullanıcıyı yorum yazmaktan caydırıyordu.
+      // ALT SINIR TAMAMEN KALDIRILDI.
+      expect(degerlendirme.contains('kYorumMinKelime'), isFalse,
+          reason: 'asgari kelime kuralı geri gelmiş');
+      expect(degerlendirme.contains('yorumKisa'), isFalse);
+      // Sabit ve mesaj kaynaktan da kalkmalı.
+      // ⚠ `read` ham metin döner; aranan ifadeler KALDIRILDIĞINI
+      // anlatan yorumlarda da geçmesin diye kod adları seçildi.
+      expect(read('lib/domain/config.dart').contains('int kYorumMinKelime'),
+          isFalse);
+      expect(read('lib/domain/form_mesajlari.dart').contains('static final yorumKisa'),
+          isFalse);
+
+      // ⚠ PUAN ZORUNLU — iki katmanda birden.
+      expect(degerlendirme.contains('if (_stars < 1)'), isTrue,
+          reason: 'gönderimde puan denetimi yok');
+      expect(degerlendirme.contains('onPressed: _stars < 1 ? null : _submit'),
+          isTrue, reason: 'puansızken düğme pasif değil');
+
+      // ⚠ ÜST SINIR DURUYOR — kaldırılan yalnız alt sınır.
       expect(DomainConfig.kYorumMaxKarakter, 1000);
       expect(degerlendirme.contains('DomainConfig.kYorumMaxKarakter'), isTrue);
-      expect(degerlendirme.contains('maxLength: 500'), isFalse,
-          reason: 'eski 500 sınırı geri gelmiş');
-      expect(degerlendirme.contains('kelime < DomainConfig.kYorumMinKelime'),
-          isTrue, reason: 'asgari kelime denetimi yok');
+      expect(degerlendirme.contains('maxLength: 500'), isFalse);
+    });
+
+    test('⚠ SÖZLEŞME DE AYNI KURALI SÖYLER', () {
+      // İstemci ve sunucu ayrışırsa boş yorum istemcide geçer,
+      // sunucuda reddedilirdi.
+      final y = File('docs/openapi.yaml').readAsStringSync();
+      expect(y.contains('EN AZ 5 KELİME'), isFalse,
+          reason: 'sözleşmede eski kural kalmış');
+      expect(y.contains('YORUM İSTEĞE BAĞLIDIR'), isTrue);
+      // `ReviewCreate` yalnız `stars` zorunlu.
+      expect(y.contains('      required: [stars]'), isTrue);
     });
 
     test('⚠ FORM ATLANMAZ — düğme yalnız YAPILMAMIŞSA çizilir', () {

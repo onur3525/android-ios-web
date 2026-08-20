@@ -528,6 +528,16 @@ class RefFormField extends StatelessWidget {
     required this.controller,
     required this.hint,
     this.zorunlu = true,
+
+    /// Kutunun ÜSTÜNDE görünen alan adı. Verilmezse `hint` kullanılır.
+    /// ⚠ `RefTextField` ile AYNI sözleşme: iki bileşen de aynı
+    /// parametreleri tanır, çağıran taraf hangisini kullandığını
+    /// bilmek zorunda kalmaz.
+    this.etiket,
+
+    /// Kutunun İÇİNDE görünen BİÇİM ÖRNEĞİ ("5XX XXX XX XX").
+    /// ⚠ Alan adı buraya yazılmaz — o `etiket`e aittir.
+    this.yerTutucu,
     this.suffix,
     this.keyboardType,
     this.inputFormatters,
@@ -558,6 +568,8 @@ class RefFormField extends StatelessWidget {
   final InputCounterWidgetBuilder? buildCounter;
   final TextEditingController controller;
   final String hint;
+  final String? etiket;
+  final String? yerTutucu;
 
   /// `.rg-star` — kırmızı yıldız.
   final bool zorunlu;
@@ -636,7 +648,7 @@ class RefFormField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RefFieldLabel(hint, zorunlu: zorunlu, ilk: true),
+        RefFieldLabel(etiket ?? hint, zorunlu: zorunlu, ilk: true),
         _kutu(context),
       ],
     );
@@ -724,7 +736,12 @@ class RefFormField extends StatelessWidget {
                 // ⚠ KUTUNUN İÇİ BOŞ: alan adı ÜSTTEKİ etikette.
                 // İkisinde birden yazılırsa aynı bilgi iki kez
                 // görünür ve alan doldurulunca içerideki kaybolur.
-                hint: null,
+                //
+                // ⚠ Tek istisna BİÇİM ÖRNEĞİ ("5XX XXX XX XX"):
+                // o alan adı değil, yazım ipucudur.
+                hint: (yerTutucu == null || yerTutucu!.isEmpty)
+                    ? null
+                    : refYerTutucu(yerTutucu!, zorunlu: false, boyut: RF.s15),
                 // Kutu `.rg-f` tarafından çiziliyor; girdi çerçevesizdir.
                 isDense: true,
                 border: InputBorder.none,

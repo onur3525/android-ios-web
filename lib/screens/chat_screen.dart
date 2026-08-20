@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -284,17 +286,18 @@ class _ChatScreenState extends State<ChatScreen>
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // ── ⚠ FOTOĞRAF ÖNİZLEMELİ ──
+                          //
+                          // Burada yalnız bir ikon ve "Fotoğraf"
+                          // yazısı vardı: kullanıcı GÖNDERDİĞİ
+                          // fotoğrafı bile göremiyordu. Artık küçük
+                          // önizleme çizilir, dokununca tam ekran
+                          // açılır.
                           if (m.imagePath != null)
-                            Row(mainAxisSize: MainAxisSize.min, children: [
-                              RefSvg('assets/svg/ic_camplus.svg',
-                                  size: 17,
-                                  color: mine ? Colors.white : HC.grey),
-                              const SizedBox(width: 6),
-                              Text('Fotoğraf',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: mine ? Colors.white : HC.dark)),
-                            ]),
+                            _SohbetFotografi(
+                              yol: m.imagePath!,
+                              benim: mine,
+                            ),
                           if (m.text != null)
                             Text(m.text!,
                                 style: TextStyle(
@@ -418,5 +421,118 @@ Future<void> _ara(BuildContext context, String ham) async {
   if (!acildi && context.mounted) {
     sysToastErr(context, SysKind.genericError,
         extra: 'Arama uygulaması açılamadı');
+  }
+}
+
+/// SOHBET FOTOĞRAFI — önizleme + tam ekran.
+///
+/// ── ⚠ KAYNAK İKİ TÜRLÜ OLABİLİR ──
+///
+/// · CİHAZ YOLU — kullanıcının az önce seçtiği dosya (galeriden
+///   gelir, mock modda ve gönderim anında budur).
+/// · SUNUCU REFERANSI (`storageRef`) — karşı taraftan gelen mesajda
+///   `Mappers.chatMessage` bu alanı doldurur.
+///
+/// ⚠ REFERANS ÇÖZÜMLEME YAPILMADI. `StorageApi.resolve` ucu tanımlı
+/// ama YANIT BİÇİMİ sözleşmede belirsiz (hangi alan URL taşıyor
+/// yazılı değil). Uydurma bir alan adı okumak yerine referans
+/// çözülemediğinde nötr bir yer tutucu çizilir — bkz. rapor.
+class _SohbetFotografi extends StatelessWidget {
+  const _SohbetFotografi({required this.yol, required this.benim});
+
+  final String yol;
+  final bool benim;
+
+  bool get _ag => yol.startsWith('http://') || yol.startsWith('https://');
+  bool get _yerel => !_ag && File(yol).existsSync();
+
+  @override
+  Widget build(BuildContext context) {
+    final gorsel = _gorsel(kucuk: true);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+          width: 190,
+          height: 140,
+          child: (_ag || _yerel)
+              ? RefTap(
+                  // ⚠ Dokununca TAM EKRAN: sohbet balonundaki küçük
+                  // önizlemede ayrıntı seçilemiyor.
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => _FotografTamEkran(yol: yol),
+                    ),
+                  ),
+                  child: gorsel,
+                )
+              : gorsel,
+        ),
+      ),
+    );
+  }
+
+  Widget _gorsel({required bool kucuk}) {
+    if (_ag) {
+      return Image.network(yol, fit: BoxFit.cover, errorBuilder: _hata);
+    }
+    if (_yerel) {
+      return Image.file(File(yol), fit: BoxFit.cover, errorBuilder: _hata);
+    }
+    return _yerTutucu();
+  }
+
+  Widget _hata(BuildContext _, Object __, StackTrace? ___) => _yerTutucu();
+
+  /// ⚠ Görsel açılamadığında BOŞ KUTU BIRAKILMAZ: kullanıcı bir
+  /// fotoğraf gönderildiğini yine de görmeli.
+  Widget _yerTutucu() => ColoredBox(
+        color: benim ? Colors.white24 : const Color(0xFFF1F4F9),
+        child: Center(
+          child: RefSvg('assets/svg/ic_camg.svg', size: 22),
+        ),
+      );
+}
+
+/// Tam ekran fotoğraf görüntüleyici.
+///
+/// ⚠ Yakınlaştırma `InteractiveViewer` ile: ayrı bir paket
+/// EKLENMEDİ.
+class _FotografTamEkran extends StatelessWidget {
+  const _FotografTamEkran({required this.yol});
+
+  final String yol;
+
+  @override
+  Widget build(BuildContext context) {
+    final ag = yol.startsWith('http://') || yol.startsWith('https://');
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: ag
+                    ? Image.network(yol)
+                    : Image.file(File(yol)),
+              ),
+            ),
+            Positioned(
+              left: 4,
+              top: 4,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

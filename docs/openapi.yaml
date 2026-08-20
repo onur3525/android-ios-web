@@ -442,13 +442,19 @@ components:
 
     ReviewCreate:
       type: object
-      required: [stars, text]
+      # ⚠ Yalnız `stars` zorunlu: yorum isteğe bağlıdır.
+      required: [stars]
       properties:
         stars: { type: integer, minimum: 1, maximum: 5 }
         text:
           type: string
           maxLength: 1000
-          description: ⚠ EN AZ 5 KELİME (§14). Fotoğraf alanı YOKTUR.
+          description: |
+            ⚠ YORUM İSTEĞE BAĞLIDIR — boş gönderilebilir (ürün kararı).
+            Asgari kelime kuralı KALDIRILDI: kısa ama geçerli
+            yorumları engelliyordu. Yalnız PUAN zorunludur.
+
+            Fotoğraf alanı YOKTUR.
 
     # ── MESAJ / BİLDİRİM ──
     Message:
@@ -1035,7 +1041,11 @@ paths:
       tags: [Reviews]
       summary: Değerlendirme yaz
       description: |
-        ⚠ Yalnız Hizmet Alan → Hizmet Veren, 1-5 yıldız, EN AZ 5 KELİME, en fazla 1000 karakter, FOTOĞRAF YOK (§14).
+        ⚠ Yalnız Hizmet Alan → Hizmet Veren. PUAN ZORUNLU (1-5),
+        YORUM İSTEĞE BAĞLI (en fazla 1000 karakter, alt sınır YOK),
+        FOTOĞRAF YOK.
+
+        ⚠ Sunucu boş yorumu REDDETMEZ; puansız isteği reddeder.
         ⚠ Her ilan için tek değerlendirme; ikinci istek → 409. Kullanıcı silemez/değiştiremez.
         ⚠ PENDING_PUBLICATION ile başlar, 1 GÜN sonra PUBLISHED olur.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]

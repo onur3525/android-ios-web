@@ -122,9 +122,10 @@ class FormMesaj {
   static const mahalleSec = 'Mahalle seçiniz';
   static const puanSec = 'Puan seçiniz';
 
-  /// ⚠ API sözleşmesi §14: yorum en az `kYorumMinKelime` kelimedir.
-  static final yorumKisa =
-      'Yorumunuz en az ${DomainConfig.kYorumMinKelime} kelime olmalıdır';
+  // ⚠ `yorumKisa` KALDIRILDI — asgari kelime kuralı yok.
+  //
+  // Yorum tamamen isteğe bağlı; kısa yorumlar da geçerli. Bu mesaj
+  // kullanıcıyı yorum yazmaktan caydırıyordu.
 
   /// İlan oluşturmada kategori adımı.
   ///

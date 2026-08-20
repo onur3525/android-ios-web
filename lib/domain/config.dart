@@ -22,7 +22,12 @@ abstract final class DomainConfig {
   // Belge HTML prototipine ÜSTÜNDÜR (§31). Prototipte `maxlength=500`
   // yazıyordu; sözleşme 1000 diyor. Asgari kelime kuralı prototipte
   // HİÇ YOKTU.
-  static const int kYorumMinKelime = 5;
+  // ⚠ `kYorumMinKelime` KALDIRILDI (ürün kararı).
+  //
+  // Yorum İSTEĞE BAĞLIDIR ve alt uzunluk sınırı YOKTUR. Yalnız PUAN
+  // zorunludur. Sınır, kısa ama geçerli yorumları engelliyordu.
+  //
+  // ⚠ Üst sınır aşağıda duruyor — kaldırılan yalnız alt sınır.
   static const int kYorumMaxKarakter = 1000;
 
   /// ⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14, kabul testi 15).

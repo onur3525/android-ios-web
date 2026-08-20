@@ -35,29 +35,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
       setState(() => _error = FormMesaj.puanSec);
       return;
     }
-    // ── ⚠ YORUM İSTEĞE BAĞLIDIR ──
+    // ── ⚠ YORUM TAMAMEN İSTEĞE BAĞLIDIR ──
     //
-    // Ürün kararı: puan zorunlu, yorum opsiyonel. Boş yorum yüzünden
-    // gönderim ENGELLENMEZ — kullanıcı yalnız yıldız vererek
-    // değerlendirmesini tamamlayabilir.
+    // Ürün kararı: PUAN ZORUNLU, YORUM SERBEST. Kullanıcı yalnız
+    // yıldız verip gönderebilir.
     //
-    // ⚠ YAZILDIYSA ANLAMLI OLMALI: asgari kelime kuralı yalnız DOLU
-    // yorumlara uygulanır. Tek kelimelik ("iyi") bir yorum hizmet
-    // veren hakkında bilgi taşımıyor; ama hiç yazmamak serbest.
+    // ⚠ ASGARİ KELİME KURALI KALDIRILDI. Bir süre "yazıldıysa en az
+    // 5 kelime olsun" kuralı vardı; kısa ama geçerli yorumları
+    // ("işini iyi yaptı") engelliyordu ve kullanıcıyı yorum
+    // yazmaktan caydırıyordu. Uzunluk denetimi YOK.
     //
-    // ⚠ ÇELİŞKİ NOTU: API sözleşmesi §14 yorumu ZORUNLU ve en az
-    // 5 kelime sayıyor. Bu ürün kararı onunla çelişiyor ve sözleşme
-    // tarafı KARAR BEKLİYOR (bkz. rapor) — sözleşmeyi kendi başıma
-    // değiştirmedim.
+    // ⚠ Üst sınır (`kYorumMaxKarakter`) alanın kendisinde duruyor;
+    // kaldırılan yalnız ALT sınırdır.
     final yorum = _text.text.trim();
-    if (yorum.isNotEmpty) {
-      final kelime =
-          yorum.split(RegExp(r'\s+')).where((k) => k.isNotEmpty).length;
-      if (kelime < DomainConfig.kYorumMinKelime) {
-        setState(() => _error = FormMesaj.yorumKisa);
-        return;
-      }
-    }
     setState(() { _busy = true; _error = null; });
     final me = context.read<AuthController>().currentAccount!;
     final err = await context.read<ReviewController>().submit(
@@ -365,7 +355,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 RefWideButton(
                   'Değerlendirmeyi Gönder',
                   busy: _busy,
-                  onPressed: _submit,
+                  // ── ⚠ PUAN ZORUNLU ──
+                  //
+                  // Yıldız seçilmeden düğme PASİFTİR: kullanıcı
+                  // basıp hata almak yerine eksiği önceden görür.
+                  //
+                  // ⚠ `_submit` içindeki denetim KALDIRILMADI —
+                  // ikinci savunma olarak duruyor.
+                  //
+                  // ⚠ YORUM KOŞULA GİRMEZ: boş yorumla gönderim
+                  // serbesttir.
+                  onPressed: _stars < 1 ? null : _submit,
                 ),
               ],
             ],

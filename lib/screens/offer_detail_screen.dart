@@ -479,7 +479,22 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 const SizedBox(height: 13),
                 RefPrimaryButton(
                   'Teklifi Seç',
-                  iconAsset: 'assets/svg/ic_checkw.svg',
+                  // ── ⚠ İKON DEĞİŞTİ: `ic_checkw` → `ic_check_line` ──
+                  //
+                  // `ic_checkw` ÇİFT RENKLİ: beyaz dolu daire + İÇİNDE
+                  // mavi tik. Düğme ikonları `RefSvg`'ye `RC.white`
+                  // ile veriliyor ve `srcIn` harmanı çizimin TAMAMINI
+                  // tek renge boyuyor — mavi tik de beyaza dönüşünce
+                  // geriye düz beyaz bir daire kalıyordu. Kullanıcının
+                  // "anlamsız nokta" dediği şey buydu.
+                  //
+                  // Yeni ikon TEK RENKLİ çizgi tiktir; boyandığında
+                  // anlamını korur.
+                  //
+                  // ⚠ `ic_checkw` SİLİNMEDİ: giriş ekranındaki "Beni
+                  // Hatırla" kutusu onu RENK VERMEDEN kullanıyor ve
+                  // orada çift renk DOĞRU görünüyor.
+                  iconAsset: 'assets/svg/ic_check_line.svg',
                   busy: _busySelect,
                   // ── ⚠ SEÇİM VE YORUM AYRI ADIMLAR (ürün kararı) ──
                   //
@@ -558,11 +573,20 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                     ),
                   ),
                 ),
-                // ⚠ DÜĞME YOKKEN DE DURUM YAZISI KALIR: "Yorum Yapıldı".
-                _UcretsizSerit(reviewed
-                    ? 'Yorum Yapıldı '
-                        '(${reviewCtl.byOffer(offer.id)!.stars} puan)'
-                    : 'Yorum yazmak ücretsizdir.'),
+                // ── ⚠ "Yorum yazmak ücretsizdir." KALDIRILDI ──
+                //
+                // Ücretsizlik şeridi bedel alınan işlemler için var
+                // (teklif verme, iletişim açma): kullanıcı para
+                // çıkacak sanmasın diye. Yorum yazmak zaten hiçbir
+                // zaman ücretli olmadı; orada bu cümle olmayan bir
+                // endişeyi akla getiriyordu.
+                //
+                // ⚠ "Yorum Yapıldı" DURUM BİLGİSİ KALIYOR: düğme
+                // kalktığında kullanıcı işin tamamlandığını yalnız
+                // bundan anlıyor.
+                if (reviewed)
+                  _UcretsizSerit('Yorum Yapıldı '
+                      '(${reviewCtl.byOffer(offer.id)!.stars} puan)'),
               ],
             ],
           ),

@@ -330,8 +330,17 @@ class _FaturaKarti extends StatelessWidget {
                 borderRadius: BorderRadius.circular(RR.r10),
               ),
               alignment: Alignment.center,
-              child: const RefSvg('assets/svg/ic_ndoc.svg',
-                  size: 18, color: RC.blue),
+              // ⚠ RENK VERİLMEZ — İKON ÇİFT RENKLİ.
+              //
+              // `ic_ndoc` üç renkten oluşuyor: mavi gövde, açık mavi
+              // kıvrım, beyaz satır çizgileri. `RefSvg`'ye renk
+              // verilince `srcIn` harmanı çizimin TAMAMINI tek renge
+              // boyuyor ve belge düz mavi bir dikdörtgene dönüşüyordu
+              // — satır çizgileri kayboluyordu.
+              //
+              // İkon zaten mavi tonlarında tasarlanmış; olduğu gibi
+              // çizilmesi doğru sonucu veriyor.
+              child: const RefSvg('assets/svg/ic_ndoc.svg', size: 18),
             ),
             const SizedBox(width: 11),
             // ⚠ KARTTA YALNIZ DÖNEM YAZAR.
