@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  build-apk:
-    name: Build HizmetCep APK
+  build:
+    name: Android APK Build
     runs-on: ubuntu-latest
 
     steps:
@@ -44,7 +44,7 @@ jobs:
 
       - name: Find APK
         run: |
-          echo "APK DOSYALARI:"
+          echo "===== APK DOSYALARI ====="
           find build/app/outputs/flutter-apk -type f -name "*.apk" -ls
 
       - name: Upload APK
