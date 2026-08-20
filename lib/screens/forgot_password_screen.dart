@@ -505,6 +505,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
                       // etikette "Telefon" yazar, kutunun içinde biçim
                       // ipucu kalır.
+                      // ⚠ `hint` ZORUNLU PARAMETRE: `RefFormField`
+                      // etiket verilmediğinde onu kullanır. Burada
+                      // etiket ayrıca veriliyor ama parametre yine de
+                      // dolu olmalı — aksi hâlde derleme kırılır.
+                      hint: 'Telefon',
                       etiket: 'Telefon',
                       yerTutucu: '5XX XXX XX XX',
                       keyboardType: TextInputType.phone,
