@@ -1370,12 +1370,88 @@ paths:
   /categories:
     get:
       tags: [Categories]
-      summary: Kategori ve hizmet ağacı
+      summary: Kategori ve hizmet ağacı — KANONİK KATALOG KAYNAĞI
       description: |
-        ⚠ FLUTTER HENÜZ KULLANMIYOR: katalog bugün istemciye gömülü. Sunucudan besleme kararı açık (bkz. rapor).
+        ── ⚠ KATALOG OTORİTESİ BACKEND'DİR (nihai karar) ──
+
+        Admin panelinden kategori/hizmet eklenebildiği, düzenlenebildiği,
+        pasifleştirilebildiği ve kaldırılabildiği için katalogun tek
+        otoritatif kaynağı sunucudur. Android, iOS ve Web AYNI ucu
+        kullanır; platforma özel katalog TUTULMAZ.
+
+            Admin Paneli → Backend → GET /categories → Android · iOS · Web
+
+        ⚠ İSTEMCİDEKİ KATALOG YALNIZCA CACHE'TİR. Uygulamaya gömülü
+        liste performans ve çevrimdışı içindir; backend'in YERİNE
+        GEÇMEZ ve katalog üzerinde OTORİTE DEĞİLDİR.
+
+        ⚠ YENİ KATEGORİ İÇİN UYGULAMA SÜRÜMÜ GEREKMEZ. Admin bir
+        kategori eklediğinde değişiklik bu uçtan istemcilere yansır.
+
+        ── BACKEND'İN ZORUNLU KONTROLLERİ ──
+
+        İlan oluşturulurken gönderilen kategori/hizmet referansı
+        sunucuda YENİDEN doğrulanır:
+          · referans gerçekten var mı,
+          · aktif ve seçilebilir mi,
+          · kategori-hizmet ilişkisi geçerli mi.
+
+        ⚠ İSTEMCİ DENETİMİ GÜVENLİK SAYILMAZ. Geçersiz, pasif ya da
+        silinmiş referans REDDEDİLİR; hata mevcut `ErrorCode`
+        sözleşmesine göre döner (`VALIDATION_ERROR` ya da
+        `BUSINESS_RULE_VIOLATION`) — bu karar için YENİ hata kodu
+        tanımlanmadı.
+
+        ⚠ GEÇMİŞ İLANLARIN BÜTÜNLÜĞÜ KORUNUR: bir kategori
+        pasifleştirilince yeni ilanda seçilemez, ama mevcut ilanların
+        kategori referansı İSTEMCİ TARAFINDAN DEĞİŞTİRİLMEZ. Var olan
+        referansların nasıl korunacağı backend'in veri bütünlüğü
+        sorumluluğudur.
+
+        ⚠ ALTERNATİF UÇ AÇILMAZ: `/categories/me`, `/my/categories`,
+        `/mobile/categories` gibi karşılıklar üretilmez.
+
+        ── ⚠ MEVCUT DURUM (dürüst tespit) ──
+
+        İstemci bu ucu HENÜZ ÇAĞIRMIYOR; katalog bugün uygulamaya
+        gömülü. Karar sözleşme düzeyinde kesinleşti, istemci göçü
+        AYRI BİR İŞ olarak kalıyor (bkz. rapor).
+
+        ⚠ KİMLİK ALANI: bugünkü istemci kategori ve hizmeti ADIYLA
+        taşıyor; ayrı bir kimlik alanı YOK. Var olmayan bir alan
+        uydurulmadı — aşağıdaki şema gerçek yapıyı yansıtır. Kimliğe
+        geçiş backend sözleşmesiyle birlikte kararlaştırılmalıdır.
       parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
       responses:
-        '200': { description: Başarılı }
+        '200':
+          description: Kategori ağacı
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [category, services]
+                      properties:
+                        category:
+                          type: string
+                          description: Ana kategori adı (ör. "Kombi Servis").
+                        services:
+                          type: array
+                          items: { type: string }
+                          description: Alt hizmet adları.
+                        active:
+                          type: boolean
+                          description: |
+                            ⚠ Pasifleştirilen kategori yeni ilanda
+                            SEÇİLEMEZ. `false` gelen kayıt istemcide
+                            seçim listesine alınmaz.
+                  nextCursor:
+                    type: [string, 'null']
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 

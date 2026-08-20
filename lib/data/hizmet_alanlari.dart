@@ -244,7 +244,32 @@ List<({String kategori, String hizmet})> alanHizmetleri(String alan) {
   return out;
 }
 
-/// ⚠ Bütünlük: her kategori bir çatıya bağlı OLMALI.
+/// ── ⚠ ÇATISIZ KATEGORİLER (sunucudan gelenler) ──
+///
+/// Çatı eşlemesi (`kKategoriAlani`) uygulamaya gömülüdür: hangi
+/// kategorinin hangi çatıda görüneceği bir YERLEŞİM kararıdır ve
+/// sunucudan gelmez.
+///
+/// Admin YENİ bir kategori eklerse o kategori hiçbir çatıya bağlı
+/// olmaz. Bu bir hata değildir ve uygulamayı KIRMAZ:
+///   · kategori aramada ve "Tüm Kategoriler"de görünür,
+///   · ilan verme akışında seçilebilir,
+///   · yalnız ana sayfadaki ÇATI kısayolunda listelenmez.
+///
+/// ⚠ ALTERNATİF DAHA KÖTÜYDÜ: bilinmeyen kategoriyi rastgele bir
+/// çatıya atamak, kullanıcıya yanlış yerde gösterirdi. Kategori
+/// çatıya bağlanana kadar kısayoldan erişilemez ama ARAMADAN
+/// erişilebilir — veri kaybı yoktur.
+///
+/// ⚠ AÇIK KONU: yeni kategorinin çatısı, ikonu ve fotoğrafı
+/// uygulamada tanımlı olmadığı için sürüm gerektirir. Kalıcı çözüm
+/// bu üçünün de sunucudan gelmesidir; ürün kararı bekliyor.
+List<String> catisizKategoriler() =>
+    kCategoryTree.keys.where((c) => !kKategoriAlani.containsKey(c)).toList();
+
+/// ⚠ Bütünlük: GÖMÜLÜ katalogun her kategorisi bir çatıya bağlı
+/// OLMALI. Sunucudan gelen yeni kategoriler bu denetimin dışındadır
+/// (bkz. `catisizKategoriler`).
 bool alanKapsamiTam() =>
-    kKategoriAlani.length == kCategoryTree.length &&
-    kCategoryTree.keys.every(kKategoriAlani.containsKey);
+    kKategoriAlani.length == kGomuluKatalog.length &&
+    kGomuluKatalog.keys.every(kKategoriAlani.containsKey);

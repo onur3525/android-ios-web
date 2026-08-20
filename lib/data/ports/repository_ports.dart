@@ -259,9 +259,29 @@ abstract class OfferPort extends ChangeNotifier {
   Future<DomainError?> loadMine();
   Future<DomainError?> loadForListing(String listingId);
 
+  /// Teklif verir.
+  ///
+  /// ⚠ TEK GÜVENLİ İŞLEM: teklif kaydı ile bedelin ayrılması
+  /// (TL bloke ya da ücretsiz hak tüketimi) birlikte yapılır.
+  Future<DomainError?> placeOffer({
+    required String listingId,
+    required String providerId,
+    required int amount,
+    required String note,
+  });
+
+  /// Teklifi seçer — ilanın `selectedOffer` alanını yazar.
+  ///
+  /// ⚠ Nihai uç ilana aittir (`PUT /listings/{id}/selected-offer`),
+  /// bu yüzden `listingId` zorunludur.
+  Future<DomainError?> selectOffer({
+    required String listingId,
+    required String offerId,
+    required String actorId,
+  });
+
   // ⚠ `withdrawOffer` KALDIRILDI (API sözleşmesi §1).
   // Gönderilmiş teklif geri çekilemez; alternatif adla da eklenmez.
-
 }
 
 abstract class WalletPort extends ChangeNotifier {

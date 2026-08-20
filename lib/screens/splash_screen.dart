@@ -11,6 +11,8 @@ import '../data/controllers/notification_controller.dart';
 import '../data/models/account.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api/config_api.dart';
+import '../data/category_tree.dart';
+import '../data/remote/api/category_api.dart';
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
@@ -509,6 +511,33 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       configOk = true; // mock modda meta ucu yoktur
       BootLog.olay('CONFIG_CHECK_END', 'mock');
+    }
+
+    // ── ⚠ KATALOG — OTORİTE BACKEND'DİR ──
+    //
+    // Kategori ve hizmetler admin panelinden yönetiliyor; uygulamaya
+    // gömülü liste yalnızca YEDEKTİR. Sunucudan gelen katalog
+    // yerleşince arama, kategori seçimi, ilan verme ve çatı ekranları
+    // hepsi yeni veriyi görür — çünkü hepsi `kCategoryTree`
+    // getter'ından okuyor.
+    //
+    // ⚠ AÇILIŞI BLOKLAMAZ. Katalog alınamazsa uygulama gömülü
+    // listeyle çalışmaya devam eder; kullanıcı beyaz ekranda
+    // bırakılmaz. Bu yüzden hata yutulur ve yalnız log'a yazılır.
+    //
+    // ⚠ MOCK MODDA ÇAĞRILMAZ: sunucu yok, gömülü katalog zaten
+    // kullanılıyor.
+    if (ApiConfig.useRealApi) {
+      try {
+        BootLog.olay('CATALOG_FETCH_START');
+        final j = await CategoryApi(client!).tree().timeout(_kConfigButce);
+        final agac = CategoryApi.parse(j);
+        KatalogKaynagi.i.guncelle(agac);
+        BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
+      } catch (e) {
+        // ⚠ Gömülü katalog devrede kalır — kategorisiz uygulama olmaz.
+        BootLog.olay('CATALOG_FETCH_END', 'fail:${e.runtimeType}');
+      }
     }
 
     // ── CİHAZIN GERÇEK İNTERNET DURUMU ──

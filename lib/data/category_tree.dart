@@ -1,5 +1,32 @@
 /// HİZMET KATALOĞU — 63 ANA KATEGORİ · 640 ALT HİZMET
 ///
+/// ═══════════════════════════════════════════════════════════════
+///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
+/// ═══════════════════════════════════════════════════════════════
+///
+/// NİHAİ KARAR: katalogun tek otoritatif kaynağı BACKEND'dir.
+/// Kanonik uç `GET /categories`; Android, iOS ve Web aynı ucu
+/// kullanır ve platforma özel katalog TUTULMAZ.
+///
+///     Admin Paneli → Backend → GET /categories → Android · iOS · Web
+///
+/// ⚠ NEDEN: kategori ve hizmetler admin panelinden yönetiliyor.
+/// Listeyi uygulamaya gömülü OTORİTE saymak, admin yönetimini
+/// etkisiz kılar — yeni bir kategori için uygulama sürümü
+/// yayınlamak gerekirdi.
+///
+/// ⚠ BU DOSYANIN GÖREVİ: performans ve çevrimdışı kullanım için
+/// yerel kopya sağlamak. Sunucudan güncel katalog geldiğinde ONUN
+/// verisi esas alınır; buradaki liste backend'in YERİNE GEÇMEZ.
+///
+/// ⚠ İSTEMCİ KATEGORİ KİMLİĞİ ÜRETMEZ: addan kimlik türetme, tahmin
+/// etme veya yeniden numaralandırma YAPILMAZ. Sunucunun verdiği
+/// gerçek değerler kullanılır.
+///
+/// ⚠ MEVCUT DURUM (dürüst tespit): istemci bu ucu HENÜZ ÇAĞIRMIYOR
+/// ve katalog pratikte buradan okunuyor. Karar sözleşme düzeyinde
+/// kesinleşti; sunucudan besleme AYRI BİR İŞ olarak duruyor.
+///
 /// ⚠ BU SAYILAR TESTLE BAĞLIDIR. `test/katalog_yapisi_test.dart`
 /// gerçek sayımı doğrular, `test/yorum_sayi_tutarliligi_test.dart` ise
 /// BU SATIRDAKİ sayının gerçek sayımla aynı olmasını zorunlu kılar.
@@ -42,8 +69,20 @@
 /// bakınız.
 library;
 
-/// Ana kategori → alt hizmetler.
-const Map<String, List<String>> kCategoryTree = {
+/// ── ⚠ GÖMÜLÜ KATALOG — YEDEK VE İLK AÇILIŞ TOHUMU ──
+///
+/// Bu sabit artık DOĞRUDAN OKUNMAZ. Uygulamanın katalog erişimi
+/// `kCategoryTree` üzerinden olur ve o, çalışma zamanında AKTİF
+/// katalogu döndürür:
+///
+///   · sunucudan katalog geldiyse   → SUNUCU verisi
+///   · henüz gelmediyse / hata varsa → bu gömülü liste
+///
+/// ⚠ ADI DEĞİŞTİ ama içeriği aynı. `kCategoryTree` adı korundu ki
+/// katalogu okuyan on iki dosya ve testler DEĞİŞMEDEN sunucu
+/// verisine geçsin — tek noktadan kaynak değişimi, on iki dosyayı
+/// tek tek elden geçirmekten çok daha güvenli.
+const Map<String, List<String>> kGomuluKatalog = {
   'Temizlik Hizmetleri': [
     'Ev Temizliği', 'Boş Ev Temizliği', 'Ofis Temizliği',
     'İnşaat Sonrası Temizlik', 'Derin Temizlik', 'Taşınma Temizliği',
@@ -526,6 +565,60 @@ const Map<String, List<String>> kCategoryTree = {
     'Poliçe Yenileme', 'Kurumsal Sigorta Danışmanlığı'
   ],
 };
+
+/// ── ⚠ KATALOG KAYNAĞI — TEK GEÇİT ──
+///
+/// Katalogun otoritesi BACKEND'dir (`GET /categories`). Bu sınıf,
+/// sunucudan gelen katalogu tutar ve uygulamanın tamamı buradan
+/// okur.
+///
+/// ⚠ NEDEN SINGLETON: katalog on iki dosyadan ve tüm ekranlardan
+/// okunuyor. Her birine ayrı ayrı controller geçirmek yerine tek
+/// geçit kullanıldı — mevcut mimariyi bozmadan kaynağı değiştirmenin
+/// en az riskli yolu buydu.
+class KatalogKaynagi {
+  KatalogKaynagi._();
+  static final KatalogKaynagi i = KatalogKaynagi._();
+
+  Map<String, List<String>>? _sunucu;
+
+  /// Sunucudan katalog alındı mı?
+  bool get sunucudanGeldi => _sunucu != null;
+
+  /// AKTİF katalog: sunucu verisi varsa o, yoksa gömülü liste.
+  ///
+  /// ⚠ YEREL LİSTE SUNUCUNUN ÜZERİNE YAZAMAZ. Sıra tek yönlüdür:
+  /// sunucu geldiğinde onun verisi esas alınır ve bir daha gömülü
+  /// listeye DÜŞÜLMEZ.
+  Map<String, List<String>> get aktif => _sunucu ?? kGomuluKatalog;
+
+  /// Sunucudan gelen katalogu yerleştirir.
+  ///
+  /// ⚠ BOŞ KATALOG KABUL EDİLMEZ. Sunucu geçici bir hata yüzünden
+  /// boş liste dönerse uygulama kategorisiz kalırdı; böyle bir yanıt
+  /// yok sayılır ve önceki katalog korunur.
+  ///
+  /// ⚠ PASİF KAYITLAR ÇAĞIRAN TARAFTA SÜZÜLÜR (bkz. `CategoryApi`):
+  /// buraya yalnız SEÇİLEBİLİR kategoriler gelir.
+  void guncelle(Map<String, List<String>> gelen) {
+    if (gelen.isEmpty) {
+      return;
+    }
+    _sunucu = {
+      for (final e in gelen.entries)
+        if (e.value.isNotEmpty) e.key: List.unmodifiable(e.value),
+    };
+  }
+
+  /// ⚠ YALNIZ TESTLER İÇİN: sunucu verisini geri alır.
+  void sifirla() => _sunucu = null;
+}
+
+/// ANA KATEGORİ → ALT HİZMETLER (aktif kaynak).
+///
+/// ⚠ Sabit DEĞİL, GETTER'dır: sunucudan katalog geldiğinde bu
+/// getter'ı okuyan her yer kendiliğinden yeni veriyi görür.
+Map<String, List<String>> get kCategoryTree => KatalogKaynagi.i.aktif;
 
 
 
