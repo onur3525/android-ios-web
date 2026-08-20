@@ -122,6 +122,22 @@ HataBilgisi hataBilgisi(DomainError hata) {
     case InsufficientBalanceError():
     case DuplicateOfferError():
     case OwnListingOfferError():
+    // ── ⚠ İLETİŞİM ZATEN AÇIK — BAŞARISIZLIK DEĞİL ──
+    //
+    // İletişim açma idempotenttir (§10): ikinci istek ikinci tahsilat
+    // yapmaz ve sunucu "zaten açık" der. İstenen durum ZATEN
+    // sağlandığı için `ContactController` bunu başarı gibi ele alır
+    // ve buraya normalde HİÇ GELMEZ.
+    //
+    // ⚠ Yine de sessiz bırakılmaz: başka bir yol bu hatayı ekrana
+    // taşırsa kullanıcı kırmızı bir uyarı değil, durumu anlatan nötr
+    // bir bilgi görmeli.
+    case IletisimZatenAcikError():
+      return const HataBilgisi(
+        baslik: 'İletişim zaten açık',
+        aciklama: 'Karşı tarafın bilgilerine erişebilirsiniz.',
+        bicim: HataBicimi.bildirim,
+      );
     case ListingClosedError():
     case OtpRequiredError():
     case WrongPasswordError():

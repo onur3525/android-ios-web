@@ -49,6 +49,46 @@ const _miras = {
 };
 
 void main() {
+  group('⚠ DOMAIN HATA KAPSAMI', () {
+    // ── NİÇİN VAR ──
+    //
+    // `hataBilgisi()` bir EXHAUSTIVE switch: yeni bir `DomainError`
+    // alt tipi eklenip dal yazılmazsa DERLEME KIRILIR:
+    //
+    //   The type 'DomainError' is not exhaustively matched by the
+    //   switch cases since it doesn't match 'IletisimZatenAcikError()'
+    //
+    // Bu tam olarak yaşandı: Paket 3'te `IletisimZatenAcikError`
+    // eklendi ama çeviri dalı yazılmadı. Kaynak metin testleri bunu
+    // göremez; ancak derleyici yakalar. Test o boşluğu kapatır.
+    test('her DomainError alt tipinin çeviri dalı VAR', () {
+      final tipler = RegExp(r'class (\w+) extends DomainError')
+          .allMatches(_kodu('lib/domain/failures.dart'))
+          .map((m) => m.group(1)!)
+          .toSet();
+      final kapsanan = RegExp(r'case (\w+)\(\)')
+          .allMatches(_kodu('lib/domain/hata_mesajlari.dart'))
+          .map((m) => m.group(1)!)
+          .toSet();
+      expect(tipler, isNotEmpty, reason: 'hata tipleri okunamadı');
+      final eksik = tipler.difference(kapsanan);
+      expect(eksik, isEmpty,
+          reason: 'çeviri dalı olmayan hata tipi — DERLEME KIRILIR: $eksik');
+    });
+
+    test('switch\'te tanımsız tip yok', () {
+      final tipler = RegExp(r'class (\w+) extends DomainError')
+          .allMatches(_kodu('lib/domain/failures.dart'))
+          .map((m) => m.group(1)!)
+          .toSet();
+      final kapsanan = RegExp(r'case (\w+)\(\)')
+          .allMatches(_kodu('lib/domain/hata_mesajlari.dart'))
+          .map((m) => m.group(1)!)
+          .toSet();
+      expect(kapsanan.difference(tipler), isEmpty);
+    });
+  });
+
   group('PORT ARAYÜZÜ', () {
     test('sekiz port arayüzü tanımlı', () {
       final a = _arayuzler();
