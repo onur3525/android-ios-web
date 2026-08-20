@@ -633,6 +633,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             enabled: !_busy,
                             hint: 'E-posta',
                             keyboardType: TextInputType.emailAddress,
+                  // ⚠ E-postada baş harf büyütülmez.
+                  textCapitalization: TextCapitalization.none,
                             textInputAction: TextInputAction.next,
                             focusNode: _fEmail,
                             validator: (v) =>
@@ -658,7 +660,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           // numaraya aittir, yazıyla kalkmaz.
                           onChanged: (_) => _degerDegisti(),
                           enabled: !_busy,
-                          hint: '5XX XXX XX XX',
+                          // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
+                      // etikette "Telefon" yazar, kutunun içinde biçim
+                      // ipucu kalır.
+                      etiket: 'Telefon',
+                      yerTutucu: '5XX XXX XX XX',
                           keyboardType: TextInputType.phone,
                           // ⚠ DİĞER EKRANLARLA AYNI KURAL.
                           //

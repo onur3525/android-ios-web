@@ -437,6 +437,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       enabled: !_busy,
                       hint: 'E-posta',
                       keyboardType: TextInputType.emailAddress,
+                  // ⚠ E-postada baş harf büyütülmez.
+                  textCapitalization: TextCapitalization.none,
                       textInputAction: TextInputAction.done,
                       // ⚠ ADRES DEĞİŞİNCE NÖTR KUTU KALKAR.
                       //
@@ -500,7 +502,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       controller: _phone,
                       focusNode: _fPhone,
                       enabled: !_busy,
-                      hint: '5XX XXX XX XX',
+                      // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
+                      // etikette "Telefon" yazar, kutunun içinde biçim
+                      // ipucu kalır.
+                      etiket: 'Telefon',
+                      yerTutucu: '5XX XXX XX XX',
                       keyboardType: TextInputType.phone,
                       inputFormatters: const [TelefonBicimlendirici()],
                       textInputAction: TextInputAction.done,

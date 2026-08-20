@@ -252,7 +252,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // aktif ettiğinde liste KENDİLİĞİNDEN büyür ve
                   // kullanıcı seçebilir — ekran kodu değişmez.
                   RefDropdownField(
-                    placeholder: 'İl',
+                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
+                    // "seçim yapılmadı" bilgisidir.
+                    etiket: 'İl',
+                    placeholder: 'Seçiniz',
                     zorunlu: true,
                     value: _city.isNotEmpty ? _city : r.cityName,
                     onTap: _saving ? null : _pickCity,
@@ -261,7 +264,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // kayboldu; kayıt ekranıyla aynı değer.
                   const SizedBox(height: 12),
                   RefDropdownField(
-                    placeholder: 'İlçe',
+                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
+                    // "seçim yapılmadı" bilgisidir.
+                    etiket: 'İlçe',
+                    placeholder: 'Seçiniz',
                     zorunlu: true,
                     value: _district,
                     onTap: _saving ? null : _pickDistrict,
@@ -270,7 +276,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // kayboldu; kayıt ekranıyla aynı değer.
                   const SizedBox(height: 12),
                   RefDropdownField(
-                    placeholder: 'Mahalle',
+                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
+                    // "seçim yapılmadı" bilgisidir.
+                    etiket: 'Mahalle',
+                    placeholder: 'Seçiniz',
                     zorunlu: true,
                     value: _neighborhood,
                     onTap: (_saving || _district == null)

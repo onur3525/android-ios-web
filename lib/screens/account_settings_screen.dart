@@ -731,6 +731,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 builder: (_, hata, __) => TextField(
                   controller: ctl,
                   obscureText: true,
+                  // ⚠ Şifrede baş harf büyütülmez.
+                  textCapitalization: TextCapitalization.none,
                   autofocus: true,
                   onChanged: (_) {
                     if (hataNot.value != null) {

@@ -489,6 +489,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               onChanged: (_) => setState(() {}),
               hint: 'E-posta',
               keyboardType: TextInputType.emailAddress,
+                  // ⚠ E-postada baş harf büyütülmez.
+                  textCapitalization: TextCapitalization.none,
               textInputAction: TextInputAction.next,
               onEditingComplete: () => _fTelefon.requestFocus(),
               // ⚠ ÖNERİ SATIRI KALDIRILDI.
@@ -521,7 +523,11 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               // ⚠ `onChanged` doğrulama YAPMAZ — yalnız "numara
               // değişti mi" bilgisi için yeniden çizim.
               onChanged: (_) => setState(() {}),
-              hint: '5XX XXX XX XX',
+              // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
+                      // etikette "Telefon" yazar, kutunun içinde biçim
+                      // ipucu kalır.
+                      etiket: 'Telefon',
+                      yerTutucu: '5XX XXX XX XX',
               keyboardType: TextInputType.number,
               // Son alan: klavye kapanır, form kendiliğinden gönderilmez.
               textInputAction: TextInputAction.done,

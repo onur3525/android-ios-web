@@ -202,6 +202,38 @@ void main() {
       }
     });
 
+    test('⚠ TAMAMLANAN İŞTE ÜÇ NOKTA MENÜSÜ ÇİZİLMEZ', () {
+      // Menünün tek işi ilanı silmek; tamamlanmış iş silinemez.
+      //
+      // ⚠ İkon "gizlenmiyor", HİÇ çizilmiyor. Önceki hâlde
+      // `onTap: null` veriliyordu — nokta duruyor ama basınca hiçbir
+      // şey olmuyordu; kullanıcı bozuk sanıyordu.
+      final k = _kodu('lib/screens/listing_detail_screen.dart');
+      expect(
+          k.contains(
+              'if (l.status == ListingStatus.active && !l.isTamamlanmisIs)'),
+          isTrue,
+          reason: 'üç nokta tamamlanmış işte de çiziliyor');
+      expect(k.contains('onTap: l.status == ListingStatus.active'), isFalse,
+          reason: 'ölü (tıklanamaz) ikon geri gelmiş');
+    });
+
+    test('⚠ TAMAMLANMIŞ İŞ DOMAIN KATMANINDA DA SİLİNEMEZ', () async {
+      // Arayüzde gizlemek tek başına güvenlik değildir.
+      final t = await tamamlanmisIs();
+      expect(ListingStateMachine.canDelete(t.l), isFalse);
+      final err =
+          await w.listingCtl.delete(t.l.id, actorId: cust, reason: 'test');
+      expect(err, isNotNull, reason: 'tamamlanmış ilan silinebiliyor');
+      expect(t.l.status, ListingStatus.active,
+          reason: 'başarısız silme durumu bozmamalı');
+    });
+
+    test('⚠ TAMAMLANMIŞ İŞ DÜZENLENEMEZ (sözleşme)', () {
+      final y = _sozlesme();
+      expect(y.contains('PATCH TAMAMEN\n          REDDEDİLİR'), isTrue);
+    });
+
     test('⚠ EK: İlanı Düzenle aksiyonu hiçbir ekranda YOK', () {
       for (final yol in const [
         'lib/screens/listing_detail_screen.dart',

@@ -133,6 +133,56 @@ void main() {
           isTrue, reason: 'asgari kelime denetimi yok');
     });
 
+    test('⚠ FORM ATLANMAZ — düğme yalnız YAPILMAMIŞSA çizilir', () {
+      // ── YAŞANAN HATA ──
+      //
+      // İlan detayındaki "Hizmeti Değerlendir" düğmesi koşulu yalnız
+      // `isTamamlanmisIs` idi. Değerlendirme ZATEN yapılmış olsa bile
+      // düğme çiziliyor, kullanıcı basınca ekran gerçek kaydı bulup
+      // doğrudan "gönderildi" görünümüne düşüyordu — dışarıdan
+      // "form atlanıyor" gibi görünüyordu.
+      expect(ilanDetay.contains('byOffer(l.selectedOfferId!) == null'), isTrue,
+          reason: 'yapılmış değerlendirmede düğme yine çiziliyor');
+      // Yapılmışsa düğme yerine durum yazısı.
+      expect(ilanDetay.contains('Değerlendirmeniz alındı'), isTrue);
+    });
+
+    test('⚠ DÜĞME ADI VE İKONU İKİ EKRANDA AYNI', () {
+      // Aynı iş iki ekranda farklı adla ("Hizmeti Değerlendir" /
+      // "Yorum Yaz") görünüyordu; kullanıcıya iki ayrı işmiş gibi
+      // geliyordu.
+      expect(ilanDetay.contains("'Yorum Yaz'"), isTrue);
+      expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
+      expect(ilanDetay.contains('Hizmeti Değerlendir'), isFalse);
+      // ⚠ İkon: `SysButton` ikon almıyordu ve metnin yanında sahipsiz
+      // bir işaret kalıyordu. İki ekran da `RefPrimaryButton` +
+      // yıldız ikonu kullanır.
+      expect(ilanDetay.contains("iconAsset: 'assets/svg/ic_starw.svg'"), isTrue);
+      expect(teklifDetay.contains("iconAsset: 'assets/svg/ic_starw.svg'"), isTrue);
+      expect(File('assets/svg/ic_starw.svg').existsSync(), isTrue,
+          reason: 'ikon dosyası yok — düğmede boşluk kalır');
+    });
+
+    test('⚠ PUAN ZORUNLU, YORUM İSTEĞE BAĞLI', () {
+      // Puan olmadan gönderim yapılamaz.
+      expect(degerlendirme.contains('if (_stars < 1)'), isTrue);
+      // ⚠ Boş yorum gönderimi ENGELLEMEZ: kelime kuralı yalnız DOLU
+      // yoruma uygulanır.
+      expect(degerlendirme.contains('if (yorum.isNotEmpty)'), isTrue,
+          reason: 'boş yorum gönderimi engelliyor');
+    });
+
+    test('⚠ API BAŞARILI DÖNMEDEN "yapıldı" GÖSTERİLMEZ', () {
+      final i = degerlendirme.indexOf('_submit()');
+      final blok = degerlendirme.substring(i, i + 2200);
+      // Sıra: submit → hata denetimi → başarı.
+      expect(blok.indexOf('.submit('), lessThan(blok.indexOf('if (err != null)')));
+      expect(blok.contains('setState(() => _error = err.message);'), isTrue,
+          reason: 'hata ekranda gösterilmiyor');
+      // "Gönderildi" görünümü GERÇEK KAYDA bakar, yerel bayrağa değil.
+      expect(degerlendirme.contains('byOffer(widget.offerId)'), isTrue);
+    });
+
     test('⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14)', () {
       // Yorum anında kaydedilir — yazan kişi "Yorum Yapıldı" görür —
       // ama hizmet verenin ortalamasına ve listesine gecikmeyle girer.
@@ -170,7 +220,9 @@ void main() {
 
     test('referans metinleri birebir', () {
       for (final metin in [
-        'Hizmeti Değerlendir',
+        // ⚠ Başlık "Hizmeti Değerlendir" → "Yorum Yaz" (ürün kararı):
+        // düğme ile ekran başlığı aynı adı taşımalı.
+        'Yorum Yaz',
         'Aldığınız hizmet için puan ve yorumunuzu paylaşın.',
         'Puanınız',
         'Hizmet kalitesini puanlayın',

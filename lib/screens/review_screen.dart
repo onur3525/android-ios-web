@@ -35,25 +35,34 @@ class _ReviewScreenState extends State<ReviewScreen> {
       setState(() => _error = FormMesaj.puanSec);
       return;
     }
-    // ── ⚠ EN AZ 5 KELİME (API sözleşmesi §14) ──
+    // ── ⚠ YORUM İSTEĞE BAĞLIDIR ──
     //
-    // Prototipte yorum İSTEĞE BAĞLIYDI ve alt sınır yoktu. Sözleşme
-    // asgari kelime sayısı koyuyor: tek kelimelik ("iyi") yorumlar
-    // hizmet veren hakkında bilgi taşımıyor.
-    final kelime = _text.text
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((k) => k.isNotEmpty)
-        .length;
-    if (kelime < DomainConfig.kYorumMinKelime) {
-      setState(() => _error = FormMesaj.yorumKisa);
-      return;
+    // Ürün kararı: puan zorunlu, yorum opsiyonel. Boş yorum yüzünden
+    // gönderim ENGELLENMEZ — kullanıcı yalnız yıldız vererek
+    // değerlendirmesini tamamlayabilir.
+    //
+    // ⚠ YAZILDIYSA ANLAMLI OLMALI: asgari kelime kuralı yalnız DOLU
+    // yorumlara uygulanır. Tek kelimelik ("iyi") bir yorum hizmet
+    // veren hakkında bilgi taşımıyor; ama hiç yazmamak serbest.
+    //
+    // ⚠ ÇELİŞKİ NOTU: API sözleşmesi §14 yorumu ZORUNLU ve en az
+    // 5 kelime sayıyor. Bu ürün kararı onunla çelişiyor ve sözleşme
+    // tarafı KARAR BEKLİYOR (bkz. rapor) — sözleşmeyi kendi başıma
+    // değiştirmedim.
+    final yorum = _text.text.trim();
+    if (yorum.isNotEmpty) {
+      final kelime =
+          yorum.split(RegExp(r'\s+')).where((k) => k.isNotEmpty).length;
+      if (kelime < DomainConfig.kYorumMinKelime) {
+        setState(() => _error = FormMesaj.yorumKisa);
+        return;
+      }
     }
     setState(() { _busy = true; _error = null; });
     final me = context.read<AuthController>().currentAccount!;
     final err = await context.read<ReviewController>().submit(
         listingId: widget.listingId, offerId: widget.offerId,
-        actorId: me.id, stars: _stars, text: _text.text.trim());
+        actorId: me.id, stars: _stars, text: yorum);
     if (!mounted) {
       return;
     }
@@ -112,7 +121,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
               ),
               const SizedBox(height: 6),
               // .rv-title{26px/700;-.3px}
-              Text('Hizmeti Değerlendir',
+              // ⚠ Ekran başlığı da düğmeyle AYNI: kullanıcı "Yorum Yaz"
+              // düğmesine basıp "Hizmeti Değerlendir" başlıklı bir
+              // ekrana düşünce doğru yere geldiğinden emin olamıyordu.
+              Text('Yorum Yaz',
                   style: refText(
                       size: 26,
                       weight: RF.w700,

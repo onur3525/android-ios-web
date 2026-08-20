@@ -486,6 +486,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 // kaydırılır — bkz. `kAlanKaydirmaPayi`.
                 scrollPadding: const EdgeInsets.only(bottom: kAlanKaydirmaPayi),
                 controller: _note,
+                // ⚠ Teklif notunda baş harf otomatik büyür; kullanıcı
+                // isterse küçültebilir (klavye ipucu, zorlama değil).
+                textCapitalization: TextCapitalization.sentences,
                 // ⚠ TEK `onChanged` — İKİ DAVRANIŞ BİRLEŞTİRİLDİ.
                 //
                 // Burada iki ayrı `onChanged` vardı ve Dart aynı

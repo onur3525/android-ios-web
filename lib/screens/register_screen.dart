@@ -1499,6 +1499,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // şifre) ve klavyeye dokunmaz.
                   onEditingComplete: () => _fPass.requestFocus(),
                   keyboardType: TextInputType.emailAddress,
+                  // ⚠ E-postada baş harf büyütülmez.
+                  textCapitalization: TextCapitalization.none,
                   decoration: _dec('E-posta *', 'assets/svg/ic_mail.svg'),
                   validator: (v) => _kural(_email, v, Validators.email),
                 ),

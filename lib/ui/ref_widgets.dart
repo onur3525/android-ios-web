@@ -540,7 +540,9 @@ class RefFormField extends StatelessWidget {
     this.enabled = true,
     this.focusNode,
     this.hatali = false,
-    this.textCapitalization = TextCapitalization.none,
+    // ⚠ Varsayılan `sentences` (bkz. `RefTextField` notu). Ad/soyad
+    // alanları `words`, e-posta ve şifre `none` verir.
+    this.textCapitalization = TextCapitalization.sentences,
     this.iconColor,
     this.maxLength,
     this.buildCounter,
@@ -623,6 +625,24 @@ class RefFormField extends StatelessWidget {
     // konumu kayıyordu). Alanın görünür kalması Android tarafında
     // `windowSoftInputMode=adjustResize` ve ekranların kendi
     // `SingleChildScrollView` yapısıyla zaten sağlanıyor.
+    // ── ⚠ ETİKET KUTUNUN DIŞINDA, SOL ÜSTTE ──
+    //
+    // Alan adı ("Ad", "Telefon") kutunun içinde yer tutucu olarak
+    // yazılıyordu ve kullanıcı alanı doldurunca KAYBOLUYORDU. Formu
+    // gözden geçirirken hangi kutunun ne olduğu görünmüyordu.
+    //
+    // ⚠ Ad `hint`ten alınır: çağıran ekranlar zaten alan adını orada
+    // veriyor. Kaynak tek yerde çevrildi; ekranlar değişmedi.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RefFieldLabel(hint, zorunlu: zorunlu, ilk: true),
+        _kutu(context),
+      ],
+    );
+  }
+
+  Widget _kutu(BuildContext context) {
     return Container(
       // ⚠ ALANLAR ARASI ARALIK TEK DEĞER: 12 dp.
       //
@@ -701,9 +721,10 @@ class RefFormField extends StatelessWidget {
                 letterSpacing: RF.lsM01,
               ),
               decoration: InputDecoration(
-                // ⚠ `hintText` DEĞİL `hint`: yıldızın kırmızı
-                // kalabilmesi için iki renkli widget gerekir.
-                hint: refYerTutucu(hint, zorunlu: zorunlu, boyut: RF.s15),
+                // ⚠ KUTUNUN İÇİ BOŞ: alan adı ÜSTTEKİ etikette.
+                // İkisinde birden yazılırsa aynı bilgi iki kez
+                // görünür ve alan doldurulunca içerideki kaybolur.
+                hint: null,
                 // Kutu `.rg-f` tarafından çiziliyor; girdi çerçevesizdir.
                 isDense: true,
                 border: InputBorder.none,
@@ -2322,18 +2343,27 @@ class RefFieldLabel extends StatelessWidget {
               style: refText(
                   size: RF.s135, weight: RF.w700, color: RC.text),
             ),
-            // ── ⚠ ETİKETTE YILDIZ ÇİZİLMEZ ──
+            // ── ⚠ YILDIZ ETİKETTE ÇİZİLİR ──
             //
-            // Yıldız ALANIN İÇİNDE zaten var (`RefFormField`, ikonun
-            // yanında). Etikette de gösterilince aynı bilgi iki kez
-            // yazılıyordu: "Telefon *" başlığı ve hemen altındaki
-            // kutuda ikinci bir yıldız.
+            // Nihai karar: alan adı KUTUNUN DIŞINDA, sol üstte durur
+            // ve zorunluluk yıldızı adın hemen ardından gelir:
             //
-            // ⚠ `zorunlu` PARAMETRESİ KALDIRILMADI: çağıran ekranlar
-            // alanın zorunlu olduğunu bildirmeye devam ediyor ve
-            // ekran okuyucular için anlam korunuyor. Değişen yalnız
-            // GÖRSEL tekrar.
-            if (zorunlu) const SizedBox.shrink(),
+            //     Ad *
+            //     [                    ]
+            //
+            // Bir süre yıldız kutunun İÇİNDE, yer tutucunun sonunda
+            // çiziliyordu; o dönemde etiket hiç yoktu ve tekrar
+            // olmasın diye burada gizlenmişti. Artık etiket geri
+            // geldiği için yıldızın yeri de burasıdır.
+            //
+            // ⚠ Yer tutucudaki yıldız KALDIRILDI (bkz. `RefTextField`
+            // ve `RefFormField`): iki yerde birden gösterilmez.
+            if (zorunlu)
+              Text(
+                ' *',
+                style: refText(
+                    size: RF.s135, weight: RF.w700, color: RC.requiredStar),
+              ),
           ],
         ),
       );
@@ -2353,11 +2383,16 @@ class RefDropdownField extends StatelessWidget {
     this.onTap,
     this.placeholder = 'Seçiniz',
     this.zorunlu = false,
+    this.etiket,
   });
 
   final String? value;
   final VoidCallback? onTap;
   final String placeholder;
+
+  /// Kutunun ÜSTÜNDE görünen alan adı ("İl", "İlçe", "Mahalle").
+  /// ⚠ Verilmezse etiket çizilmez — mevcut çağrılar etkilenmez.
+  final String? etiket;
 
   /// ⚠ ZORUNLU SEÇİM — yıldız yer tutucunun ÖNÜNDE çizilir.
   ///
@@ -2370,6 +2405,24 @@ class RefDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ⚠ ETİKET KUTUNUN ÜSTÜNDE (bkz. `RefTextField` notu).
+    //
+    // Seçim alanlarında ad ("İl", "İlçe") yer tutucu olarak
+    // yazılıyordu; seçim yapılınca kayboluyordu.
+    final alan = _kutu(context);
+    if (etiket == null || etiket!.isEmpty) {
+      return alan;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RefFieldLabel(etiket!, zorunlu: zorunlu, ilk: true),
+        alan,
+      ],
+    );
+  }
+
+  Widget _kutu(BuildContext context) {
     final bos = value == null || value!.isEmpty;
     return RefTap(
       onTap: onTap,
@@ -2443,10 +2496,38 @@ class RefTextField extends StatelessWidget {
     this.hatali = false,
     this.alanAnahtari,
     this.zorunlu = false,
+
+    /// ── ⚠ BAŞ HARF BÜYÜTME ──
+    ///
+    /// Varsayılan `sentences`: kullanıcı yazmaya başladığında ilk harf
+    /// otomatik büyük gelir. Bu bir KLAVYE İPUCUDUR, zorlama değildir
+    /// — kullanıcı isterse küçültüp kendi yazabilir.
+    ///
+    /// ⚠ Metni DEĞİŞTİREN bir biçimlendirici KULLANILMADI: öyle
+    /// olsaydı kullanıcının düzeltmesi anında geri alınır ve alan
+    /// kullanılamaz hale gelirdi.
+    ///
+    /// ⚠ E-posta ve şifre alanlarında çağıran taraf `none` verir;
+    /// oralarda büyük harf yanlış olur.
+    this.textCapitalization = TextCapitalization.sentences,
+
+    /// Kutunun ÜSTÜNDE görünen alan adı. Verilmezse `hint` kullanılır.
+    this.etiket,
+
+    /// Kutunun İÇİNDE görünen BİÇİM ÖRNEĞİ ("5XX XXX XX XX").
+    /// ⚠ Alan adı buraya yazılmaz — o `etiket`e aittir.
+    this.yerTutucu,
   });
 
   final TextEditingController controller;
+
+  /// ⚠ GERİYE UYUMLULUK: mevcut ekranlar alan adını `hint` olarak
+  /// veriyor. Etiket verilmezse bu metin ETİKET olarak kullanılır;
+  /// kutunun içinde çizilmez.
   final String? hint;
+  final String? etiket;
+  final String? yerTutucu;
+  final TextCapitalization textCapitalization;
   final bool obscureText;
   final Widget? suffix;
   final TextInputType? keyboardType;
@@ -2517,7 +2598,34 @@ class RefTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ⚠ Sarmalayıcı kaldırıldı (bkz. `RefFormField` notu).
+    // ── ⚠ ETİKET KUTUNUN DIŞINDA, SOL ÜSTTE ──
+    //
+    // Nihai karar: alan adı ("Ad", "Telefon") kutunun İÇİNDE yer
+    // tutucu olarak DEĞİL, kutunun ÜSTÜNDE etiket olarak durur.
+    //
+    // Yer tutucu olarak yazıldığında kullanıcı alanı doldurunca ad
+    // KAYBOLUYOR; formu gözden geçirirken hangi kutunun ne olduğu
+    // görünmüyordu. Etiket her zaman görünür kalır.
+    //
+    // ⚠ ETİKET `hint`TEN TÜRETİLİR: çağıran ekranlar zaten alan adını
+    // `hint` olarak veriyordu. Otuza yakın çağrı noktasını tek tek
+    // değiştirmek yerine kaynak burada çevrildi — aynı metin, farklı
+    // konum. `etiket` verilirse o kullanılır.
+    final ad = etiket ?? hint;
+    final alan = _girdi(context);
+    if (ad == null || ad.isEmpty) {
+      return alan;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RefFieldLabel(ad, zorunlu: zorunlu, ilk: true),
+        alan,
+      ],
+    );
+  }
+
+  Widget _girdi(BuildContext context) {
     return TextFormField(
       key: alanAnahtari,
       // Klavye altında kalmama payı — bkz. [kAlanKaydirmaPayi].
@@ -2536,13 +2644,17 @@ class RefTextField extends StatelessWidget {
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,
       onEditingComplete: onEditingComplete,
+      textCapitalization: textCapitalization,
       style: refText(size: RF.s145, weight: RF.w500, color: RC.text),
       decoration: InputDecoration(
-        // ⚠ `hintText` DEĞİL `hint`: yıldız kırmızı kalmalı.
-        // Yer tutucu boşsa (hint verilmemişse) hiçbir şey çizilmez.
-        hint: (hint == null || hint!.isEmpty)
+        // ⚠ KUTUNUN İÇİ BOŞ: ad artık ÜSTTEKİ etikette (yukarı bkz.).
+        //
+        // `hint` yalnız BİÇİM ÖRNEĞİ olduğunda çizilir — "5XX XXX XX
+        // XX" gibi. Alan adının kendisi ("Telefon") içeride
+        // tekrarlanmaz.
+        hint: (yerTutucu == null || yerTutucu!.isEmpty)
             ? null
-            : refYerTutucu(hint!, zorunlu: zorunlu),
+            : refYerTutucu(yerTutucu!, zorunlu: false),
         filled: true,
         fillColor: RC.white,
         isDense: true,

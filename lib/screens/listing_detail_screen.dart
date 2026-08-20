@@ -283,6 +283,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     }
     final listingCtl = context.watch<ListingController>();
     final offerCtl = context.watch<OfferController>();
+    // ⚠ Değerlendirme YAPILMIŞ MI — düğmenin görünürlüğü buna bağlı.
+    final reviewCtl = context.watch<ReviewController>();
     final l = listingCtl.byId(widget.listingId);
     if (l == null) {
       return Scaffold(
@@ -345,21 +347,36 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // ⚠ SİLME BURADA — alttaki tehlike düğmesi KALDIRILDI.
                 // Referans `listingMenu()`: üç nokta → "İlanı Sil" →
                 // neden seçimi (`askDelReason`) → silme.
-                RefTap(
-                  // ⚠ Menü YAŞAYAN ilanda açılır. Eski koşul
-                  // `providerSelected`/`inProgress` de sayıyordu; o
-                  // durumlar kalktı (§24). Tamamlanmış işte silme
-                  // zaten domain katmanında reddedilir.
-                  onTap: l.status == ListingStatus.active
-                      ? () => _ilanMenusu(context, l, me.id)
-                      : null,
-                  borderRadius: BorderRadius.circular(RR.circle),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: RefSvg('assets/svg/ic_dots.svg',
-                        size: 22, color: RC.text),
-                  ),
-                ),
+                // ── ⚠ ÜÇ NOKTA MENÜSÜ — TAMAMLANMIŞ İŞTE ÇİZİLMEZ ──
+                //
+                // Menünün tek işi ilanı silmek. Tamamlanmış iş
+                // (`selectedOfferId != null`) silinemez ve
+                // düzenlenemez: hizmet veren o işi yaptı, teklifi
+                // seçildi ve bedeli tahsil edildi.
+                //
+                // ⚠ İKON GİZLENMİYOR, HİÇ ÇİZİLMİYOR. Önceki hâlde
+                // `onTap: null` veriliyordu — nokta duruyor ama
+                // basınca hiçbir şey olmuyordu. Kullanıcı bozuk
+                // sanıyordu; olmayan bir seçenek hiç gösterilmez.
+                //
+                // ⚠ Domain katmanı da reddediyor
+                // (`ListingStateMachine.canDelete`): arayüzde
+                // gizlemek tek başına güvenlik değildir.
+                if (l.status == ListingStatus.active && !l.isTamamlanmisIs)
+                  RefTap(
+                    onTap: () => _ilanMenusu(context, l, me.id),
+                    borderRadius: BorderRadius.circular(RR.circle),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: RefSvg('assets/svg/ic_dots.svg',
+                          size: 22, color: RC.text),
+                    ),
+                  )
+                else
+                  // ⚠ Geri oku SOLDA kalsın diye yer tutucu: `Row`
+                  // `spaceBetween` ile hizalanıyor, ikinci çocuk
+                  // kalkarsa ok ortaya kayardı.
+                  const SizedBox(width: 34),
               ],
             ),
             const SizedBox(height: 8),
@@ -571,19 +588,61 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             //
             // ⚠ Bu paket enum göçü değildir: `providerSelected` ve
             // `inProgress` sözleşmedeki adlara Paket 2'de geçecek.
-            // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
-            if (l.isTamamlanmisIs)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: SysButton('Hizmeti Değerlendir',
-                    busy: false,
+            // ── ⚠ DEĞERLENDİRME DÜĞMESİ — YALNIZ YAPILMAMIŞSA ──
+            //
+            // Koşul yalnız `isTamamlanmisIs` idi: değerlendirme ZATEN
+            // YAPILMIŞ olsa bile düğme çiziliyordu. Kullanıcı basınca
+            // form açılıyor ama ekran kaydı bulup doğrudan "gönderildi"
+            // görünümüne düşüyordu — dışarıdan bakınca "form
+            // atlanıyor, doğrudan başarıya geçiyor" gibi görünüyordu.
+            //
+            // ⚠ FORM ATLANMIYORDU: `ReviewScreen` gerçek kayda bakıp
+            // doğru görünümü çiziyor. Yanlış olan, yapılmış bir işi
+            // yapılabilir gibi göstermekti.
+            //
+            // ⚠ Teklif detayında bu denetim ZATEN VARDI (`!reviewed`);
+            // burada eksikti. İki ekran artık aynı kuralı uyguluyor.
+            if (l.isTamamlanmisIs) ...[
+              if (reviewCtl.byOffer(l.selectedOfferId!) == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  // ── ⚠ AD VE İKON TEKLİF DETAYIYLA AYNI ──
+                  //
+                  // Metin "Hizmeti Değerlendir" idi; teklif detayında
+                  // aynı iş "Yorum Yaz" diye geçiyordu. İki ekranda
+                  // farklı ad, kullanıcıya iki ayrı işmiş gibi
+                  // görünüyordu.
+                  //
+                  // ⚠ DÜĞME TÜRÜ DE DEĞİŞTİ: `SysButton` ikon
+                  // ALMIYOR ve metnin yanında sahipsiz bir işaret
+                  // kalıyordu. `RefPrimaryButton` ikonu metnin
+                  // solunda düzgün çizer — teklif detayında zaten bu
+                  // kullanılıyor, iki ekran artık aynı bileşende.
+                  child: RefPrimaryButton(
+                    'Yorum Yaz',
+                    iconAsset: 'assets/svg/ic_starw.svg',
                     onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        MaterialPageRoute<void>(
                             builder: (_) => ReviewScreen(
                                 listingId: l.id,
-                                offerId: l.selectedOfferId!)))),
-              ),
+                                offerId: l.selectedOfferId!))),
+                  ),
+                )
+              else
+                // ⚠ Değerlendirme YAPILMIŞSA düğme yerine durum yazısı.
+                // Tıklanamaz bir düğme, hâlâ yapılacak bir iş varmış
+                // izlenimi verirdi.
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text('Değerlendirmeniz alındı',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: HC.grey)),
+                ),
+            ],
           ]),
         ),
       ),
