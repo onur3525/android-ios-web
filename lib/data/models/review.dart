@@ -10,6 +10,15 @@ class Review {
   final String authorId;   // ilan sahibi müşteri
   final int stars;         // 1..5
   final String text;
+  /// YORUMUN YAZILDIĞI AN.
+  ///
+  /// ⚠ DIŞARIDAN VERİLEBİLİR. Eskiden yapıcı her zaman
+  /// `DateTime.now()` yazıyordu; sunucudan gelen yorumlar da
+  /// OKUNDUKLARI ana damgalanıyordu — yani liste her açıldığında
+  /// bütün yorumlar "az önce yazılmış" görünürdü ve 1 günlük yayın
+  /// gecikmesi hiç dolmazdı.
+  ///
+  /// Verilmezse (yeni oluşturulan yorum) şimdiki zaman kullanılır.
   final DateTime createdAt;
 
   /// ── ⚠ YAYIN DURUMU (API sözleşmesi §14) ──
@@ -39,7 +48,8 @@ class Review {
     this.status,
     this.publishedAt,
     required this.text,
-  }) : createdAt = DateTime.now();
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   /// Yayında mı?
   ///

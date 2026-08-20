@@ -214,6 +214,17 @@ abstract final class Mappers {
         publishedAt: j['publishedAt'] == null
             ? null
             : DateTime.tryParse(j['publishedAt'] as String),
+        // ⚠ SUNUCUNUN ZAMANI TAŞINIR.
+        //
+        // Okunmuyordu ve model her yorumu `DateTime.now()` ile
+        // damgalıyordu: liste her açıldığında bütün yorumlar "az önce
+        // yazılmış" görünüyor, 1 günlük yayın gecikmesi hiç dolmuyordu.
+        //
+        // Alan yoksa `null` bırakılır ve model şimdiki zamanı
+        // kullanır — sahte bir tarih UYDURULMAZ.
+        createdAt: j['createdAt'] == null
+            ? null
+            : DateTime.tryParse(j['createdAt'] as String)?.toLocal(),
       );
 
   // ── bildirim ──

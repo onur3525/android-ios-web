@@ -139,7 +139,7 @@ void main() {
     // Seçim ilanı zaten tamamlanmış duruma getirir.
     // cancelled
     final lx = ilan();
-    await listingCtl.cancel(lx.id, actorId: cust);
+    await listingCtl.delete(lx.id, actorId: cust);
     // silinmiş
     final ld = ilan();
     await listingCtl.delete(ld.id, actorId: cust);

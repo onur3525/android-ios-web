@@ -84,7 +84,7 @@ void main() {
 
     test('kapalı ilana teklif verilemez (cancelled/expired)', () async {
       final l1 = await yeniIlan();
-      await listingCtl.cancel(l1.id, actorId: cust);
+      await listingCtl.delete(l1.id, actorId: cust);
       expect(await offerCtl.placeOffer(listingId: l1.id, providerId: p1, amount: 500, note: 'n'),
           isA<ListingClosedError>());
       final l2 = await yeniIlan();
@@ -379,7 +379,7 @@ void main() {
       // ⚠ `completeWork` KALDIRILDI (§11); tutarsız veri artık BAŞKA
       // bir geçiş denemesiyle sınanır: tamamlanmış ilan iptal
       // EDİLEMEZ ve durum bozulmaz.
-      final err = await listingCtl.cancel(l.id, actorId: cust);
+      final err = await listingCtl.delete(l.id, actorId: cust);
       expect(err, isA<InvalidStateError>(),
           reason: 'sessizce geçilmemeli, AÇIK hata dönmeli');
       // ⚠ EN ÖNEMLİSİ: ilan TUTARSIZ duruma DÜŞMEDİ.
@@ -455,9 +455,13 @@ void main() {
       final w = wallets.walletOf(p1);
       final a0 = w.avail, b0 = w.blocked;
 
-      expect(await listingCtl.cancel(l.id, actorId: cust), isA<InvalidStateError>());
-      expect(await listingCtl.expire(l.id, actorId: cust), isA<InvalidStateError>());
-      expect(await listingCtl.delete(l.id, actorId: cust), isA<InvalidStateError>());
+      // ⚠ Tamamlanmış iş SİLİNEMEZ ve süresi DOLDURULAMAZ.
+      // (Eskiden burada `cancel` ve `delete` ayrı ayrı sınanıyordu;
+      // `cancel` kaldırıldı, ikisi tek kanonik uca indi.)
+      expect(await listingCtl.delete(l.id, actorId: cust),
+          isA<InvalidStateError>());
+      expect(await listingCtl.expire(l.id, actorId: cust),
+          isA<InvalidStateError>());
       // ⚠ Tamamlanmışlık ilişkiden türetilir (§24); ilan ACTIVE kalır.
       expect(l.isTamamlanmisIs, isTrue);
       expect(l.status, ListingStatus.active);
@@ -478,7 +482,7 @@ void main() {
   group('İptal / süre dolumu / silme', () {
     test('yetkisiz aktör ilan yönetemez (Y3)', () async {
       final l = await yeniIlan();
-      expect(await listingCtl.cancel(l.id, actorId: stranger), isA<UnauthorizedError>());
+      expect(await listingCtl.delete(l.id, actorId: stranger), isA<UnauthorizedError>());
       expect(await listingCtl.delete(l.id, actorId: p1), isA<UnauthorizedError>());
       expect(l.status, ListingStatus.active);
       expect(listingCtl.byId(l.id), isNotNull);
@@ -488,7 +492,7 @@ void main() {
       final l1 = await yeniIlan();
       await offerCtl.placeOffer(listingId: l1.id, providerId: p1, amount: 900, note: 'a');
       final a0 = wallets.walletOf(p1).avail;
-      expect(await listingCtl.cancel(l1.id, actorId: cust), isNull);
+      expect(await listingCtl.delete(l1.id, actorId: cust), isNull);
       expect(l1.status, ListingStatus.userDeleted);
       expect(wallets.walletOf(p1).avail, a0 + fee);
 

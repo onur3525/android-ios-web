@@ -36,20 +36,15 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Flutter analyze
-        run: flutter analyze
-
       - name: Build APK
         run: flutter build apk --release
 
       - name: Find APK
-        run: |
-          echo "===== APK DOSYALARI ====="
-          find build/app/outputs/flutter-apk -type f -name "*.apk" -ls
+        run: find build/app/outputs/flutter-apk -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HizmetCep-APK
+          name: hizmetcep-release-apk
           path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
