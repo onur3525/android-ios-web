@@ -5,44 +5,28 @@ rootProject.buildDir = "../build"
 subprojects { project.buildDir = "${rootProject.buildDir}/${project.name}" }
 subprojects { project.evaluationDependsOn(":app") }
 
-// ── ⚠ LINT ÇÖKMESİ — RELEASE DERLEMESİNİ DURDURUYORDU ──
+// ── ⚠ LINT BLOĞU KALDIRILDI ──
 //
-// `flutter build apk --release`, `:google_sign_in_android:
-// lintVitalAnalyzeRelease` görevinde ÇÖKTÜ. Gradle'ın kendi mesajı:
-// "Unexpected failure during lint analysis (this is a bug in lint or
-// one of the libraries it depends on)".
+// Buraya `subprojects { afterEvaluate { ... lint { disable ... } } }`
+// eklenmişti; amaç `lintVitalAnalyzeRelease` çökmesini aşmaktı.
 //
-// ⚠ HATA BİZİM KODUMUZDA DEĞİL: çöken şey Android Lint'in
-// `CommentDetector` sınıfı, incelediği dosya da eklentinin kendi
-// kaynağı olan `GoogleSignInPlugin.java`. Yığın izi
-// `JavaDocParser.parseDataItem` içinde bitiyor — lint bir Javadoc
-// yorumunu ayrıştırırken patlıyor.
+// İKİ SEBEPLE KALDIRILDI:
 //
-// ⚠ NİÇİN İLK KEZ ŞİMDİ GÖRÜLDÜ: `lintVital*` görevleri YALNIZ
-// release derlemesinde çalışır. Önceki koşular `--debug` idi, o
-// yüzden bu adıma hiç gelinmemişti. Hata yeni değil.
+// 1. ÇÖZMEDİ. Gerçek sebep lint denetimleri değil, JAVA SÜRÜMÜYDÜ:
+//    `java.util.List.removeLast()` NoSuchMethodError — lint Java 21'e
+//    göre derlenmişken JDK 17 üzerinde koşuyordu. Gradle'ın hata
+//    çıktısındaki "disable EasterEgg, StopShip" önerisi çöken
+//    dedektörün adına bakarak otomatik üretiliyor ve gerçek nedeni
+//    BİLMİYOR. O öneriye güvenmek hataydı.
 //
-// ⚠ NİÇİN `android/app` DEĞİL DE BURASI: çöken görev EKLENTİNİN
-// modülüne aittir (`:google_sign_in_android`). Uygulama modülüne
-// yazılan `lint` bloğu o modülü ETKİLEMEZ — ilk denemem buydu ve
-// yanlıştı. Ayar tüm alt projelere uygulanmalıdır.
+// 2. KENDİSİ DERLEMEYİ KIRDI:
+//      Cannot run Project.afterEvaluate(Closure) when the project is
+//      already evaluated.
+//    Bu dosyada `subprojects { project.evaluationDependsOn(":app") }`
+//    satırı var; alt projeler o noktada ZATEN değerlendirilmiş
+//    oluyor ve sonradan `afterEvaluate` eklenemiyor. Gradle/AGP
+//    sürümüne göre tetiklenen bir sıra sorunu.
 //
-// ── EN DAR ÇÖZÜM ──
-//
-// Yalnız ÇÖKEN iki denetim kapatıldı; Gradle'ın hata çıktısında
-// önerdiği ikisi de bunlar. `lint` tamamen kapatılmadı,
-// `checkReleaseBuilds false` DA yapılmadı: ikisi de gerçek uyarıları
-// susturur ve bir daha kimse fark etmez.
-//
-// ⚠ GEÇİCİDİR: eklenti ya da AGP güncellenip çökme giderildiğinde bu
-// blok kaldırılmalı ve release derlemesi yeniden denenmelidir.
-subprojects {
-    afterEvaluate {
-        if (project.extensions.findByName("android") != null) {
-            project.extensions.getByName("android").lint {
-                disable += ["EasterEgg", "StopShip"]
-            }
-        }
-    }
-}
+// ⚠ Lint çökmesi yeniden görülürse çözüm JDK sürümüdür (setup-java
+// 21), bu blok değil.
 tasks.register("clean", Delete) { delete rootProject.buildDir }
