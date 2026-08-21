@@ -152,8 +152,18 @@ class _JobsScreenState extends State<JobsScreen> {
     //
     // Kategori veya bölge seçimi HENÜZ YAPILMAMIŞSA o kısıt
     // uygulanmaz (onboarding tamamlanmadan ekran boş kalmasın).
+    // ── ⚠ TAMAMLANMIŞ İŞ BESLEMEDE GÖRÜNMEZ ──
+    //
+    // Koşul yalnız `status == active` idi. Paket 2'den sonra seçim
+    // ilanın durumunu DEĞİŞTİRMİYOR — teklifi seçilmiş, işi bitmiş
+    // ilan da `active` kalıyor. Sonuç: hizmet verenin "Yeni işler"
+    // sekmesi bitmiş işlerle doluyordu ve o ilanlara teklif
+    // verilemeyeceği ancak dokununca anlaşılıyordu.
+    //
+    // ⚠ Kural `Listing.acceptsOffers` ile AYNI: yaşayan ve teklif
+    // seçilmemiş ilan. Ekran kendi kuralını yazmaz.
     bool acikVeBaskasinin(Listing l) =>
-        l.status == ListingStatus.active && l.ownerId != me.id;
+        l.acceptsOffers && l.ownerId != me.id;
 
     /// BÖLGE EŞLEŞMESİ
     ///
@@ -182,9 +192,19 @@ class _JobsScreenState extends State<JobsScreen> {
     int oncelik(Listing l) => eslesmeOnceligi(me.categories, l.title);
     bool kategoriUygun(Listing l) => oncelik(l) != kEslesmeYok;
 
-    // Kategoriye uyan tüm açık ilanlar (il geneli).
-    final kategoriUyanlar =
-        listingCtl.all.where((l) => acikVeBaskasinin(l) && kategoriUygun(l));
+    /// ⚠ TEKLİF VERDİĞİM İLAN "YENİ İŞLER"DE GÖRÜNMEZ.
+    ///
+    /// Aynı hizmet veren aynı ilana İKİNCİ teklifi veremez (API
+    /// sözleşmesi §1). Verilmiş bir ilanı yeni iş gibi göstermek,
+    /// kullanıcıyı dokunup "zaten teklif verdiniz" hatası almaya
+    /// yönlendiriyordu.
+    ///
+    /// ⚠ İlan kaybolmuyor: "Teklif verdiklerim" sekmesinde duruyor.
+    bool teklifVermedim(Listing l) => offerCtl.myOfferFor(l.id, me.id) == null;
+
+    // Kategoriye uyan, teklif verilmemiş açık ilanlar (il geneli).
+    final kategoriUyanlar = listingCtl.all.where(
+        (l) => acikVeBaskasinin(l) && teklifVermedim(l) && kategoriUygun(l));
 
     // Seçili ilçelerdeki ilanlar.
     final ilceIcindekiler = kategoriUyanlar.where(ilceUygun).toList();

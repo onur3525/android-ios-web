@@ -127,7 +127,8 @@ void main() {
     test('giriş: zorunlular GEÇERLİ olmadan düğme aktif olmaz', () {
       final l = _kod('lib/screens/login_screen.dart');
       expect(l.contains('bool get _zorunlularDolu =>'), isTrue);
-      expect(l.contains('onPressed: (_busyGoogle || !_zorunlularDolu)'), isTrue);
+      // ⚠ Google giriş kaldırıldı; koşulda `_busyGoogle` yok.
+      expect(l.contains('onPressed: (!_zorunlularDolu)'), isTrue);
       // ⚠ KURAL SIKILAŞTIRILDI: "dolu mu" YETMEZ, "geçerli mi" aranır.
       //
       // Eskiden yalnız alanın boş olmadığına bakılıyordu; kullanıcı

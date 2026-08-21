@@ -82,7 +82,7 @@ abstract class AuthPort extends ChangeNotifier {
 
   /// GOOGLE İLE GİRİŞ — `idToken` sunucuda doğrulanır.
   /// İstemci e-posta/ad göndermez; sunucu Google'dan okur.
-  Future<DomainError?> googleLogin(String idToken);
+  // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
   Future<({Account? account, DomainError? error})> register({
     required String phone,
     required String pass,
@@ -109,7 +109,6 @@ abstract class AuthPort extends ChangeNotifier {
 
     /// Google hesabının benzersiz kimliği (`sub`).
     /// Hesap eşleştirmesi e-posta metniyle DEĞİL bu kimlikle yapılır.
-    String? googleSub,
 
     /// ⚠ OTP DOĞRULAMASINDAN ÜRETİLEN KAYIT YETKİSİ (Y1).
     /// Telefona VE kayıt taslağına bağlıdır; verildiğinde

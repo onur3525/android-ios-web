@@ -737,7 +737,6 @@ class AuthRepository extends ChangeNotifier {
     /// Google akışında doğrulanmış e-posta ile gelinir.
     bool emailVerified = false,
     /// Google `sub` — hesap eşleştirmesi bu kimlikle yapılır.
-    String? googleSub,
 
     /// ⚠ YALNIZ DEBUG TOHUMLAMASI İÇİN — önceden hesaplanmış tuz+özet.
     ///
@@ -812,11 +811,9 @@ class AuthRepository extends ChangeNotifier {
         activeRole: role,
         // SMS OTP bu noktada doğrulanmıştır.
         phoneVerified: true,
-        // Normal kayıtta e-posta AYRICA doğrulanır (`verifyEmail`);
-        // Google akışında doğrulanmış olarak gelir.
+        // ⚠ E-posta AYRICA doğrulanır (`verifyEmail`).
         emailVerified: emailVerified,
         termsAccepted: termsAccepted,
-        googleSub: googleSub,
       );
       accounts.add(acc);
     } else {
@@ -836,9 +833,6 @@ class AuthRepository extends ChangeNotifier {
       }
       if (termsAccepted) {
         acc.termsAccepted = true;
-      }
-      if (googleSub != null && acc.googleSub == null) {
-        acc.googleSub = googleSub;
       }
     }
     if (role == Role.provider) {
@@ -903,44 +897,11 @@ class AuthRepository extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════
   // GOOGLE HESAP EŞLEŞTİRME
   // ═══════════════════════════════════════════════════════════════
+  // ⚠ `findByGoogleSub` ve `linkGoogle` KALDIRILDI.
+  //
+  // Üçüncü taraf girişi tamamen kaldırıldı; hesaplar yalnız kendi
+  // sistemimizle açılıyor. Bu iki metodun çağıranı kalmadı.
 
-  /// Google `sub` kimliğiyle hesap arar.
-  ///
-  /// ⚠ E-POSTA METNİYLE ARAMA YAPILMAZ: e-posta değişebilir, `sub`
-  /// değişmez. Aynı `sub` için ikinci hesap üretilmez.
-  Account? findByGoogleSub(String sub) {
-    for (final a in accounts) {
-      if (a.googleSub == sub) {
-        return a;
-      }
-    }
-    return null;
-  }
-
-  /// Google kimliğini mevcut hesaba bağlar.
-  DomainError? linkGoogle({
-    required String sub,
-    required String email,
-    required bool googleEmailVerified,
-  }) {
-    final acc = currentAccount;
-    if (acc == null) {
-      return const UnauthorizedError('Oturum bulunamadı');
-    }
-    final baskasinda = findByGoogleSub(sub);
-    if (baskasinda != null && baskasinda.id != acc.id) {
-      return const ValidationError(
-          'Bu Google hesabı başka bir kullanıcıya bağlı');
-    }
-    acc.googleSub = sub;
-    // Google e-postası doğrulanmışsa ikinci doğrulama istenmez.
-    if (googleEmailVerified && email.trim().isNotEmpty) {
-      acc.email = email.trim();
-      acc.emailVerified = true;
-    }
-    notifyListeners();
-    return null;
-  }
 
   /// Aktif rolü değiştir (hesap o role sahipse).  /// Aktif rolü değiştir (hesap o role sahipse).
   DomainError? switchRole(Role role) {

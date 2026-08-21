@@ -532,19 +532,8 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
-  /auth/google:
-    post:
-      tags: [Auth]
-      summary: Google ile giriş (Android)
-      description: |
-        ⚠ iOS'ta Google düğmesi gizlidir; uç ortak kalır.
-      responses:
-        '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessRule' }
-
+  # ⚠ `POST /auth/google` KALDIRILDI — üçüncü taraf girişi yok.
+  # Giriş yalnızca telefon/e-posta + şifre ve SMS OTP ile yapılır.
   /auth/otp/request:
     post:
       tags: [Auth]

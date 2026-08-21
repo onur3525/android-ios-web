@@ -97,7 +97,6 @@ class MockAuthPort extends AuthPort {
     /// Google akışında doğrulanmış e-posta ile gelinir.
     bool emailVerified = false,
     /// Google `sub` — hesap eşleştirme kimliği.
-    String? googleSub,
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async =>
@@ -107,7 +106,6 @@ class MockAuthPort extends AuthPort {
         categories: categories, serviceDistricts: serviceDistricts,
         termsAccepted: termsAccepted,
         emailVerified: emailVerified,
-        googleSub: googleSub,
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,
       );
@@ -207,12 +205,7 @@ class MockAuthPort extends AuthPort {
     return null;
   }
 
-  @override
-  Future<DomainError?> googleLogin(String idToken) async =>
-      // Geliştirme modunda Google girişi SİMÜLE EDİLMEZ.
-      // Gerçek akış yalnız API modunda ve sunucu doğrulamasıyla çalışır.
-      const ValidationError(
-          'Google ile giriş yalnız gerçek API modunda kullanılabilir');
+  // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
 
   @override
   Future<DomainError?> updateProfile({String? name, String? email, String? photoPath}) async {

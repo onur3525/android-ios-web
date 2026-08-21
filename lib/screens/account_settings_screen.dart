@@ -622,17 +622,27 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (me == null) {
       return false;
     }
-    // ⚠ CANLI İLAN = YAŞAYAN İLAN (§24). Eski küme iş gidişatı
-    // durumlarını da sayıyordu; onlar kalktı. Tamamlanmış iş "canlı"
-    // sayılmaz — kullanıcıyı dondurmadan alıkoymaz.
-    const canliIlan = {ListingStatus.active};
+    // ── ⚠ CANLI = DEVAM EDEN İŞ ──
+    //
+    // Yorumda "tamamlanmış iş canlı sayılmaz" yazıyordu ama KOD BUNU
+    // UYGULAMIYORDU: koşul yalnız `status == active` idi. Paket 2'den
+    // sonra seçim ilanın durumunu DEĞİŞTİRMİYOR — tamamlanmış ilan da
+    // `active` kalıyor. Sonuç: işi bitmiş kullanıcı "devam eden
+    // işiniz var" uyarısı alıyor ve hesabını dondurmayı hiç
+    // başaramıyordu.
+    //
+    // ⚠ Tamamlanmışlık `Listing.isTamamlanmisIs` ile türetilir.
     final ilanlar = context.read<ListingController>().byOwner(me.id);
-    if (ilanlar.any((l) => canliIlan.contains(l.status))) {
+    if (ilanlar.any((l) =>
+        l.status == ListingStatus.active && !l.isTamamlanmisIs)) {
       return true;
     }
-    const canliTeklif = {OfferStatus.active, OfferStatus.selected};
+    // ⚠ `selected` TEKLİF DEVAM EDEN İŞ DEĞİLDİR: seçilmiş teklif,
+    // tamamlanmış işin kendisidir. Yalnız `active` teklif — yani
+    // henüz seçilmemiş, karşı tarafın kararını bekleyen teklif —
+    // dondurmayı engeller.
     final teklifler = context.read<OfferController>().offersByProvider(me.id);
-    return teklifler.any((o) => canliTeklif.contains(o.status));
+    return teklifler.any((o) => o.status == OfferStatus.active);
   }
 
   /// ── HESABI SİL ──

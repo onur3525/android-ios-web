@@ -60,17 +60,7 @@ class ApiAuthRepository extends ChangeNotifier {
 
   /// GOOGLE İLE GİRİŞ — `idToken` sunucuda doğrulanır.
   /// İstemci e-posta/ad göndermez; sunucu Google'dan okur.
-  Future<DomainError?> googleLogin(String idToken) async {
-    final (res, err) = await _guard(() => _auth.googleLogin(idToken));
-    if (err != null) {
-      return err;
-    }
-    await _client.tokens.save(
-      access: res!['accessToken'] as String,
-      refresh: res['refreshToken'] as String,
-    );
-    return loadMe();
-  }
+  // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
 
   /// Profil + TEK adres. Adres ayrı uçtan gelir (GET /profiles/me/address);
   /// kayıt yoksa sunucu null döner ve hesabın adresi boş kalır.

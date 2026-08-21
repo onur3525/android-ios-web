@@ -8,7 +8,6 @@ import '../core/telefon_bicimi.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import 'forgot_password_screen.dart';
-import '../data/services/google_auth_service.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -38,7 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _beniHatirla = true;
   bool _busy = false;       // lockBtn karşılığı: reentry engeli
   bool _obscure = true;
-  bool _busyGoogle = false;
   // ══════════════════════════════════════════════════════════════
   // İKİ GİRİŞ YOLU — HESAP MODELİ KARARI
   //
@@ -337,122 +335,12 @@ class _LoginScreenState extends State<LoginScreen> {
         : '/customer/listings';
     Navigator.of(context).pushNamedAndRemoveUntil(hedef, (r) => false);
   }
+  // ⚠ GOOGLE GİRİŞ METOTLARI KALDIRILDI.
+  //
+  // `_googleSheetAc` (hesap seçim paneli) ve `_googleSubmit`
+  // (idToken alıp sunucuya gönderme) birlikte silindi. Üçüncü
+  // taraf girişi tamamen kaldırıldığı için çağıran kalmadı.
 
-  /// GOOGLE HESAP SEÇİM SHEET'İ — referans `googleSheet()`
-  ///
-  /// ```
-  /// rgOverlay('Google ile Devam Et',
-  ///   <div class="gs-sub">Devam etmek için bir hesap seçin</div>
-  ///   <button class="gs-acc">IC_GOOGLE  ad / e-posta  IC_CHEV</button>
-  ///   <button class="gs-other">Başka bir hesap kullan</button>)
-  /// ```
-  ///
-  /// Hesap satırındaki ad/e-posta referans prototipin gösterdiği
-  /// değerlerdir ve BİREBİR korunur. Gerçek Google SDK bağlandığında
-  /// bu satır SDK'dan gelen hesapla doldurulacaktır.
-  Future<void> _googleSheetAc() async {
-    if (_busy || _busyGoogle) {
-      return;
-    }
-    final secildi = await RefBottomSheet.goster<bool>(
-      context,
-      title: 'Google ile Devam Et',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // .gs-sub{font-size:13px;color:#5B6472;margin:2px 2px 12px}
-          Padding(
-            padding: const EdgeInsets.only(left: 2, right: 2, bottom: 12),
-            child: Text(
-              'Devam etmek için bir hesap seçin',
-              style: refText(
-                size: RF.s13, weight: RF.w400, color: RC.textSoft),
-            ),
-          ),
-
-          // .gs-acc — hesap seçim satırı
-          _GoogleHesapSatiri(
-            onTap: () => Navigator.of(context).pop(true),
-          ),
-
-          // .gs-other{margin:12px auto 2px}
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 2),
-            child: Center(
-              child: RefTap(
-                onTap: () => Navigator.of(context).pop(true),
-                borderRadius: BorderRadius.circular(RR.r8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 4, horizontal: 6),
-                  child: Text(
-                    'Başka bir hesap kullan',
-                    style: refText(
-                      size: RF.s135, weight: RF.w700, color: RC.blue),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (secildi == true && mounted) {
-      await _googleSubmit();
-    }
-  }
-
-  /// GOOGLE İLE GİRİŞ
-  ///
-  /// Google'dan `idToken` alınır ve SUNUCUYA gönderilir; sunucu bunu
-  /// Google'da doğrular. İstemci e-posta/ad göndermez, sahte başarı üretmez.
-  Future<void> _googleSubmit() async {
-    if (_busyGoogle || _busy) {
-      return;
-    }
-    setState(() => _busyGoogle = true);
-    try {
-      final idToken = await GoogleAuthService().signInIdToken();
-      if (!mounted) {
-        return;
-      }
-      if (idToken == null) {
-        // Kullanıcı vazgeçti — hata gösterilmez.
-        setState(() => _busyGoogle = false);
-        return;
-      }
-      final err = await context.read<AuthController>().googleLogin(idToken);
-      if (!mounted) {
-        return;
-      }
-      setState(() => _busyGoogle = false);
-      if (err != null) {
-        sysToastErr(context, SysKind.genericError, extra: err.message);
-        return;
-      }
-      // ⚠ Google GİRİŞİ de eksik kayıt varsa panele atlamaz.
-      // Hesap daha önce Google ile açıldıysa HizmetCep zorunlulukları
-      // (telefon+OTP, adres, sözleşme, rol bilgileri) eksik olabilir.
-      final acc = context.read<AuthController>().currentAccount;
-      final eksik = acc?.missingSteps ?? const <OnboardingStep>[];
-      if (acc != null && eksik.isNotEmpty) {
-        sysToastOk(context, 'Kaydınızı tamamlayın: ${eksik.first.label}');
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/role', (r) => false);
-        return;
-      }
-      sysToastOk(context, 'Hoş geldiniz! Giriş yapıldı');
-      _girisSonrasiYonlendir();
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _busyGoogle = false);
-      sysToastErr(context, SysKind.genericError,
-          extra: 'Google ile giriş tamamlanamadı');
-    }
-  }
 
   // ═════════════════════════════════════════════════════════════
   // GÖRÜNÜM — referans `vLogin` (hizmetcep-v66-final__1_.html)
@@ -900,7 +788,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Zorunlu alanların hepsi dolmadan gönderim
                           // denenemez; bu yüzden "Bu alan zorunludur"
                           // uyarısı da hiç çıkmaz.
-                          onPressed: (_busyGoogle || !_zorunlularDolu)
+                          onPressed: (!_zorunlularDolu)
                               ? null
                               : _submit,
                         ),
@@ -916,21 +804,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ: düğme,
                         // ikonu, ölçüsü, sırası ve davranışı aynen
                         // buradadır.
-                        if (googleGirisiGosterilir) ...[
-                          const RefOrDivider(),
-                          RefSecondaryButton(
-                            'Google ile Devam Et',
-                            iconAsset: 'assets/svg/ic_google.svg',
-                            busy: _busyGoogle,
-                            onPressed: _busy ? null : _googleSheetAc,
-                          ),
-                        ],
+                        // ── ⚠ GOOGLE / APPLE İLE GİRİŞ TAMAMEN KALDIRILDI ──
+                        //
+                        // Ürün kararı: hesap açma ve giriş YALNIZCA kendi
+                        // hesap sistemimizle yapılır (telefon/e-posta + şifre,
+                        // telefonla girişte SMS OTP).
+                        //
+                        // ⚠ Bu, ikinci bir yan etki daha yaratır ve LEHİMİZE:
+                        // Apple kılavuzu 4.8 "üçüncü taraf giriş kullanan
+                        // uygulama" için ek seçenek zorunluluğu getiriyordu;
+                        // muafiyet "yalnızca kendi hesap sistemini kullanan"
+                        // uygulamalar içindir. Üçüncü taraf girişi kalmayınca
+                        // muafiyet DOĞRUDAN uygulanır.
+                        //
+                        // ⚠ "veya" ayırıcısı da kaldırıldı: düğme gidince
+                        // sahipsiz bir çizgi kalırdı.
 
                         // .lg-reg{margin-top:16px}
                         const SizedBox(height: 16),
                         Center(
                           child: RefTap(
-                            onTap: (_busy || _busyGoogle)
+                            onTap: _busy
                                 ? null
                                 : () => Navigator.pushReplacementNamed(
                                     context, '/role'),
@@ -972,85 +866,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 }
 
-/// `.gs-acc` — Google hesap seçim satırı.
-///
-/// ```css
-/// .gs-acc{display:flex;align-items:center;gap:12px;width:100%;
-///   border:1px solid #E1E5EC;border-radius:13px;background:#fff;
-///   padding:13px}
-/// .gs-n{font-size:14.5px;font-weight:700;color:#16233D}
-/// .gs-m{font-size:12px;color:#5B6472;ellipsis}
-/// ```
-///
-/// Ad ve e-posta referans prototipteki değerlerdir; birebir korunur.
-/// Gerçek Google SDK bağlandığında SDK'dan gelen hesapla doldurulur.
-class _GoogleHesapSatiri extends StatelessWidget {
-  const _GoogleHesapSatiri({required this.onTap});
-
-  /// `.gs-n` — referans: "Onur Bütün"
-  static const ad = 'Onur Bütün';
-
-  /// `.gs-m` — referans: "onur@butunmuhendislik.com.tr"
-  static const eposta = 'onur@butunmuhendislik.com.tr';
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // ⚠ TEŞHİS: bu akışın klavye süreleri AYRI etiketlenir.
-    FocusIzle.aktifRoute = '/login';
-    return Material(
-      color: RC.white,
-      borderRadius: BorderRadius.circular(RR.r13),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(RR.r13),
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            border: Border.all(color: RC.borderAlt), // #E1E5EC
-            borderRadius: BorderRadius.circular(RR.r13),
-          ),
-          child: Row(
-            children: [
-              const RefSvg('assets/svg/ic_google.svg', size: 22),
-              const SizedBox(width: 12), // gap:12px
-              // .gs-tx{flex:1;flex-direction:column;gap:2px}
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // .gs-n{font-size:14.5px;font-weight:700;color:#16233D}
-                    Text(
-                      ad,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: refText(
-                        size: RF.s145, weight: RF.w700, color: RC.text),
-                    ),
-                    const SizedBox(height: 2), // gap:2px
-                    // .gs-m{font-size:12px;color:#5B6472;ellipsis}
-                    Text(
-                      eposta,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: refText(
-                        size: RF.s12, weight: RF.w400, color: RC.textSoft),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              const RefSvg('assets/svg/ic_chev.svg',
-                  size: 18, color: RC.textSoft),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ⚠ `_GoogleHesapSatiri` KALDIRILDI — Google giriş paneli yok.
 
 /// GİRİŞ YOLU DEĞİŞTİRME — TEK DÜĞME.
 ///

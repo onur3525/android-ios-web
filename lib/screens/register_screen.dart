@@ -17,7 +17,6 @@ import '../data/controllers/region_controller.dart';
 import 'widgets/region_picker.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
-import '../data/services/google_auth_service.dart';
 import '../data/controllers/profile_controller.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import '../data/models/pending_listing.dart';
@@ -109,7 +108,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Set<String> _cats = {};      // sağlayıcı kategorileri
   final Set<String> _provDistricts = {}; // sağlayıcı ilçeleri
   bool _agree = false;
-  bool _busyGoogle = false;
 
   /// Seçili il — sunucudan gelen aktif iller arasından seçilir.
   /// ⚠ HARD-CODE DEĞİLDİR; tek il varsa kendiliğinden seçilir.
@@ -231,94 +229,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // AKTİF olan iller görünür (admin yeni il eklerse kendiliğinden
     // listeye düşer).
   }
+  // ⚠ `_googleIleDevam` KALDIRILDI — üçüncü taraf girişi yok.
 
-  /// GOOGLE İLE DEVAM (kayıt akışı)
-  ///
-  /// Referans `vRegStep1`: `<button class="rg-google" onclick="googleSheet()">`
-  ///
-  /// Login ile AYNI gerçek akış: Google'dan `idToken` alınır ve sunucuya
-  /// gönderilir. Yalnız görsel buton DEĞİLDİR.
-  Future<void> _googleIleDevam() async {
-    if (_busyGoogle || _busy) {
-      return;
-    }
-    setState(() => _busyGoogle = true);
-    try {
-      final idToken = await GoogleAuthService().signInIdToken();
-      if (!mounted) {
-        return;
-      }
-      if (idToken == null) {
-        // Kullanıcı vazgeçti — hata gösterilmez.
-        setState(() => _busyGoogle = false);
-        return;
-      }
-      final err = await context.read<AuthController>().googleLogin(idToken);
-      if (!mounted) {
-        return;
-      }
-      setState(() => _busyGoogle = false);
-      if (err != null) {
-        sysToastErr(context, SysKind.genericError, extra: err.message);
-        return;
-      }
-      // ══════════════════════════════════════════════════════════
-      // ⚠ GOOGLE İLE KAYIT PANELE ATLAMAZ
-      //
-      // Google yalnız kimlik ve doğrulanmış e-posta sağlar.
-      // HizmetCep zorunlulukları BYPASS EDİLMEZ:
-      //   Telefon + SMS OTP · İl/İlçe/Mahalle · sözleşme onayı
-      //   (Hizmet Veren için ayrıca kategori + hizmet bölgesi)
-      //
-      // Eksik alan varsa kullanıcı tamamlama akışına yönlendirilir.
-      // ══════════════════════════════════════════════════════════
-      final auth = context.read<AuthController>();
-      final acc = auth.currentAccount;
-      final eksik = acc?.missingSteps ?? const <OnboardingStep>[];
-
-      if (acc == null || eksik.isNotEmpty) {
-        sysToastOk(context,
-            'Google hesabınız bağlandı — bilgilerinizi tamamlayın');
-        // Formda kalınır; Google'dan gelen bilgiler alanlara doldurulur
-        // ve kullanıcı eksikleri tamamlayıp normal akışla devam eder.
-        setState(() {
-          if (acc != null) {
-            final ad = acc.name.trim().split(RegExp(r'\s+'));
-            if (_first.text.trim().isEmpty && ad.isNotEmpty) {
-              _first.text = ad.first;
-            }
-            if (_last.text.trim().isEmpty && ad.length > 1) {
-              _last.text = ad.sublist(1).join(' ');
-            }
-            if (_email.text.trim().isEmpty) {
-              _email.text = acc.email;
-            }
-          }
-        });
-        // ⚠ Alanlar KOD İLE dolduruldu; `onChanged` tetiklenmez.
-        // Düğme bildirimi elle tazelenmezse form dolu görünür ama
-        // "Devam Et" pasif kalır.
-        _tazele();
-        return;
-      }
-
-      // Tüm zorunluluklar tamam — panele geçilebilir.
-      sysToastOk(context, 'Hoş geldiniz!');
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        auth.activeRole == Role.provider
-            ? '/provider/jobs'
-            : '/customer/listings',
-        (r) => false,
-      );
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() => _busyGoogle = false);
-      sysToastErr(context, SysKind.genericError,
-          extra: 'Google ile devam edilemedi');
-    }
-  }
 
   /// KAYIT SONRASI BEKLEYEN İLAN YAYINI
   ///
@@ -1800,21 +1712,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // BİRLİKTE gizlenir; sahipsiz "veya" çizgisi kalmaz.
                 //
                 // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ.
-                if (googleGirisiGosterilir) ...[
-                  const RefOrDivider(),
-                  RefSecondaryButton(
-                    // ⚠ KAYIT EKRANINDA "KAYDOL", GİRİŞTE "DEVAM ET".
-                    //
-                    // Aynı düğme iki ekranda da vardı ve ikisinde de
-                    // "Devam Et" yazıyordu. Kayıt akışında kullanıcı
-                    // hesap AÇIYOR; "devam et" ne yapacağını
-                    // söylemiyordu. Giriş ekranındaki metin DEĞİŞMEDİ.
-                    'Google ile Kaydol',
-                    iconAsset: 'assets/svg/ic_google.svg',
-                    busy: _busyGoogle,
-                    onPressed: _busy ? null : _googleIleDevam,
-                  ),
-                ],
+                // ── ⚠ GOOGLE / APPLE İLE GİRİŞ TAMAMEN KALDIRILDI ──
+                //
+                // Ürün kararı: hesap açma ve giriş YALNIZCA kendi
+                // hesap sistemimizle yapılır (telefon/e-posta + şifre,
+                // telefonla girişte SMS OTP).
+                //
+                // ⚠ Bu, ikinci bir yan etki daha yaratır ve LEHİMİZE:
+                // Apple kılavuzu 4.8 "üçüncü taraf giriş kullanan
+                // uygulama" için ek seçenek zorunluluğu getiriyordu;
+                // muafiyet "yalnızca kendi hesap sistemini kullanan"
+                // uygulamalar içindir. Üçüncü taraf girişi kalmayınca
+                // muafiyet DOĞRUDAN uygulanır.
+                //
+                // ⚠ "veya" ayırıcısı da kaldırıldı: düğme gidince
+                // sahipsiz bir çizgi kalırdı.
               ]),
             ),
           ),

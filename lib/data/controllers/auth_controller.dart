@@ -54,11 +54,11 @@ class AuthController extends BaseController {
     return err?.message;
   }
 
-  /// GOOGLE İLE GİRİŞ — `idToken` sunucuda doğrulanır.
-  /// Hata mesajı döner; başarıda `null`.
-  Future<DomainError?> googleLogin(String idToken) async {
-    return runAction('googleLogin', () => _auth.googleLogin(idToken));
-  }
+  // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
+  //
+  // Giriş yalnızca kendi hesap sistemimizle yapılır: telefon/e-posta
+  // + şifre, telefonla girişte SMS OTP.
+
 
   Future<({Account? account, DomainError? error})> register({
     required String phone,
@@ -75,7 +75,6 @@ class AuthController extends BaseController {
     /// Google akışında doğrulanmış e-posta ile gelinir.
     bool emailVerified = false,
     /// Google `sub` — hesap eşleştirme kimliği.
-    String? googleSub,
 
     /// ⚠ OTP doğrulamasından üretilen kayıt yetkisi (Y1).
     String? kayitYetkisi,
@@ -95,7 +94,6 @@ class AuthController extends BaseController {
         categories: categories, serviceDistricts: serviceDistricts,
         termsAccepted: termsAccepted,
         emailVerified: emailVerified,
-        googleSub: googleSub,
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,
       );

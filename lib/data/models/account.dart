@@ -122,12 +122,7 @@ class Account {
   /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
   bool termsAccepted;
 
-  /// Google hesabının benzersiz kimliği (`sub`).
-  ///
-  /// ⚠ Hesap eşleştirmesi E-POSTA METNİYLE DEĞİL bu kimlikle yapılır;
-  /// e-posta değişebilir, `sub` değişmez. Aynı `sub` ile ikinci hesap
-  /// üretilmez.
-  String? googleSub;
+  // ⚠ `googleSub` KALDIRILDI — üçüncü taraf girişi yok.
 
   Account({
     required this.id,
@@ -140,7 +135,6 @@ class Account {
     this.phoneVerified = false,
     this.emailVerified = false,
     this.termsAccepted = false,
-    this.googleSub,
     Set<Role>? roles,
     Role? activeRole,
   })  : roles = roles ?? {Role.customer},

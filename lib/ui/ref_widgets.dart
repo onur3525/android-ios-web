@@ -759,7 +759,29 @@ class RefFormField extends StatelessWidget {
               ),
             ),
           ),
-          if (suffix != null) suffix!,
+          // ── ⚠ SUFFIX SATIR YÜKSEKLİĞİNİ BÜYÜTMEZ ──
+          //
+          // Şifre alanı öteki alanlardan DAHA UZUN görünüyordu.
+          // Sebep: `RefSifreGozu` erişilebilirlik için en az 48×48
+          // dokunma alanı istiyor; kutunun kendi yüksekliği ise
+          // 14 dp dolgu + tek satır metin ≈ 46 dp. Göz ikonu satırı
+          // birkaç piksel esnetiyordu ve göze çarpıyordu.
+          //
+          // ⚠ DOKUNMA ALANI KÜÇÜLTÜLMEDİ. `RefSifreGozu` içindeki
+          // 48×48 sınırı erişilebilirlik alt sınırıdır ve KORUNUR —
+          // burada yalnız DIŞ YÜKSEKLİK sabitleniyor. İkon taşan
+          // kısmıyla dokunulabilir kalır, ama satırı büyütmez.
+          //
+          // ⚠ Ölçü BİLEŞENDE sabit: ekranlar tek tek düzeltme yapmaz,
+          // suffix veren her alan aynı yüksekliği alır.
+          if (suffix != null)
+            SizedBox(
+              height: kRefAlanIcYukseklik,
+              child: OverflowBox(
+                maxHeight: kSifreGozuDokunma,
+                child: suffix,
+              ),
+            ),
         ],
       ),
     );
@@ -4249,6 +4271,13 @@ class _RefSerbestNedenSayfasiState extends State<RefSerbestNedenSayfasi> {
 ///
 /// ⚠ EKRANLAR BU DEĞERLERİ EZMEZ. Göz ikonu bazı ekranlarda küçük
 /// görünüyordu; ölçü ekran ekran ayarlanırsa yeniden ayrışır.
+/// ⚠ ALAN İÇ YÜKSEKLİĞİ — suffix'li ve suffix'siz alanlar AYNI.
+///
+/// `RefFormField` kutusu 14 dp dikey dolgu + tek satır metin
+/// yüksekliğinde. Suffix (göz ikonu) bu değere sabitlenir ki şifre
+/// alanı telefon/e-posta alanlarından uzun görünmesin.
+const double kRefAlanIcYukseklik = 22;
+
 const double kSifreGozuIkon = 24;
 
 /// Erişilebilirlik alt sınırı — parmak hedefi 48×48'ten küçük olamaz.

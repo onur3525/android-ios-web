@@ -25,10 +25,11 @@ class AuthApi {
   Future<Map<String, dynamic>> login({required String phone, required String password}) =>
       c.post('/auth/login', body: {'phone': phone, 'password': password});
 
-  /// GOOGLE İLE GİRİŞ — yalnız `idToken` gönderilir.
-  /// E-posta/ad SUNUCUDA Google'dan doğrulanarak okunur.
-  Future<Map<String, dynamic>> googleLogin(String idToken) =>
-      c.post('/auth/google', body: {'idToken': idToken});
+  // ⚠ `POST /auth/google` KALDIRILDI — üçüncü taraf girişi yok.
+  //
+  // ⚠ SÖZLEŞMEDEN DE ÇIKARILDI: istemcinin çağırmadığı bir ucu
+  // sözleşmede bırakmak, backend'in gereksiz yere uygulamasına yol
+  // açardı.
 
   Future<void> logout() => c.post('/auth/logout');
 

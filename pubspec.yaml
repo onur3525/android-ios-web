@@ -51,7 +51,7 @@ dependencies:
   crypto: ^3.0.3            # şifre hash (düz metin şifre saklanmaz)
   http: ^1.2.2              # backend API istemcisi
   flutter_secure_storage: ^9.2.2  # token saklama (Keychain / EncryptedSharedPreferences)
-  google_sign_in: ^6.2.1    # Google ile giriş — id_token SUNUCUDA doğrulanır
+  # ⚠ `google_sign_in` KALDIRILDI — üçüncü taraf girişi yok.
   socket_io_client: ^2.0.3  # gerçek zamanlı mesajlaşma (/ws namespace)
 
 dev_dependencies:

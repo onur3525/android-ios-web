@@ -46,6 +46,45 @@ void main() {
       expect(govde.contains('EdgeInsets.all(10)'), isFalse);
     });
 
+    test('⚠ SUFFIX SATIR YÜKSEKLİĞİNİ BÜYÜTMEZ', () {
+      // ── YAŞANAN SORUN ──
+      //
+      // Girişte şifre alanı, telefon/e-posta alanlarından DAHA UZUN
+      // görünüyordu. Sebep göz ikonunun 48×48 dokunma alanı:
+      // kutunun kendi yüksekliği ~46 dp iken satırı esnetiyordu.
+      //
+      // ⚠ ÇÖZÜM DOKUNMA ALANINI KÜÇÜLTMEK DEĞİL: 48×48
+      // erişilebilirlik alt sınırıdır ve KORUNUR. Dış yükseklik
+      // sabitlenir, ikon `OverflowBox` ile taşar.
+      expect(ref.contains('const double kRefAlanIcYukseklik'), isTrue,
+          reason: 'ortak yükseklik sabiti yok');
+      expect(ref.contains('height: kRefAlanIcYukseklik'), isTrue,
+          reason: 'suffix yüksekliği sabitlenmemiş');
+      expect(ref.contains('maxHeight: kSifreGozuDokunma'), isTrue,
+          reason: 'ikon taşamıyor — dokunma alanı küçülür');
+      // ⚠ Dokunma alanı sınırı YERİNDE DURUYOR.
+      final i = ref.indexOf('class RefSifreGozu');
+      final govde = ref.substring(i, i + 1800);
+      expect(govde.contains('minHeight: kSifreGozuDokunma'), isTrue,
+          reason: 'dokunma alanı küçültülmüş — erişilebilirlik ihlali');
+    });
+
+    test('⚠ GİRİŞTE ÜÇ ALAN AYNI BİLEŞEN VE ÖLÇÜDE', () {
+      // Telefon, e-posta ve şifre aynı `RefFormField`'ı kullanır;
+      // yükseklik farkı yalnız suffix'ten geliyordu.
+      final k = _kod('lib/screens/login_screen.dart');
+      expect('RefFormField('.allMatches(k).length, greaterThanOrEqualTo(3));
+      // Hiçbir ekran kendi yüksekliğini vermez.
+      for (final yol in const [
+        'lib/screens/login_screen.dart',
+        'lib/screens/register_screen.dart',
+        'lib/screens/profile_info_screen.dart',
+      ]) {
+        expect(_kod(yol).contains('kRefAlanIcYukseklik'), isFalse,
+            reason: '$yol: ölçü ekrana taşınmış');
+      }
+    });
+
     test('HİÇBİR EKRAN kendi ölçüsünü vermez', () {
       // Ölçü ekran ekran verilirse standart yeniden ayrışır.
       for (final f in const [

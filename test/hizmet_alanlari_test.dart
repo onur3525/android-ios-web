@@ -15,24 +15,71 @@ import 'package:hizmetcep/data/hizmet_alanlari.dart';
 
 void main() {
   group('KAPSAM', () {
-    test('ON İKİ ÇATI — ne eksik ne fazla', () {
-      expect(kHizmetAlanlari.length, 12);
+    test('ON BEŞ ÇATI — ne eksik ne fazla', () {
+      // ⚠ 15 ÇATI KESİN YAPI (kullanıcı talimatı §2).
+      //
+      // 16. çatı ve "Diğer" çatısı OLUŞTURULMAZ. Adlar talimattaki
+      // kesin adlardır; sıra ana ekrandaki 3×5 kart düzenini verir.
+      expect(kHizmetAlanlari.length, 15);
       expect(
           kHizmetAlanlari.map((a) => a.ad).toList(),
           const [
-            'Ev Hizmeti',
-            'Araç Hizmeti',
-            'Tamir',
+            'Ev & Yaşam',
+            'Araç Hizmetleri',
+            'Beyaz Eşya & Elektronik Servis',
             'Temizlik',
-            'Taşıma',
-            'Kişisel Hizmet',
-            'Evcil Hayvan',
+            'Taşıma & Nakliyat',
+            'Güzellik & Kişisel Bakım',
+            'Evcil Hayvan Hizmetleri',
             'Eğitim',
-            'Dijital Hizmet',
-            'Organizasyon',
+            'Dijital Hizmetler',
+            'Organizasyon & Etkinlik',
             'İnşaat & Dekorasyon',
-            'Mühendislik & Danışmanlık',
+            'Teknik Hizmetler',
+            'Giyim & Tekstil',
+            'Mühendislik & Proje',
+            'Hukuk, Finans & Kurumsal',
           ]);
+    });
+
+    test('⚠ 3×5 DÜZENİ — satır çatı sayısından türer', () {
+      // Ekran kodu satırı hesaplıyor; 15 çatı 3 sütunda 5 satır eder.
+      expect((kHizmetAlanlari.length + 2) ~/ 3, 5);
+    });
+
+    test('⚠ TALİMATTA GEÇMEYEN KATEGORİLER MEVCUT ÇATISINI KORUDU', () {
+      // ── NİÇİN ──
+      //
+      // Talimatın §3 yerleşim listesi 47 kategori sayıyor; katalogda
+      // 63 var. Kalan 16'sı listede HİÇ geçmiyor.
+      //
+      // ⚠ VARSAYIMLA YERLEŞTİRİLMEDİLER. Talimat "mevcut hiçbir
+      // kategori silinmeyecek" (§4) ve "mevcut çalışan davranış
+      // korunacak" (§9) diyor. Değinilmeyen kategoriler bu yüzden
+      // MEVCUT çatılarını korudu; çatı adları yalnız §2'deki eşlemeye
+      // göre değişti.
+      expect(kKategoriAlani['Kombi Montaj'], 'Ev & Yaşam');
+      expect(kKategoriAlani['Oto Çekici ve Yol Yardım'], 'Araç Hizmetleri');
+      expect(kKategoriAlani['Müzik Dersleri'], 'Eğitim');
+      expect(kKategoriAlani['Fayans ve Seramik Döşeme'], 'İnşaat & Dekorasyon');
+      expect(kKategoriAlani['Asansör Montaj ve Bakım'], 'İnşaat & Dekorasyon');
+    });
+
+    test('⚠ TALİMATIN §3 YERLEŞİMİ BİREBİR UYGULANDI', () {
+      // Örnekleme: her yeni/taşınan çatıdan en az bir kategori.
+      expect(kKategoriAlani['Bahçe ve Peyzaj'], 'Ev & Yaşam');
+      expect(kKategoriAlani['Su Tesisatı'], 'Teknik Hizmetler');
+      expect(kKategoriAlani['Elektrik'], 'Teknik Hizmetler');
+      expect(kKategoriAlani['Kombi Servis'], 'Teknik Hizmetler');
+      expect(kKategoriAlani['Terzilik ve Dikiş'], 'Giyim & Tekstil');
+      expect(kKategoriAlani['Ev Tekstili'], 'Giyim & Tekstil');
+      expect(kKategoriAlani['Avukatlık ve Hukuk'], 'Hukuk, Finans & Kurumsal');
+      expect(kKategoriAlani['Sigorta'], 'Hukuk, Finans & Kurumsal');
+      expect(kKategoriAlani['Beyaz Eşya Servisi'],
+          'Beyaz Eşya & Elektronik Servis');
+      expect(kKategoriAlani['Spor ve Kişisel Antrenör'],
+          'Güzellik & Kişisel Bakım');
+      expect(kKategoriAlani['Fotoğraf Çekimi'], 'Dijital Hizmetler');
     });
 
     test('HER KATEGORİ bir çatıya bağlı', () {
@@ -130,14 +177,14 @@ void main() {
     test('EV HİZMETİ ürün kararlarına uyuyor', () {
       // Bahçe bakım ağırlıklı, güvenlik kurulum ağırlıklı, ev tekstili
       // eve ait ürünler → üçü de Ev Hizmeti (kullanıcı kararı).
-      expect(kKategoriAlani['Bahçe ve Peyzaj'], 'Ev Hizmeti');
-      expect(kKategoriAlani['Güvenlik Sistemleri'], 'Ev Hizmeti');
-      expect(kKategoriAlani['Ev Tekstili'], 'Ev Hizmeti');
+      
+      expect(kKategoriAlani['Güvenlik Sistemleri'], 'Teknik Hizmetler');
+      
     });
 
     test('SPOR DERSLERİ Eğitim değil KİŞİSEL HİZMET', () {
       // Eğitim çatısı okul/dil/müzik/sürücü için temiz tutulur.
-      expect(kKategoriAlani['Spor ve Kişisel Antrenör'], 'Kişisel Hizmet');
+      
       for (final d in const [
         'Yüzme Dersi',
         'Fitness Özel Ders',
@@ -145,22 +192,22 @@ void main() {
         'Tenis Dersi',
         'Yoga Dersi',
       ]) {
-        expect(hizmetAlani('Spor ve Kişisel Antrenör', d), 'Kişisel Hizmet',
+        expect(hizmetAlani('Spor ve Kişisel Antrenör', d), 'Güzellik & Kişisel Bakım',
             reason: d);
       }
     });
 
     test('EVCİL HAYVAN kendi çatısında', () {
-      expect(kKategoriAlani['Evcil Hayvan Hizmetleri'], 'Evcil Hayvan');
+      expect(kKategoriAlani['Evcil Hayvan Hizmetleri'], 'Evcil Hayvan Hizmetleri');
       for (final h in const ['Köpek Eğitimi', 'Evcil Hayvan Taşıma']) {
-        expect(hizmetAlani('Evcil Hayvan Hizmetleri', h), 'Evcil Hayvan',
+        expect(hizmetAlani('Evcil Hayvan Hizmetleri', h), 'Evcil Hayvan Hizmetleri',
             reason: h);
       }
     });
 
     test('HİZMET DÜZEYİNDE İSTİSNA çalışıyor', () {
       // ⚠ Kategori bir çatıda, hizmet başka çatıda olabilir.
-      expect(kKategoriAlani['Çilingir ve Kilit'], 'Ev Hizmeti');
+      expect(kKategoriAlani['Çilingir ve Kilit'], 'Teknik Hizmetler');
       expect(hizmetAlani('Çilingir ve Kilit', 'Oto Anahtarcı'),
           'Araç Hizmeti');
 
@@ -169,9 +216,9 @@ void main() {
           'Araç Hizmeti');
 
       // İstisnası olmayan hizmet kategorisinin çatısını izler.
-      expect(hizmetAlani('Çilingir ve Kilit', 'Kapı Açma'), 'Ev Hizmeti');
+      expect(hizmetAlani('Çilingir ve Kilit', 'Kapı Açma'), 'Teknik Hizmetler');
       // Hizmet verilmezse kategori çatısı döner.
-      expect(hizmetAlani('Çilingir ve Kilit', null), 'Ev Hizmeti');
+      expect(hizmetAlani('Çilingir ve Kilit', null), 'Teknik Hizmetler');
     });
 
     test('İSTİSNALAR KATALOGDA GERÇEKTEN VAR', () {
@@ -195,7 +242,7 @@ void main() {
       expect(arac, contains('Oto Anahtarcı'));
       expect(arac, contains('Araç Döşeme Yıkama'));
 
-      final ev = alanHizmetleri('Ev Hizmeti').map((e) => e.hizmet);
+      final ev = alanHizmetleri('Teknik Hizmetler').map((e) => e.hizmet);
       expect(ev, isNot(contains('Oto Anahtarcı')));
 
       // Toplam korunur: hiçbir hizmet kaybolmaz veya iki kez sayılmaz.
@@ -366,7 +413,7 @@ void main() {
 
     test('OTO ANAHTARCI Araç Hizmeti kapsamında, Ev Hizmeti değil', () {
       final arac = alanHizmetleri('Araç Hizmeti').map((e) => e.hizmet);
-      final ev = alanHizmetleri('Ev Hizmeti').map((e) => e.hizmet);
+      final ev = alanHizmetleri('Teknik Hizmetler').map((e) => e.hizmet);
       expect(arac, contains('Oto Anahtarcı'));
       expect(ev, isNot(contains('Oto Anahtarcı')));
     });

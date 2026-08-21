@@ -155,8 +155,7 @@ class ApiAuthPort extends AuthPort {
   @override
   bool? telefonKayitliMi(String phone) => null;
 
-  @override
-  Future<DomainError?> googleLogin(String idToken) => repo.googleLogin(idToken);
+  // ⚠ `googleLogin` KALDIRILDI.
 
   @override
   Future<({Account? account, DomainError? error})> register({
@@ -171,7 +170,6 @@ class ApiAuthPort extends AuthPort {
     Set<String> serviceDistricts = const {},
     bool termsAccepted = false,
     bool emailVerified = false,
-    String? googleSub,
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async {

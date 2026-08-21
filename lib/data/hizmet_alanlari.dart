@@ -44,39 +44,34 @@ class HizmetAlani {
 
 const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
-    ad: 'Ev Hizmeti',
+    ad: 'Ev & Yaşam',
     aciklama:
-        'Tesisat, elektrik, ısıtma',
+        'Bahçe, havuz ve ev işleri',
     gorsel: 'assets/alanlar/ev.jpg',
     ikon: 'assets/svg/alanlar/ev.svg',
     kategoriler: [
-      'Su Tesisatı', 'Doğalgaz', 'Kombi Montaj', 'Kombi Servis',
-      'Isıtma Sistemleri', 'Elektrik', 'Güvenlik Sistemleri',
-      'Klima Montaj ve Servis', 'Çilingir ve Kilit', 'Bahçe ve Peyzaj',
-      'Ev Tekstili'
+      'Bahçe ve Peyzaj', 'Havuz Yapım ve Bakım', 'Kombi Montaj'
     ],
   ),
   HizmetAlani(
-    ad: 'Araç Hizmeti',
+    ad: 'Araç Hizmetleri',
     aciklama:
-        'Oto bakım ve onarım',
+        'Oto bakım ve yol yardım',
     gorsel: 'assets/alanlar/arac.jpg',
     ikon: 'assets/svg/alanlar/arac.svg',
     kategoriler: [
-      'Oto Çekici ve Yol Yardım', 'Oto Servis ve Bakım',
-      'Araç Temizlik ve Detaylı Bakım'
+      'Oto Servis ve Bakım', 'Araç Temizlik ve Detaylı Bakım',
+      'Oto Çekici ve Yol Yardım'
     ],
   ),
   HizmetAlani(
-    ad: 'Tamir',
+    ad: 'Beyaz Eşya & Elektronik Servis',
     aciklama:
-        'Elektronik ve beyaz eşya',
+        'Beyaz eşya ve cihaz tamiri',
     gorsel: 'assets/alanlar/tamir.jpg',
     ikon: 'assets/svg/alanlar/tamir.svg',
     kategoriler: [
-      'Beyaz Eşya Servisi', 'Elektronik Cihaz Tamiri',
-      'Uydu ve Anten Sistemleri', 'İnternet ve Ağ Kurulumu',
-      'Ayakkabı ve Deri İşleri', 'Terzilik ve Dikiş'
+      'Beyaz Eşya Servisi', 'Elektronik Cihaz Tamiri'
     ],
   ),
   HizmetAlani(
@@ -91,7 +86,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Taşıma',
+    ad: 'Taşıma & Nakliyat',
     aciklama:
         'Nakliyat ve kurye',
     gorsel: 'assets/alanlar/tasima.jpg',
@@ -101,7 +96,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Kişisel Hizmet',
+    ad: 'Güzellik & Kişisel Bakım',
     aciklama:
         'Güzellik, bakım ve spor',
     gorsel: 'assets/alanlar/kisisel.jpg',
@@ -111,7 +106,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Evcil Hayvan',
+    ad: 'Evcil Hayvan Hizmetleri',
     aciklama:
         'Pet bakım ve kuaför',
     gorsel: 'assets/alanlar/evcil.jpg',
@@ -132,24 +127,24 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Dijital Hizmet',
+    ad: 'Dijital Hizmetler',
     aciklama:
         'Yazılım, web, tasarım',
     gorsel: 'assets/alanlar/dijital.jpg',
     ikon: 'assets/svg/alanlar/dijital.svg',
     kategoriler: [
       'Yazılım ve Web Hizmetleri', 'Grafik ve Logo Tasarım',
-      'Dijital Pazarlama'
+      'Dijital Pazarlama', 'Fotoğraf Çekimi'
     ],
   ),
   HizmetAlani(
-    ad: 'Organizasyon',
+    ad: 'Organizasyon & Etkinlik',
     aciklama:
         'Etkinlik ve fotoğraf',
     gorsel: 'assets/alanlar/organizasyon.jpg',
     ikon: 'assets/svg/alanlar/organizasyon.svg',
     kategoriler: [
-      'Etkinlik ve Organizasyon', 'Fotoğraf Çekimi'
+      'Etkinlik ve Organizasyon'
     ],
   ),
   HizmetAlani(
@@ -159,41 +154,59 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/insaat.jpg',
     ikon: 'assets/svg/alanlar/insaat.svg',
     kategoriler: [
-      'İnşaat ve Kaba Yapı', 'Çatı Yapım ve Onarım',
-      'Tadilat ve Yenileme', 'Banyo Tadilat ve Montaj',
-      'Mutfak Tadilat ve Dolap', 'Boya ve Badana', 'Alçı ve Sıva İşleri',
-      'Duvar Kağıdı ve Dekorasyon', 'Fayans ve Seramik Döşeme',
-      'Zemin Kaplama', 'Yalıtım ve Mantolama',
+      'Mutfak Tadilat ve Dolap', 'Banyo Tadilat ve Montaj',
+      'Boya ve Badana', 'Zemin Kaplama', 'Çatı Yapım ve Onarım',
+      'İnşaat ve Kaba Yapı', 'Tadilat ve Yenileme',
+      'Alçı ve Sıva İşleri', 'Duvar Kağıdı ve Dekorasyon',
+      'Fayans ve Seramik Döşeme', 'Yalıtım ve Mantolama',
       'PVC ve Alüminyum Doğrama', 'Demir Doğrama ve Kaynak',
       'Cam Balkon Sistemleri', 'Marangozluk ve Ahşap İşleri',
       'Mobilya Yapım ve Montaj', 'Kapı Montaj ve Tamir',
-      'Havuz Yapım ve Bakım', 'Asansör Montaj ve Bakım'
+      'Asansör Montaj ve Bakım'
     ],
   ),
   HizmetAlani(
-    ad: 'Mühendislik & Danışmanlık',
+    ad: 'Teknik Hizmetler',
     aciklama:
-        'Proje ve danışmanlık',
+        'Tesisat, elektrik, ısıtma',
+    gorsel: 'assets/alanlar/teknik.jpg',
+    ikon: 'assets/svg/alanlar/teknik.svg',
+    kategoriler: [
+      'Su Tesisatı', 'Doğalgaz', 'Kombi Servis', 'Isıtma Sistemleri',
+      'Elektrik', 'Güvenlik Sistemleri', 'Klima Montaj ve Servis',
+      'Çilingir ve Kilit', 'Uydu ve Anten Sistemleri',
+      'İnternet ve Ağ Kurulumu'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Giyim & Tekstil',
+    aciklama:
+        'Terzilik ve ev tekstili',
+    gorsel: 'assets/alanlar/giyim.jpg',
+    ikon: 'assets/svg/alanlar/giyim.svg',
+    kategoriler: [
+      'Terzilik ve Dikiş', 'Ayakkabı ve Deri İşleri', 'Ev Tekstili'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Mühendislik & Proje',
+    aciklama:
+        'Proje ve mühendislik',
     gorsel: 'assets/alanlar/muhendislik.jpg',
     ikon: 'assets/svg/alanlar/muhendislik.svg',
     kategoriler: [
-      'Mühendislik ve Proje',
-      // ── PROFESYONEL / OFİS HİZMETLERİ (16 Ağu) ──
-      //
-      // ⚠ BU BEŞİ SAHA İŞİ DEĞİL, MESLEK HİZMETİDİR ve doğal yerleri
-      // bu çatıdır: çatının açıklaması zaten "Proje ve danışmanlık".
-      //
-      // ⚠ ALTERNATİF: ayrı bir çatı ("Kurumsal & Profesyonel") açmak.
-      // O yol çatı sayısını 12→13 yapar, ana sayfa yerleşimini
-      // değiştirir ve yeni bir çatı fotoğrafı + ikonu gerektirir.
-      // Ürün kararı verilmediği için MEVCUT çatı kullanıldı; taşımak
-      // istenirse bu beş satır yeni çatıya alınır, başka bir yere
-      // dokunulmaz.
-      'Avukatlık ve Hukuk',
-      'Muhasebe ve Mali Müşavirlik',
-      'İş Güvenliği ve İSG',
-      'Marka ve Patent',
-      'Sigorta'
+      'Mühendislik ve Proje'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Hukuk, Finans & Kurumsal',
+    aciklama:
+        'Hukuk, muhasebe, sigorta',
+    gorsel: 'assets/alanlar/hukuk.jpg',
+    ikon: 'assets/svg/alanlar/hukuk.svg',
+    kategoriler: [
+      'Avukatlık ve Hukuk', 'Muhasebe ve Mali Müşavirlik', 'Sigorta',
+      'İş Güvenliği ve İSG', 'Marka ve Patent'
     ],
   ),
 ];
