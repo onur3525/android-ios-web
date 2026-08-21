@@ -168,7 +168,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Teknik Hizmetler',
     aciklama:
-        'Tesisat, elektrik, ısıtma',
+        'Tesisat ve elektrik',
     gorsel: 'assets/alanlar/teknik.jpg',
     ikon: 'assets/svg/alanlar/teknik.svg',
     kategoriler: [
@@ -201,7 +201,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Hukuk, Finans & Kurumsal',
     aciklama:
-        'Hukuk, muhasebe, sigorta',
+        'Hukuk ve muhasebe',
     gorsel: 'assets/alanlar/hukuk.jpg',
     ikon: 'assets/svg/alanlar/hukuk.svg',
     kategoriler: [

@@ -776,8 +776,19 @@ class RefFormField extends StatelessWidget {
           // suffix veren her alan aynı yüksekliği alır.
           if (suffix != null)
             SizedBox(
+              // ⚠ GENİŞLİK DE VERİLİR.
+              //
+              // Önce yalnız `height` veriliyordu ve `OverflowBox`'ın
+              // `maxWidth`'i boştu. `Row` çocuğuna SINIRSIZ genişlik
+              // verir; `OverflowBox` bunu SONSUZ diye alıp taşıyordu:
+              //   "RIGHT OVERFLOWED BY Infinity PIXELS"
+              // Aynı bozuk düzen kayıt ekranını da çökertiyordu.
+              width: kSifreGozuDokunma,
               height: kRefAlanIcYukseklik,
               child: OverflowBox(
+                // ⚠ İKİ EKSEN DE SINIRLI: dokunma alanı 48×48 kalır
+                // (erişilebilirlik), ama satırı büyütmez.
+                maxWidth: kSifreGozuDokunma,
                 maxHeight: kSifreGozuDokunma,
                 child: suffix,
               ),

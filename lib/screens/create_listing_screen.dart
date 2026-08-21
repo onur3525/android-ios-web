@@ -1048,7 +1048,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               onChanged: (_) => setState(() {}),
               // ⚠ Örnek metin KULLANILMAZ: kutuyu doldurup okunmayı
               // zorlaştırıyordu. Kısa ve yönlendirici ipucu yeterli.
-              hint: 'Açıklama yazın.',
+              // ⚠ ETİKET DEĞİL YER TUTUCU.
+              //
+              // Bu alanın başlığı ZATEN ÜSTTE var ("Açıklama
+              // (Zorunlu)"). `hint` verilirse ortak bileşen onu kutunun
+              // üstünde ikinci bir etiket olarak çizer ve başlık iki
+              // kez görünürdü.
+              yerTutucu: 'Açıklama yazın.',
             ),
             Positioned(
               right: 14,

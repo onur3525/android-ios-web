@@ -272,14 +272,14 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
       // Telefon — yalnız rakam, 11 hane, başa otomatik `0`.
       _alan('telefon', 'assets/svg/ic_phone.svg',
           // Yalnız örnek biçim — bkz. `register_screen` notu.
-          '5XX XXX XX XX', v.telefon,
+          'Telefon', v.telefon,
           klavye: TextInputType.number,
           // ⚠ TEK KURAL KAYNAĞI — bkz. `TelefonBicimlendirici`.
           bicim: const [TelefonBicimlendirici()],
           // ⚠ `+90` kutusu KALDIRILDI (bkz. `register_screen` notu).
           // İşlevsiz bir açılır kutuydu; numara `0` ile başlayan yerel
           // biçimde alınıyor.
-          ),
+          yerTutucu: '5XX XXX XX XX'),
 
       // ── İL / İLÇE / MAHALLE ──
       //
@@ -453,11 +453,17 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
         ),
       );
 
+  /// Form alanı.
+  ///
+  /// ⚠ `ipucu` ALAN ADIDIR ve kutunun ÜSTÜNDE etiket olarak çizilir.
+  /// Biçim örneği ("5XX XXX XX XX") ayrı `yerTutucu` ile verilir —
+  /// aksi hâlde başlıkta "5XX XXX XX XX" yazıyordu.
   Widget _alan(String id, String ikon, String ipucu,
       TextEditingController ctl,
       {TextInputType? klavye,
       List<TextInputFormatter>? bicim,
       bool adSoyad = false,
+      String? yerTutucu,
       Widget? sonEk}) {
     final u = widget.veri.uyari(id);
     return Padding(
@@ -477,6 +483,7 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           iconAsset: ikon,
           controller: ctl,
           hint: ipucu,
+          yerTutucu: yerTutucu,
           keyboardType: klavye,
           inputFormatters: bicim,
           textCapitalization:
@@ -511,6 +518,7 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           iconAsset: 'assets/svg/ic_lock.svg',
           controller: ctl,
           hint: ipucu,
+          yerTutucu: yerTutucu,
           obscureText: !acik,
           // ⚠ Ara alanlar `next`, ZİNCİRİN SON ALANI `done`
           // (uygulamanın klavye standardı — `register_screen` ile aynı).

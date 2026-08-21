@@ -747,17 +747,42 @@ class HizmetAlanlariPaneli extends StatefulWidget {
   /// ayırır; 12 kartın tamamı aynı ölçüde kalır.
   static const int kBaslikSatiri = 2;
 
-  /// ── ⚠ KARTTA GÖRÜNEN KISA ETİKET ──
-  ///
-  /// Üç sütunda kart ~110 birim; "Mühendislik & Danışmanlık" tek
+  /// (eski not) Üç sütunda kart ~110 birim; uzun adlar tek
   /// satıra sığmıyor ve punto okunmaz hâle gelmeden sığdırılamıyor.
   /// Kartta iki satırlık KISA ad gösterilir.
   ///
   /// ⚠ VERİ ADI DEĞİŞMEZ: çatı ekranında, eşleştirmede ve testlerde
   /// gerçek ad kullanılır. Bu yalnız kartın etiketi.
+  /// ── ⚠ KARTTA GÖRÜNEN KISA ETİKET ──
+  ///
+  /// Üç sütunda kart en dar cihazda ~97 dp; yan dolgu düşünce metne
+  /// ~85 dp kalıyor ve 12.5 puntoda satır başına ancak ~13 karakter
+  /// sığıyor. Başlık iki satırla sınırlı olduğu için uzun adlar üç
+  /// nokta ile kesiliyordu.
+  ///
+  /// ⚠ İKİ İŞ BİRDEN YAPAR:
+  ///   1. UZUN ADI KISALTIR — "Beyaz Eşya & Elektronik Servis" iki
+  ///      satıra sığmıyordu.
+  ///   2. KIRMA NOKTASINI SABİTLER — sığan adlarda bile Flitter'ın
+  ///      seçtiği kırılma yeri tesadüfe kalmasın. Ekran görüntüsünde
+  ///      "Hukuk," / "Finans & Kur…" diye bölünüyordu; `\n` ile nerede
+  ///      bölüneceği kesinleşir.
+  ///
+  /// ⚠ SÖZLÜKTEKİ HER ANAHTAR GERÇEK BİR ÇATI ADI OLMALIDIR.
+  /// Paket A'da adlar değişince eski `'Mühendislik & Danışmanlık'`
+  /// kaydı ÖLÜ kalmıştı — hiç eşleşmiyordu ve kimse fark etmemişti.
+  /// Test artık bunu yakalar.
+  ///
+  /// ⚠ PUNTO VE KART ÖLÇÜSÜ DEĞİŞMEZ: on beş kart aynı yükseklikte
+  /// ve aynı puntoda kalır; değişen yalnız yazılan metin.
   static const Map<String, String> kKartEtiketi = {
+    'Beyaz Eşya & Elektronik Servis': 'Beyaz Eşya\nElektronik',
+    'Hukuk, Finans & Kurumsal': 'Hukuk &\nFinans',
     'İnşaat & Dekorasyon': 'İnşaat\nDekorasyon',
-    'Mühendislik & Danışmanlık': 'Mühendislik\nDanışmanlık',
+    'Mühendislik & Proje': 'Mühendislik\n& Proje',
+    'Organizasyon & Etkinlik': 'Organizasyon\n& Etkinlik',
+    'Güzellik & Kişisel Bakım': 'Güzellik &\nBakım',
+    'Evcil Hayvan Hizmetleri': 'Evcil Hayvan\nHizmetleri',
   };
 
   /// Kartta yazılacak etiket — kısaltması yoksa gerçek ad.
