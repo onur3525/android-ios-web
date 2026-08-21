@@ -502,26 +502,117 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   /// kaydırıp kapatmaktı; kritik işlemlerde bu yeterli değildir.
   ///
   /// Panel yalnız METNİ ve DÜĞMEYİ taşır; asıl iş çağıran taraftadır.
+  /// ── ONAY PANELİ ──
+  ///
+  /// ⚠ BU EKRANA ÖZELDİR. `RefBottomSheet` on ekranda ortak kullanılan
+  /// bir bileşendir ve DEĞİŞTİRİLMEDİ; yalnız bu panelin İÇERİĞİ
+  /// yenilendi. Böylece öteki ekranların panel görünümü etkilenmez.
+  ///
+  /// ⚠ Yeni parametrelerin hepsi İSTEĞE BAĞLI. Vermeyen çağrı
+  /// (silmenin son kesin onayı) eskisi gibi çizilir.
+  ///
+  /// ⚠ Başlık `RefBottomSheet`'e BOŞ geçilir: ortak bileşen başlığı
+  /// SOLA yaslıyor, tasarım ise ikonun altında ORTALI istiyor.
+  /// Boş başlıkla üst şeritte yalnız kapatma (X) kalır; başlık
+  /// aşağıda, ikonla birlikte çizilir.
   Future<bool> _onayPaneli({
     required String baslik,
     required String aciklama,
     required String onayMetni,
     required Color renk,
+    String? ikonAsset,
+    Color? uyariZemin,
+    List<({String ikon, String metin})> bilgiler = const [],
+    Widget? aciklamaAlti,
   }) async {
+    final zengin = ikonAsset != null;
     final kabul = await RefBottomSheet.goster<bool>(
       context,
-      title: baslik,
+      title: zengin ? '' : baslik,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(aciklama,
-              style: refText(
-                  size: RF.s135,
-                  weight: RF.w400,
-                  color: RC.textDark,
-                  height: RF.lh155)),
-          const SizedBox(height: 18),
+          if (zengin) ...[
+            // ── İKON + ORTALI BAŞLIK ──
+            Center(
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  // ⚠ Vurgu renginin AÇIK tonu; yeni token
+                  // tanımlanmadı, mevcut renk saydamlaştırıldı.
+                  color: renk.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: RefSvg(ikonAsset, size: 24, color: renk),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(baslik,
+                textAlign: TextAlign.center,
+                style: refText(
+                    size: RF.s20, weight: RF.w700, color: RC.text)),
+            const SizedBox(height: 16),
+            // ── ANA UYARI KUTUSU ──
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: uyariZemin ?? renk.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(RR.r12),
+              ),
+              child: Text(aciklama,
+                  style: refText(
+                      size: RF.s135,
+                      weight: RF.w400,
+                      color: RC.textDark,
+                      height: RF.lh155)),
+            ),
+            if (bilgiler.isNotEmpty) const SizedBox(height: 10),
+            // ── KISA BİLGİ SATIRLARI ──
+            //
+            // ⚠ Uzun paragraf yerine taranabilir satırlar; anlam
+            // korunur, yalnız biçim değişir.
+            for (final b in bilgiler) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: RC.white,
+                  border: Border.all(color: RC.border, width: 1.2),
+                  borderRadius: BorderRadius.circular(RR.r12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RefSvg(b.ikon, size: 18, color: RC.textSoft),
+                    const SizedBox(width: 10),
+                    // ⚠ `Expanded`: uzun metin küçük ekranda taşmasın,
+                    // kesilmesin — alt satıra insin.
+                    Expanded(
+                      child: Text(b.metin,
+                          style: refText(
+                              size: RF.s13,
+                              weight: RF.w400,
+                              color: RC.textDark,
+                              height: RF.lh155)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (aciklamaAlti != null) aciklamaAlti,
+            const SizedBox(height: 12),
+          ] else ...[
+            Text(aciklama,
+                style: refText(
+                    size: RF.s135,
+                    weight: RF.w400,
+                    color: RC.textDark,
+                    height: RF.lh155)),
+            const SizedBox(height: 18),
+          ],
           Row(
             children: [
               Expanded(
@@ -542,21 +633,41 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: renk,
-                    side: BorderSide(color: renk, width: 1.4),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(RR.r12),
-                    ),
-                  ),
-                  child: Text(onayMetni,
-                      textAlign: TextAlign.center,
-                      style: refText(
-                          size: RF.s14, weight: RF.w700, color: renk)),
-                ),
+                // ⚠ ZENGİN PANELDE BİRİNCİL DÜĞME DOLU RENKTİR.
+                // Eski hâlde iki düğme de çerçeveliydi; hangisinin
+                // asıl işlem olduğu anlaşılmıyordu.
+                child: zengin
+                    ? FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: renk,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(RR.r12),
+                          ),
+                        ),
+                        child: Text(onayMetni,
+                            textAlign: TextAlign.center,
+                            style: refText(
+                                size: RF.s14,
+                                weight: RF.w700,
+                                color: RC.white)),
+                      )
+                    : OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: renk,
+                          side: BorderSide(color: renk, width: 1.4),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(RR.r12),
+                          ),
+                        ),
+                        child: Text(onayMetni,
+                            textAlign: TextAlign.center,
+                            style: refText(
+                                size: RF.s14, weight: RF.w700, color: renk)),
+                      ),
               ),
             ],
           ),
@@ -594,12 +705,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
     final ok = await _onayPaneli(
       baslik: 'Hesabı Dondur',
-      aciklama: 'Hesabınız geçici olarak dondurulacaktır. Bu işlem '
-          'hesabınızı veya kişisel verilerinizi silmez. Hesabınızı '
-          'yeniden etkinleştirene kadar HizmetCep hizmetlerini '
-          'kullanamazsınız.',
+      // ⚠ ANLAM KORUNDU: hesabın SİLİNMEDİĞİ, verilerin korunduğu ve
+      // yeniden etkinleştirilebileceği açıkça yazılı. Yalnız biçim
+      // sadeleşti — uzun paragraf yerine kısa uyarı + iki bilgi satırı.
+      aciklama: 'Hesabınız geçici olarak dondurulacaktır. Hesabınız ve '
+          'verileriniz silinmez. Hesabınızı yeniden etkinleştirene '
+          'kadar HizmetCep\'i kullanamazsınız.',
       onayMetni: 'Hesabı Dondur',
+      // ⚠ Mevcut token; yeni renk tanımlanmadı.
       renk: HC.orange,
+      ikonAsset: 'assets/svg/ic_pause.svg',
+      bilgiler: const [
+        (ikon: 'assets/svg/ic_lock.svg',
+            metin: 'Hesabınız ve verileriniz güvende kalır.'),
+        (ikon: 'assets/svg/ic_refresh.svg',
+            metin: 'Dilediğiniz zaman tekrar giriş yaparak hesabınızı '
+                'etkinleştirebilirsiniz.'),
+      ],
     );
     if (!ok) {
       return;
@@ -660,14 +782,25 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Future<void> _silmePaneli() async {
     final devam = await _onayPaneli(
       baslik: 'Hesabı Sil',
-      aciklama: 'Hesabınızın silinmesi için işlem başlatılacaktır. '
-          'Hesabınız silindikten sonra hesabınıza erişemezsiniz.\n\n'
-          'Mevzuat gereği saklanması zorunlu kayıtlar, ilgili yasal '
-          'saklama süreleri boyunca tutulur. Saklanmasını gerektiren '
-          'hukuki sebep bulunmayan kişisel verileriniz silinir, yok '
-          'edilir veya anonim hâle getirilir.',
+      // ⚠ ÜÇ ZORUNLU BİLGİ KORUNDU: işlemin KALICI olduğu, silinebilen
+      // verilerin silineceği, mevzuat gereği bazı kayıtların
+      // saklanabileceği. Yalnız biçim sadeleşti.
+      aciklama: 'Hesabınızı kalıcı olarak silmek üzeresiniz. Hesabınız '
+          've silinebilen kişisel verileriniz silinecektir. Bu işlem '
+          'geri alınamaz.',
       onayMetni: 'Devam Et',
       renk: HC.red,
+      ikonAsset: 'assets/svg/ic_trash.svg',
+      bilgiler: const [
+        (ikon: 'assets/svg/ic_person.svg',
+            metin: 'Hesabınız, ilanlarınız, teklifleriniz ve '
+                'mesajlarınıza erişemezsiniz.'),
+        // ⚠ `ic_nshield` BEYAZ çizilmiş; açık zeminde görünmezdi.
+        // Kilit ikonu tek renkli ve boyanabilir.
+        (ikon: 'assets/svg/ic_lock.svg',
+            metin: 'Yasal zorunluluklar nedeniyle bazı veriler mevzuat '
+                'gereği saklanabilir.'),
+      ],
     );
     if (!devam) {
       return;

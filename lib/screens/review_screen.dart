@@ -136,9 +136,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     onTap: () => Navigator.pushNamedAndRemoveUntil(
                         context, '/customer/listings', (r) => false),
                     borderRadius: BorderRadius.circular(RR.circle),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: RefSvg('assets/svg/ic_x.svg', size: 20),
+                    // ── ⚠ KAPAT DÜĞMESİ BELİRGİNLEŞTİRİLDİ ──
+                    //
+                    // Önce yalnız 20 birimlik çıplak bir çarpıydı;
+                    // zemini olmadığı için düğme olduğu anlaşılmıyor,
+                    // başlıkla karışıyordu.
+                    //
+                    // ⚠ DIŞ ÖLÇÜ DEĞİŞMEDİ: geri oku 22 ikon + 8 dolgu
+                    // = 38 birim. Daire de 38 birim; satır yüksekliği
+                    // ve hizalama AYNI kalır, arayüz kaymaz.
+                    //
+                    // ⚠ Zemin `RC.surface` — projede zaten kullanılan
+                    // nötr gri; yeni renk tanımlanmadı.
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: RC.surface,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const RefSvg('assets/svg/ic_x.svg',
+                          size: 18, color: RC.text),
                     ),
                   ),
                 ],

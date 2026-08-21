@@ -36,9 +36,10 @@ jobs:
       - name: Build DEBUG APK
         run: flutter build apk --debug
 
-      - name: Check APK
+      - name: Verify APK
         run: |
           test -f build/app/outputs/flutter-apk/app-debug.apk
+          echo "APK bulundu:"
           ls -lh build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload APK
