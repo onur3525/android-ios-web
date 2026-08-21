@@ -517,8 +517,12 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           hatali: u != null,
           iconAsset: 'assets/svg/ic_lock.svg',
           controller: ctl,
+          // ⚠ ŞİFRE ALANINDA YER TUTUCU YOKTUR: biçim örneği
+          // gösterilecek bir şey yok, ad etikete çıkıyor. `_alan`'a
+          // eklenen `yerTutucu` yanlışlıkla buraya da yazılmıştı ve
+          // `_sifre` böyle bir parametre almadığı için derleme
+          // kırılıyordu.
           hint: ipucu,
-          yerTutucu: yerTutucu,
           obscureText: !acik,
           // ⚠ Ara alanlar `next`, ZİNCİRİN SON ALANI `done`
           // (uygulamanın klavye standardı — `register_screen` ile aynı).
