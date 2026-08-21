@@ -27,9 +27,16 @@ class ProfileController extends BaseController {
   Set<String> get categories => me?.categories ?? const {};
   Set<String> get districts => me?.serviceDistricts ?? const {};
 
-  Future<DomainError?> updateProfile({String? name, String? email, String? photoPath}) =>
+  Future<DomainError?> updateProfile({String? name, String? photoPath}) =>
       runAction('profile:update',
-          () => _auth.updateProfile(name: name, email: email, photoPath: photoPath));
+          () => _auth.updateProfile(name: name, photoPath: photoPath));
+
+  /// E-POSTA DEĞİŞİMİ — yeni adrese doğrulama bağlantısı yollanır.
+  ///
+  /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ (iş kuralları §4).
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) =>
+      runAction('profile:email-change',
+          () => _auth.epostaDegisimiBaslat(yeniEposta));
 
   /// TEK ADRES — güncelleme. Ekleme/silme YOKTUR.
   Future<DomainError?> saveAddress({

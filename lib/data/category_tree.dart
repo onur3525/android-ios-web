@@ -206,7 +206,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Buzdolabı Tamiri', 'Çamaşır Makinesi Tamiri',
     'Bulaşık Makinesi Tamiri', 'Kurutma Makinesi Tamiri',
     'Fırın Tamiri', 'Aspiratör Tamiri', 'Ankastre Cihaz Montajı',
-    'Davlumbaz Tamiri', 'Su Sebili Tamiri', 'Beyaz Eşya Nakli'
+    'Davlumbaz Tamiri', 'Su Sebili Tamiri'
   ],
   'Elektronik Cihaz Tamiri': [
     'Televizyon Tamiri', 'Bilgisayar Tamiri', 'Telefon Tamiri',
@@ -339,7 +339,16 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Nakliyat ve Taşımacılık': [
     'Evden Eve Nakliyat', 'Şehirler Arası Nakliyat', 'Ofis Taşıma',
     'Parça Eşya Taşıma', 'Asansörlü Nakliyat', 'Eşya Depolama',
-    'Piyano Taşıma', 'Asansörlü Taşıma', 'Sigortalı Nakliyat'
+    'Piyano Taşıma', 'Asansörlü Taşıma', 'Sigortalı Nakliyat',
+    // ⚠ "Beyaz Eşya Servisi"nden BURAYA TAŞINDI: bu bir TAŞIMA
+    // işidir, tamir değil. Servis kategorisinde durduğu için
+    // "Beyaz Eşya & Elektronik Servis" çatısında görünüyordu.
+    //
+    // ⚠ İSTİSNA LİSTESİ KULLANILMADI. `kHizmetCatiIstisnasi` ile
+    // çatısını zorlamak, hizmeti kategorisinden KOPUK bırakırdı:
+    // arama ve ilan akışı hâlâ servis kategorisi altında bulurdu.
+    // Doğru yer kategorinin kendisidir.
+    'Beyaz Eşya Nakli'
   ],
   'Kurye ve Küçük Taşıma': [
     'Moto Kurye', 'Paket Taşıma', 'Küçük Nakliye', 'Aynı Gün Kurye'

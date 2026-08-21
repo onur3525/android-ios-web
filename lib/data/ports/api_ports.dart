@@ -240,9 +240,15 @@ class ApiAuthPort extends AuthPort {
       repo.forgotComplete(phone, otp, newPass);
 
   @override
-  Future<DomainError?> updateProfile({String? name, String? email, String? photoPath}) =>
-      repo.updateProfile(name: name, email: email, photoRef: photoPath);
-    @override
+  Future<DomainError?> updateProfile({String? name, String? photoPath}) =>
+      // ⚠ E-posta GÖNDERİLMEZ: doğrulamayı atlatmak olurdu.
+      repo.updateProfile(name: name, photoRef: photoPath);
+
+  @override
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) =>
+      repo.changeEmail(yeniEposta);
+
+  @override
   Future<ProviderApprovalState> providerApproval() => repo.providerApproval();
 
   /// Şehir SUNUCUDAN gelen bölge ağacından alınır; sabit dosya kullanılmaz.

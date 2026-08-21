@@ -185,7 +185,18 @@ abstract class AuthPort extends ChangeNotifier {
 
   Future<DomainError?> forgotStart(String phone);
   Future<DomainError?> forgotComplete(String phone, String otp, String newPass);
-  Future<DomainError?> updateProfile({String? name, String? email, String? photoPath});
+  /// ⚠ `email` PARAMETRESİ KALDIRILDI.
+  ///
+  /// E-posta yalnız doğrulama bağlantısıyla değişir
+  /// (`epostaDegisimiBaslat`). Bu uçtan göndermek doğrulamayı
+  /// atlatmak olurdu.
+  Future<DomainError?> updateProfile({String? name, String? photoPath});
+
+  /// E-POSTA DEĞİŞİMİ — yeni adrese doğrulama bağlantısı yollar.
+  ///
+  /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ; bağlantı tıklanana
+  /// kadar eski adres geçerlidir (iş kuralları §4).
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta);
   // ⚠ `updatePhone(newPhone, otpCode)` KALDIRILDI.
   //
   // Telefon değişikliği artık challenge sözleşmesinden geçiyor

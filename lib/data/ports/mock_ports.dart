@@ -208,8 +208,26 @@ class MockAuthPort extends AuthPort {
   // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
 
   @override
-  Future<DomainError?> updateProfile({String? name, String? email, String? photoPath}) async {
-    repo.updateProfile(name: name, email: email, photoPath: photoPath);
+  Future<DomainError?> updateProfile({String? name, String? photoPath}) async {
+    // ⚠ E-POSTA BURADAN GEÇMEZ (bkz. `epostaDegisimiBaslat`).
+    repo.updateProfile(name: name, photoPath: photoPath);
+    return null;
+  }
+
+  /// E-POSTA DEĞİŞİMİ — doğrulama bekleyen alana yazılır.
+  ///
+  /// ⚠ `acc.email` DEĞİŞMEZ. Depo yeni adresi `bekleyenEposta`da
+  /// tutar; `epostaDogrula()` çağrılana kadar eski adres geçerlidir.
+  /// Gerçek API'de bu doğrulama, kullanıcının e-postasına gelen
+  /// bağlantıyla yapılır.
+  ///
+  /// ⚠ MOCK MODDA BAĞLANTI GÖNDERİLEMEZ — e-posta altyapısı yok.
+  /// Sahte bir "gönderildi" başarısı üretmek yerine yeni adres
+  /// beklemeye alınır; bu, gerçek akışın istemci tarafıyla birebir
+  /// aynıdır.
+  @override
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async {
+    repo.updateProfile(email: yeniEposta);
     return null;
   }
 

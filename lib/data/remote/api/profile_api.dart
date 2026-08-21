@@ -17,6 +17,19 @@ class ProfileApi {
         if (photoRef != null) 'photoRef': photoRef,
       });
 
+  /// E-POSTA DEĞİŞİMİ — doğrulama bağlantısı ister.
+  ///
+  /// ⚠ BU ÇAĞRI E-POSTAYI DEĞİŞTİRMEZ. Sunucu yeni adrese bağlantı
+  /// yollar; hesabın e-postası bağlantı tıklanana kadar ESKİ kalır
+  /// (iş kuralları §4).
+  ///
+  /// ⚠ `updateProfile` ile e-posta GÖNDERİLMEZ — doğrulamayı
+  /// atlatmak olurdu.
+  Future<Map<String, dynamic>> changeEmail({required String newEmail}) =>
+      c.post('/profiles/me/email/change',
+          body: {'newEmail': newEmail},
+          idempotencyKey: ApiClient.newIdempotencyKey());
+
   Future<Map<String, dynamic>> changePhone({required String newPhone, required String otpCode}) =>
       c.post('/profiles/me/phone/change', body: {'newPhone': newPhone, 'otpCode': otpCode});
 

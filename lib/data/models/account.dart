@@ -187,6 +187,25 @@ class Account {
   bool get providerOnboardingComplete =>
       _ortakTamam && categories.isNotEmpty && serviceDistricts.isNotEmpty;
 
+  /// ── ⚠ TEKLİF EKRANINDA "Onaylı Hizmet Veren" ROZETİ ──
+  ///
+  /// Rozet, HizmetCep'in hizmet veren olarak kabul ettiği — kayıt ve
+  /// TELEFON DOĞRULAMA şartlarını tamamlamış — hesabı işaret eder.
+  ///
+  /// ⚠ RESMİ KİMLİK DOĞRULAMASI ANLAMINA GELMEZ. Platformda T.C.
+  /// kimlik / pasaport doğrulaması YOKTUR; bu yüzden "Kimlik
+  /// Doğrulandı" ifadesi KULLANILMAZ.
+  ///
+  /// ⚠ KOŞUL `providerOnboardingComplete`TİR, yani:
+  /// ad · telefon · e-posta · `phoneVerified` · `emailVerified` ·
+  /// sözleşme onayı · tam adres · en az bir kategori · en az bir
+  /// hizmet bölgesi.
+  ///
+  /// ⚠ VERİ YOKSA ROZET ÇİZİLMEZ. Karşı tarafın hesabına
+  /// erişilemediğinde (`null`) rozet GÖSTERİLMEZ — herkesi onaylı
+  /// göstermek sahte doğrulama olurdu.
+  bool get onayliHizmetVeren => providerOnboardingComplete;
+
   /// Aktif role göre kayıt tamamlanmış mı?
   bool get onboardingComplete => activeRole == Role.provider
       ? providerOnboardingComplete

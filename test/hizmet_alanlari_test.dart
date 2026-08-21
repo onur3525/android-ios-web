@@ -58,11 +58,16 @@ void main() {
       // korunacak" (§9) diyor. Değinilmeyen kategoriler bu yüzden
       // MEVCUT çatılarını korudu; çatı adları yalnız §2'deki eşlemeye
       // göre değişti.
-      expect(kKategoriAlani['Kombi Montaj'], 'Ev & Yaşam');
+      // ⚠ DÜZELTİLDİ: "Kombi Montaj" ısıtma tesisatı işidir; Ev &
+      // Yaşam'da değil Teknik Hizmetler'de olmalı (Kombi Servis'in
+      // yanında).
+      expect(kKategoriAlani['Kombi Montaj'], 'Teknik Hizmetler');
       expect(kKategoriAlani['Oto Çekici ve Yol Yardım'], 'Araç Hizmetleri');
       expect(kKategoriAlani['Müzik Dersleri'], 'Eğitim');
       expect(kKategoriAlani['Fayans ve Seramik Döşeme'], 'İnşaat & Dekorasyon');
-      expect(kKategoriAlani['Asansör Montaj ve Bakım'], 'İnşaat & Dekorasyon');
+      // ⚠ DÜZELTİLDİ: asansör bir YAPI işi değil, süregelen teknik
+      // servis işidir.
+      expect(kKategoriAlani['Asansör Montaj ve Bakım'], 'Teknik Hizmetler');
     });
 
     test('⚠ TALİMATIN §3 YERLEŞİMİ BİREBİR UYGULANDI', () {
@@ -165,8 +170,11 @@ void main() {
         'Cam Balkon Sistemleri',
         'PVC ve Alüminyum Doğrama',
         'Demir Doğrama ve Kaynak',
-        'Havuz Yapım ve Bakım',
-        'Asansör Montaj ve Bakım',
+        // ⚠ 'Havuz Yapım ve Bakım' ÇIKARILDI → Ev & Yaşam
+        // (talimat §3 yerleşimi; Paket A'da taşındı, bu liste
+        // güncellenmemişti).
+        //
+        // ⚠ 'Asansör Montaj ve Bakım' ÇIKARILDI → Teknik Hizmetler.
         'Kapı Montaj ve Tamir',
       ];
       for (final k in yapi) {

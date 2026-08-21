@@ -213,17 +213,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                           Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              const RefSvg('assets/svg/ic_shieldok.svg',
-                                  size: 16, color: Color(0xFF3A4658)),
-                              const SizedBox(width: 5),
-                              Text('Kimlik Doğrulandı',
-                                  style: refText(
-                                      size: 11.8,
-                                      weight: RF.w400,
-                                      color: const Color(0xFF3A4658))),
+                              // ── ⚠ "Onaylı Hizmet Veren" — KOŞULA BAĞLI ──
+                              //
+                              // Teklif kartıyla AYNI kural
+                              // (`onayliHizmetVeren`); iki ekran
+                              // ayrışmasın diye tek kaynaktan okunur.
+                              //
+                              // ⚠ Resmi kimlik doğrulaması DEĞİLDİR.
+                              if (prov?.onayliHizmetVeren ?? false) ...[
+                                const RefSvg('assets/svg/ic_shieldok.svg',
+                                    size: 16, color: Color(0xFF3A4658)),
+                                const SizedBox(width: 5),
+                                Text('Onaylı Hizmet Veren',
+                                    style: refText(
+                                        size: 11.8,
+                                        weight: RF.w400,
+                                        color: const Color(0xFF3A4658))),
+                              ],
                               // ⚠ Oran YALNIZ gerçek yorum varsa yazılır.
+                              // ⚠ AYRAÇ KOŞULLU: rozet gizlendiğinde bu
+                              // satır ayraçla BAŞLIYORDU ("· %90
+                              // olumlu yorum"). Ayraç yalnız SOLUNDA
+                              // bir öğe varsa çizilir.
                               if (_olumluOran(revs) != null) ...[
-                                _prAyrac(),
+                                if (prov?.onayliHizmetVeren ?? false)
+                                  _prAyrac(),
                                 const RefSvg('assets/svg/ic_thumb.svg',
                                     size: 16, color: Color(0xFF3A4658)),
                                 const SizedBox(width: 5),
@@ -244,7 +258,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                               // ile gerçek veri ayrışamaz.
                               if (_tamamlananIs(context, offer.providerId) >
                                   0) ...[
-                                _prAyrac(),
+                                // ⚠ Ayraç, SOLUNDA öğe varsa çizilir.
+                                if ((prov?.onayliHizmetVeren ?? false) ||
+                                    _olumluOran(revs) != null)
+                                  _prAyrac(),
                                 Text(
                                     '${_tamamlananIs(context, offer.providerId)} iş tamamladı',
                                     style: refText(

@@ -1111,13 +1111,27 @@ class _TeklifKarti extends StatelessWidget {
                 Text(_goreliZaman(offer.createdAt),
                     style: refText(
                         size: 10, weight: RF.w400, color: RC.textSoft)),
-                _ayrac(),
-                const RefSvg('assets/svg/ic_shieldok.svg',
-                    size: 13, color: RC.textSoft),
-                const SizedBox(width: 4),
-                Text('Kimlik Doğrulandı',
-                    style: refText(
-                        size: 10, weight: RF.w400, color: RC.textSoft)),
+                // ── ⚠ "Onaylı Hizmet Veren" — KOŞULA BAĞLI ──
+                //
+                // Eskiden "Kimlik Doğrulandı" yazıyordu ve KOŞULSUZDU:
+                // her hizmet verene, hiçbir veri bakılmadan. İki
+                // sorunu vardı — platformda resmi kimlik doğrulaması
+                // YOK, ve rozet dayanaksızdı.
+                //
+                // ⚠ Kural TEK KAYNAKTAN gelir: `onayliHizmetVeren`
+                // (bkz. `Account`). Teklif detayı da aynı kuralı
+                // kullanır.
+                //
+                // ⚠ Hesap bilinmiyorsa rozet ÇİZİLMEZ.
+                if (saglayici?.onayliHizmetVeren ?? false) ...[
+                  _ayrac(),
+                  const RefSvg('assets/svg/ic_shieldok.svg',
+                      size: 13, color: RC.textSoft),
+                  const SizedBox(width: 4),
+                  Text('Onaylı Hizmet Veren',
+                      style: refText(
+                          size: 10, weight: RF.w400, color: RC.textSoft)),
+                ],
                 // ⚠ Oran YALNIZ gerçek yorum varsa yazılır; veri yoksa
                 // referanstaki gibi uydurma bir yüzde GÖSTERİLMEZ.
                 if (olumlu != null) ...[

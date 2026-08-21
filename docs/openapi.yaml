@@ -694,6 +694,52 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /profiles/me/email/change:
+    post:
+      tags: [Profile]
+      summary: E-posta değişimi — DOĞRULAMA BAĞLANTISI ile
+      description: |
+        ⚠ E-POSTA DOĞRUDAN DEĞİŞTİRİLEMEZ (iş kuralları §4:
+        "E-posta değişimi doğrulama bağlantısıyla yapılır").
+
+        Akış:
+          1. İstemci yeni adresi gönderir.
+          2. Sunucu O ADRESE doğrulama bağlantısı yollar.
+          3. Hesabın e-postası bağlantı TIKLANANA KADAR DEĞİŞMEZ.
+          4. Bağlantı doğrulanınca yeni adres yürürlüğe girer.
+
+        ⚠ NİÇİN ÖNEMLİ: doğrulama olmadan herkes bir başkasının
+        adresini kendi hesabına bağlayabilir; adresin sahibi olduğu
+        kanıtlanmaz.
+
+        ⚠ TELEFONDAN FARKLIDIR: telefon değişimi 6 haneli SMS koduyla
+        (`/profiles/me/phone/change`), e-posta BAĞLANTIYLA yapılır.
+        İkisi karıştırılmaz.
+
+        ⚠ SUNUCU ZORUNLU KONTROLLERİ: adres biçimi · adresin başka
+        hesapta kullanılmıyor olması (409) · bağlantının süreli ve
+        tek kullanımlık olması.
+
+        ⚠ `PATCH /profiles/me` E-POSTA KABUL ETMEZ; o uç yalnız ad ve
+        fotoğraf içindir.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [newEmail]
+              properties:
+                newEmail: { type: string, format: email }
+      responses:
+        '200': { description: Doğrulama bağlantısı gönderildi }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
   /profiles/me/provider:
     get:
       tags: [Profile]

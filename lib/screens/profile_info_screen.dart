@@ -277,17 +277,42 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
     final profile = context.read<ProfileController>();
     final newPhone = Validators.phoneFmt(_phone.text);
     final oldPhone = auth.currentAccount!.phone;
+    // ── AD/SOYAD ──
+    //
+    // ⚠ E-POSTA BU ÇAĞRIDA GÖNDERİLMEZ. İş kuralları §4:
+    // "E-posta değişimi doğrulama bağlantısıyla yapılır." Profil
+    // güncelleme ucundan yollamak doğrulamayı atlatmak olurdu.
     final err = await profile.updateProfile(
-        name: '${_first.text.trim()} ${_last.text.trim()}'.trim(),
-        email: epostaNormalize(_email.text));
+        name: '${_first.text.trim()} ${_last.text.trim()}'.trim());
     if (!mounted) {
       return;
     }
-    setState(() => _busy = false);
     if (err != null) {
+      setState(() => _busy = false);
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
+
+    // ── E-POSTA DEĞİŞİMİ — DOĞRULAMA BAĞLANTISI ──
+    //
+    // ⚠ Hesabın e-postası BURADA DEĞİŞMEZ: sunucu yeni adrese
+    // bağlantı yollar, adres ancak tıklanınca yürürlüğe girer.
+    // Kullanıcıya "güncellendi" demek yanlış olurdu.
+    var epostaBeklemede = false;
+    if (_epostaDegisti) {
+      final e = await profile
+          .epostaDegisimiBaslat(epostaNormalize(_email.text));
+      if (!mounted) {
+        return;
+      }
+      if (e != null) {
+        setState(() => _busy = false);
+        sysToastErr(context, SysKind.genericError, extra: e.message);
+        return;
+      }
+      epostaBeklemede = true;
+    }
+    setState(() => _busy = false);
     if (newPhone != oldPhone) {
       // ── TELEFON DEĞİŞİKLİĞİ CHALLENGE'I ──
       //
@@ -349,7 +374,14 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         ),
       );
     } else {
-      sysToastOk(context, 'Profil bilgileriniz güncellendi');
+      // ⚠ MESAJ GERÇEĞİ SÖYLER: e-posta değiştiyse "güncellendi"
+      // DENMEZ — henüz değişmedi, doğrulama bekliyor.
+      sysToastOk(
+          context,
+          epostaBeklemede
+              ? 'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. '
+                  'Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.'
+              : 'Profil bilgileriniz güncellendi');
       geriGit(context);
     }
   }

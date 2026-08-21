@@ -50,7 +50,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/ev.jpg',
     ikon: 'assets/svg/alanlar/ev.svg',
     kategoriler: [
-      'Bahçe ve Peyzaj', 'Havuz Yapım ve Bakım', 'Kombi Montaj'
+      'Bahçe ve Peyzaj', 'Havuz Yapım ve Bakım'
     ],
   ),
   HizmetAlani(
@@ -161,8 +161,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Fayans ve Seramik Döşeme', 'Yalıtım ve Mantolama',
       'PVC ve Alüminyum Doğrama', 'Demir Doğrama ve Kaynak',
       'Cam Balkon Sistemleri', 'Marangozluk ve Ahşap İşleri',
-      'Mobilya Yapım ve Montaj', 'Kapı Montaj ve Tamir',
-      'Asansör Montaj ve Bakım'
+      'Mobilya Yapım ve Montaj', 'Kapı Montaj ve Tamir'
     ],
   ),
   HizmetAlani(
@@ -175,7 +174,9 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Su Tesisatı', 'Doğalgaz', 'Kombi Servis', 'Isıtma Sistemleri',
       'Elektrik', 'Güvenlik Sistemleri', 'Klima Montaj ve Servis',
       'Çilingir ve Kilit', 'Uydu ve Anten Sistemleri',
-      'İnternet ve Ağ Kurulumu'
+      'İnternet ve Ağ Kurulumu',
+      'Kombi Montaj',
+      'Asansör Montaj ve Bakım'
     ],
   ),
   HizmetAlani(
@@ -220,11 +221,14 @@ const List<HizmetAlani> kHizmetAlanlari = [
 const Map<String, String> kHizmetCatiIstisnasi = {
   // Mesleği çilingir ama kullanıcı aracın yanında kalmışken
   // Araç Hizmeti çatısına bakar.
-  'Oto Anahtarcı': 'Araç Hizmeti',
+  // ⚠ ÇATI ADI GÜNCELLENDİ: Paket A'da "Araç Hizmeti" →
+  // "Araç Hizmetleri" oldu; bu iki istisna eski adı işaret ettiği
+  // için HİÇBİR çatıya eşleşmiyordu — sessizce etkisiz kalmışlardı.
+  'Oto Anahtarcı': 'Araç Hizmetleri',
 
   // Aynı makine ve kimyayla yıkanır (temizlikçi işi) ama kullanıcı
   // "araç" diye arar; aradığı yer Araç Hizmeti.
-  'Araç Döşeme Yıkama': 'Araç Hizmeti',
+  'Araç Döşeme Yıkama': 'Araç Hizmetleri',
 };
 
 /// Kategori → VARSAYILAN çatı.

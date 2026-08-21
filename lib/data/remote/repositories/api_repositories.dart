@@ -147,6 +147,15 @@ class ApiAuthRepository extends ChangeNotifier {
     return null;
   }
 
+  /// E-POSTA DEĞİŞİM BAĞLANTISI İSTER.
+  ///
+  /// ⚠ YEREL HESAP GÜNCELLENMEZ. Değişiklik ancak kullanıcı
+  /// bağlantıya tıklayınca sunucuda yürürlüğe girer; istemci burada
+  /// hesabın e-postasını değiştirirse kullanıcı doğrulamadan
+  /// değişmiş sanır.
+  Future<DomainError?> changeEmail(String newEmail) async =>
+      (await _guard(() => _profile.changeEmail(newEmail: newEmail))).$2;
+
   Future<DomainError?> changePhone(String newPhone, String otpCode) async {
     final (res, err) = await _guard(() => _profile.changePhone(newPhone: newPhone, otpCode: otpCode));
     if (err != null) {
