@@ -102,12 +102,46 @@ class _ReviewScreenState extends State<ReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // `.rv-wrap .rg-back{margin:2px 0 10px -4px}`
-              // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-              // Platforma göre değişen gezinme karışıklık üretiyordu.
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: RefBackButton(),
+              // ── ⚠ İKİ ÇIKIŞ YOLU: GERİ OKU + KAPAT ──
+              //
+              // Değerlendirme ekranına genelde teklif detayı → ilan
+              // detayı → ... zinciriyle geliniyor. Yorum gönderildikten
+              // sonra kullanıcı ana ekrana dönmek için o zinciri
+              // TEK TEK geri almak zorunda kalıyordu.
+              //
+              // ⚠ GERİ OKU KALDIRILMADI: bir adım geri dönmek isteyen
+              // (ör. teklifi yeniden görmek) hâlâ dönebilir. Sağdaki
+              // X ise zinciri kapatıp doğrudan ana ekrana götürür.
+              // İki farklı ihtiyaç, iki ayrı düğme.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // `.rv-wrap .rg-back{margin:2px 0 10px -4px}`
+                  // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
+                  const RefBackButton(),
+                  RefTap(
+                    // ⚠ `pushNamedAndRemoveUntil` ile TÜM yığın
+                    // temizlenir: arkada duran teklif/ilan ekranları
+                    // kalırsa kullanıcı ana ekrandan geri tuşuna
+                    // basınca değerlendirme akışına geri düşerdi.
+                    //
+                    // ⚠ HEDEF `/customer/listings`: alt barın dört
+                    // sekmesini (İlan Ver · İlanlarım · Bildirimler ·
+                    // Profil) taşıyan ekran budur. `/home` alt bar
+                    // TAŞIMAZ — oraya götürmek kullanıcıyı sekmesiz
+                    // bırakırdı.
+                    //
+                    // ⚠ Değerlendirmeyi YALNIZ hizmet alan yapar
+                    // (API sözleşmesi §14), bu yüzden rol ayrımı yok.
+                    onTap: () => Navigator.pushNamedAndRemoveUntil(
+                        context, '/customer/listings', (r) => false),
+                    borderRadius: BorderRadius.circular(RR.circle),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: RefSvg('assets/svg/ic_x.svg', size: 20),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               // .rv-title{26px/700;-.3px}
