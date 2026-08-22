@@ -5,7 +5,7 @@ on:
 
 jobs:
   ios-build:
-    name: Build iOS Archive
+    name: Build HizmetCep iOS
     runs-on: macos-latest
 
     steps:
@@ -24,21 +24,30 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build iOS Archive
-        run: flutter build ipa --release --no-codesign
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
 
       - name: Verify iOS build
         run: |
-          echo "iOS archive çıktıları:"
-          find build/ios/archive -maxdepth 2 -type f -name "*.xcarchive" -print
+          echo "iOS build kontrolü:"
+          ls -lah build/ios/iphoneos/ || true
+          ls -lah build/ios/iphoneos/Runner.app || true
 
-          echo "iOS build klasörü:"
-          ls -lah build/ios/ || true
+      - name: Create unsigned IPA
+        run: |
+          rm -rf Payload
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/Runner.app
+          zip -r HizmetCep-unsigned.ipa Payload
 
-      - name: Upload iOS archive
+      - name: Verify IPA
+        run: |
+          echo "IPA oluşturuldu:"
+          ls -lh HizmetCep-unsigned.ipa
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: hizmetcep-ios-build
-          path: |
-            build/ios/archive/*.xcarchive
+          name: hizmetcep-ios-ipa
+          path: HizmetCep-unsigned.ipa
           if-no-files-found: error
