@@ -1,0 +1,44 @@
+name: HizmetCep iOS Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ios-build:
+    name: Build iOS Archive
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build iOS Archive
+        run: flutter build ipa --release --no-codesign
+
+      - name: Verify iOS build
+        run: |
+          echo "iOS archive çıktıları:"
+          find build/ios/archive -maxdepth 2 -type f -name "*.xcarchive" -print
+
+          echo "iOS build klasörü:"
+          ls -lah build/ios/ || true
+
+      - name: Upload iOS archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: hizmetcep-ios-build
+          path: |
+            build/ios/archive/*.xcarchive
+          if-no-files-found: error
