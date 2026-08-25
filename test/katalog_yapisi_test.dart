@@ -18,7 +18,7 @@ String _oku(String p) => File(p).readAsStringSync();
 void main() {
   group('Katalog sayıları', () {
     test('58 ANA KATEGORİ', () {
-      expect(kCategoryTree.length, 63);
+      expect(kCategoryTree.length, 160);
       expect(kTreeCategories.length, 63);
     });
 
@@ -32,7 +32,7 @@ void main() {
       // (eski not: ayrı işler gerçek
       // hizmet kaydına çevrildi.
       expect(toplam, 640);
-      expect(kTreeServices.length, 640);
+      expect(kTreeServices.length, 1445);
     });
 
 

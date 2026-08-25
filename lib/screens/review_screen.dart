@@ -156,7 +156,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const RefSvg('assets/svg/ic_x.svg',
+                      // ⚠ `ic_x` DEĞİL `ic_close`.
+                      //
+                      // `ic_x` ÇİFT RENKLİ: gri dolu daire + İÇİNDE
+                      // beyaz çarpı. `RefSvg` rengi `srcIn` ile
+                      // çizimin TAMAMINA uygular; koyu renk verilince
+                      // beyaz çarpı da koyuya dönüşüyor ve geriye DÜZ
+                      // BİR NOKTA kalıyordu.
+                      //
+                      // `ic_close` tek renkli çizgi çarpıdır
+                      // (`currentColor`), boyandığında anlamını korur.
+                      child: const RefSvg('assets/svg/ic_close.svg',
                           size: 18, color: RC.text),
                     ),
                   ),

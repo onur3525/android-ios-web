@@ -549,7 +549,13 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                         'Teklif seçildi — hizmet veren ile çalışmaya başlayabilirsiniz');
                   },
                 ),
-                const _UcretsizSerit('Teklif seçmek ücretsizdir.'),
+                // ⚠ "Teklif seçmek ücretsizdir." KALDIRILDI.
+                //
+                // Ücretsizlik şeridi BEDEL ALINAN işlemler içindir
+                // (teklif verme, iletişim açma): kullanıcı para
+                // çıkacak sanmasın diye. Teklif seçmek zaten hiçbir
+                // zaman ücretli olmadı; burada olmayan bir endişeyi
+                // akla getiriyordu.
               ] else if (offer.status == OfferStatus.selected) ...[
                 // ── AYNI DÜĞME, DEĞİŞEN GÖREV ──
                 //

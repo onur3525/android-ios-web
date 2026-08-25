@@ -90,9 +90,12 @@ void main() {
       // akla getiriyordu.
       expect(teklifDetay.contains('Yorum yazmak ücretsizdir'), isFalse,
           reason: 'kaldırılan ücretsizlik yazısı geri gelmiş');
-      // ⚠ Bedel alınan iki işlemde şerit KALIR.
+      // ⚠ "Teklif seçmek ücretsizdir." DE KALDIRILDI: teklif seçmek
+      // zaten hiç ücretli olmadı.
+      expect(teklifDetay.contains('Teklif seçmek ücretsizdir.'), isFalse,
+          reason: 'kaldırılan ücretsizlik yazısı geri gelmiş');
+      // ⚠ BEDEL ALINAN işlemde şerit KALIR — tek kalan budur.
       expect(teklifDetay.contains('İletişimi açmak ücretsizdir.'), isTrue);
-      expect(teklifDetay.contains('Teklif seçmek ücretsizdir.'), isTrue);
     });
   });
 

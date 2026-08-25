@@ -1,4 +1,4 @@
-/// HİZMET KATALOĞU — 63 ANA KATEGORİ · 640 ALT HİZMET
+/// HİZMET KATALOĞU — 160 KATEGORİ · 1445 HİZMET (24 ÇATI)
 ///
 /// ═══════════════════════════════════════════════════════════════
 ///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
@@ -83,329 +83,302 @@ library;
 /// verisine geçsin — tek noktadan kaynak değişimi, on iki dosyayı
 /// tek tek elden geçirmekten çok daha güvenli.
 const Map<String, List<String>> kGomuluKatalog = {
-  'Temizlik Hizmetleri': [
-    'Ev Temizliği', 'Boş Ev Temizliği', 'Ofis Temizliği',
-    'İnşaat Sonrası Temizlik', 'Derin Temizlik', 'Taşınma Temizliği',
-    'Cam Temizliği', 'Cam Silme', 'Ütü Hizmeti', 'Merdiven Temizliği',
-    'Buhar Makinesiyle Temizlik'
+  'Bahçe ve Peyzaj': [
+    'Çim Halı / Suni Çim', 'Suni Çim Montajı', 'Suni Çim Serme',
+    'Suni Çim Sökme', 'Bahçe Düzenleme', 'Çim Ekimi', 'Çim Serme',
+    'Ağaç Budama', 'Ağaç Kesimi', 'Ağaç Dikimi', 'Bitki Dikimi',
+    'Çiçek Dikimi', 'Bitki Hastalığı Tedavisi', 'Bahçe Bakımı',
+    'Çim Biçme', 'Budama Sonrası Atık Temizliği', 'Bahçe Toprak Düzenleme',
+    'Toprak Gübreleme', 'Otomatik Sulama Sistemi',
+    'Otomatik Sulama Montajı', 'Bahçe Sulama Sistemi Bakımı',
+    'Bahçe Drenajı', 'Bahçe Aydınlatma',
+    'Bahçe Aydınlatma Sistemi Montajı', 'Bahçe Duvarı ve Çit',
+    'Bahçe Çit Montajı', 'Bahçe Kapısı Montajı', 'Sera Kurulumu',
+    'Peyzaj Tasarımı', 'Yağmur Suyu Toplama Sistemi',
+    'Yağmur Suyu Depolama Sistemi', 'Drenaj Pompası Montajı'
   ],
-  // ⚠ "Halı ve Döşeme Yıkama" İKİYE BÖLÜNDÜ.
-  //
-  // Tek kategori iki ayrı işi barındırıyordu: halı yıkama (halı
-  // fabrikaya/atölyeye gider) ile döşeme yıkama (usta eve gelir,
-  // koltuk-yatak-perde yerinde temizlenir). Farklı ekipman, farklı
-  // fiyat, çoğu zaman farklı usta.
-  //
-  // Alt hizmetler AYNEN korundu, yalnız iki başlığa dağıtıldı; yeni
-  // alt hizmet UYDURULMADI.
-  // ⚠ 'Halı Yıkama' HİZMETİ KALDIRILDI — kategori adı zaten bu.
-  //
-  // Aynı ad hem kategori hem hizmet olunca aramada iki satır
-  // çıkıyordu. Genel halı yıkama isteği kategori satırından
-  // karşılanır; buradaki kayıtlar işin TÜRLERİdir.
-  'Halı Yıkama': [
-    'Kilim Yıkama', 'Yolluk Yıkama',
-    'Halı Leke Çıkarma', 'Yerinde Halı Yıkama'
-  ],
-  'Koltuk ve Döşeme Yıkama': [
-    'Koltuk Yıkama', 'Yatak Yıkama', 'Perde Yıkama', 'Stor Perde Temizliği',
-    'Sandalye Yıkama',
-    'Halıfleks Yıkama',
-    'Araç Döşeme Yıkama',
-  ],
-  'İlaçlama ve Haşere Kontrolü': [
-    'Ev İlaçlama', 'Böcek İlaçlama', 'Haşere İlaçlama',
-    'Kene İlaçlama', 'Fare Mücadelesi', 'Tahtakurusu İlaçlama',
-    'Karınca İlaçlama', 'Güve İlaçlama',
-    'Sinek ve Sivrisinek İlaçlama', 'Pire İlaçlama', 'İşyeri İlaçlama'
+  'Havuz Yapım ve Bakım': [
+    'Havuz Yapımı', 'Havuz Bakımı', 'Havuz Kimyasal Dengeleme',
+    'Havuz Tamiri', 'Havuz Su Kaçağı Onarımı', 'Havuz Kışa Hazırlık',
+    'Havuz Açılış Bakımı', 'Havuz Kapatma Bakımı', 'Havuz Filtre Bakımı',
+    'Havuz Filtresi Değişimi', 'Havuz Pompa Bakımı',
+    'Havuz Pompa Değişimi', 'Havuz Motoru Tamiri',
+    'Havuz Ekipmanları Montajı', 'Havuz Aydınlatma Tamiri',
+    'Havuz Derz Yenileme', 'Havuz Kaplama Yenileme',
+    'Havuz Isıtma Sistemi', 'Havuz Isı Pompası Montajı',
+    'Havuz Otomasyon Sistemi', 'Havuz Kapak Sistemi'
   ],
   'Su Tesisatı': [
     'Su Tesisatçısı', 'Sıhhi Tesisat', 'Su Kaçağı Tespiti',
-    'Tıkanıklık Açma', 'Gider Açma', 'Musluk Montajı',
-    'Klozet Montajı', 'Su Deposu Temizliği', 'Tesisat Tamiri',
-    'Su Arıtma Servisi',
-    'Petek Borusu Tesisatı', 'Duş Bataryası Montajı',
-    'Hidrofor Montajı', 'Pissu Tesisatı'
+    'Kameralı Su Kaçağı Tespiti', 'Termal Kamera ile Su Kaçağı Tespiti',
+    'Su Kaçağı Onarımı', 'Alt Kata Su Sızıntısı Onarımı',
+    'Tıkanıklık Açma', 'Gider Açma', 'Musluk Montajı', 'Batarya Değişimi',
+    'Klozet Montajı', 'Klozet Tamiri', 'Klozet İç Takım Değişimi',
+    'Gömme Rezervuar Tamiri', 'Gömme Rezervuar Montajı', 'Sifon Tamiri',
+    'Sifon Değişimi', 'Lavabo Montajı', 'Lavabo Tamiri', 'Vana Değişimi',
+    'Su Sayacı Değişimi', 'Su Basıncı Problemi', 'Su Deposu Temizliği',
+    'Tesisat Tamiri', 'Su Arıtma Servisi', 'Duş Bataryası Montajı',
+    'Hidrofor Montajı', 'Hidrofor Bakımı', 'Hidrofor Tamiri',
+    'Hidrofor Basınç Tankı Değişimi', 'Pissu Tesisatı'
   ],
-  // ⚠ DOĞALGAZ GENİŞLETİLDİ (14 Ağu, ürün kararı) — 4 → 8 hizmet.
-  //
-  // Kategori adı 'Doğalgaz Tesisatı ve Proje' idi; iki işi tek
-  // başlıkta birleştiriyordu ve kullanıcı kararıyla kaldırıldı.
-  // Yeni ad tek sözcük: 'Doğalgaz'.
-  //
-  // ⚠ KATEGORİ ADI ZATEN KULLANICIYA GÖSTERİLMİYOR (öneri
-  // listesinde kırılım çizilmez); ad yalnız kart ızgarasında ve
-  // sistem içinde kullanılır.
-  //
-  // Eklenen dört hizmet, sahada AYRI olarak istenen işlerdir:
-  //   · İç Tesisat   — daire/bina içi, kolon hattından ayrı
-  //   · Kolon Hattı  — bina ana hattı, yönetim işi
-  //   · Kaçak Tespiti / Kaçak Onarımı — kullanıcı kararıyla ayrıldı
-  //
-  // ⚠ NOT: tespit ile onarımı sahada çoğunlukla aynı usta aynı
-  // ziyarette yapar; üçe bölmek teklif havuzunu böler. Risk
-  // bildirildi, karar ürün tarafının.
   'Doğalgaz': [
-    'Doğalgaz Tesisatı',
-    'Doğalgaz Projesi',
-    'Doğalgaz İç Tesisatı',
-    'Doğalgaz Kolon Hattı',
-    'Doğalgaz Kaçak Kontrolü',
-    'Doğalgaz Kaçak Tespiti',
-    'Doğalgaz Kaçak Onarımı',
-    'Doğalgaz Boru Hattı Tadilatı',
-    'Doğalgaz Ocak Bağlantısı',
-    'Doğalgaz Ocak Dönüşümü',
-    'Doğalgaz Sobası Montajı',
-    ],
-  // ⚠ KOMBİ İKİYE AYRILDI (14 Ağu, ürün kararı).
-  //
-  // Eskiden tek kategori vardı: `Kombi Servisi`. Adı "servis" diyordu
-  // ama içinde MONTAJ işleri de duruyordu. Kullanıcı kararı: kurulum
-  // ile bakım/onarım AYRI işlerdir, ayrı kategori olmalıdır.
-  //
-  // ⚠ ALT HİZMET SAYISI DEĞİŞMEDİ (dördü de duruyor); yalnız iki
-  // kategoriye dağıtıldı. Kategori 54 → 55.
-  //
-  // ⚠ Ad "Kombi" DEĞİL: tek başına "Kombi" hangi işi anlattığını
-  // söylemiyordu.
-  'Kombi Montaj': [
-    'Kombi Montajı', 'Kombi Değişimi', 'Kombi Yeri Değişimi',
-    'Kombi Baca Montajı'
+    'Doğalgaz Tesisatı', 'Doğalgaz İç Tesisatı', 'Doğalgaz Kolon Hattı',
+    'Doğalgaz Kaçak Kontrolü', 'Doğalgaz Kaçak Tespiti',
+    'Doğalgaz Kaçak Onarımı', 'Doğalgaz Boru Hattı Tadilatı',
+    'Doğalgaz Tesisat Kontrolü', 'Doğalgaz Tesisat Uygunluk Kontrolü',
+    'Doğalgaz Tesisat Sızdırmazlık Testi', 'Doğalgaz Tesisat Yenileme',
+    'Doğalgaz Hat Tadilatı', 'Doğalgaz Ocak Bağlantısı',
+    'Doğalgaz Ocak Dönüşümü', 'Doğalgaz Sobası Montajı', 'Kombi Montajı',
+    'Kombi Değişimi', 'Kombi Yeri Değişimi', 'Kombi Baca Montajı',
+    'Doğalgaz Projesi'
   ],
   'Kombi Servis': [
-    'Kombi Tamiri', 'Kombi Bakımı', 'Kombi Arıza Tespiti'
+    'Kombi Tamiri', 'Kombi Bakımı', 'Kombi Arıza Tespiti',
+    'Kombi Petek Isınmama Arızası', 'Kombi Su Basıncı Sorunu',
+    'Kombi Su Kaçağı Tamiri', 'Kombi Eşanjör Temizliği',
+    'Kombi Fan Değişimi', 'Kombi Pompa Değişimi', 'Kombi Sensör Değişimi',
+    'Kombi Kart Tamiri', 'Kombi Baca Kontrolü', 'Kombi Baca Temizliği',
+    'Kombi Yoğuşma Gideri Temizliği'
   ],
   'Isıtma Sistemleri': [
-    'Petek Temizliği', 'Petek Montajı', 'Yerden Isıtma',
-    'Şofben Tamiri', 'Termosifon Tamiri', 'Radyatör Vana Değişimi',
-    'Kalorifer Kazanı Bakımı', 'Oda Termostatı Montajı',
-    'Boyler Montajı'
+    'Petek Temizliği', 'Petek Montajı', 'Petek Havası Alma',
+    'Petek Vana Değişimi', 'Termostatik Vana Montajı', 'Yerden Isıtma',
+    'Yerden Isıtma Bakımı', 'Yerden Isıtma Tamiri',
+    'Yerden Isıtma Kaçak Tespiti', 'Kalorifer Tesisatı',
+    'Kalorifer Tesisatı Tamiri', 'Kalorifer Tesisatı Yenileme',
+    'Merkezi Isıtma Sistemi Bakımı', 'Merkezi Isıtma Sistemi Tamiri',
+    'Şofben Tamiri', 'Şofben Montajı', 'Termosifon Tamiri',
+    'Termosifon Montajı', 'Radyatör Vana Değişimi',
+    'Kalorifer Kazanı Bakımı', 'Oda Termostatı Montajı', 'Boyler Montajı',
+    'Boyler Bakımı', 'Isı Pompası Montajı', 'Isı Pompası Bakımı',
+    'Isı Pompası Tamiri', 'Petek Borusu Tesisatı'
   ],
   'Elektrik': [
     'Elektrikçi', 'Elektrik Arıza', 'Elektrik Tesisatı',
-    'Priz Montajı', 'Anahtar Montajı', 'Avize Montajı',
-    'Sigorta Panosu Montajı', 'Elektrik Panosu Yenileme',
-    'Aydınlatma Sistemleri', 'Kaçak Akım Rölesi Montajı',
-    'Spot Aydınlatma Montajı', 'Elektrik Kablo Çekimi',
-    'Jeneratör Montajı', 'Elektrikli Panjur Montajı'
+    'Ev Elektrik Tesisatı', 'Elektrik Tesisatı Yenileme',
+    'Elektrik Kaçağı Tespiti', 'Priz Montajı', 'Priz Değişimi',
+    'Anahtar Montajı', 'Anahtar Değişimi', 'Ampul Değişimi',
+    'LED Aydınlatma Montajı', 'Sensörlü Aydınlatma Montajı',
+    'Avize Montajı', 'Sigorta Panosu Montajı', 'Sigorta Değişimi',
+    'Elektrik Panosu Yenileme', 'Aydınlatma Sistemleri',
+    'Aydınlatma Otomasyonu', 'Kaçak Akım Rölesi Montajı',
+    'Topraklama Ölçümü', 'Spot Aydınlatma Montajı',
+    'Elektrik Kablo Çekimi', 'Elektrikli Panjur Montajı', 'Zil Montajı',
+    'Kapı Zili Tamiri', 'Elektrikli Araç Şarj İstasyonu Montajı',
+    'Wallbox Montajı'
   ],
   'Güvenlik Sistemleri': [
-    'Kamera Sistemi Kurulumu', 'Alarm Sistemi Kurulumu',
-    'Görüntülü Diafon Montajı', 'Akıllı Kilit', 'Yangın Algılama',
-    'Kamera Bakım ve Onarımı', 'Parmak İzli Geçiş Sistemi',
-    'Bariyer ve Otopark Sistemi'
+    'Kamera Sistemi Kurulumu', 'IP Kamera Sistemi',
+    'Analog Kamera Sistemi', 'Kamera Montajı', 'Kamera Sökme',
+    'Kamera Bakımı', 'Kamera Arıza Tamiri', 'Kamera Bakım ve Onarımı',
+    'Alarm Sistemi Kurulumu', 'Hırsız Alarmı', 'Yangın Alarm Sistemi',
+    'Yangın Algılama Sistemi', 'Gaz Alarm Sistemi',
+    'Su Baskını Alarm Sistemi', 'Görüntülü Diafon', 'Diafon Tamiri',
+    'Akıllı Ev Güvenlik Sistemi', 'Apartman Güvenlik Sistemi',
+    'Kartlı Geçiş Sistemi', 'Parmak İzi Geçiş Sistemi',
+    'Yüz Tanıma Sistemi', 'Turnike Sistemi', 'Otopark Bariyer Sistemi',
+    'Otomatik Kapı Sistemi', 'Güvenlik Sistemi Uzaktan İzleme',
+    'İnterkom/Diafon Montajı'
   ],
   'Klima Montaj ve Servis': [
     'Klima Montajı', 'Klima Bakımı', 'Klima Tamiri', 'Klima Temizliği',
-    'Havalandırma Sistemleri', 'VRF Sistemleri', 'Klima Gaz Dolumu',
-    'Klima Sökme Takma', 'Kanallı Klima Montajı',
-    'Salon Tipi Klima Montajı'
+    'Klima Gaz Dolumu', 'Klima Gaz Kaçağı Tespiti', 'Klima Sökme',
+    'Klima Sökme-Takma', 'Klima Dış Ünite Montajı',
+    'Klima İç Ünite Montajı', 'Klima Yer Değişimi', 'Klima Drenaj Hattı',
+    'Klima Elektrik Bağlantısı', 'Multi Klima Sistemi Montajı',
+    'VRF Klima Sistemi Bakımı'
+  ],
+  'Çilingir ve Kilit': [
+    'Kapı Açma', 'Ev Kapısı Açma', 'Çelik Kapı Açma', 'Kilit Değişimi',
+    'Kilit Tamiri', 'Silindir Değişimi', 'Barel Değişimi',
+    'Kapı Kolu Değişimi', 'Akıllı Kilit Montajı', 'Şifreli Kilit Montajı',
+    'Elektrikli Kilit Montajı', 'Manyetik Kilit Montajı',
+    'Kapı Otomatiği Montajı', 'Panik Bar Montajı', 'Kapı Kilidi Bakımı',
+    'Akıllı Kilit', 'Şifreli Kilit'
+  ],
+  'Uydu ve Anten Sistemleri': [
+    'Uydu Kurulumu', 'Uydu Anteni Montajı', 'Uydu Anteni Ayarı',
+    'Uydu Sinyal Sorunu', 'Uydu Kanal Ayarlama', 'Uydu Sinyal Ölçümü',
+    'LNB Değişimi', 'Uydu Kablosu Çekme', 'Merkezi Uydu Sistemi',
+    'Merkezi Uydu Sistemi Arızası', 'Merkezi Uydu Sistemi Yenileme',
+    'TV Sinyal Dağıtım Sistemi', 'TV Anteni Montajı'
+  ],
+  'İnternet ve Ağ Kurulumu': [
+    'İnternet Kurulumu', 'İnternet Nakli', 'İnternet Arıza / Hat Sorunu',
+    'Modem Kurulumu', 'Wi-Fi Kurulumu', 'Wi-Fi Sinyal Güçlendirme',
+    'Wi-Fi Mesh Sistem Kurulumu', 'Wi-Fi Access Point Kurulumu',
+    'Wi-Fi Ölü Nokta Çözümü', 'Ev İçi Ağ Kurulumu', 'Router Kurulumu',
+    'Mesh Wi-Fi Kurulumu', 'CAT6 Kablo Çekimi', 'Ethernet Prizi Montajı',
+    'İnternet Kablosu Çekme', 'Fiber Kablo Çekimi',
+    'Fiber Optik Sonlandırma', 'Fiber Optik Arıza Tespiti',
+    'Network Kablo Testi', 'İnternet Arıza Tespiti'
+  ],
+  'Güneş Enerjisi Sistemleri': [
+    'Ev Tipi Güneş Enerjisi Sistemi', 'Çatı Güneş Enerjisi Sistemi',
+    'Güneş Paneli Montajı', 'Güneş Paneli Bakımı',
+    'Güneş Paneli Temizliği', 'Güneş Paneli Arıza Tespiti',
+    'Güneş Paneli Değişimi', 'On-Grid Güneş Enerjisi Sistemi',
+    'Off-Grid Güneş Enerjisi Sistemi', 'Hibrit Güneş Enerjisi Sistemi',
+    'Güneş Enerjisi Batarya Sistemi', 'Enerji Depolama Sistemi',
+    'İnverter Montajı', 'Güneş Enerjisi Sistem Bakımı',
+    'Güneş Enerjisi Sistem İzleme'
+  ],
+  'Oto Çekici ve Yol Yardım': [
+    'Oto Çekici', 'Yol Yardım', 'Akü Takviye', 'Kilitli Araç Açma',
+    'Lastik Yol Yardımı'
+  ],
+  'Oto Servis ve Bakım': [
+    'Oto Elektrik', 'Oto Klima', 'Fren Balata Değişimi',
+    'Periyodik Araç Bakımı', 'Motor Yağı Değişimi', 'Akü Değişimi',
+    'Araç Klima Gaz Dolumu', 'Fren Bakımı', 'Bilgisayarlı Arıza Tespiti',
+    'Triger Seti Değişimi', 'Yağ ve Filtre Değişimi', 'Şanzıman Bakımı'
+  ],
+  'Araç Temizlik ve Detaylı Bakım': [
+    'Araç Detaylı Temizlik', 'Araç Koltuk Yıkama', 'Oto Yıkama',
+    'Pasta ve Cila', 'Motor Yıkama', 'Yerinde Oto Yıkama',
+    'Seramik Kaplama', 'Far Temizleme ve Parlatma', 'Araç Döşeme Yıkama'
+  ],
+  'Oto Ekspertiz': [
+    'Oto Ekspertiz', 'Mobil Oto Ekspertiz'
+  ],
+  'Kaporta ve Boya': [
+    'Kaporta Onarımı', 'Boya Onarımı', 'Mini Onarım', 'Göçük Düzeltme'
+  ],
+  'Lastik ve Jant Hizmetleri': [
+    'Lastik Değişimi', 'Lastik Tamiri', 'Rot Balans Ayarı', 'Jant Onarımı'
+  ],
+  'Oto Görsel & Koruma Hizmetleri': [
+    'Araç Kaplama', 'Oto Cam Filmi', 'Oto Boya Koruma', 'Oto Modifiye'
+  ],
+  'Oto Bakım & Servis': [
+    'Mobil Lastik Hizmeti'
   ],
   'Beyaz Eşya Servisi': [
     'Buzdolabı Tamiri', 'Çamaşır Makinesi Tamiri',
-    'Bulaşık Makinesi Tamiri', 'Kurutma Makinesi Tamiri',
-    'Fırın Tamiri', 'Aspiratör Tamiri', 'Ankastre Cihaz Montajı',
-    'Davlumbaz Tamiri', 'Su Sebili Tamiri'
+    'Bulaşık Makinesi Tamiri', 'Kurutma Makinesi Tamiri', 'Fırın Tamiri',
+    'Aspiratör Tamiri', 'Ankastre Cihaz Montajı', 'Davlumbaz Tamiri',
+    'Su Sebili Tamiri', 'Mikrodalga Fırın Tamiri',
+    'Derin Dondurucu Tamiri', 'Buzdolabı Bakımı',
+    'Çamaşır Makinesi Bakımı', 'Bulaşık Makinesi Bakımı'
   ],
   'Elektronik Cihaz Tamiri': [
     'Televizyon Tamiri', 'Bilgisayar Tamiri', 'Telefon Tamiri',
     'Tablet Tamiri', 'Oyun Konsolu Tamiri', 'Telefon Ekran Değişimi',
     'Telefon Batarya Değişimi', 'Bilgisayar Format ve Kurulum',
-    'Veri Kurtarma', 'Projeksiyon Tamiri',
-    // ⚠ SAAT TAMİRİ — ÇATISI TAMİR (15 Ağu, kesin karar).
-    //
-    // Çatı katmanı KATEGORİ eşler, hizmet değil. Bu yüzden bir
-    // hizmetin çatısı, bağlı olduğu kategorinin çatısıdır:
-    // Elektronik Cihaz Tamiri → Tamir. Saat tamiri buraya
-    // konularak Tamir çatısına girer; yeni kategori AÇILMADI.
-    'Saat Tamiri'
+    'Veri Kurtarma', 'Projeksiyon Tamiri', 'Saat Tamiri', 'Yazıcı Tamiri',
+    'Monitör Tamiri', 'Ses Sistemi Tamiri', 'Hoparlör Tamiri',
+    'Projeksiyon Kurulumu', 'Akıllı Saat Tamiri', 'Drone Tamiri'
   ],
-  'Uydu ve Anten Sistemleri': [
-    'Uydu Anteni Kurulumu', 'Çanak Anten Ayarı',
-    'Merkezi Uydu Sistemi', 'Televizyon Duvar Montajı',
-    'Uydu Alıcı Kurulumu', 'Karasal Anten Montajı',
-    'Anten Kablo Çekimi'
+  'Küçük Ev Aletleri': [
+    'Küçük Ev Aletleri Tamiri', 'Kahve Makinesi Tamiri',
+    'Elektrikli Süpürge Tamiri'
   ],
-  'İnternet ve Ağ Kurulumu': [
-    'Modem Kurulumu', 'Ağ Kablolama', 'Wifi Güçlendirme',
-    'Akıllı Ev Sistemleri', 'Fiber İnternet Kurulumu',
-    'Kamera Ağ Kurulumu', 'Sunucu ve NAS Kurulumu'
+  'Temizlik Hizmetleri': [
+    'Ev Temizliği', 'Boş Ev Temizliği', 'Ofis Temizliği',
+    'İnşaat Sonrası Temizlik', 'Derin Temizlik', 'Taşınma Temizliği',
+    'Cam Temizliği', 'Cam Silme', 'Ütü Hizmeti', 'Merdiven Temizliği',
+    'Buharlı Ev Temizliği', 'Apartman / Ortak Alan Temizliği',
+    'Buzdolabı İçi Temizliği', 'Fırın İçi Temizliği',
+    'Dolap İçi Temizliği', 'Taşınma Öncesi Temizlik', 'Dükkan Temizliği'
   ],
-  'Boya ve Badana': [
-    'Boya Badana', 'İç Cephe Boya', 'Dış Cephe Boyama',
-    'Dekoratif Boya', 'Kapı Boyama', 'Tavan Boyama',
-    'Silinebilir Boya Uygulaması', 'Mobilya Boyama',
-    'Cephe Boya Onarımı'
+  'Halı Yıkama': [
+    'Kilim Yıkama', 'Yolluk Yıkama', 'Halı Leke Çıkarma',
+    'Yerinde Halı Yıkama', 'Bambu Halı Yıkama', 'Ofis Halı Yıkama'
   ],
-  'Alçı ve Sıva İşleri': [
-    'Alçıpan', 'Alçı Sıva', 'Kartonpiyer', 'Asma Tavan Yapımı',
-    'Saten Alçı Uygulaması', 'Sıva Tamiri'
+  'Koltuk ve Döşeme Yıkama': [
+    'Koltuk Yıkama', 'Yatak Yıkama', 'Sandalye Yıkama', 'Halıfleks Yıkama'
   ],
-  'Duvar Kağıdı ve Dekorasyon': [
-    'Duvar Kağıdı Uygulama', 'Duvar Paneli', '3D Duvar Kaplama',
-    'Poster Duvar Kağıdı', 'Duvar Kağıdı Sökme', 'Akustik Panel Montajı'
+  'İlaçlama ve Haşere Kontrolü': [
+    'Ev İlaçlama', 'Böcek İlaçlama', 'Haşere İlaçlama', 'Kene İlaçlama',
+    'Fare Mücadelesi', 'Tahtakurusu İlaçlama', 'Karınca İlaçlama',
+    'Güve İlaçlama', 'Sinek ve Sivrisinek İlaçlama', 'Pire İlaçlama',
+    'İşyeri İlaçlama'
   ],
-  'Tadilat ve Yenileme': [
-    'Ev Tadilatı', 'Daire Tadilatı', 'Ofis Tadilatı',
-    'Dükkan Tadilatı', 'Anahtar Teslim Tadilat',
-    'Kiralık Daire Tadilatı', 'Villa Tadilatı', 'Bina Yenileme'
+  'Kuru Temizleme': [
+    'Kuru Temizleme', 'Kıyafet Kuru Temizleme', 'Perde Kuru Temizleme',
+    'Perde Yıkama', 'Stor Perde Temizliği'
   ],
-  'Banyo Tadilat ve Montaj': [
-    'Banyo Tadilatı', 'Duşakabin Montajı', 'Banyo Dolabı Montajı',
-    'Lavabo Montajı', 'Duş Teknesi Montajı', 'Küvet Montajı',
-    'Klozet Değişimi', 'Banyo Fayans Yenileme'
-  ],
-  'Mutfak Tadilat ve Dolap': [
-    'Mutfak Tadilatı', 'Mutfak Dolabı Yapımı', 'Mutfak Dolabı Tamiri',
-    'Mutfak Tezgahı Montajı', 'Hazır Mutfak', 'Mutfak Dolabı Montajı',
-    'Mutfak Dolabı Kapak Değişimi', 'Granit Tezgah Montajı',
-    'Evye Montajı'
-  ],
-  'İnşaat ve Kaba Yapı': [
-    'Kaba İnşaat', 'Anahtar Teslim İnşaat', 'Duvar Örme',
-    'Yıkım İşleri', 'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme'
-  ],
-  'Fayans ve Seramik Döşeme': [
-    'Fayans Döşeme', 'Seramik Döşeme', 'Fayans Tamiri',
-    'Mermer Döşeme', 'Granit Uygulama', 'Derz Yenileme', 'Silikon Uygulaması', 'Mermer Eşik Montajı',
-    'Dış Cephe Seramik'
-  ],
-  'Zemin Kaplama': [
-    'Parke Döşeme', 'Parke Tamiri',
-    'Halıfleks Uygulama', 'PVC Zemin', 'Epoksi Zemin Kaplama',
-    'Parke Zımpara ve Cila', 'Süpürgelik Montajı',
-    'Vinil Zemin Uygulaması', 'Zemin Şap Düzeltme'
-  ],
-  'Yalıtım ve Mantolama': [
-    'Su Yalıtımı', 'Isı Yalıtımı', 'Mantolama', 'Ses Yalıtımı',
-    'Teras İzolasyonu', 'Balkon Su Yalıtımı', 'Çatı Su Yalıtımı',
-    'Rutubet ve Küf Onarımı', 'Pencere Ses Yalıtımı'
-  ],
-  'Çatı Yapım ve Onarım': [
-    'Çatı Tamiri', 'Çatı Yapımı', 'Çatı İzolasyonu', 'Çatı Aktarma',
-    'Oluk Montajı', 'Kiremit Değişimi', 'Kiremit Aktarma',
-    'Oluk Temizliği', 'Çatı Kaçak Onarımı', 'Çelik Çatı İmalatı'
-  ],
-  'Mobilya Yapım ve Montaj': [
-    'Mobilya Montajı', 'Mobilya Tamiri', 'Mobilya İmalatı',
-    'Gardırop Yapımı', 'Gardırop Montajı', 'TV Ünitesi Yapımı',
-    'TV Ünitesi Montajı', 'Vestiyer Yapımı', 'Hazır Mobilya Kurulumu',
-    'Yatak Odası Takımı Montajı', 'Raf ve Kitaplık Montajı',
-    'Mobilya Sökme ve Taşıma'
-  ],
-  'Marangozluk ve Ahşap İşleri': [
-    'Özel Mobilya Yapımı', 'Ahşap Raf Yapımı', 'Ahşap Masa Yapımı',
-    'Ahşap Merdiven', 'Ahşap Pergola', 'Masa ve Sandalye Tamiri',
-    'Vernik ve Cila', 'Ahşap Deck Uygulaması', 'Ahşap Kapı Onarımı',
-    'Ölçüye Özel Dolap'
-  ],
-  'Kapı Montaj ve Tamir': [
-    'İç Kapı Montajı', 'İç Kapı İmalatı', 'Çelik Kapı Montajı',
-    'Çelik Kapı Tamiri', 'Kapı Tamiri', 'Kapı Kolu Değişimi',
-    'Kapı Menteşe Ayarı', 'Sürgülü Kapı Montajı',
-    'Kapı Otomatiği Montajı'
-  ],
-  'Cam Balkon Sistemleri': [
-    'Cam Balkon', 'Cam Değişimi', 'Ayna Montajı',
-    'Duş Camı Montajı', 'Isıcam Değişimi', 'Kırık Cam Değişimi',
-    'Giyotin Cam Montajı'
-  ],
-  'PVC ve Alüminyum Doğrama': [
-    'PVC Pencere Montajı', 'PVC Pencere Tamiri', 'PVC Kapı',
-    'Alüminyum Doğrama', 'Sineklik Montajı', 'Panjur Sistemleri',
-    'Pencere Ayarı ve Fitil Değişimi', 'Pileli Sineklik Montajı',
-    'Otomatik Panjur Montajı', 'Alüminyum Cephe Kaplama'
-  ],
-  'Demir Doğrama ve Kaynak': [
-    'Demir Doğrama İşleri', 'Ferforje', 'Kaynakçı', 'Korkuluk Montajı',
-    'Çelik Konstrüksiyon', 'Balkon Korkuluğu Montajı',
-    'Merdiven Korkuluğu', 'Demir Kapı İmalatı', 'Yerinde Kaynak İşi'
-  ],
-  'Çilingir ve Kilit': [
-    'Kapı Açma', 'Kilit Değişimi', 'Barel Değişimi', 'Oto Anahtarcı',
-    'Çelik Kapı Kilidi Değişimi', 'Kasa Açma', 'Anahtar Kopyalama'
-  ],
-  'Bahçe ve Peyzaj': [
-    'Bahçe Düzenleme', 'Çim Ekimi', 'Çim Serme', 'Ağaç Budama',
-    'Otomatik Sulama Sistemi', 'Bahçe Bakımı', 'Çim Biçme',
-    'Ağaç Kesimi', 'Otomatik Sulama Montajı', 'Bahçe Duvarı ve Çit',
-    'Sera Kurulumu'
-  ],
-  'Havuz Yapım ve Bakım': [
-    'Havuz Yapımı', 'Havuz Bakımı', 'Havuz Kimyasal Dengeleme',
-    'Havuz Tamiri', 'Havuz Su Kaçağı Onarımı', 'Havuz Kışa Hazırlık'
+  'Zemin ve Yüzey Temizliği': [
+    'Mermer Cilalama', 'Mermer Silim', 'Zemin Cilalama'
   ],
   'Nakliyat ve Taşımacılık': [
     'Evden Eve Nakliyat', 'Şehirler Arası Nakliyat', 'Ofis Taşıma',
-    'Parça Eşya Taşıma', 'Asansörlü Nakliyat', 'Eşya Depolama',
-    'Piyano Taşıma', 'Asansörlü Taşıma', 'Sigortalı Nakliyat',
-    // ⚠ "Beyaz Eşya Servisi"nden BURAYA TAŞINDI: bu bir TAŞIMA
-    // işidir, tamir değil. Servis kategorisinde durduğu için
-    // "Beyaz Eşya & Elektronik Servis" çatısında görünüyordu.
-    //
-    // ⚠ İSTİSNA LİSTESİ KULLANILMADI. `kHizmetCatiIstisnasi` ile
-    // çatısını zorlamak, hizmeti kategorisinden KOPUK bırakırdı:
-    // arama ve ilan akışı hâlâ servis kategorisi altında bulurdu.
-    // Doğru yer kategorinin kendisidir.
-    'Beyaz Eşya Nakli'
+    'Parça Eşya Taşıma', 'Asansörlü Nakliyat', 'Piyano Taşıma',
+    'Asansörlü Taşıma', 'Sigortalı Nakliyat', 'Şehir İçi Nakliyat',
+    'Minivan Nakliye', 'Yük Taşıma', 'Koli Taşıma', 'Koltuk Taşıma',
+    'Buzdolabı Taşıma', 'Çeyiz Taşıma', 'Paletli Yük Taşıma',
+    'Motosiklet Taşıma', 'Araç Taşıma', 'Uluslararası Nakliyat'
+  ],
+  'Depolama Hizmetleri': [
+    'Eşya Depolama', 'Mini Depo', 'Ticari Eşya Depolama', 'Arşiv Depolama'
   ],
   'Kurye ve Küçük Taşıma': [
-    'Moto Kurye', 'Paket Taşıma', 'Küçük Nakliye', 'Aynı Gün Kurye'
+    'Moto Kurye', 'Paket Taşıma', 'Küçük Nakliye', 'Aynı Gün Kurye',
+    'Arabalı Kurye', 'Acil Kurye', 'Evrak Kurye'
   ],
-  'Asansör Montaj ve Bakım': [
-    'Asansör Bakımı', 'Asansör Tamiri', 'Asansör Montajı',
-    'Asansör Kabin Yenileme', 'Asansör Kapı Tamiri'
+  'Personel ve Öğrenci Servisi': [
+    'Personel Servisi', 'Fabrika Personel Servisi',
+    'İş Yeri Personel Servisi', 'Öğrenci Servisi', 'Okul Servisi',
+    'Servis Aracı Kiralama'
   ],
-  'Mühendislik ve Proje': [
-    'Statik Proje', 'Mimari Proje', 'Elektrik Projesi',
-    'Mekanik Tesisat Projesi', 'Zemin Etüdü', 'Enerji Kimlik Belgesi',
-    'Güçlendirme Projesi', 'Deprem Performans Analizi',
-    'Ruhsat Projesi', 'Röleve Projesi'
+  'Depolama & Lojistik': [
+    'Antrepo'
   ],
-  'Oto Çekici ve Yol Yardım': [
-    'Oto Çekici', 'Yol Yardım', 'Akü Takviye',
-    'Kilitli Araç Açma'
+  'Güzellik ve Bakım Hizmetleri': [
+    'Makyaj', 'Manikür Pedikür', 'Saç Tasarımı', 'Gelin Saçı ve Makyajı',
+    'Kalıcı Oje', 'Ağda ve Epilasyon', 'Cilt Bakımı', 'Evde Kuaför'
   ],
-  'Oto Servis ve Bakım': [
-    'Oto Elektrik', 'Oto Klima', 'Fren Balata Değişimi',
-    'Periyodik Araç Bakımı', 'Motor Yağı Değişimi', 'Akü Değişimi',
-    'Araç Klima Gaz Dolumu', 'Fren Bakımı'
+  'Masaj ve Wellness': [
+    'Masaj', 'Evde Masaj', 'Spa Bakımı'
   ],
-  'Araç Temizlik ve Detaylı Bakım': [
-    'Araç Detaylı Temizlik', 'Araç Koltuk Yıkama', 'Oto Yıkama',
-    'Pasta ve Cila', 'Motor Yıkama', 'Yerinde Oto Yıkama'
+  'Spor': [
+    'Personal Trainer', 'Pilates', 'Yoga', 'Yüzme Dersi',
+    'Fitness Özel Ders', 'Tenis Dersi', 'Voleybol Dersi', 'Kiralık Kaleci',
+    'Evde Fitness Antrenörü', 'Beslenme ve Antrenman Programı'
+  ],
+  'Kişisel Gelişim ve Koçluk': [
+    'Yaşam Koçu'
+  ],
+  'Evcil Hayvan Hizmetleri': [
+    'Köpek Gezdirme', 'Evcil Hayvan Bakımı', 'Pet Kuaför',
+    'Evde Hayvan Bakıcılığı', 'Köpek Eğitimi', 'Evcil Hayvan Taşıma',
+    'Pet Oteli ve Pansiyon', 'Pet Kreş Hizmeti', 'Kedi Bakımı',
+    'Kedi Gezdirme', 'Evcil Hayvan Gezdirme', 'Evcil Hayvan Bakıcısı',
+    'Evde Evcil Hayvan Bakımı', 'Evcil Hayvan Eğitimi'
   ],
   'Özel Ders': [
-    'Matematik Özel Ders', 'Fizik Özel Ders',
-    'Fen Bilimleri Özel Ders', 'İlkokul Özel Ders', 'Kimya Özel Ders',
-    'Biyoloji Özel Ders', 'Türkçe ve Edebiyat Özel Ders',
-    'Geometri Özel Ders', 'LGS Hazırlık', 'YKS Hazırlık'
+    'Matematik Özel Ders', 'Fizik Özel Ders', 'Fen Bilimleri Özel Ders',
+    'İlkokul Özel Ders', 'Kimya Özel Ders', 'Biyoloji Özel Ders',
+    'Türkçe ve Edebiyat Özel Ders', 'Geometri Özel Ders', 'LGS Hazırlık',
+    'YKS Hazırlık', 'Okuma Yazma Özel Ders', 'Sınav Koçluğu'
   ],
   'Yabancı Dil Eğitimi': [
     'İngilizce Özel Ders', 'Almanca Özel Ders', 'Fransızca Özel Ders',
-    'Online İngilizce Dersi', 'İspanyolca Özel Ders',
-    'Rusça Özel Ders', 'IELTS ve TOEFL Hazırlık', 'İş İngilizcesi'
+    'Online İngilizce Dersi', 'İspanyolca Özel Ders', 'Rusça Özel Ders',
+    'IELTS ve TOEFL Hazırlık', 'İş İngilizcesi', 'İtalyanca Özel Ders',
+    'Yabancılara Türkçe Öğretimi'
   ],
   'Sürücü Eğitimi': [
-    'Direksiyon Dersi', 'İleri Sürüş Eğitimi',
-    'Park Etme Eğitimi'
-  ],
-  'Spor ve Kişisel Antrenör': [
-    'Yüzme Dersi', 'Fitness Özel Ders', 'Pilates Dersi', 'Tenis Dersi',
-    'Evde Fitness Antrenörü', 'Yoga Dersi',
-    'Beslenme ve Antrenman Programı'
+    'Direksiyon Dersi', 'İleri Sürüş Eğitimi', 'Park Etme Eğitimi',
+    'Motosiklet Direksiyon Dersi'
   ],
   'Müzik Dersleri': [
     'Piyano Dersi', 'Gitar Dersi', 'Keman Dersi', 'Şan Dersi',
     'Bağlama Dersi', 'Davul ve Perküsyon Dersi', 'Ud ve Kanun Dersi',
-    'Flüt Dersi'
+    'Flüt Dersi', 'Ukulele Dersi', 'Elektronik Piyano Dersi'
+  ],
+  'Kodlama ve Yazılım Eğitimi': [
+    'Çocuklar İçin Kodlama', 'Python Eğitimi', 'Web Geliştirme Eğitimi'
+  ],
+  'Teknik ve Hobi Eğitimleri': [
+    'Drone Eğitimi'
   ],
   'Yazılım ve Web Hizmetleri': [
     'Web Sitesi Yapımı', 'Mobil Uygulama Geliştirme',
     'E-Ticaret Sitesi Yapımı', 'WordPress Site Kurulumu',
     'Web Sitesi Bakımı', 'SEO Uyumlu Site Kurulumu',
-    'Yazılım Danışmanlığı', 'Veri Tabanı Kurulumu'
+    'Yazılım Danışmanlığı', 'Veri Tabanı Kurulumu', 'API Entegrasyonu',
+    'Mobil Uygulama Bakımı', 'Web Uygulama Geliştirme'
   ],
   'Grafik ve Logo Tasarım': [
     'Logo Tasarımı', 'Grafik Tasarım', 'Kurumsal Kimlik Tasarımı',
@@ -417,161 +390,589 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Meta Reklam Yönetimi', 'İçerik Üretimi',
     'E-Ticaret Pazaryeri Yönetimi'
   ],
-  'Fotoğraf Çekimi': [
-    'Ürün Fotoğraf Çekimi', 'Kurumsal Fotoğraf Çekimi',
-    'Düğün ve Nişan Fotoğrafçısı', 'Bebek ve Aile Çekimi',
-    'Mekan ve Emlak Çekimi', 'Video Çekim ve Kurgu'
+  'Video ve Animasyon': [
+    'Video Montajı', 'Reels ve Kısa Video Montajı', 'Motion Graphics',
+    '2D Animasyon'
+  ],
+  'Müzik & Ses Prodüksiyonu': [
+    'Müzik Prodüksiyon', 'Ses Kayıt', 'Şarkı Aranje', 'Mix & Mastering',
+    'Jingle Yapımı', 'Müzik Yapımı'
+  ],
+  'Dijital Pazarlama & Reklam': [
+    'Influencer Marketing', 'Mobil Reklamcılık', 'Reklam Ajansı'
+  ],
+  'Video, Ses & Animasyon': [
+    'Seslendirme & Dublaj', 'Seslendirme', 'Dublaj'
   ],
   'Etkinlik ve Organizasyon': [
-    'Doğum Günü Organizasyonu', 'Düğün Organizasyonu',
-    'Balon ve Süsleme', 'Kına ve Nişan Organizasyonu',
-    'Kurumsal Etkinlik Organizasyonu', 'Ses ve Işık Sistemi Kiralama'
+    'Masa & Sandalye Kiralama', 'Palyaço', 'Doğum Günü Organizasyonu',
+    'Düğün Organizasyonu', 'Balon ve Süsleme',
+    'Kına ve Nişan Organizasyonu', 'Kurumsal Etkinlik Organizasyonu',
+    'Ses ve Işık Sistemi Kiralama'
   ],
-  // ⚠ ANA KATEGORİ ADI DEĞİŞTİRİLDİ: 'Evcil Hayvan' → 'Evcil Hayvan
-  // Bakımı' yapılınca ALT HİZMETLE ÇAKIŞTI. `anaKategoriBul` her
-  // zaman ana kategoriyi döndürdüğü için o alt hizmet SEÇİLEMEZ
-  // hâle gelmişti. Ana kategori 'Evcil Hayvan Hizmetleri' oldu.
-  'Evcil Hayvan Hizmetleri': [
-    'Köpek Gezdirme', 'Evcil Hayvan Bakımı', 'Pet Kuaför',
-    'Evde Hayvan Bakıcılığı', 'Köpek Eğitimi', 'Evcil Hayvan Taşıma'
+  'Fotoğraf Çekimi': [
+    'Drone Çekimi', 'Ürün Fotoğraf Çekimi', 'Kurumsal Fotoğraf Çekimi',
+    'Düğün ve Nişan Fotoğrafçısı', 'Bebek ve Aile Çekimi',
+    'Video Çekim ve Kurgu'
   ],
-  'Güzellik ve Bakım Hizmetleri': [
-    'Makyaj', 'Manikür Pedikür', 'Saç Tasarımı',
-    'Gelin Saçı ve Makyajı', 'Kalıcı Oje', 'Ağda ve Epilasyon',
-    'Cilt Bakımı', 'Evde Kuaför'
+  'Catering ve İkram': [
+    'Catering Hizmeti', 'Kokteyl İkram Hizmeti', 'Etkinlik Yemek Servisi',
+    'Yaprak Sarma Yapımı'
   ],
-
-  // ═══════════════════════════════════════════════════════════
-  // ⚠ HİZMET LİDERİ YAPISI (14 Ağu, ürün kararı)
-  //
-  // Ürün adı TEK BAŞINA kategori olmaz. Her ailede kullanıcının en
-  // doğal arayacağı iş LİDER HİZMETTİR ve GERÇEK HİZMET olarak
-  // listelenir; ilgili işler onunla aynı kategoride durur.
-  //
-  //   ✗ AYAKKABI (ürün adı)      ✓ Ayakkabı Tamiri (lider hizmet)
-  //   ✗ ÇANTA                    ✓ Çanta Tamiri
-  //   ✗ DERİ ÜRÜNLERİ            ✓ Deri Tamiri
-  //
-  // ⚠ 21 lider ÜÇ KATEGORİYE toplandı, 21 ayrı kategori AÇILMADI:
-  // her kategori bir fotoğraf ve bir ikon ister; liderleri kategori
-  // yapmak hem 21 görsel gerektirir hem de lider adını hizmet
-  // listesinden düşürürdü. Bu yapıda lider ARANABİLİR HİZMETTİR —
-  // "ayakkabı" yazan doğrudan `Ayakkabı Tamiri`'ni görür.
-  //
-  // ⚠ MİKRO HİZMET AÇILMADI: taban değişimi, fermuar tamiri, sap
-  // değişimi, toka değişimi gibi işler liderin kapsamındadır.
-  //
-  // ⚠ `Halı Yıkama` EKLENMEDİ — katalogda kendi kategorisi var.
-  // Yıkama bir temizlik işi, tamir/dokuma zanaat işidir; ikisi ayrı
-  // yerde durur.
+  'Etkinlik Personeli': [
+    'Garson', 'Servis Personeli', 'Host / Hostes', 'Karşılama Personeli',
+    'Komi', 'Barmen / Bar Servis Personeli', 'Etkinlik Görevlisi',
+    'Etkinlik Kurulum Personeli', 'Etkinlik Söküm Personeli'
+  ],
+  'Müzik & Eğlence': [
+    'Orkestra', 'Solist', 'Canlı Müzik', 'Müzik Grubu', 'DJ',
+    'Fasıl Ekibi', 'Davul Zurna', 'Bando Takımı', 'Mehter Takımı',
+    'Dansöz', 'Dansçı', 'Dans Ekibi', 'Dans Gösterisi'
+  ],
+  'Fuar & Stand Hizmetleri': [
+    'Stand Kurulumu', 'Fuar Standı Tasarımı', 'Fuar Standı Montajı',
+    'Fuar Standı Sökümü'
+  ],
+  'İnşaat ve Kaba Yapı': [
+    'Duvar Ustası', 'İnşaat Kalıp Ustası', 'Beton Kalıp Ustası',
+    'İnşaat Demir Ustası', 'Demir Bağlama Ustası', 'İnşaat Demir Döşeme',
+    'Kaba İnşaat', 'Anahtar Teslim İnşaat', 'Duvar Örme', 'Yıkım İşleri',
+    'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme'
+  ],
+  'Çatı Yapım ve Onarım': [
+    'Çatı Tamiri', 'Çatı Yapımı', 'Çatı İzolasyonu', 'Çatı Aktarma',
+    'Oluk Montajı', 'Kiremit Değişimi', 'Kiremit Aktarma',
+    'Oluk Temizliği', 'Çatı Kaçak Onarımı', 'Çelik Çatı İmalatı',
+    'Çatı Oluk Bakımı', 'Çatı Kiremit Tamiri'
+  ],
+  'Tadilat ve Yenileme': [
+    'Ev Tadilatı', 'Daire Tadilatı', 'Ofis Tadilatı', 'Dükkan Tadilatı',
+    'Anahtar Teslim Tadilat', 'Kiralık Daire Tadilatı', 'Villa Tadilatı',
+    'Bina Yenileme', 'Konut Tadilatı', 'Bina Restorasyonu'
+  ],
+  'Banyo Tadilat ve Montaj': [
+    'Banyo Tadilatı', 'Duşakabin Montajı', 'Banyo Dolabı Montajı',
+    'Duş Teknesi Montajı', 'Küvet Montajı', 'Klozet Değişimi',
+    'Banyo Fayans Yenileme', 'Duşakabin Tamiri', 'Duşakabin Değişimi'
+  ],
+  'Mutfak Tadilat ve Dolap': [
+    'Mutfak Tadilatı', 'Mutfak Dolabı Yapımı', 'Mutfak Dolabı Tamiri',
+    'Mutfak Tezgahı Montajı', 'Hazır Mutfak', 'Mutfak Dolabı Montajı',
+    'Mutfak Dolabı Kapak Değişimi', 'Granit Tezgah Montajı',
+    'Evye Montajı', 'Mutfak Tezgahı Yapımı'
+  ],
+  'Boya ve Badana': [
+    'Boya Badana', 'İç Cephe Boya', 'Dış Cephe Boyama', 'Dekoratif Boya',
+    'Kapı Boyama', 'Tavan Boyama', 'Silinebilir Boya Uygulaması',
+    'Mobilya Boyama', 'Cephe Boya Onarımı', 'Boya Öncesi Hazırlık'
+  ],
+  'Alçı ve Sıva İşleri': [
+    'Alçıpan', 'Alçı Sıva', 'Kartonpiyer', 'Asma Tavan Yapımı',
+    'Saten Alçı Uygulaması', 'Sıva Tamiri'
+  ],
+  'Duvar Kağıdı ve Dekorasyon': [
+    'Çıta Uygulaması', 'Dekoratif Duvar Çıtası', 'MDF Çıta Uygulaması',
+    'PVC Çıta Uygulaması', 'Duvar Kağıdı Uygulama', 'Duvar Paneli',
+    '3D Duvar Kaplama', 'Poster Duvar Kağıdı', 'Duvar Kağıdı Sökme',
+    'Akustik Panel Montajı'
+  ],
+  'Fayans ve Seramik Döşeme': [
+    'Fayans Döşeme', 'Seramik Döşeme', 'Fayans Tamiri', 'Mermer Döşeme',
+    'Granit Uygulama', 'Derz Yenileme', 'Silikon Uygulaması',
+    'Mermer Eşik Montajı', 'Dış Cephe Seramik'
+  ],
+  'Zemin Kaplama': [
+    'Parke Döşeme', 'Parke Tamiri', 'Halıfleks Uygulama', 'PVC Zemin',
+    'Epoksi Zemin Kaplama', 'Parke Zımpara ve Cila', 'Süpürgelik Montajı',
+    'Vinil Zemin Uygulaması', 'Zemin Şap Düzeltme', 'Laminat Parke Döşeme'
+  ],
+  'Yalıtım ve Mantolama': [
+    'Su Yalıtımı', 'Isı Yalıtımı', 'Mantolama', 'Ses Yalıtımı',
+    'Teras İzolasyonu', 'Balkon Su Yalıtımı', 'Çatı Su Yalıtımı',
+    'Rutubet ve Küf Onarımı', 'Pencere Ses Yalıtımı',
+    'Ses İzolasyonu Uygulaması', 'Teras Su Yalıtımı'
+  ],
+  'PVC ve Alüminyum Doğrama': [
+    'PVC Pencere Montajı', 'PVC Pencere Tamiri', 'PVC Kapı',
+    'Alüminyum Doğrama', 'Sineklik Montajı', 'Panjur Sistemleri',
+    'Pencere Ayarı ve Fitil Değişimi', 'Pileli Sineklik Montajı',
+    'Otomatik Panjur Montajı', 'Alüminyum Cephe Kaplama',
+    'Pencere Sineklik Montajı'
+  ],
+  'Demir Doğrama ve Kaynak': [
+    'Demir Doğrama İşleri', 'Ferforje', 'Kaynakçı', 'Korkuluk Montajı',
+    'Çelik Konstrüksiyon', 'Balkon Korkuluğu Montajı',
+    'Merdiven Korkuluğu', 'Demir Kapı İmalatı', 'Yerinde Kaynak İşi'
+  ],
+  'Marangozluk ve Ahşap İşleri': [
+    'Özel Mobilya Yapımı', 'Ahşap Raf Yapımı', 'Ahşap Masa Yapımı',
+    'Ahşap Merdiven', 'Ahşap Pergola', 'Masa ve Sandalye Tamiri',
+    'Vernik ve Cila', 'Ahşap Deck Uygulaması', 'Ahşap Kapı Onarımı',
+    'Ölçüye Özel Dolap', 'Ahşap Restorasyon'
+  ],
+  'Mobilya Yapım ve Montaj': [
+    'Mobilya Montajı', 'Mobilya Tamiri', 'Mobilya İmalatı',
+    'Gardırop Yapımı', 'Gardırop Montajı', 'TV Ünitesi Yapımı',
+    'TV Ünitesi Montajı', 'Vestiyer Yapımı', 'Hazır Mobilya Kurulumu',
+    'Yatak Odası Takımı Montajı', 'Raf ve Kitaplık Montajı',
+    'Mobilya Sökme ve Taşıma'
+  ],
+  'Asansör Montaj ve Bakım': [
+    'Asansör Bakımı', 'Asansör Tamiri', 'Asansör Montajı',
+    'Asansör Kabin Yenileme', 'Asansör Kapı Tamiri'
+  ],
+  'Havalandırma Sistemleri': [
+    'Havalandırma Sistemleri', 'Havalandırma Kanalı Montajı',
+    'Davlumbaz Havalandırma Montajı'
+  ],
+  'Çelik Yapı & Prefabrik Yapılar': [
+    'Çelik Ev Yapımı', 'Anahtar Teslim Prefabrik Ev',
+    'Prefabrik Ev Yapımı', 'Prefabrik Ev Montajı', 'Çelik Ev Montajı',
+    'Konteyner Yapımı', 'Konteyner Ev', 'Konteyner Ofis',
+    'Konteyner Montajı', 'Konteyner Demontajı', 'Konteyner Taşıma',
+    'Konteyner Tadilatı', 'Yangın Merdiveni'
+  ],
+  'Pergola & Gölgelendirme Sistemleri': [
+    'Alüminyum Pergola', 'Pergola Montajı', 'Pergola Kapatma',
+    'Pergola Tamiri', 'Tente', 'Mafsallı Tente', 'Otomatik Tente',
+    'Balkon Tentesi', 'Tente Tamiri', 'Tente Kumaş Değişimi'
+  ],
+  'Cam Film ve Kış Bahçesi': [
+    'Cam Filmi Uygulama', 'Güneş Kontrol Cam Filmi', 'Güvenlik Cam Filmi',
+    'Dekoratif Cam Filmi', 'Cam Filmi Sökme', 'Kış Bahçesi Yapımı',
+    'Kış Bahçesi Cam Sistemi', 'Kış Bahçesi Kapatma',
+    'Kış Bahçesi Bakım ve Tadilat'
+  ],
+  'Cam ve Ayna Hizmetleri': [
+    'Cam Balkon', 'Cam Değişimi', 'Ayna Montajı', 'Duş Camı Montajı',
+    'Isıcam Değişimi', 'Kırık Cam Değişimi', 'Giyotin Cam Montajı'
+  ],
+  'Kapı Sistemleri': [
+    'Çelik Kapı İmalatı', 'Çelik Kapı Değişimi',
+    'Çelik Kapı Kilit Değişimi', 'Çelik Kapı Kasa Değişimi',
+    'İç Kapı Montajı', 'İç Kapı İmalatı', 'Çelik Kapı Montajı',
+    'Çelik Kapı Tamiri', 'Kapı Tamiri', 'Kapı Menteşe Ayarı',
+    'Sürgülü Kapı Montajı'
+  ],
+  'Kepenk Sistemleri': [
+    'Otomatik Kepenk', 'Otomatik Kepenk Montajı', 'Otomatik Kepenk Tamiri',
+    'Otomatik Kepenk Servisi', 'Garaj Kepengi'
+  ],
+  'Endüstriyel Yapı & Kurulum': [
+    'Fabrika Kurulumu', 'Fabrika Montajı', 'Endüstriyel Makine Montajı',
+    'Üretim Tesisi Kurulumu'
+  ],
+  'Cam & Alüminyum': [
+    'Cam Tavan Sistemleri', 'Lamine Cam', 'Masa Camı İmalatı',
+    'Ofis Cam Bölme', 'Dekoratif Ayna Yapımı'
+  ],
+  'Kapı & Pencere': [
+    'Fotoselli Otomatik Kapı', 'Garaj Kapı Sistemleri'
+  ],
+  'Pergola & Gölgelendirme': [
+    'Kış Bahçesi Sistemleri', 'Çardak & Kamelya'
+  ],
+  'Zemin & Beton': [
+    'Baskı Beton', 'Hazır Beton', 'İnşaat Temeli'
+  ],
+  'Sauna, Hamam & Spa': [
+    'Sauna Yapımı', 'Hamam Yapımı', 'Jakuzi', 'Spa Yapımı'
+  ],
+  'Jeneratör Servisi': [
+    'Jeneratör Servisi', 'Jeneratör Bakımı', 'Jeneratör Arıza Onarımı',
+    'Jeneratör Montajı', 'Jeneratör Devreye Alma'
+  ],
+  'Kompresör ve Basınçlı Hava Sistemleri': [
+    'Kompresör Servisi', 'Kompresör Bakımı', 'Kompresör Tamiri',
+    'Kompresör Montajı', 'Basınçlı Hava Sistemi Kurulumu',
+    'Basınçlı Hava Hattı Bakımı'
+  ],
+  'Endüstriyel Makine ve Ekipman Servisi': [
+    'Endüstriyel Makine Bakımı', 'Endüstriyel Makine Arıza Tespiti',
+    'Endüstriyel Makine Tamiri', 'Makine Kurulum ve Devreye Alma',
+    'Pompa Servisi', 'Endüstriyel Yıkama Makinesi Servisi'
+  ],
+  'Endüstriyel Otomasyon ve Kontrol': [
+    'PLC Programlama', 'PLC Arıza ve Bakım', 'Otomasyon Panosu Yapımı',
+    'Otomasyon Panosu Revizyonu', 'Frekans İnverteri Kurulumu',
+    'Endüstriyel Otomasyon Devreye Alma'
+  ],
   'Ayakkabı ve Deri İşleri': [
     'Ayakkabı Tamiri', 'Bot Tamiri', 'Çizme Tamiri',
     'Spor Ayakkabı Tamiri', 'Sneaker Tamiri', 'Ayakkabı Boyama',
     'Ayakkabı Temizleme', 'Ayakkabı Bakımı', 'Ayakkabı Restorasyonu',
-    'Ayakkabı Yapımı', 'Çanta Tamiri', 'Çanta Yapımı',
-    'Çanta Temizleme', 'Çanta Boyama', 'Çanta Restorasyonu',
-    'Deri Tamiri', 'Deri Ürün Yapımı', 'Deri Boyama', 'Deri Temizleme',
-    'Deri Bakımı', 'Deri Restorasyonu', 'Kemer Tamiri', 'Kemer Yapımı',
-    'Cüzdan Tamiri', 'Cüzdan Yapımı'
-  ],
-  'Terzilik ve Dikiş': [
-    'Perde Dikimi', 'Perde Tadilatı', 'Perde Temizleme',
-    'Perde Ölçüsü Alma', 'Perde Montajı', 'Stor Perde',
-    'Fon Perde Dikimi', 'Fason Dikim', 'Seri Dikim', 'Numune Dikimi',
-    'Kalıp Hazırlama', 'Özel Ölçü Kalıp Hazırlama', 'Overlok Hizmeti',
-    'Reçme Hizmeti', 'Tekstil Ütüleme', 'Tekstil Paketleme',
-    'Triko Tamiri', 'Triko Yapımı', 'Triko Yenileme', 'Triko Tadilatı',
-    'Örgü Yapımı', 'Kazak Örme', 'Hırka Örme', 'Bebek Örgüsü',
-    'Örgü Kıyafet Tamiri', 'Nakış', 'El Nakışı', 'Bilgisayarlı Nakış',
-    'Logo Nakışı', 'Kişiye Özel Nakış', 'Monogram', 'Tekstil İşleme',
-    'Piko', 'İlik Açma', 'Kumaş Dokuma', 'Kumaş Kesimi',
-    'Kumaş Tamiri'
+    'Ayakkabı Yapımı', 'Çanta Tamiri', 'Çanta Yapımı', 'Çanta Temizleme',
+    'Çanta Boyama', 'Çanta Restorasyonu', 'Deri Tamiri',
+    'Deri Ürün Yapımı', 'Deri Boyama', 'Deri Temizleme', 'Deri Bakımı',
+    'Deri Restorasyonu', 'Kemer Tamiri', 'Kemer Yapımı', 'Cüzdan Tamiri',
+    'Cüzdan Yapımı', 'Çanta Fermuar Değişimi', 'Deri/Süet Temizliği',
+    'Deri/Süet Boyama', 'Deri Ceket Tadilatı', 'Valiz Tekerlek Değişimi'
   ],
   'Ev Tekstili': [
     'Yorgan Dikimi', 'Yorgan Yapımı', 'Yorgan Yenileme',
     'Yorgan İçi Değişimi', 'Yatak Yenileme', 'Yatak Dolgusu Yenileme',
     'Yatak Tamiri', 'Halı Tamiri', 'Halı Dokuma', 'Halı Restorasyonu',
-    'Halı Saçak Yenileme', 'Halı Overlok', 'Kilim Tamiri',
-    'Kilim Dokuma', 'Kilim Restorasyonu'
+    'Halı Saçak Yenileme', 'Halı Overlok', 'Kilim Tamiri', 'Kilim Dokuma',
+    'Kilim Restorasyonu', 'Kırlent Dikimi', 'Masa Örtüsü Dikimi',
+    'Nevresim Dikimi', 'Battaniye Dikimi', 'Perde Montajı ve Sökümü'
   ],
-
-  // ══════════════════════════════════════════════════════════════
-  //  PROFESYONEL / OFİS HİZMETLERİ (16 Ağustos'ta eklendi)
-  // ══════════════════════════════════════════════════════════════
-  //
-  // ⚠ BU BEŞ KATEGORİ SAHA İŞİ DEĞİL, MESLEK HİZMETİDİR.
-  //
-  // Katalogun geri kalanı ustalık işlerinden oluşur (tesisat, boya,
-  // nakliyat). Bunlar ise büro hizmetleridir: iş genellikle uzaktan
-  // veya danışmanın ofisinde yapılır. Yapı aynıdır — kategori ve
-  // içinde hizmetler — ayrı bir mekanizma GEREKMEZ.
-  //
-  // ⚠ KATALOGLA ÇAKIŞMA YOK: 123 hizmetin hiçbiri mevcut 517
-  // hizmetten biriyle aynı adı taşımıyor (ölçüldü).
+  'Perde Hizmetleri': [
+    'Perde Dikimi', 'Perde Tadilatı', 'Perde Temizleme',
+    'Perde Ölçüsü Alma', 'Perde Montajı', 'Stor Perde', 'Fon Perde Dikimi'
+  ],
+  'Örgü ve Triko': [
+    'Triko Tamiri', 'Triko Yapımı', 'Triko Yenileme', 'Triko Tadilatı',
+    'Örgü Yapımı', 'Kazak Örme', 'Hırka Örme', 'Bebek Örgüsü',
+    'Örgü Kıyafet Tamiri'
+  ],
+  'Nakış ve Tekstil İşleme': [
+    'Nakış', 'El Nakışı', 'Bilgisayarlı Nakış', 'Logo Nakışı',
+    'Kişiye Özel Nakış', 'Monogram', 'Tekstil İşleme', 'Piko', 'İlik Açma'
+  ],
+  'Kumaş ve Tekstil İşleme': [
+    'Kumaş Dokuma', 'Kumaş Kesimi', 'Kumaş Tamiri', 'Kumaş Baskı',
+    'Kumaş Boyama'
+  ],
+  'Terzilik ve Dikim': [
+    'Fason Dikim', 'Seri Dikim', 'Numune Dikimi', 'Kalıp Hazırlama',
+    'Özel Ölçü Kalıp Hazırlama', 'Overlok Hizmeti', 'Reçme Hizmeti',
+    'Tekstil Ütüleme', 'Tekstil Paketleme', 'Kişiye Özel Kıyafet Dikimi',
+    'Gelinlik Dikimi', 'Abiye Dikimi', 'Damatlık Dikimi',
+    'Üniforma Dikimi', 'Kostüm Dikimi', 'Fermuar Değişimi',
+    'Düğme Değişimi', 'Astar Yenileme'
+  ],
+  'Mimari Proje': [
+    'Mimari Proje', 'Ruhsat Projesi', 'Röleve Projesi',
+    'Restorasyon Projesi', 'İç Mekân Projesi', 'Vaziyet Planı',
+    '3D Mimari Modelleme'
+  ],
+  'Statik ve Yapı Projeleri': [
+    'Statik Proje', 'Çelik Yapı Projesi', 'Betonarme Yapı Projesi',
+    'Yapı Statiği Hesabı', 'Taşıyıcı Sistem Analizi',
+    'Güçlendirme Projesi', 'Deprem Performans Analizi',
+    'Yapı Hasar Tespiti'
+  ],
+  'Elektrik Projeleri': [
+    'Elektrik Projesi', 'Elektrik Tesisat Projesi', 'Aydınlatma Projesi',
+    'Topraklama Projesi', 'Paratoner Projesi', 'Yangın Algılama Projesi'
+  ],
+  'Mekanik Projeler': [
+    'Mekanik Tesisat Projesi', 'Isıtma Projesi', 'Sıhhi Tesisat Projesi',
+    'Havalandırma Projesi', 'Klima Projesi', 'Yangın Tesisatı Projesi'
+  ],
+  'Harita ve Ölçüm': [
+    'Harita Ölçümü ve Aplikasyon', 'Plankote', 'Halihazır Harita',
+    'Kotlu Kroki', 'Parsel Ölçümü', 'İmar Uygulaması', 'Arazi Ölçümü'
+  ],
+  'Zemin ve Jeoteknik': [
+    'Zemin Etüdü', 'Jeolojik Etüt', 'Jeoteknik Etüt', 'Zemin Sondajı',
+    'Zemin Analizi'
+  ],
+  'Enerji ve Yapı Belgelendirme': [
+    'Enerji Kimlik Belgesi', 'Enerji Performans Analizi'
+  ],
+  'Proje Danışmanlığı': [
+    'Proje Yönetimi', 'Teknik Şartname Hazırlama', 'Metraj ve Keşif',
+    'Yaklaşık Maliyet Hesabı', 'Proje Kontrol ve Teknik Danışmanlık'
+  ],
+  'Yapı Denetim': [
+    'Yapı Denetim Hizmeti', 'Yapı Denetim Proje Kontrolü',
+    'İnşaat Kontrolü', 'Hakediş Kontrolü',
+    'Beton ve Yapı Malzemesi Kontrolü'
+  ],
   'Avukatlık ve Hukuk': [
     'Hukuki Danışmanlık', 'Dava Danışmanlığı', 'Dava Takibi',
     'İcra Takibi', 'Alacak Takibi', 'Sözleşme Hazırlama',
     'Sözleşme İnceleme', 'İş Hukuku Danışmanlığı',
     'İşçi Hakları Danışmanlığı', 'İşveren Hukuku Danışmanlığı',
-    'Kira Hukuku', 'Gayrimenkul Hukuku', 'Aile Hukuku',
-    'Boşanma Davası', 'Miras Hukuku', 'Tüketici Hukuku',
-    'Ceza Hukuku', 'Ticaret Hukuku', 'Şirketler Hukuku',
-    'Vergi Hukuku', 'Bilişim Hukuku', 'KVKK Danışmanlığı',
-    'İş Kazası Hukuku', 'Tazminat Davaları', 'Arabuluculuk',
-    'Marka ve Patent Hukuku', 'Fikri Mülkiyet Hukuku',
-    'Hukuki Belge Hazırlama', 'Hukuki Belge İnceleme'
+    'Kira Hukuku', 'Gayrimenkul Hukuku', 'Aile Hukuku', 'Boşanma Davası',
+    'Miras Hukuku', 'Tüketici Hukuku', 'Ceza Hukuku', 'Ticaret Hukuku',
+    'Şirketler Hukuku', 'Vergi Hukuku', 'Bilişim Hukuku',
+    'KVKK Danışmanlığı', 'İş Kazası Hukuku', 'Tazminat Davaları',
+    'Arabuluculuk', 'Marka ve Patent Hukuku', 'Fikri Mülkiyet Hukuku',
+    'Hukuki Belge Hazırlama', 'Hukuki Belge İnceleme',
+    'İş Hukuku Uyuşmazlıkları', 'İcra ve İflas Hukuku',
+    'Tüketici Uyuşmazlıkları', 'Gayrimenkul ve Kira Uyuşmazlıkları',
+    'Miras ve Veraset İşlemleri', 'Aile ve Boşanma Hukuku',
+    'Ceza Hukuku Danışmanlığı', 'Ticaret ve Şirketler Hukuku',
+    'Arabuluculuk Hizmeti'
   ],
   'Muhasebe ve Mali Müşavirlik': [
     'Ön Muhasebe', 'Genel Muhasebe', 'Mali Müşavirlik',
-    'Vergi Danışmanlığı', 'Vergi Beyannamesi Hazırlama',
-    'KDV Beyannamesi', 'Gelir Vergisi İşlemleri',
-    'Kurumlar Vergisi İşlemleri', 'Geçici Vergi İşlemleri',
-    'E-Fatura İşlemleri', 'E-Arşiv İşlemleri', 'E-Defter İşlemleri',
-    'SGK İşlemleri', 'Bordro Hazırlama', 'Personel Özlük İşlemleri',
-    'Şirket Kuruluş İşlemleri', 'Şahıs Şirketi Kuruluşu',
-    'Limited Şirket Kuruluşu', 'Anonim Şirket Kuruluşu',
-    'Şirket Kapanış İşlemleri', 'Vergi Mükellefiyeti İşlemleri',
-    'Muhasebe Kayıt İşlemleri', 'Finansal Raporlama',
-    'Maliyet Analizi', 'Muhasebe Danışmanlığı',
-    'Mali Denetim Danışmanlığı'
+    'Vergi Danışmanlığı', 'Vergi Beyannamesi Hazırlama', 'KDV Beyannamesi',
+    'Gelir Vergisi İşlemleri', 'Kurumlar Vergisi İşlemleri',
+    'Geçici Vergi İşlemleri', 'E-Fatura İşlemleri', 'E-Arşiv İşlemleri',
+    'E-Defter İşlemleri', 'SGK İşlemleri', 'Bordro Hazırlama',
+    'Personel Özlük İşlemleri', 'Şirket Kuruluş İşlemleri',
+    'Şahıs Şirketi Kuruluşu', 'Limited Şirket Kuruluşu',
+    'Anonim Şirket Kuruluşu', 'Şirket Kapanış İşlemleri',
+    'Vergi Mükellefiyeti İşlemleri', 'Muhasebe Kayıt İşlemleri',
+    'Finansal Raporlama', 'Maliyet Analizi', 'Muhasebe Danışmanlığı',
+    'Mali Denetim Danışmanlığı', 'Şirket Kuruluş Danışmanlığı',
+    'E-Fatura ve E-Arşiv Danışmanlığı', 'Bordro ve Özlük Hizmetleri',
+    'Mali Müşavirlik Danışmanlığı', 'Vergi Uyuşmazlık Danışmanlığı'
   ],
   'İş Güvenliği ve İSG': [
-    'İş Güvenliği Uzmanlığı', 'İSG Danışmanlığı',
-    'Risk Değerlendirmesi', 'İş Yeri Risk Analizi',
-    'Acil Durum Eylem Planı', 'Acil Durum Planı Hazırlama',
-    'Acil Durum Tatbikatı', 'İSG Eğitimleri',
+    'İş Güvenliği Uzmanlığı', 'İSG Danışmanlığı', 'Risk Değerlendirmesi',
+    'İş Yeri Risk Analizi', 'Acil Durum Eylem Planı',
+    'Acil Durum Planı Hazırlama', 'Acil Durum Tatbikatı', 'İSG Eğitimleri',
     'Çalışan İş Güvenliği Eğitimi', 'İşe Giriş İSG Eğitimi',
     'Yangın Eğitimi', 'Tahliye Eğitimi', 'İş Kazası İnceleme',
-    'İş Kazası Raporlama', 'İSG Saha Denetimi',
-    'İSG Dokümantasyonu', 'İSG Kurul Danışmanlığı',
-    'İş Hijyeni Danışmanlığı', 'Periyodik Kontrol Organizasyonu',
-    'Risk Analizi Güncelleme', 'İSG Mevzuat Danışmanlığı',
-    'OSGB Hizmetleri'
+    'İş Kazası Raporlama', 'İSG Saha Denetimi', 'İSG Dokümantasyonu',
+    'İSG Kurul Danışmanlığı', 'İş Hijyeni Danışmanlığı',
+    'Periyodik Kontrol Organizasyonu', 'Risk Analizi Güncelleme',
+    'İSG Mevzuat Danışmanlığı', 'OSGB Hizmetleri',
+    'İSG Risk Değerlendirmesi', 'İş Yeri İSG Denetimi'
   ],
   'Marka ve Patent': [
     'Marka Araştırması', 'Marka Başvurusu', 'Marka Tescili',
-    'Marka Yenileme', 'Marka Devir İşlemleri',
-    'Marka İtiraz İşlemleri', 'Marka İzleme',
-    'Marka Koruma Danışmanlığı', 'Patent Araştırması',
-    'Patent Başvurusu', 'Patent Tescili',
-    'Faydalı Model Başvurusu', 'Faydalı Model Tescili',
-    'Tasarım Tescili', 'Endüstriyel Tasarım Başvurusu',
-    'Patent Yenileme', 'Patent Devir İşlemleri',
-    'Patent İtiraz İşlemleri', 'Fikri Mülkiyet Danışmanlığı',
-    'Telif Hakkı Danışmanlığı', 'Lisanslama Danışmanlığı'
+    'Marka Yenileme', 'Marka Devir İşlemleri', 'Marka İtiraz İşlemleri',
+    'Marka İzleme', 'Marka Koruma Danışmanlığı', 'Patent Araştırması',
+    'Patent Başvurusu', 'Patent Tescili', 'Faydalı Model Başvurusu',
+    'Faydalı Model Tescili', 'Tasarım Tescili',
+    'Endüstriyel Tasarım Başvurusu', 'Patent Yenileme',
+    'Patent Devir İşlemleri', 'Patent İtiraz İşlemleri',
+    'Fikri Mülkiyet Danışmanlığı', 'Telif Hakkı Danışmanlığı',
+    'Lisanslama Danışmanlığı', 'Marka İtirazı'
   ],
   'Sigorta': [
     'Sigorta Danışmanlığı', 'Sigorta Poliçesi Karşılaştırma',
     'Konut Sigortası', 'DASK', 'İşyeri Sigortası',
     'Ticari İşletme Sigortası', 'Kasko', 'Trafik Sigortası',
     'Sağlık Sigortası', 'Tamamlayıcı Sağlık Sigortası',
-    'Özel Sağlık Sigortası', 'Hayat Sigortası',
-    'Ferdi Kaza Sigortası', 'Seyahat Sigortası',
-    'İşveren Sorumluluk Sigortası', 'Mesleki Sorumluluk Sigortası',
-    'Nakliyat Sigortası', 'Yangın Sigortası', 'Tarım Sigortası',
-    'Makine Kırılması Sigortası', 'Elektronik Cihaz Sigortası',
-    'Sigorta Hasar Danışmanlığı', 'Hasar Dosyası Takibi',
-    'Poliçe Yenileme', 'Kurumsal Sigorta Danışmanlığı'
+    'Özel Sağlık Sigortası', 'Hayat Sigortası', 'Ferdi Kaza Sigortası',
+    'Seyahat Sigortası', 'İşveren Sorumluluk Sigortası',
+    'Mesleki Sorumluluk Sigortası', 'Nakliyat Sigortası',
+    'Yangın Sigortası', 'Tarım Sigortası', 'Makine Kırılması Sigortası',
+    'Elektronik Cihaz Sigortası', 'Sigorta Hasar Danışmanlığı',
+    'Hasar Dosyası Takibi', 'Poliçe Yenileme',
+    'Kurumsal Sigorta Danışmanlığı'
+  ],
+  'Ofis & İş Yeri Hizmetleri': [
+    'Hazır Ofis', 'Sanal Ofis', 'E-Ofis', 'Toplantı Odası Kiralama',
+    'Paylaşımlı Ofis', 'Sekreterya Hizmeti', 'Çağrı Karşılama Hizmeti'
+  ],
+  'Dış Ticaret & Gümrük': [
+    'Gümrük Müşaviri', 'Gümrük Danışmanlığı', 'İthalat İşlemleri',
+    'İhracat İşlemleri', 'Gümrük İşlemleri Danışmanlığı'
+  ],
+  'Teşvik & Hibe Danışmanlığı': [
+    'KOSGEB Danışmanlığı', 'Teşvik Danışmanlığı', 'Hibe Danışmanlığı',
+    'Yatırım Teşvik Danışmanlığı', 'Devlet Destekleri Danışmanlığı'
+  ],
+  'Hasta Bakımı': [
+    'Günlük Hasta Bakımı', 'Yatılı Hasta Bakımı', 'Hasta Öz Bakım',
+    'Hasta Beslenme', 'Hasta Hijyen ve Banyo',
+    'Hasta Giyinme ve Günlük Yaşam', 'Hasta Mobilizasyon'
+  ],
+  'Yaşlı Bakımı': [
+    'Günlük Yaşlı Bakımı', 'Yatılı Yaşlı Bakımı', 'Yaşlı Öz Bakım',
+    'Yaşlı Beslenme', 'Yaşlı Hijyen ve Banyo',
+    'Yaşlı Giyinme ve Günlük Yaşam', 'Yaşlı Gezdirme',
+    'Alzheimer ve Demans Bakımı', 'Yaşlı Refakat',
+    'Yaşlı Alışveriş Refakati', 'Yaşlı Randevu Refakati',
+    'Yaşlı Sosyal Aktivite Refakati'
+  ],
+  'Evde Hasta Bakımı': [
+    'Evde Günlük Hasta Bakımı', 'Evde Hasta Öz Bakım',
+    'Evde Hasta Beslenme', 'Evde Hasta Hijyen ve Banyo',
+    'Evde Hasta Giyinme', 'Evde Hasta Mobilizasyon', 'Evde Hasta Refakati',
+    'Evde Hasta Günlük Yaşam Yardımı', 'Evde Hasta Alışveriş Yardımı',
+    'Evde Hasta Sosyal Refakati'
+  ],
+  'Evde Yaşlı Bakımı': [
+    'Evde Günlük Yaşlı Bakımı', 'Evde Yaşlı Öz Bakım',
+    'Evde Yaşlı Beslenme', 'Evde Yaşlı Hijyen ve Banyo',
+    'Evde Yaşlı Giyinme', 'Evde Yaşlı Mobilizasyon', 'Evde Yaşlı Refakati',
+    'Evde Alzheimer ve Demans Bakımı', 'Evde Yaşlı Günlük Yaşam Yardımı',
+    'Evde Yaşlı Alışveriş Yardımı', 'Evde Yaşlı Sosyal Refakati'
+  ],
+  'Hastane Refakatçisi': [
+    'Hastane Hasta Refakati', 'Hastane Yaşlı Refakati',
+    'Hastane Gece Refakati', 'Hastane Gündüz Refakati',
+    'Hastane Yatılı Refakat', 'Hastane Taburculuk Refakati'
+  ],
+  'Evde Refakat': [
+    'Gece Evde Refakat', 'Gündüz Evde Refakat', 'Yatılı Evde Refakat',
+    'Randevu ve Hastane Gidiş Refakati', 'Alışveriş Refakati',
+    'Günlük İşlere Refakat', 'Sosyal Aktivite Refakati'
+  ],
+  'Günlük Yaşam Desteği': [
+    'Kişisel Bakım', 'Banyo ve Hijyen', 'Giyinme ve Soyunma',
+    'Beslenme ve Yemek', 'Ev İçinde Günlük Yaşam Yardımı',
+    'Alışveriş ve Temel İhtiyaç Yardımı',
+    'Yürüyüş ve Sosyal Aktivite Refakati',
+    'Randevu ve Günlük İşlere Refakat'
+  ],
+  'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları': [
+    'Kupa Uygulaması (Hacamat)', 'Sülük Uygulaması (Hirudoterapi)',
+    'Akupunktur Uygulaması', 'Apiterapi Uygulaması',
+    'Fitoterapi Uygulaması', 'Larva (Maggot) Uygulaması',
+    'Osteopati Uygulaması', 'Müzikterapi Uygulaması',
+    'Refleksoloji Uygulaması', 'Hipnoz Uygulaması', 'Homeopati Uygulaması',
+    'Mezoterapi Uygulaması', 'Ozon Uygulaması', 'Proloterapi Uygulaması',
+    'Kayropraktik Uygulaması'
+  ],
+  'Tarım Danışmanlığı': [
+    'Tarım Danışmanlığı', 'Ziraat Danışmanlığı',
+    'Tarımsal Sulama Danışmanlığı'
+  ],
+  'Tarla ve Bahçe İşleri': [
+    'Tarla Sürme', 'Toprak Hazırlama', 'Ekim Hizmeti', 'Hasat Hizmeti',
+    'Budama', 'Aşılama', 'Ot Biçme', 'Çapalama', 'Meyve Toplama'
+  ],
+  'Tarımsal Sulama': [
+    'Tarımsal Sulama Sistemi Kurulumu', 'Tarımsal Sulama Sistemi Bakımı',
+    'Damla Sulama Sistemi', 'Yağmurlama Sulama Sistemi'
+  ],
+  'Bitki Koruma ve İlaçlama': [
+    'Tarım İlaçlama', 'Bitki Hastalıkları ve Zararlılarıyla Mücadele',
+    'Zirai İlaçlama', 'Sera İlaçlama'
+  ],
+  'Hayvancılık Hizmetleri': [
+    'Büyükbaş Hayvancılık Danışmanlığı',
+    'Küçükbaş Hayvancılık Danışmanlığı'
+  ],
+  'Veteriner Hizmetleri': [
+    'Veteriner Hekim', 'Evde Veteriner Hizmeti', 'Hayvan Aşılama',
+    'Hayvan Sağlığı Danışmanlığı'
+  ],
+  'Tur Organizasyon': [
+    'Tur Organizasyonu', 'Günübirlik Tur', 'Kültür Turu', 'Doğa Turu',
+    'Tekne Turu', 'Özel Tur Organizasyonu', 'Balık Turu'
+  ],
+  'Konaklama': [
+    'Otel Rezervasyonu', 'Pansiyon Rezervasyonu', 'Villa Kiralama',
+    'Günlük Ev Kiralama', 'Bungalov Kiralama', 'Apart Konaklama'
+  ],
+  'Transfer ve Ulaşım': [
+    'Havalimanı Transferi', 'VIP Transfer', 'Şoförlü Araç Hizmeti',
+    'Turizm Transferi', 'Özel Araç Tahsisi'
+  ],
+  'Seyahat Danışmanlığı': [
+    'Seyahat Planlama', 'Tatil Planlama', 'Yurtiçi Tatil Organizasyonu',
+    'Yurtdışı Tatil Organizasyonu'
+  ],
+  'Rehberlik': [
+    'Profesyonel Turist Rehberi', 'Özel Tur Rehberi', 'Şehir Turu Rehberi',
+    'Müze ve Kültür Turu Rehberi'
+  ],
+  'Vize & Seyahat İşlemleri': [
+    'Vize Danışmanı', 'Vize Başvurusu', 'Vize Evrak Hazırlama',
+    'Vize Randevu İşlemleri'
+  ],
+  'Emlak Danışmanlığı': [
+    'Konut Alım Satım Danışmanlığı', 'Konut Kiralama Danışmanlığı',
+    'İşyeri Alım Satım Danışmanlığı', 'İşyeri Kiralama Danışmanlığı',
+    'Arsa Alım Satım Danışmanlığı', 'Gayrimenkul Danışmanlığı',
+    'Emlak Değerleme Danışmanlığı'
+  ],
+  'Site ve Apartman Yönetimi': [
+    'Site Yönetimi', 'Apartman Yönetimi', 'Profesyonel Apartman Yönetimi',
+    'Profesyonel Site Yönetimi', 'Aidat Yönetimi',
+    'Site Yönetim Danışmanlığı'
+  ],
+  'Gayrimenkul Hizmetleri': [
+    'Emlak Drone Çekimi', 'Gayrimenkul Kiralama Yönetimi',
+    'Kiralık Ev Yönetimi', 'Gayrimenkul İlan Yönetimi',
+    'Gayrimenkul Fotoğraf Çekimi', 'Gayrimenkul Video Çekimi'
+  ],
+  'Özel Güvenlik': [
+    'Özel Güvenlik Hizmeti', 'Site Özel Güvenlik', 'İşyeri Özel Güvenlik',
+    'Etkinlik Özel Güvenlik', 'Organizasyon Güvenliği'
+  ],
+  'Yakın Koruma': [
+    'Yakın Koruma', 'Kişisel Koruma', 'Etkinlik Yakın Koruma'
+  ],
+  'Güvenlik Personeli': [
+    'Güvenlik Görevlisi', 'Gece Güvenliği', 'Gündüz Güvenliği',
+    'Özel Etkinlik Güvenliği'
+  ],
+  'Kartvizit & Kurumsal Baskı': [
+    'Kartvizit Baskı', 'Antetli Kağıt Baskı', 'Zarf Baskı', 'Fatura Baskı',
+    'İrsaliye Baskı', 'Kaşe Yapımı'
+  ],
+  'Broşür & Tanıtım Baskıları': [
+    'Broşür Baskı', 'El İlanı Baskı', 'Flyer Baskı', 'Katalog Baskı',
+    'Afiş Baskı', 'Poster Baskı'
+  ],
+  'Davetiye & Özel Gün Baskıları': [
+    'Davetiye Baskı', 'Düğün Davetiyesi Baskı', 'Nişan Davetiyesi Baskı',
+    'Doğum Günü Davetiyesi Baskı'
+  ],
+  'Etiket & Ambalaj Baskıları': [
+    'Etiket Baskı', 'Sticker Baskı', 'Ürün Etiketi Baskı', 'Ambalaj Baskı',
+    'Kutu Baskı', 'Poşet Baskı'
+  ],
+  'Promosyon Baskıları': [
+    'Magnet Baskı', 'Takvim Baskı', 'Bloknot Baskı', 'Ajanda Baskı',
+    'Promosyon Ürün Baskısı'
+  ],
+  'Kitap & Yayın Baskıları': [
+    'Kitap Baskı', 'Dergi Baskı', 'Tez Baskı', 'Ciltleme'
+  ],
+  '3D Baskı & Üretim': [
+    '3D Baskı', '3D PLA Baskı', '3D ABS Baskı', '3D PETG Baskı',
+    '3D Prototip Baskı', 'Kişiye Özel 3D Baskı', '3D Modelden Baskı',
+    '3D Yedek Parça Baskı'
+  ],
+  'Tabela & Reklam Uygulamaları': [
+    'Tabela', 'Işıklı Tabela', 'Kutu Harf Tabela', 'Kompozit Tabela',
+    'Branda Tabela', 'Tabela Montajı'
+  ],
+  'Geri Dönüşüm Hizmetleri': [
+    'Tekstil Geri Dönüşüm', 'Plastik Geri Dönüşüm',
+    'Kağıt ve Karton Geri Dönüşüm', 'Metal Geri Dönüşüm',
+    'Elektronik Atık Geri Dönüşüm', 'Ahşap Geri Dönüşüm',
+    'Tekstil Atık Toplama', 'Plastik Atık Toplama',
+    'Atık Ayrıştırma ve Sınıflandırma', 'Cam Geri Dönüşüm'
+  ],
+  'Bebek Bakımı': [
+    'Bebek Bakıcısı', 'Saatlik Bebek Bakımı', 'Gündüzlü Bebek Bakıcısı',
+    'Yatılı Bebek Bakıcısı', 'Yenidoğan Bebek Bakımı', 'İkiz Bebek Bakımı'
+  ],
+  'Çocuk Bakımı': [
+    'Çocuk Bakıcısı', 'Saatlik Çocuk Bakımı', 'Gündüzlü Çocuk Bakıcısı',
+    'Yatılı Çocuk Bakıcısı', 'Çocuk Bakımı ve Ev Yardımcısı',
+    'Okul Sonrası Çocuk Bakımı'
+  ],
+  'Oyun & Gelişim Desteği': [
+    'Oyun Ablası / Oyun Abisi', 'Çocuk Etkinlik ve Oyun Desteği',
+    'Ebeveynli Oyun Grubu'
+  ],
+  'Çocuk Refakat ve Destek': [
+    'Okul Gidiş-Geliş Refakati', 'Çocuk Etkinlik Refakati',
+    'Çocuk Gezi Refakati', 'Gölge Öğretmen'
+  ],
+  'Çiçekçilik': [
+    'Çiçekçi', 'Buket Hazırlama', 'Çiçek Aranjmanı', 'Çelenk Hazırlama',
+    'Özel Gün Çiçekleri', 'Açılış Çiçekleri', 'Düğün Çiçekleri',
+    'Çiçek Gönderme'
+  ],
+  'Asistanlık & Günlük Destek': [
+    'Günlük Asistan', 'Kişisel Asistan', 'Özel Asistan', 'Sanal Asistan',
+    'Yönetici Asistanı', 'Randevu ve Takvim Yönetimi',
+    'Evrak ve Dosya Takibi', 'Günlük İş Takibi', 'Veri Girişi'
+  ],
+  'Dedektiflik & Araştırma': [
+    'Özel Dedektif', 'Kişi Araştırması', 'Adres Tespiti',
+    'Kayıp Kişi Araştırması', 'Ticari Araştırma', 'Saha Araştırması',
+    'Delil Toplama',
+    '24. Diğer Hizmetler altında 3 yeni alt kategori eklendi.',
+    'Çiçekçilik, Asistanlık & Günlük Destek, Dedektiflik & Araştırma eklendi.'
+  ],
+  'Araştırma & Saha Hizmetleri': [
+    'Pazar Araştırması', 'Piyasa Araştırması', 'Gizli Müşteri', 'Anket',
+    'Anketör Hizmeti', 'Müşteri Memnuniyeti Araştırması',
+    'Müşteri Deneyimi Araştırması', 'Rakip Araştırması',
+    'Ürün Araştırması'
+  ],
+  'Günlük Eleman & Personel Desteği': [
+    'Günlük Eleman', 'Günlük Yardımcı Eleman', 'Geçici Personel',
+    'Kısa Süreli Personel', 'İş Gücü Desteği', 'Depo Yardımcı Personeli',
+    'Yükleme / Boşaltma Personeli', 'Genel Yardımcı Personel',
+    '24. Diğer Hizmetler: 5 yeni alt kategori.',
+    'Mevcut yapı ve standart kutu/sayfa düzeni korunmuştur.'
   ],
 };
 

@@ -50,7 +50,11 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/ev.jpg',
     ikon: 'assets/svg/alanlar/ev.svg',
     kategoriler: [
-      'Bahçe ve Peyzaj', 'Havuz Yapım ve Bakım'
+      'Bahçe ve Peyzaj', 'Havuz Yapım ve Bakım', 'Su Tesisatı',
+      'Doğalgaz', 'Kombi Servis', 'Isıtma Sistemleri', 'Elektrik',
+      'Güvenlik Sistemleri', 'Klima Montaj ve Servis',
+      'Çilingir ve Kilit', 'Uydu ve Anten Sistemleri',
+      'İnternet ve Ağ Kurulumu', 'Güneş Enerjisi Sistemleri'
     ],
   ),
   HizmetAlani(
@@ -60,18 +64,21 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/arac.jpg',
     ikon: 'assets/svg/alanlar/arac.svg',
     kategoriler: [
-      'Oto Servis ve Bakım', 'Araç Temizlik ve Detaylı Bakım',
-      'Oto Çekici ve Yol Yardım'
+      'Oto Çekici ve Yol Yardım', 'Oto Servis ve Bakım',
+      'Araç Temizlik ve Detaylı Bakım', 'Oto Ekspertiz',
+      'Kaporta ve Boya', 'Lastik ve Jant Hizmetleri',
+      'Oto Görsel & Koruma Hizmetleri', 'Oto Bakım & Servis'
     ],
   ),
   HizmetAlani(
-    ad: 'Beyaz Eşya & Elektronik Servis',
+    ad: 'Beyaz Eşya & Elektronik',
     aciklama:
-        'Beyaz eşya ve cihaz tamiri',
+        'Beyaz eşya ve cihaz',
     gorsel: 'assets/alanlar/tamir.jpg',
     ikon: 'assets/svg/alanlar/tamir.svg',
     kategoriler: [
-      'Beyaz Eşya Servisi', 'Elektronik Cihaz Tamiri'
+      'Beyaz Eşya Servisi', 'Elektronik Cihaz Tamiri',
+      'Küçük Ev Aletleri'
     ],
   ),
   HizmetAlani(
@@ -82,7 +89,8 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ikon: 'assets/svg/alanlar/temizlik.svg',
     kategoriler: [
       'Temizlik Hizmetleri', 'Halı Yıkama', 'Koltuk ve Döşeme Yıkama',
-      'İlaçlama ve Haşere Kontrolü'
+      'İlaçlama ve Haşere Kontrolü', 'Kuru Temizleme',
+      'Zemin ve Yüzey Temizliği'
     ],
   ),
   HizmetAlani(
@@ -92,17 +100,20 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/tasima.jpg',
     ikon: 'assets/svg/alanlar/tasima.svg',
     kategoriler: [
-      'Nakliyat ve Taşımacılık', 'Kurye ve Küçük Taşıma'
+      'Nakliyat ve Taşımacılık', 'Depolama Hizmetleri',
+      'Kurye ve Küçük Taşıma', 'Personel ve Öğrenci Servisi',
+      'Depolama & Lojistik'
     ],
   ),
   HizmetAlani(
-    ad: 'Güzellik & Kişisel Bakım',
+    ad: 'Güzellik & Bakım & Spor',
     aciklama:
         'Güzellik, bakım ve spor',
     gorsel: 'assets/alanlar/kisisel.jpg',
     ikon: 'assets/svg/alanlar/kisisel.svg',
     kategoriler: [
-      'Güzellik ve Bakım Hizmetleri', 'Spor ve Kişisel Antrenör'
+      'Güzellik ve Bakım Hizmetleri', 'Masaj ve Wellness', 'Spor',
+      'Kişisel Gelişim ve Koçluk'
     ],
   ),
   HizmetAlani(
@@ -123,7 +134,8 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ikon: 'assets/svg/alanlar/egitim.svg',
     kategoriler: [
       'Özel Ders', 'Yabancı Dil Eğitimi', 'Sürücü Eğitimi',
-      'Müzik Dersleri'
+      'Müzik Dersleri', 'Kodlama ve Yazılım Eğitimi',
+      'Teknik ve Hobi Eğitimleri'
     ],
   ),
   HizmetAlani(
@@ -134,7 +146,9 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ikon: 'assets/svg/alanlar/dijital.svg',
     kategoriler: [
       'Yazılım ve Web Hizmetleri', 'Grafik ve Logo Tasarım',
-      'Dijital Pazarlama', 'Fotoğraf Çekimi'
+      'Dijital Pazarlama', 'Video ve Animasyon',
+      'Müzik & Ses Prodüksiyonu', 'Dijital Pazarlama & Reklam',
+      'Video, Ses & Animasyon'
     ],
   ),
   HizmetAlani(
@@ -144,7 +158,9 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/organizasyon.jpg',
     ikon: 'assets/svg/alanlar/organizasyon.svg',
     kategoriler: [
-      'Etkinlik ve Organizasyon'
+      'Etkinlik ve Organizasyon', 'Fotoğraf Çekimi',
+      'Catering ve İkram', 'Etkinlik Personeli', 'Müzik & Eğlence',
+      'Fuar & Stand Hizmetleri'
     ],
   ),
   HizmetAlani(
@@ -154,14 +170,20 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/insaat.jpg',
     ikon: 'assets/svg/alanlar/insaat.svg',
     kategoriler: [
-      'Mutfak Tadilat ve Dolap', 'Banyo Tadilat ve Montaj',
-      'Boya ve Badana', 'Zemin Kaplama', 'Çatı Yapım ve Onarım',
-      'İnşaat ve Kaba Yapı', 'Tadilat ve Yenileme',
+      'İnşaat ve Kaba Yapı', 'Çatı Yapım ve Onarım',
+      'Tadilat ve Yenileme', 'Banyo Tadilat ve Montaj',
+      'Mutfak Tadilat ve Dolap', 'Boya ve Badana',
       'Alçı ve Sıva İşleri', 'Duvar Kağıdı ve Dekorasyon',
-      'Fayans ve Seramik Döşeme', 'Yalıtım ve Mantolama',
-      'PVC ve Alüminyum Doğrama', 'Demir Doğrama ve Kaynak',
-      'Cam Balkon Sistemleri', 'Marangozluk ve Ahşap İşleri',
-      'Mobilya Yapım ve Montaj', 'Kapı Montaj ve Tamir'
+      'Fayans ve Seramik Döşeme', 'Zemin Kaplama',
+      'Yalıtım ve Mantolama', 'PVC ve Alüminyum Doğrama',
+      'Demir Doğrama ve Kaynak', 'Marangozluk ve Ahşap İşleri',
+      'Mobilya Yapım ve Montaj', 'Asansör Montaj ve Bakım',
+      'Havalandırma Sistemleri', 'Çelik Yapı & Prefabrik Yapılar',
+      'Pergola & Gölgelendirme Sistemleri', 'Cam Film ve Kış Bahçesi',
+      'Cam ve Ayna Hizmetleri', 'Kapı Sistemleri', 'Kepenk Sistemleri',
+      'Endüstriyel Yapı & Kurulum', 'Cam & Alüminyum',
+      'Kapı & Pencere', 'Pergola & Gölgelendirme', 'Zemin & Beton',
+      'Sauna, Hamam & Spa'
     ],
   ),
   HizmetAlani(
@@ -171,22 +193,21 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/teknik.jpg',
     ikon: 'assets/svg/alanlar/teknik.svg',
     kategoriler: [
-      'Su Tesisatı', 'Doğalgaz', 'Kombi Servis', 'Isıtma Sistemleri',
-      'Elektrik', 'Güvenlik Sistemleri', 'Klima Montaj ve Servis',
-      'Çilingir ve Kilit', 'Uydu ve Anten Sistemleri',
-      'İnternet ve Ağ Kurulumu',
-      'Kombi Montaj',
-      'Asansör Montaj ve Bakım'
+      'Jeneratör Servisi', 'Kompresör ve Basınçlı Hava Sistemleri',
+      'Endüstriyel Makine ve Ekipman Servisi',
+      'Endüstriyel Otomasyon ve Kontrol'
     ],
   ),
   HizmetAlani(
     ad: 'Giyim & Tekstil',
     aciklama:
-        'Terzilik ve ev tekstili',
+        'Terzilik ve tekstil',
     gorsel: 'assets/alanlar/giyim.jpg',
     ikon: 'assets/svg/alanlar/giyim.svg',
     kategoriler: [
-      'Terzilik ve Dikiş', 'Ayakkabı ve Deri İşleri', 'Ev Tekstili'
+      'Ayakkabı ve Deri İşleri', 'Ev Tekstili', 'Perde Hizmetleri',
+      'Örgü ve Triko', 'Nakış ve Tekstil İşleme',
+      'Kumaş ve Tekstil İşleme', 'Terzilik ve Dikim'
     ],
   ),
   HizmetAlani(
@@ -196,18 +217,126 @@ const List<HizmetAlani> kHizmetAlanlari = [
     gorsel: 'assets/alanlar/muhendislik.jpg',
     ikon: 'assets/svg/alanlar/muhendislik.svg',
     kategoriler: [
-      'Mühendislik ve Proje'
+      'Mimari Proje', 'Statik ve Yapı Projeleri', 'Elektrik Projeleri',
+      'Mekanik Projeler', 'Harita ve Ölçüm', 'Zemin ve Jeoteknik',
+      'Enerji ve Yapı Belgelendirme', 'Proje Danışmanlığı',
+      'Yapı Denetim'
     ],
   ),
   HizmetAlani(
-    ad: 'Hukuk, Finans & Kurumsal',
+    ad: 'Hukuk & Finans',
     aciklama:
         'Hukuk ve muhasebe',
     gorsel: 'assets/alanlar/hukuk.jpg',
     ikon: 'assets/svg/alanlar/hukuk.svg',
     kategoriler: [
-      'Avukatlık ve Hukuk', 'Muhasebe ve Mali Müşavirlik', 'Sigorta',
-      'İş Güvenliği ve İSG', 'Marka ve Patent'
+      'Avukatlık ve Hukuk', 'Muhasebe ve Mali Müşavirlik',
+      'İş Güvenliği ve İSG', 'Marka ve Patent', 'Sigorta',
+      'Ofis & İş Yeri Hizmetleri', 'Dış Ticaret & Gümrük',
+      'Teşvik & Hibe Danışmanlığı'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Sağlık Hizmetleri',
+    aciklama:
+        'Bakım ve destek',
+    gorsel: 'assets/alanlar/saglik.jpg',
+    ikon: 'assets/svg/alanlar/saglik.svg',
+    kategoriler: [
+      'Hasta Bakımı', 'Yaşlı Bakımı', 'Evde Hasta Bakımı',
+      'Evde Yaşlı Bakımı', 'Hastane Refakatçisi', 'Evde Refakat',
+      'Günlük Yaşam Desteği',
+      'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Tarım & Hayvancılık',
+    aciklama:
+        'Tarım ve hayvancılık',
+    gorsel: 'assets/alanlar/tarim.jpg',
+    ikon: 'assets/svg/alanlar/tarim.svg',
+    kategoriler: [
+      'Tarım Danışmanlığı', 'Tarla ve Bahçe İşleri', 'Tarımsal Sulama',
+      'Bitki Koruma ve İlaçlama', 'Hayvancılık Hizmetleri',
+      'Veteriner Hizmetleri'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Turizm & Konaklama',
+    aciklama:
+        'Turizm ve konaklama',
+    gorsel: 'assets/alanlar/turizm.jpg',
+    ikon: 'assets/svg/alanlar/turizm.svg',
+    kategoriler: [
+      'Tur Organizasyon', 'Konaklama', 'Transfer ve Ulaşım',
+      'Seyahat Danışmanlığı', 'Rehberlik', 'Vize & Seyahat İşlemleri'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Gayrimenkul & Emlak',
+    aciklama:
+        'Emlak ve danışmanlık',
+    gorsel: 'assets/alanlar/emlak.jpg',
+    ikon: 'assets/svg/alanlar/emlak.svg',
+    kategoriler: [
+      'Emlak Danışmanlığı', 'Site ve Apartman Yönetimi',
+      'Gayrimenkul Hizmetleri'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Özel Güvenlik & Koruma',
+    aciklama:
+        'Güvenlik ve koruma',
+    gorsel: 'assets/alanlar/guvenlik.jpg',
+    ikon: 'assets/svg/alanlar/guvenlik.svg',
+    kategoriler: [
+      'Özel Güvenlik', 'Yakın Koruma', 'Güvenlik Personeli'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Matbaa & Baskı',
+    aciklama:
+        'Matbaa ve baskı',
+    gorsel: 'assets/alanlar/matbaa.jpg',
+    ikon: 'assets/svg/alanlar/matbaa.svg',
+    kategoriler: [
+      'Kartvizit & Kurumsal Baskı', 'Broşür & Tanıtım Baskıları',
+      'Davetiye & Özel Gün Baskıları', 'Etiket & Ambalaj Baskıları',
+      'Promosyon Baskıları', 'Kitap & Yayın Baskıları',
+      '3D Baskı & Üretim', 'Tabela & Reklam Uygulamaları'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Geri Dönüşüm & Atık Yönetimi',
+    aciklama:
+        'Geri dönüşüm ve atık',
+    gorsel: 'assets/alanlar/geridonusum.jpg',
+    ikon: 'assets/svg/alanlar/geridonusum.svg',
+    kategoriler: [
+      'Geri Dönüşüm Hizmetleri'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Çocuk & Bebek Bakımı',
+    aciklama:
+        'Çocuk ve bebek bakımı',
+    gorsel: 'assets/alanlar/cocuk.jpg',
+    ikon: 'assets/svg/alanlar/cocuk.svg',
+    kategoriler: [
+      'Bebek Bakımı', 'Çocuk Bakımı', 'Oyun & Gelişim Desteği',
+      'Çocuk Refakat ve Destek'
+    ],
+  ),
+  HizmetAlani(
+    ad: 'Diğer Hizmetler',
+    aciklama:
+        'Diğer hizmetler',
+    gorsel: 'assets/alanlar/diger.jpg',
+    ikon: 'assets/svg/alanlar/diger.svg',
+    kategoriler: [
+      'Çiçekçilik', 'Asistanlık & Günlük Destek',
+      'Dedektiflik & Araştırma', 'Araştırma & Saha Hizmetleri',
+      'Günlük Eleman & Personel Desteği'
     ],
   ),
 ];

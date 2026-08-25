@@ -250,6 +250,26 @@ void _toast(BuildContext context, String msg) {
     ..showSnackBar(SnackBar(
       content: Text(msg, textAlign: TextAlign.center),
       behavior: SnackBarBehavior.floating,
+      // ── ⚠ UYARI ALT BARIN ÜSTÜNE GELMESİN ──
+      //
+      // `floating` uyarıyı ekranın en altına yerleştiriyordu ve alt
+      // bar taşıyan dokuz ekranda (İlanlarım, İşlerim, Bildirimler,
+      // Profil, Adreslerim, Faturalarım, Şifre Değiştir, Profil
+      // Bilgilerim, Uygulamayı Değerlendir) sekmelerin hemen üstüne
+      // yapışıyor, hatta üzerine biniyordu.
+      //
+      // ⚠ SORUN TEK BİR UYARIYA ÖZGÜ DEĞİL, YAPISAL: uygulamadaki 77
+      // uyarının tamamı aynı yerden çiziliyor. Bu yüzden çözüm de tek
+      // yerde — her uyarı için ayrı düzeltme yapılmadı.
+      //
+      // ⚠ SABİT BOŞLUK: uyarı, altında bar olup olmadığını BİLMEZ.
+      // Alt bar yüksekliği kadar (~68) boşluk verilir; barsız
+      // ekranlarda uyarı biraz daha yukarıda durur, örtüşme olmaz.
+      //
+      // ⚠ Yatay kenar boşluğu da verilmelidir: `margin` verildiğinde
+      // varsayılan kenar boşlukları düşer, aksi hâlde uyarı ekranın
+      // iki kenarına yapışırdı.
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 68),
       backgroundColor: HC.dark,
       duration: const Duration(milliseconds: 1900),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

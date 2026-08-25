@@ -334,7 +334,7 @@ void main() {
     });
 
     test('KATALOG BÜYÜMEDİ', () {
-      expect(kCategoryTree.length, 63);
+      expect(kCategoryTree.length, 160);
       expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 640);
       expect(kAramaEsAnlamlilari.length, 640);
     });
@@ -412,7 +412,7 @@ void main() {
     // olarak kaldı.
 
     test('58 kategori · 517 hizmet · tekrar yok', () {
-      expect(kCategoryTree.length, 63);
+      expect(kCategoryTree.length, 160);
       final tum = [for (final v in kCategoryTree.values) ...v];
       expect(tum.length, 640);
       expect(tum.toSet().length, 640, reason: 'aynı hizmet iki kez');

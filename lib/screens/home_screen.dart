@@ -776,13 +776,21 @@ class HizmetAlanlariPaneli extends StatefulWidget {
   /// ⚠ PUNTO VE KART ÖLÇÜSÜ DEĞİŞMEZ: on beş kart aynı yükseklikte
   /// ve aynı puntoda kalır; değişen yalnız yazılan metin.
   static const Map<String, String> kKartEtiketi = {
-    'Beyaz Eşya & Elektronik Servis': 'Beyaz Eşya\nElektronik',
-    'Hukuk, Finans & Kurumsal': 'Hukuk &\nFinans',
+    // ⚠ 24 ÇATI (yeni katalog). Ölü kayıt bırakılmaz: çatı adı
+    // değişince buradaki anahtar da değişmeli — test denetler.
     'İnşaat & Dekorasyon': 'İnşaat\nDekorasyon',
     'Mühendislik & Proje': 'Mühendislik\n& Proje',
     'Organizasyon & Etkinlik': 'Organizasyon\n& Etkinlik',
-    'Güzellik & Kişisel Bakım': 'Güzellik &\nBakım',
     'Evcil Hayvan Hizmetleri': 'Evcil Hayvan\nHizmetleri',
+    'Beyaz Eşya & Elektronik': 'Beyaz Eşya\nElektronik',
+    'Hukuk & Finans': 'Hukuk &\nFinans',
+    'Güzellik & Bakım & Spor': 'Güzellik &\nBakım',
+    'Geri Dönüşüm & Atık Yönetimi': 'Geri Dönüşüm\n& Atık',
+    'Özel Güvenlik & Koruma': 'Özel Güvenlik\n& Koruma',
+    'Çocuk & Bebek Bakımı': 'Çocuk &\nBebek Bakımı',
+    'Gayrimenkul & Emlak': 'Gayrimenkul\n& Emlak',
+    'Tarım & Hayvancılık': 'Tarım &\nHayvancılık',
+    'Turizm & Konaklama': 'Turizm &\nKonaklama',
   };
 
   /// Kartta yazılacak etiket — kısaltması yoksa gerçek ad.

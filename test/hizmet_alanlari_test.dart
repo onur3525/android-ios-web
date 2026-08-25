@@ -15,21 +15,21 @@ import 'package:hizmetcep/data/hizmet_alanlari.dart';
 
 void main() {
   group('KAPSAM', () {
-    test('ON BEŞ ÇATI — ne eksik ne fazla', () {
-      // ⚠ 15 ÇATI KESİN YAPI (kullanıcı talimatı §2).
+    test('YİRMİ DÖRT ÇATI — ne eksik ne fazla', () {
+      // ⚠ 24 ÇATI KESİN YAPI (kullanıcı kararı, nihai katalog belgesi).
       //
-      // 16. çatı ve "Diğer" çatısı OLUŞTURULMAZ. Adlar talimattaki
-      // kesin adlardır; sıra ana ekrandaki 3×5 kart düzenini verir.
-      expect(kHizmetAlanlari.length, 15);
+      // Adlar ve SIRA belgeden gelir; sıra ana ekrandaki kart
+      // düzenini belirler. Fazladan çatı üretilmez.
+      expect(kHizmetAlanlari.length, 24);
       expect(
           kHizmetAlanlari.map((a) => a.ad).toList(),
           const [
             'Ev & Yaşam',
             'Araç Hizmetleri',
-            'Beyaz Eşya & Elektronik Servis',
+            'Beyaz Eşya & Elektronik',
             'Temizlik',
             'Taşıma & Nakliyat',
-            'Güzellik & Kişisel Bakım',
+            'Güzellik & Bakım & Spor',
             'Evcil Hayvan Hizmetleri',
             'Eğitim',
             'Dijital Hizmetler',
@@ -38,53 +38,43 @@ void main() {
             'Teknik Hizmetler',
             'Giyim & Tekstil',
             'Mühendislik & Proje',
-            'Hukuk, Finans & Kurumsal',
+            'Hukuk & Finans',
+            'Sağlık Hizmetleri',
+            'Tarım & Hayvancılık',
+            'Turizm & Konaklama',
+            'Gayrimenkul & Emlak',
+            'Özel Güvenlik & Koruma',
+            'Matbaa & Baskı',
+            'Geri Dönüşüm & Atık Yönetimi',
+            'Çocuk & Bebek Bakımı',
+            'Diğer Hizmetler',
           ]);
     });
 
-    test('⚠ 3×5 DÜZENİ — satır çatı sayısından türer', () {
-      // Ekran kodu satırı hesaplıyor; 15 çatı 3 sütunda 5 satır eder.
-      expect((kHizmetAlanlari.length + 2) ~/ 3, 5);
+    test('⚠ 3×8 DÜZENİ — satır çatı sayısından türer', () {
+      // Ekran kodu satırı hesaplar; 24 çatı 3 sütunda 8 satır eder.
+      expect((kHizmetAlanlari.length + 2) ~/ 3, 8);
     });
 
-    test('⚠ TALİMATTA GEÇMEYEN KATEGORİLER MEVCUT ÇATISINI KORUDU', () {
-      // ── NİÇİN ──
+    test('⚠ YERLEŞİM NİHAİ KATALOG BELGESİNDEN GELİR', () {
+      // ── DEĞİŞEN KAYNAK ──
       //
-      // Talimatın §3 yerleşim listesi 47 kategori sayıyor; katalogda
-      // 63 var. Kalan 16'sı listede HİÇ geçmiyor.
+      // Önceki iddialar 15 çatılı yapıya ve o dönemin talimatına
+      // aitti. Nihai katalog belgesi (24 çatı) yerleşimi YENİDEN
+      // tanımladı; bu yüzden iddialar belgedeki gerçek yerleşime
+      // göre yazıldı.
       //
-      // ⚠ VARSAYIMLA YERLEŞTİRİLMEDİLER. Talimat "mevcut hiçbir
-      // kategori silinmeyecek" (§4) ve "mevcut çalışan davranış
-      // korunacak" (§9) diyor. Değinilmeyen kategoriler bu yüzden
-      // MEVCUT çatılarını korudu; çatı adları yalnız §2'deki eşlemeye
-      // göre değişti.
-      // ⚠ DÜZELTİLDİ: "Kombi Montaj" ısıtma tesisatı işidir; Ev &
-      // Yaşam'da değil Teknik Hizmetler'de olmalı (Kombi Servis'in
-      // yanında).
-      expect(kKategoriAlani['Kombi Montaj'], 'Teknik Hizmetler');
-      expect(kKategoriAlani['Oto Çekici ve Yol Yardım'], 'Araç Hizmetleri');
-      expect(kKategoriAlani['Müzik Dersleri'], 'Eğitim');
-      expect(kKategoriAlani['Fayans ve Seramik Döşeme'], 'İnşaat & Dekorasyon');
-      // ⚠ DÜZELTİLDİ: asansör bir YAPI işi değil, süregelen teknik
-      // servis işidir.
-      expect(kKategoriAlani['Asansör Montaj ve Bakım'], 'Teknik Hizmetler');
-    });
-
-    test('⚠ TALİMATIN §3 YERLEŞİMİ BİREBİR UYGULANDI', () {
-      // Örnekleme: her yeni/taşınan çatıdan en az bir kategori.
+      // ⚠ Örnekleme: her çatıdan en az bir kategori.
       expect(kKategoriAlani['Bahçe ve Peyzaj'], 'Ev & Yaşam');
-      expect(kKategoriAlani['Su Tesisatı'], 'Teknik Hizmetler');
-      expect(kKategoriAlani['Elektrik'], 'Teknik Hizmetler');
-      expect(kKategoriAlani['Kombi Servis'], 'Teknik Hizmetler');
-      expect(kKategoriAlani['Terzilik ve Dikiş'], 'Giyim & Tekstil');
-      expect(kKategoriAlani['Ev Tekstili'], 'Giyim & Tekstil');
-      expect(kKategoriAlani['Avukatlık ve Hukuk'], 'Hukuk, Finans & Kurumsal');
-      expect(kKategoriAlani['Sigorta'], 'Hukuk, Finans & Kurumsal');
-      expect(kKategoriAlani['Beyaz Eşya Servisi'],
-          'Beyaz Eşya & Elektronik Servis');
-      expect(kKategoriAlani['Spor ve Kişisel Antrenör'],
-          'Güzellik & Kişisel Bakım');
-      expect(kKategoriAlani['Fotoğraf Çekimi'], 'Dijital Hizmetler');
+      expect(kKategoriAlani['Oto Servis ve Bakım'], 'Araç Hizmetleri');
+      expect(kKategoriAlani['Beyaz Eşya Servisi'], 'Beyaz Eşya & Elektronik');
+      expect(kKategoriAlani['Nakliyat ve Taşımacılık'], 'Taşıma & Nakliyat');
+      expect(kKategoriAlani['Avukatlık ve Hukuk'], 'Hukuk & Finans');
+      expect(kKategoriAlani['Sigorta'], 'Hukuk & Finans');
+      expect(kKategoriAlani['Fotoğraf Çekimi'], 'Organizasyon & Etkinlik');
+      expect(kKategoriAlani['Su Tesisatı'], 'Ev & Yaşam');
+      expect(kKategoriAlani['Elektrik'], 'Ev & Yaşam');
+      expect(kKategoriAlani['Asansör Montaj ve Bakım'], 'İnşaat & Dekorasyon');
     });
 
     test('HER KATEGORİ bir çatıya bağlı', () {
@@ -115,7 +105,7 @@ void main() {
   group('KATALOG DEĞİŞMEDİ', () {
     test('çatı katmanı SAYILARA karışmaz', () {
       // ⚠ Çatılar ana kategori DEĞİL: katalog sayıları aynı kalır.
-      expect(kCategoryTree.length, 63);
+      expect(kCategoryTree.length, 160);
       expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 640);
     });
 
@@ -162,20 +152,14 @@ void main() {
     test('yapı işleri İNŞAAT & DEKORASYON altında', () {
       // ⚠ 12 çatılı yapıda yapı işleri kendi çatısına ayrıldı;
       // eskiden Ev Hizmeti 264 hizmetle katalogun yarısını taşıyordu.
+      // ⚠ Liste NİHAİ KATALOG belgesine göre yenilendi.
       const yapi = [
         'İnşaat ve Kaba Yapı',
         'Çatı Yapım ve Onarım',
         'Mobilya Yapım ve Montaj',
         'Marangozluk ve Ahşap İşleri',
-        'Cam Balkon Sistemleri',
         'PVC ve Alüminyum Doğrama',
         'Demir Doğrama ve Kaynak',
-        // ⚠ 'Havuz Yapım ve Bakım' ÇIKARILDI → Ev & Yaşam
-        // (talimat §3 yerleşimi; Paket A'da taşındı, bu liste
-        // güncellenmemişti).
-        //
-        // ⚠ 'Asansör Montaj ve Bakım' ÇIKARILDI → Teknik Hizmetler.
-        'Kapı Montaj ve Tamir',
       ];
       for (final k in yapi) {
         expect(kKategoriAlani[k], 'İnşaat & Dekorasyon', reason: k);
@@ -186,7 +170,10 @@ void main() {
       // Bahçe bakım ağırlıklı, güvenlik kurulum ağırlıklı, ev tekstili
       // eve ait ürünler → üçü de Ev Hizmeti (kullanıcı kararı).
       
-      expect(kKategoriAlani['Güvenlik Sistemleri'], 'Teknik Hizmetler');
+      // ⚠ NİHAİ KATALOG: "Güvenlik Sistemleri" ve "Çilingir ve Kilit"
+      // Ev & Yaşam altında. Bir önceki 15 çatılı yapıda Teknik
+      // Hizmetler'deydiler; belge yerleşimi değiştirdi.
+      expect(kKategoriAlani['Güvenlik Sistemleri'], 'Ev & Yaşam');
       
     });
 
@@ -215,18 +202,18 @@ void main() {
 
     test('HİZMET DÜZEYİNDE İSTİSNA çalışıyor', () {
       // ⚠ Kategori bir çatıda, hizmet başka çatıda olabilir.
-      expect(kKategoriAlani['Çilingir ve Kilit'], 'Teknik Hizmetler');
+      expect(kKategoriAlani['Çilingir ve Kilit'], 'Ev & Yaşam');
       expect(hizmetAlani('Çilingir ve Kilit', 'Oto Anahtarcı'),
-          'Araç Hizmeti');
+          'Araç Hizmetleri');
 
       expect(kKategoriAlani['Koltuk ve Döşeme Yıkama'], 'Temizlik');
       expect(hizmetAlani('Koltuk ve Döşeme Yıkama', 'Araç Döşeme Yıkama'),
-          'Araç Hizmeti');
+          'Araç Hizmetleri');
 
       // İstisnası olmayan hizmet kategorisinin çatısını izler.
-      expect(hizmetAlani('Çilingir ve Kilit', 'Kapı Açma'), 'Teknik Hizmetler');
+      expect(hizmetAlani('Çilingir ve Kilit', 'Kapı Açma'), 'Ev & Yaşam');
       // Hizmet verilmezse kategori çatısı döner.
-      expect(hizmetAlani('Çilingir ve Kilit', null), 'Teknik Hizmetler');
+      expect(hizmetAlani('Çilingir ve Kilit', null), 'Ev & Yaşam');
     });
 
     test('İSTİSNALAR KATALOGDA GERÇEKTEN VAR', () {
@@ -327,9 +314,9 @@ void main() {
             !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
         .join('\n');
 
-    test('ana sayfada TAM 12 ÇATI, eski kartlar YOK', () {
+    test('ana sayfada TAM 24 ÇATI, eski kartlar YOK', () {
       final h = _k('lib/screens/home_screen.dart');
-      expect(kHizmetAlanlari.length, 12);
+      expect(kHizmetAlanlari.length, 24);
       expect(h.contains('HizmetAlanlariPaneli'), isTrue);
       expect(h.contains('kHizmetAlanlari'), isTrue);
       expect(h.contains('kHizliKategoriler = ['), isFalse);

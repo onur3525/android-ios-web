@@ -135,29 +135,32 @@ void main() {
   });
 
   group('SİLME SONRASI', () {
-    test('"hesabınız silindi" DENMEZ — backend yalnız talep oluşturuyor', () {
-      expect(a.contains('Hesap silme işleminiz alındı.'), isTrue);
-      // ⚠ Kullanıcıya GÖSTERİLEN metinde "silindi" iddiası yok.
-      // ("Hesabınız silindikten sonra…" bilgilendirme cümlesidir,
-      //  sonuç bildirimi değildir.)
+    test('⚠ SİLME SONRASI UYARI GÖSTERİLMEZ (ürün kararı)', () {
+      // ── DEĞİŞEN KARAR ──
+      //
+      // Önce "Hesap silme işleminiz alındı… 30 gün içinde kalıcı
+      // olarak silinecektir." uyarısı gösteriliyordu ve bu iki test
+      // onun VARLIĞINI kilitliyordu.
+      //
+      // Yeni karar: uyarı GÖSTERİLMEZ. Kullanıcı üç aşamalı onaydan
+      // geçiyor; işlem bitince oturum kapanıp giriş ekranına
+      // dönülüyor ve sonucu oradan anlıyor.
+      expect(a.contains('Hesap silme işleminiz alındı.'), isFalse,
+          reason: 'kaldırılan uyarı geri gelmiş');
+      expect(a.contains('30 gün içinde kalıcı olarak silinecektir.'), isFalse,
+          reason: 'kaldırılan uyarı geri gelmiş');
+      // ⚠ "Hesabınız silindi" iddiası HÂLÂ YASAK: backend yalnız
+      // talep oluşturuyor, hesap o anda silinmiyor.
       expect(a.contains("sysToastOk(context, 'Hesabınız silindi"), isFalse);
     });
 
-    test('SÜRE BİLDİRİLİR — 30 gün', () {
-      // ⚠ Apple'ın hesap silme kuralı, silmenin zaman almasını KABUL
-      // EDER; ancak kullanıcıya NE KADAR SÜRECEĞİNİN bildirilmesini
-      // şart koşar. Süre bir ÜRÜN TAAHHÜDÜDÜR: 30 gün.
-      //
-      // ⚠ Süre değişecekse burası ve ekran metni BİRLİKTE değişir;
-      // taahhüt sessizce kaymamalı.
-      // ⚠ İDDİA TEK SATIRDA GEÇEN PARÇAYA BAĞLANIR: metin kaynak
-      // kodda iki satıra bölünmüş bir string literalidir; iki satırı
-      // birleştirip aramak (biçim değişince) yanlış alarm verir.
-      expect(
-        a.contains('30 gün içinde kalıcı olarak silinecektir.'),
-        isTrue,
-        reason: 'silme talebinden sonra 30 günlük süre bildirilmiyor',
-      );
+    test('⚠ SİLME AKIŞI BOZULMADI', () {
+      // Kaldırılan yalnız EKRANDA BELİREN YAZI; işlemin kendisi aynı.
+      expect(a.contains('requestDeletion()'), isTrue,
+          reason: 'silme talebi çağrısı kalkmış');
+      expect(a.contains('auth.logout()'), isTrue,
+          reason: 'oturum kapatma kalkmış');
+      expect(a.contains('OturumTercihi().temizle()'), isTrue);
     });
 
     test('tamamlanma bildirimi BU PAKETTE YOK — backend işi', () {

@@ -222,28 +222,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         return;
       }
       setState(() => _busy = false);
-      // ⚠ "HESABINIZ SİLİNDİ" DENMEZ.
+      // ── ⚠ SİLME SONRASI UYARI KALDIRILDI ──
       //
-      // Backend şu an yalnız TALEP oluşturuyor; hesap o anda
-      // silinmiyor. Kullanıcıya olmayan bir sonucu bildirmek
-      // yanlış olurdu. Sunucu anında silmeye geçtiğinde metin
-      // "Hesabınız silindi." olarak güncellenecektir.
+      // Burada "Hesap silme işleminiz alındı. Hesabınız, talebinizden
+      // itibaren 30 gün içinde kalıcı olarak silinecektir." uyarısı
+      // gösteriliyordu.
       //
-      // ⚠ SÜRE BİLDİRİMİ ZORUNLUDUR (30 GÜN — ürün taahhüdü).
+      // Ürün kararı: bu uyarı GÖSTERİLMEZ. Kullanıcı zaten üç aşamalı
+      // bir onaydan (bilgilendirme → şifre doğrulama → kesin onay)
+      // geçti; işlem bittiğinde oturum kapanıp giriş ekranına
+      // dönülüyor ve sonucu oradan anlıyor.
       //
-      // Apple'ın hesap silme kuralı, silmenin elle veya zaman alarak
-      // yapılmasını KABUL EDER; ancak iki şart koşar: kullanıcıya
-      // NE KADAR SÜRECEĞİ bildirilmeli ve tamamlandığında ONAY
-      // verilmelidir. Birincisi buradadır.
-      //
-      // ⚠ İKİNCİSİ HENÜZ YOK: silme tamamlandığında kullanıcıya
-      // bildirim/e-posta gönderilmesi BACKEND işidir ve bu pakette
-      // YAPILMAMIŞTIR.
-      sysToastOk(
-        context,
-        'Hesap silme işleminiz alındı. Hesabınız, talebinizden '
-        'itibaren 30 gün içinde kalıcı olarak silinecektir.',
-      );
+      // ⚠ SİLME AKIŞI DEĞİŞMEDİ: `requestDeletion` çağrısı, oturum
+      // kapatma ve yönlendirme aynen duruyor — kaldırılan yalnız
+      // ekranda beliren yazıdır.
 
       // ── OTURUM KAPATILIR ──
       //
