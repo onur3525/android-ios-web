@@ -1,5 +1,0 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Flutter geliştirme modu, hot reload için yerel ağ soketi açar.
-         YALNIZ debug derlemesinde geçerlidir; release'e DAHİL EDİLMEZ. -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-</manifest>

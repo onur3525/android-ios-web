@@ -1,8 +1,0 @@
-# ⚠ ÖRNEK DOSYA — GERÇEK DEĞERLERLE `key.properties` OLUŞTURUN.
-#
-# Gerçek dosya depoya GİTMEZ (`android/.gitignore` dışlar).
-# Anahtar kaybolursa aynı uygulama BİR DAHA GÜNCELLENEMEZ; yedekleyin.
-storeFile=/mutlak/yol/hizmetcep.jks
-storePassword=DEPO_PAROLASI
-keyAlias=hizmetcep
-keyPassword=ANAHTAR_PAROLASI
