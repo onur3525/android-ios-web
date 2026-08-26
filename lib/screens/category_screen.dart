@@ -151,7 +151,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
               if (i > 0) const SizedBox(height: 8),
               _HizmetSatiri(
                 ad: subs[i],
-                ikon: categoryIcon(category),
                 secili: _secili == subs[i],
                 // ⚠ Aynı satıra tekrar dokunmak seçimi KALDIRIR;
                 // kullanıcı vazgeçebilmeli.
@@ -199,13 +198,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
 class _HizmetSatiri extends StatelessWidget {
   const _HizmetSatiri({
     required this.ad,
-    required this.ikon,
     required this.secili,
     required this.onTap,
   });
 
   final String ad;
-  final String ikon;
   final bool secili;
   final VoidCallback onTap;
 
@@ -227,8 +224,12 @@ class _HizmetSatiri extends StatelessWidget {
           ),
           child: Row(
             children: [
-              RefSvg(ikon, size: 18, color: secili ? RC.blue : RC.textSoft),
-              const SizedBox(width: 10),
+              // ⚠ HİZMET SATIRINDA İKON YOK.
+              //
+              // Her satıra KATEGORİ ikonu çiziliyordu; listedeki tüm
+              // hizmetlerde aynı simge tekrarlanıyor ve hiçbir şeyi
+              // ayırt etmiyordu. Satırlar artık yalnız hizmet adıyla
+              // ve seçim işaretiyle okunuyor.
               Expanded(
                 child: Text(ad,
                     style: TextStyle(

@@ -401,10 +401,11 @@ class _IlanKarti extends StatelessWidget {
                           letterSpacing: RF.lsM02,
                         ),
                       ),
-                      // ⚠ İKİNCİL BİLGİ: başlığın ALTINDA, küçük ve
-                      // soluk. Başlığın önüne geçmez.
-                      const SizedBox(height: 2),
-                      IlanNoEtiketi(listing),
+                      // ⚠ İLAN NUMARASI ÖNİZLEMEDE GÖSTERİLMEZ.
+                      //
+                      // Ürün kuralı: numara YALNIZ detay ekranında,
+                      // sağ üst köşede. Liste kartında yer kaplıyor ve
+                      // kullanıcı kartları BAŞLIĞA göre tarıyor.
                     ],
                   ),
                 ),

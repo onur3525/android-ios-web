@@ -383,6 +383,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           location: konum,
           desc: p.description,
           photoPaths: refs,
+          // ⚠ Taslakta taşınan seçim korunur.
+          isZamani: p.isZamani,
         );
     if (r.error != null) {
       for (final ref in refs) {

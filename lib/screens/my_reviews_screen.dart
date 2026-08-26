@@ -47,10 +47,31 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
     super.initState();
     _scroll.addListener(_onScroll);
     _load(reset: true);
+    // ── ⚠ YENİ YORUM ANINDA GÖRÜNSÜN ──
+    //
+    // Ekran veriyi YALNIZ açılışta okuyordu. Hizmet alan yorum
+    // yazdığında liste, ortalama ve toplam sayı ancak ekran yeniden
+    // açılınca güncelleniyordu.
+    //
+    // ⚠ Depoya abone olunur; yorum eklenince liste BAŞTAN kurulur.
+    // Böylece yeni yorum eskilerin ÜZERİNE YAZILMAZ, aynı yorum iki
+    // kez eklenmez ve ortalama yeniden hesaplanır.
+    _yorumlar = context.read<ReviewController>()..addListener(_yorumDegisti);
+  }
+
+  ReviewController? _yorumlar;
+
+  void _yorumDegisti() {
+    if (!mounted) {
+      return;
+    }
+    // ⚠ `reset: true`: liste sıfırdan kurulur, tekrar oluşmaz.
+    _load(reset: true);
   }
 
   @override
   void dispose() {
+    _yorumlar?.removeListener(_yorumDegisti);
     _scroll.dispose();
     super.dispose();
   }

@@ -17,6 +17,7 @@ import 'review_screen.dart';
 import 'category_ui.dart';
 import 'status_ui.dart';
 import 'widgets/foto_goruntuleyici.dart';
+import '../domain/iletisim_maskesi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -424,6 +425,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             //
                             // ⚠ Çatı DEĞİL kategori yazılır; bulunamazsa
                             // satır HİÇ çizilmez (uydurma ad yok).
+                            // ── ⚠ İLAN NUMARASI — SAĞ ÜST KÖŞE ──
+                            //
+                            // Ürün kuralı: numara başlığın ÜSTÜNDE,
+                            // sağ köşede. Hizalama ve alt boşluk
+                            // `IlanNoEtiketi` içinde SABİT; ekran
+                            // kendi ölçüsünü yazmaz.
+                            IlanNoEtiketi(l),
                             if (kategoriAdi(l.title) != null)
                               Text(
                                 kategoriAdi(l.title)!,
@@ -447,11 +455,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 ),
                               ),
                             ),
-                            // ⚠ İLAN NUMARASI — kolay bulunabilecek
-                            // sabit yer: başlığın hemen altı, konum
-                            // satırının üstü. İkincil ölçüde.
-                            const SizedBox(height: 3),
-                            IlanNoEtiketi(l),
                             // .ld-meta{gap:5px;#98A2B3;11.5px;margin-top:4px}
                             // .ld-meta svg{13px}
                             const SizedBox(height: 4),
@@ -1088,7 +1091,10 @@ class _TeklifKarti extends StatelessWidget {
                   const SizedBox(width: 6), // gap:6px
                   Expanded(
                     child: Text(
-                      offer.note,
+                      // ⚠ Teklif kartında iletişim DAİMA kapalıdır:
+                      // iletişim ancak teklif detayında açılır ve
+                      // orada zaten maskesiz gösterilir.
+                      maskele(offer.note),
                       style: refText(
                           size: 11,
                           weight: RF.w400,

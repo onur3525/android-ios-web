@@ -123,6 +123,17 @@ class _HizmetAlaniScreenState extends State<HizmetAlaniScreen> {
             controller: _ara,
             hint: 'Hangi hizmete ihtiyacınız var?',
             onChanged: (v) => setState(() => _sorgu = v),
+            // ⚠ ORTAK TEMİZLEME DÜĞMESİ — yalnız metin varken çizilir.
+            // Bu ekranda açılır panel YOKTUR (sonuçlar sayfa içinde
+            // listelenir), bu yüzden kapatılacak bir panel de yok:
+            // yalnız metin ve sorgu sıfırlanır.
+            suffix: RefAramaTemizle(
+              controller: _ara,
+              onTemizle: () => setState(() {
+                _ara.clear();
+                _sorgu = '';
+              }),
+            ),
           ),
           const SizedBox(height: 14),
 

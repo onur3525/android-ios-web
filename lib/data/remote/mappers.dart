@@ -57,6 +57,10 @@ abstract final class Mappers {
         desc: (j['description'] ?? j['desc'] ?? '') as String,
         status: listingStatus((j['status'] ?? 'OPEN') as String),
         photoPaths: ((j['photoPaths'] ?? const []) as List).cast<String>(),
+        // ⚠ ALAN YOKSA `null` KALIR: seçim yapılmamış demektir ve
+        // bilinmeyen bir değer gelirse de `null` döner (uygulama
+        // çökmez, yalnız etiket gösterilmez).
+        isZamani: IsZamani.koddan(j['workTiming'] as String?),
         createdAt: _date(j['createdAt']),
       )..selectedOfferId = j['selectedOfferId'] as String?;
 

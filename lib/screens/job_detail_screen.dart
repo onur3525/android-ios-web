@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'widgets/ilan_no_etiketi.dart';
+import '../domain/iletisim_maskesi.dart';
+import 'widgets/is_zamani_secici.dart';
 import '../domain/form_mesajlari.dart';
 import 'dart:io';
 
@@ -49,7 +51,7 @@ class JobDetailScreen extends StatefulWidget {
 class _JobDetailScreenState extends State<JobDetailScreen>
  {
   final _amt = TextEditingController();
-  final _note = TextEditingController();
+  // ⚠ `_note` KALDIRILDI (madde 3) — açıklama alanı yok.
 
   /// ⚠ ZORUNLU ALANLARIN İKİSİ DE DOLU MU?
   ///
@@ -57,8 +59,10 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   /// gösterilmez; içerik YANLIŞSA (tutar geçersiz, açıklama kısa)
   /// uyarı yalnız o satırda çıkar.
   bool get _zorunlularDolu =>
-      _amt.text.trim().isNotEmpty && _note.text.trim().isNotEmpty;
-  String? _amtError, _noteError, _formError;
+      // ⚠ YALNIZ TUTAR: açıklama alanı kaldırıldı (madde 3).
+      _amt.text.trim().isNotEmpty;
+  // ⚠ `_noteError` KALDIRILDI: açıklama alanı yok.
+  String? _amtError, _formError;
   bool _busyOffer = false, _busyContact = false;
 
   /// Ücretsiz hak / cüzdan kaynak kararı yüklenirken `true`.
@@ -72,7 +76,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   @override
   void dispose() {
     _amt.dispose();
-    _note.dispose();
     super.dispose();
   }
 
@@ -113,23 +116,14 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     if (_busyOffer) {
       return;
     }
-    setState(() { _amtError = null; _noteError = null; _formError = null; });
+    setState(() { _amtError = null; _formError = null; });
     final amount = int.tryParse(_amt.text.trim());
-    final words =
-        _note.text.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
     var ok = true;
     if (amount == null || amount <= 0) {
       _amtError = FormMesaj.teklifTutari;
       ok = false;
     }
-    // ⚠ SAYI KURALDAN GELİR: sabit 5 yerine `kMinAciklamaKelime`.
-    // Kural değişirse hem denetim hem metin birlikte değişir.
-    if (words < kMinAciklamaKelime) {
-      // ⚠ SAYAÇ HATA METNİNE GÖMÜLMEZ: "3/5" bir yardımcı bilgidir,
-      // hata değil. Metin tek kaynaktan gelir.
-      _noteError = FormMesaj.teklifAciklama;
-      ok = false;
-    }
+    // ⚠ AÇIKLAMA DOĞRULAMASI KALDIRILDI (madde 3): alan yok.
     setState(() {});
     if (!ok) {
       return;
@@ -141,7 +135,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
         listingId: widget.listingId,
         providerId: me.id,
         amount: amount!,
-        note: _note.text.trim());
+        // ⚠ AÇIKLAMA ALANI KALDIRILDI: not BOŞ gönderilir.
+        // Port imzası değiştirilmedi; mevcut mimari korunuyor.
+        note: '');
     if (!mounted) {
       return;
     }
@@ -279,6 +275,12 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                         children: [
                           // ⚠ KATEGORİ SATIRI — hizmet adı tek başına
                           // ayırt etmiyor (bkz. category_ui.kategoriAdi).
+                          // ── ⚠ İLAN NUMARASI — SAĞ ÜST KÖŞE ──
+                          //
+                          // İlan detayıyla AYNI kural; iki detay
+                          // ekranı ayrışmasın diye ortak bileşen
+                          // kullanılır ve hizalama orada sabittir.
+                          IlanNoEtiketi(l),
                           if (kategoriAdi(l.title) != null)
                             Text(kategoriAdi(l.title)!,
                                 style: refText(
@@ -293,10 +295,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                                   weight: RF.w700,
                                   color: RC.text,
                                   letterSpacing: -0.2)),
-                          // ⚠ İlan numarası — hizmet verenin destek
-                          // süreçlerinde kullanacağı referans.
-                          const SizedBox(height: 3),
-                          IlanNoEtiketi(l),
                           const SizedBox(height: 4),
                           // .ld-meta{11.5px;#98A2B3;gap:5px}
                           Wrap(
@@ -336,12 +334,33 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       style: refText(
                           size: 15, weight: RF.w700, color: RC.text)),
                 ),
+                // ── ⚠ İŞİN YAPILMASI İSTENEN ZAMAN ──
+                //
+                // Hizmet veren için işin ne zaman isteneceği teklif
+                // kararını doğrudan etkiler; açıklamadan ÖNCE görünür.
+                //
+                // ⚠ SEÇİM YOKSA HİÇ ÇİZİLMEZ — `IsZamaniRozeti`
+                // `null` durumunda boş döner, yer tutucu göstermez.
+                if (l.isZamani != null) ...[
+                  IsZamaniRozeti(l.isZamani),
+                  const SizedBox(height: 8),
+                ],
+
                 // ── İLAN AÇIKLAMASI ──
                 // ⚠ Referans `.pl-desc{12.8px;#3A4658;line-height:1.6}`
                 // idi. Ortak standarda çekildi (bkz. listing_detail):
                 // 13,5/w500/RC.text. Aynı içeriğin iki detay ekranında
                 // farklı görünmesi için sebep yok.
-                Text(l.desc,
+                // ── ⚠ İLETİŞİM KAPALIYKEN MASKELİ ──
+                //
+                // Hizmet alan açıklamaya telefon/adres yazarak bedelli
+                // iletişim adımını atlatabilir. İletişim AÇILANA KADAR
+                // bu bilgiler maskelenir; açıklamanın geri kalanı
+                // normal görünür.
+                //
+                // ⚠ İletişim açıksa metin AYNEN gösterilir (mevcut
+                // `iletisimAcik` kullanılır; yeni mekanizma yok).
+                Text(gorunenMetin(l.desc, iletisimAcik: iletisimAcik),
                     style: refText(
                         size: RF.s135,
                         weight: RF.w500,
@@ -480,47 +499,15 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     hintText: 'Teklif tutarınızı girin',
                     errorText: _amtError),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                // Odaklanınca alan klavyenin ve alt düğmenin ÜSTÜNE
-                // kaydırılır — bkz. `kAlanKaydirmaPayi`.
-                scrollPadding: const EdgeInsets.only(bottom: kAlanKaydirmaPayi),
-                controller: _note,
-                // ⚠ Teklif notunda baş harf otomatik büyür; kullanıcı
-                // isterse küçültebilir (klavye ipucu, zorlama değil).
-                textCapitalization: TextCapitalization.sentences,
-                // ⚠ TEK `onChanged` — İKİ DAVRANIŞ BİRLEŞTİRİLDİ.
-                //
-                // Burada iki ayrı `onChanged` vardı ve Dart aynı
-                // adlandırılmış parametrenin iki kez verilmesine izin
-                // vermediği için derleme duruyordu
-                // (`duplicate_named_argument`).
-                //
-                // Birleştirilen davranışlar:
-                //   1. YALNIZ BU ALANIN hatası düşer — tutar alanının
-                //      geçerli hatası SİLİNMEZ.
-                //   2. `setState` karakter sayacını (`n / 1000`) ve
-                //      düğmenin aktifliğini (`_zorunlularDolu`)
-                //      tazeler; eskiden bunu ikinci `onChanged`
-                //      yapıyordu.
-                onChanged: (_) => setState(() => _noteError = null),
-                maxLines: 3,
-                decoration: InputDecoration(
-                    // Referans: `Açıklama`
-                    labelText: 'Açıklama',
-                    alignLabelWithHint: true,
-                    hintText:
-                        'Hizmetinizle ilgili kısa bir açıklama yazın...',
-                    errorText: _noteError),
-                maxLength: 1000,
-                buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-              ),
-              // HTML vProvListing: karakter sayacı
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text('${_note.text.length} / 1000',
-                    style: const TextStyle(fontSize: 11.5, color: HC.lightGrey)),
-              ),
+              // ── ⚠ AÇIKLAMA ALANI KALDIRILDI (madde 3) ──
+              //
+              // Teklif verme ekranında YALNIZ teklif fiyatı kalır.
+              // Alan, karakter sayacı ve doğrulaması birlikte
+              // kaldırıldı.
+              //
+              // Gerekçe: teklif verildikten ve iletişim açıldıktan
+              // sonra taraflar ayrıntıları uygulama içi
+              // mesajlaşmadan konuşuyor.
               if (_formError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, left: 4),
@@ -545,12 +532,14 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   iconAsset: 'assets/svg/ic_plane.svg',
                   busy: _busyOffer,
                   onPressed: _zorunlularDolu ? _placeOffer : null),
-              const SizedBox(height: 8),
-              _KaynakBilgisi(
-                yukleniyor: _fundingYukleniyor,
-                funding: context.watch<FreeRightController>().funding,
-                freeRights: context.watch<FreeRightController>().summary,
-              ),
+              // ⚠ ALT BİLGİLENDİRME KUTUSU KALDIRILDI (madde 4).
+              //
+              // "Teklif vermek ücretsizdir; teklifinizle birlikte
+              // 50 TL iletişim ücreti ... bloke edilir." metni artık
+              // gösterilmiyor.
+              //
+              // ⚠ `_KaynakBilgisi` sınıfı SİLİNMEDİ: ileride gerekirse
+              // diye duruyor ama hiçbir yerden çağrılmıyor.
             ] else if (mine != null) ...[
               // ── `Verdiğiniz Teklif` — MAVİ ÖZET KARTI ──
               //
@@ -648,13 +637,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                         Text(mine.note,
                             style: const TextStyle(
                                 fontSize: 13, height: 1.5, color: HC.grey)),
-                        const SizedBox(height: 6),
-                        Text(
-                            mine.escrowConsumed
-                                ? 'İletişim ücreti blokenizden kullanıldı.'
-                                : 'Bloke: ${DomainConfig.contactFee} TL (iletişim açılmazsa iade edilir)',
-                            style: const TextStyle(
-                                fontSize: 11.5, color: HC.lightGrey)),
+                        // ⚠ BLOKE YAZISI KALDIRILDI (madde 5).
+                        // "Bloke: 50 TL (iletişim açılmazsa iade
+                        // edilir)" satırı kullanıcıyı yanıltıyordu.
                       ]),
                 );
               }),
@@ -756,10 +741,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                             'İletişim açıldı — ücret blokenizden kullanıldı');
                       }
                     }),
-                const SizedBox(height: 8),
-                const InfoBox(
-                    child: Text(
-                        'İletişimi taraflardan biri açtığında iki taraf için de açılır; bloke yalnızca bir kez kullanılır.')),
+                // ⚠ BİLGİLENDİRME KUTUSU KALDIRILDI (madde 6).
               ],
               // ── ⚠ İLETİŞİM AÇILDIYSA HİZMET VERENİN AKIŞI BİTER ──
               //
@@ -771,10 +753,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               // birbirine ulaşabilir. Geri çekme düğmesinin durması,
               // ücreti geri alınabilirmiş izlenimi veriyordu — oysa
               // tüketilmiş ücret İADE EDİLMEZ.
-              if (contactCtl.isOpen(mine.id)) ...[
-                const SizedBox(height: 10),
-                const InfoBox(child: Text('Teklif verildi')),
-              ],
+              // ⚠ "Teklif verildi" KUTUSU KALDIRILDI (madde 7).
+              //
+              // ⚠ YALNIZ EN ALTTAKİ bu kutu gitti. Verdiğiniz Teklif,
+              // tutar, "İletişim Bilgileri Açıldı", teklif zamanı,
+              // telefon ve mesajlaşma AYNEN duruyor.
               // ── ⚠ "TEKLİFİ GERİ ÇEK" KALDIRILDI ──
               //
               // API sözleşmesi §1 ve kabul testi 2: "Teklif geri

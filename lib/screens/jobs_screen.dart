@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../domain/iletisim_maskesi.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
 import 'widgets/ilan_no_etiketi.dart';
@@ -7,6 +8,7 @@ import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
+import '../data/controllers/contact_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/models/listing.dart';
 import '../data/models/offer.dart';
@@ -547,6 +549,29 @@ class _JobsScreenState extends State<JobsScreen> {
   ///    İNCELENMİŞ ilan : normal yazı + ince çerçeve.
   /// Ayrıca rozet/nokta gibi bir işaret GÖSTERİLMEZ; fark yalnız
   /// yazı ve çerçeve kalınlığındadır.
+  /// İLAN SAHİBİNİN ADI — iletişim kapalıysa maskeli.
+  ///
+  /// ⚠ İLAN BAZINDA: bu ilana verdiğim teklifin iletişimi açıksa
+  /// gerçek ad, değilse maske. Başka ilanların maskesi kalkmaz.
+  ///
+  /// ⚠ Maskeleme kuralı `maskeliAd` ile ORTAK (bkz.
+  /// `job_detail_screen`); iki ekran ayrışmaz.
+  String _musteriAdi(BuildContext context, Listing l) {
+    final auth = context.read<AuthController>();
+    final tamAd = auth.accountById(l.ownerId)?.name.trim() ?? '';
+    if (tamAd.isEmpty) {
+      return '';
+    }
+    final me = auth.currentAccount;
+    if (me == null) {
+      return maskeliAd(tamAd);
+    }
+    final mine = context.read<OfferController>().myOfferFor(l.id, me.id);
+    final acik =
+        mine != null && context.watch<ContactController>().isOpen(mine.id);
+    return acik ? tamAd : maskeliAd(tamAd);
+  }
+
   Widget _jobCard(BuildContext context, Listing l,
           {required Widget trailing,
           bool incelendi = false,
@@ -595,9 +620,23 @@ class _JobsScreenState extends State<JobsScreen> {
                           fontWeight:
                               incelendi ? FontWeight.w600 : FontWeight.w800,
                           color: incelendi ? HC.dark : _kYeniKoyu)),
-                  // ⚠ İkincil bilgi — başlığın altında, küçük.
-                  const SizedBox(height: 2),
-                  IlanNoEtiketi(l),
+                  // ⚠ İLAN NUMARASI ÖNİZLEMEDE GÖSTERİLMEZ
+                  // (bkz. `IlanNoEtiketi` — yalnız detayda, sağ üstte).
+                  // ── ⚠ MÜŞTERİ ADI — İLETİŞİM DURUMUNA GÖRE ──
+                  //
+                  // Hizmet veren ilanın kime ait olduğunu kartta görür.
+                  //
+                  // ⚠ MASKE İLAN BAZINDADIR: yalnız iletişimi AÇILMIŞ
+                  // ilanda gerçek ad görünür. Başka ilanların maskesi
+                  // ETKİLENMEZ — her kart kendi teklifinin iletişim
+                  // durumuna bakar.
+                  const SizedBox(height: 3),
+                  Text(_musteriAdi(context, l),
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              incelendi ? FontWeight.w500 : FontWeight.w700,
+                          color: incelendi ? HC.dark : _kYeniKoyu)),
                   const SizedBox(height: 3),
                   Text(l.location,
                       style: TextStyle(
@@ -617,7 +656,16 @@ class _JobsScreenState extends State<JobsScreen> {
                   // `TextStyle` kullanıyordu, `refText`'e çekildi.
                   // Okunmuş/okunmamış ayrımı KORUNDU: okunmamışta
                   // açıklama okunur koyulukta, okununca soluk grileşir.
-                  Text(l.desc,
+                  // ── ⚠ BESLEMEDE AÇIKLAMA DAİMA MASKELİ ──
+                  //
+                  // Bu liste yalnız hizmet verenin HENÜZ TEKLİF
+                  // VERMEDİĞİ ilanları gösterir (bkz. `teklifVermedim`
+                  // süzgeci). Teklif yoksa iletişim de açılamaz, yani
+                  // burada iletişim HER ZAMAN kapalıdır.
+                  //
+                  // ⚠ Koşul yazmak yerine doğrudan maskeleniyor:
+                  // `ContactController` sorgusu hep `false` dönerdi.
+                  Text(maskele(l.desc),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: refText(

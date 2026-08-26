@@ -110,11 +110,33 @@ void main() {
       });
     });
 
-    test('SAYAÇ hata metnine gömülmez', () {
-      // "3/5" bir yardımcı bilgidir, hata değil.
+    test('⚠ TEKLİF EKRANINDA AÇIKLAMA ALANI YOK', () {
+      // ── ÜRÜN KARARI (madde 3) ──
+      //
+      // Teklif verme ekranından açıklama alanı, karakter sayacı ve
+      // doğrulaması KALDIRILDI; ekranda yalnız teklif fiyatı kalır.
+      // Taraflar ayrıntıları iletişim açıldıktan sonra uygulama içi
+      // mesajlaşmadan konuşur.
       final j = _kod('lib/screens/job_detail_screen.dart');
-      expect(j.contains(r'($words/5)'), isFalse);
-      expect(j.contains('_noteError = FormMesaj.teklifAciklama;'), isTrue);
+      expect(j.contains('_noteError'), isFalse,
+          reason: 'açıklama doğrulaması geri gelmiş');
+      expect(j.contains('_note.text'), isFalse,
+          reason: 'açıklama alanı geri gelmiş');
+      expect(j.contains(r'/ 1000'), isFalse, reason: 'karakter sayacı kalmış');
+      // ⚠ Teklif TUTARI korunur.
+      expect(j.contains('_amtError'), isTrue);
+    });
+
+    test('⚠ KALDIRILAN BİLGİLENDİRMELER GERİ GELMEDİ', () {
+      // Maddeler 4-7.
+      final j = _kod('lib/screens/job_detail_screen.dart');
+      expect(j.contains('Teklif vermek ücretsizdir'), isFalse);
+      expect(j.contains('Bloke: '), isFalse);
+      expect(j.contains('taraflardan biri açtığında'), isFalse);
+      expect(j.contains("InfoBox(child: Text('Teklif verildi'))"), isFalse);
+      // ⚠ KALDIRILMAYACAKLAR yerinde.
+      expect(j.contains('Verdiğiniz Teklif'), isTrue);
+      expect(j.contains('İletişim Bilgileri Açıldı'), isTrue);
     });
   });
 

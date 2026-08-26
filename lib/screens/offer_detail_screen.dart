@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/validators.dart';
+import '../domain/iletisim_maskesi.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
@@ -326,7 +327,16 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(offer.note,
+                      // ── ⚠ İLETİŞİM KAPALIYKEN MASKELİ ──
+                      //
+                      // Hizmet veren de teklif notuna telefon/adres
+                      // yazarak bedelli adımı atlatabilir. Maskeleme
+                      // İKİ YÖNDE de uygulanır.
+                      //
+                      // ⚠ Mevcut `open` bayrağı kullanılır; yeni
+                      // iletişim mekanizması kurulmadı.
+                      child: Text(
+                          gorunenMetin(offer.note, iletisimAcik: open),
                           style: refText(
                               size: 11,
                               weight: RF.w400,

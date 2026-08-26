@@ -74,10 +74,22 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
   void initState() {
     super.initState();
     _odak.addListener(() {
-      if (!_odak.hasFocus && _controller.text.trim().isEmpty) {
-        // ⚠ Kutu kapanınca panel de gider; overlay'de asılı kalmaz.
+      if (!_odak.hasFocus) {
+        // ── ⚠ DIŞARI DOKUNMA = YALNIZCA PANELİ KAPAT ──
+        //
+        // Eski koşul `&& _controller.text.trim().isEmpty` idi: metin
+        // varken odak gitse bile panel AÇIK KALIYORDU. Kullanıcı
+        // yanlışlıkla başlığa dokunduğunda öneri listesi ekranda
+        // asılı duruyordu.
+        //
+        // ⚠ METİN SİLİNMEZ. Burada `_controller.clear()` ÇAĞRILMAZ;
+        // yalnız overlay kaldırılır ve kutu kapalı duruma döner.
+        // Kullanıcı tekrar dokunduğunda yazdığı metin yerinde olur ve
+        // kaldığı yerden devam eder. Metin YALNIZCA X ile temizlenir.
         _paneliKaldir();
-        setState(() => _acik = false);
+        if (_acik) {
+          setState(() => _acik = false);
+        }
       }
     });
   }
@@ -303,9 +315,23 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
               ),
               if (_controller.text.isNotEmpty)
                 RefTap(
+                  // ── ⚠ X = TEMİZLE + KAPAT + SIFIRLA ──
+                  //
+                  // Önce yalnız metin siliniyordu; overlay paneli AÇIK
+                  // kalıyordu. Artık panel de kaldırılır ve kutu
+                  // başlangıç durumuna döner.
+                  //
+                  // ⚠ İKON VE TASARIM DEĞİŞMEDİ — yalnız davranış.
                   onTap: () {
                     _controller.clear();
                     _ara('');
+                    _paneliKaldir();
+                    _odak.unfocus();
+                    setState(() {
+                      _acik = false;
+                      _oneriler = const [];
+                      _sonucYok.value = false;
+                    });
                   },
                   borderRadius: BorderRadius.circular(RR.circle),
                   child: const Padding(

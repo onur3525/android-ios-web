@@ -78,6 +78,8 @@ class ListingRepository extends ChangeNotifier {
     required String desc,
     List<String>? photoPaths,
     DateTime? createdAt,
+    // ⚠ İsteğe bağlı; `null` seçim yapılmadı demektir.
+    IsZamani? isZamani,
   }) {
     // ⚠ Numara BURADA üretilir; kullanıcıdan İSTENMEZ ve form
     // üzerinden geçirilmez.
@@ -85,6 +87,7 @@ class ListingRepository extends ChangeNotifier {
         id: _uuid.v4(), ilanNo: _ilanNoUret(), ownerId: ownerId,
         title: title,
         location: location, desc: desc, photoPaths: photoPaths,
+        isZamani: isZamani,
         createdAt: createdAt);
     _items.insert(0, l); // UUID sayesinde index kaydırma derdi YOK
     notifyListeners();

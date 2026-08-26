@@ -28,6 +28,7 @@ import '../data/category_tree.dart';
 import '../domain/config.dart';
 import '../data/controllers/profile_controller.dart';
 import 'widgets/ilan_kayit_adimi.dart';
+import 'widgets/is_zamani_secici.dart';
 import 'widgets/ilan_otp_adimi.dart';
 import '../core/validators.dart';
 import '../core/teshis.dart';
@@ -85,6 +86,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _kayit = KayitVerisi();
   final _otp = OtpVerisi();
   String? _cat;
+
+  /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
+  ///
+  /// ⚠ `null` başlar ve `null` kalabilir: kullanıcı hiçbir seçenek
+  /// seçmeden ilan verebilir. Zorunlu alan DEĞİLDİR, doğrulamaya
+  /// girmez, uyarı gösterilmez.
+  IsZamani? _isZamani;
 
   @override
   void initState() {
@@ -392,6 +400,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               '${_kayit.il ?? sehir}',
           desc: _desc.text.trim(),
           photoPaths: refs,
+          isZamani: _isZamani,
         );
     return r.error == null;
   }
@@ -569,6 +578,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       // ⚠ Yalnız CİHAZ yolları; sunucu referansı YOK.
       localPhotoPaths:
           _photos.map((p) => p.localPath).toList(growable: false),
+      // ⚠ Kayıtsız akışta seçim taslakta taşınır; kayıt sonrası
+      // ilan oluşturulurken kullanılır.
+      isZamani: _isZamani,
       createdAt: DateTime.now(),
     );
     await context.read<PendingListingController>().saveDraft(taslak);
@@ -626,7 +638,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         title: _cat!,
         location: '${_hood.text.trim()}, $_district / $cityName',
         desc: _desc.text.trim(),
-        photoPaths: refs);
+        photoPaths: refs,
+        isZamani: _isZamani);
     if (!mounted) {
       return;
     }
@@ -906,6 +919,25 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                     ),
                   ),
                 ),
+                // ⚠ ORTAK TEMİZLEME DÜĞMESİ.
+                //
+                // Kutunun İÇİNE `suffixIcon` olarak değil, satırın
+                // sonuna konur: bu alan `InputBorder.none` ile çıplak
+                // bir `TextField`; `suffixIcon` vermek dolgu ve
+                // yükseklik hesabını değiştirirdi. Satır sonu ekleme
+                // mevcut ölçüleri BOZMAZ.
+                //
+                // ⚠ Bu ekranda açılır panel YOK — sonuçlar sayfa
+                // içinde listelenir. Yalnız metin ve sorgu sıfırlanır;
+                // seçim (`_cat`) de düşer, yazıyla aynı kural.
+                RefAramaTemizle(
+                  controller: _aramaCtl,
+                  onTemizle: () => setState(() {
+                    _aramaCtl.clear();
+                    _catQuery = '';
+                    _cat = null;
+                  }),
+                ),
               ],
             ),
           ),
@@ -1006,6 +1038,28 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                         size: 16.5, weight: RF.w700, color: RC.text)),
               ],
             ),
+          ),
+
+          // ── ⚠ İŞİN NE ZAMAN YAPILACAĞI — İSTEĞE BAĞLI ──
+          //
+          // ⚠ KONUM: kategori özetinin hemen altı, "Açıklama"
+          // başlığının üstü. Doğal sıra bu: kullanıcı NE yaptıracağını
+          // seçti, şimdi NE ZAMAN; ardından anlatıyor.
+          //
+          // ⚠ Açıklama alanını aşağı İTMEZ: tek satır başlık + tek
+          // satır seçenek; ekran dikey olarak büyümez.
+          //
+          // ⚠ ZORUNLU DEĞİL: doğrulamaya girmez, "(Zorunlu)" etiketi
+          // yoktur, seçilmezse uyarı gösterilmez.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(1, 16, 1, 3),
+            child: Text('İşin ne zaman yapılacağı',
+                style: refText(
+                    size: RF.s16, weight: RF.w700, color: RC.text)),
+          ),
+          IsZamaniSecici(
+            secili: _isZamani,
+            onDegisti: (z) => setState(() => _isZamani = z),
           ),
 
           // .po-h3{16px/700;margin:16px 1px 3px} + .po-req

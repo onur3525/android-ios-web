@@ -33,6 +33,8 @@ class ListingController extends BaseController {
     required String location,
     required String desc,
     List<String>? photoPaths,
+    // ⚠ İsteğe bağlı işin yapılma zamanı; `null` = seçim yok.
+    IsZamani? isZamani,
   }) async {
     if (isBusy('publish')) {
       return (listing: null, error: const ValidationError('İlan yayınlanıyor — lütfen bekleyin'));
@@ -42,7 +44,7 @@ class ListingController extends BaseController {
     await runAction('publish', () async {
       result = await _listings.publish(
           ownerId: ownerId, title: title, location: location,
-          desc: desc, photoPaths: photoPaths);
+          desc: desc, photoPaths: photoPaths, isZamani: isZamani);
       return result.error;
     }, onSuccess: () => _listings.loadMine(ownerId));
     return result;

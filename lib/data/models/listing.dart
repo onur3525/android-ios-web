@@ -35,6 +35,47 @@ enum ListingStatus {
 }
 
 
+/// İŞİN NE ZAMAN YAPILMASI İSTENDİĞİ.
+///
+/// ⚠ İSTEĞE BAĞLIDIR: alan `null` olabilir ve olması normaldir.
+/// Kullanıcı hiçbir şey seçmeden ilan verebilir; seçim yapılmadıysa
+/// ilanda zaman bilgisi HİÇ GÖSTERİLMEZ.
+///
+/// ⚠ ÜÇ SEÇENEK KESİNDİR. "Acil", "Bugün", "Yarın", "Planlı" gibi
+/// başka değerler EKLENMEZ; tarih seçici de yoktur (ürün kararı).
+enum IsZamani {
+  hemen,
+  buHafta,
+  esnek;
+
+  /// Kullanıcıya ve hizmet verene gösterilen etiket.
+  ///
+  /// ⚠ TEK KAYNAK: ekranlar kendi metnini yazmaz, ikisi de buradan
+  /// okur; oluşturma ile görüntüleme ayrışmaz.
+  String get etiket => switch (this) {
+        IsZamani.hemen => 'Hemen',
+        IsZamani.buHafta => 'Bu hafta',
+        IsZamani.esnek => 'Esnek zaman',
+      };
+
+  /// Sunucuya gidecek değer.
+  String get kod => switch (this) {
+        IsZamani.hemen => 'NOW',
+        IsZamani.buHafta => 'THIS_WEEK',
+        IsZamani.esnek => 'FLEXIBLE',
+      };
+
+  /// ⚠ BİLİNMEYEN DEĞER `null` DÖNER, hata fırlatmaz: sunucu ileride
+  /// yeni bir değer gönderirse uygulama çökmez, yalnız etiket
+  /// gösterilmez.
+  static IsZamani? koddan(String? k) => switch (k) {
+        'NOW' => IsZamani.hemen,
+        'THIS_WEEK' => IsZamani.buHafta,
+        'FLEXIBLE' => IsZamani.esnek,
+        _ => null,
+      };
+}
+
 class Listing {
   final String id;       // değişmez UUID
 
@@ -64,6 +105,16 @@ class Listing {
   ListingStatus status;
   List<String> photoPaths;
   String? selectedOfferId;
+
+  /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
+  ///
+  /// ⚠ `null` = kullanıcı seçim YAPMADI. Bu bir eksiklik değildir;
+  /// ilanda hiçbir zaman etiketi gösterilmez.
+  ///
+  /// ⚠ `final` DEĞİL: kullanıcı ilanını düzenlerken seçimini
+  /// değiştirebilmeli veya kaldırabilmelidir.
+  IsZamani? isZamani;
+
   final DateTime createdAt;
   final DateTime expiresAt;   // createdAt + DomainConfig.listingLifetime
 
@@ -75,6 +126,8 @@ class Listing {
     required this.location,
     required this.desc,
     this.status = ListingStatus.active,
+    // ⚠ İSTEĞE BAĞLI: verilmezse `null` kalır, seçim yapılmamış demektir.
+    this.isZamani,
     List<String>? photoPaths,
     DateTime? createdAt,
   })  : photoPaths = photoPaths ?? [],

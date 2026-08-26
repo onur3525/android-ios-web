@@ -208,7 +208,8 @@ class ProfileScreen extends StatelessWidget {
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pstar.svg',
           iconBg: const Color(0xFFFDEAF1),
-          title: 'Değerlendirmelerim',
+          // ⚠ BAŞLIK DEĞİŞTİ (madde 8). Alt açıklama AYNEN korundu.
+          title: 'Müşteri Yorumları',
           subtitle: 'Aldığınız puan ve yorumları görüntüleyin.',
           onTap: () => Navigator.pushNamed(c, '/provider/reviews'),
         ),

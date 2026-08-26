@@ -243,6 +243,8 @@ abstract class ListingPort extends ChangeNotifier {
     required String location,
     required String desc,
     List<String>? photoPaths,
+    // ⚠ İSTEĞE BAĞLI: `null` = kullanıcı zaman seçmedi.
+    IsZamani? isZamani,
   });
   // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
   //

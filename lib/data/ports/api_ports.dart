@@ -326,10 +326,11 @@ class ApiListingPort extends ListingPort {
     required String location,
     required String desc,
     List<String>? photoPaths,
+    IsZamani? isZamani,
   }) async {
     final (l, err) = await repo.create(
         title: title, location: location, description: desc,
-        photoRefs: photoPaths ?? const []);
+        photoRefs: photoPaths ?? const [], isZamani: isZamani);
     return (listing: l, error: err);
   }
 

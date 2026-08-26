@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'listing.dart';
+
 /// KAYIT ÖNCESİ HAZIRLANAN İLAN (TASLAK)
 ///
 /// Kayıtsız kullanıcı ana sayfadaki kategoriden veya "Hizmet Ara"
@@ -27,6 +29,12 @@ class PendingListing {
   /// Cihazdaki fotoğraf yolları. Yükleme kayıt SONRASINDA yapılır.
   final List<String> localPhotoPaths;
 
+  /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
+  ///
+  /// ⚠ Kayıtsız akışta da taşınır: kullanıcı ilanı doldurup kayıt
+  /// olduğunda seçimi KAYBOLMAZ.
+  final IsZamani? isZamani;
+
   final DateTime createdAt;
 
   const PendingListing({
@@ -37,6 +45,7 @@ class PendingListing {
     this.district = '',
     this.neighborhood = '',
     this.localPhotoPaths = const [],
+    this.isZamani,
     required this.createdAt,
   });
 
@@ -82,6 +91,9 @@ class PendingListing {
         'district': district,
         'neighborhood': neighborhood,
         'localPhotoPaths': localPhotoPaths,
+        // ⚠ SEÇİM YOKSA ANAHTAR YAZILMAZ: eski taslaklar okunurken
+        // `null` döner ve sorun çıkmaz.
+        if (isZamani != null) 'isZamani': isZamani!.kod,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -95,6 +107,9 @@ class PendingListing {
         localPhotoPaths: ((j['localPhotoPaths'] as List<dynamic>?) ?? const [])
             .whereType<String>()
             .toList(growable: false),
+        // ⚠ Alan yoksa ya da bilinmeyense `null` — eski taslaklarla
+        // geriye dönük uyumlu.
+        isZamani: IsZamani.koddan(j['isZamani'] as String?),
         createdAt:
             DateTime.tryParse((j['createdAt'] as String?) ?? '') ??
                 DateTime.now(),

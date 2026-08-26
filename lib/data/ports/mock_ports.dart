@@ -334,6 +334,7 @@ class MockListingPort extends ListingPort {
     required String location,
     required String desc,
     List<String>? photoPaths,
+    IsZamani? isZamani,
   }) async {
     final hata = _cikarCatismasi(ownerId, title);
     if (hata != null) {
@@ -341,7 +342,7 @@ class MockListingPort extends ListingPort {
     }
     final l = listings.create(
         ownerId: ownerId, title: title, location: location,
-        desc: desc, photoPaths: photoPaths);
+        desc: desc, photoPaths: photoPaths, isZamani: isZamani);
     return (listing: l, error: null);
   }
 

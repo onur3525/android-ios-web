@@ -17,7 +17,17 @@ import '../../ui/ref_tokens.dart';
 ///
 /// ⚠ İKİNCİL BİLGİDİR. Başlık, kategori, konum ve fiyatın ÖNÜNE
 /// GEÇMEZ: küçük punto, soluk renk, kalın değil. Kartlarda tek
-/// satır, detay ekranında sabit bir bilgi alanında.
+/// ── ⚠ TEK KURAL: SAĞ ÜST KÖŞE ──
+///
+/// İlan numarası YALNIZ DETAY ekranlarında gösterilir ve her zaman
+/// başlığın ÜSTÜNDE, sağ köşede durur.
+///
+/// ⚠ ÖNİZLEME KARTLARINDA GÖSTERİLMEZ: liste kartında numara yer
+/// kaplıyor ve kullanıcı kartları başlığa göre tarıyor. Numara
+/// karta girince gerekli.
+///
+/// ⚠ YENİ İLAN EKRANLARI DA BU KURALA UYAR: numara göstermek gereken
+/// her detay ekranı bu bileşeni çağırır, kendi hizalamasını YAZMAZ.
 ///
 /// ## BOŞ NUMARA
 ///
@@ -26,29 +36,36 @@ import '../../ui/ref_tokens.dart';
 /// etiket göstermek kullanıcıyı yanıltır.
 /// ═══════════════════════════════════════════════════════════════
 class IlanNoEtiketi extends StatelessWidget {
-  const IlanNoEtiketi(this.listing, {super.key, this.hizali = false});
+  /// ⚠ VARSAYILAN: SAĞ ÜST KÖŞE.
+  ///
+  /// Ürün kuralı gereği ilan numarası detay ekranlarında başlığın
+  /// ÜSTÜNDE, sağ köşede durur. Bu yüzden varsayılan davranış budur;
+  /// çağıran ekranların ayrıca hizalama yazmasına gerek yoktur.
+  const IlanNoEtiketi(this.listing, {super.key});
 
   final Listing listing;
-
-  /// Detay ekranlarında satırın soluna hizalanır; kartlarda akışta.
-  final bool hizali;
 
   @override
   Widget build(BuildContext context) {
     if (listing.ilanNo.trim().isEmpty) {
       return const SizedBox.shrink();
     }
-    final metin = Text(
-      listing.ilanNoEtiketi,
-      style: refText(
-        size: RF.s12,
-        weight: RF.w400,
-        color: RC.textSoft,
-        letterSpacing: RF.lsM02,
+    // ⚠ SAĞA YASLI + ALTINDA BOŞLUK: başlıkla arasında sabit aralık,
+    // ekranlar kendi `SizedBox`ını eklemez — ölçü tek yerde.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          listing.ilanNoEtiketi,
+          style: refText(
+            size: RF.s12,
+            weight: RF.w400,
+            color: RC.textSoft,
+            letterSpacing: RF.lsM02,
+          ),
+        ),
       ),
     );
-    return hizali
-        ? Align(alignment: Alignment.centerLeft, child: metin)
-        : metin;
   }
 }

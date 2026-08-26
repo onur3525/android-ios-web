@@ -1,4 +1,5 @@
 import '../api_client.dart';
+import '../../models/listing.dart';
 
 /// /listings uçları — 30 saat kuralı ve durum makinesi SUNUCUDA işler.
 class ListingApi {
@@ -18,10 +19,17 @@ class ListingApi {
     required String location,
     required String description,
     List<String> photoRefs = const [],
+    IsZamani? isZamani,
   }) =>
       c.post('/listings', body: {
         'title': title, 'location': location,
         'description': description, 'photoRefs': photoRefs,
+        // ⚠ SEÇİM YOKSA ALAN HİÇ GÖNDERİLMEZ.
+        //
+        // `null` göndermek yerine alanı atlamak, sunucunun "seçim
+        // yapılmadı" ile "boş gönderildi" arasında ayrım yapmasını
+        // gerektirmez.
+        if (isZamani != null) 'workTiming': isZamani.kod,
       });
 
   Future<Map<String, dynamic>> update(String id, {String? title, String? description}) =>

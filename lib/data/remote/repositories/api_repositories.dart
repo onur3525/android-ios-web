@@ -277,9 +277,11 @@ class ApiListingRepository extends ChangeNotifier {
   Future<(Listing?, DomainError?)> create({
     required String title, required String location,
     required String description, List<String> photoRefs = const [],
+    IsZamani? isZamani,
   }) async {
     final (res, err) = await _guard(() => _api.create(
-        title: title, location: location, description: description, photoRefs: photoRefs));
+        title: title, location: location, description: description,
+        photoRefs: photoRefs, isZamani: isZamani));
     if (err != null) {
       return (null, err);
     }

@@ -208,15 +208,52 @@ void main() {
       expect(l.ilanNoEtiketi, 'İlan No: ${l.ilanNo}');
     });
 
-    test('kart ve detay ekranları etiketi gösterir', () {
-      const ekranlar = [
-        'lib/screens/my_listings_screen.dart', // müşteri listesi
-        'lib/screens/jobs_screen.dart', // hizmet veren listesi
+    test('⚠ YALNIZ DETAY EKRANLARI ETİKETİ GÖSTERİR', () {
+      // ── ÜRÜN KURALI (değişti) ──
+      //
+      // Numara ÖNİZLEME kartlarında GÖSTERİLMEZ: liste kartında yer
+      // kaplıyor ve kullanıcı kartları BAŞLIĞA göre tarıyor. Numara
+      // karta girince gerekli.
+      for (final f in const [
         'lib/screens/listing_detail_screen.dart', // müşteri detayı
         'lib/screens/job_detail_screen.dart', // hizmet veren detayı
-      ];
-      for (final f in ekranlar) {
+      ]) {
         expect(_kod(f).contains('IlanNoEtiketi('), isTrue, reason: f);
+      }
+      for (final f in const [
+        'lib/screens/my_listings_screen.dart', // müşteri listesi
+        'lib/screens/jobs_screen.dart', // hizmet veren listesi
+      ]) {
+        expect(_kod(f).contains('IlanNoEtiketi('), isFalse,
+            reason: '$f: önizleme kartında numara gösteriliyor');
+      }
+    });
+
+    test('⚠ SAĞ ÜST KÖŞE — KURAL BİLEŞENDE SABİT', () {
+      // ⚠ Hizalama ve alt boşluk `IlanNoEtiketi` içinde tanımlıdır;
+      // ekranlar kendi hizalamasını YAZMAZ. Böylece YENİ ilan detay
+      // ekranları da bileşeni çağırmakla aynı kurala uyar.
+      final w = _kod('lib/screens/widgets/ilan_no_etiketi.dart');
+      expect(w.contains('Alignment.centerRight'), isTrue,
+          reason: 'sağa yaslama bileşende değil');
+      expect(w.contains('EdgeInsets.only(bottom: 4)'), isTrue,
+          reason: 'başlıkla arasındaki boşluk bileşende değil');
+      // Eski sola yaslama geri gelmemeli.
+      expect(w.contains('Alignment.centerLeft'), isFalse);
+    });
+
+    test('⚠ NUMARA BAŞLIĞIN ÜSTÜNDE ÇİZİLİR', () {
+      // Etiket, kategori/başlık satırlarından ÖNCE gelmeli.
+      for (final f in const [
+        'lib/screens/listing_detail_screen.dart',
+        'lib/screens/job_detail_screen.dart',
+      ]) {
+        final k = _kod(f);
+        final numara = k.indexOf('IlanNoEtiketi(l)');
+        final baslik = k.indexOf('kategoriAdi(l.title) != null');
+        expect(numara, greaterThan(0), reason: f);
+        expect(numara, lessThan(baslik),
+            reason: '$f: numara başlıktan SONRA çiziliyor');
       }
     });
 

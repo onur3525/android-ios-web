@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'job_detail_screen.dart';
+import 'listing_detail_screen.dart';
 import 'widgets/hata_gosterimi.dart';
 import '../domain/hata_mesajlari.dart';
 import 'package:provider/provider.dart';
@@ -132,7 +134,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       };
 
   /// Bildirim hedefi — mevcut yönlendirme kuralı KORUNDU.
-  void _openTarget(BuildContext context, NotifType t) {
+  /// BİLDİRİMDEN İLGİLİ İÇERİĞE YÖNLENDİRME.
+  ///
+  /// ── ⚠ NİÇİN `refId` GEREKLİ ──
+  ///
+  /// Önce yalnız TÜRE bakılıyordu; "Yeni teklif aldınız" bildirimine
+  /// dokunan kullanıcı Bildirimler ekranında KALIYORDU. Hangi ilana
+  /// gideceği `refId`de duruyor ve okunmuyordu.
+  ///
+  /// ⚠ `refId` BOŞSA YERİNDE KALINIR: uydurma bir ilana yönlendirmek
+  /// yerine hiçbir şey yapılmaz.
+  void _openTarget(BuildContext context, NotifType t, String? refId) {
+    final ilan = refId?.trim();
+    final gecerli = ilan != null && ilan.isNotEmpty;
+
     switch (t) {
       case NotifType.announcement:
         // Duyuru detay ekranı YOK; geçersiz route üretilmez.
@@ -140,11 +155,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case NotifType.accountStatus:
       case NotifType.categoryRequest:
         Navigator.pushNamed(context, '/provider/status');
+
+      // ── HİZMET ALANIN İLANINA ──
+      //
+      // "Yeni teklif aldınız" ve "teklifiniz seçildi" ilan sahibine
+      // gider; ilan detayında gelen teklifler listelenir.
       case NotifType.newOffer:
       case NotifType.offerSelected:
-      case NotifType.refund:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => ListingDetailScreen(listingId: ilan)));
+        }
+
+      // ── HİZMET VERENİN İŞ DETAYINA ──
+      //
+      // İletişim açıldı / yeni mesaj bildirimleri hizmet verene gider;
+      // iş detayında telefon ve mesajlaşma bulunur.
       case NotifType.contactOpened:
       case NotifType.newMessage:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => JobDetailScreen(listingId: ilan)));
+        }
+
+      case NotifType.refund:
       case NotifType.listingExpired:
       case NotifType.unknown:
         break;
@@ -249,7 +287,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 gorunum: _gorunum(n.type),
                 onTap: () {
                   context.read<NotificationController>().markRead(n.id);
-                  _openTarget(context, n.type);
+                  _openTarget(context, n.type, n.refId);
                 },
               ),
               const SizedBox(height: 10),

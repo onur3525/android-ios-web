@@ -1769,8 +1769,16 @@ class RefBottomNav extends StatelessWidget {
     required this.activeKey,
   });
 
-  final List<({String key, String label, String asset, VoidCallback onTap})>
-      items;
+  /// ⚠ `rozet`: sekmenin üstünde okunmamış göstergesi çizilsin mi?
+  /// Varsayılan davranış YOK — her çağıran açıkça belirtir.
+  final List<
+      ({
+        String key,
+        String label,
+        String asset,
+        VoidCallback onTap,
+        bool rozet
+      })> items;
 
   /// Etkin sekmenin anahtarı (`ilanver` / `ilanlarim` / `bildirim` / `profil`).
   final String activeKey;
@@ -1796,10 +1804,43 @@ class RefBottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      RefSvg(
-                        it.asset,
-                        size: 22,
-                        color: it.key == activeKey ? RC.blue : RC.textMuted,
+                      // ── ⚠ OKUNMAMIŞ BİLDİRİM GÖSTERGESİ ──
+                      //
+                      // Kullanıcı Bildirimler ekranına GİRMEDEN yeni
+                      // bildirim olduğunu anlamalı.
+                      //
+                      // ⚠ SAYI DEĞİL NOKTA: sekme dar; iki haneli sayı
+                      // ikonu itip hizayı bozardı. Nokta yalnız "yeni
+                      // var" bilgisini verir, ekranda sayı zaten
+                      // görünür.
+                      //
+                      // ⚠ ÖLÇÜ DEĞİŞMEZ: nokta `Stack` içinde ikonun
+                      // ÜSTÜNE çizilir, yer kaplamaz.
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          RefSvg(
+                            it.asset,
+                            size: 22,
+                            color:
+                                it.key == activeKey ? RC.blue : RC.textMuted,
+                          ),
+                          if (it.rozet)
+                            Positioned(
+                              right: -2,
+                              top: -1,
+                              child: Container(
+                                width: 9,
+                                height: 9,
+                                decoration: BoxDecoration(
+                                  color: RC.blue,
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: RC.white, width: 1.5),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4), // gap:4px
                       Text(
@@ -4310,6 +4351,60 @@ const double kSifreGozuDokunma = 48;
 /// ⚠ `Listener` kullanılır, `GestureDetector` DEĞİL: parmak düğmenin
 /// dışına kayarsa `onTapUp` hiç tetiklenmez ve şifre AÇIK KALIRDI.
 /// `onPointerUp` ve `onPointerCancel` her koşulda gelir.
+/// ARAMA TEMİZLEME DÜĞMESİ — tüm arama çubuklarında ORTAK.
+///
+/// ── ⚠ NİÇİN ORTAK ──
+///
+/// Aynı davranış beş ekranda ayrı ayrı yazılırsa biri güncellenip
+/// öteki unutulur. Tek bileşen: X ikonu, ölçüsü ve dokunma alanı her
+/// arama çubuğunda AYNI.
+///
+/// ⚠ YALNIZCA METİN VARKEN ÇİZİLİR — çağıran taraf koşulu kendisi
+/// yazmaz, bileşen `controller`'a bakar.
+///
+/// ⚠ `ic_close` KULLANILIR, `ic_x` DEĞİL: `ic_x` çift renklidir
+/// (gri daire + beyaz çarpı) ve boyandığında düz bir noktaya
+/// dönüşür. `ic_close` tek renkli çizgi çarpıdır.
+class RefAramaTemizle extends StatelessWidget {
+  const RefAramaTemizle({
+    super.key,
+    required this.controller,
+    required this.onTemizle,
+    this.boyut = 18,
+  });
+
+  final TextEditingController controller;
+
+  /// ⚠ Metni silmek YETMEZ: çağıran taraf ayrıca açık öneri panelini
+  /// kapatmalı ve arama durumunu sıfırlamalıdır. Bu yüzden temizleme
+  /// işi bileşene GÖMÜLMEDİ, çağırana bırakıldı.
+  final VoidCallback onTemizle;
+  final double boyut;
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠ Metin değişince yeniden çizilmeli; çağıranın `setState`ine
+    // bağlı kalmaz.
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (_, deger, __) {
+        if (deger.text.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return RefTap(
+          onTap: onTemizle,
+          borderRadius: BorderRadius.circular(RR.circle),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: RefSvg('assets/svg/ic_close.svg',
+                size: boyut, color: RC.textSoft),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class RefSifreGozu extends StatelessWidget {
   const RefSifreGozu({
     super.key,
