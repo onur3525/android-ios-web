@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -33,8 +35,11 @@ jobs:
       - name: Build Debug APK
         run: flutter build apk --debug
 
-      - name: Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          tag_name: debug-v${{ github.run_number }}
+          name: Debug APK Build #${{ github.run_number }}
+          files: build/app/outputs/flutter-apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
