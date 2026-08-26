@@ -1,4 +1,4 @@
-name: HizmetCep Test APK
+name: HizmetCep Android Debug APK
 
 on:
   push:
@@ -9,9 +9,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: hizmetcep-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android-apk:
-    name: Android Debug APK
+    name: Build Android Debug APK
     runs-on: ubuntu-latest
 
     steps:
@@ -40,56 +44,69 @@ jobs:
         run: flutter build apk --debug
 
       - name: Verify APK
+        shell: bash
         run: |
-          test -f build/app/outputs/flutter-apk/app-debug.apk
-          echo "APK bulundu:"
-          ls -lh build/app/outputs/flutter-apk/app-debug.apk
+          set -e
+          APK="build/app/outputs/flutter-apk/app-debug.apk"
 
-    - name: Create GitHub Release and upload APK
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        TAG="debug-${{ github.run_id }}"
-        APK="build/app/outputs/flutter-apk/app-debug.apk"
+          if [ ! -f "$APK" ]; then
+            echo "HATA: APK oluşturulamadı: $APK"
+            exit 1
+          fi
 
-        echo "Release oluşturuluyor: $TAG"
+          echo "APK başarıyla oluşturuldu:"
+          ls -lh "$APK"
 
-        gh release create "$TAG" "$APK#HizmetCep Debug APK" \
-          --repo "$GITHUB_REPOSITORY" \
-          --title "HizmetCep Debug APK #${{ github.run_number }}" \
-          --notes "GitHub Actions tarafından oluşturuldu. Run: ${{ github.run_id }}"
+          echo "SHA-256:"
+          sha256sum "$APK"
 
-    - name: Verify GitHub Release APK
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        TAG="debug-${{ github.run_id }}"
+      - name: Create GitHub Release and upload APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -e
 
-        echo "Release doğrulanıyor..."
+          TAG="debug-${{ github.run_number }}"
+          APK="build/app/outputs/flutter-apk/app-debug.apk"
 
-        gh release view "$TAG" \
-          --repo "$GITHUB_REPOSITORY"
+          echo "Release oluşturuluyor: $TAG"
 
-        echo ""
-        echo "APK asset kontrolü..."
+          gh release create "$TAG" \
+            "$APK#HizmetCep Debug APK" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "HizmetCep Debug APK #${{ github.run_number }}" \
+            --notes "GitHub Actions tarafından oluşturuldu. Run: ${{ github.run_id }}"
 
-        gh release view "$TAG" \
-          --repo "$GITHUB_REPOSITORY" \
-          --json assets \
-          --jq '.assets[] | select(.name == "app-debug.apk") | "\(.name) | \(.size) bytes | \(.url)"'
+          echo "Release başarıyla oluşturuldu."
 
-        COUNT=$(gh release view "$TAG" \
-          --repo "$GITHUB_REPOSITORY" \
-          --json assets \
-          --jq '[.assets[] | select(.name == "app-debug.apk")] | length')
+      - name: Verify GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -e
 
-        if [ "$COUNT" != "1" ]; then
-          echo "HATA: APK Release asset olarak bulunamadı."
-          exit 1
-        fi
+          TAG="debug-${{ github.run_number }}"
 
-        echo ""
-        echo "========================================"
-        echo "APK RELEASE OLARAK BAŞARIYLA YÜKLENDİ"
-        echo "========================================"
-        echo "Release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          echo "Release doğrulanıyor..."
+
+          gh release view "$TAG" \
+            --repo "$GITHUB_REPOSITORY"
+
+          COUNT="$(gh release view "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            --jq '[.assets[] | select(.name == "app-debug.apk")] | length')"
+
+          if [ "$COUNT" != "1" ]; then
+            echo "HATA: app-debug.apk Release asset olarak bulunamadı."
+            exit 1
+          fi
+
+          echo ""
+          echo "========================================"
+          echo "APK BAŞARIYLA OLUŞTURULDU VE YÜKLENDİ"
+          echo "========================================"
+          echo "Release:"
+          echo "https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
