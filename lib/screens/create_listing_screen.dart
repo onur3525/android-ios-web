@@ -1053,12 +1053,42 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           //
           // ⚠ ZORUNLU DEĞİL: doğrulamaya girmez, "(Zorunlu)" etiketi
           // yoktur, seçilmezse uyarı gösterilmez.
+          // ── ⚠ BAŞLIK ÖTEKİ BÖLÜMLERLE AYNI RİTİMDE ──
+          //
+          // Ekrandaki her bölüm İKİ KATMANLI: kalın başlık + yanında
+          // durum etiketi + altında ince gri açıklama satırı
+          // ("Açıklama (Zorunlu)" / "Hizmetinizle ilgili detayları
+          // yazın.").
+          //
+          // Bu bölüm tek katmandı: düğmeler doğrudan başlığın altına
+          // yapışıyor, ekranda ötekilerden farklı bir ritim
+          // oluşturuyordu.
+          //
+          // ⚠ "(Opsiyonel)" ETİKETİ EKLENDİ — Fotoğraf bölümündeki
+          // etiketle AYNI biçim ve ölçüde. Kullanıcı bu alanın
+          // zorunlu olmadığını görmeliydi; hiçbir işaret yoktu.
           Padding(
             padding: const EdgeInsets.fromLTRB(1, 16, 1, 3),
-            child: Text('İşin ne zaman yapılacağı',
-                style: refText(
-                    size: RF.s16, weight: RF.w700, color: RC.text)),
+            child: Row(
+              children: [
+                Text('Hizmet Zamanı',
+                    style: refText(
+                        size: RF.s16, weight: RF.w700, color: RC.text)),
+                const SizedBox(width: 6),
+                Text('(Opsiyonel)',
+                    style: refText(
+                        size: RF.s125, weight: RF.w500, color: RC.textSoft)),
+              ],
+            ),
           ),
+          // ⚠ Açıklama satırı: öteki bölümlerdeki gri satırla aynı rol
+          // ve aynı stil. Aynı zamanda başlıkla düğmeler arasına
+          // doğal bir nefes koyar.
+          Text('Zaman tercihiniz varsa belirtin.',
+              style: refText(
+                  size: RF.s13, weight: RF.w400, color: RC.textSoft)),
+          // ⚠ 3 → 10: düğmeler başlığa yapışık duruyordu.
+          const SizedBox(height: 10),
           IsZamaniSecici(
             secili: _isZamani,
             onDegisti: (z) => setState(() => _isZamani = z),

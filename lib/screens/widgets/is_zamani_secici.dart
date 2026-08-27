@@ -43,8 +43,10 @@ class IsZamaniSecici extends StatelessWidget {
     // ⚠ `Wrap`: dar ekranda üç seçenek sığmazsa alt satıra iner,
     // taşma olmaz. `Row` sabit genişlik zorlar ve metni keserdi.
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      // ⚠ 8 → 10: üç düğme arasında nefes olsun; dar ekranda alt
+      // satıra inerse dikey aralık da aynı kalır.
+      spacing: 10,
+      runSpacing: 10,
       children: [
         for (final z in IsZamani.values) _secenek(z),
       ],

@@ -126,30 +126,42 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
                     vertical: 13, horizontal: 4),
                 child: Row(children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    // ── ⚠ AD VE DURUM AYNI SATIRDA ──
+                    //
+                    // "İstanbul — Yakında" biçimi. Alt satır DEĞİL:
+                    // tek kelimelik bir ibare için ikinci satır
+                    // açmak listeyi gereksiz uzatıyordu.
+                    child: Row(
                       children: [
-                        Text(il,
-                            style: refText(
-                                size: RF.s145,
-                                weight: il == _il ? RF.w700 : RF.w500,
-                                // ⚠ PASİF İL SOLUK: seçilemeyeceği
-                                // dokunmadan önce anlaşılsın.
-                                color: rc.sehirAktif(il)
-                                    ? RC.text
-                                    : RC.greyLight)),
-                        // ── ⚠ DURUM YAZISI ──
+                        Flexible(
+                          child: Text(il,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: refText(
+                                  size: RF.s145,
+                                  weight: il == _il ? RF.w700 : RF.w500,
+                                  // ⚠ PASİF İL SOLUK: seçilemeyeceği
+                                  // dokunmadan önce anlaşılsın.
+                                  color: rc.sehirAktif(il)
+                                      ? RC.text
+                                      : RC.greyLight)),
+                        ),
+                        // ── ⚠ YALNIZ PASİF İLDE "Yakında" ──
                         //
-                        // "Şimdi HizmetCep'te" / "Yakında HizmetCep'te"
-                        // metni `RegionController`dan gelir; il seçen
-                        // ekranlar kendi metnini yazmaz.
-                        Text(rc.sehirDurumu(il),
-                            style: refText(
-                                size: RF.s12,
-                                weight: RF.w500,
-                                color: rc.sehirAktif(il)
-                                    ? RC.blue
-                                    : RC.greyLight)),
+                        // Aktif ilin yanında hiçbir şey yazmaz;
+                        // `sehirDurumu` orada `null` döner.
+                        //
+                        // ⚠ KOŞULSUZ GÖSTERİLİR: kullanıcı hangi ilin
+                        // henüz açılmadığını görmeli. Bir il aktif
+                        // edildiği an ibare KENDİLİĞİNDEN kalkar.
+                        if (rc.sehirDurumu(il) != null) ...[
+                          const SizedBox(width: 8),
+                          Text('— ${rc.sehirDurumu(il)}',
+                              style: refText(
+                                  size: RF.s125,
+                                  weight: RF.w500,
+                                  color: RC.greyLight)),
+                        ],
                       ],
                     ),
                   ),
@@ -348,6 +360,15 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
                             ),
                             onChanged: (_) => setState(() {}),
                           ),
+                        ),
+                        // ── ⚠ TEMİZLEME DÜĞMESİ ──
+                        //
+                        // Yanlış yazılan aramayı tek tek silmek yerine
+                        // tek dokunuşla temizler. Yalnız metin varken
+                        // çizilir (bileşen kendisi denetler).
+                        RefAramaTemizle(
+                          controller: _search,
+                          onTemizle: () => setState(_search.clear),
                         ),
                       ]),
                     ),

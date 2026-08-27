@@ -64,11 +64,16 @@ void main() {
     });
 
     test('⚠ ZORUNLU ALAN DEĞİL — doğrulamaya girmez', () {
+      // ⚠ BAŞLIK DEĞİŞTİ: "İşin ne zaman yapılacağı" → "Hizmet Zamanı"
+      // (ürün kararı). Eski metin form etiketi gibi soğuk duruyordu.
       final k = _kod('lib/screens/create_listing_screen.dart');
-      final i = k.indexOf('İşin ne zaman yapılacağı');
+      final i = k.indexOf('Hizmet Zamanı');
       expect(i, greaterThan(0), reason: 'alan eklenmemiş');
-      // Başlığın yanında "(Zorunlu)" etiketi olmamalı.
-      expect(k.substring(i, i + 240).contains('(Zorunlu)'), isFalse);
+      // ⚠ "(Zorunlu)" DEĞİL "(Opsiyonel)": kullanıcı bu alanın
+      // isteğe bağlı olduğunu görmeli.
+      final blok = k.substring(i, i + 320);
+      expect(blok.contains('(Zorunlu)'), isFalse);
+      expect(blok.contains('(Opsiyonel)'), isTrue);
     });
   });
 

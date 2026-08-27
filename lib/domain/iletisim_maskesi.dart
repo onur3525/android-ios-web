@@ -289,11 +289,127 @@ List<_Aralik> _tarifliKonum(String metin) {
 /// Metinde maskelenecek bir şey var mı?
 bool iletisimIceriyor(String metin) => _tumAraliklar(metin).isNotEmpty;
 
+/// ── ⚠ YAZIYLA YAZILAN RAKAM ──
+///
+/// "beş beş beş üç bir dokuz dokuz üç" gibi. Rakam kullanmadan numara
+/// vermenin en yaygın yolu; blok tespiti bunu göremez çünkü ortada
+/// rakam yoktur.
+///
+/// Yöntem: ardışık sayı SÖZCÜKLERİ bulunur, rakama çevrilir ve aynı
+/// telefon kalıbına vurulur.
+const Map<String, String> _sayiSozcugu = {
+  'sıfır': '0', 'sifir': '0',
+  'bir': '1', 'iki': '2', 'üç': '3', 'uc': '3', 'dört': '4', 'dort': '4',
+  'beş': '5', 'bes': '5', 'altı': '6', 'alti': '6', 'yedi': '7',
+  'sekiz': '8', 'dokuz': '9',
+};
+
+List<_Aralik> _yaziylaRakam(String metin) {
+  final out = <_Aralik>[];
+  final kucuk = trKucuk(metin);
+  // Sözcük sınırlarıyla tara.
+  final kelime = RegExp(r'[a-zçğıöşü]+').allMatches(kucuk).toList();
+  var i = 0;
+  while (i < kelime.length) {
+    if (!_sayiSozcugu.containsKey(kelime[i].group(0))) {
+      i++;
+      continue;
+    }
+    var j = i;
+    final b = StringBuffer();
+    while (j < kelime.length &&
+        _sayiSozcugu.containsKey(kelime[j].group(0))) {
+      b.write(_sayiSozcugu[kelime[j].group(0)]);
+      j++;
+    }
+    // ⚠ EN AZ 7 HANE: "üç oda" ya da "iki kat" yanlışlıkla
+    // yakalanmasın. Kısa sayı dizileri günlük dilde çok yaygın.
+    if (b.length >= 7) {
+      out.add(_Aralik(kelime[i].start, kelime[j - 1].end));
+    }
+    i = j;
+  }
+  return out;
+}
+
+/// ── ⚠ HARF ARAYA SIKIŞTIRMA ──
+///
+/// "5o5 5b6 3x1 99 3" gibi rakamların arasına harf serpiştirme.
+/// Blok tespiti harfte kesildiği için bunu kaçırıyordu.
+///
+/// ⚠ ÖLÇÜLÜ: bloğun EN AZ YARISI rakam olmalı ve rakamlar telefon
+/// kalıbına uymalı. Aksi hâlde "3 metre kablo A5 tipi" gibi normal
+/// metinler yakalanırdı.
+List<_Aralik> _harfKarisikNumara(String metin) {
+  final out = <_Aralik>[];
+  final blok = RegExp(r'[\dA-Za-zçğıöşüÇĞİÖŞÜ\s().\-/+]{10,}');
+  for (final m in blok.allMatches(metin)) {
+    final ham = m.group(0)!;
+    final rakam = ham.replaceAll(RegExp(r'\D'), '');
+    // ⚠ 9 HANE DE SAYILIR: kullanıcı baştaki `0`ı yazmayabilir
+    // ("5o5 5b6 3x1 99 3" → 555631993). Bu durumda başa `0`
+    // eklenerek kalıba vurulur.
+    if (rakam.length < 9) {
+      continue;
+    }
+    final harf = ham.replaceAll(RegExp(r'[^A-Za-zçğıöşüÇĞİÖŞÜ]'), '');
+    // Rakam ağırlıklı olmalı: harf sayısı rakamı geçmesin.
+    if (harf.length > rakam.length) {
+      continue;
+    }
+    if (_telefonMu(rakam) || _telefonMu('0$rakam')) {
+      out.add(_Aralik(m.start, m.end));
+    }
+  }
+  return out;
+}
+
+// ⚠ İLETİŞİME YÖNLENDİRME TESPİTİ KALDIRILDI (ürün kararı).
+//
+// "numaram profilimde", "beni ara", "whatsapptan yaz" gibi ifadeler
+// MASKELENMEZ. Gerekçe: bu cümleler numaranın KENDİSİNİ içermiyor.
+// Numara zaten görünmüyorsa karşı taraf bir yere ulaşamaz; cümleyi
+// gizlemek kullanıcıyı gereksiz yere kısıtlardı.
+//
+// ⚠ Maskeleme YALNIZ gerçek iletişim verisine uygulanır: numara,
+// adres, e-posta, bağlantı, kullanıcı adı.
+
+/// ── ⚠ ANLAMSIZ / TEKRARLAYAN HARF DİZİSİ ──
+///
+/// "jjjjjj", "jjjkdnddmddk" gibi yazılar. Bunlar iletişim bilgisi
+/// DEĞİLDİR ama açıklamayı okunamaz kılar ve maskelemeyi test etmek
+/// için kullanılabilir.
+///
+/// ⚠ İKİ ÖLÇÜT BİRDEN, YÜKSEK EŞİKLE:
+///   · aynı harfin 4+ kez ardışık tekrarı ("jjjj"), YA DA
+///   · 6+ harflik sözcükte sesli harf ORANI çok düşük (<%15)
+///
+/// ⚠ MEŞRU KISALTMALAR KORUNUR: "TSE", "İSG", "PVC", "CNC" gibi
+/// kısaltmalar 6 harften kısa olduğu için eşiğin altında kalır.
+final RegExp _sesli = RegExp(r'[aeıioöuüAEIİOÖUÜ]');
+
+List<_Aralik> _anlamsizAraliklari(String metin) {
+  final out = <_Aralik>[];
+  for (final m in RegExp(r'[A-Za-zçğıöşüÇĞİÖŞÜ]{4,}').allMatches(metin)) {
+    final k = m.group(0)!;
+    final tekrar = RegExp(r'(.)\1{3,}').hasMatch(trKucuk(k));
+    final sesliSayisi = _sesli.allMatches(k).length;
+    final seslisiz = k.length >= 6 && sesliSayisi / k.length < 0.15;
+    if (tekrar || seslisiz) {
+      out.add(_Aralik(m.start, m.end));
+    }
+  }
+  return out;
+}
+
 List<_Aralik> _tumAraliklar(String metin) => [
       ..._telefonAraliklari(metin),
       ..._kanalAraliklari(metin),
       ..._adresAraliklari(metin),
       ..._tarifliKonum(metin),
+      ..._yaziylaRakam(metin),
+      ..._harfKarisikNumara(metin),
+      ..._anlamsizAraliklari(metin),
     ];
 
 /// İLETİŞİM VE ADRES BİLGİLERİNİ MASKELER.

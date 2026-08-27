@@ -31,7 +31,21 @@ class CategoryScreen extends StatefulWidget {
   /// ve çatı ayrımı anlamını kaybeder.
   final String? alan;
 
-  const CategoryScreen({super.key, required this.category, this.alan});
+  /// ── ⚠ ÖNSEÇİLİ HİZMET ──
+  ///
+  /// Çatı ekranındaki aramadan bir HİZMET seçilerek gelindiğinde o
+  /// hizmet burada seçili açılır; kullanıcı listede ikinci kez
+  /// aramak zorunda kalmaz.
+  ///
+  /// ⚠ Boşsa hiçbir şey seçili değildir — mevcut davranış.
+  final String? onSecili;
+
+  const CategoryScreen({
+    super.key,
+    required this.category,
+    this.alan,
+    this.onSecili,
+  });
 
   @override
   State<CategoryScreen> createState() => _CategoryScreenState();
@@ -43,6 +57,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
   /// Bir ilan tek bir hizmete açılır. Çoklu seçim, ilanın hangi işe
   /// ait olduğunu belirsizleştirir ve eşleştirmeyi bozar.
   String? _secili;
+
+  @override
+  void initState() {
+    super.initState();
+    // ⚠ Önseçim yalnız BAŞLANGIÇTA uygulanır; kullanıcı sonradan
+    // seçimi değiştirebilir ya da kaldırabilir.
+    _secili = widget.onSecili;
+  }
 
   @override
   Widget build(BuildContext context) {

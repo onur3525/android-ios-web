@@ -59,10 +59,17 @@ class RegionController extends BaseController {
 
   /// İl satırında gösterilecek durum yazısı.
   ///
-  /// ⚠ METİN TEK KAYNAKTAN: "Şimdi/Yakında HizmetCep'te" ifadeleri
-  /// dört ekranda ayrı ayrı yazılırsa biri güncellenip öteki unutulur.
-  String sehirDurumu(String il) =>
-      sehirAktif(il) ? "Şimdi HizmetCep'te" : "Yakında HizmetCep'te";
+  /// ── ⚠ YALNIZ PASİF İLDE YAZI VAR ──
+  ///
+  /// Aktif ilin yanında HİÇBİR ŞEY yazmaz (`null` döner): hizmete açık
+  /// olmak olağan durumdur, ayrıca belirtmek gürültü yaratır.
+  /// Pasif ilin yanında yalnız "Yakında" yazar.
+  ///
+  /// ⚠ Bir il aktif edildiği anda "Yakında" ibaresi KENDİLİĞİNDEN
+  /// kalkar — ekranlarda ayrıca bir iş yapılması gerekmez.
+  ///
+  /// ⚠ METİN TEK KAYNAKTAN: il seçen dört ekran da buradan okur.
+  String? sehirDurumu(String il) => sehirAktif(il) ? null : 'Yakında';
 
   /// Tek il varsa onu döndürür; birden çok il varsa `null`
   /// (kullanıcı seçmelidir).
