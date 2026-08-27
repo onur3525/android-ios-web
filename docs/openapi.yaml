@@ -1406,7 +1406,47 @@ paths:
   /regions/tree:
     get:
       tags: [Regions]
-      summary: İl / ilçe / mahalle ağacı
+      summary: İl / ilçe / mahalle ağacı — COĞRAFİ VERİ OTORİTESİ
+      description: |
+        ⚠ COĞRAFİ VERİNİN OTORİTESİ BACKEND'DİR.
+
+        Türkiye'nin 81 ili, 973 ilçesi ve 72.984 mahalle/köy kaydı
+        SUNUCUDA tutulur. Veri uygulamaya GÖMÜLMEZ: 16,7 MB'lık bir
+        dosya APK'yı şişirir, açılışı yavaşlatır ve —en önemlisi— yeni
+        bir il açmak APK GÜNCELLEMESİ gerektirirdi.
+
+        ── ⚠ VERİ VARLIĞI İLE HİZMET DURUMU AYRIDIR ──
+
+        Her seviyede bağımsız bir `active` alanı bulunur:
+
+          · İL      → `cities[].active`
+          · İLÇE    → `cities[].districts[].active`
+          · MAHALLE → `...neighborhoods[].active`
+
+        ⚠ PASİF YAPMAK VERİYİ SİLMEZ. `active: false` yalnız hizmet
+        durumudur; ilçe ve mahalle kayıtları yerinde kalır. Şehir
+        sonradan açıldığında yeniden veri yüklemek GEREKMEZ.
+
+        ── ⚠ ETKİN AKTİFLİK (istemci bu kuralı uygular) ──
+
+        Bir mahalle ancak **il aktif VE ilçe aktif VE mahalle aktif**
+        ise hizmet bölgesi sayılır. Üst seviye kapatıldığında alt
+        seviyeler tek tek `true` olsa bile kullanıcıya sunulmaz.
+
+        ── ⚠ BAŞLANGIÇ DURUMU ──
+
+        İzmir `active: true`; öteki 80 il `active: false`. Pasif iller
+        listede GÖRÜNÜR ("Yakında HizmetCep'te") ama seçilemez.
+
+        ── ⚠ KÖY KAYITLARI ──
+
+        Adı "… Köyü" ile biten 39.167 kayıt MAHALLE listesinde, kendi
+        adıyla döner. Ayrı bir "köy" seviyesi YOKTUR; hiyerarşi
+        yalnız İl → İlçe → Mahalle'dir.
+
+        ⚠ Posta kodu (`postalCode`) varsa korunur ve ayrı alanda döner.
+
+        ⚠ PUBLIC: kayıt sırasında adres seçimi girişten ÖNCE gerekir.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ `IsZamani` enum'u burada tanımlı; `_isZamani` alanı için gerekli.
+import '../data/models/listing.dart';
 import '../domain/cikar_catismasi.dart';
 import '../data/remote/api_config.dart';
 import '../data/services/otp_service.dart';

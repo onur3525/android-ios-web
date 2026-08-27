@@ -23,7 +23,9 @@ import 'provider_status_screen.dart';
 import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import 'widgets/foto_goruntuleyici.dart';
-import '../data/models/free_right.dart';
+// ⚠ `free_right.dart` importu KALDIRILDI: `_KaynakBilgisi` silinince
+// bu dosyadaki üç tipin de kullanımı kalmadı. Controller importu
+// DURUYOR — `FreeRightController` hâlâ kullanılıyor.
 import '../data/controllers/free_right_controller.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
@@ -778,94 +780,12 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     );
   }
 }
+// ⚠ `_KaynakBilgisi` SINIFI SİLİNDİ.
+//
+// Alt bilgilendirme kutusu kaldırılınca (madde 4) çağıranı
+// kalmamıştı. Ölü kod bırakmak yerine silindi; gerekirse sürüm
+// geçmişinden geri alınır.
 
-
-
-/// Teklif bedelinin kaynağını gösteren bilgi kutusu.
-///
-/// ⚠ Kaynağı SUNUCU belirler. Kullanıcı seçim yapamaz.
-/// FREE_RIGHT → parasal bloke YOK · WALLET → bakiye blokesi VAR
-class _KaynakBilgisi extends StatelessWidget {
-  const _KaynakBilgisi({ 
-    required this.yukleniyor,
-    required this.funding,
-    required this.freeRights,
-  });
-
-  final bool yukleniyor;
-  final FundingDecision? funding;
-  final FreeRightSummary? freeRights;
-
-  @override
-  Widget build(BuildContext context) {
-    if (yukleniyor) {
-      return const InfoBox(
-        child: Row(
-          children: [
-            SizedBox(
-              width: 14, height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(width: 10),
-            Expanded(child: Text('İletişim bedeli kaynağı kontrol ediliyor…')),
-          ],
-        ),
-      );
-    }
-
-    final ucretsiz = funding?.isFree ?? false;
-    final kalan = freeRights?.remainingRights ?? 0;
-
-    if (ucretsiz) {
-      return InfoBox(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Ücretsiz iletişim hakkınız kullanılacak',
-              style: TextStyle(fontWeight: FontWeight.w800, color: HC.dark),
-            ),
-            const SizedBox(height: 4),
-            const Text('Bu teklif için ücretsiz iletişim hakkınız kullanılacaktır.'),
-            const SizedBox(height: 2),
-            const Text('Bakiyeniz bloke edilmeyecektir.'),
-            const SizedBox(height: 6),
-            Text(
-              'Kalan hakkınız: $kalan',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Hak teklif anında kullanılır ve geri alınmaz; ilan iptal edilse '
-              'veya başka bir hizmet veren seçilse bile iade edilmez.',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return InfoBox(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Teklif vermek ücretsizdir; teklifinizle birlikte '
-            '${DomainConfig.contactFee} TL iletişim ücreti kullanılabilir '
-            'bakiyenizden bloke edilir. İletişim açılmazsa bloke iade edilir.',
-          ),
-          if (kalan > 0) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Ücretsiz hakkınız: $kalan (bu teklifte kullanılamıyor)',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
 
 
 /// AD MASKELEME — HTML `PL_OWNERS` biçimi

@@ -111,18 +111,47 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
         children: [
           for (final il in iller)
             RefTap(
-              onTap: () => Navigator.of(context).pop(il),
+              // ⚠ PASİF İL SEÇİLEMEZ: veri var ama hizmete kapalı.
+              // Dokunulunca bilgilendirilir, seçim yapılmaz.
+              onTap: () => rc.sehirAktif(il)
+                  ? Navigator.of(context).pop(il)
+                  : sysToastKural(
+                      context,
+                      '$il henüz hizmete açılmadı. '
+                      "$il'da hizmet vermeye başladığımızda "
+                      'sizi haberdar edelim.'),
               borderRadius: BorderRadius.circular(RR.r10),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     vertical: 13, horizontal: 4),
                 child: Row(children: [
                   Expanded(
-                    child: Text(il,
-                        style: refText(
-                            size: RF.s145,
-                            weight: il == _il ? RF.w700 : RF.w500,
-                            color: RC.text)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(il,
+                            style: refText(
+                                size: RF.s145,
+                                weight: il == _il ? RF.w700 : RF.w500,
+                                // ⚠ PASİF İL SOLUK: seçilemeyeceği
+                                // dokunmadan önce anlaşılsın.
+                                color: rc.sehirAktif(il)
+                                    ? RC.text
+                                    : RC.greyLight)),
+                        // ── ⚠ DURUM YAZISI ──
+                        //
+                        // "Şimdi HizmetCep'te" / "Yakında HizmetCep'te"
+                        // metni `RegionController`dan gelir; il seçen
+                        // ekranlar kendi metnini yazmaz.
+                        Text(rc.sehirDurumu(il),
+                            style: refText(
+                                size: RF.s12,
+                                weight: RF.w500,
+                                color: rc.sehirAktif(il)
+                                    ? RC.blue
+                                    : RC.greyLight)),
+                      ],
+                    ),
                   ),
                   if (il == _il)
                     const RefSvg('assets/svg/ic_checkc.svg',

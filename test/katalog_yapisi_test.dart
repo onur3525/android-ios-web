@@ -32,7 +32,9 @@ void main() {
       // (eski not: ayrı işler gerçek
       // hizmet kaydına çevrildi.
       expect(toplam, 640);
-      expect(kTreeServices.length, 1445);
+      // ⚠ 1445 → 1441: hizmet OLMAYAN dört kayıt silindi (belgenin
+      // kendi açıklama satırları katalog verisine karışmıştı).
+      expect(kTreeServices.length, 1441);
     });
 
 

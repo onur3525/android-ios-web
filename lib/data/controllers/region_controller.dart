@@ -43,8 +43,26 @@ class RegionController extends BaseController {
   // ═══════════════════════════════════════════════════════════════
 
   /// Seçilebilir il adları (sunucudan gelen aktif iller).
+  /// İL ADLARI — AKTİF OLANLAR ÖNCE.
+  ///
+  /// ⚠ SIRALAMA TEK YERDE: il seçen dört ekran da bu listeyi
+  /// kullanıyor; sıralamayı ekranlara bırakmak üç farklı sıra
+  /// üretirdi. Aktifler alfabetik, sonra pasifler alfabetik.
   List<String> get cityNames =>
-      tree.cities.map((c) => c.name).toList(growable: false);
+      tree.siraliSehirler.map((c) => c.name).toList(growable: false);
+
+  /// ── ⚠ ŞEHİR HİZMETE AÇIK MI ──
+  ///
+  /// Etkin aktiflik `RegionTree.hizmeteAcik` ile hesaplanır; ekranlar
+  /// kendi kuralını yazmaz.
+  bool sehirAktif(String il) => tree.hizmeteAcik(sehir: il);
+
+  /// İl satırında gösterilecek durum yazısı.
+  ///
+  /// ⚠ METİN TEK KAYNAKTAN: "Şimdi/Yakında HizmetCep'te" ifadeleri
+  /// dört ekranda ayrı ayrı yazılırsa biri güncellenip öteki unutulur.
+  String sehirDurumu(String il) =>
+      sehirAktif(il) ? "Şimdi HizmetCep'te" : "Yakında HizmetCep'te";
 
   /// Tek il varsa onu döndürür; birden çok il varsa `null`
   /// (kullanıcı seçmelidir).

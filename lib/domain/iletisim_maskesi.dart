@@ -177,7 +177,8 @@ final RegExp _guclu = RegExp(
 final RegExp _zayif = RegExp(
   r'(?<![\wçğıöşü])('
   r'kat|katı|'
-'
+  // ⚠ "no/numara" BURADAN ÇIKARILDI — artık GÜÇLÜ listede
+  // (bkz. `_guclu`): sayıyla birlikte kapı numarası demektir.
   r'bina|binası|'
   r'giriş\w*|'
   r'avm|'

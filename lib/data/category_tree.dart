@@ -1,4 +1,4 @@
-/// HİZMET KATALOĞU — 160 KATEGORİ · 1445 HİZMET (24 ÇATI)
+/// HİZMET KATALOĞU — 160 KATEGORİ · 1441 HİZMET (24 ÇATI)
 ///
 /// ═══════════════════════════════════════════════════════════════
 ///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
@@ -957,9 +957,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Dedektiflik & Araştırma': [
     'Özel Dedektif', 'Kişi Araştırması', 'Adres Tespiti',
     'Kayıp Kişi Araştırması', 'Ticari Araştırma', 'Saha Araştırması',
-    'Delil Toplama',
-    '24. Diğer Hizmetler altında 3 yeni alt kategori eklendi.',
-    'Çiçekçilik, Asistanlık & Günlük Destek, Dedektiflik & Araştırma eklendi.'
+    'Delil Toplama'
   ],
   'Araştırma & Saha Hizmetleri': [
     'Pazar Araştırması', 'Piyasa Araştırması', 'Gizli Müşteri', 'Anket',
@@ -970,9 +968,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Günlük Eleman & Personel Desteği': [
     'Günlük Eleman', 'Günlük Yardımcı Eleman', 'Geçici Personel',
     'Kısa Süreli Personel', 'İş Gücü Desteği', 'Depo Yardımcı Personeli',
-    'Yükleme / Boşaltma Personeli', 'Genel Yardımcı Personel',
-    '24. Diğer Hizmetler: 5 yeni alt kategori.',
-    'Mevcut yapı ve standart kutu/sayfa düzeni korunmuştur.'
+    'Yükleme / Boşaltma Personeli', 'Genel Yardımcı Personel'
   ],
 };
 
