@@ -1,4 +1,4 @@
-/// HİZMET KATALOĞU — 160 KATEGORİ · 1441 HİZMET (24 ÇATI)
+/// HİZMET KATALOĞU — 158 KATEGORİ · 1448 HİZMET (24 ÇATI)
 ///
 /// ═══════════════════════════════════════════════════════════════
 ///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
@@ -119,7 +119,11 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Su Sayacı Değişimi', 'Su Basıncı Problemi', 'Su Deposu Temizliği',
     'Tesisat Tamiri', 'Su Arıtma Servisi', 'Duş Bataryası Montajı',
     'Hidrofor Montajı', 'Hidrofor Bakımı', 'Hidrofor Tamiri',
-    'Hidrofor Basınç Tankı Değişimi', 'Pissu Tesisatı'
+    'Hidrofor Basınç Tankı Değişimi', 'Pissu Tesisatı',
+    'Lavabo Su Akıtıyor', 'Klozet Su Kaçırıyor',
+    'Alaturka Tuvaleti Alafrangaya Çevirme',
+    'Gömme Rezervuar İç Takım Değişimi', 'Gömme Rezervuar Değişimi',
+    'Batarya Montajı'
   ],
   'Doğalgaz': [
     'Doğalgaz Tesisatı', 'Doğalgaz İç Tesisatı', 'Doğalgaz Kolon Hattı',
@@ -515,7 +519,9 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Gardırop Yapımı', 'Gardırop Montajı', 'TV Ünitesi Yapımı',
     'TV Ünitesi Montajı', 'Vestiyer Yapımı', 'Hazır Mobilya Kurulumu',
     'Yatak Odası Takımı Montajı', 'Raf ve Kitaplık Montajı',
-    'Mobilya Sökme ve Taşıma'
+    'Mobilya Sökme ve Taşıma', 'İç Kapı Montajı', 'İç Kapı İmalatı',
+    'Kapı Tamiri', 'Kapı Menteşe Ayarı', 'Sürgülü Kapı Montajı',
+    'Korniş Montajı'
   ],
   'Asansör Montaj ve Bakım': [
     'Asansör Bakımı', 'Asansör Tamiri', 'Asansör Montajı',
@@ -535,7 +541,8 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Pergola & Gölgelendirme Sistemleri': [
     'Alüminyum Pergola', 'Pergola Montajı', 'Pergola Kapatma',
     'Pergola Tamiri', 'Tente', 'Mafsallı Tente', 'Otomatik Tente',
-    'Balkon Tentesi', 'Tente Tamiri', 'Tente Kumaş Değişimi'
+    'Balkon Tentesi', 'Tente Tamiri', 'Tente Kumaş Değişimi',
+    'Kış Bahçesi Sistemleri', 'Çardak & Kamelya'
   ],
   'Cam Film ve Kış Bahçesi': [
     'Cam Filmi Uygulama', 'Güneş Kontrol Cam Filmi', 'Güvenlik Cam Filmi',
@@ -550,9 +557,8 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Kapı Sistemleri': [
     'Çelik Kapı İmalatı', 'Çelik Kapı Değişimi',
     'Çelik Kapı Kilit Değişimi', 'Çelik Kapı Kasa Değişimi',
-    'İç Kapı Montajı', 'İç Kapı İmalatı', 'Çelik Kapı Montajı',
-    'Çelik Kapı Tamiri', 'Kapı Tamiri', 'Kapı Menteşe Ayarı',
-    'Sürgülü Kapı Montajı'
+    'Çelik Kapı Montajı', 'Çelik Kapı Tamiri', 'Fotoselli Otomatik Kapı',
+    'Garaj Kapı Sistemleri'
   ],
   'Kepenk Sistemleri': [
     'Otomatik Kepenk', 'Otomatik Kepenk Montajı', 'Otomatik Kepenk Tamiri',
@@ -565,12 +571,6 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Cam & Alüminyum': [
     'Cam Tavan Sistemleri', 'Lamine Cam', 'Masa Camı İmalatı',
     'Ofis Cam Bölme', 'Dekoratif Ayna Yapımı'
-  ],
-  'Kapı & Pencere': [
-    'Fotoselli Otomatik Kapı', 'Garaj Kapı Sistemleri'
-  ],
-  'Pergola & Gölgelendirme': [
-    'Kış Bahçesi Sistemleri', 'Çardak & Kamelya'
   ],
   'Zemin & Beton': [
     'Baskı Beton', 'Hazır Beton', 'İnşaat Temeli'

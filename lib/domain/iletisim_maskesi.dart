@@ -163,7 +163,6 @@ final RegExp _guclu = RegExp(
   r'(?<![\wçğıöşü])('
   r'sokak|sokağ\w*|sok\.?|sk\.?|'
   r'cadde\w*|cad\.?|cd\.?|'
-  r'mahalle\w*|mah\.?|mh\.?|'
   r'apartman\w*|apart\w*|apt\.?|'
   r'sitesi|site|'
   r'blok|bloğ\w*|'
@@ -187,6 +186,16 @@ final RegExp _guclu = RegExp(
 final RegExp _zayif = RegExp(
   r'(?<![\wçğıöşü])('
   r'kat|katı|'
+  // ── ⚠ MAHALLE TEK BAŞINA ADRES DEĞİLDİR ──
+  //
+  // "Karşıyaka Girne Mahallesi'nde hizmet almak istiyorum" NORMAL bir
+  // ilan cümlesidir; il/ilçe/mahalle zaten ilanın kendi konum
+  // alanında görünüyor.
+  //
+  // ⚠ Güçlü listedeyken bu cümle maskeleniyordu. Artık ZAYIF: ancak
+  // sokak/cadde/no/daire gibi İKİNCİ bir işaretle birlikte adres
+  // sayılır ("Girne Mahallesi, X Sokak, No: 25").
+  r'mahalle\w*|mah\.?|mh\.?|'
   // ⚠ "no/numara" BURADAN ÇIKARILDI — artık GÜÇLÜ listede
   // (bkz. `_guclu`): sayıyla birlikte kapı numarası demektir.
   r'bina|binası|'
@@ -299,62 +308,12 @@ List<_Aralik> _tarifliKonum(String metin) {
 /// Metinde maskelenecek bir şey var mı?
 bool iletisimIceriyor(String metin) => _tumAraliklar(metin).isNotEmpty;
 
-/// ── ⚠ YAZIYLA YAZILAN RAKAM ──
-///
-/// "beş beş beş üç bir dokuz dokuz üç" gibi. Rakam kullanmadan numara
-/// vermenin en yaygın yolu; blok tespiti bunu göremez çünkü ortada
-/// rakam yoktur.
-///
-/// Yöntem: ardışık sayı SÖZCÜKLERİ bulunur, rakama çevrilir ve aynı
-/// telefon kalıbına vurulur.
-const Map<String, String> _sayiSozcugu = {
-  'sıfır': '0', 'sifir': '0',
-  'bir': '1', 'iki': '2', 'üç': '3', 'uc': '3', 'dört': '4', 'dort': '4',
-  'beş': '5', 'bes': '5', 'altı': '6', 'alti': '6', 'yedi': '7',
-  'sekiz': '8', 'dokuz': '9',
-  // ── ⚠ BİLEŞİK SAYI SÖZCÜKLERİ ──
-  //
-  // Kullanıcı numarayı OKUNUŞUYLA yazabiliyor:
-  // "beşyüz elli beş beş yüz altmış üç" = 555 563.
-  // Yalnız tek haneler tanınsaydı bu kaçardı.
-  'on': '10', 'yirmi': '20', 'otuz': '30', 'kırk': '40', 'kirk': '40',
-  'elli': '50', 'altmış': '60', 'altmis': '60', 'atmış': '60',
-  'atmis': '60', 'yetmiş': '70', 'yetmis': '70', 'seksen': '80',
-  'doksan': '90', 'yüz': '00', 'yuz': '00',
-  // ⚠ "beşyüz" bitişik de yazılabilir.
-  'beşyüz': '500', 'besyuz': '500', 'üçyüz': '300', 'ucyuz': '300',
-  'dörtyüz': '400', 'dortyuz': '400', 'altıyüz': '600',
-  'yediyüz': '700', 'sekizyüz': '800', 'dokuzyüz': '900',
-  'ikiyüz': '200', 'biryüz': '100',
-};
-
-List<_Aralik> _yaziylaRakam(String metin) {
-  final out = <_Aralik>[];
-  final kucuk = trKucuk(metin);
-  // Sözcük sınırlarıyla tara.
-  final kelime = RegExp(r'[a-zçğıöşü]+').allMatches(kucuk).toList();
-  var i = 0;
-  while (i < kelime.length) {
-    if (!_sayiSozcugu.containsKey(kelime[i].group(0))) {
-      i++;
-      continue;
-    }
-    var j = i;
-    final b = StringBuffer();
-    while (j < kelime.length &&
-        _sayiSozcugu.containsKey(kelime[j].group(0))) {
-      b.write(_sayiSozcugu[kelime[j].group(0)]);
-      j++;
-    }
-    // ⚠ EN AZ 7 HANE: "üç oda" ya da "iki kat" yanlışlıkla
-    // yakalanmasın. Kısa sayı dizileri günlük dilde çok yaygın.
-    if (b.length >= 7) {
-      out.add(_Aralik(kelime[i].start, kelime[j - 1].end));
-    }
-    i = j;
-  }
-  return out;
-}
+// ⚠ ESKİ `_yaziylaRakam` KALDIRILDI.
+//
+// Sözcük başına tek rakam üreten basit yöntemdi ve "beşyüz"ü 500
+// değil 5+00 olarak okuyordu. Yerini gerçek sayı okunuşunu çözen
+// `_sayiCoz` aldı (bkz. yukarısı); bitişik ve boşluklu yazımların
+// ikisini de `_bitisikSayi` tarar.
 
 /// ── ⚠ HARF ARAYA SIKIŞTIRMA ──
 ///
@@ -427,14 +386,239 @@ List<_Aralik> _anlamsizAraliklari(String metin) {
   return out;
 }
 
+/// ── ⚠ TÜRKÇE SAYI OKUNUŞU ÇÖZÜMLEYİCİSİ ──
+///
+/// "beşyüzellibeş" → 555 · "ondokuz" → 19 · "doksanüç" → 93
+///
+/// Basit "her sözcüğü rakama çevir" yöntemi YANLIŞTIR: "beşyüz"
+/// 5+00 değil 500'dür, "beşyüzellibeş" ise 555'tir. Bu yüzden gerçek
+/// sayı okunuşu çözümlenir.
+///
+/// ⚠ HARD-CODE DEĞİL: herhangi bir Türkçe sayı okunuşu çalışır.
+const Map<String, int> _birimler = {
+  'sıfır': 0, 'sifir': 0, 'bir': 1, 'iki': 2, 'üç': 3, 'uc': 3,
+  'dört': 4, 'dort': 4, 'beş': 5, 'bes': 5, 'altı': 6, 'alti': 6,
+  'yedi': 7, 'sekiz': 8, 'dokuz': 9,
+};
+
+const Map<String, int> _onlar = {
+  'on': 10, 'yirmi': 20, 'otuz': 30, 'kırk': 40, 'kirk': 40,
+  'elli': 50, 'altmış': 60, 'altmis': 60,
+  // ⚠ Konuşma dilindeki "atmış" biçimi de desteklenir.
+  'atmış': 60, 'atmis': 60,
+  'yetmiş': 70, 'yetmis': 70, 'seksen': 80, 'doksan': 90,
+};
+
+/// Tüm belirteçler — UZUN OLAN ÖNCE denenmeli.
+/// Aksi hâlde "beşyüz" içindeki "beş" önce eşleşir ve değer bozulur.
+final List<String> _sayiBelirtec = () {
+  final l = <String>[
+    ..._birimler.keys,
+    ..._onlar.keys,
+    'yüz',
+    'yuz',
+    'bin',
+  ]..sort((a, b) => b.length.compareTo(a.length));
+  return l;
+}();
+
+/// Sözcüğü sayı belirteçlerine ayırır.
+///
+/// ⚠ SÖZCÜK TAMAMEN TÜKENMELİ: artan harf kalırsa `null` döner.
+/// Bu koşul yanlış pozitifi engelleyen kilittir — "üçodalı" gibi
+/// karışık sözcükler sayı sayılmaz.
+List<String>? _sayiBelirtecleri(String k) {
+  final out = <String>[];
+  var i = 0;
+  while (i < k.length) {
+    var eslesti = false;
+    for (final p in _sayiBelirtec) {
+      if (k.startsWith(p, i)) {
+        out.add(p);
+        i += p.length;
+        eslesti = true;
+        break;
+      }
+    }
+    if (!eslesti) {
+      return null;
+    }
+  }
+  return out.isEmpty ? null : out;
+}
+
+/// Belirteçleri AYRI SAYI GRUPLARINA böler.
+///
+/// "beşyüzellibeş|beşyüzaltmışüç|ondokuz|doksanüç" → dört grup.
+/// Yeni grup, önceki grup tamamlandığında başlar: birimden sonra
+/// birim gelirse ya da ikinci bir onlar basamağı görülürse.
+List<List<String>> _sayiGruplari(List<String> bs) {
+  final g = <List<String>>[];
+  var cur = <String>[];
+  for (final t in bs) {
+    if (cur.isEmpty) {
+      cur = [t];
+      continue;
+    }
+    final onc = cur.last;
+    var yeni = false;
+    if (t == 'yüz' || t == 'yuz' || onc == 'yüz' || onc == 'yuz') {
+      yeni = false; // yüz, önündeki birimi çarpar; sonrasına ek gelir
+    } else if (_onlar.containsKey(t)) {
+      yeni = cur.any(_onlar.containsKey);
+    } else if (_birimler.containsKey(t)) {
+      yeni = _birimler.containsKey(onc);
+    }
+    if (yeni) {
+      g.add(cur);
+      cur = [t];
+    } else {
+      cur.add(t);
+    }
+  }
+  if (cur.isNotEmpty) {
+    g.add(cur);
+  }
+  return g;
+}
+
+/// Tek bir grubun sayısal değeri.
+int _grupDegeri(List<String> g) {
+  var top = 0;
+  var bek = 0;
+  for (final t in g) {
+    if (_birimler.containsKey(t)) {
+      bek = _birimler[t]!;
+      top += bek;
+    } else if (_onlar.containsKey(t)) {
+      top += _onlar[t]!;
+    } else if (t == 'yüz' || t == 'yuz') {
+      // ⚠ Önündeki birim YÜZLER basamağıdır: "beş" + "yüz" = 500.
+      // Birim yoksa yalnız "yüz" = 100.
+      top = bek > 0 ? (top - bek) + bek * 100 : top + 100;
+      bek = 0;
+    }
+  }
+  return top;
+}
+
+/// Sözcüğü rakam dizisine çevirir; sayı değilse `null`.
+String? _sayiCoz(String k) {
+  final bs = _sayiBelirtecleri(k);
+  if (bs == null) {
+    return null;
+  }
+  return _sayiGruplari(bs).map((g) => _grupDegeri(g).toString()).join();
+}
+
+/// ── ⚠ BİTİŞİK VE BOŞLUKLU TÜRKÇE SAYI TELEFONU ──
+///
+/// "beşyüzellibeşbeşyüzatmışüçondokuzdoksanüç" → 5555631993
+/// "beşyüzellibeş beşyüzaltmışüç ondokuz doksanüç" → 5555631993
+///
+/// İki yol birlikte taranır:
+///   1. TEK SÖZCÜK bitişik yazım
+///   2. ARDIŞIK sayı sözcükleri (boşluklu)
+///
+/// ⚠ NORMAL İÇERİK KORUNUR: "üç odalı", "yüz elli TL", "beş metre"
+/// çözümlenir ama çıkan dizi telefon kalıbına uymadığı için
+/// maskelenmez.
+List<_Aralik> _bitisikSayi(String metin) {
+  final out = <_Aralik>[];
+
+  // 1) Tek sözcük — bitişik yazım.
+  for (final m in RegExp(r'[a-zA-ZçğıöşüÇĞİÖŞÜ]{6,}').allMatches(metin)) {
+    final r = _sayiCoz(trKucuk(m.group(0)!));
+    if (r != null && (_telefonMu(r) || _telefonMu('0$r'))) {
+      out.add(_Aralik(m.start, m.end));
+    }
+  }
+
+  // 2) Ardışık sayı sözcükleri — boşluklu yazım.
+  final kel =
+      RegExp(r'[a-zA-ZçğıöşüÇĞİÖŞÜ]+').allMatches(metin).toList();
+  var i = 0;
+  while (i < kel.length) {
+    if (_sayiCoz(trKucuk(kel[i].group(0)!)) == null) {
+      i++;
+      continue;
+    }
+    var j = i;
+    final b = StringBuffer();
+    while (j < kel.length) {
+      final r = _sayiCoz(trKucuk(kel[j].group(0)!));
+      if (r == null) {
+        break;
+      }
+      b.write(r);
+      j++;
+    }
+    final r = b.toString();
+    if (_telefonMu(r) || _telefonMu('0$r')) {
+      out.add(_Aralik(kel[i].start, kel[j - 1].end));
+    }
+    i = j;
+  }
+  return out;
+}
+
+/// ── ⚠ IBAN ──
+///
+/// "TR12 0000 6100 5190 0078 0000 12" ve boşluklu/parçalanmış
+/// varyasyonları. Platform dışı ödeme yönlendirmesidir.
+///
+/// ⚠ TR + 24 rakam. Aradaki boşluk, nokta ve tire temizlenerek
+/// değerlendirilir; parçalama tespiti bozmaz.
+List<_Aralik> _ibanAraliklari(String metin) {
+  final out = <_Aralik>[];
+  final k = RegExp(r'[Tt][Rr][\d \t.\-]{24,44}');
+  for (final m in k.allMatches(metin)) {
+    final rakam = m.group(0)!.substring(2).replaceAll(RegExp(r'\D'), '');
+    if (rakam.length >= 24) {
+      out.add(_Aralik(m.start, m.end));
+    }
+  }
+  return out;
+}
+
+/// ── ⚠ MARKA / İŞLETME + KONUM TARİFİ ──
+///
+/// "McDonald's'ın üstü", "X mağazasının arkasındaki bina" gibi
+/// tarifler hizmet verenin müşteriyi FİZİKSEL olarak bulmasını
+/// sağlar.
+///
+/// ⚠ GENEL BÖLGE SERBEST KALIR: "Karşıyaka'da" ya da "Girne
+/// Mahallesi'nde" bu kurala GİRMEZ — burada aranan ÖZEL AD (büyük
+/// harfle başlayan marka/işletme adı) ile KONUM EKİ'nin bir arada
+/// bulunmasıdır.
+final RegExp _ozelAd = RegExp(r"[A-ZÇĞİÖŞÜ][\wçğıöşü'’]{2,}");
+
+List<_Aralik> _markaKonum(String metin) {
+  final out = <_Aralik>[];
+  for (final o in _obekler(metin)) {
+    final parca = metin.substring(o.bas, o.son);
+    if (!_konumEki.hasMatch(parca)) {
+      continue;
+    }
+    // ⚠ Yalnız konum eki YETMEZ ("içinde" tek başına adres değildir);
+    // yanında bir özel ad ya da yer sözcüğü bulunmalı.
+    if (_ozelAd.hasMatch(parca) || _yerSozcugu.hasMatch(parca)) {
+      out.add(o);
+    }
+  }
+  return out;
+}
+
 List<_Aralik> _tumAraliklar(String metin) => [
       ..._telefonAraliklari(metin),
       ..._kanalAraliklari(metin),
       ..._adresAraliklari(metin),
       ..._tarifliKonum(metin),
-      ..._yaziylaRakam(metin),
       ..._harfKarisikNumara(metin),
       ..._anlamsizAraliklari(metin),
+      ..._bitisikSayi(metin),
+      ..._ibanAraliklari(metin),
+      ..._markaKonum(metin),
     ];
 
 /// İLETİŞİM VE ADRES BİLGİLERİNİ MASKELER.

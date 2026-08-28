@@ -105,7 +105,7 @@ void main() {
   group('KATALOG DEĞİŞMEDİ', () {
     test('çatı katmanı SAYILARA karışmaz', () {
       // ⚠ Çatılar ana kategori DEĞİL: katalog sayıları aynı kalır.
-      expect(kCategoryTree.length, 160);
+      expect(kCategoryTree.length, 158);
       expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 640);
     });
 

@@ -182,7 +182,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Pergola & Gölgelendirme Sistemleri', 'Cam Film ve Kış Bahçesi',
       'Cam ve Ayna Hizmetleri', 'Kapı Sistemleri', 'Kepenk Sistemleri',
       'Endüstriyel Yapı & Kurulum', 'Cam & Alüminyum',
-      'Kapı & Pencere', 'Pergola & Gölgelendirme', 'Zemin & Beton',
+      'Zemin & Beton',
       'Sauna, Hamam & Spa'
     ],
   ),

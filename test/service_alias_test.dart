@@ -18,7 +18,7 @@ void main() {
   group('KATALOG BÜYÜMEDİ', () {
     test('ana kategori 55, alt hizmet 517', () {
       // ⚠ 54 → 55: kombi ikiye ayrıldı (Montaj + Servis).
-      expect(kCategoryTree.length, 160);
+      expect(kCategoryTree.length, 158);
       final toplam =
           kCategoryTree.values.fold<int>(0, (t, v) => t + v.length);
       // ⚠ 255 → 459 → 439 → 517: önce öneri listesindeki ayrı işler hizmet oldu,

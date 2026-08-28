@@ -94,7 +94,7 @@ void main() {
 
   group('KATEGORİ ADLARI', () {
     test('58 ana kategori · 517 alt hizmet', () {
-      expect(kCategoryTree.length, 160);
+      expect(kCategoryTree.length, 158);
       expect(kCategoryTree.values.fold<int>(0, (t, v) => t + v.length), 640);
     });
 

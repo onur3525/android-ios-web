@@ -18,7 +18,7 @@ String _oku(String p) => File(p).readAsStringSync();
 void main() {
   group('Katalog sayıları', () {
     test('58 ANA KATEGORİ', () {
-      expect(kCategoryTree.length, 160);
+      expect(kCategoryTree.length, 158);
       expect(kTreeCategories.length, 63);
     });
 
@@ -34,7 +34,7 @@ void main() {
       expect(toplam, 640);
       // ⚠ 1445 → 1441: hizmet OLMAYAN dört kayıt silindi (belgenin
       // kendi açıklama satırları katalog verisine karışmıştı).
-      expect(kTreeServices.length, 1441);
+      expect(kTreeServices.length, 1448);
     });
 
 

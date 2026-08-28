@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../domain/iletisim_maskesi.dart';
+import 'widgets/is_zamani_secici.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
 import 'widgets/ilan_no_etiketi.dart';
@@ -600,7 +601,12 @@ class _JobsScreenState extends State<JobsScreen> {
                     color: incelendi ? HC.border : _kYeniRenk,
                     width: incelendi ? 1 : 2),
                 borderRadius: BorderRadius.circular(14)),
-            child: Row(children: [
+            // ⚠ ÜSTTEN HİZALI: teklif rozeti kartın SAĞ ÜST köşesinde
+            // durmalı; `center` olsaydı kart yüksekliğine göre
+            // ortalanır, başlık hizasından kayardı.
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   // ⚠ KATEGORİ SATIRI — hizmet veren ilana GİRMEDEN
@@ -649,9 +655,18 @@ class _JobsScreenState extends State<JobsScreen> {
                   // Referans `.cc-badge`: "Henüz teklif verilmedi" /
                   // "N teklif verildi". Sağlayıcı, ilana kaç kişinin
                   // teklif verdiğini görür.
+                  // ⚠ TEKLİF ROZETİ SAĞ ÜST KÖŞEYE TAŞINDI (aşağıda).
                   const SizedBox(height: 7),
-                  _TeklifRozeti(adet: teklifAdedi),
-                  const SizedBox(height: 5),
+                  // ── ⚠ HİZMET ZAMANI ──
+                  //
+                  // Hizmet alan bir zaman seçtiyse burada görünür;
+                  // seçmediyse HİÇ ÇİZİLMEZ (rozet `null` durumunda
+                  // boş döner). İşin ne zaman istendiği teklif
+                  // kararını doğrudan etkiler.
+                  if (l.isZamani != null) ...[
+                    IsZamaniRozeti(l.isZamani),
+                    const SizedBox(height: 7),
+                  ],
                   // ⚠ Kart standardı: 12,5/w500. Burası tek yerde ham
                   // `TextStyle` kullanıyordu, `refText`'e çekildi.
                   // Okunmuş/okunmamış ayrımı KORUNDU: okunmamışta
@@ -676,7 +691,19 @@ class _JobsScreenState extends State<JobsScreen> {
                 ]),
               ),
               const SizedBox(width: 8),
-              trailing,
+              // ── ⚠ TEKLİF DURUMU — SAĞ ÜST KÖŞE ──
+              //
+              // "Henüz teklif verilmedi" / "N teklif verildi".
+              // Eskiden açıklamanın üstünde, sol sütunda duruyordu;
+              // hizmet veren rekabeti kartın başında görmeli.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _TeklifRozeti(adet: teklifAdedi),
+                  const SizedBox(height: 6),
+                  trailing,
+                ],
+              ),
             ]),
           ),
         ),
