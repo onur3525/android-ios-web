@@ -68,7 +68,17 @@ class _Aralik {
 List<_Aralik> _telefonAraliklari(String metin) {
   final out = <_Aralik>[];
   // Rakam · boşluk · nokta · tire · parantez · artı · slash
-  final blok = RegExp(r'[+(]?[\d][\d\s().\-/+]{7,}\d');
+  //
+  // ── ⚠ SATIR SONU AYRAÇ DEĞİLDİR ──
+  //
+  // Eskiden `\s` kullanılıyordu ve satır sonunu da kapsıyordu.
+  // Kullanıcı numaraları ALT ALTA yazınca üçü TEK BLOĞA birleşiyor,
+  // rakam dizisi 31 haneye çıkıyor ve telefon kalıbına uymuyordu —
+  // yani hiçbiri maskelenmiyordu.
+  //
+  // ⚠ Yalnız BOŞLUK ve SEKME ayraç sayılır; her satır ayrı
+  // değerlendirilir.
+  final blok = RegExp(r'[+(]?[\d][\d \t().\-/+]{7,}\d');
   for (final m in blok.allMatches(metin)) {
     final ham = m.group(0)!;
     final rakam = ham.replaceAll(RegExp(r'\D'), '');
@@ -302,6 +312,20 @@ const Map<String, String> _sayiSozcugu = {
   'bir': '1', 'iki': '2', 'üç': '3', 'uc': '3', 'dört': '4', 'dort': '4',
   'beş': '5', 'bes': '5', 'altı': '6', 'alti': '6', 'yedi': '7',
   'sekiz': '8', 'dokuz': '9',
+  // ── ⚠ BİLEŞİK SAYI SÖZCÜKLERİ ──
+  //
+  // Kullanıcı numarayı OKUNUŞUYLA yazabiliyor:
+  // "beşyüz elli beş beş yüz altmış üç" = 555 563.
+  // Yalnız tek haneler tanınsaydı bu kaçardı.
+  'on': '10', 'yirmi': '20', 'otuz': '30', 'kırk': '40', 'kirk': '40',
+  'elli': '50', 'altmış': '60', 'altmis': '60', 'atmış': '60',
+  'atmis': '60', 'yetmiş': '70', 'yetmis': '70', 'seksen': '80',
+  'doksan': '90', 'yüz': '00', 'yuz': '00',
+  // ⚠ "beşyüz" bitişik de yazılabilir.
+  'beşyüz': '500', 'besyuz': '500', 'üçyüz': '300', 'ucyuz': '300',
+  'dörtyüz': '400', 'dortyuz': '400', 'altıyüz': '600',
+  'yediyüz': '700', 'sekizyüz': '800', 'dokuzyüz': '900',
+  'ikiyüz': '200', 'biryüz': '100',
 };
 
 List<_Aralik> _yaziylaRakam(String metin) {
@@ -342,7 +366,8 @@ List<_Aralik> _yaziylaRakam(String metin) {
 /// metinler yakalanırdı.
 List<_Aralik> _harfKarisikNumara(String metin) {
   final out = <_Aralik>[];
-  final blok = RegExp(r'[\dA-Za-zçğıöşüÇĞİÖŞÜ\s().\-/+]{10,}');
+  // ⚠ SATIR SONU HARİÇ (yukarıdaki aynı gerekçe).
+  final blok = RegExp(r'[\dA-Za-zçğıöşüÇĞİÖŞÜ \t().\-/+]{10,}');
   for (final m in blok.allMatches(metin)) {
     final ham = m.group(0)!;
     final rakam = ham.replaceAll(RegExp(r'\D'), '');
