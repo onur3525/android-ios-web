@@ -79,7 +79,7 @@ abstract final class ApiConfig {
     }
 
     // (3) Debug varsayılanı: mock.
-    return DataSourceMode.mock;
+    return DataSourceMode.api;
   }
 
   static bool get useRealApi => mode == DataSourceMode.api;
