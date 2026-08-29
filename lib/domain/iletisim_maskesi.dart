@@ -52,67 +52,138 @@ class _Aralik {
 ///  TELEFON
 /// ═══════════════════════════════════════════════════════════════
 ///
-/// ⚠ TEK REGEX YETMEZ. Kullanıcı rakamların arasına boşluk, nokta,
-/// tire, parantez koyabilir; hatta "5 5 5 5 6 3 1 9 9 3" diye tek tek
-/// yazabilir. Bu yüzden yöntem şudur:
+/// ⚠ ESKİ KALIP TABANLI TESPİTLER KALDIRILDI.
 ///
-///   1. Metinde RAKAM ve ARALARINDAKİ AYRAÇLARDAN oluşan blokları bul.
-///   2. Bloktaki ayraçları at, geriye kalan rakam dizisine bak.
-///   3. Türk cep numarası kalıbına uyuyorsa bloğun TAMAMINI maskele.
+/// Her kaçış biçimi için ayrı regex yazılıyordu (`_harfKarisikNumara`,
+/// `_bitisikSayi`, blok kalıbı) ve her yeni varyasyon yeni bir açık
+/// üretiyordu. Yerlerini TEK bir normalize tarayıcı aldı — bkz.
+/// `_telefonAraliklari` (aşağıda).
+
+/// ── ⚠ NORMALİZE EDİLMİŞ TELEFON TARAMASI ──
 ///
-/// Böylece `+90 555 563 19 93`, `0555-563-19-93`, `05555631993` ve
-/// `5 5 5 5 6 3 1 9 9 3` aynı numara olarak yakalanır.
+/// Önceki yaklaşım her kaçış biçimi için ayrı kalıp yazıyordu ve her
+/// yeni varyasyon yeni bir açık oluşturuyordu. Bu tarayıcı metni ÖNCE
+/// ortak bir rakam temsiline indirger, SONRA telefon arar.
 ///
-/// ⚠ YANLIŞ POZİTİF KORUMASI: "500 TL", "3 metre", "4 saat" gibi kısa
-/// sayılar kalıba uymaz; en az 10 rakam gerekir.
+/// Böylece şunların hepsi AYNI diziye iner:
+///   0555 563 19 93 · 0555-563-19-93 · 05a55b631c993
+///   0x5x5x5x6x3x1x9x9x3 · +90/0090 önekli · satır sonlu
+///   beşyüzellibeşbeşyüzatmışüçondokuzdoksanüç
+///   0555 altmışüç ondokuz doksanüç
+///
+/// ── ⚠ KOŞU (RUN) MANTIĞI ──
+///
+/// Metin belirteçlere ayrılır. Rakam ve sayı sözcükleri koşuya rakam
+/// EKLER; kısa harf parçaları (1-2 harf) GÜRÜLTÜ sayılıp atlanır;
+/// bunun dışındaki her sözcük koşuyu BİTİRİR.
+///
+/// ⚠ YANLIŞ POZİTİFİ ENGELLEYEN ŞART BUDUR: "3 odalı 2 banyolu 150 m²"
+/// cümlesinde "odalı" ve "banyolu" koşuyu keser, rakamlar birbirine
+/// yapışmaz. Aksi hâlde normal ilanlardaki sayılar birleşip telefon
+/// gibi görünürdü.
+class _KoşuParcasi {
+  const _KoşuParcasi(this.rakam, this.bas, this.son);
+
+  /// Bu parçanın koşuya kattığı rakamlar.
+  final String rakam;
+
+  /// Kaynak metindeki yeri — maskeleme aralığı buradan kurulur.
+  final int bas;
+  final int son;
+}
+
+final RegExp _kosuBelirtec = RegExp(r'[0-9]+|[a-zA-ZçğıöşüÇĞİÖŞÜ]+');
+
+/// Metni rakam koşularına böler.
+List<List<_KoşuParcasi>> _rakamKosulari(String metin) {
+  final out = <List<_KoşuParcasi>>[];
+  var cur = <_KoşuParcasi>[];
+  for (final m in _kosuBelirtec.allMatches(metin)) {
+    final t = m.group(0)!;
+    if (RegExp(r'^[0-9]+$').hasMatch(t)) {
+      cur.add(_KoşuParcasi(t, m.start, m.end));
+      continue;
+    }
+    final r = _sayiCoz(trKucuk(t));
+    if (r != null) {
+      cur.add(_KoşuParcasi(r, m.start, m.end));
+      continue;
+    }
+    // ⚠ 1-2 HARFLİK PARÇA GÜRÜLTÜDÜR: "05a55b631c993" ya da
+    // "0x5x5x..." gibi araya harf serpiştirme kaçışları burada
+    // atlanır. Koşu KIRILMAZ ama rakam da EKLENMEZ.
+    if (t.length <= 2 && cur.isNotEmpty) {
+      continue;
+    }
+    // Anlamlı sözcük → koşu biter.
+    if (cur.isNotEmpty) {
+      out.add(cur);
+      cur = <_KoşuParcasi>[];
+    }
+  }
+  if (cur.isNotEmpty) {
+    out.add(cur);
+  }
+  return out;
+}
+
+/// Rakam dizisi geçerli bir Türk numarasının GÖVDESİ mi (10 hane)?
+bool _govdeMu(String s) =>
+    s.length == 10 && RegExp(r'^[2345]\d{9}$').hasMatch(s);
+
+/// ── ⚠ ÇOKLU VE BİTİŞİK TELEFON ──
+///
+/// Koşu içindeki rakam dizisi baştan sona taranır; her geçerli
+/// numara bulunduğunda maskelenir ve tarama HEMEN ARDINDAN devam
+/// eder. Böylece "0555563199305551234567" gibi aralıksız yazılmış
+/// iki numara da AYRI AYRI yakalanır.
+///
+/// ⚠ HİÇBİR ÜST SINIR YOKTUR ve bir adayın başarısız olması taramayı
+/// durdurmaz.
 List<_Aralik> _telefonAraliklari(String metin) {
   final out = <_Aralik>[];
-  // Rakam · boşluk · nokta · tire · parantez · artı · slash
-  //
-  // ── ⚠ SATIR SONU AYRAÇ DEĞİLDİR ──
-  //
-  // Eskiden `\s` kullanılıyordu ve satır sonunu da kapsıyordu.
-  // Kullanıcı numaraları ALT ALTA yazınca üçü TEK BLOĞA birleşiyor,
-  // rakam dizisi 31 haneye çıkıyor ve telefon kalıbına uymuyordu —
-  // yani hiçbiri maskelenmiyordu.
-  //
-  // ⚠ Yalnız BOŞLUK ve SEKME ayraç sayılır; her satır ayrı
-  // değerlendirilir.
-  final blok = RegExp(r'[+(]?[\d][\d \t().\-/+]{7,}\d');
-  for (final m in blok.allMatches(metin)) {
-    final ham = m.group(0)!;
-    final rakam = ham.replaceAll(RegExp(r'\D'), '');
-    if (_telefonMu(rakam)) {
-      out.add(_Aralik(m.start, m.end));
+  for (final kosu in _rakamKosulari(metin)) {
+    // Koşunun düz rakam dizisi + her rakamın kaynak parçası.
+    final b = StringBuffer();
+    final sahip = <int>[];
+    for (var i = 0; i < kosu.length; i++) {
+      b.write(kosu[i].rakam);
+      for (var k = 0; k < kosu[i].rakam.length; k++) {
+        sahip.add(i);
+      }
+    }
+    final d = b.toString();
+    var i = 0;
+    while (i + 10 <= d.length) {
+      // ⚠ ÖNEK SIYIRMA: 0090 / 90 / 0 biçimlerinin hepsi aynı
+      // gövdeye iner.
+      var atla = 0;
+      if (d.startsWith('0090', i)) {
+        atla = 4;
+      } else if (d.startsWith('90', i) && _govdeMu(_dilim(d, i + 2, 10))) {
+        atla = 2;
+      } else if (d.startsWith('0', i) && _govdeMu(_dilim(d, i + 1, 10))) {
+        atla = 1;
+      }
+      final govde = _dilim(d, i + atla, 10);
+      if (_govdeMu(govde)) {
+        final bas = kosu[sahip[i]].bas;
+        final sonIdx = i + atla + 10 - 1;
+        final son = kosu[sahip[sonIdx.clamp(0, sahip.length - 1)]].son;
+        out.add(_Aralik(bas, son));
+        i = i + atla + 10; // ⚠ Ardından TARAMA SÜRER.
+        continue;
+      }
+      i++;
     }
   }
   return out;
 }
 
-/// Rakam dizisi Türk telefon numarası mı?
-///
-/// ⚠ KABUL EDİLEN BİÇİMLER:
-///   `5XXXXXXXXX`      (10 hane, cep)
-///   `05XXXXXXXXX`     (11 hane)
-///   `905XXXXXXXXX`    (12 hane, +90)
-///   Ayrıca sabit hat: alan kodu 2/3/4 ile başlayan 10-11 hane.
-bool _telefonMu(String r) {
-  if (r.length < 10 || r.length > 13) {
-    return false;
-  }
-  var s = r;
-  if (s.startsWith('90') && s.length >= 12) {
-    s = s.substring(2);
-  }
-  if (s.startsWith('0')) {
-    s = s.substring(1);
-  }
-  if (s.length != 10) {
-    return false;
-  }
-  // Cep 5 ile, sabit hat 2/3/4 ile başlar.
-  return RegExp(r'^[2345]\d{9}$').hasMatch(s);
-}
+String _dilim(String s, int bas, int uzunluk) =>
+    (bas < 0 || bas + uzunluk > s.length)
+        ? ''
+        : s.substring(bas, bas + uzunluk);
 
 /// ═══════════════════════════════════════════════════════════════
 ///  E-POSTA · URL · SOSYAL MEDYA
@@ -125,10 +196,35 @@ List<_Aralik> _kanalAraliklari(String metin) {
     // URL (şemalı ya da www ile)
     RegExp(r'(https?://|www\.)[\w.-]+\.[a-zA-Z]{2,}(/\S*)?',
         caseSensitive: false),
+    // ── ⚠ PROTOKOLSÜZ ALAN ADI ──
+    //
+    // "example.com" gibi şemasız yazımlar kaçıyordu. Yalnız BİLİNEN
+    // uzantılar sayılır; "3.kat" ya da "1.5 metre" yakalanmaz.
+    RegExp(
+        r'(?<![\w@])[\w-]{2,}\s*[.]\s*'
+        r'(com|net|org|info|biz|co|io|me|tr|com\.tr|net\.tr|org\.tr)'
+        r'(?![\w])',
+        caseSensitive: false),
+    // ── ⚠ METİNSEL URL / E-POSTA ──
+    //
+    // "example nokta com", "ornek [at] gmail [dot] com" gibi
+    // yazımlar açıkça iletişim bilgisidir.
+    RegExp(
+        r'[\w-]{2,}\s*(nokta|dot|\[dot\]|\(dot\))\s*[\w-]{2,}',
+        caseSensitive: false),
+    RegExp(
+        r'[\w.-]{2,}\s*(\[at\]|\(at\)|\bat\b)\s*[\w.-]{2,}'
+        r'\s*(\[dot\]|\(dot\)|nokta|dot|[.])\s*[\w-]{2,}',
+        caseSensitive: false),
     // "instagram: kullanici", "telegram - kullanici", "wp: 0555..."
+    // ── ⚠ AYRAÇ ZORUNLU ──
+    //
+    // "Instagram'dan ulaşabilirsiniz" yalnız YÖNLENDİRME cümlesidir
+    // ve ürün kararı gereği maskelenmez. Hesap adı ancak ':' ya da
+    // '@' ile verildiğinde yakalanır: "Instagram: @ornek".
     RegExp(
         r'(instagram|insta|facebook|fb|twitter|telegram|whatsapp|whatsap|wp|snapchat|tiktok)'
-        r'\s*[:\-]?\s*@?[\w.]{2,}',
+        r'\s*(:|-)\s*@?[\w.]{2,}',
         caseSensitive: false),
     // @kullaniciadi — e-posta olmayan tekil kullanıcı adı
     RegExp(r'(?<![\w.])@[\w.]{3,}'),
@@ -169,7 +265,12 @@ final RegExp _guclu = RegExp(
   r'pasaj\w*|'
   r'plaza|'
   r'iş\s*hanı|iş\s*merkezi|'
-  r'daire|dai\.?|'
+  // ⚠ "daire" TEK BAŞINA yetmez: "2+1 daire" normal bir ilan
+  // ifadesidir. Ardından ya da önünde SAYI olmalı ("Daire 4").
+  // ⚠ "2+1 daire" NORMAL bir ilan ifadesidir: sayıdan hemen önce
+  // '+' varsa daire numarası DEĞİL, oda sayısıdır.
+  r'daire\s*[:.]?\s*\d{1,4}|(?<![+\d])\d{1,4}\s*\.?\s*daire|'
+  r'dai\.?\s*\d{1,4}|'
   r'kapı\s*(no|numara\w*)|'
   // ⚠ "No:25" / "No 25" / "Numara 25" / "25 numara" GÜÇLÜDÜR.
   //
@@ -260,26 +361,111 @@ List<_Aralik> _adresAraliklari(String metin) {
   return out;
 }
 
+
+/// ── ⚠ ADRES BAĞLAMINDA YAZIYLA SAYI ──
+///
+/// "No yirmi beş", "Kat iki", "Daire dört", "Bina on iki" gibi
+/// yazımlar rakam içermediği için adres kalıplarına takılmıyordu.
+///
+/// ⚠ BÜTÜN YAZIYLA SAYILAR ADRES SAYILMAZ. Yalnız bir ADRES
+/// İŞARETİNİN hemen ardından gelen sayı adres kabul edilir:
+///   "No yirmi beş"   → adres      "iki oda"        → serbest
+///   "Kat iki"        → adres      "üç petek"       → serbest
+///   "Daire dört"     → adres      "beş metre"      → serbest
+///
+/// Ayrım işaretin KENDİSİNDEDİR, sayının değil.
+final RegExp _adresIsareti = RegExp(
+  r'(?<![\wçğıöşü])('
+  r'no|numara|numarası|'
+  r'kapı\s*no|kapı\s*numarası|'
+  r'sokak\s*no|sokak\s*numarası|'
+  r'kat|daire|dai|bina|blok|apartman'
+  r')(?![\wçğıöşü])',
+  caseSensitive: false,
+);
+
+/// İşaretin ardından gelen sayı sözcüklerini adres olarak işaretler.
+List<_Aralik> _yaziylaAdresNo(String metin) {
+  final out = <_Aralik>[];
+  for (final m in _adresIsareti.allMatches(metin)) {
+    // İşaretten sonraki metinde ilk belirteçleri incele.
+    final kalan = metin.substring(m.end);
+    // ⚠ Araya yalnız boşluk / iki nokta / nokta girebilir.
+    final bas = RegExp(r'^[\s:.]{0,3}').firstMatch(kalan)!.end;
+    var i = bas;
+    var son = bas;
+    var bulundu = false;
+    while (i < kalan.length) {
+      final k = RegExp(r'^[a-zA-ZçğıöşüÇĞİÖŞÜ]+').firstMatch(kalan.substring(i));
+      if (k == null) {
+        break;
+      }
+      final kelime = k.group(0)!;
+      if (_sayiCoz(trKucuk(kelime)) == null) {
+        break;
+      }
+      bulundu = true;
+      son = i + k.end;
+      // Sonraki sözcüğe geç (yalnız boşluk atlanır).
+      final bosluk =
+          RegExp(r'^[ \t]{0,3}').firstMatch(kalan.substring(son))!.end;
+      i = son + bosluk;
+      if (bosluk == 0) {
+        break;
+      }
+    }
+    if (bulundu) {
+      out.add(_Aralik(m.start, m.end + son));
+      continue;
+    }
+    // ── ⚠ RAKAMLI BİÇİM DE AYNI KURALA TABİ ──
+    //
+    // "Kat 2", "Bina 12" güçlü kalıplara takılmıyordu ("kat" ve
+    // "bina" tek başına ZAYIF işaret). Ama bir adres işaretinin
+    // HEMEN ARDINDAN gelen sayı — yazıyla ya da rakamla — adres
+    // numarasıdır.
+    //
+    // ⚠ "2+1 daire" etkilenmez: orada sayı işaretten ÖNCE gelir.
+    final rakam =
+        RegExp(r'^\d{1,5}(?![\d])').firstMatch(kalan.substring(bas));
+    if (rakam != null) {
+      out.add(_Aralik(m.start, m.end + bas + rakam.end));
+    }
+  }
+  return out;
+}
+
 /// ── ⚠ TARİFLİ KONUM ──
 ///
 /// "Karşıyaka Çiçek Pasajı içinde Ayşe Terzi" cümlesinde sokak ya da
 /// numara YOKTUR ama kişi fiziksel olarak bulunabilir. Bu tür tarifler
 /// bir YER SÖZCÜĞÜ + KONUM EKİ ikilisiyle yakalanır.
 final RegExp _yerSozcugu = RegExp(
+  // ⚠ GENEL İŞLETME/YER SÖZCÜKLERİ — markaya özel değil.
   r'(?<![\wçğıöşü])('
-  r'pasaj\w*|avm|çarşı\w*|hal|market\w*|mağaza\w*|dükkan\w*|dükkân\w*|'
-  r'cami\w*|okul\w*|hastane\w*|banka\w*|eczane\w*|'
+  r'pasaj\w*|avm|çarşı\w*|market\w*|mağaza\w*|dükkan\w*|dükkân\w*|'
+  r'fırın\w*|eczane\w*|restoran\w*|lokanta\w*|kafe\w*|büfe\w*|'
+  r'benzinlik\w*|benzin\s*istasyon\w*|otel\w*|banka\w*|berber\w*|'
+  r'cami\w*|okul\w*|hastane\w*|karakol\w*|postane\w*|'
   r'apartman\w*|site\w*|bina\w*|plaza|han|iş\s*hanı|durak\w*|'
-  r'köprü\w*|meydan\w*|park\w*|terminal\w*|istasyon\w*'
+  r'köprü\w*|meydan\w*|park\w*|terminal\w*|istasyon\w*|hal'
   r')(?![\wçğıöşü])',
   caseSensitive: false,
 );
 
 final RegExp _konumEki = RegExp(
+  // ── ⚠ KÖK BİÇİMLER DE KAPSANIR ──
+  //
+  // Eskiden yalnız "üstünde/yanında" gibi bulunma hâli vardı;
+  // "üstü", "yanı", "karşısı", "arkası", "üst katı" kaçıyordu.
   r'(?<![\wçğıöşü])('
-  r'içinde|içindeki|karşısı|karşısında|karşısındaki|'
-  r'yanı|yanında|yanındaki|arkası|arkasında|arkasındaki|'
-  r'girişinde|girişindeki|üstünde|altında|bitişiğinde|civarında'
+  r'içinde|içindeki|'
+  r'karşısı|karşısında|karşısındaki|karşısındakı|'
+  r'yanı|yanında|yanındaki|'
+  r'arkası|arkasında|arkasındaki|'
+  r'üstü|üstünde|üstündeki|üst\s*katı|'
+  r'altı|altında|altındaki|'
+  r'girişinde|girişindeki|bitişiğinde|civarında'
   r')(?![\wçğıöşü])',
   caseSensitive: false,
 );
@@ -308,45 +494,8 @@ List<_Aralik> _tarifliKonum(String metin) {
 /// Metinde maskelenecek bir şey var mı?
 bool iletisimIceriyor(String metin) => _tumAraliklar(metin).isNotEmpty;
 
-// ⚠ ESKİ `_yaziylaRakam` KALDIRILDI.
-//
-// Sözcük başına tek rakam üreten basit yöntemdi ve "beşyüz"ü 500
-// değil 5+00 olarak okuyordu. Yerini gerçek sayı okunuşunu çözen
-// `_sayiCoz` aldı (bkz. yukarısı); bitişik ve boşluklu yazımların
-// ikisini de `_bitisikSayi` tarar.
+// ⚠ `_harfKarisikNumara` KALDIRILDI: yerini normalize tarayıcı aldı.
 
-/// ── ⚠ HARF ARAYA SIKIŞTIRMA ──
-///
-/// "5o5 5b6 3x1 99 3" gibi rakamların arasına harf serpiştirme.
-/// Blok tespiti harfte kesildiği için bunu kaçırıyordu.
-///
-/// ⚠ ÖLÇÜLÜ: bloğun EN AZ YARISI rakam olmalı ve rakamlar telefon
-/// kalıbına uymalı. Aksi hâlde "3 metre kablo A5 tipi" gibi normal
-/// metinler yakalanırdı.
-List<_Aralik> _harfKarisikNumara(String metin) {
-  final out = <_Aralik>[];
-  // ⚠ SATIR SONU HARİÇ (yukarıdaki aynı gerekçe).
-  final blok = RegExp(r'[\dA-Za-zçğıöşüÇĞİÖŞÜ \t().\-/+]{10,}');
-  for (final m in blok.allMatches(metin)) {
-    final ham = m.group(0)!;
-    final rakam = ham.replaceAll(RegExp(r'\D'), '');
-    // ⚠ 9 HANE DE SAYILIR: kullanıcı baştaki `0`ı yazmayabilir
-    // ("5o5 5b6 3x1 99 3" → 555631993). Bu durumda başa `0`
-    // eklenerek kalıba vurulur.
-    if (rakam.length < 9) {
-      continue;
-    }
-    final harf = ham.replaceAll(RegExp(r'[^A-Za-zçğıöşüÇĞİÖŞÜ]'), '');
-    // Rakam ağırlıklı olmalı: harf sayısı rakamı geçmesin.
-    if (harf.length > rakam.length) {
-      continue;
-    }
-    if (_telefonMu(rakam) || _telefonMu('0$rakam')) {
-      out.add(_Aralik(m.start, m.end));
-    }
-  }
-  return out;
-}
 
 // ⚠ İLETİŞİME YÖNLENDİRME TESPİTİ KALDIRILDI (ürün kararı).
 //
@@ -511,56 +660,27 @@ String? _sayiCoz(String k) {
   return _sayiGruplari(bs).map((g) => _grupDegeri(g).toString()).join();
 }
 
-/// ── ⚠ BİTİŞİK VE BOŞLUKLU TÜRKÇE SAYI TELEFONU ──
+/// ── ⚠ SAYI BÖLGESİ — AYRAÇLA PARÇALAMAYA DİRENÇLİ ──
 ///
-/// "beşyüzellibeşbeşyüzatmışüçondokuzdoksanüç" → 5555631993
-/// "beşyüzellibeş beşyüzaltmışüç ondokuz doksanüç" → 5555631993
+/// Saldırgan sayı sözcüklerini boşluk, nokta, tire, slash, parantez,
+/// virgül ve satır sonuyla parçalayarak tespitten kaçabiliyordu.
 ///
-/// İki yol birlikte taranır:
-///   1. TEK SÖZCÜK bitişik yazım
-///   2. ARDIŞIK sayı sözcükleri (boşluklu)
+/// Eski yöntem her SÖZCÜĞÜ ayrı çözüp sonuçları birleştiriyordu:
+/// "beş" + "yüz" → "5" + "00" = 500 yerine 5+00. Yanlış.
 ///
-/// ⚠ NORMAL İÇERİK KORUNUR: "üç odalı", "yüz elli TL", "beş metre"
-/// çözümlenir ama çıkan dizi telefon kalıbına uymadığı için
-/// maskelenmez.
-List<_Aralik> _bitisikSayi(String metin) {
-  final out = <_Aralik>[];
+/// Yeni yöntem: ardışık sayı belirteçlerinden oluşan BÖLGE bulunur,
+/// aradaki ayraçlar yok sayılır ve bölge TEK BİR metin gibi çözülür.
+/// Böylece "Beş yüz elli beş", "Beşyüz.ellibeş", "Beşyüz-elli-beş"
+/// hepsi aynı sonucu verir.
+///
+/// ⚠ Ayraç dışında bir şey araya girerse bölge KAPANIR: normal
+/// cümledeki sayılar birbirine yapıştırılmaz.
+// ⚠ `_bolgeAdaylari` ve `_rakamMi` KALDIRILDI: normalize tarayıcı
+// koşu mantığını kendi içinde kuruyor.
 
-  // 1) Tek sözcük — bitişik yazım.
-  for (final m in RegExp(r'[a-zA-ZçğıöşüÇĞİÖŞÜ]{6,}').allMatches(metin)) {
-    final r = _sayiCoz(trKucuk(m.group(0)!));
-    if (r != null && (_telefonMu(r) || _telefonMu('0$r'))) {
-      out.add(_Aralik(m.start, m.end));
-    }
-  }
 
-  // 2) Ardışık sayı sözcükleri — boşluklu yazım.
-  final kel =
-      RegExp(r'[a-zA-ZçğıöşüÇĞİÖŞÜ]+').allMatches(metin).toList();
-  var i = 0;
-  while (i < kel.length) {
-    if (_sayiCoz(trKucuk(kel[i].group(0)!)) == null) {
-      i++;
-      continue;
-    }
-    var j = i;
-    final b = StringBuffer();
-    while (j < kel.length) {
-      final r = _sayiCoz(trKucuk(kel[j].group(0)!));
-      if (r == null) {
-        break;
-      }
-      b.write(r);
-      j++;
-    }
-    final r = b.toString();
-    if (_telefonMu(r) || _telefonMu('0$r')) {
-      out.add(_Aralik(kel[i].start, kel[j - 1].end));
-    }
-    i = j;
-  }
-  return out;
-}
+// ⚠ `_bitisikSayi` KALDIRILDI: yerini normalize tarayıcı aldı.
+
 
 /// ── ⚠ IBAN ──
 ///
@@ -613,10 +733,9 @@ List<_Aralik> _tumAraliklar(String metin) => [
       ..._telefonAraliklari(metin),
       ..._kanalAraliklari(metin),
       ..._adresAraliklari(metin),
+      ..._yaziylaAdresNo(metin),
       ..._tarifliKonum(metin),
-      ..._harfKarisikNumara(metin),
       ..._anlamsizAraliklari(metin),
-      ..._bitisikSayi(metin),
       ..._ibanAraliklari(metin),
       ..._markaKonum(metin),
     ];

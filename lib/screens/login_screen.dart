@@ -615,71 +615,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             onDegisti: (g) => setState(() => _obscure = g),
                           ),
                         ),
-
-                        // .rg-infobox.blue{margin:2px 0 4px}
+                        // ── ⚠ DEMO GİRİŞ KUTUSU KALDIRILDI ──
                         //
-                        // ⚠ Test kimliği YALNIZ debug + mock derlemede
-                        // gösterilir. Release APK'da bu kutu ÇİZİLMEZ;
-                        // demo hesap da tohumlanmaz (`seedTestAccount`).
-                        if (kDebugMode && !ApiConfig.useRealApi)
-                        RefInfoBox(
-                          mavi: true,
-                          margin: const EdgeInsets.only(top: 2, bottom: 4),
-                          child: RichText(
-                            text: TextSpan(
-                              style: refText(
-                                size: RF.s135,
-                                weight: RF.w400,
-                                color: RC.textDark,
-                                height: RF.lh150,
-                              ),
-                              children: [
-                                // ⚠ ŞİFRELİ GİRİŞ E-POSTA İLE.
-                                //
-                                // Kutu telefon numarası gösteriyordu;
-                                // o bilgiyle e-posta alanı
-                                // doldurulunca "Geçerli bir e-posta
-                                // adresi giriniz" çıkıyordu.
-                                //
-                                // ⚠ KUTU ARTIK MODA GÖRE DEĞİŞİYOR.
-                                //
-                                // Telefon modunda da e-posta adresi
-                                // gösteriliyordu; o değer telefon
-                                // alanına yazılamaz. Her mod KENDİ
-                                // kimliğini gösterir ve ikisi de
-                                // tohumlanan demo hesaba aittir.
-                                TextSpan(
-                                    text: _epostaModu
-                                        ? 'Test girişi — E-posta: '
-                                        : 'Test girişi — Telefon: '),
-                                TextSpan(
-                                  text: _epostaModu
-                                      ? 'test@hizmetcep.com'
-                                      : '0532 111 22 33',
-                                  style: refText(
-                                    size: RF.s135,
-                                    weight: RF.w700,
-                                    color: RC.textDark,
-                                    height: RF.lh150,
-                                  ),
-                                ),
-                                const TextSpan(text: ' · Şifre: '),
-                                TextSpan(
-                                  // ⚠ Depodaki tohum değerle AYNI olmalı;
-                                  // ikisi ayrı düşerse kutu yanlış şifre
-                                  // gösterir ve giriş denenemez.
-                                  text: '1986onur',
-                                  style: refText(
-                                    size: RF.s135,
-                                    weight: RF.w700,
-                                    color: RC.textDark,
-                                    height: RF.lh150,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // Canlı sürümde hazır hesap bilgisi (e-posta +
+                        // şifre) gösterilmez. Kullanıcı yalnız kendi
+                        // oluşturduğu hesapla giriş yapar.
 
                         // ── BENİ HATIRLA ──
                         //

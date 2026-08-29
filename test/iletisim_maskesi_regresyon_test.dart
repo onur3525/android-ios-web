@@ -83,6 +83,43 @@ void main() {
       }
     });
 
+    test('⚠ AYRAÇLA PARÇALAMA VARYASYONLARI (20 madde)', () {
+      // Saldırgan sayı sözcüklerini boşluk/nokta/tire/slash/parantez/
+      // virgül/satır sonu ile parçalayarak kaçıyordu. Bölge tabanlı
+      // çözümleme hepsini aynı sonuca indirger.
+      for (final t in const [
+        'Beş yüz elli beş beş yüz altmış üç on dokuz doksan üç',
+        'Beşyüzellibeşbeşyüzaltmışüçondokuzdoksanüç',
+        'Beşyüz ellibeşbeşyüz atmışüç on dokuzdoksanüç',
+        'Beşyüz.ellibeş.beşyüz.atmışüç.ondokuz.doksanüç',
+        'Beşyüz-ellibeş-beşyüz-atmışüç-on-dokuz-doksanüç',
+        'Beşyüz/ellibeş/beşyüz/atmışüç/ondokuz/doksanüç',
+        'Beşyüz, ellibeş, beşyüz, atmışüç, ondokuz, doksanüç',
+        'Beş   yüz   elli   beş   beş   yüz   altmış   üç   '
+            'on   dokuz   doksan   üç',
+        'Beş yüz elli beş\nbeş yüz altmış üç\non dokuz\ndoksan üç',
+        'BEŞYÜZELLİBEŞBEŞYÜZALTMIŞÜÇONDOKUZDOKSANÜÇ',
+        '(beşyüz) ellibeş (beşyüz) atmışüç ondokuz doksanüç',
+        '0555beşyüzatmışüç1993',
+      ]) {
+        expect(m(t), isTrue, reason: t);
+      }
+    });
+
+    test('⚠ SAYI OKUNUŞU DOĞRU ÇÖZÜLÜR (genel, hard-code değil)', () {
+      // Normal sayı okunuşları çözümlenir ama telefon kalıbına
+      // uymadıkları için MASKELENMEZ.
+      for (final t in const [
+        'yüz yirmi beş TL',
+        'iki yüz elli metre',
+        'bin iki yüz otuz dört adet',
+        '150 m2 ev',
+        '2-3 petek daha',
+      ]) {
+        expect(m(t), isFalse, reason: t);
+      }
+    });
+
     test('boşluklu yazım maskeli', () {
       for (final t in const [
         'beş beş beş beş altı üç bir dokuz dokuz üç',
@@ -153,6 +190,51 @@ void main() {
         'www.example.com',
       ]) {
         expect(m(t), isTrue, reason: t);
+      }
+    });
+  });
+
+  group('⚠ YAZIYLA ADRES NUMARASI (regresyon)', () {
+    // "No yirmi beş", "Kat iki" rakam içermediği için adres
+    // kalıplarına takılmıyordu.
+    //
+    // ⚠ AYRIM İŞARETTEDİR, SAYIDA DEĞİL: bir adres işaretinin HEMEN
+    // ARDINDAN gelen sayı adres numarasıdır. Bütün yazıyla sayılar
+    // adres sayılmaz.
+    test('adres işareti + sayı MASKELİ', () {
+      for (final t in const [
+        'No 25',
+        'No yirmi beş',
+        'Kapı No 25',
+        'Kapı numarası yirmi beş',
+        'Kapı numarası yirmi beş, kat iki',
+        'Kat 2',
+        'Kat iki',
+        'Daire 4',
+        'Daire dört',
+        'Bina 12',
+        'Bina on iki',
+        'Girne Mahallesi, X Sokak, No yirmi beş',
+        'Girne Mahallesi, X Sokak, No 25, Kat iki',
+      ]) {
+        expect(m(t), isTrue, reason: t);
+      }
+    });
+
+    test('⚠ İŞARETSİZ SAYI SERBEST', () {
+      for (final t in const [
+        'iki oda',
+        'üç petek',
+        'beş metre kablo',
+        'on adet petek',
+        'üç odalı iki banyolu',
+        'yüz elli TL',
+        '2+1 daire',
+        '3 oda 2 banyo',
+        '150 TL',
+        '2019 model',
+      ]) {
+        expect(m(t), isFalse, reason: t);
       }
     });
   });

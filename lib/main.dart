@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -176,14 +175,16 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
 
   // ── mock kurulum (mevcut davranış birebir korunur) ──
   final authRepo = AuthRepository();
-  final walletRepo = WalletRepository(demoDefaults: kDebugMode);
+  // ⚠ DEMO BAKİYE KAPATILDI: yeni hesap SIFIR bakiye ile başlar.
+  // `demoDefaults` 950 TL kullanılabilir + 150 TL bloke yüklüyordu.
+  final walletRepo = WalletRepository();
   final listingRepo = ListingRepository();
   final offerRepo = OfferRepository();
   final contactRepo = ContactRepository();
 
-  final offerPort = ApiOfferPort(offerRepo, listingRepo, walletRepo, notifs: notifRepo);
+  final offerPort = MockOfferPort(offerRepo, listingRepo, walletRepo, notifs: notifRepo);
   final listingPort =
-      ApiListingPort(listingRepo, offerRepo, contactRepo, chatRepo, offerPort,
+      MockListingPort(listingRepo, offerRepo, contactRepo, chatRepo, offerPort,
           // Çıkar çatışması denetimi için hesap deposu.
           auth: authRepo);
 
@@ -198,33 +199,38 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   // ⚠ DEMO VERİSİ KALDIRILMADI: aynı hesap, aynı kategoriler, aynı
   // adres, aynı `register` sözleşmesinden geçerek üretilir — yalnız
   // ZAMANI değişti: İLK KARE ÇİZİLDİKTEN sonra.
-  if (kDebugMode) {
-    demoTohumla(authRepo,
-        listings: listingRepo, offers: offerRepo, wallets: walletRepo,
-        reviews: reviewRepo, contacts: contactRepo);
-  }
+  // ── ⚠ DEMO TOHUMLAMA KAPATILDI (canlı hazırlığı) ──
+  //
+  // Hazır demo hesap ve demo ilan ÜRETİLMEZ. Kullanıcı hesap
+  // oluşturmadan giriş yapamaz; hizmet alan ve hizmet veren
+  // ekranları boş başlar.
+  //
+  // ⚠ `demoTohumla` SİLİNMEDİ, yalnız ÇAĞRILMIYOR: yerel geliştirmede
+  // gerekirse bu blok geri açılabilir.
+  //
+  // ⚠ OTP test kodu (123456) DEĞİŞMEDİ — talimat gereği aynı kaldı.
 
   return AppPorts(
-    chat: ApiChatPort(chatRepo, offerRepo, listingRepo,
+    chat: MockChatPort(chatRepo, offerRepo, listingRepo,
         contacts: contactRepo, notifs: notifRepo),
-    reviews: ApiReviewPort(
+    reviews: MockReviewPort(
         reviewRepo, listingRepo, offerRepo, walletRepo, contactRepo),
-    notifications: ApiNotificationPort(notifRepo),
+    notifications: MockNotificationPort(notifRepo),
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
-    regions: ApiRegionPort(),
+    regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
-    freeRights: ApiFreeRightPort(),
+    freeRights: MockFreeRightPort(),
     // Geliştirme modunda kayıtlı kart KAPALI — sahte kart üretilmez.
-    savedCards: ApiSavedCardsPort(),
-    // Api modda da istemci kurulur: ekranlar `context.read<ApiClient>()`
-    // ile *Api yardımcıları oluşturur. Api modda ağ çağrısı YAPILMAZ;
+    savedCards: MockSavedCardsPort(),
+    // Mock modda da istemci kurulur: ekranlar `context.read<ApiClient>()`
+    // ile *Api yardımcıları oluşturur. Mock modda ağ çağrısı YAPILMAZ;
     // ekranlar veriyi mock port'lardan okur.
     apiClient: ApiClient(onSessionExpired: onSessionExpired),
-    auth: ApiAuthPort(authRepo),
+    auth: MockAuthPort(authRepo),
     listings: listingPort,
     offers: offerPort,
-    wallet: ApiWalletPort(walletRepo),
-    contact: ApiContactPort(contactRepo, offerRepo, walletRepo, listingRepo,
+    wallet: MockWalletPort(walletRepo),
+    contact: MockContactPort(contactRepo, offerRepo, walletRepo, listingRepo,
         notifs: notifRepo),
     expiry: ListingExpiryService(listingRepo, offerPort, notifications: notifRepo),
   );
@@ -273,7 +279,7 @@ Future<void> main() async {
   //
   // ⚠ Burada İKİNCİ bir `restoreSession()` çağrısı vardı. Aynı iş
   // `SplashScreen._boot()` içinde de yapılıyordu; ikisi paralel
-  // koşuyordu. Api modda gövde boş olduğu için zararsızdı ama
+  // koşuyordu. Mock modda gövde boş olduğu için zararsızdı ama
   // GERÇEK API modunda iki ayrı jeton yenileme turu ve yarış durumu
   // demekti (hangisinin sonucu kalacağı belirsiz).
   //
