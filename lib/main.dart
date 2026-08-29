@@ -181,9 +181,9 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   final offerRepo = OfferRepository();
   final contactRepo = ContactRepository();
 
-  final offerPort = MockOfferPort(offerRepo, listingRepo, walletRepo, notifs: notifRepo);
+  final offerPort = ApiOfferPort(offerRepo, listingRepo, walletRepo, notifs: notifRepo);
   final listingPort =
-      MockListingPort(listingRepo, offerRepo, contactRepo, chatRepo, offerPort,
+      ApiListingPort(listingRepo, offerRepo, contactRepo, chatRepo, offerPort,
           // Çıkar çatışması denetimi için hesap deposu.
           auth: authRepo);
 
@@ -205,26 +205,26 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   }
 
   return AppPorts(
-    chat: MockChatPort(chatRepo, offerRepo, listingRepo,
+    chat: ApiChatPort(chatRepo, offerRepo, listingRepo,
         contacts: contactRepo, notifs: notifRepo),
-    reviews: MockReviewPort(
+    reviews: ApiReviewPort(
         reviewRepo, listingRepo, offerRepo, walletRepo, contactRepo),
-    notifications: MockNotificationPort(notifRepo),
+    notifications: ApiNotificationPort(notifRepo),
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
-    regions: MockRegionPort(),
+    regions: ApiRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
-    freeRights: MockFreeRightPort(),
+    freeRights: ApiFreeRightPort(),
     // Geliştirme modunda kayıtlı kart KAPALI — sahte kart üretilmez.
-    savedCards: MockSavedCardsPort(),
-    // Mock modda da istemci kurulur: ekranlar `context.read<ApiClient>()`
-    // ile *Api yardımcıları oluşturur. Mock modda ağ çağrısı YAPILMAZ;
+    savedCards: ApiSavedCardsPort(),
+    // Api modda da istemci kurulur: ekranlar `context.read<ApiClient>()`
+    // ile *Api yardımcıları oluşturur. Api modda ağ çağrısı YAPILMAZ;
     // ekranlar veriyi mock port'lardan okur.
     apiClient: ApiClient(onSessionExpired: onSessionExpired),
-    auth: MockAuthPort(authRepo),
+    auth: ApiAuthPort(authRepo),
     listings: listingPort,
     offers: offerPort,
-    wallet: MockWalletPort(walletRepo),
-    contact: MockContactPort(contactRepo, offerRepo, walletRepo, listingRepo,
+    wallet: ApiWalletPort(walletRepo),
+    contact: ApiContactPort(contactRepo, offerRepo, walletRepo, listingRepo,
         notifs: notifRepo),
     expiry: ListingExpiryService(listingRepo, offerPort, notifications: notifRepo),
   );
@@ -273,7 +273,7 @@ Future<void> main() async {
   //
   // ⚠ Burada İKİNCİ bir `restoreSession()` çağrısı vardı. Aynı iş
   // `SplashScreen._boot()` içinde de yapılıyordu; ikisi paralel
-  // koşuyordu. Mock modda gövde boş olduğu için zararsızdı ama
+  // koşuyordu. Api modda gövde boş olduğu için zararsızdı ama
   // GERÇEK API modunda iki ayrı jeton yenileme turu ve yarış durumu
   // demekti (hangisinin sonucu kalacağı belirsiz).
   //
