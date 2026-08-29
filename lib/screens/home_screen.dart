@@ -779,7 +779,7 @@ class HizmetAlanlariPaneli extends StatefulWidget {
     // ⚠ 24 ÇATI (yeni katalog). Ölü kayıt bırakılmaz: çatı adı
     // değişince buradaki anahtar da değişmeli — test denetler.
     'İnşaat & Dekorasyon': 'İnşaat\nDekorasyon',
-    'Mühendislik & Proje': 'Mühendislik\n& Proje',
+    'Mühendislik & Mimarlık': 'Mühendislik\n& Proje',
     'Organizasyon & Etkinlik': 'Organizasyon\n& Etkinlik',
     'Evcil Hayvan Hizmetleri': 'Evcil Hayvan\nHizmetleri',
     'Beyaz Eşya & Elektronik': 'Beyaz Eşya\nElektronik',

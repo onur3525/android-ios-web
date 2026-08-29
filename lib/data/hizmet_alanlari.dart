@@ -211,7 +211,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Mühendislik & Proje',
+    ad: 'Mühendislik & Mimarlık',
     aciklama:
         'Proje ve mühendislik',
     gorsel: 'assets/alanlar/muhendislik.jpg',

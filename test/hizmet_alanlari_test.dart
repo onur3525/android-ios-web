@@ -37,7 +37,7 @@ void main() {
             'İnşaat & Dekorasyon',
             'Teknik Hizmetler',
             'Giyim & Tekstil',
-            'Mühendislik & Proje',
+            'Mühendislik & Mimarlık',
             'Hukuk & Finans',
             'Sağlık Hizmetleri',
             'Tarım & Hayvancılık',
