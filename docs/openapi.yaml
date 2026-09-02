@@ -1,0 +1,1424 @@
+# ═══════════════════════════════════════════════════════════════════
+#  HİZMETCEP — API SÖZLEŞMESİ (OpenAPI 3.1)
+# ═══════════════════════════════════════════════════════════════════
+#
+# Kaynak: "HizmetCep Nihai API ve İş Kuralları" belgesi, Sürüm 1.0.
+# ⚠ O belge ESKİ KOD VE ESKİ ZIP'E ÜSTÜNDÜR (§31). Bu dosya belgeyi
+#   makine tarafından doğrulanabilir biçime çevirir; ürün kararı
+#   EKLEMEZ.
+#
+# ⚠ BELGENİN AÇIK BIRAKTIKLARI BURADA DA AÇIK BIRAKILDI (§30):
+#   · ödeme sağlayıcısı seçilmedi → adapter ile soyutlanacak
+#   · iletişim bedeli algoritması tanımlanmadı → ilk sürüm Admin fiyatı
+#   · minimum teklif algoritması tanımlanmadı → ilk sürüm Admin fiyatı
+#   Bunlar VARSAYIMLA DOLDURULMADI.
+openapi: 3.1.0
+
+info:
+  title: HizmetCep API
+  version: 1.0.0
+  description: |
+    İzmir hizmet pazaryeri. İki rol: Hizmet Alan (müşteri) ve
+    Hizmet Veren (usta).
+
+    TEMEL İLKELER (§1)
+    - 1 ilan = 1 kategori/hizmet.
+    - Aynı Hizmet Veren aynı ilana yalnızca 1 teklif verir.
+    - Teklif geri çekilemez ve değiştirilemez.
+    - İletişim açılmadan kişisel bilgiler MASKELİDİR ve mesajlaşma kapalıdır.
+    - İletişim açılınca iki taraf için AYNI ANDA açılır.
+    - E-posta hiçbir zaman karşı tarafa gösterilmez.
+    - Yalnızca Hizmet Alan, Hizmet Veren'i 1-5 yıldız ve yorumla değerlendirir.
+    - Her ilan için yalnızca 1 değerlendirme; kullanıcı silemez/değiştiremez.
+    - İlan aktif süresi 30 saattir.
+    - Para iadesi yoktur.
+
+servers:
+  - url: https://api.hizmetcep.com/v1
+    description: Üretim
+  - url: https://staging-api.hizmetcep.com/v1
+    description: Hazırlık
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Roles
+  - name: Categories
+  - name: ServiceAreas
+  - name: Listings
+  - name: Offers
+  - name: Communication
+  - name: Reviews
+  - name: Messages
+  - name: Notifications
+  - name: Support
+  - name: Admin
+
+# ═══════════════════════════════════════════════════════════════════
+#  BİLEŞENLER
+# ═══════════════════════════════════════════════════════════════════
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        ⚠ 401 istemcide MERKEZİ interceptor ile yönetilir (§28);
+        her ekran ayrı ayrı ele almaz.
+
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema: { type: string }
+      description: Önceki yanıtın `nextCursor` değeri (§2 cursor pagination).
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+      description: |
+        ⚠ FİNANSAL VE DURUM DEĞİŞTİREN POST'LARDA ZORUNLU (§25).
+        Aynı anahtarla tekrarlanan istek İKİNCİ finansal hareketi ya da
+        hak tüketimini OLUŞTURMAZ; ilk sonucu aynen döndürür.
+
+  schemas:
+
+    # ── ORTAK ──
+    Error:
+      type: object
+      required: [code, message, requestId, retryable]
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+          description: Alan bazlı doğrulama ayrıntıları.
+        requestId: { type: string }
+        retryable: { type: boolean }
+      description: |
+        ⚠ İSTEMCİ METNE DEĞİL `code` ALANINA GÖRE DAVRANIR (§3).
+        Mesaj metni değişebilir; kod sözleşmedir.
+
+    ErrorCode:
+      type: string
+      description: |
+        ⚠ İSTEMCİ HTTP DURUMUNA DEĞİL BU KODA GÖRE DAVRANIR (§13).
+        Aynı 409 iki farklı anlam taşıyabilir: "zaten teklif verdiniz"
+        ile "iletişim zaten açık" kullanıcı için bambaşka sonuçlardır.
+
+        ⚠ BU LİSTE FLUTTER `api_error_mapper.dart` İLE BİREBİRDİR.
+        İstemcinin ele aldığı ama burada tanımsız olan bir kod,
+        sunucunun asla göndermeyeceği ölü bir daldır; tersi ise
+        istemcide genel hataya düşer. İki taraf ayrışmamalıdır.
+      enum:
+        # ── GENEL (HTTP karşılıkları) ──
+        - VALIDATION_ERROR          # 400
+        - UNAUTHENTICATED           # 401
+        - UNAUTHORIZED              # 401/403 — eski ad, hâlâ kabul edilir
+        - FORBIDDEN                 # 403
+        - NOT_FOUND                 # 404
+        - CONFLICT                  # 409
+        - DUPLICATE_OPERATION       # 409
+        - STATE_CONFLICT            # 409
+        - INVALID_STATE             # 409/422 — durum uygun değil
+        - BUSINESS_RULE_VIOLATION   # 422
+        - RATE_LIMITED              # 429
+        - INTERNAL_ERROR            # 500
+        - EXTERNAL_SERVICE_ERROR    # 502/503
+
+        # ── KİMLİK VE OTURUM ──
+        - AUTH_FAILED               # kimlik doğrulanamadı
+        - WRONG_PASSWORD            # mevcut şifre hatalı
+        - OTP_REQUIRED              # SMS doğrulaması gerekiyor
+
+        # ── TEKLİF ──
+        - OFFER_ALREADY_EXISTS      # aynı ilana ikinci teklif (§1)
+        - DUPLICATE_OFFER           # aynı anlam — eski ad
+        - OWN_LISTING_OFFER         # kendi ilanına teklif verilemez
+
+        # ── İLAN ──
+        - LISTING_EXPIRED           # 30 saat doldu (§12)
+        - LISTING_REMOVED           # admin kaldırdı (§13)
+        - LISTING_CLOSED            # teklif kabul etmiyor (genel)
+
+        # ── İLETİŞİM ──
+        # ⚠ COMMUNICATION_ALREADY_OPEN BİR BAŞARISIZLIK DEĞİLDİR:
+        # iletişim açma idempotenttir (§10). İstenen durum zaten
+        # sağlanmıştır; istemci bunu başarı gibi ele alır ve kullanıcıya
+        # hata GÖSTERMEZ.
+        - COMMUNICATION_ALREADY_OPEN
+
+        # ── PARA VE HAK ──
+        - FREE_RIGHTS_EXHAUSTED     # ücretsiz hak kalmadı (§9)
+
+    Money:
+      type: object
+      required: [amountMinor, currency]
+      properties:
+        amountMinor:
+          type: integer
+          description: |
+            ⚠ KURUŞ CİNSİNDEN TAM SAYI (§2). Kayan noktalı sayı
+            KULLANILMAZ; tek yöntem her yerde aynı uygulanır.
+        currency: { type: string, enum: [TRY] }
+
+    Page:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: {} }
+        nextCursor:
+          type: [string, 'null']
+          description: Son sayfada `null`.
+
+    # ⚠ `OfferFundingSource` KALDIRILDI: teklif ücretsiz, kaynak yok.
+
+    # ── DURUM ENUM'LARI (§24) ──
+    UserStatus:        { type: string, enum: [ACTIVE, FROZEN, DELETED] }
+    ListingStatus:     { type: string, enum: [ACTIVE, EXPIRED, USER_DELETED, ADMIN_REMOVED] }
+    OfferStatus:       { type: string, enum: [ACTIVE, SELECTED, EXPIRED, CLOSED] }
+    CommunicationState: { type: string, enum: [MASKED, OPENED] }
+    ReviewStatus:      { type: string, enum: [PENDING_PUBLICATION, PUBLISHED, ADMIN_DELETED] }
+    NotificationStatus: { type: string, enum: [UNREAD, READ, DELETED] }
+    Role:              { type: string, enum: [CUSTOMER, PROVIDER] }
+
+    # ── KULLANICI ──
+    Address:
+      type: object
+      required: [cityId, districtId, neighborhoodId]
+      properties:
+        cityId: { type: string }
+        districtId: { type: string }
+        neighborhoodId: { type: string }
+        cityName: { type: string, readOnly: true }
+        districtName: { type: string, readOnly: true }
+        neighborhoodName: { type: string, readOnly: true }
+      description: ⚠ Her kullanıcının TEK adresi vardır (§4).
+
+    Me:
+      type: object
+      required: [userId, firstName, lastName, phone, roles, activeRole, status, address]
+      properties:
+        userId: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        email:
+          type: string
+          format: email
+          description: |
+            ⚠ YALNIZ KENDİ PROFİLİNDE döner. Karşı tarafa HİÇBİR
+            durumda gösterilmez (§1, §4, kabul testi 18).
+        photoUrl: { type: [string, 'null'] }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/Role' }
+        activeRole: { $ref: '#/components/schemas/Role' }
+        status: { $ref: '#/components/schemas/UserStatus' }
+        address: { $ref: '#/components/schemas/Address' }
+
+    PartyPublic:
+      type: object
+      required: [userId, communication]
+      properties:
+        userId: { type: string }
+        communication: { $ref: '#/components/schemas/CommunicationState' }
+        firstName:
+          type: [string, 'null']
+          description: MASKED iken maskeli ("E***"), OPENED iken tam.
+        lastName: { type: [string, 'null'] }
+        phone:
+          type: [string, 'null']
+          description: |
+            ⚠ MASKED iken SUNUCU BU ALANI GÖNDERMEZ (`null`).
+            Yalnız arayüzde gizlemek güvenlik DEĞİLDİR (§28).
+        photoUrl: { type: [string, 'null'] }
+        cityName: { type: [string, 'null'] }
+        districtName: { type: [string, 'null'] }
+        neighborhoodName: { type: [string, 'null'] }
+        rating:
+          type: [number, 'null']
+          description: Yayınlanmış değerlendirmelerin ortalaması, 1 ondalık.
+        reviewCount: { type: integer }
+        completedJobCount:
+          type: integer
+          description: ⚠ Teklif seçildiği anda +1 olur (§11).
+      description: |
+        ⚠ E-POSTA ALANI YOKTUR — bilerek. Şemada bulunmaması,
+        yanlışlıkla doldurulmasını da engeller.
+
+    # ── İLAN ──
+    Listing:
+      type: object
+      required: [listingId, listingNo, ownerId, categoryId, serviceId, title, description, address, status, createdAt, expiresAt, offerCount]
+      properties:
+        listingId: { type: string }
+        listingNo:
+          type: string
+          description: Kullanıcıya gösterilen referans; ilişkiler `listingId` üzerinden kurulur.
+        ownerId: { type: string }
+        categoryId: { type: string }
+        serviceId:
+          type: string
+          description: ⚠ 1 ilan = 1 kategori/hizmet (§1).
+        title: { type: string }
+        description: { type: string }
+        photoUrls:
+          type: array
+          items: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        status: { $ref: '#/components/schemas/ListingStatus' }
+        createdAt: { type: string, format: date-time }
+        expiresAt:
+          type: string
+          format: date-time
+          description: ⚠ createdAt + 30 saat (§1, §12).
+        offerCount: { type: integer }
+        selectedOfferId: { type: [string, 'null'] }
+        owner: { $ref: '#/components/schemas/PartyPublic' }
+
+    ListingCreate:
+      type: object
+      required: [categoryId, serviceId, description]
+      properties:
+        categoryId: { type: string }
+        serviceId: { type: string }
+        description: { type: string, maxLength: 2000 }
+        photoUrls: { type: array, items: { type: string } }
+
+    # ── TEKLİF ──
+    Offer:
+      type: object
+      # ⚠ ÜCRETLENDİRME ALANLARI KALDIRILDI (ücretsiz model):
+      # holdStatus, fundingSource, usedFreeBenefit, escrowBlocked,
+      # escrowConsumed. HizmetCep tamamen ücretsizdir.
+      required: [offerId, listingId, providerId, amount, note, status, communication, createdAt]
+      properties:
+        offerId: { type: string }
+        listingId: { type: string }
+        providerId: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+        note: { type: string }
+        status: { $ref: '#/components/schemas/OfferStatus' }
+        communication: { $ref: '#/components/schemas/CommunicationState' }
+        createdAt: { type: string, format: date-time }
+        provider: { $ref: '#/components/schemas/PartyPublic' }
+
+    OfferCreate:
+      type: object
+      required: [amount, note]
+      properties:
+        amount: { $ref: '#/components/schemas/Money' }
+        note: { type: string, minLength: 1 }
+      description: |
+        ⚠ GÜNCELLEME/SİLME UCU YOKTUR (§27). Teklif geri çekilemez ve
+        değiştirilemez (§1, kabul testi 2).
+
+    # ⚠ `WalletSummary`, `WalletTransaction` ve `FreeBenefitGrant`
+    # şemaları KALDIRILDI (ücretsiz model): cüzdan, hareket ve
+    # ücretsiz hak kavramları ürün kapsamından çıktı.
+
+    # ── DEĞERLENDİRME ──
+    Review:
+      type: object
+      required: [reviewId, listingId, offerId, providerId, authorId, stars, text, status, createdAt]
+      properties:
+        reviewId: { type: string }
+        listingId: { type: string }
+        offerId: { type: string }
+        providerId: { type: string }
+        authorId: { type: string }
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        text: { type: string, maxLength: 1000 }
+        status: { $ref: '#/components/schemas/ReviewStatus' }
+        createdAt: { type: string, format: date-time }
+        publishedAt:
+          type: [string, 'null']
+          format: date-time
+          description: |
+            ⚠ Gönderimden 1 GÜN sonra doldurulur (§14). `null` iken
+            yorum `PENDING_PUBLICATION`dır: listede ve ortalamada
+            GÖRÜNMEZ.
+
+            ⚠ YAYIN KARARI SUNUCUNUNDUR. İstemci cihaz saatiyle
+            hesaplama yapmaz; `status` gelmediğinde yerel gecikme
+            kuralına düşmesi geçiş dönemi köprüsüdür.
+
+    ReviewCreate:
+      type: object
+      # ⚠ Yalnız `stars` zorunlu: yorum isteğe bağlıdır.
+      required: [stars]
+      properties:
+        stars: { type: integer, minimum: 1, maximum: 5 }
+        text:
+          type: string
+          maxLength: 1000
+          description: |
+            ⚠ YORUM İSTEĞE BAĞLIDIR — boş gönderilebilir (ürün kararı).
+            Asgari kelime kuralı KALDIRILDI: kısa ama geçerli
+            yorumları engelliyordu. Yalnız PUAN zorunludur.
+
+            Fotoğraf alanı YOKTUR.
+
+    # ── MESAJ / BİLDİRİM ──
+    Message:
+      type: object
+      required: [messageId, conversationId, senderId, createdAt]
+      properties:
+        messageId: { type: string }
+        conversationId: { type: string }
+        senderId: { type: string }
+        text: { type: [string, 'null'] }
+        photoUrl: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      required: [notificationId, type, status, createdAt]
+      properties:
+        notificationId: { type: string }
+        type:
+          type: string
+          enum:
+            - NEW_OFFER
+            - OFFER_SELECTED
+            - CONTACT_OPENED
+            - NEW_MESSAGE
+            - LISTING_EXPIRED
+            - ADMIN_LISTING_REMOVED
+            - BENEFIT_GRANTED
+        status: { $ref: '#/components/schemas/NotificationStatus' }
+        listingId: { type: [string, 'null'] }
+        offerId: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+
+  responses:
+    BadRequest:      { description: VALIDATION_ERROR,        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Unauthorized:    { description: UNAUTHENTICATED,         content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Forbidden:       { description: FORBIDDEN,               content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    NotFound:        { description: NOT_FOUND,               content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Conflict:        { description: CONFLICT / DUPLICATE_OPERATION / STATE_CONFLICT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    BusinessRule:    { description: BUSINESS_RULE_VIOLATION, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    RateLimited:     { description: RATE_LIMITED,            content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+
+# ═══════════════════════════════════════════════════════════════════
+#  YOLLAR
+# ═══════════════════════════════════════════════════════════════════
+#
+# ⚠ AYNI ANLAM İÇİN ALTERNATİF UÇ AÇILMAZ (§27). Her işlemin tek
+#   kanonik yolu vardır.
+paths:
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Kayıt (Ad, Soyad, Telefon, E-posta, Şifre + adres)
+      description: |
+        ⚠ Kayıt sonrası SMS doğrulaması yapılır; e-posta doğrulaması YAPILMAZ (§4).
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Telefon+şifre veya e-posta+şifre ile giriş
+      description: |
+        ⚠ OTP DOĞRUDAN GİRİŞ YÖNTEMİ DEĞİLDİR (§4).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  # ⚠ `POST /auth/google` KALDIRILDI — üçüncü taraf girişi yok.
+  # Giriş yalnızca telefon/e-posta + şifre ve SMS OTP ile yapılır.
+  /auth/otp/request:
+    post:
+      tags: [Auth]
+      summary: SMS kodu iste
+      description: |
+        ⚠ Yeniden gönderme 60 saniye. Cevap NÖTRDÜR — numaranın kayıtlı olup olmadığı sızdırılmaz.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Oturumu kapat
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/verify-password:
+    post:
+      tags: [Auth]
+      summary: Şifre doğrulama (adım yükseltme)
+      description: |
+        Hesap silme gibi kritik işlemlerden önce yeniden kimlik doğrulama (§20).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/password/change:
+    post:
+      tags: [Auth]
+      summary: Şifre değiştir
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/forgot/complete:
+    post:
+      tags: [Auth]
+      summary: Şifre sıfırlamayı tamamla
+      description: |
+        ⚠ Şifre unutma akışının SON adımı. Paket 1/2'de kaldırılan /listings/{id}/complete ile İLGİSİZDİR.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/sessions:
+    get:
+      tags: [Auth]
+      summary: Açık oturumlar
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/sessions/{sessionId}/revoke:
+    parameters:
+      - { name: sessionId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Auth]
+      summary: Oturumu sonlandır
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /auth/roles/add:
+    post:
+      tags: [Auth]
+      summary: Hesaba ikinci rolü ekle
+      description: |
+        ⚠ Rol ekleme YALNIZCA kullanıcı tarafından yapılır; Admin rol değiştiremez (§4).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /users/me:
+    get:
+      tags: [User]
+      summary: Kendi hesabım
+      description: |
+        ⚠ E-posta YALNIZ burada döner; karşı tarafa hiçbir durumda gösterilmez (§1).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /users/me/active-role:
+    post:
+      tags: [User]
+      summary: Aktif rolü değiştir
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me:
+    patch:
+      tags: [Profile]
+      summary: Profil güncelle
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/address:
+    get:
+      tags: [Profile]
+      summary: Adresim
+      description: |
+        ⚠ Her kullanıcının TEK adresi vardır (§4).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Profile]
+      summary: Adresi güncelle (İl + İlçe + Mahalle)
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/phone/change:
+    post:
+      tags: [Profile]
+      summary: Telefon değişimi — yeni numara + 6 haneli SMS
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/email/change:
+    post:
+      tags: [Profile]
+      summary: E-posta değişimi — DOĞRULAMA BAĞLANTISI ile
+      description: |
+        ⚠ E-POSTA DOĞRUDAN DEĞİŞTİRİLEMEZ (iş kuralları §4:
+        "E-posta değişimi doğrulama bağlantısıyla yapılır").
+
+        Akış:
+          1. İstemci yeni adresi gönderir.
+          2. Sunucu O ADRESE doğrulama bağlantısı yollar.
+          3. Hesabın e-postası bağlantı TIKLANANA KADAR DEĞİŞMEZ.
+          4. Bağlantı doğrulanınca yeni adres yürürlüğe girer.
+
+        ⚠ NİÇİN ÖNEMLİ: doğrulama olmadan herkes bir başkasının
+        adresini kendi hesabına bağlayabilir; adresin sahibi olduğu
+        kanıtlanmaz.
+
+        ⚠ TELEFONDAN FARKLIDIR: telefon değişimi 6 haneli SMS koduyla
+        (`/profiles/me/phone/change`), e-posta BAĞLANTIYLA yapılır.
+        İkisi karıştırılmaz.
+
+        ⚠ SUNUCU ZORUNLU KONTROLLERİ: adres biçimi · adresin başka
+        hesapta kullanılmıyor olması (409) · bağlantının süreli ve
+        tek kullanımlık olması.
+
+        ⚠ `PATCH /profiles/me` E-POSTA KABUL ETMEZ; o uç yalnız ad ve
+        fotoğraf içindir.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [newEmail]
+              properties:
+                newEmail: { type: string, format: email }
+      responses:
+        '200': { description: Doğrulama bağlantısı gönderildi }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/provider:
+    get:
+      tags: [Profile]
+      summary: Hizmet veren profilim
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Profile]
+      summary: Hizmet veren profilini güncelle
+      description: |
+        ⚠ Kategori ve hizmet bölgesi seçimi buradan yazılır. Aktif teklifi olan kategori kaldırılamaz (§5).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/provider/approval:
+    get:
+      tags: [Profile]
+      summary: Hizmet veren onay durumu
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /profiles/me/freeze:
+    post:
+      tags: [Profile]
+      summary: Hesabı dondur
+      description: |
+        ⚠ Dondurma mevcut ilanların 30 saatini DURDURMAZ ve blokeleri iade ETMEZ (§19).
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/deletion-request:
+    post:
+      tags: [Profile]
+      summary: Hesap silme talebi
+      description: |
+        ⚠ Silme nedeniyle para/hak iadesi YAPILMAZ; finansal kayıtlar silinmez (§20).
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+    delete:
+      tags: [Profile]
+      summary: Silme talebini geri al
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/account-requests:
+    get:
+      tags: [Profile]
+      summary: Bekleyen dondurma/silme talepleri
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /profiles/me/app-feedback:
+    get:
+      tags: [Profile]
+      summary: Uygulama geri bildirimim
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Profile]
+      summary: Uygulama geri bildirimi gönder
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /listings:
+    post:
+      tags: [Listings]
+      summary: İlan oluştur
+      description: |
+        ⚠ 1 ilan = 1 kategori/hizmet (§1). Oluşturulan ilan 30 saat aktiftir; süre `expiresAt` alanından takip edilir — istemci saatinden DEĞİL.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /listings/my:
+    get:
+      tags: [Listings]
+      summary: İlanlarım
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /listings/available:
+    get:
+      tags: [Listings]
+      summary: Hizmet verene DÜŞEN ilanlar
+      description: |
+        ⚠ Eşleşme SUNUCUDA yapılır: hizmet verenin kategori ve bölge seçimine göre süzülür (§5). İstemci kendi süzgecini yazmaz.
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /listings/{listingId}:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Listings]
+      summary: İlan detayı
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Listings]
+      summary: İlan güncelle — YALNIZ İZİN VERİLEN ALANLAR
+      description: |
+        ⚠ "Yayınlanmış ilan düzenlenemez" şeklinde GENEL BİR YASAK
+        UYGULANMAZ. Kural şudur: yayınlanmış ilanda YALNIZCA izin
+        verilen alanlar düzenlenebilir.
+
+        ── İZİN VERİLEN (ALLOWED_AFTER_PUBLISH) ──
+
+        · `description` — ilan açıklaması. Kullanıcı eksik anlattığı
+          bir ayrıntıyı ekleyebilmelidir; işin KİMLİĞİNİ değiştirmez.
+
+        ── YASAK (FORBIDDEN_AFTER_PUBLISH) ──
+
+        · `title` — ⚠ BU ALAN İŞİN KİMLİĞİDİR. Uygulamada başlık
+          serbest metin değil, SEÇİLEN HİZMETİN ADIDIR ("Kombi
+          Bakımı"). Değiştirilmesi, hizmet verenlerin başka bir işe
+          teklif vermiş duruma düşmesi demektir. İstemci bu alanı
+          gönderse bile sunucu REDDETMELİDİR.
+        · `categoryId` / `serviceId` — aynı gerekçe.
+        · `location` / adres — teklifin dayandığı mesafe ve bölge
+          şartını değiştirir.
+        · `photoRefs` — teklif fotoğraflara bakılarak verilmiş olabilir.
+        · `status`, `createdAt`, `expiresAt`, `selectedOfferId`,
+          `ilanNo` — bunlar SİSTEM alanlarıdır; istemci yazamaz.
+          İlan süresi uzatılamaz, durum elle değiştirilemez.
+
+        ⚠ MEVCUT İSTEMCİ DAVRANIŞI: Flutter bu uca yalnız `title` ve
+        `description` gönderebiliyor. `title` yukarıdaki gerekçeyle
+        YASAK olduğundan, uygulamada tek düzenlenebilir alan
+        `description`tır.
+
+        ── DURUMA GÖRE DAVRANIŞ ──
+
+        · `ACTIVE` + seçilmiş teklif YOK → izin verilen alanlar
+          düzenlenebilir.
+        · `ACTIVE` + `selectedOfferId != null` → ⚠ PATCH TAMAMEN
+          REDDEDİLİR. `description` DAHİL hiçbir alan değiştirilemez.
+
+          Gerekçe: seçilmiş teklif bulunduğu anda iş tamamlanmış
+          sayılır. Hizmet veren teklifini o AÇIKLAMAYA bakarak verdi;
+          açıklamanın sonradan değişmesi, teklifin dayandığı şartları
+          değiştirir.
+        · `EXPIRED` → PATCH REDDEDİLİR. Süresi dolmuş ilan
+          düzenlenerek ACTIVE'e döndürülemez.
+        · `USER_DELETED` → PATCH REDDEDİLİR.
+        · `ADMIN_REMOVED` → PATCH REDDEDİLİR. Yeniden açma YALNIZ
+          `POST /admin/listings/{listingId}/reactivate` ile yapılır.
+
+        ⚠ BU KONTROLLER SUNUCUDA YAPILIR. İstemcide alanın
+        düzenlenebilir görünmesi, sunucunun kabul edeceği anlamına
+        GELMEZ (§9). Sunucu ayrıca sahiplik denetimi yapar: başka
+        kullanıcının ilanı değiştirilemez → 403.
+
+        ⚠ `description` YALNIZ `selectedOfferId == null` iken
+        değiştirilebilir.
+
+        ⚠ SUNUCU ZORUNLU KONTROLLERİ: yetki · ilan sahipliği ·
+        `status` · `selectedOfferId` · izin verilmeyen alan · kapanmış
+        durumlar. İstemcide düğmenin gizlenmesi güvenlik DEĞİLDİR.
+
+        Ret kodu: `STATE_CONFLICT` (409) — yeni hata kodu
+        tanımlanmadı, mevcut sözleşme yeterlidir.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                description:
+                  type: string
+                  maxLength: 2000
+                  description: Yayın sonrası düzenlenebilen TEK alan.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+    delete:
+      tags: [Listings]
+      summary: İlanı sil — TEK KANONİK UÇ
+      description: |
+        ⚠ `POST /listings/{listingId}/cancel` KALDIRILDI. Aynı iş için
+        iki uç bırakılmaz; kanonik uç budur.
+
+        ⚠ `cancel` adında yeni bir `ListingStatus` OLUŞTURULMAZ ve
+        eski `CANCELLED` durumu GERİ GETİRİLMEZ. Kullanıcı sildiğinde
+        durum `USER_DELETED` olur; admin kaldırdığında
+        `ADMIN_REMOVED`. İkisi BİRBİRİNE KARIŞTIRILMAZ ve bu uç admin
+        kaldırma ucuyla BİRLEŞTİRİLMEZ.
+
+        Silinen ilan geri getirilemez. Açılmamış normal blokeler iade
+        edilir; açılmış bedel ve ücretsiz hak İADE EDİLMEZ (§11).
+
+        ⚠ SUNUCU ZORUNLU KONTROLLERİ: başkasının ilanı silinemez ·
+        yetkisiz kullanıcı silemez · silinmesi yasak durumdaki ilan
+        silinemez.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ⚠ `POST /listings/{listingId}/cancel` KALDIRILDI.
+  #
+  # Aynı işi `DELETE /listings/{listingId}` yapıyordu; iki kanonik uç
+  # bırakılmaz. İstemcideki `cancel()` metodu, repository ve port
+  # bağlantıları da temizlendi.
+  /offers:
+    post:
+      tags: [Offers]
+      summary: Teklif ver
+      description: |
+        ⚠ Aynı hizmet veren aynı ilana İKİNCİ teklifi veremez → 409 OFFER_ALREADY_EXISTS.
+        ⚠ Teklif geri çekilemez ve değiştirilemez (§1) — güncelleme/silme ucu YOKTUR.
+        ⚠ Teklif vermek ÜCRETSİZ ve SINIRSIZDIR: bakiye, kota ya da hak koşulu YOKTUR.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /offers/my:
+    get:
+      tags: [Offers]
+      summary: Verdiğim teklifler
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /offers/{offerId}/communication:
+    parameters:
+      - { name: offerId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Communication]
+      summary: İletişimi aç
+      description: |
+        ⚠ İKİ TARAF İÇİN AYNI ANDA açılır ve SÜRESİZDİR (§8).
+        ⚠ İDEMPOTENT: tekrar istek ikinci kez ücret almaz; sunucu COMMUNICATION_ALREADY_OPEN döner ve bu BİR HATA DEĞİLDİR (§10).
+        ⚠ Bedel HİZMET VERENDEN alınır; hizmet alan hiçbir aşamada ödemez.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /contact/{offerId}:
+    parameters:
+      - { name: offerId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Communication]
+      summary: İletişim durumu
+      description: |
+        ⚠ MASKED iken telefon SUNUCUDAN HİÇ GÖNDERİLMEZ; arayüzde gizlemek güvenlik değildir (§28).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /listings/{listingId}/selected-offer:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string } }
+    put:
+      tags: [Communication]
+      summary: Teklifi seç
+      description: |
+        ⚠ TEK ATOMİK AKIŞ (§25): teklif SELECTED olur · `selectedOfferId` yazılır · tamamlanan iş sayısı +1 · diğer teklifler CLOSED · iletişimi AÇILMAMIŞ blokeler iade · açılmış bedel ve ücretsiz hak İADE EDİLMEZ.
+        ⚠ İLAN DURUMU DEĞİŞMEZ: ACTIVE kalır. Tamamlanmışlık `selectedOfferId` ilişkisinden türetilir (§24).
+        ⚠ İkinci istek ikinci tamamlanan iş ya da ikinci finansal işlem ÜRETMEZ.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /listings/{listingId}/review:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Reviews]
+      summary: Değerlendirme yaz
+      description: |
+        ⚠ Yalnız Hizmet Alan → Hizmet Veren. PUAN ZORUNLU (1-5),
+        YORUM İSTEĞE BAĞLI (en fazla 1000 karakter, alt sınır YOK),
+        FOTOĞRAF YOK.
+
+        ⚠ Sunucu boş yorumu REDDETMEZ; puansız isteği reddeder.
+        ⚠ Her ilan için tek değerlendirme; ikinci istek → 409. Kullanıcı silemez/değiştiremez.
+        ⚠ PENDING_PUBLICATION ile başlar, 1 GÜN sonra PUBLISHED olur.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /providers/{providerId}/reviews:
+    parameters:
+      - { name: providerId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Reviews]
+      summary: Hizmet verenin YAYINLANMIŞ değerlendirmeleri
+      description: |
+        ⚠ Yalnız PUBLISHED kayıtlar döner; ortalama ve dağılım onlardan hesaplanır (§14).
+        ⚠ "Değerlendirmelerim" ekranı da BU UCU kullanır — kendi kimliğini verir. Ayrı bir /reviews/me ucu AÇILMAZ (§27).
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200':
+          description: Özet + sayfalı liste
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor, count]
+                properties:
+                  average:
+                    type: [number, 'null']
+                    description: |
+                      Yayınlanmış yorumların ortalaması, 1 ondalık.
+                      ⚠ Hiç yorum yoksa `null` — SIFIRA ZORLANMAZ.
+                  count: { type: integer }
+                  distribution:
+                    type: object
+                    description: Yıldız dağılımı; anahtar "1".."5", değer adet.
+                    additionalProperties: { type: integer }
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Review' }
+                  nextCursor:
+                    type: [string, 'null']
+                    description: Son sayfada `null`.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /messages/conversations:
+    get:
+      tags: [Messages]
+      summary: Sohbet listesi
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /messages/{conversationId}:
+    parameters:
+      - { name: conversationId, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Messages]
+      summary: Sohbet mesajları
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /messages:
+    post:
+      tags: [Messages]
+      summary: Mesaj gönder (metin veya fotoğraf)
+      description: |
+        ⚠ İLETİŞİM AÇILMADAN REDDEDİLİR (§15). Dosya gönderilemez; mesaj silinemez/düzenlenemez. Admin mesaj İÇERİĞİNİ göremez.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /messages/{messageId}/read:
+    parameters:
+      - { name: messageId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Messages]
+      summary: Mesajı okundu işaretle
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Bildirim listesi
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Okunmamış sayısı
+      description: |
+        ⚠ Sayaç ROL BAZINDA doğru olmalıdır (§16).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /notifications/{notificationId}/read:
+    parameters:
+      - { name: notificationId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Notifications]
+      summary: Okundu işaretle
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Tümünü okundu işaretle
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  # ⚠ ÜCRETLENDİRME UÇLARI KALDIRILDI (ücretsiz model):
+  #   /wallet/me · /wallet/me/ledger · /wallet/topup/session
+  #   /wallet/topup/confirm · /wallet/token-packages
+  #   /wallet/cards* (5 uç) · /free-rights/me/summary
+  #   /free-rights/me/funding-preview
+  #
+  # HizmetCep hem hizmet alan hem hizmet veren için TAMAMEN
+  # ÜCRETSİZDİR: cüzdan, bakiye, ödeme, kart, kredi ve
+  # ücretsiz hak kavramları ürün kapsamından çıktı.
+
+  /regions/tree:
+    get:
+      tags: [Regions]
+      summary: İl / ilçe / mahalle ağacı — COĞRAFİ VERİ OTORİTESİ
+      description: |
+        ⚠ COĞRAFİ VERİNİN OTORİTESİ BACKEND'DİR.
+
+        Türkiye'nin 81 ili, 973 ilçesi ve 72.984 mahalle/köy kaydı
+        SUNUCUDA tutulur. Veri uygulamaya GÖMÜLMEZ: 16,7 MB'lık bir
+        dosya APK'yı şişirir, açılışı yavaşlatır ve —en önemlisi— yeni
+        bir il açmak APK GÜNCELLEMESİ gerektirirdi.
+
+        ── ⚠ VERİ VARLIĞI İLE HİZMET DURUMU AYRIDIR ──
+
+        Her seviyede bağımsız bir `active` alanı bulunur:
+
+          · İL      → `cities[].active`
+          · İLÇE    → `cities[].districts[].active`
+          · MAHALLE → `...neighborhoods[].active`
+
+        ⚠ PASİF YAPMAK VERİYİ SİLMEZ. `active: false` yalnız hizmet
+        durumudur; ilçe ve mahalle kayıtları yerinde kalır. Şehir
+        sonradan açıldığında yeniden veri yüklemek GEREKMEZ.
+
+        ── ⚠ ETKİN AKTİFLİK (istemci bu kuralı uygular) ──
+
+        Bir mahalle ancak **il aktif VE ilçe aktif VE mahalle aktif**
+        ise hizmet bölgesi sayılır. Üst seviye kapatıldığında alt
+        seviyeler tek tek `true` olsa bile kullanıcıya sunulmaz.
+
+        ── ⚠ BAŞLANGIÇ DURUMU ──
+
+        İzmir `active: true`; öteki 80 il `active: false`. Pasif iller
+        listede GÖRÜNÜR ("Yakında HizmetCep'te") ama seçilemez.
+
+        ── ⚠ KÖY KAYITLARI ──
+
+        Adı "… Köyü" ile biten 39.167 kayıt MAHALLE listesinde, kendi
+        adıyla döner. Ayrı bir "köy" seviyesi YOKTUR; hiyerarşi
+        yalnız İl → İlçe → Mahalle'dir.
+
+        ⚠ Posta kodu (`postalCode`) varsa korunur ve ayrı alanda döner.
+
+        ⚠ PUBLIC: kayıt sırasında adres seçimi girişten ÖNCE gerekir.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Kategori ve hizmet ağacı — KANONİK KATALOG KAYNAĞI
+      description: |
+        ── ⚠ KATALOG OTORİTESİ BACKEND'DİR (nihai karar) ──
+
+        Admin panelinden kategori/hizmet eklenebildiği, düzenlenebildiği,
+        pasifleştirilebildiği ve kaldırılabildiği için katalogun tek
+        otoritatif kaynağı sunucudur. Android, iOS ve Web AYNI ucu
+        kullanır; platforma özel katalog TUTULMAZ.
+
+            Admin Paneli → Backend → GET /categories → Android · iOS · Web
+
+        ⚠ İSTEMCİDEKİ KATALOG YALNIZCA CACHE'TİR. Uygulamaya gömülü
+        liste performans ve çevrimdışı içindir; backend'in YERİNE
+        GEÇMEZ ve katalog üzerinde OTORİTE DEĞİLDİR.
+
+        ⚠ YENİ KATEGORİ İÇİN UYGULAMA SÜRÜMÜ GEREKMEZ. Admin bir
+        kategori eklediğinde değişiklik bu uçtan istemcilere yansır.
+
+        ── BACKEND'İN ZORUNLU KONTROLLERİ ──
+
+        İlan oluşturulurken gönderilen kategori/hizmet referansı
+        sunucuda YENİDEN doğrulanır:
+          · referans gerçekten var mı,
+          · aktif ve seçilebilir mi,
+          · kategori-hizmet ilişkisi geçerli mi.
+
+        ⚠ İSTEMCİ DENETİMİ GÜVENLİK SAYILMAZ. Geçersiz, pasif ya da
+        silinmiş referans REDDEDİLİR; hata mevcut `ErrorCode`
+        sözleşmesine göre döner (`VALIDATION_ERROR` ya da
+        `BUSINESS_RULE_VIOLATION`) — bu karar için YENİ hata kodu
+        tanımlanmadı.
+
+        ⚠ GEÇMİŞ İLANLARIN BÜTÜNLÜĞÜ KORUNUR: bir kategori
+        pasifleştirilince yeni ilanda seçilemez, ama mevcut ilanların
+        kategori referansı İSTEMCİ TARAFINDAN DEĞİŞTİRİLMEZ. Var olan
+        referansların nasıl korunacağı backend'in veri bütünlüğü
+        sorumluluğudur.
+
+        ⚠ ALTERNATİF UÇ AÇILMAZ: `/categories/me`, `/my/categories`,
+        `/mobile/categories` gibi karşılıklar üretilmez.
+
+        ── ⚠ MEVCUT DURUM (dürüst tespit) ──
+
+        İstemci bu ucu HENÜZ ÇAĞIRMIYOR; katalog bugün uygulamaya
+        gömülü. Karar sözleşme düzeyinde kesinleşti, istemci göçü
+        AYRI BİR İŞ olarak kalıyor (bkz. rapor).
+
+        ⚠ KİMLİK ALANI: bugünkü istemci kategori ve hizmeti ADIYLA
+        taşıyor; ayrı bir kimlik alanı YOK. Var olmayan bir alan
+        uydurulmadı — aşağıdaki şema gerçek yapıyı yansıtır. Kimliğe
+        geçiş backend sözleşmesiyle birlikte kararlaştırılmalıdır.
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200':
+          description: Kategori ağacı
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [category, services]
+                      properties:
+                        category:
+                          type: string
+                          description: Ana kategori adı (ör. "Kombi Servis").
+                        services:
+                          type: array
+                          items: { type: string }
+                          description: Alt hizmet adları.
+                        active:
+                          type: boolean
+                          description: |
+                            ⚠ Pasifleştirilen kategori yeni ilanda
+                            SEÇİLEMEZ. `false` gelen kayıt istemcide
+                            seçim listesine alınmaz.
+                  nextCursor:
+                    type: [string, 'null']
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /storage/resolve:
+    get:
+      tags: [Storage]
+      summary: Dosya referansını çöz
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /storage/upload-ref:
+    post:
+      tags: [Storage]
+      summary: Yükleme referansı al
+      description: |
+        ⚠ İlan ve profil fotoğrafı içindir. YORUM FOTOĞRAFI YOKTUR (§14).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /config/app:
+    get:
+      tags: [Other]
+      summary: Uygulama yapılandırması
+      description: |
+        Zorunlu güncelleme ve bakım modu bilgisi; platform parametrelidir.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /legal:
+    get:
+      tags: [Other]
+      summary: Hukuki belge listesi
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /legal/{slug}:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Other]
+      summary: Hukuki belge içeriği
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /support/settings:
+    get:
+      tags: [Other]
+      summary: Destek e-posta adresi
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /admin/listings/{listingId}/remove:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Admin]
+      summary: İlanı kaldır (neden zorunlu)
+      description: |
+        ⚠ Teklifler sıfırlanır, AÇIK normal blokeler iade edilir; ücretsiz hak geri verilmez (§13).
+        ⚠ FLUTTER KULLANMIYOR — admin paneli ayrı bir istemcidir.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /admin/listings/{listingId}/reactivate:
+    parameters:
+      - { name: listingId, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Admin]
+      summary: İlanı yeniden aç
+      description: |
+        ⚠ Eski teklifler GELMEZ ve 30 saat YENİDEN başlar (§13). ⚠ Flutter kullanmıyor.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /admin/reviews/{reviewId}:
+    parameters:
+      - { name: reviewId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Admin]
+      summary: Değerlendirmeyi sil
+      description: |
+        ⚠ Silince ortalama ve sayı YENİDEN HESAPLANIR (§14). ⚠ Flutter kullanmıyor.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /admin/benefits/grant:
+    post:
+      tags: [Admin]
+      summary: Ücretsiz hak tanımla
+      description: |
+        ⚠ Flutter kullanmıyor.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /admin/audit-logs:
+    get:
+      tags: [Admin]
+      summary: Denetim kayıtları
+      description: |
+        ⚠ Kritik admin işlemleri DEĞİŞTİRİLEMEZ loga yazılır (§1). ⚠ Flutter kullanmıyor.
+      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }

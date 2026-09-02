@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- HizmetCep marka renkleri (lib/core/theme.dart ile aynı) -->
+    <color name="hc_blue">#FF1D6BE3</color>
+    <color name="hc_dark">#FF16233D</color>
+    <color name="hc_white">#FFFFFFFF</color>
+    <color name="hc_soft_blue">#FFE7EFFD</color>
+
+    <!-- Açılış ekranı arka planı -->
+    <!-- Flutter SplashScreen zemini ile AYNI (RC.splashBg #FEFEFE) -->
+    <color name="launch_background">#FFFEFEFE</color>
+
+    <!-- Adaptive launcher icon arka planı -->
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+</resources>
