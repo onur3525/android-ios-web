@@ -81,8 +81,8 @@ class _Aralik {
 /// cümlesinde "odalı" ve "banyolu" koşuyu keser, rakamlar birbirine
 /// yapışmaz. Aksi hâlde normal ilanlardaki sayılar birleşip telefon
 /// gibi görünürdü.
-class _KoşuParcasi {
-  const _KoşuParcasi(this.rakam, this.bas, this.son);
+class _KosuParcasi {
+  const _KosuParcasi(this.rakam, this.bas, this.son);
 
   /// Bu parçanın koşuya kattığı rakamlar.
   final String rakam;
@@ -95,18 +95,18 @@ class _KoşuParcasi {
 final RegExp _kosuBelirtec = RegExp(r'[0-9]+|[a-zA-ZçğıöşüÇĞİÖŞÜ]+');
 
 /// Metni rakam koşularına böler.
-List<List<_KoşuParcasi>> _rakamKosulari(String metin) {
-  final out = <List<_KoşuParcasi>>[];
-  var cur = <_KoşuParcasi>[];
+List<List<_KosuParcasi>> _rakamKosulari(String metin) {
+  final out = <List<_KosuParcasi>>[];
+  var cur = <_KosuParcasi>[];
   for (final m in _kosuBelirtec.allMatches(metin)) {
     final t = m.group(0)!;
     if (RegExp(r'^[0-9]+$').hasMatch(t)) {
-      cur.add(_KoşuParcasi(t, m.start, m.end));
+      cur.add(_KosuParcasi(t, m.start, m.end));
       continue;
     }
     final r = _sayiCoz(trKucuk(t));
     if (r != null) {
-      cur.add(_KoşuParcasi(r, m.start, m.end));
+      cur.add(_KosuParcasi(r, m.start, m.end));
       continue;
     }
     // ⚠ 1-2 HARFLİK PARÇA GÜRÜLTÜDÜR: "05a55b631c993" ya da
@@ -118,7 +118,7 @@ List<List<_KoşuParcasi>> _rakamKosulari(String metin) {
     // Anlamlı sözcük → koşu biter.
     if (cur.isNotEmpty) {
       out.add(cur);
-      cur = <_KoşuParcasi>[];
+      cur = <_KosuParcasi>[];
     }
   }
   if (cur.isNotEmpty) {
