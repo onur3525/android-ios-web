@@ -19,6 +19,7 @@ import '../repositories/chat_repository.dart';
 import '../repositories/contact_repository.dart';
 import '../repositories/listing_repository.dart';
 import '../repositories/notification_repository.dart';
+import '../repositories/oturum_tercihi.dart';
 import '../repositories/offer_repository.dart';
 import '../repositories/review_repository.dart';
 import 'repository_ports.dart';
@@ -264,8 +265,26 @@ class MockAuthPort extends AuthPort {
 
   @override
   Future<void> logout() async => repo.logout();
+
+  /// ⚠ ÖNCEDEN BOŞTU — mock modda oturum HİÇ geri yüklenmiyordu.
+  /// "Beni Hatırla" işaretliyse (bkz. `OturumTercihi`) hatırlanan
+  /// telefonla hesap bulunup oturum açılır; API modundaki gerçek
+  /// jeton doğrulamasının mock karşılığıdır.
   @override
-  Future<void> restoreSession() async {}
+  Future<void> restoreSession() async {
+    final tercih = OturumTercihi();
+    if (!await tercih.hatirlaniyor) {
+      return;
+    }
+    final telefon = await tercih.telefon;
+    if (telefon == null) {
+      return;
+    }
+    final acc = repo.findByPhone(telefon);
+    if (acc != null) {
+      repo.oturumuGeriYukle(acc);
+    }
+  }
 }
 
 class MockListingPort extends ListingPort {

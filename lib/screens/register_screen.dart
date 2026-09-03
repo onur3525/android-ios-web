@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import '../domain/form_mesajlari.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ import '../data/controllers/profile_controller.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import '../data/models/pending_listing.dart';
 import '../data/controllers/listing_controller.dart';
+import '../data/repositories/oturum_tercihi.dart';
 import '../data/remote/api/storage_api.dart';
 import '../data/remote/api_client.dart';
 import 'widgets/photo_picker.dart';
@@ -821,6 +823,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Navigator.pop(otpContext); // forma geri
               return;
             }
+            // ── ⚠ CİHAZ BU HESABI HATIRLASIN ──
+            //
+            // Giriş ekranında "Beni Hatırla" kutucuğu VAR; kayıtta
+            // YOK — yeni kaydolan kullanıcı için varsayılan zaten
+            // "hatırla"dır (aksi hâlde az önce doldurduğu formu
+            // uygulamayı kapatır kapatmaz yeniden yaşardı). Giriş
+            // ekranındaki AYNI mekanizma (`OturumTercihi`), AYNI
+            // güvenli/sessiz hata kuralıyla kullanılır.
+            unawaited(OturumTercihi().kaydet(phone));
             // ── KAYIT ADRESİNİ KALICI HALE GETİR ──
             //
             // Kullanıcı formda İl/İlçe/Mahalle seçti; bu değerler

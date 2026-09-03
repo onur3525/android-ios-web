@@ -330,9 +330,15 @@ class _SaglayiciKarti extends StatelessWidget {
 
 /// ── ⚠ KÜÇÜK YEŞİL BUTON — AŞAMA 1'DEKİ "ARA" İLE AYNI TASARIM ──
 ///
-/// Ayrı bir buton dili İCAT EDİLMEDİ: dolgu (`HC.green`), köşe
-/// yarıçapı ve tipografi Aşama 1'de kurulan yeşil düğmeyle aynı;
-/// yalnız kart içine sığacak ÖLÇÜDE küçültüldü.
+/// Ayrı bir buton dili İCAT EDİLMEDİ: dolgu (`HC.green`) ve köşe
+/// yarıçapı Aşama 1'de kurulan yeşil düğmeyle aynı. İkon
+/// (`ic_send.svg`) da yeni değil — `teklif_iste_screen.dart`'taki
+/// asıl "Teklif İste" gönder düğmesiyle AYNI ikon; tutarlılık için
+/// tekrar kullanıldı, yeni bir görsel dil eklenmedi.
+///
+/// ⚠ ÖNCEDEN metin `'Teklif\nİste'` ile iki satıra ZORLANIYORDU —
+/// dar ve sıkışık görünüyordu. Şimdi tek satır + ikon; kart genişliği
+/// hâlâ `Expanded` bilgi sütunundan alınır, taşma OLUŞMAZ.
 class _TeklifIsteButonu extends StatelessWidget {
   const _TeklifIsteButonu({required this.onTap});
 
@@ -347,14 +353,20 @@ class _TeklifIsteButonu extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Text('Teklif\nİste',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: RC.white,
-                    height: 1.2)),
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RefSvg('assets/svg/ic_send.svg', size: 14, color: RC.white),
+                SizedBox(width: 6),
+                Text('Teklif İste',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: RC.white,
+                        height: 1.0)),
+              ],
+            ),
           ),
         ),
       ),

@@ -720,6 +720,15 @@ class AuthRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// ⚠ YALNIZ MOCK OTURUM GERİ YÜKLEME İÇİN — `MockAuthPort.restoreSession`
+  /// buradan çağırır. `_oturumAc` (normal giriş akışı) ile AYNI işi
+  /// yapar; PUBLIC olması gerekir çünkü çağıran farklı bir dosyadadır
+  /// (`data/ports/mock_ports.dart`).
+  void oturumuGeriYukle(Account acc) {
+    currentAccount = acc;
+    notifyListeners();
+  }
+
   /// Kayıt — GÜVENLİK KURALLARI:
   /// * [otpVerified] false ise HİÇBİR yol çalışmaz (SMS doğrulaması zorunlu).
   /// * Telefon KAYITLI ise: girilen şifre MEVCUT hesabın şifresiyle

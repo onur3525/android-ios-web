@@ -244,6 +244,90 @@ class Account {
     }
     return eksik;
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ── ⚠ SERİLEŞTİRME — YALNIZ APK TEST KALICILIĞI İÇİN ──
+  //
+  // Bkz. `data/repositories/account_test_store.dart`. Kullanıcı
+  // "sil" dediğinde bu iki metot ve o dosya birlikte kaldırılacak;
+  // `Account` sınıfının GERÇEK API sözleşmesiyle (bkz.
+  // `Mappers.account`, şifre alanlarını hiç TAŞIMAZ) KARIŞTIRILMASIN
+  // diye ayrı tutuldu — o mapper sunucu YANITINI okur, bu ikisi
+  // CİHAZDA test hesabını SAKLAR/GERİ YÜKLER, şifre hash'i dahil.
+  // ═══════════════════════════════════════════════════════════════
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'passwordHash': passwordHash,
+        'salt': salt,
+        'roles': roles.map((r) => r.name).toList(),
+        'activeRole': activeRole.name,
+        'address': address == null
+            ? null
+            : {
+                'id': address!.id,
+                'city': address!.city,
+                'district': address!.district,
+                'neighborhood': address!.neighborhood,
+              },
+        'bildirimTeklif': bildirimTeklif,
+        'bildirimMesaj': bildirimMesaj,
+        'bildirimDuyuru': bildirimDuyuru,
+        'bildirimEposta': bildirimEposta,
+        'categories': categories.toList(),
+        'serviceDistricts': serviceDistricts.toList(),
+        'phoneVerified': phoneVerified,
+        'emailVerified': emailVerified,
+        'bekleyenEposta': bekleyenEposta,
+        'termsAccepted': termsAccepted,
+        'fotoAlan': fotografi(Role.customer),
+        'fotoVeren': fotografi(Role.provider),
+      };
+
+  factory Account.fromJson(Map<String, dynamic> j) {
+    final roller = ((j['roles'] as List?)
+                ?.map((e) => Role.values.byName(e as String))
+                .toSet()) ??
+        {Role.customer};
+    final a = Account(
+      id: j['id'] as String,
+      name: j['name'] as String? ?? '',
+      email: j['email'] as String? ?? '',
+      phone: j['phone'] as String? ?? '',
+      passwordHash: j['passwordHash'] as String? ?? '',
+      salt: j['salt'] as String? ?? '',
+      phoneVerified: j['phoneVerified'] as bool? ?? false,
+      emailVerified: j['emailVerified'] as bool? ?? false,
+      termsAccepted: j['termsAccepted'] as bool? ?? false,
+      roles: roller,
+      activeRole: j['activeRole'] != null
+          ? Role.values.byName(j['activeRole'] as String)
+          : null,
+    );
+    final addr = j['address'] as Map<String, dynamic>?;
+    if (addr != null) {
+      a.address = Address(
+        id: addr['id'] as String? ?? '',
+        city: addr['city'] as String? ?? 'İzmir',
+        district: addr['district'] as String? ?? '',
+        neighborhood: addr['neighborhood'] as String? ?? '',
+      );
+    }
+    a.bildirimTeklif = j['bildirimTeklif'] as bool? ?? true;
+    a.bildirimMesaj = j['bildirimMesaj'] as bool? ?? true;
+    a.bildirimDuyuru = j['bildirimDuyuru'] as bool? ?? true;
+    a.bildirimEposta = j['bildirimEposta'] as bool? ?? true;
+    a.categories.addAll(((j['categories'] as List?)?.cast<String>()) ?? const []);
+    a.serviceDistricts
+        .addAll(((j['serviceDistricts'] as List?)?.cast<String>()) ?? const []);
+    a.bekleyenEposta = j['bekleyenEposta'] as String?;
+    a.fotografAta(Role.customer, j['fotoAlan'] as String? ?? '');
+    a.fotografAta(Role.provider, j['fotoVeren'] as String? ?? '');
+    return a;
+  }
 }
 
 /// Kayıt akışında eksik kalabilecek zorunlu adımlar.

@@ -52,7 +52,14 @@ const Color _kBg = RC.splashBg;
 
 /// Marka bloğunun çizildiği kutu — Android 12+ splash ikon kutusuyla
 /// aynı ölçü (240dp). `splash_brand.png` tuvalinin tamamı buraya
-/// sığdırılır; görünen blok tuvalin 469/1024'ü kadardır (≈110dp).
+/// sığdırılır.
+///
+/// ⚠ KUTU BOYUTU DEĞİL, GÖRSELİN İÇERİĞİ KÜÇÜLTÜLDÜ (%40): Android'in
+/// native splash ikon kutusu SABİTTİR, uygulama tarafından
+/// büyütülüp küçültülemez — bu yüzden kutuyu değil, `splash_brand.png`
+/// içindeki logoyu (tuval aynı 1024×1024 kalacak şekilde) küçülttük.
+/// Böylece Android/iOS/Flutter ÜÇÜ DE aynı oranda küçük görünür; kutu
+/// burada 240 kalır, çünkü küçültme zaten görselin İÇİNDE.
 const double _kMarkaKutusu = 240;
 
 
@@ -428,14 +435,26 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) {
       return null;
     }
-    final acc = context.read<AuthController>().currentAccount;
+    final auth = context.read<AuthController>();
+    final acc = auth.currentAccount;
     if (acc == null) {
       return null;
     }
     // ⚠ ÇİFT ROL → HİZMET VEREN.
-    return acc.roles.contains(Role.provider)
-        ? '/provider/jobs'
-        : '/customer/listings';
+    final hedefRol =
+        acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+    // ⚠ KRİTİK: `RoleGuard`, hedef değil `acc.activeRole`e bakar
+    // (bkz. `core/route_guard.dart`). Geçen oturumda AKTİF rol
+    // farklıysa (ör. hesap hem hizmet alan hem hizmet veren ve son
+    // kapanışta hizmet alan panelindeydi) burada güncellenmezse
+    // kullanıcı `/provider/jobs`e gönderilir ama Guard onu "Bu
+    // ekrana erişiminiz yok" ile GERİ ÇEVİRİR. `switchRole` — rol
+    // değiştirme ekranının kullandığı AYNI genel metot — bu
+    // uyuşmazlığı yönlendirmeden ÖNCE kapatır.
+    if (acc.activeRole != hedefRol) {
+      await auth.switchRole(hedefRol);
+    }
+    return hedefRol == Role.provider ? '/provider/jobs' : '/customer/listings';
   }
 
   /// Bloke kararı (bakım · zorunlu güncelleme · çevrimdışı) ekranı.

@@ -11,12 +11,18 @@
   kutusuna ölçeklediği için TÜM EKRAN BOYUTLARINDA ve yoğunluklarda
   aynı oranla, ortalanmış görünür; sabit dp konumlandırma YOKTUR.
 
-  Ölçüler referans ekran görüntüsünden alınmıştır:
+  Ölçüler referans ekran görüntüsünden alınmıştır (küçültme ÖNCESİ):
     • blok genişliği  = ikon kutusunun %45.8'i (≈110dp / 240dp)
     • wordmark/logo   = 2.14
     • boşluk          = logo yüksekliğinin %4.1'i
   Blok köşegeni 142dp; Android 12+ dairesel maskesi (160dp) içine
   TAMAMEN sığar — kırpılma olmaz.
+
+  ⚠ KULLANICI İSTEĞİYLE %40 KÜÇÜLTÜLDÜ: `splash_brand.png` dosyasının
+  KENDİSİ düzenlendi (tuval 1024×1024 aynı kaldı, içerik 614×614'e
+  küçültülüp ortalandı) — ikon kutusu (240dp) SABİTTİR, sistem
+  tarafından belirlenir, uygulama büyütüp küçültemez. Güncel görünen
+  blok genişliği ≈ ikon kutusunun %27.5'i (%45.8 × 0,6).
 
   Beyaz zemin şeffaflaştırıldığı için beyaz kutu/canvas izi yoktur.
 

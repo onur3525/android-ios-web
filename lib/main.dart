@@ -38,6 +38,7 @@ import 'data/controllers/review_controller.dart';
 import 'data/models/account.dart';
 import 'data/ports/api_ports.dart';
 import 'data/ports/mock_ports.dart';
+import 'data/repositories/account_test_store.dart';
 import 'data/ports/repository_ports.dart';
 import 'data/remote/api_client.dart';
 import 'data/remote/api_config.dart';
@@ -258,6 +259,34 @@ Future<void> main() async {
   final teklifTalebiPort =
       MockTeklifTalebiPort(TeklifTalebiRepository(), notifs: ports.notifRepo);
   BootLog.olay('BUILD_PORTS_END');
+
+  // ═══════════════════════════════════════════════════════════════
+  // ── ⚠ APK TEST KALICILIĞI — YALNIZ TEST AMAÇLI, GEÇİCİ ──
+  //
+  // Mock modda kayıtlı hesaplar yalnız BELLEKTEYDİ; APK kapatılıp
+  // açılınca (gerçek cihaz testinde olduğu gibi) kaybolur, tekrar
+  // kayıt gerekirdi. Bkz. `account_test_store.dart`'taki tam not.
+  //
+  // ⚠ KULLANICI "SİL" DEDİĞİNDE: bu blok + import satırı +
+  // `account_test_store.dart` birlikte kaldırılacak.
+  //
+  // `AppPorts`e DOKUNULMADI: `MockAuthPort.repo` zaten PUBLIC bir
+  // alan (bkz. `mock_ports.dart`), doğrudan ondan erişildi.
+  if (ports.auth is MockAuthPort) {
+    final authRepo = (ports.auth as MockAuthPort).repo;
+    final accountStore = AccountTestStore();
+    final kayitliHesaplar = await accountStore.read();
+    for (final restored in kayitliHesaplar) {
+      // ⚠ AYNI id'li hesap (ör. sabit demo hesabı) varsa YENİ
+      // (kaydedilmiş) sürümle DEĞİŞTİRİLİR — çift kayıt OLUŞMAZ.
+      authRepo.accounts.removeWhere((a) => a.id == restored.id);
+      authRepo.accounts.add(restored);
+    }
+    // ⚠ Kayıt/profil güncelleme gibi her değişiklikte OTOMATİK
+    // kaydeder — `authRepo` zaten `notifyListeners()` çağırıyor,
+    // ayrı bir tetikleyici İCAT EDİLMEDİ.
+    authRepo.addListener(() => accountStore.save(authRepo.accounts));
+  }
 
   // İLAN SÜRESİ KURALI — yalnız mock modda istemcide işlenir.
   final expiry = ports.expiry;

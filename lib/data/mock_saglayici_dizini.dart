@@ -82,21 +82,29 @@ List<({MockSaglayici saglayici, int yakinlikSirasi})> mockSaglayicilariBul({
       (saglayici: s, yakinlikSirasi: siraHesapla(s.ilce)),
   ];
 
-  // ── ⚠ SIRALAMA: aktiflik → puan → yorum → tamamlanan iş → mesafe ──
+  // ── ⚠ SIRALAMA: önce İLÇE, sonra aktiflik → puan → yorum →
+  // tamamlanan iş (ürün kararı, güncellendi) ──
   //
   // Mesafe burada `yakinlikSirasi`dir — gerçek haversine sırasına
   // göre 0 (kendi ilçe), 1 (en yakın), 2, 3... şeklinde artar.
   // Kullanıcıya GÖSTERİLMEZ — yalnız sıralama kriteridir.
+  //
+  // ÖNCEDEN mesafe EN SONDAKİ kıstastı: yeni başlayan, hiç yorumu
+  // olmayan ama hizmet alanla AYNI ilçedeki bir usta, uzak ilçedeki
+  // deneyimli ustaların GERİSİNE düşebiliyordu. Şimdi İLÇE YAKINLIĞI
+  // birincil kıstas — önce "hangi ilçe" (kendi ilçesi → en yakın →
+  // ... → en uzak), AYNI ilçe içinde eşitlik olursa aktiflik/puan/
+  // yorum/tamamlanan iş belirler.
   sonuc.sort((a, b) {
-    var c = b.saglayici.aktiflikSkoru.compareTo(a.saglayici.aktiflikSkoru);
+    var c = a.yakinlikSirasi.compareTo(b.yakinlikSirasi);
+    if (c != 0) return c;
+    c = b.saglayici.aktiflikSkoru.compareTo(a.saglayici.aktiflikSkoru);
     if (c != 0) return c;
     c = b.saglayici.puan.compareTo(a.saglayici.puan);
     if (c != 0) return c;
     c = b.saglayici.yorumSayisi.compareTo(a.saglayici.yorumSayisi);
     if (c != 0) return c;
-    c = b.saglayici.tamamlananIs.compareTo(a.saglayici.tamamlananIs);
-    if (c != 0) return c;
-    return a.yakinlikSirasi.compareTo(b.yakinlikSirasi);
+    return b.saglayici.tamamlananIs.compareTo(a.saglayici.tamamlananIs);
   });
 
   return sonuc;
