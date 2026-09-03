@@ -9,7 +9,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout NEW project
+      - name: Checkout NEW ZIP project
         uses: actions/checkout@v4
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -22,7 +22,7 @@ jobs:
           channel: stable
       - name: Install dependencies
         run: flutter pub get
-      - name: Build NEW APK
+      - name: Build APK from NEW ZIP
         run: flutter build apk --debug
       - name: Publish APK
         uses: softprops/action-gh-release@v2
