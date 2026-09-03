@@ -55,6 +55,8 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   /// Düğme yalnız o zaman aktif olur. Boş alan uyarısı hiç
   bool get _zorunlularDolu =>
       _amt.text.trim().isNotEmpty;
+  /// Teklif notu — İSTEĞE BAĞLI.
+  final _note = TextEditingController();
   String? _amtError, _formError;
   bool _busyOffer = false, _busyContact = false;
 
@@ -64,6 +66,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
 
   @override
   void dispose() {
+    _note.dispose();
     _amt.dispose();
     super.dispose();
   }
@@ -113,7 +116,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
         listingId: widget.listingId,
         providerId: me.id,
         amount: amount!,
-        note: '');
+        note: _note.text.trim());
     if (!mounted) {
       return;
     }
@@ -122,9 +125,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       setState(() => _formError = err.message);
       return;
     }
-    // ⚠ ÜCRET MESAJI KALDIRILDI (ücretsiz model): eskiden "ücretsiz
-    // hak kullanıldı" ya da "50 TL bloke edildi" yazıyordu. Teklif
-    // vermek artık her zaman ücretsiz.
     sysToastOk(context, 'Teklifiniz gönderildi');
   }
 
@@ -203,11 +203,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 _SahipKarti(
                   adSoyad: sahipAdi,
                   acik: iletisimAcik,
-                  // ⚠ SABİT 127 KALDIRILDI.
-                  //
-                  // Referanstaki örnek veriydi; her ilan sahibi için
-                  // aynı sayı görünüyordu. Artık ilan sahibinin
-                  // TAMAMLANMIŞ ilan sayısı hesaplanır.
                   tamamlananIs: listingCtl
                       .byOwner(l.ownerId)
                       // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
@@ -466,15 +461,25 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     hintText: 'Teklif tutarınızı girin',
                     errorText: _amtError),
               ),
-              // ── ⚠ AÇIKLAMA ALANI KALDIRILDI (madde 3) ──
+              const SizedBox(height: 12),
+              // ── NOT ──
               //
-              // Teklif verme ekranında YALNIZ teklif fiyatı kalır.
-              // Alan, karakter sayacı ve doğrulaması birlikte
-              // kaldırıldı.
-              //
-              // Gerekçe: teklif verildikten ve iletişim açıldıktan
-              // sonra taraflar ayrıntıları uygulama içi
-              // mesajlaşmadan konuşuyor.
+              // ⚠ İSTEĞE BAĞLI: boş bırakılabilir, düğmeyi pasif
+              // yapmaz. Hizmet veren isterse teklifiyle birlikte kısa
+              // bir açıklama yazar.
+              TextField(
+                scrollPadding: const EdgeInsets.only(bottom: kAlanKaydirmaPayi),
+                controller: _note,
+                onChanged: (_) => setState(() {}),
+                maxLines: 3,
+                maxLength: 300,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Notunuz (isteğe bağlı)',
+                  hintText: 'Örn. Aynı gün gelebilirim.',
+                  alignLabelWithHint: true,
+                ),
+              ),
               if (_formError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, left: 4),
@@ -499,14 +504,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   iconAsset: 'assets/svg/ic_plane.svg',
                   busy: _busyOffer,
                   onPressed: _zorunlularDolu ? _placeOffer : null),
-              // ⚠ ALT BİLGİLENDİRME KUTUSU KALDIRILDI (madde 4).
-              //
-              // "Teklif vermek ücretsizdir; teklifinizle birlikte
-              // 50 TL iletişim ücreti ... bloke edilir." metni artık
-              // gösterilmiyor.
-              //
-              // ⚠ `_KaynakBilgisi` sınıfı SİLİNMEDİ: ileride gerekirse
-              // diye duruyor ama hiçbir yerden çağrılmıyor.
             ] else if (mine != null) ...[
               // ── `Verdiğiniz Teklif` — MAVİ ÖZET KARTI ──
               //
@@ -604,9 +601,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                         Text(mine.note,
                             style: const TextStyle(
                                 fontSize: 13, height: 1.5, color: HC.grey)),
-                        // ⚠ BLOKE YAZISI KALDIRILDI (madde 5).
-                        // "Bloke: 50 TL (iletişim açılmazsa iade
-                        // edilir)" satırı kullanıcıyı yanıltıyordu.
                       ]),
                 );
               }),
@@ -718,21 +712,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               // birbirine ulaşabilir. Geri çekme düğmesinin durması,
               // ücreti geri alınabilirmiş izlenimi veriyordu — oysa
               // tüketilmiş ücret İADE EDİLMEZ.
-              // ⚠ "Teklif verildi" KUTUSU KALDIRILDI (madde 7).
-              //
-              // ⚠ YALNIZ EN ALTTAKİ bu kutu gitti. Verdiğiniz Teklif,
-              // tutar, "İletişim Bilgileri Açıldı", teklif zamanı,
-              // telefon ve mesajlaşma AYNEN duruyor.
-              // ── ⚠ "TEKLİFİ GERİ ÇEK" KALDIRILDI ──
-              //
-              // API sözleşmesi §1 ve kabul testi 2: "Teklif geri
-              // çekilemez ve değiştirilemez." Düğme referans HTML'de
-              // vardı; sözleşme HTML'e ÜSTÜNDÜR (§31).
-              //
-              // ⚠ Uç, repository metodu ve controller aksiyonu da
-              // KALDIRILDI — yalnız düğme gizlenmedi. Süresi dolmuş
-              // teklif KAYDINI silme (§12) ayrı bir iştir ve Paket
-              // 13'te ele alınacaktır; withdraw ile aynı şey değildir.
             ] else
               const SysEmpty(
                   title: 'Bu ilan teklif kabul etmiyor',
@@ -743,9 +722,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     );
   }
 }
-// ⚠ `_KaynakBilgisi` SINIFI SİLİNDİ.
-//
-// Alt bilgilendirme kutusu kaldırılınca (madde 4) çağıranı
 
 
 

@@ -107,14 +107,6 @@ void main() {
     });
 
     test('+90 ülke kodu kutusu YOK — numara yerel biçimde alınır', () {
-      // ⚠ ÜRÜN KARARI: `+90` kutusu KALDIRILDI.
-      //
-      // Tek ülkede hizmet verildiği için seçim yoktu; dokunulunca
-      // yalnız "şimdilik +90" mesajı veren işlevsiz bir açılır
-      // kutuydu. Numara artık `0` ile başlayan YEREL biçimde alınır.
-      //
-      // Test SİLİNMEDİ, yeni kurala çevrildi: kutunun bulunmadığı ve
-      // yerine ortak telefon biçimlendiricisinin geçtiği doğrulanır.
       expect(src.contains('RefCountryCodeDrop'), isFalse,
           reason: '+90 kutusu kaldırıldı');
       expect(src.contains('prefixText'), isFalse,

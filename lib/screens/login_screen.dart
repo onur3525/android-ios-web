@@ -296,15 +296,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _kilidiTazele();
   }
 
-  // ⚠ TELEFON OTP GİRİŞ AKIŞI KALDIRILDI.
-  //
-  // `_telefonKodIste` ve `_girisTamam` buradaydı: telefon modunda
-  // kod gönderip OTP ekranında oturum açıyorlardı. Ürün kararı
-  // değişti — kayıtlı kullanıcı telefonuyla da ŞİFRESİYLE girer.
-  //
-  // ⚠ Challenge altyapısı SİLİNMEDİ: kayıt, telefon numarası
-  // değişikliği ve hesap kurtarma akışları onu kullanmayı sürdürüyor.
-
 
 
   /// BAŞARILI GİRİŞ SONRASI YÖNLENDİRME
@@ -446,20 +437,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         // ══════════════════════════════════════════
                         // GİRİŞ YOLU — TEK GEÇİŞ DÜĞMESİ
                         //
-                        // ⚠ İKİ SEKME KALDIRILDI.
-                        //
-                        // Yan yana iki düğme, biri seçili biri değil,
-                        // ekranın en üstünde duruyordu; kullanıcı
-                        // hangisinin aktif olduğunu renkten çıkarmak
-                        // zorundaydı. Aktif mod ZATEN forma bakınca
-                        // belli: telefon alanı mı e-posta alanı mı.
-                        //
-                        // ⚠ DÜĞME ÜZERİNDEKİ METİN GİDİLECEK YERİ
-                        // SÖYLER, bulunulan yeri değil. Telefon
-                        // formundayken "E-posta ile Giriş" yazar.
-                        //
-                        // Varsayılan açılış TELEFON formudur.
-                        // ══════════════════════════════════════════
                         _GirisYoluDegistir(
                           etiket: _epostaModu
                               ? 'Telefon ile Giriş'
@@ -606,11 +583,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             onDegisti: (g) => setState(() => _obscure = g),
                           ),
                         ),
-                        // ── ⚠ DEMO GİRİŞ KUTUSU KALDIRILDI ──
-                        //
-                        // Canlı sürümde hazır hesap bilgisi (e-posta +
-                        // şifre) gösterilmez. Kullanıcı yalnız kendi
-                        // oluşturduğu hesapla giriş yapar.
 
                         // ── BENİ HATIRLA ──
                         //
@@ -735,19 +707,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ: düğme,
                         // ikonu, ölçüsü, sırası ve davranışı aynen
                         // buradadır.
-                        // ── ⚠ GOOGLE / APPLE İLE GİRİŞ TAMAMEN KALDIRILDI ──
-                        //
-                        // Ürün kararı: hesap açma ve giriş YALNIZCA kendi
-                        // hesap sistemimizle yapılır (telefon/e-posta + şifre,
-                        // telefonla girişte SMS OTP).
-                        //
-                        // ⚠ Bu, ikinci bir yan etki daha yaratır ve LEHİMİZE:
-                        // Apple kılavuzu 4.8 "üçüncü taraf giriş kullanan
-                        // uygulama" için ek seçenek zorunluluğu getiriyordu;
-                        // muafiyet "yalnızca kendi hesap sistemini kullanan"
-                        // uygulamalar içindir. Üçüncü taraf girişi kalmayınca
-                        // muafiyet DOĞRUDAN uygulanır.
-                        //
 
                         // .lg-reg{margin-top:16px}
                         const SizedBox(height: 16),

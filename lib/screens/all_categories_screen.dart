@@ -140,10 +140,6 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen> {
             ),
           ),
 
-          // ⚠ "53 kategori" SAYACI KALDIRILDI.
-          //
-          // Sayı kullanıcıya bir şey anlatmıyordu; liste zaten önünde
-          // duruyor. Arama yapıldığında da sayı vermek gereksizdi.
           const SizedBox(height: 2),
 
           Expanded(
@@ -193,21 +189,6 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // ⚠ "N hizmet" SAYACI KALDIRILDI.
-                                  //
-                                  // Alt hizmet sayısı kullanıcıya bir
-                                  // şey anlatmıyordu: "3 hizmet" olan
-                                  // kategori "11 hizmet" olandan daha
-                                  // az değerli değil. Kart artık yalnız
-                                  // SVG + ad + ok taşır.
-                                  // ⚠ Satırda YALNIZ eşleşen adın kendisi
-                                  // yazar (ana kategori ya da alt hizmet);
-                                  // ana sayfadaki arama önerileriyle aynı
-                                  // biçim — ayrıca "ana kategori" alt
-                                  // başlığı GÖSTERİLMEZ.
-                                  // ⚠ Ana kategori satırlarında GÖRÜNEN
-                                  // ad yazar (kart ızgarasıyla aynı);
-                                  // alt hizmet adları olduğu gibi kalır.
                                   Text(kategoriEtiketi(h.label),
                                       style: refText(
                                           size: RF.s145,

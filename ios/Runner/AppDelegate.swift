@@ -13,9 +13,7 @@ import UIKit
    • ARKA PLAN / ÖN PLAN → application(_:open:options:)
 
  GÜVENLİK:
-   • Yalnız `hizmetcep://payment...` kabul edilir.
    • URI'deki "success"/"status" alanlarına GÜVENİLMEZ; Dart'a yalnız
-     bağlantı iletilir, sonucu backend `confirmTopup` belirler.
    • Aynı bağlantı iki kez iletilmez (duplicate callback koruması).
  */
 @main
@@ -24,23 +22,6 @@ import UIKit
   private static let methodChannelName = "hizmetcep/deeplinks"
   private static let eventChannelName = "hizmetcep/deeplinks/events"
   private static let scheme = "hizmetcep"
-  private static let paymentHost = "payment"
-
-  /**
-   KART TOKENİZASYON KANALI
-
-   Dart tarafı (`card_tokenization_bridge.dart`) bu kanala `ping` ve
-   `tokenize` çağrıları yapar.
-
-   ⚠ ŞU AN ADAPTÖR BAĞLI DEĞİL: ödeme sağlayıcısı seçilmediği için
-   `ping` false döner ve Dart tarafı `UnconfiguredCardTokenizer`
-   kullanır.
-
-   Sağlayıcı seçildiğinde yapılacak: `tokenize` içinde sağlayıcının iOS
-   SDK'sı çağrılır ve tek kullanımlık `paymentToken` döndürülür.
-   Dart tarafında HİÇBİR dosya değişmez.
-   */
-  private static let cardTokenizerChannelName = "hizmetcep/card_tokenizer"
 
   /**
    EKRAN KORUMASI KANALI (iOS karşılığı)
@@ -53,8 +34,8 @@ import UIKit
    iOS'ta `FLAG_SECURE` gibi bir anahtar YOKTUR; ekran görüntüsü
    ENGELLENEMEZ. Buradaki koruma yalnız ÖNİZLEME KARARTMASIDIR:
    uygulama arka plana alınırken pencerenin üzerine opak bir örtü
-   konur, öne gelince kaldırılır. Böylece görev değiştiricide bakiye,
-   kart ve iletişim bilgisi asılı kalmaz.
+   konur, öne gelince kaldırılır. Böylece görev değiştiricide iletişim
+   bilgisi asılı kalmaz.
 
    ⚠ Sayaç Dart tarafındadır; burada yalnız "istek var mı" bilgisi
    tutulur.
@@ -68,7 +49,6 @@ import UIKit
   private var privacyCover: UIView?
 
   /// Sağlayıcı SDK adaptörü bağlandığında `true` yapılır.
-  private static let cardTokenizerReady = false
 
   /// Açılışa neden olan bağlantı; Dart bir kez okur ve tüketir.
   private var initialLink: String?
@@ -85,44 +65,9 @@ import UIKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    // ── KART TOKENİZASYON KÖPRÜSÜ ──
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let cardChannel = FlutterMethodChannel(
-        name: AppDelegate.cardTokenizerChannelName,
-        binaryMessenger: controller.binaryMessenger)
-
-      cardChannel.setMethodCallHandler { call, result in
-        switch call.method {
-        case "ping":
-          // Dart açılışta sorar: adaptör hazır mı?
-          result(AppDelegate.cardTokenizerReady)
-
-        case "tokenize":
-          guard AppDelegate.cardTokenizerReady else {
-            // Sahte token ÜRETİLMEZ; açık hata döner.
-            result(FlutterError(
-              code: "PROVIDER_NOT_CONFIGURED",
-              message: "Ödeme sağlayıcısı SDK adaptörü bağlanmadı.",
-              details: nil))
-            return
-          }
-          // DIŞ SERVİS ENTEGRASYONU BEKLİYOR:
-          // sağlayıcının iOS SDK çağrısı buraya gelir.
-          // Beklenen dönüş: ["paymentToken": ..., "masked": ..., "brand": ...]
-          result(FlutterError(
-            code: "NOT_IMPLEMENTED",
-            message: "Sağlayıcı SDK adaptörü henüz uygulanmadı.",
-            details: nil))
-
-        default:
-          result(FlutterMethodNotImplemented)
-        }
-      }
-    }
-
-    // SOĞUK BAŞLANGIÇ: uygulama tamamen kapalıyken gelen ödeme dönüşü.
+    // SOĞUK BAŞLANGIÇ: uygulama tamamen kapalıyken gelen derin bağlantı.
     if let url = launchOptions?[.url] as? URL {
-      initialLink = Self.paymentLink(from: url)
+      initialLink = Self.derinBaglanti(from: url)
     }
 
     // Kanallar, Flutter motoru hazır olduktan sonra kurulur.
@@ -189,7 +134,7 @@ import UIKit
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
-    guard let link = Self.paymentLink(from: url) else {
+    guard let link = Self.derinBaglanti(from: url) else {
       // Ödeme dışı bağlantı: diğer eklentilere devredilir.
       return super.application(app, open: url, options: options)
     }
@@ -263,26 +208,11 @@ import UIKit
    Geçersiz şema/host veya EKSİK session kimliğinde nil döner ve
    neden loglanır (sessizce yutulmaz).
    */
-  private static func paymentLink(from url: URL) -> String? {
+  private static func derinBaglanti(from url: URL) -> String? {
     guard url.scheme?.lowercased() == scheme else {
       NSLog("[HizmetCepDeepLink] Beklenmeyen şema yok sayıldı: \(url.scheme ?? "-")")
       return nil
     }
-    let host = url.host?.lowercased()
-    let isPayment = host == paymentHost || url.pathComponents.contains(paymentHost)
-    guard isPayment else {
-      NSLog("[HizmetCepDeepLink] Ödeme dışı derin bağlantı yok sayıldı")
-      return nil
-    }
-
-    let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
-    let session = items?.first(where: { $0.name == "session" })?.value
-      ?? items?.first(where: { $0.name == "sessionId" })?.value
-    guard let s = session, !s.trimmingCharacters(in: .whitespaces).isEmpty else {
-      NSLog("[HizmetCepDeepLink] Ödeme dönüşünde session kimliği YOK — yok sayıldı")
-      return nil
-    }
-    // NOT: success/status gibi alanlar bilinçli olarak OKUNMAZ.
     return url.absoluteString
   }
 }

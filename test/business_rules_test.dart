@@ -61,6 +61,39 @@ void main() {
       }
     });
 
+    test('⚠ İLAN BAŞINA EN FAZLA 3 TEKLİF', () async {
+      final l = await yeniIlan();
+      for (var i = 0; i < DomainConfig.ilanBasinaMaxTeklif; i++) {
+        expect(
+            await offerCtl.placeOffer(
+                listingId: l.id, providerId: 'usta$i', amount: 500, note: 'n'),
+            isNull,
+            reason: '${i + 1}. teklif reddedildi');
+      }
+      // Kontenjan doldu: dördüncü teklif reddedilir.
+      expect(
+          await offerCtl.placeOffer(
+              listingId: l.id, providerId: 'ustaX', amount: 500, note: 'n'),
+          isA<OfferLimitReachedError>());
+    });
+
+    test('⚠ NOT İSTEĞE BAĞLI — boş not ile teklif verilir', () async {
+      final l = await yeniIlan();
+      expect(
+          await offerCtl.placeOffer(
+              listingId: l.id, providerId: p1, amount: 900, note: ''),
+          isNull);
+      expect(offerCtl.myOfferFor(l.id, p1)!.note, '');
+    });
+
+    test('NOT teklifle birlikte kaydedilir', () async {
+      final l = await yeniIlan();
+      await offerCtl.placeOffer(
+          listingId: l.id, providerId: p1, amount: 900,
+          note: 'Aynı gün gelebilirim.');
+      expect(offerCtl.myOfferFor(l.id, p1)!.note, 'Aynı gün gelebilirim.');
+    });
+
     test('⚠ İLETİŞİM AÇMA ÜCRETSİZ VE KOŞULSUZ', () async {
       final l = await yeniIlan();
       await offerCtl.placeOffer(
@@ -204,11 +237,6 @@ void main() {
 
 
     test('akış: open→completed (seçim doğrudan tamamlar)', () async {
-      // ⚠ ÜRÜN KARARI: ayrı "İşi Başlat" adımı KALDIRILDI.
-      //
-      // Teklif seçildikten sonra iş fiilen başlamıştır; ayrıca
-      // "başlat" demek fazladan bir adımdı ve unutulduğunda ilan
-      // tamamlanamaz duruma düşüyordu.
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'a');
       await offerCtl.selectOffer(
@@ -274,9 +302,6 @@ void main() {
       // Veri tutarsızlığı simüle edilir: seçim kaydı kaybolmuş.
       l.selectedOfferId = null;
 
-      // ⚠ `completeWork` KALDIRILDI (§11); tutarsız veri artık BAŞKA
-      // bir geçiş denemesiyle sınanır: tamamlanmış ilan iptal
-      // EDİLEMEZ ve durum bozulmaz.
       final err = await listingCtl.delete(l.id, actorId: cust);
       expect(err, isA<InvalidStateError>(),
           reason: 'sessizce geçilmemeli, AÇIK hata dönmeli');

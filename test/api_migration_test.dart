@@ -192,9 +192,6 @@ void main() {
       final ctl = ContactController(contactPort(c), offerPort(c));
       final err = await ctl.openShared('o1', actorId: 'u1');
 
-      // ⚠ `InsufficientBalanceError` beklentisi KALDIRILDI: bakiye
-      // kavramı yok. Kural aynı: SUNUCU REDDEDERSE iletişim açık
-      // gösterilmez.
       expect(err, isNotNull);
       expect(ctl.isOpen('o1'), isFalse);
     });

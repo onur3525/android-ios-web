@@ -29,20 +29,6 @@ class MyCategoriesScreen extends StatefulWidget {
 class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
   final _search = TextEditingController();
 
-  // ⚠ KATEGORİ TALEBİ AKIŞININ TAMAMI KALDIRILDI.
-  //
-  // İŞ KURALI: yeni ana kategori / alt hizmet TANIMLAMA yetkisi
-  // YALNIZ ADMİNDEDİR. Hizmet veren bu işi yapamaz ve ekranda
-  // GÖRMEZ.
-  //
-  // Silinenler: "Yeni Hizmet Ekle" kartı (Kategori Seç + Alt
-  // Kategori Adı + Kategori Talep Et), "Hizmet Taleplerim" listesi
-  // ve ona ait durum alanları (`_yeniAd`, `_yeniAna`, `_yeniHata`,
-  // `_yeniGonderiliyor`, `_requests`, `_requestsLoading`).
-  //
-  // Bu ekran artık HİÇBİR ağ çağrısı yapmaz: talep uçları
-  // (`/categories/requests`) uygulamadan hiç çağrılmadığı için
-  // `CategoryRequestApi` dosyası da silinmiştir.
   Set<String> _selected = {};
   bool _loaded = false;
   bool _saving = false;
@@ -189,25 +175,6 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
       geriGit(context);
     }
   }
-
-  // ⚠ KATEGORİ TALEBİ AKIŞI TAMAMEN KALDIRILDI.
-  //
-  // Silinen üyeler: `_yeniHizmetKutusu()` (Yeni Hizmet Ekle kartı),
-  // `_yeniAnaSec()` (Kategori Seç yarım ekranı) ve `_talepGonder()`
-  // (POST /categories/requests).
-  //
-  // GEREKÇE — İŞ KURALI: kategori ve alt hizmet tanımlamak YALNIZ
-  // ADMİN yetkisidir. Hizmet veren yeni alt kategori öneremez ve bu
-  // alanı ekranda görmez. Yeni kategori ihtiyacı admin panelinden
-  // karşılanır.
-  //
-  // ⚠ GERİ EKLENMEZ: kutuyu geri getirmek yetki kuralını bozar.
-
-  // ⚠ ESKİ TALEP PANELİ DE KALDIRILMIŞTI (`_openRequestSheet`).
-  //
-  // Önce yarım ekran panel sayfa içi karta çevrilmiş, sonra kart da
-  // bütünüyle silinmiştir; bu ekranda talep oluşturan hiçbir yol
-  // kalmadı.
 
   @override
   Widget build(BuildContext context) {
@@ -423,10 +390,6 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
                   ),
 
                 // ⚠ BURADA "Hizmet Taleplerim" LİSTESİ ve "Yeni Hizmet
-                // Ekle" KUTUSU VARDI — İKİSİ DE SİLİNDİ.
-                //
-                // Kutuyla birlikte altındaki mavi bilgi kutusu
-                // ("Eklediğiniz alt kategori ... kontrol edilip
               ],
             ),
           ),
@@ -455,17 +418,5 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
     );
   }
 
-  // ⚠ `_categoryBlock` ve `_inactiveChip` KALDIRILDI.
-  //
-  // Referansta kategori AĞACI yoktur; seçim arama sonucundan
-  // yapılır. Ağaç kalkınca bu iki çizim yardımcısı çağrılmaz
-  // oldu.
-
 }
 
-
-// ⚠ `_KategoriCipi` KALDIRILDI.
-//
-// `.mc-chip` çipini çizen özel bir sınıftı ama HİÇBİR YERDEN
-// çağrılmıyordu: seçili hizmet çipleri `build` içinde doğrudan
-// çiziliyor. Ölü kod analyzer'da `unused_element` üretiyordu.

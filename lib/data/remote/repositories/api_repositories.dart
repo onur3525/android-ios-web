@@ -121,9 +121,6 @@ class ApiAuthRepository extends ChangeNotifier {
   /// backend bu ucu açana kadar gerçek API modunda doğrulama
   /// BAŞARISIZ döner. Sessizce "doğru" saymak, kritik işlemi
   /// doğrulamasız yapmak demek olurdu.
-  // ⚠ `@override` KALDIRILDI: `AuthPort` arayüzünde `verifyPassword`
-  // TANIMLI DEĞİL; bu sınıfa özel bir uç. Yanlış işaret analyzer
-  // uyarısı üretiyordu.
   Future<DomainError?> verifyPassword(String password) async =>
       (await _guard(() => _auth.verifyPassword(password: password))).$2;
 

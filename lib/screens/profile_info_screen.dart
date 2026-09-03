@@ -398,9 +398,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ⚠ `final me = ...currentAccount!` KALDIRILDI: değerler artık
-    // `initState`'te denetleyicilere yükleniyor, burada okunmuyordu.
-    // Ayrıca `!` oturum düşerse çökme riskiydi.
     return RefShell(
       nav: RefBottomNav(
         activeKey: 'profil',
@@ -425,14 +422,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
             const RefSubtitle(
                 'Profil bilgilerinizi görüntüleyebilir ve '
                 'güncelleyebilirsiniz.'),
-
-            // ⚠ FOTOĞRAF BÖLÜMÜ BU EKRANDAN KALDIRILDI.
-            //
-            // Fotoğraf yönetimi TEK YERDE olmalı: Profil ekranındaki
-            // avatar. Aynı işi iki ekranda sunmak hem yer kaplıyor
-            // hem de "hangisi geçerli?" sorusunu doğuruyordu.
-            // Bu ekran artık YALNIZ ad/soyad/e-posta/telefon alanını
-            // yönetir.
 
             // ⚠ Alt başlıkla ilk alan arasındaki boşluk da etiketten
             // geliyordu; etiket kalkınca elle verildi.
@@ -518,12 +507,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                   textCapitalization: TextCapitalization.none,
               textInputAction: TextInputAction.next,
               onEditingComplete: () => _fTelefon.requestFocus(),
-              // ⚠ ÖNERİ SATIRI KALDIRILDI.
-              //
-              // Yazım hatası artık BİLGİ NOTU değil, DOĞRULAMA HATASIDIR:
-              // `Validators.email` yaygın sağlayıcıdaki hatalı uzantıyı
-              // ("hotmail.co") reddeder ve alanın altında kırmızı uyarı
-              // verir. Kayıt ekranlarıyla AYNI davranış.
               validator: (v) => _kural('eposta', _fEposta, v, Validators.email),
             ),
 

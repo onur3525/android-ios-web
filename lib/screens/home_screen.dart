@@ -82,11 +82,6 @@ import 'hizmet_alani_screen.dart';
 /// ⚠ BU LİSTE KATALOG SINIRI DEĞİLDİR — 53 kategorinin hepsi
 /// erişilebilir kalır.
 ///
-// ⚠ `kHizliKategoriler` KALDIRILDI (15 Ağu).
-//
-// Ana sayfada 12 sabit kategori kısayolu vardı; yerini ON ÇATI aldı
-// (`kHizmetAlanlari`). Çatılar kategori DEĞİLDİR — katalog aynen
-// duruyor, çatıya dokunulunca altındaki kategoriler listelenir.
 
 
 
@@ -615,34 +610,13 @@ class _CategoryCard extends StatelessWidget {
           const SizedBox(height: 16),
           // ── ⚠ HİZMET ALANLARI PANELİ ──
           //
-          // Eski 12 ikon kartı KALDIRILDI (ürün kararı, 15 Ağu).
-          // Yerine ON ÇATI geldi: fotoğraflı kart, başlık yanında
-          // renkli ikon, altında açıklama.
-          //
-          // ⚠ ÇATILAR KATEGORİ DEĞİLDİR. Katalog aynen duruyor;
-          // çatıya dokunulunca altındaki MEVCUT kategoriler listelenir.
-          //
-          // ⚠ PANEL SABİT, İÇİ KAYAR: panelin kendisi sayfayla
-          // birlikte durur, çatı listesi kendi içinde dikey kaydırılır.
-          // Bu yüzden yükseklik SINIRLI ve iç liste ayrı kaydırıcı.
           const HizmetAlanlariPaneli(),
 
-          // ⚠ "TÜM KATEGORİLER" BAĞLANTISI KALDIRILDI (15 Ağu).
-          //
-          // 12 çatının tamamı yukarıdaki panelde; 63 kategorinin
-          // hepsi bir çatıya bağlı. Ayrı bir tam liste bağlantısı
-          // hem gereksiz hem de çatı ayrımını zayıflatıyordu.
         ],
       ),
     );
   }
 }
-
-// ⚠ `_CategoryItem` KALDIRILDI (15 Ağu).
-//
-// Ana sayfadaki sade ikon kartları çatı kartlarıyla değiştirildi.
-// Aynı turda `kHizliKategoriler` listesi de kalktı; kullanıcı artık
-// on çatıdan ya da "Tüm Kategoriler"den ilerliyor.
 
 /// ── HİZMET ALANLARI PANELİ ──
 ///
@@ -1043,24 +1017,6 @@ class _AlanKarti extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── ⚠ ÇATI İKONU KALDIRILDI (15 Ağu, kesin karar) ──
-                  //
-                  // Kartın görsel hiyerarşisi YALNIZCA:
-                  //   fotoğraf → başlık → açıklama
-                  //
-                  // Renkli ikon başlıkla yarışıyordu; alev, 1-9
-                  // sayacı ve yön okları gibi dekoratif katmanlar
-                  // zaten kaldırılmıştı, ikon da onlara katıldı.
-                  //
-                  // ⚠ `HizmetAlani.ikon` alanı DURUYOR: veri modeli
-                  // bu turda değiştirilmedi ve ikon dosyaları ileride
-                  // başka bir yüzeyde gerekebilir. Yalnız KART onu
-                  // çizmiyor.
-                  // ⚠ BAŞLIĞA SABİT İKİ SATIRLIK ALAN.
-                  //
-                  // Yükseklik metne göre DEĞİŞMEZ: kısa adlı kart da
-                  // aynı alanı ayırır, böylece 12 kartın başlık ve
-                  // açıklama blokları aynı hizada başlar.
                   SizedBox(
                     height: HizmetAlanlariPaneli.baslikAlani(olcek, oran),
                     width: double.infinity,
@@ -1127,23 +1083,6 @@ class _TrustCard extends StatelessWidget {
   /// açıklamaları FARKLI HİZADAN başlardı. Bu yüzden başlık alanı
   /// KALIR.
   ///
-  /// ── ⚠ AÇIKLAMADAKİ SABİT ALAN VE `maxLines` KALDIRILDI ──
-  ///
-  /// Açıklamaya beş satırlık sabit alan ayrılmış ve `maxLines: 5`
-  /// konmuştu. "Binlerce memnun kullanıcı deneyimiyle hizmet
-  /// kalitesini güvence altına alın." bu sınıra sığmıyor ve cümlenin
-  /// SONU KESİLİYORDU ("…güvence altına" diye bitiyordu).
-  ///
-  /// ⚠ SATIR SAYISINI ARTIRMAK ÇÖZÜM DEĞİLDİ: alan üç sütunda
-  /// ORTAKTIR, büyütünce kısa metinli iki kartın altında boşluk
-  /// kalırdı. Üstelik kaç satır gerektiği EKRAN GENİŞLİĞİNE ve
-  /// kullanıcının YAZI BOYUTU AYARINA göre değişir — bugün yeten
-  /// sayı, yazıyı büyüten kullanıcıda yine keserdi. Sabit sayı
-  /// zaman ayarlı bir kırılmadır.
-  ///
-  /// Açıklama artık doğal yüksekliğini alır; kart en uzun sütuna göre
-  /// uzar, hiçbir metin kesilmez. Sütunlar üstten hizalı olduğu için
-  /// ekran bütünlüğü korunur.
   static const int _kBaslikSatiri = 3;
 
   /// ⚠ Satır yüksekliği YUKARI YUVARLANIR: Flutter paragraf düzeni

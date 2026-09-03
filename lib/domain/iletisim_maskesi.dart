@@ -52,12 +52,6 @@ class _Aralik {
 ///  TELEFON
 /// ═══════════════════════════════════════════════════════════════
 ///
-/// ⚠ ESKİ KALIP TABANLI TESPİTLER KALDIRILDI.
-///
-/// Her kaçış biçimi için ayrı regex yazılıyordu (`_harfKarisikNumara`,
-/// `_bitisikSayi`, blok kalıbı) ve her yeni varyasyon yeni bir açık
-/// üretiyordu. Yerlerini TEK bir normalize tarayıcı aldı — bkz.
-/// `_telefonAraliklari` (aşağıda).
 
 /// ── ⚠ NORMALİZE EDİLMİŞ TELEFON TARAMASI ──
 ///
@@ -81,8 +75,8 @@ class _Aralik {
 /// cümlesinde "odalı" ve "banyolu" koşuyu keser, rakamlar birbirine
 /// yapışmaz. Aksi hâlde normal ilanlardaki sayılar birleşip telefon
 /// gibi görünürdü.
-class _KosuParcasi {
-  const _KosuParcasi(this.rakam, this.bas, this.son);
+class _KoşuParcasi {
+  const _KoşuParcasi(this.rakam, this.bas, this.son);
 
   /// Bu parçanın koşuya kattığı rakamlar.
   final String rakam;
@@ -95,18 +89,18 @@ class _KosuParcasi {
 final RegExp _kosuBelirtec = RegExp(r'[0-9]+|[a-zA-ZçğıöşüÇĞİÖŞÜ]+');
 
 /// Metni rakam koşularına böler.
-List<List<_KosuParcasi>> _rakamKosulari(String metin) {
-  final out = <List<_KosuParcasi>>[];
-  var cur = <_KosuParcasi>[];
+List<List<_KoşuParcasi>> _rakamKosulari(String metin) {
+  final out = <List<_KoşuParcasi>>[];
+  var cur = <_KoşuParcasi>[];
   for (final m in _kosuBelirtec.allMatches(metin)) {
     final t = m.group(0)!;
     if (RegExp(r'^[0-9]+$').hasMatch(t)) {
-      cur.add(_KosuParcasi(t, m.start, m.end));
+      cur.add(_KoşuParcasi(t, m.start, m.end));
       continue;
     }
     final r = _sayiCoz(trKucuk(t));
     if (r != null) {
-      cur.add(_KosuParcasi(r, m.start, m.end));
+      cur.add(_KoşuParcasi(r, m.start, m.end));
       continue;
     }
     // ⚠ 1-2 HARFLİK PARÇA GÜRÜLTÜDÜR: "05a55b631c993" ya da
@@ -118,7 +112,7 @@ List<List<_KosuParcasi>> _rakamKosulari(String metin) {
     // Anlamlı sözcük → koşu biter.
     if (cur.isNotEmpty) {
       out.add(cur);
-      cur = <_KosuParcasi>[];
+      cur = <_KoşuParcasi>[];
     }
   }
   if (cur.isNotEmpty) {
@@ -492,16 +486,6 @@ List<_Aralik> _tarifliKonum(String metin) {
 /// Metinde maskelenecek bir şey var mı?
 bool iletisimIceriyor(String metin) => _tumAraliklar(metin).isNotEmpty;
 
-
-// ⚠ İLETİŞİME YÖNLENDİRME TESPİTİ KALDIRILDI (ürün kararı).
-//
-// "numaram profilimde", "beni ara", "whatsapptan yaz" gibi ifadeler
-// MASKELENMEZ. Gerekçe: bu cümleler numaranın KENDİSİNİ içermiyor.
-// Numara zaten görünmüyorsa karşı taraf bir yere ulaşamaz; cümleyi
-// gizlemek kullanıcıyı gereksiz yere kısıtlardı.
-//
-// ⚠ Maskeleme YALNIZ gerçek iletişim verisine uygulanır: numara,
-// adres, e-posta, bağlantı, kullanıcı adı.
 
 /// ── ⚠ ANLAMSIZ / TEKRARLAYAN HARF DİZİSİ ──
 ///

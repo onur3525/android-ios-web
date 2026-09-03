@@ -1,172 +1,35 @@
-# ═══════════════════════════════════════════════════════════════════
-#  HİZMETCEP — ANDROID DEBUG APK
-# ═══════════════════════════════════════════════════════════════════
-#
-# ⚠ BU DOSYA DEPODA ŞU YOLA KONULMALIDIR:
-#     .github/workflows/android-debug-apk.yml
-#   (mevcut aynı isimli iş akışının ÜZERİNE yazılır)
-#
-# ── NİÇİN DEĞİŞTİ ──
-#
-# Derleme başarılıydı; APK üretiliyordu (157 MB). Kırılan adım
-# `actions/upload-artifact@v4` idi:
-#
-#   Failed to CreateArtifact: Artifact storage quota has been hit.
-#
-# ⚠ SORUN FLUTTER, GRADLE, JAVA YA DA UYGULAMA KODU DEĞİLDİ.
-# Depo hesabının artifact saklama kotası dolmuştu. Kota 6-12 saatte
-# bir yeniden hesaplanıyor, yani beklemek de kalıcı çözüm değil.
-#
-# ── ÇÖZÜM ──
-#
-# APK artık artifact olarak DEĞİL, GitHub Release ASSET'İ olarak
-# yükleniyor. Release depolaması artifact kotasından ayrıdır.
-name: Android Debug APK
-
+name: Build Android Debug APK
 on:
-  # ── ⚠ ÇİFT KOŞU ÖNLEMİ ──
-  #
-  # `push` ve `workflow_dispatch` birlikte duruyor — ikisi de
-  # KORUNDU, tetikleme mantığı değiştirilmedi.
-  #
-  # Çift koşu, aşağıdaki `concurrency` bloğuyla engellenir: aynı
-  # commit için ikinci bir koşu başlarsa öncekini iptal eder. Böylece
-  # aynı commit'ten iki APK ve iki Release üretilmez.
   push:
-    branches: [main, master]
+    branches: ["main"]
   workflow_dispatch:
-
-# ⚠ AYNI COMMIT İÇİN TEK KOŞU.
-#
-# Grup anahtarı commit SHA'sıdır: elle tetikleme ile push aynı
-# commit'e denk gelirse ikincisi öncekini iptal eder.
-concurrency:
-  group: apk-${{ github.sha }}
-  cancel-in-progress: true
-
-# ⚠ RELEASE OLUŞTURMAK İÇİN YAZMA YETKİSİ ZORUNLUDUR.
-#
-# Varsayılan `GITHUB_TOKEN` yalnız okuma yetkisiyle gelir; bu satır
-# olmadan Release adımı 403 ile düşer.
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
+      - name: Checkout NEW project
         uses: actions/checkout@v4
-
-      - name: Setup Java 17
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Flutter
+          distribution: zulu
+          java-version: "21"
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-
-      - name: Flutter version
-        run: flutter --version
-
-      - name: Flutter pub get
+      - name: Install dependencies
         run: flutter pub get
-
-      # ── DERLEME — DEĞİŞMEDİ ──
-      #
-      # ⚠ `--debug` bilerek: release imzalama anahtarı gerektirir ve
-      # demo verileri YALNIZ debug derlemesinde tohumlanır.
-      - name: Build DEBUG APK
+      - name: Build NEW APK
         run: flutter build apk --debug
-
-      # ── APK GERÇEKTEN OLUŞTU MU ──
-      #
-      # ⚠ Sonraki adımlar buna güvenir; dosya yoksa burada durulur.
-      - name: Verify APK
-        id: verify
-        run: |
-          set -e
-          APK=build/app/outputs/flutter-apk/app-debug.apk
-          test -f "$APK"
-          BOYUT=$(stat -c%s "$APK")
-          echo "APK OLUŞTU: $APK"
-          echo "APK BOYUTU: $(numfmt --to=iec "$BOYUT") ($BOYUT bayt)"
-          echo "APK SHA256: $(sha256sum "$APK" | cut -d' ' -f1)"
-          echo "boyut=$(numfmt --to=iec "$BOYUT")" >> "$GITHUB_OUTPUT"
-          echo "bayt=$BOYUT" >> "$GITHUB_OUTPUT"
-
-      # ── RELEASE OLUŞTUR VE APK'YI ASSET OLARAK YÜKLE ──
-      #
-      # ⚠ `actions/upload-artifact` KULLANILMAZ (kota).
-      #
-      # ⚠ AD VE ETİKET BENZERSİZ: `run_number` her koşuda artar,
-      # böylece "tag already exists" hatası oluşmaz.
-      - name: Release olustur ve APK yukle
-        id: release
+      - name: Publish APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: debug-${{ github.run_number }}
-          name: hizmetcep-debug-${{ github.run_number }}
-          body: |
-            HizmetCep test APK (debug)
-
-            Commit: ${{ github.sha }}
-            Boyut: ${{ steps.verify.outputs.boyut }}
-
-            ⚠ Bu bir DEBUG derlemesidir; mağazaya yüklenemez.
-            Demo verileri yalnız debug derlemesinde görünür.
+          tag_name: latest-debug
+          name: HizmetCep Latest Debug APK
+          prerelease: true
+          make_latest: false
           files: build/app/outputs/flutter-apk/app-debug.apk
-          # ⚠ Taslak/ön sürüm DEĞİL: asset doğrudan indirilebilir olmalı.
-          draft: false
-          prerelease: false
-          fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── ⚠ ASSET GERÇEKTEN YÜKLENDİ Mİ ──
-      #
-      # "Release oluştu" yetmez: asset listesi BOŞ olabilir. Bu adım
-      # Release'i API'den okur, APK'yı asset listesinde arar ve
-      # indirme bağlantısını yazar. Bulamazsa iş BAŞARISIZ olur.
-      - name: Asset dogrulama
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-          TAG=debug-${{ github.run_number }}
-          echo "── RELEASE DOĞRULAMA ──"
-          JSON=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG")
-          echo "Release oluşturuldu: $(echo "$JSON" | jq -r .name)"
-          echo "Release URL       : $(echo "$JSON" | jq -r .html_url)"
-
-          ADET=$(echo "$JSON" | jq '[.assets[] | select(.name=="app-debug.apk")] | length')
-          if [ "$ADET" -eq 0 ]; then
-            echo "##[error]APK release asset olarak YÜKLENMEDİ."
-            echo "$JSON" | jq -r '.assets[].name'
-            exit 1
-          fi
-
-          echo "APK asset olarak yüklendi: EVET"
-          echo "Asset boyutu      : $(echo "$JSON" | jq -r '.assets[] | select(.name=="app-debug.apk") | .size') bayt"
-          echo "İNDİRME BAĞLANTISI: $(echo "$JSON" | jq -r '.assets[] | select(.name=="app-debug.apk") | .browser_download_url')"
-
-      # ── ÖZET ──
-      #
-      # ⚠ Buraya YALNIZCA derleme VE yükleme birlikte başarılıysa
-      # gelinir; önceki adımların herhangi biri düşerse iş kırmızı
-      # olur ve bu özet hiç yazılmaz.
-      - name: Ozet
-        run: |
-          {
-            echo "### HizmetCep Debug APK"
-            echo ""
-            echo "- APK oluştu: **EVET**"
-            echo "- APK boyutu: **${{ steps.verify.outputs.boyut }}**"
-            echo "- Release: **hizmetcep-debug-${{ github.run_number }}**"
-            echo "- Asset olarak yüklendi: **EVET**"
-            echo "- İndirme: ${{ github.server_url }}/${{ github.repository }}/releases/tag/debug-${{ github.run_number }}"
-          } >> "$GITHUB_STEP_SUMMARY"
+          overwrite_files: true

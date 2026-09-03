@@ -107,7 +107,6 @@ class AuthRepository extends ChangeNotifier {
       String name = '', String email = '',
       String ilce = '', String mahalle = '',
       /// ⚠ AÇILIŞ YOLUNDAN PBKDF2'Yİ ÇIKARIR — bkz.
-      /// `demo_hesap_ozetleri.dart`. Verilmezse eski davranış.
       String? hazirTuz, String? hazirOzet}) {
     final hazir = hazirTuz != null && hazirOzet != null;
     final salt = hazir ? hazirTuz : _uuid.v4();

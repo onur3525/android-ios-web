@@ -53,18 +53,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- ÖDEME DÖNÜŞÜ (derin bağlantı)
-                 Sağlayıcı ödeme bitince hizmetcep://payment/return adresine
-                 yönlendirir. launchMode=singleTop olduğu için uygulama
-                 arka plandaysa YENİ örnek açılmaz, mevcut örnek öne gelir;
-                 uygulama kapalıysa normal açılış yapılır ve dönüş adresi
-                 ilk intent olarak işlenir. -->
-            <intent-filter android:autoVerify="false">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="hizmetcep" android:host="payment"/>
-            </intent-filter>
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2"/>
     </application>

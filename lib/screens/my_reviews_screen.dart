@@ -216,10 +216,6 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: HC.bg,
-        // AppBar KALDIRILDI — referansta yok (başlık sayfa içinde).
-        // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar): gövde hangi
-        // durumda olursa olsun (yükleniyor / hata / liste) ok üstte
-        // sabit durur, kullanıcı ekranda kilitlenmez.
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

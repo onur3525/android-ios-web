@@ -26,10 +26,8 @@ import io.flutter.plugin.common.MethodChannel
  *   • ÖN PLANDAYKEN        → onNewIntent
  *
  * GÜVENLİK:
- *   • Yalnız `hizmetcep://payment...` kabul edilir; başka şema/host yok sayılır.
  *   • URI'deki "success"/"status" gibi alanlara GÜVENİLMEZ ve Dart'a
  *     ayrıca iletilmez; yalnız bağlantının kendisi taşınır. Ödemenin
- *     sonucunu her zaman backend `confirmTopup` belirler.
  *   • Aynı bağlantı iki kez iletilmez (duplicate callback koruması).
  */
 class MainActivity : FlutterActivity() {
@@ -38,22 +36,6 @@ class MainActivity : FlutterActivity() {
         private const val TAG = "HizmetCepDeepLink"
         private const val METHOD_CHANNEL = "hizmetcep/deeplinks"
         private const val EVENT_CHANNEL = "hizmetcep/deeplinks/events"
-
-        /**
-         * KART TOKENİZASYON KANALI
-         *
-         * Dart tarafı (`card_tokenization_bridge.dart`) bu kanala
-         * `ping` ve `tokenize` çağrıları yapar.
-         *
-         * ⚠ ŞU AN ADAPTÖR BAĞLI DEĞİL: ödeme sağlayıcısı seçilmediği
-         * için `ping` false döner ve Dart tarafı
-         * `UnconfiguredCardTokenizer` kullanır.
-         *
-         * Sağlayıcı seçildiğinde yapılacak: `tokenize` içinde sağlayıcının
-         * Android SDK'sı çağrılır ve tek kullanımlık `paymentToken`
-         * döndürülür. Dart tarafında HİÇBİR dosya değişmez.
-         */
-        private const val CARD_TOKENIZER_CHANNEL = "hizmetcep/card_tokenizer"
 
         /**
          * SPLASH KANALI
@@ -93,9 +75,7 @@ class MainActivity : FlutterActivity() {
         private const val SPLASH_MAX_MS = 5000L
 
         /** Sağlayıcı SDK adaptörü bağlandığında `true` yapılır. */
-        private const val CARD_TOKENIZER_READY = false
         private const val SCHEME = "hizmetcep"
-        private const val HOST_PAYMENT = "payment"
     }
 
     /** Dart açılış kararını verdi mi? */
@@ -215,8 +195,8 @@ class MainActivity : FlutterActivity() {
         //   • ekran görüntüsü ve ekran kaydı ENGELLENİR
         //   • son uygulamalar listesinde ekranın ÖNİZLEMESİ çizilmez
         //
-        // Cüzdan, kart formu ve iletişim bilgisi ekranlarında açılır;
-        // kart numarası ve telefon numarası bu yüzeylerde görünür.
+        // İletişim bilgisi ekranlarında açılır; telefon numarası bu
+        // yüzeylerde görünür.
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURE_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -263,7 +243,7 @@ class MainActivity : FlutterActivity() {
         }
 
         // Açılış intent'i motor kurulmadan önce gelmiş olabilir.
-        initialLink = extractPaymentLink(intent)
+        initialLink = derinBaglantiCikar(intent)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -279,38 +259,6 @@ class MainActivity : FlutterActivity() {
                             result.success(link)
                         }
                     }
-                    else -> result.notImplemented()
-                }
-            }
-
-        // ── KART TOKENİZASYON KÖPRÜSÜ ──
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CARD_TOKENIZER_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    // Dart açılışta sorar: adaptör hazır mı?
-                    "ping" -> result.success(CARD_TOKENIZER_READY)
-
-                    "tokenize" -> {
-                        if (!CARD_TOKENIZER_READY) {
-                            // Sahte token ÜRETİLMEZ; açık hata döner.
-                            result.error(
-                                "PROVIDER_NOT_CONFIGURED",
-                                "Ödeme sağlayıcısı SDK adaptörü bağlanmadı.",
-                                null,
-                            )
-                        } else {
-                            // DIŞ SERVİS ENTEGRASYONU BEKLİYOR:
-                            // sağlayıcının Android SDK çağrısı buraya gelir.
-                            // Beklenen dönüş: mapOf("paymentToken" to ...,
-                            //   "masked" to ..., "brand" to ...)
-                            result.error(
-                                "NOT_IMPLEMENTED",
-                                "Sağlayıcı SDK adaptörü henüz uygulanmadı.",
-                                null,
-                            )
-                        }
-                    }
-
                     else -> result.notImplemented()
                 }
             }
@@ -337,7 +285,7 @@ class MainActivity : FlutterActivity() {
         // setIntent: sonradan getIntent() güncel bağlantıyı versin.
         setIntent(intent)
 
-        val link = extractPaymentLink(intent) ?: return
+        val link = derinBaglantiCikar(intent) ?: return
         if (!delivered.add(link)) {
             // Aynı bağlantı daha önce iletildi — yok sayılır.
             Log.i(TAG, "Yinelenen ödeme dönüşü yok sayıldı")
@@ -360,7 +308,7 @@ class MainActivity : FlutterActivity() {
      * Geçersiz/eksik durumlarda null döner ve nedeni loglanır
      * (sessizce yutulmaz).
      */
-    private fun extractPaymentLink(intent: Intent?): String? {
+    private fun derinBaglantiCikar(intent: Intent?): String? {
         if (intent == null) return null
         if (intent.action != Intent.ACTION_VIEW) return null
         val uri: Uri = intent.data ?: return null
@@ -369,21 +317,6 @@ class MainActivity : FlutterActivity() {
             Log.w(TAG, "Beklenmeyen şema yok sayıldı: ${uri.scheme}")
             return null
         }
-        val isPayment = uri.host.equals(HOST_PAYMENT, ignoreCase = true) ||
-            uri.pathSegments.contains(HOST_PAYMENT)
-        if (!isPayment) {
-            Log.w(TAG, "Ödeme dışı derin bağlantı yok sayıldı: ${uri.host}")
-            return null
-        }
-
-        val session = uri.getQueryParameter("session")
-            ?: uri.getQueryParameter("sessionId")
-        if (session.isNullOrBlank()) {
-            // Session yoksa doğrulama yapılamaz — sessizce geçilmez.
-            Log.e(TAG, "Ödeme dönüşünde session kimliği YOK — bağlantı yok sayıldı")
-            return null
-        }
-        // NOT: success/status gibi alanlar bilinçli olarak OKUNMAZ.
         return uri.toString()
     }
     /**

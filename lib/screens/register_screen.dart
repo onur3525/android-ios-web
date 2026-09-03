@@ -1332,12 +1332,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // ⚠ Yalnız ÖRNEK BİÇİM yazar. "Telefon Numaranız"
                     // ifadesi kaldırıldı: satırda zaten telefon ikonu ve
                     // kırmızı zorunluluk yıldızı var, metin tekrar oluyordu.
-                    // ⚠ `+90` ÜLKE KODU KUTUSU KALDIRILDI.
-                    //
-                    // Tek ülkede hizmet verildiği için seçim yoktu;
-                    // dokunulunca yalnız "şimdilik +90" mesajı çıkan
-                    // sahte bir açılır kutuydu. Numara zaten `0` ile
-                    // başlayan yerel biçimde alınıyor.
                     '5XX XXX XX XX *',
                     'assets/svg/ic_phone.svg',
                   ),
@@ -1406,16 +1400,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: _dec('E-posta *', 'assets/svg/ic_mail.svg'),
                   validator: (v) => _kural(_email, v, Validators.email),
                 ),
-                // ⚠ ÖNERİ SATIRI KALDIRILDI.
-                //
-                // "Şunu mu demek istediniz: …@hotmail.com" satırı hem
-                // kullanıcının adresini TAHMİN ediyordu hem de girilen
-                // adresin hangi sağlayıcıya benzediğini ekrana yazarak
-                // omuz üstünden okuyana bilgi sızdırıyordu.
-                //
-                // Yazım hatası artık `Validators.email` tarafından
-                // GENEL bir uyarıyla reddedilir; doğru adresi kullanıcı
-                // kendisi yazar. Profil ekranında da aynı kural geçerli.
                 const SizedBox(height: 12),
 
                 if (!isProvider) ...[
@@ -1700,19 +1684,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // BİRLİKTE gizlenir; sahipsiz "veya" çizgisi kalmaz.
                 //
                 // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ.
-                // ── ⚠ GOOGLE / APPLE İLE GİRİŞ TAMAMEN KALDIRILDI ──
-                //
-                // Ürün kararı: hesap açma ve giriş YALNIZCA kendi
-                // hesap sistemimizle yapılır (telefon/e-posta + şifre,
-                // telefonla girişte SMS OTP).
-                //
-                // ⚠ Bu, ikinci bir yan etki daha yaratır ve LEHİMİZE:
-                // Apple kılavuzu 4.8 "üçüncü taraf giriş kullanan
-                // uygulama" için ek seçenek zorunluluğu getiriyordu;
-                // muafiyet "yalnızca kendi hesap sistemini kullanan"
-                // uygulamalar içindir. Üçüncü taraf girişi kalmayınca
-                // muafiyet DOĞRUDAN uygulanır.
-                //
               ]),
             ),
           ),

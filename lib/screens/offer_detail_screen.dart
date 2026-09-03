@@ -559,13 +559,6 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                         'Teklif seçildi — hizmet veren ile çalışmaya başlayabilirsiniz');
                   },
                 ),
-                // ⚠ "Teklif seçmek ücretsizdir." KALDIRILDI.
-                //
-                // Ücretsizlik şeridi BEDEL ALINAN işlemler içindir
-                // (teklif verme, iletişim açma): kullanıcı para
-                // çıkacak sanmasın diye. Teklif seçmek zaten hiçbir
-                // zaman ücretli olmadı; burada olmayan bir endişeyi
-                // akla getiriyordu.
               ] else if (offer.status == OfferStatus.selected) ...[
                 // ── AYNI DÜĞME, DEĞİŞEN GÖREV ──
                 //
@@ -606,17 +599,6 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                     ),
                   ),
                 ),
-                // ── ⚠ "Yorum yazmak ücretsizdir." KALDIRILDI ──
-                //
-                // Ücretsizlik şeridi bedel alınan işlemler için var
-                // (teklif verme, iletişim açma): kullanıcı para
-                // çıkacak sanmasın diye. Yorum yazmak zaten hiçbir
-                // zaman ücretli olmadı; orada bu cümle olmayan bir
-                // endişeyi akla getiriyordu.
-                //
-                // ⚠ "Yorum Yapıldı" DURUM BİLGİSİ KALIYOR: düğme
-                // kalktığında kullanıcı işin tamamlandığını yalnız
-                // bundan anlıyor.
                 if (reviewed)
                   _UcretsizSerit('Yorum Yapıldı '
                       '(${reviewCtl.byOffer(offer.id)!.stars} puan)'),

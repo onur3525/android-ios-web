@@ -43,19 +43,6 @@ void main() {
           reason: 'değerlendirme yolu da silinmiş');
     });
 
-    // ⚠ "tamamlama sonrası değerlendirme açılır" TESTİ KALDIRILDI.
-    //
-    // Testin dayandığı "İşi Tamamla" düğmesi artık YOK (§11).
-    // Değerlendirmeye giden yol teklif detayındaki "Yorum Yaz"
-    // düğmesidir ve o zaten ayrı testlerle kilitli.
-
-    // ⚠ "seçili teklif yoksa sessizce atlanmaz" TESTİ KALDIRILDI.
-    //
-    // Bu da "İşi Tamamla" bloğunun içindeki davranışı ölçüyordu; blok
-    // kaldırıldığı için dayanağı kalmadı. Seçili teklif zorunluluğu
-    // domain katmanında `_transition` ile korunuyor ve orada
-    // ayrıca kilitli.
-
   });
 
   group('SEÇİLMİŞ TEKLİFTE "İletişimi Aç" ÇIKMAZ', () {
@@ -84,10 +71,6 @@ void main() {
       expect(j, greaterThan(i), reason: 'yorum dalı zincirin sonunda olmalı');
       expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
       expect(teklifDetay.contains("'Yorum Yapıldı "), isTrue);
-      // ⚠ "Yorum yazmak ücretsizdir." KALDIRILDI: ücretsizlik şeridi
-      // BEDEL ALINAN işlemler için var (teklif verme, iletişim açma).
-      // Yorum zaten hiç ücretli olmadı; cümle olmayan bir endişeyi
-      // akla getiriyordu.
       expect(teklifDetay.contains('Yorum yazmak ücretsizdir'), isFalse,
           reason: 'kaldırılan ücretsizlik yazısı geri gelmiş');
       expect(teklifDetay.contains('Teklif seçmek ücretsizdir.'), isFalse,

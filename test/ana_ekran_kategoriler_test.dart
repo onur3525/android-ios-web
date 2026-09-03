@@ -156,11 +156,6 @@ void main() {
     //
     //   ana sayfa   → vitrin: sade tek renk ikon
     //   ilan ekranı → seçim: fotoğraf
-    // ⚠ `kHizliKategoriler` KALDIRILDI (15 Ağu, ürün kararı).
-    //
-    // Ana sayfadaki 12 sabit kategori kısayolu yerini ON ÇATIYA
-    // bıraktı (`kHizmetAlanlari`). Çatı kapsamı ve bütünlüğü artık
-    // `test/hizmet_alanlari_test.dart` içinde denetleniyor.
     test('eski hızlı kategori listesi KALDIRILDI', () {
       final h = _oku('lib/screens/home_screen.dart');
       expect(h.contains('kHizliKategoriler = ['), isFalse,

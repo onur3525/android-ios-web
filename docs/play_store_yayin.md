@@ -91,7 +91,7 @@ numarayı iki kez kabul etmez ve numara geri alınamaz.
 - **Gizlilik politikası** — yayınlanmış bir adreste durmalı
 - **Veri güvenliği formu** — uygulama şunları topluyor:
   telefon numarası, ad-soyad, e-posta, konum (ilçe/mahalle),
-  fotoğraf, ödeme bilgisi (sağlayıcıda saklanır)
+  fotoğraf
 - **Kamera izni gerekçesi** — ilan fotoğrafı çekimi
 - Uygulama kategorisi, ekran görüntüleri, açıklama
 

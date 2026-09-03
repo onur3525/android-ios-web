@@ -1,11 +1,5 @@
 /// TEKLİF DURUMU — nihai dört değer (API sözleşmesi §24).
 ///
-/// ⚠ `withdrawn` ve `cancelled` KALDIRILDI. Teklif geri çekilemez
-/// (§1, Paket 1) ve "iptal" ile "kapandı" ayrı ayrı adlandırılmaz.
-///
-/// ⚠ `expired` İLE `closed` FARKI KORUNUR:
-///   · `expired` → ilanın 30 saati dolduğu için kapanan teklif
-///   · `closed`  → başka bir sistemsel nedenle kapanan teklif
 enum OfferStatus { active, selected, expired, closed }
 
 /// Bir ilana verilen teklif. Bir ilan BİRDEN FAZLA hizmet verenden

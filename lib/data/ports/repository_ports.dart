@@ -148,9 +148,6 @@ abstract class AuthPort extends ChangeNotifier {
 
   /// Kurtarma yetkisiyle yeni şifre belirler. ⚠ Oturum açmaz.
   Future<DomainError?> kurtarmaSifreBelirle(String yetki, String yeniSifre);
-  // ⚠ `requestOtp` KALDIRILDI — challenge üretmeyen generic gönderim
-  // yolu bırakılmaz (C7). Her akış kendi challenge-start metodunu
-  // çağırır.
   Future<DomainError?> switchRole(Role role);
 
   /// İkinci rolü aynı hesaba ekler (eksik rol tamamlama akışı).
@@ -178,11 +175,6 @@ abstract class AuthPort extends ChangeNotifier {
 
   Future<DomainError?> forgotStart(String phone);
   Future<DomainError?> forgotComplete(String phone, String otp, String newPass);
-  /// ⚠ `email` PARAMETRESİ KALDIRILDI.
-  ///
-  /// E-posta yalnız doğrulama bağlantısıyla değişir
-  /// (`epostaDegisimiBaslat`). Bu uçtan göndermek doğrulamayı
-  /// atlatmak olurdu.
   Future<DomainError?> updateProfile({String? name, String? photoPath});
 
   /// E-POSTA DEĞİŞİMİ — yeni adrese doğrulama bağlantısı yollar.
@@ -190,13 +182,6 @@ abstract class AuthPort extends ChangeNotifier {
   /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ; bağlantı tıklanana
   /// kadar eski adres geçerlidir (iş kuralları §4).
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta);
-  // ⚠ `updatePhone(newPhone, otpCode)` KALDIRILDI.
-  //
-  // Telefon değişikliği artık challenge sözleşmesinden geçiyor
-  // (`telefonDegisimiKodGonder` / `telefonDegisimiDogrula`). Eski yol
-  // kodu parametre olarak alıyordu ve doğrulamayı port yapıyordu;
-  // numara da çağıranın alan değerinden geliyordu (Y4 ihlali).
-  /// Hizmet veren platform onay durumu (teklif kapısı için).
   Future<ProviderApprovalState> providerApproval();
 
   /// TEK ADRES: kullanıcının en fazla bir adresi olur. Yalnız güncelleme
@@ -239,15 +224,6 @@ abstract class ListingPort extends ChangeNotifier {
     // ⚠ İSTEĞE BAĞLI: `null` = kullanıcı zaman seçmedi.
     IsZamani? isZamani,
   });
-  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
-  //
-  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
-  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
-  // seçildiği anda iş tamamlanmış sayılır.
-  //
-  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
-  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
-  /// [reason] — kullanıcının seçtiği gerekçe; denetim için taşınır.
   Future<DomainError?> expire(String listingId, {required String actorId});
   Future<DomainError?> delete(String listingId,
       {required String actorId, String? reason});

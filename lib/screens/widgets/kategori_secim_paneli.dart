@@ -48,11 +48,6 @@ class _KategoriSecimPaneliState extends State<KategoriSecimPaneli> {
     super.dispose();
   }
 
-  // ⚠ YEREL `_norm` KALDIRILDI.
-  //
-  // Panel kendi Türkçe normalleştirmesini taşıyordu; artık arama
-  // ortak servisten geçiyor ve normalleştirme de orada tek yerde.
-
   /// Arama sonuçları — `(alt hizmet, ana kategori)`, en fazla 6.
   ///
   /// ── ⚠ ORTAK ARAMA SERVİSİ — KESİN KURAL ──
@@ -302,9 +297,6 @@ class _KategoriSecimPaneliState extends State<KategoriSecimPaneli> {
             ),
 
             // `.mc-chips`
-            // ⚠ İÇ KAYDIRMA KALDIRILDI: dış `ListView` zaten kaydırır;
-            // iç içe kaydırma parmağın hangi listeyi sürükleyeceğini
-            // belirsizleştiriyordu.
             Padding(
                   padding: const EdgeInsets.fromLTRB(18, 10, 18, 4),
                   child: Align(

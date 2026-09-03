@@ -325,15 +325,6 @@ class ApiListingPort extends ListingPort {
     return (listing: l, error: err);
   }
 
-  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
-  //
-  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
-  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
-  // seçildiği anda iş tamamlanmış sayılır.
-  //
-  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
-  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
-
   /// Süre dolumu SUNUCUDA (30 saat zamanlayıcısı) işlenir; istemci tetiklemez.
   @override
   Future<DomainError?> expire(String listingId, {required String actorId}) async =>

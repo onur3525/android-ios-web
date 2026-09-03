@@ -123,9 +123,9 @@ gerçekten sonuçlandığını görmek isteyebilir.
 
 ## 4. Kodda kalan iOS eksikleri
 
-**Ekran koruması yok.** Android'de `FLAG_SECURE` cüzdan, bakiye
-yükleme ve teklif detayında açık. iOS'ta karşılığı yoktur; oradaki
-önizleme karartması ayrı bir iştir ve YAPILMAMIŞTIR.
+**Ekran koruması yok.** Android'de `FLAG_SECURE` teklif detayında
+açık. iOS'ta karşılığı yoktur; oradaki önizleme karartması ayrı bir
+iştir ve YAPILMAMIŞTIR.
 
 **Push bildirim kurulmadı.** APNs anahtarı ve yetkilendirme
 (capability) gerekir.

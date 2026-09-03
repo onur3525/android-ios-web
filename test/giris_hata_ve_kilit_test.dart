@@ -36,7 +36,6 @@ void main() {
     // ⚠ EKRAN İKİ GİRİŞ YOLUNA AYRILDI (hesap modeli kararı):
     // e-posta + şifre · telefon + SMS. Alan sayısı ÜÇ oldu
     // (e-posta, telefon, şifre) ve iş kuralı hatası validator'dan
-    // çıkarılıp form düzeyine taşındı.
 
     test('değer değişince hata temizlenir — ÜÇ alanda da', () {
       // ⚠ SARMALAYICI EKLENDİ: `_degerDegisti` hem eski hatayı

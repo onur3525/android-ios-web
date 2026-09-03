@@ -114,9 +114,6 @@ void main() {
       // ── ÜRÜN KARARI (madde 3) ──
       //
       // Teklif verme ekranından açıklama alanı, karakter sayacı ve
-      // doğrulaması KALDIRILDI; ekranda yalnız teklif fiyatı kalır.
-      // Taraflar ayrıntıları iletişim açıldıktan sonra uygulama içi
-      // mesajlaşmadan konuşur.
       final j = _kod('lib/screens/job_detail_screen.dart');
       expect(j.contains('_noteError'), isFalse,
           reason: 'açıklama doğrulaması geri gelmiş');

@@ -50,12 +50,6 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // ⚠ TEK SEFERLİK OKUMA KALDIRILDI.
-    //
-    // Önceden `_loaded` bayrağıyla adres YALNIZ İLK KARE'de okunuyordu.
-    // Hesap veya adres o anda henüz hazır değilse (oturum geri
-    // yükleniyor, kayıt sonrası adres yeni yazılıyor) alanlar KALICI
-    // OLARAK BOŞ kalıyordu — kayıt sırasında girilen adres Adreslerim'de
     _kayittanDoldur();
     // ── BÖLGE VERİSİ: İLK KAREDEN SONRA ──
     //
@@ -251,8 +245,6 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // aktif ettiğinde liste KENDİLİĞİNDEN büyür ve
                   // kullanıcı seçebilir — ekran kodu değişmez.
                   RefDropdownField(
-                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
-                    // "seçim yapılmadı" bilgisidir.
                     etiket: 'İl',
                     placeholder: 'Seçiniz',
                     zorunlu: true,
@@ -263,8 +255,6 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // kayboldu; kayıt ekranıyla aynı değer.
                   const SizedBox(height: 12),
                   RefDropdownField(
-                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
-                    // "seçim yapılmadı" bilgisidir.
                     etiket: 'İlçe',
                     placeholder: 'Seçiniz',
                     zorunlu: true,
@@ -275,8 +265,6 @@ class _AddressesScreenState extends State<AddressesScreen> {
                   // kayboldu; kayıt ekranıyla aynı değer.
                   const SizedBox(height: 12),
                   RefDropdownField(
-                    // ⚠ Ad ETİKETE taşındı; kutu içindeki metin yalnız
-                    // "seçim yapılmadı" bilgisidir.
                     etiket: 'Mahalle',
                     placeholder: 'Seçiniz',
                     zorunlu: true,

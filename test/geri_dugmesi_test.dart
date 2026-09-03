@@ -7,16 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 ///
 /// ## SÖZLEŞMENİN GEÇMİŞİ
 ///
-/// 1. Ok bir tur 19 ekrandan KALDIRILDI ("gezinme cihazın kendi geri
-///    tuşuyla yapılır"). Android'de doğruydu.
-/// 2. iOS'ta donanım geri tuşu YOKTUR ve kenardan kaydırma jesti de
-///    kapalıdır (`theme.dart` iOS geçişine `HizliGecis` atıyor).
-///    O ekranlarda iPhone kullanıcısı KİLİTLENİYORDU.
-/// 3. Ok bir tur PLATFORMA bağlandı (Android'de yok, iOS/web'de var).
-/// 4. NİHAİ KARAR: platform ayrımı KALDIRILDI — ok HER YERDE çizilir.
-///    Gerekçe: aynı ekranın iki cihazda farklı davranması hem kullanıcı
-///    hem geliştirici tarafında karışıklık üretiyordu.
-///
 String _kod(String p) => const LineSplitter()
     .convert(File(p).readAsStringSync())
     .where((l) => !l.trimLeft().startsWith('//'))

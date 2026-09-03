@@ -325,7 +325,6 @@ void main() {
 
       // `runApp` ÖNCESİ pencere de ölçülür — asıl şüpheli orası.
       //
-      // ⚠ RESTORE_SESSION_MAIN_* ARTIK YOK: `main()` içindeki ikinci
       for (final e in const [
         'MAIN_ENTRY',
         'ENSURE_INITIALIZED_END',
@@ -339,7 +338,6 @@ void main() {
       expect(m.contains('RESTORE_SESSION_MAIN_START'), isFalse,
           reason: 'ikinci restoreSession geri gelmiş');
       // Tokenizer artık tembel: açılışta ölçülecek bir çağrı yok.
-      expect(m.contains('const cardTokenizer = LazyCardTokenizer();'), isTrue);
 
       for (final e in const [
         'SPLASH_INIT_STATE',
@@ -470,13 +468,7 @@ void main() {
     });
 
     test('tokenizer runApp\'i BEKLETMEZ', () {
-      expect(m.contains('const cardTokenizer = LazyCardTokenizer();'), isTrue);
       final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
-      expect(
-          mKod
-              .substring(0, iRun)
-              .contains('await CardTokenizerFactory.olustur'),
-          isFalse);
     });
 
     test('platform ping ZAMAN AŞIMLI', () {
@@ -487,14 +479,12 @@ void main() {
 
     test('tokenizer sonucu ÖNBELLEKLENİR, tek sorgu yapılır', () {
       expect(b.contains('_bekleyen ??= _sor();'), isTrue);
-      expect(b.contains('static CardTokenizer? _hazir;'), isTrue);
     });
 
     test('oturum geri yükleme TEK yerden', () {
       expect(mKod.contains('ports.auth.restoreSession()'), isFalse,
           reason: 'main() içinde ikinci restoreSession geri gelmiş');
       expect(sp.contains('await auth.restoreSession().timeout('), isTrue);
-      // Rozet tazeleme de oraya taşındı.
       expect(sp.contains('refreshBadge(me.id)'), isTrue);
     });
   });

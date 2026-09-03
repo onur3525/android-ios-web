@@ -40,13 +40,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     // Ürün kararı: PUAN ZORUNLU, YORUM SERBEST. Kullanıcı yalnız
     // yıldız verip gönderebilir.
     //
-    // ⚠ ASGARİ KELİME KURALI KALDIRILDI. Bir süre "yazıldıysa en az
-    // 5 kelime olsun" kuralı vardı; kısa ama geçerli yorumları
-    // ("işini iyi yaptı") engelliyordu ve kullanıcıyı yorum
-    // yazmaktan caydırıyordu. Uzunluk denetimi YOK.
-    //
-    // ⚠ Üst sınır (`kYorumMaxKarakter`) alanın kendisinde duruyor;
-    // kaldırılan yalnız ALT sınırdır.
     final yorum = _text.text.trim();
     setState(() { _busy = true; _error = null; });
     final me = context.read<AuthController>().currentAccount!;

@@ -25,16 +25,6 @@ import 'package:flutter/widgets.dart';
 /// imleç yazarken yerinden oynamaz.
 /// AD/SOYAD BİÇİMİ — YAZARKEN DEĞİL, ALANDAN ÇIKINCA.
 ///
-/// ⚠ ESKİ `AdBicimiFormatter` KALDIRILDI.
-///
-/// Her tuşta metni yeniden yazıyordu: `"Onur"` içinde baştaki `O`
-/// silinince kalan `"nur"` anında `"Nur"` yapılıyordu. Metin
-/// kullanıcının yazdığından farklı olunca Android IME bileşim
-/// durumunu sıfırlıyor; hızlı silmede tuşlar kayboluyor veya geç
-/// işleniyordu.
-///
-/// Artık kullanıcı yazarken metnine karışılmaz; biçim alandan
-/// ÇIKILDIĞINDA bir kez uygulanır. Sonuç aynı, yazma ve silme akıcı.
 
 /// Alandan çıkıldığında ad/soyad biçimini uygular.
 ///

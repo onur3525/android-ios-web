@@ -270,9 +270,6 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           klavye: TextInputType.number,
           // ⚠ TEK KURAL KAYNAĞI — bkz. `TelefonBicimlendirici`.
           bicim: const [TelefonBicimlendirici()],
-          // ⚠ `+90` kutusu KALDIRILDI (bkz. `register_screen` notu).
-          // İşlevsiz bir açılır kutuydu; numara `0` ile başlayan yerel
-          // biçimde alınıyor.
           yerTutucu: '5XX XXX XX XX'),
 
       // ── İL / İLÇE / MAHALLE ──

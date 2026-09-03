@@ -24,7 +24,6 @@ import '../repositories/review_repository.dart';
 import 'repository_ports.dart';
 
 /// MOCK PORT UYGULAMALARI — bellek içi repository'leri sarar.
-/// Buradaki iş kuralları, controller'lardan BİREBİR taşındı; hiçbir kural
 
 class MockAuthPort extends AuthPort {
   final AuthRepository repo;
@@ -384,31 +383,12 @@ class MockListingPort extends ListingPort {
     // ⚠ DENETİM GEÇİŞTEN ÖNCE yapılır: hata dönerse ilanın durumu
     // DEĞİŞMEZ. Sonradan kontrol etmek, ilanı bozuk duruma sokup
     // ardından hata göstermek olurdu.
-    // ⚠ "SEÇİLİ TEKLİF GEREKTİREN DURUM" KAPISI KALDIRILDI.
-    //
-    // `providerSelected` ve `completed` durumları artık YOK; nihai
-    // durumların hiçbiri seçilmiş teklif gerektirmiyor (§24).
-    // Tamamlanmışlık `Listing.isTamamlanmisIs` ile türetiliyor.
 
     listings.setStatus(id, to);
     return null;
   }
 
-  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
-  //
-  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
-  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
-  // seçildiği anda iş tamamlanmış sayılır.
-  //
-  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
-  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
-
   /// İptal: açılmamış blokeler iade edilir; completed İPTAL EDİLEMEZ.
-  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir.
-  //
-  // İkisi de aynı işi yapıyordu: teklifleri kapat, açılmamış
-  // blokeleri iade et, ilanı `userDeleted` yap. Kanonik uç
-  // `DELETE /listings/{id}` olarak belirlendi.
 
   /// Süre dolumu: yalnız open ilanlar için. completed DOKUNULMAZ.
   @override
@@ -502,6 +482,17 @@ class MockOfferPort extends OfferPort {
     }
     if (myOfferFor(listingId, providerId) != null) {
       return const DuplicateOfferError();
+    }
+    // ⚠ İLAN BAŞINA EN FAZLA `ilanBasinaMaxTeklif` TEKLİF.
+    //
+    // Sayım YALNIZ açık teklifleri kapsar: kapanmış ya da süresi
+    // dolmuş teklifler kontenjanı işgal etmez.
+    final acikTeklif = offers
+        .forListing(listingId)
+        .where((o) => o.status == OfferStatus.active)
+        .length;
+    if (acikTeklif >= DomainConfig.ilanBasinaMaxTeklif) {
+      return const OfferLimitReachedError();
     }
     // ── ⚠ TEKLİF VERME ÜCRETSİZ VE SINIRSIZ (yeni iş modeli) ──
     //
@@ -602,13 +593,6 @@ class MockOfferPort extends OfferPort {
 
   /// KURAL: Yalnız KENDİ AKTİF teklifi geri çekilebilir; açılmış ücret
 
-
-  // ⚠ `_refundIfUnconsumed` KALDIRILDI (ücretsiz model).
-  //
-  // Teklif verilirken bloke YAPILMADIĞI için `escrowBlocked` daima
-  // `false`tu; iade mantığı hiçbir zaman çalışmayacaktı. Seçim, süre
-  // dolumu ve admin kaldırma yollarında yalnız TEKLİF DURUMU
-  // güncellenir — bu davranış korundu.
 
   /// İlan iptal/silme/süre dolumunda çağrılır (yalnız MockListingPort).
   /// İlanın açık tekliflerini kapatır ve açılmamış blokeleri iade eder.

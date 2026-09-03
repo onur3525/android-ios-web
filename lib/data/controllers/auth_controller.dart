@@ -54,11 +54,6 @@ class AuthController extends BaseController {
     return err?.message;
   }
 
-  // ⚠ `googleLogin` KALDIRILDI — üçüncü taraf girişi yok.
-  //
-  // Giriş yalnızca kendi hesap sistemimizle yapılır: telefon/e-posta
-  // + şifre, telefonla girişte SMS OTP.
-
 
   Future<({Account? account, DomainError? error})> register({
     required String phone,
@@ -148,14 +143,6 @@ class AuthController extends BaseController {
         () => _auth.kurtarmaSifreBelirle(yetki, yeniSifre));
     return err?.message;
   }
-
-  // ⚠ `requestOtp` KALDIRILDI.
-  //
-  // Generic yol YALNIZ SMS gönderiyordu, yeni challenge ÜRETMİYORDU:
-  // kullanıcı yeni kod alıyor ama ekran ESKİ challenge'ı doğrulamaya
-  // çalışıyordu — C7 gereği eski challenge iptal edildiği için
-  // hiçbir kod çalışmazdı. Yeniden gönderim artık her akışın kendi
-  // challenge-start metodudur.
 
   Future<DomainError?> switchRole(Role role) =>
       runAction('switchRole', () => _auth.switchRole(role));

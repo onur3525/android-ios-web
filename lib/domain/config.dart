@@ -16,18 +16,19 @@ const int kMesajMaxLength = 1000;
 const int kMinAciklamaKelime = 5;
 
 abstract final class DomainConfig {
+  /// Bir ilana verilebilecek EN FAZLA teklif sayısı.
+  ///
+  /// ⚠ Bu bir ÜCRET ya da hizmet veren kotası DEĞİLDİR: ilan sahibi
+  /// yönetilebilir sayıda teklif görsün diye konmuş ürün kuralıdır.
+  /// Hizmet verenin kaç ilana teklif verebileceği SINIRSIZDIR.
+  static const int ilanBasinaMaxTeklif = 3;
+
 
   // ── ⚠ YORUM KURALLARI (API sözleşmesi §14) ──
   //
   // Belge HTML prototipine ÜSTÜNDÜR (§31). Prototipte `maxlength=500`
   // yazıyordu; sözleşme 1000 diyor. Asgari kelime kuralı prototipte
   // HİÇ YOKTU.
-  // ⚠ `kYorumMinKelime` KALDIRILDI (ürün kararı).
-  //
-  // Yorum İSTEĞE BAĞLIDIR ve alt uzunluk sınırı YOKTUR. Yalnız PUAN
-  // zorunludur. Sınır, kısa ama geçerli yorumları engelliyordu.
-  //
-  // ⚠ Üst sınır aşağıda duruyor — kaldırılan yalnız alt sınır.
   static const int kYorumMaxKarakter = 1000;
 
   /// ⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14, kabul testi 15).
@@ -53,10 +54,6 @@ abstract final class DomainConfig {
   static const String shareText =
       'HizmetCep ile İzmir\'de güvenilir ustalara ücretsiz ilan verin, '
       'dakikalar içinde teklif alın! İndirmek için: https://hizmetcep.app';
-
-  // Mağaza bağlantıları buradan KALDIRILDI.
-  // Gerçek platform kimlikleri data/store_links.dart içindedir ve
-  // --dart-define ile geçilebilir (ANDROID_PACKAGE / IOS_APP_STORE_ID).
 
   /// İlan yayın süresi: her ilan yayınlandığı andan itibaren 30 SAAT aktiftir
   /// (expiresAt = createdAt + listingLifetime).

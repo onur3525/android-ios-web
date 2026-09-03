@@ -71,8 +71,6 @@ class _JobsScreenState extends State<JobsScreen> {
         baslik: 'Sırala',
         // ⚠ SEÇENEKLER SEKMEYE GÖRE DEĞİŞİR.
         //
-        // Sekmeler alt bardan üst segmente taşındığı için ölçüt artık
-        // `widget.kazandigim` yerine `_jobsTab` ile belirlenir; aksi
         secenekler: _jobsTab ? _kIsSiralama : _kKazandigimSiralama,
         secili: _jobsTab ? _sort : _kazSort,
         onSec: (v) => setState(() {
@@ -650,7 +648,6 @@ class _JobsScreenState extends State<JobsScreen> {
                   // Referans `.cc-badge`: "Henüz teklif verilmedi" /
                   // "N teklif verildi". Sağlayıcı, ilana kaç kişinin
                   // teklif verdiğini görür.
-                  // ⚠ TEKLİF ROZETİ SAĞ ÜST KÖŞEYE TAŞINDI (aşağıda).
                   const SizedBox(height: 7),
                   // ── ⚠ HİZMET ZAMANI ──
                   //
@@ -743,12 +740,6 @@ class _TeklifRozeti extends StatelessWidget {
   }
 }
 
-
-// ⚠ `_AracButonu` KALDIRILDI.
-//
-// Araç çubuğu hizmet alan ekranıyla aynı bileşenlere geçti
-// (`RefListCount` + `RefPillButton`); bu yerel kopya artık
-// çağrılmıyordu.
 
 
 /// SAĞLAYICI SIRALAMA SEÇENEKLERİ — `(anahtar, başlık, açıklama, ikon)`

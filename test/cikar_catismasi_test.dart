@@ -115,9 +115,6 @@ void main() {
       final c = _kod('lib/screens/create_listing_screen.dart');
       expect(c.contains('void _kategoriSec(String ad)'), isTrue);
       expect(c.contains('catisanKategori('), isTrue);
-      // ⚠ IZGARA KALDIRILDI (15 Ağu): kart tıklaması yok, seçim
-      // yalnız arama önerisinden geliyor. Kural SEÇİM ANINDA hâlâ
-      // uygulanıyor — `_kategoriSec` tek giriş noktası.
       expect(c.contains('onTap: () => _kategoriSec(c)'), isFalse,
           reason: 'kart ızgarası geri gelmiş');
       expect(c.contains('_kategoriSec(altHizmet ?? kategori)'), isTrue);

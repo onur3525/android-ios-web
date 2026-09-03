@@ -50,22 +50,7 @@ class ListingController extends BaseController {
     return result;
   }
 
-  // ⚠ `startWork` / `completeWork` KALDIRILDI (API sözleşmesi §11).
-  //
-  // Nihai akış: İletişimi Aç → Teklifi Seç → Yorum Yap. Ayrı bir
-  // "İşi Başlat" ya da "İşi Tamamla" aşaması YOKTUR; teklif
-  // seçildiği anda iş tamamlanmış sayılır.
-  //
-  // ⚠ Bu paket ENUM GÖÇÜ DEĞİLDİR: `ListingStatus.completed` ve
-  // `providerSelected` yerinde duruyor. Nihai enum göçü Paket 2'de.
-
   /// ⚠ [reason] silme/iptal GEREKÇESİDİR ve yönetime iletilir.
-  // ⚠ `cancel` KALDIRILDI — tek kanonik silme `delete`tir.
-  //
-  // İki uç aynı işi yapıyordu (`POST /listings/{id}/cancel` ve
-  // `DELETE /listings/{id}`). Kanonik uç DELETE olarak belirlendi.
-  // ⚠ `cancel` adında yeni bir durum ÜRETİLMEDİ ve eski `cancelled`
-  // durumu GERİ GETİRİLMEDİ: kullanıcı silmesi `USER_DELETED`tır.
 
   Future<DomainError?> expire(String listingId, {required String actorId}) =>
       runAction('listing:expire:$listingId',

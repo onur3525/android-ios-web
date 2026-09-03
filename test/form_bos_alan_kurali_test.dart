@@ -80,10 +80,6 @@ void main() {
     });
 
     test('kayıt formunda boş alan YALNIZ gönderimde uyarır', () {
-      // ⚠ ESKİ KURAL KALDIRILDI. Kayıt formu iki durumda daha
-      // uyarıyordu: alan terk edilmişse ya da SONRASI doldurulmuşsa
-      // (atlanmış alan). Yeni ürün kuralı bunu yasakladı; eksik alan
-      // artık uyarıyla değil DÜĞMEYİ PASİF TUTARAK bildiriliyor.
       final r = _kod('lib/screens/register_screen.dart');
       expect(
           r.contains(

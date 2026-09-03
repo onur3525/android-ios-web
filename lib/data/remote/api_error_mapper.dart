@@ -59,6 +59,8 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return const ValidationError('Ücretsiz iletişim hakkınız kalmadı');
     case 'OFFER_ALREADY_EXISTS':
       return const DuplicateOfferError();
+    case 'OFFER_LIMIT_REACHED':
+      return const OfferLimitReachedError();
     case 'COMMUNICATION_ALREADY_OPEN':
       // ⚠ HATA DEĞİL, İDEMPOTENT SONUÇ (§10).
       //

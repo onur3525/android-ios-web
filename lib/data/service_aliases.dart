@@ -96,12 +96,6 @@ String aliasNormalize(String s) {
 
 /// ⚠ TEK KAYNAK. Ekranlar kendi alias listesini yazmaz, bunu çağırır.
 const List<ServiceAlias> kServiceAliases = [
-  // ⚠ ARTIK GERÇEK HİZMET OLAN ALIAS KAYITLARI KALDIRILDI.
-  //
-  // Katalog genişletmesiyle bu adlar kanonik hizmet oldu; alias
-  // olarak durmaları kAliasDizini'nde çakışma üretirdi.
-  // Kaldırılan: 14 kayıt.
-  // ── Temizlik Hizmetleri ──
   ServiceAlias('Ofis ve İşyeri Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),
   ServiceAlias('İşyeri Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),
   ServiceAlias('Dükkan Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),

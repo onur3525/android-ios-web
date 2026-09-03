@@ -210,10 +210,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     // ⚠ Zorunlu alan — yıldız kutunun içinde çizilir.
                     zorunlu: true,
                     alanAnahtari: _mevcutKey,
-                    // ⚠ ÜÇ ALANI BİRDEN DOĞRULAYAN `onChanged` KALDIRILDI:
-                    // tek alana bir karakter yazmak diğer iki satırı da
-                    // kırmızıya boyuyordu. Alanlar arası bağ artık
-                    // `AutovalidateMode.always` ile kendiliğinden kurulur.
                     onChanged: (_) => setState(() {}),
                     controller: _cur,
                     focusNode: _f_cur,

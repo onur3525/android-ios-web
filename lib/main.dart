@@ -13,6 +13,7 @@ import 'screens/legal_screen.dart';
 import 'screens/jobs_screen.dart';
 import 'screens/my_areas_screen.dart';
 import 'screens/my_categories_screen.dart';
+import 'screens/find_provider_screen.dart';
 import 'screens/my_listings_screen.dart';
 import 'screens/my_reviews_screen.dart';
 import 'screens/notifications_screen.dart';
@@ -26,6 +27,9 @@ import 'core/theme.dart';
 import 'data/controllers/auth_controller.dart';
 import 'data/controllers/chat_controller.dart';
 import 'data/controllers/contact_controller.dart';
+import 'data/controllers/teklif_talebi_controller.dart';
+import 'data/ports/teklif_talebi_port.dart';
+import 'data/repositories/teklif_talebi_repository.dart';
 import 'data/controllers/listing_controller.dart';
 import 'data/controllers/notification_controller.dart';
 import 'data/controllers/offer_controller.dart';
@@ -67,7 +71,6 @@ import 'screens/role_select_screen.dart';
 import 'data/controllers/region_controller.dart';
 import 'data/remote/api/region_api.dart';
 import 'screens/splash_screen.dart';
-import 'data/services/card_tokenization_bridge.dart';
 import 'screens/prelogin_listing_route.dart';
 import 'data/controllers/pending_listing_controller.dart';
 import 'data/repositories/pending_listing_store.dart';
@@ -88,10 +91,6 @@ class AppPorts {
 
   /// Bölge verisi (şehir/ilçe/mahalle) — API modunda sunucudan gelir.
   final RegionPort regions;
-
-  // ⚠ `freeRights` ve `savedCards` portları KALDIRILDI (ücretsiz
-  // model): teklif hakkı kotası ve kayıtlı kart kavramları ürün
-  // kapsamından çıktı.
 
   /// HTTP İSTEMCİSİ.
   ///
@@ -214,8 +213,7 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
 Future<void> main() async {
   BootLog.olay('MAIN_ENTRY');
 
-  // Platform kanalı çağrılarından (CardTokenizerFactory) ÖNCE
-  // binding hazır olmalıdır.
+  // Platform kanalı çağrılarından ÖNCE binding hazır olmalıdır.
   WidgetsFlutterBinding.ensureInitialized();
   BootLog.olay('ENSURE_INITIALIZED_END');
 
@@ -238,6 +236,14 @@ Future<void> main() async {
     onSessionExpired: () => navKey.currentState
         ?.pushNamedAndRemoveUntil('/home', (route) => false),
   );
+
+  // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — TEK ÖRNEKLEME ──
+  //
+  // Öteki portlarla AYNI kural: burada BİR KEZ kurulur, tüm ekranlar
+  // aynı örneği paylaşır. `AppPorts`/`buildPorts()` DEĞİŞMEDİ; bu
+  // yeni özellik kendi bağımsız zincirini taşır.
+  final teklifTalebiPort =
+      MockTeklifTalebiPort(TeklifTalebiRepository());
   BootLog.olay('BUILD_PORTS_END');
 
   // İLAN SÜRESİ KURALI — yalnız mock modda istemcide işlenir.
@@ -246,40 +252,6 @@ Future<void> main() async {
     expiry.sweep();
     Timer.periodic(const Duration(minutes: 1), (_) => expiry.sweep());
   }
-
-  // Açılışta saklı oturum varsa profil ve aktif rol backend'den alınır.
-  // ── OTURUM GERİ YÜKLEME TEK YERDEN ──
-  //
-  // ⚠ Burada İKİNCİ bir `restoreSession()` çağrısı vardı. Aynı iş
-  // `SplashScreen._boot()` içinde de yapılıyordu; ikisi paralel
-  // koşuyordu. Mock modda gövde boş olduğu için zararsızdı ama
-  // GERÇEK API modunda iki ayrı jeton yenileme turu ve yarış durumu
-  // demekti (hangisinin sonucu kalacağı belirsiz).
-  //
-  // Otorite artık SPLASH'tadır: orada zaman aşımı bütçesi var ve
-  // açılış kararı doğrudan sonucuna bağlı. Bildirim rozetinin
-  // tazelenmesi de oraya taşındı.
-  //
-  // ⚠ DAVRANIŞ AYNI: oturum yine geri yükleniyor, rozet yine
-  // tazeleniyor — yalnız tek kez.
-
-  // ── ⚠ ÖDEME DÖNÜŞ BAĞLANTISI KALDIRILDI ──
-  //
-  // Soğuk açılışta ödeme dönüşü algılanıp bakiye yükleme ekranına
-
-  // ── KART TOKENİZASYON KÖPRÜSÜ ──
-  // Yerel SDK adaptörü bağlıysa gerçek tokenizer, değilse
-  // `UnconfiguredCardTokenizer` döner. Ekran kodu bu seçimi BİLMEZ.
-  // ── KART TOKENİZASYONU ARTIK AÇILIŞI BEKLETMİYOR ──
-  //
-  // ⚠ Burada `await CardTokenizerFactory.olustur()` vardı: ana ekranın
-  // ilk karesi, hiç kart ekranı açılmasa bile bir platform kanalı
-  // turunun bitmesini bekliyordu ve o çağrının ZAMAN AŞIMI YOKTU.
-  //
-  // `LazyCardTokenizer` ekranların `context.read<CardTokenizer>()`
-  // sözleşmesini korur; gerçek tokenizer ilk `tokenize` çağrısında
-  // hazırlanır.
-  const cardTokenizer = LazyCardTokenizer();
 
   BootLog.olay('RUN_APP_CALL');
   runApp(MultiProvider(
@@ -317,12 +289,19 @@ Future<void> main() async {
       ChangeNotifierProvider(
           create: (_) => ContactController(ports.contact, ports.offers)),
       ChangeNotifierProvider(create: (_) => ChatController(ports.chat)),
+      // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — YENİ VE AYRI ÖZELLİK ──
+      //
+      // `AppPorts`/`buildPorts()`'a DOKUNULMADI: bu özelliğin
+      // deposu/portu/denetleyicisi, öteki portlarla AYNI TEK
+      // ÖRNEKLEME kuralına uyarak (bkz. `teklifTalebiPort` yukarıda)
+      // burada sabitlenmiş nesneleri kullanır. Gerçek backend
+      // geldiğinde yalnız `MockTeklifTalebiPort`'un yerine bir API
+      // portu geçecek.
+      ChangeNotifierProvider.value(value: teklifTalebiPort),
+      ChangeNotifierProvider(
+          create: (_) => TeklifTalebiController(teklifTalebiPort)),
       ChangeNotifierProvider(create: (_) => ReviewController(ports.reviews)),
       ChangeNotifierProvider(create: (_) => NotificationController(ports.notifications)),
-      // ÜCRETSİZ HAK: yalnız Hizmet Veren görünümünde okunur.
-      // KART TOKENİZASYON: sağlayıcı SDK'sı bağlandığında burada
-      // gerçek uygulama döner; widget dosyaları DEĞİŞMEZ.
-      Provider<CardTokenizer>.value(value: cardTokenizer),
     ],
     child: HizmetCepApp(navigatorKey: navKey),
   ));
@@ -622,15 +601,6 @@ class HizmetCepApp extends StatelessWidget {
         navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: HC.theme(),
-        // ⚠ SPLASH SARMALAYICISI KALDIRILDI.
-        //
-        // Burada bir tur `IlkKareBildirimi` duruyordu; native splash'ı
-        // bırakma sinyalini kökten göndermesi bekleniyordu. Çalışmadı:
-        // sinyal `static bool` değişimine bağlıydı ve static alan
-        // değişimi hiçbir Element'i kirletmez — `Navigator` da yalnız
-        // KENDİ alt ağacını yeniden inşa eder, kökteki sarmalayıcıyı
-        // değil. Sinyal artık `SplashScreen` içinde, navigasyondan
-        // SONRA kaydedilen post-frame geri çağrısından gider.
         builder: (context, child) =>
             OfflineBanner(child: child ?? const SizedBox.shrink()),
         home: const SplashScreen(),
@@ -663,15 +633,10 @@ class HizmetCepApp extends StatelessWidget {
           '/provider/jobs': (_) =>
               RoleGuard.provider(builder: (_) => const JobsScreen()),
           // Aynı ekran, "Kazandığım işler" listesiyle açılır.
-          // Segment sekmesi alt bara taşındığı için ayrı route gerekir.
           '/provider/won': (_) => RoleGuard.provider(
               builder: (_) => const JobsScreen(kazandigim: true)),
           '/provider/status': (_) =>
               RoleGuard.provider(builder: (_) => const ProviderStatusScreen()),
-          // ⚠ ÜCRETLENDİRME KALDIRILDI (yeni iş modeli).
-          //
-          // HizmetCep hem hizmet alan hem hizmet veren için TAMAMEN
-          // ÜCRETSİZDİR. Fatura, cüzdan ve bakiye yükleme rotaları
           '/provider/reviews': (_) =>
               RoleGuard.provider(builder: (_) => const MyReviewsScreen()),
           '/provider/categories': (_) =>
@@ -682,6 +647,10 @@ class HizmetCepApp extends StatelessWidget {
           // ── YALNIZ MÜŞTERİ ──
           '/customer/listings': (_) =>
               RoleGuard.customer(builder: (_) => const MyListingsScreen()),
+          // ⚠ "BUL" AKIŞI 1. AŞAMA — hizmet arayıp hizmet veren bulma.
+          // Tarama (aşama 2) ve sonuç (aşama 3) ekranları henüz YOK.
+          '/customer/find-provider': (_) =>
+              RoleGuard.customer(builder: (_) => const FindProviderScreen()),
           // ⚠ PUBLIC (kayıt öncesi) — yalnız TASLAK üretir, yayın YAPMAZ.
           // `/customer/new-listing` korumalı KALIR; bu route onu
           // bypass etmez (bkz. prelogin_listing_route.dart).

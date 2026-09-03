@@ -89,11 +89,6 @@ void main() {
       expect(cre.contains("'Kategori Seç',"), isTrue);
       expect(cre.contains("'Açıklama',"), isTrue);
       expect(cre.contains("'Önizle & Yayınla'"), isTrue);
-      // ⚠ SAĞ ÜSTTEKİ "Adım x/3" METNİ KALDIRILDI (17 Ağu).
-      //
-      // Adım bilgisi `RefStepper` göstergesinde zaten var; metin aynı
-      // şeyi ikinci kez söylüyordu. Gösterge KALDI, yalnız tekrar
-      // eden yazı gitti.
       expect(cre.contains("'Adım \$_step/3'"), isFalse,
           reason: 'kaldırılan adım metni geri gelmiş');
       expect(cre.contains('RefStepper('), isTrue,

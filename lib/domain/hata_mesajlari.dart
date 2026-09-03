@@ -64,6 +64,12 @@ class HataBilgisi {
 /// Yeni bir hata türü eklendiğinde derleyici burada uyarır.
 HataBilgisi hataBilgisi(DomainError hata) {
   switch (hata) {
+      return const HataBilgisi(
+        baslik: 'Kart bakiyeniz yetersiz',
+        aciklama: 'Bakiyeniz değişmedi. Farklı bir kartla deneyebilirsiniz.',
+        eylem: 'Tekrar dene',
+        bicim: HataBicimi.tamEkran,
+      );
     case NetworkError():
       return const HataBilgisi(
         baslik: 'Sunucuya ulaşılamıyor',
@@ -112,6 +118,7 @@ HataBilgisi hataBilgisi(DomainError hata) {
     // metin domain katmanından gelir (backend'in Türkçe mesajı).
     case ValidationError():
     case InvalidStateError():
+    case OfferLimitReachedError():
     case DuplicateOfferError():
     case OwnListingOfferError():
     // ── ⚠ İLETİŞİM ZATEN AÇIK — BAŞARISIZLIK DEĞİL ──

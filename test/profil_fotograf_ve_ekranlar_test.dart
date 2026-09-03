@@ -112,9 +112,6 @@ void main() {
     });
 
     test('dört alan yerinde kaldı', () {
-      // ⚠ ETİKETLER KALDIRILDI (16 Ağu): zorunluluk artık alanın
-      // İÇİNDE, yer tutucunun sonundaki yıldızla gösteriliyor.
-      // Alanın kimliği de yer tutucudan okunuyor.
       for (final a in const ['Ad', 'Soyad', 'E-posta']) {
         expect(p.contains("hint: '$a'"), isTrue, reason: a);
       }

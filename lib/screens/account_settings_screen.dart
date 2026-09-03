@@ -201,10 +201,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   /// şifre doğrulaması → son kesin onay. Buraya gelindiğinde karar
   /// verilmiş demektir.
   ///
-  /// ⚠ ESKİ METİN KALDIRILDI: "kalan bakiyeniz iade edilmez",
-  /// "teklif ve işlem geçmişiniz korunur", "anonimleştirilir"
-  /// maddeleri artık gösterilmiyor — bakiye ifadesi müşteri
-  /// rolünde karşılığı olmayan bir varsayımdı.
   Future<void> _requestDeletion() async {
     setState(() {
       _busy = true;
@@ -220,20 +216,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         return;
       }
       setState(() => _busy = false);
-      // ── ⚠ SİLME SONRASI UYARI KALDIRILDI ──
-      //
-      // Burada "Hesap silme işleminiz alındı. Hesabınız, talebinizden
-      // itibaren 30 gün içinde kalıcı olarak silinecektir." uyarısı
-      // gösteriliyordu.
-      //
-      // Ürün kararı: bu uyarı GÖSTERİLMEZ. Kullanıcı zaten üç aşamalı
-      // bir onaydan (bilgilendirme → şifre doğrulama → kesin onay)
-      // geçti; işlem bittiğinde oturum kapanıp giriş ekranına
-      // dönülüyor ve sonucu oradan anlıyor.
-      //
-      // ⚠ SİLME AKIŞI DEĞİŞMEDİ: `requestDeletion` çağrısı, oturum
-      // kapatma ve yönlendirme aynen duruyor — kaldırılan yalnız
-      // ekranda beliren yazıdır.
 
       // ── OTURUM KAPATILIR ──
       //
@@ -850,14 +832,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               // ── ⚠ ORTAK FORM STANDARDI ──
               //
               // İki ihlal vardı:
-              //   1. Yanlış şifre uyarısı, alan SİLİNDİKTEN sonra da
-              //      ekranda kalıyordu.
-              //   2. Alan boşken düğmeye basılabiliyor ve "Şifrenizi
-              //      giriniz" uyarısı çıkıyordu — oysa kural: boş
-              //      alanda uyarı YOK, düğme PASİF.
-              //
-              // Değer değişince uyarı düşer; düğme doluluk denetimine
-              // bağlanır (aşağıda).
               ValueListenableBuilder<String?>(
                 valueListenable: hataNot,
                 builder: (_, hata, __) => TextField(
@@ -966,9 +940,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       size: RF.s15, weight: RF.w800, color: RC.text)),
             ),
           ]),
-          // ⚠ Açıklama satırı KALDIRILDI: kart yüksekliğini
-          // diğerlerinden ayırıyordu ve her açılışta okunması gereken
-          // bir bilgi değildi.
           const SizedBox(height: 8),
           _bildirimSatiri('Yeni teklifler', acc.bildirimTeklif,
               (v) => auth.setNotificationPrefs(teklif: v)),
@@ -1033,12 +1004,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ],
         ),
       );
-
-  // ⚠ `_card` KALDIRILDI.
-  //
-  // Dondurma ve silme artık `_SatirKart` kullanıyor; uzun
-  // açıklama ve düğme alt panele taşındı. Bu yardımcı
-  // çağrılmaz oldu.
 
   Widget _requestRow(Map<String, dynamic> r) {
     final kind = r['kind'] == 'FREEZE' ? 'Dondurma' : 'Silme talebi';

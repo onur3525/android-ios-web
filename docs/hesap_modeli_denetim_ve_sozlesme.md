@@ -24,7 +24,6 @@ bağlantı noktalarının **tamamı** userId taşıyor:
 | İlan | `ownerId` | `me.id` (create_listing_screen) |
 | Teklif | `providerId` | `me.id` (job_detail_screen) |
 | Değerlendirme | `providerId` / `authorId` | hesap id |
-| Cüzdan / ledger | hesap id | wallet_repository |
 | Sohbet | katılımcı id | chat |
 
 ⚠ Telefonla ilişkilendirilen **hiçbir** kayıt bulamadım. Bu, kararın
@@ -293,7 +292,7 @@ güvenlik kararı vermez (bkz. C5).
 
 | Alan | Rol |
 |---|---|
-| `listingId` / `id` (UUID) | teknik ana kimlik; **tüm ilişkiler** (teklif, mesaj, ödeme, şikâyet) bunun üzerinden |
+| `listingId` / `id` (UUID) | teknik ana kimlik; **tüm ilişkiler** (teklif, mesaj, şikâyet) bunun üzerinden |
 | `ilanNo` | kullanıcı/hizmet veren/admin/destek için okunabilir referans |
 
 **N1 — ÜRETİM OTORİTESİ BACKEND.** İstemci numara üretmez.

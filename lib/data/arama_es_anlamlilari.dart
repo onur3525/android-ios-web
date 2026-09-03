@@ -171,7 +171,6 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'boru onarımı', 'su tamiri',
     'boru patladı', 'boru tamiri', 'sızdıran boru'
   ],
-  // ⚠ `Su Arıtma Servisi` Isıtma'dan buraya TAŞINDI.
   'Su Arıtma Servisi': ['su arıtma', 'filtre değişimi', 'arıtma cihazı',
     'su filtresi', 'su arıtma servisi',
     'arıtma filtresi değişimi', 'su arıtma bakımı'
@@ -417,7 +416,6 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'kurutma makinesi ısıtmıyor', 'kurutucu arızası',
     'kurutma makinesi arızası'
   ],
-  // ⚠ `Aspiratör Tamiri` Isıtma'dan buraya TAŞINDI.
   'Aspiratör Tamiri': ['aspiratör', 'davlumbaz', 'davlumbaz çekmiyor',
     'aspiratör tamiri', 'davlumbaz tamiri',
     'aspiratör çekmiyor', 'davlumbaz montajı'

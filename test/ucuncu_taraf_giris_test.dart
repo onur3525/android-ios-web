@@ -2,11 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// ÜÇÜNCÜ TARAF GİRİŞİ TAMAMEN KALDIRILDI
-///
-/// ⚠ Ürün kararı: hesap açma ve giriş YALNIZCA kendi hesap
-/// sistemimizle yapılır — telefon/e-posta + şifre, telefonla girişte
-/// SMS OTP.
 String _kodu(String yol) => File(yol)
     .readAsStringSync()
     .split('\n')

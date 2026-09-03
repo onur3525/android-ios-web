@@ -15,18 +15,6 @@ const List<String> kIzmirDistricts = [
 // ═══════════════════════════════════════════════════════════════
 // KATEGORİ VERİSİ — TEK KAYNAK: `category_tree.dart`
 //
-// ⚠ Eski elle yazılmış 7 kategori / 30 alt hizmet listesi KALDIRILDI.
-// Kategori ve alt hizmet adları `category_tree.dart` içindeki
-// `kCategoryTree` sabitinden gelir (63 kategori, 640 alt hizmet).
-//
-// ⚠ KAYNAK HTML DEĞİLDİR: katalog bir tur referans HTML ağacından
-// (34/165) türetilmişti, artık ondan BAĞIMSIZDIR ve ürün kararıyla
-// büyür. HTML yalnız UI/UX referansı olmaya devam eder.
-//
-// Böylece ana sayfa, arama, ilan oluşturma ve hizmet sağlayıcı
-// kategori seçimi AYNI veriyi kullanır; admin/backend yeni kategori
-// eklediğinde tek dosya güncellenir.
-// ═══════════════════════════════════════════════════════════════
 
 /// Ana kategoriler — referans ağacın tamamı.
 List<String> get kHomeCategories => kTreeCategories;

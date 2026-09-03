@@ -58,13 +58,6 @@ class OtpScreen extends StatefulWidget {
   /// değişikliği → `telefonDegisimiKodGonder`, kurtarma →
   /// `hesapKurtarmaKodGonder`).
   ///
-  /// ⚠ YALNIZ SMS GÖNDEREN GENERIC YOL KALDIRILDI. O yol yeni
-  /// challenge üretmiyordu: kullanıcı yeni kod alıyor ama ekran
-  /// ESKİ challenge'ı doğrulamaya çalışıyordu; C7 gereği eski
-  /// challenge iptal edildiği için hiçbir kod çalışmıyordu.
-  ///
-  /// Başarıda `null` döner ve çağıran taraf YENİ challengeId'yi
-  /// kendi durumunda saklamış olur; hata varsa mesaj döner.
   final Future<String?> Function() yenidenGonder;
 
   const OtpScreen({
@@ -81,12 +74,6 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final _otp = GlobalKey<RefOtpBoxesState>();
-
-  // ⚠ YEREL `MockOtpService` KALDIRILDI.
-  //
-  // Ekran ne doğrulama ne gönderim yapıyor; ikisi de use-case'e
-  // taşındı. Burada bir OTP servisi tutmak, doğrulama otoritesinin
-  // UI'ya geri sızması için açık kapı bırakırdı.
 
   bool _busy = false;
 
@@ -191,15 +178,6 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() { _busy = true; _error = null; });
     // ── DOĞRULAMA EKRANDA YAPILMAZ ──
     //
-    // ⚠ ESKİ FALLBACK KALDIRILDI. Önceden `dogrula` verilmediğinde
-    // ekran kendi karar veriyordu: API modunda "6 hane mi", mock
-    // modda yerel `OtpService`. Bu, doğrulamanın otoritesini UI'ya
-    // taşıyordu ve API modunda HERHANGİ bir 6 haneli kod kabul
-    // ediliyordu.
-    //
-    // Artık kod tek bir use-case çağrısına gider; challenge süresi,
-    // deneme hakkı, tek kullanım ve kodun doğruluğu ORADA denetlenir.
-    // Ekran yalnız sonucu gösterir.
     final hata = await widget.dogrula(code);
     if (!mounted) {
       return;
@@ -403,18 +381,6 @@ class _OtpScreenState extends State<OtpScreen> {
                           : () => _verify(_otp.currentState?.code ?? ''),
                     ),
 
-                    // ⚠ "SMS GELDİ Mİ?" BİLGİ KUTUSU KALDIRILDI.
-                    //
-                    // Kutu, kullanıcının zaten gördüğü bir şeyi
-                    // anlatıyordu. Kodun gelmemesi durumunda ne
-                    // yapılacağını ekran KENDİSİ söylüyor:
-                    // `RefResendRow` sayaç bitince "Kod gelmedi mi?"
-                    // yazar ve "Tekrar Gönder" bağlantısını açar.
-                    // Süre dolmadan aynı şeyi yazmak hem erken hem
-                    // gereksizdi.
-                    //
-                    // ⚠ SAĞLAYICI UYARISI KALIR: o metin SMS ile ilgili
-                    // değildir, hesabın aktifleşme KOŞULUNU söyler.
                     if (saglayici)
                       RefInfoBox(
                         child: Text(

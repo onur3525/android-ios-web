@@ -12,7 +12,6 @@ import 'package:hizmetcep/domain/listing_state_machine.dart';
 ///   · `ListingStatus`   → ilanın YAŞAMI
 ///   · `selectedOfferId` → İŞİN tamamlanmışlığı
 ///
-/// Bu ayrım bozulursa eski model geri gelir: tamamlanmış bir ilan
 String _kodu(String yol) => File(yol)
     .readAsStringSync()
     .split('\n')
@@ -48,7 +47,6 @@ void main() {
 
     test('⚠ eski değerler YENİ ADLA geri getirilmemiş', () {
       // `finished`, `done`, `working`, `removed` gibi karşılıklar
-      // aynı eski modeli başka adla diriltirdi.
       final adlar = <String>{
         ...ListingStatus.values.map((e) => e.name),
         ...OfferStatus.values.map((e) => e.name),

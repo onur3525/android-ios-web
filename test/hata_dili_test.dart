@@ -180,6 +180,20 @@ void main() {
   });
 
 
+  group('RET METNİ KISA', () {
+
+    test('genel ret için TEK başlık', () {
+      expect(t.contains("'Kart geçersiz'"), isTrue);
+      expect(t.contains("'Ödeme alınamadı'"), isFalse,
+          reason: 'eski uzun metin geri gelmiş');
+      expect(t.contains('Bankanız işlemi onaylamadı'), isFalse);
+      expect(t.contains('Bakiyeniz değişmedi. '), isFalse,
+          reason: 'gereksiz cümle geri gelmiş');
+    });
+
+  });
+
+
   group('HATA DİLİ EKRANLARA YAYILDI', () {
     // ⚠ Kapsam: uzaktan veri çeken LİSTE ekranları. Veri gelmezse
     // kullanıcı boş ekranda kalmamalı; "Tekrar dene" sunulmalı.

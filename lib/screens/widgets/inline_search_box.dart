@@ -141,10 +141,6 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     _oneriler = SearchService.services(q, enFazla: 200);
     _sonucYok.value = _oneriler.isEmpty && q.trim().isNotEmpty;
 
-    // ⚠ KARE SONUNA ERTELEME KALDIRILDI.
-    //
-    // `addPostFrameCallback` her tuşta bir kare gecikme ekliyordu.
-    // Panel zaten `markNeedsBuild` ile kendi karesinde çizilir.
     _paneliTazele();
   }
 
@@ -219,10 +215,6 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                     // `_sec(h)` kategori + alt hizmet ikilisini olduğu gibi
                     // taşır. Kullanıcıya yalnız aranan başlık gösterilir.
                     //
-                    // ⚠ SAĞDAKİ CHEVRON KALDIRILDI: satırın tamamı zaten
-                    // tıklanabilir, ok görsel gürültü yaratıyordu.
-                    // ⚠ Ana kategori önerisinde GÖRÜNEN ad yazar;
-                    // alt hizmet adları olduğu gibi kalır.
                     child: Text(kategoriEtiketi(h.label),
                         style: refText(
                             size: RF.s145,

@@ -11,18 +11,17 @@ lib/
  │   ├─ models/                    # UUID kimlikli saf modeller
  │   │   ├─ account.dart           # ÇOK ROLLÜ: roles:Set<Role> + activeRole
  │   │   ├─ listing.dart           # open|providerSelected|inProgress|completed|cancelled|expired
- │   │   ├─ offer.dart             # ilan başına ÇOK teklif; teklif başına escrow (blocked/consumed)
- │   │   ├─ wallet.dart, chat.dart
+ │   │   ├─ offer.dart             # ilan başına ÇOK teklif
+ │   │   ├─ chat.dart
  │   ├─ repositories/              # bellek-içi veri depoları (backend'de içi değişir, API'si kalır)
  │   │   ├─ auth_repository.dart      # hesap defteri + oturum + rol birleştirme
- │   │   ├─ wallet_repository.dart    # providerId→Wallet; block/consume/refund/topup
  │   │   ├─ listing_repository.dart   # UUID → index kaydırma YOK
  │   │   ├─ offer_repository.dart     # listingId/providerId sorguları
  │   │   ├─ contact_repository.dart   # ortak iletişim: offerId kümesi (tek doğruluk kaynağı)
  │   │   └─ chat_repository.dart      # offerId→mesajlar; ilk mesaj=teklif notu
  │   └─ controllers/               # iş kuralı orkestrasyonu (ChangeNotifier)
- │       ├─ auth_controller.dart, wallet_controller.dart
- │       ├─ offer_controller.dart     # placeOffer(bloke+yetersiz engel), selectOffer(iade)
+ │       ├─ auth_controller.dart
+ │       ├─ offer_controller.dart     # placeOffer, selectOffer
  │       ├─ contact_controller.dart   # openShared: iki taraf + TEK tüketim
  │       ├─ listing_controller.dart   # publish/start/complete/cancel/expire/delete(iade+temizlik)
  │       └─ chat_controller.dart
@@ -44,14 +43,13 @@ flutter test
 - Merkezi durum makinesi: `domain/listing_state_machine.dart` — completed uç durum (iptal/expire/silme yasak)
 - Yetkilendirme: tüm mutasyonlar `actorId` alır; tip güvenli hatalar `domain/failures.dart` (sealed)
 - Domain sabitleri `domain/config.dart` (tema yalnız görsel); test OTP yalnız `test/support/`
-- Wallet repo bütünlük korumaları (negatif bakiye/karşılıksız işlem imkânsız); demo bakiye bayrağı, production 0/0
 - Offer.createdAt (sıralama) + Listing.expiresAt
 
 ## İş kuralları (testlerle garanti altında)
-- Teklif ücretsiz; verilirken 50 TL bloke (avail↓ blocked↑) · yetersiz bakiye → teklif yok
+- Teklif verme ÜCRETSİZ ve SINIRSIZ
 - Bir ilana birden fazla hizmet veren teklif verir; aynı usta ikinci teklifi veremez
-- İletişim taraflardan biri açınca İKİ tarafta açılır; bloke YALNIZ BİR KEZ tüketilir
-- Seçim: ilan providerSelected, diğer teklifler cancelled + açılmamış blokeler sahibine iade; tüketilen iade edilmez
-- Durum akışı: providerSelected→inProgress→completed; cancel/expire açılmamış blokeleri iade eder
-- Silme: iade + teklif/iletişim/sohbet temizliği; UUID sayesinde başka ilanların kayıtları asla kaymaz
-- Müşteri hiçbir aşamada ödemez; ilan ücretsiz+sınırsız · Sohbetin ilk mesajı yalnız teklif notu
+- İletişim açmak ÜCRETSİZ; taraflardan biri açınca İKİ tarafta açılır (idempotent)
+- Seçim: ilan providerSelected, diğer teklifler cancelled
+- Durum akışı: providerSelected→inProgress→completed
+- Silme: teklif/iletişim/sohbet temizliği; UUID sayesinde başka ilanların kayıtları asla kaymaz
+- Uygulama iki taraf için de tamamen ÜCRETSİZ · Sohbetin ilk mesajı yalnız teklif notu

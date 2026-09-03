@@ -45,7 +45,6 @@ String categorySlug(String category) {
 /// Fotoğrafı bulunan kategorilerin slug kümesi.
 ///
 /// ⚠ ELLE YAZILMAZ: `kCategoryImage`'tan türetilir. Bugün 53/53
-/// kategorinin fotoğrafı vardır; eski 7'lik sabit liste KALDIRILMIŞTIR.
 Set<String> get kCategoryAssetSlugs =>
     kCategoryImage.keys.map(categorySlug).toSet();
 
@@ -348,15 +347,6 @@ class CategoryBadge extends StatelessWidget {
     );
   }
 }
-
-/// ⚠ `CategoryCover` KALDIRILDI.
-///
-/// Geniş fotoğraflı kapak bileşeniydi ve HİÇBİR EKRANDA
-/// kullanılmıyordu. Kategori fotoğrafı artık yalnız ilan verme
-/// ızgarasında (`KategoriKarti`) çizildiği için, ölü fotoğraf
-/// bileşeninin kodda kalması yanlışlıkla yeniden kullanılma riski
-/// taşıyordu. Kapak gerekirse SVG rozetiyle (`CategoryBadge`)
-/// yapılmalıdır.
 
 /// ── ⚠ İLAN BAŞLIĞINDAN KATEGORİ ADI ──
 ///

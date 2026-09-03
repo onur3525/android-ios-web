@@ -60,9 +60,6 @@ void main() {
     // sayımı / enumeration).
     test('İKİ YOLDA DA kayıtlılık sorgusu YOK', () {
       final f = _kod('lib/screens/forgot_password_screen.dart');
-      // ⚠ 16 Ağu: telefon yolundaki kayıtsızlık denetimi de KALDIRILDI.
-      // Önceki hâlde e-posta K5'e uyuyor, telefon uymuyordu; aynı açık
-      // telefon tarafında duruyordu.
       expect(f.contains('telefonKayitliMi('), isFalse,
           reason: 'ekran kayıt durumunu sorguluyor — enumeration');
       expect(f.contains('_numaraKayitsiz'), isFalse);
@@ -168,7 +165,6 @@ void main() {
     //   · `TelefonBicimlendirici()` → GİRİŞ alanında, yazarken
     //   · `TelefonBicimlendirici.gruplu(...)` → OKUMA yerlerinde,
     //     numarayı `0532 111 22 33` biçiminde göstermek için
-    // W2-2 değişikliği yalnız birinciyi ilgilendirir.
     for (final yol in [
       'lib/screens/login_screen.dart',
       'lib/screens/register_screen.dart',

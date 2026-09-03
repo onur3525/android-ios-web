@@ -341,24 +341,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // kullanılır"). iOS'ta donanım geri tuşu yok ve kenar
                 // jesti de kapalı olduğu için o ekranlarda geri dönüş
                 const RefBackButton(),
-                // ⚠ SİLME BURADA — alttaki tehlike düğmesi KALDIRILDI.
-                // Referans `listingMenu()`: üç nokta → "İlanı Sil" →
-                // neden seçimi (`askDelReason`) → silme.
-                // ── ⚠ ÜÇ NOKTA MENÜSÜ — TAMAMLANMIŞ İŞTE ÇİZİLMEZ ──
-                //
-                // Menünün tek işi ilanı silmek. Tamamlanmış iş
-                // (`selectedOfferId != null`) silinemez ve
-                // düzenlenemez: hizmet veren o işi yaptı, teklifi
-                // seçildi ve bedeli tahsil edildi.
-                //
-                // ⚠ İKON GİZLENMİYOR, HİÇ ÇİZİLMİYOR. Önceki hâlde
-                // `onTap: null` veriliyordu — nokta duruyor ama
-                // basınca hiçbir şey olmuyordu. Kullanıcı bozuk
-                // sanıyordu; olmayan bir seçenek hiç gösterilmez.
-                //
-                // ⚠ Domain katmanı da reddediyor
-                // (`ListingStateMachine.canDelete`): arayüzde
-                // gizlemek tek başına güvenlik değildir.
                 if (l.status == ListingStatus.active && !l.isTamamlanmisIs)
                   RefTap(
                     onTap: () => _ilanMenusu(context, l, me.id),
@@ -575,32 +557,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               ],
             const SizedBox(height: 8),
 
-            // ── ⚠ "İŞİ TAMAMLA" AKSİYONU KALDIRILDI ──
-            //
-            // API sözleşmesi §11: nihai akış İletişimi Aç → Teklifi Seç
-            // → Yorum Yap. Ayrı bir "İşi Başlat" ya da "İşi Tamamla"
-            // aşaması YOKTUR; teklif seçildiği anda iş tamamlanmış
-            // sayılır ve Tamamlanan İşler'e geçer.
-            //
-            // ⚠ Değerlendirme düğmesi AŞAĞIDA DURUYOR — kaldırılan şey
-            // yalnız tamamlama aksiyonudur, değerlendirme akışı değil.
-            //
-            // ⚠ Bu paket enum göçü değildir: `providerSelected` ve
-            // `inProgress` sözleşmedeki adlara Paket 2'de geçecek.
-            // ── ⚠ DEĞERLENDİRME DÜĞMESİ — YALNIZ YAPILMAMIŞSA ──
-            //
-            // Koşul yalnız `isTamamlanmisIs` idi: değerlendirme ZATEN
-            // YAPILMIŞ olsa bile düğme çiziliyordu. Kullanıcı basınca
-            // form açılıyor ama ekran kaydı bulup doğrudan "gönderildi"
-            // görünümüne düşüyordu — dışarıdan bakınca "form
-            // atlanıyor, doğrudan başarıya geçiyor" gibi görünüyordu.
-            //
-            // ⚠ FORM ATLANMIYORDU: `ReviewScreen` gerçek kayda bakıp
-            // doğru görünümü çiziyor. Yanlış olan, yapılmış bir işi
-            // yapılabilir gibi göstermekti.
-            //
-            // ⚠ Teklif detayında bu denetim ZATEN VARDI (`!reviewed`);
-            // burada eksikti. İki ekran artık aynı kuralı uyguluyor.
             if (l.isTamamlanmisIs) ...[
               if (reviewCtl.byOffer(l.selectedOfferId!) == null)
                 Padding(
@@ -632,14 +588,6 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 // ⚠ Değerlendirme YAPILMIŞSA düğme yerine durum yazısı.
                 // Tıklanamaz bir düğme, hâlâ yapılacak bir iş varmış
                 // izlenimi verirdi.
-                // ⚠ `const` KALDIRILDI.
-                //
-                // Derleyici bu ifadeyi sabit saymadı:
-                //   Error: Not a constant expression.
-                //
-                // `HC.grey` kaynakta `static const` olsa da bu bağlamda
-                // sabit değerlendirilmiyor. Sebebini kesinleştirmek
-                // yerine — tahminle uğraşmak derlemeyi bir tur daha
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text('Değerlendirmeniz alındı',
@@ -728,7 +676,6 @@ class _DurumChipi extends StatelessWidget {
 
   /// ⚠ TAMAMLANMIŞLIK DURUMDAN GELMEZ (§24): `Listing.isTamamlanmisIs`
   /// ile türetilir ve rozete AYRI parametre olarak geçer. "Tamamlandı"
-  /// etiketini `status` üzerinden çizmek eski modeli geri getirirdi.
   final bool tamamlandi;
 
   final ListingStatus status;
@@ -892,9 +839,6 @@ class _TeklifKarti extends StatelessWidget {
     if (tam.isEmpty) {
       return 'Hizmet Veren';
     }
-    // ⚠ `escrowConsumed` KALDIRILDI (ücretsiz model). Ad maskesinin
-    // ölçütü aynı: İLETİŞİM AÇIK MI. Artık doğrudan iletişim
-    // durumundan okunur.
     if (iletisimAcik) {
       return tam;
     }

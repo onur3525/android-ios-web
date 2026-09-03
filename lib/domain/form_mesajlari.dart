@@ -54,9 +54,6 @@ class FormMesaj {
   // ⚠ METİNLER KISA TUTULUR. Uzun cümleler alanın içindeki hata
   // satırına sığmıyor ve üç noktayla KESİLİYORDU: 360 dp'lik
   // telefonda o satıra ~212 dp yer kalıyor.
-  // ⚠ "Şifreniz" ÖNEKİ KALDIRILDI: metin 320 dp'lik telefonda hata
-  // satırına sığmıyordu (191 dp / 172 dp yer). Alanın hangi alan
-  // olduğu zaten belli; özne tekrar edilmiyor.
   static final sifreKisa =
       'En az $kPasswordMinLength karakter olmalıdır';
   static final sifreUzun =
@@ -106,13 +103,6 @@ class FormMesaj {
   static const otpGonderilemedi =
       'Doğrulama kodu gönderilemedi. Lütfen tekrar deneyin.';
 
-  // ⚠ `kodGonderildiNotr` KALDIRILDI (16 Ağu).
-  //
-  // Telefon yolunda nötr kutu artık gösterilmiyor: kod istendiğinde
-  // doğrulama ekranı açılıyor ve yönlendirme orada yapılıyor.
-  // Kayıtsızlık uyarısı ise daha önce enumeration gerekçesiyle
-  // kaldırılmıştı; ikisi de geri getirilmemelidir.
-
   // ── SEÇİM HATALARI ──
 
   static const kategoriSec = 'En az bir hizmet kategorisi seçiniz';
@@ -121,11 +111,6 @@ class FormMesaj {
   static const ilceSec = 'İlçe seçiniz';
   static const mahalleSec = 'Mahalle seçiniz';
   static const puanSec = 'Puan seçiniz';
-
-  // ⚠ `yorumKisa` KALDIRILDI — asgari kelime kuralı yok.
-  //
-  // Yorum tamamen isteğe bağlı; kısa yorumlar da geçerli. Bu mesaj
-  // kullanıcıyı yorum yazmaktan caydırıyordu.
 
   /// İlan oluşturmada kategori adımı.
   ///

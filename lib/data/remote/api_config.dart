@@ -94,13 +94,6 @@ abstract final class ApiConfig {
   /// Yalnız GET ve ağ/5xx hatalarında; POST'lar idempotency-key olmadan tekrarlanmaz.
   static const int maxRetries = 2;
 
-  /// Sağlayıcı ödeme bitince uygulamaya bu derin bağlantıyla döner.
-  /// Android/iOS tarafında scheme kaydı PLATFORM_SETUP.md'de anlatılır.
-  static const String paymentReturnUrl = String.fromEnvironment(
-    'PAYMENT_RETURN_URL',
-    defaultValue: 'hizmetcep://payment/return',
-  );
-
   /// Uygulama sürümü — pubspec.yaml ile aynı tutulmalıdır.
   /// Zorunlu güncelleme kontrolü bu değeri kullanır.
   static const String appVersion =

@@ -59,9 +59,6 @@ void main() {
       //
       // Eskiden bu ekran kategori taleplerini sunucudan çekiyordu ve
       // yalnız mock modda erken çıkması denetleniyordu. Kategori talep
-      // etme akışı KALDIRILDI (yetki yalnız adminde); ekranda artık
-      // hiçbir `*Api` kurulumu yok. Doğru denetim: mod kontrolü değil,
-      // ağ çağrısının HİÇ OLMAMASI.
       final k = _oku('lib/screens/my_categories_screen.dart');
       expect(k.contains('ApiClient>()'), isFalse,
           reason: 'ekran yeniden doğrudan HTTP çağırmaya başlamış');

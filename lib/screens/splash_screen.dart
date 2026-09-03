@@ -388,10 +388,6 @@ class _SplashScreenState extends State<SplashScreen> {
   /// ve öyleymiş gibi adlandırılmaz.
   ///
   /// ⚠ Bir tur `IlkKareBildirimi` adlı bir kök sarmalayıcı denendi ve
-  /// KALDIRILDI: sinyali `static bool` değişikliğine bağlıyordu, oysa
-  /// static alan değişimi hiçbir Element'i kirletmez. `Navigator`
-  /// yalnız KENDİ alt ağacını yeniden inşa eder; kökteki sarmalayıcı
-  /// yeniden build EDİLMEZ, dolayısıyla sinyal oradan hiç gitmezdi.
   void _navSonrasiKareyiBekle(String hedef) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       BootLog.olay('POST_NAV_FRAME_END', hedef);
@@ -575,17 +571,6 @@ class _SplashScreenState extends State<SplashScreen> {
           'fail:${kOturum.elapsedMilliseconds}ms');
     }
 
-    // ⚠ BURADAKİ `if (!mounted) return;` KALDIRILDI.
-    //
-    // Bu erken dönüş gerçek bir arızaya yol açıyordu: widget async
-    // boşlukta ağaçtan kalkarsa boot karar bile ÜRETMEDEN çıkıyor,
-    // `finally` içindeki son güvence de `!mounted` yüzünden
-    // yönlendirme yapamıyor, ama native splash YİNE bırakılıyordu.
-    // Sonuç: rotasız, kendiliğinden değişmeyen bir marka ekranı.
-    //
-    // Aşağısı `context` KULLANMAZ — `decideBoot` saf bir fonksiyondur
-    // ve `auth` zaten `await`'ten önce alındı. Karar her hâlükârda
-    // üretilir; `mounted` denetimi yönlendirmenin KENDİSİNDE yapılır.
     final acc = auth.currentAccount;
     final karar = decideBoot(
       configOk: configOk,

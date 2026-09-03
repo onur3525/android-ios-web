@@ -193,8 +193,6 @@ void main() {
     });
 
     test('İKİ BİLEŞEN DE ORTAK YER TUTUCUYU kullanır', () {
-      // ⚠ 16 Ağu: yıldız yer tutucunun sonuna taşındı. `RefFormField`
-      // içindeki ayrı yıldız bileşeni ve `RefTextField` içindeki
       final r = kod('lib/ui/ref_widgets.dart');
       expect(r.contains('Widget refYerTutucu('), isTrue);
       expect(r.contains('prefixIcon: zorunlu'), isFalse,

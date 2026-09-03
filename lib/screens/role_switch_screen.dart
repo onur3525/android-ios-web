@@ -175,22 +175,7 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
                         secili: _bolgeler,
                         onTap: _busy ? null : _bolgeSec,
                       ),
-                      // ⚠ BİLGİLENDİRME KUTUSU KALDIRILDI.
-                      //
-                      // "Ad, telefon ve e-posta bilgileriniz mevcut
-                      // hesabınızdan taşınır" satırı ekranda sürekli
-                      // duruyordu. Kullanıcı zaten bu bilgileri
-                      // yeniden girmiyor — söylenmesine gerek yok;
-                      // tamamlanması gereken üç satırın dikkatini
-                      // dağıtıyordu.
                     ],
-                    // ⚠ İKİNCİ BİLGİLENDİRME KUTUSU DA KALDIRILDI.
-                    //
-                    // "Hizmet alan profiline geçtiğinizde ilan
-                    // verebilir ve teklifleri yönetebilirsiniz."
-                    // metni, hemen altındaki düğmenin ("Hizmet Alan
-                    // Olarak Devam Et") zaten söylediği şeyi tekrar
-                    // ediyordu. Geçiş kartı + düğme yeterlidir.
                   ],
                 ),
               ),
@@ -383,16 +368,6 @@ class _GecisKarti extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        // ⚠ GRİ ÇERÇEVE VE BEYAZ ZEMİN KALDIRILDI.
-        //
-        // Blok sayfanın ortasında ayrı bir kutu gibi duruyordu;
-        // ekranın geri kalanı zaten beyaz olduğu için çerçeve iki
-        // bölge yaratıyordu. Artık geçiş bloğu sayfayla BÜTÜN
-        // görünür.
-        //
-        // ⚠ İÇERİK, DİZİLİM VE METİNLER AYNI — yalnız kutu kabuğu
-        // gitti. Yatay dolgu korundu ki dar ekranda metin kenara
-        // yapışmasın.
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 22),
         // ── ⚠ ALTLI ÜSTLÜ DİZİLİM ──
         //

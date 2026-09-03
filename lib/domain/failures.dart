@@ -30,6 +30,13 @@ class DuplicateOfferError extends DomainError {
   const DuplicateOfferError();
 }
 
+/// İlan teklif kontenjanını doldurdu.
+class OfferLimitReachedError extends DomainError {
+  @override
+  String get message => 'Bu ilan yeterli sayıda teklif aldı';
+  const OfferLimitReachedError();
+}
+
 class OwnListingOfferError extends DomainError {
   @override
   String get message => 'Kendi ilanınıza teklif veremezsiniz';

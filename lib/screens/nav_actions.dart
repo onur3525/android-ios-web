@@ -4,20 +4,16 @@ import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
 
-/// ALT NAVİGASYON ÖĞELERİ — referans `custNav(act)`
+/// ALT NAVİGASYON ÖĞELERİ
 ///
-/// ```js
-/// let items = [
-///   ['ilanver',  'İlan Ver',    IC_ADDBOX(22), "openPost()"],
-///   ['ilanlarim','İlanlarım',   IC_CLIP(22),   "navigate('cust')"],
-///   ['bildirim', 'Bildirimler', IC_BELL(22),   "navigate('notif')"],
-///   ['profil',   'Profil',      IC_PROFILE,    "navigate('profile')"],
-/// ];
-/// if (MODE === 'provider') items = items.filter(i => i[0] !== 'ilanver');
-/// ```
+/// ── ⚠ MÜŞTERİDE 5 SEKME, SAĞLAYICIDA 4 ──
 ///
-/// Hizmet veren modunda "İlan Ver" sekmesi LİSTEDEN ÇIKARILIR —
-/// gizlenmez, hiç oluşturulmaz (referansta `filter`).
+/// Müşteri: Bul → İlanlarım → İlan Ver → Bildirimler → Profil.
+/// Sağlayıcı: İşlerim → Kazandığım → Bildirimler → Profil (DEĞİŞMEDİ).
+///
+/// "Bul" yalnız müşteride vardır — hizmet veren kendi hizmetini
+/// aramaz. "İlan Ver" sağlayıcı modunda LİSTEDEN ÇIKARILIR —
+/// gizlenmez, hiç oluşturulmaz.
 List<({
   String key,
   String label,
@@ -44,12 +40,16 @@ List<({
   VoidCallback onTap,
   bool rozet
 })>[
+    // ── ⚠ "BUL" YALNIZ MÜŞTERİDE, EN SOLDA ──
+    //
+    // Hizmet verenin arayacağı bir "hizmet" yok; bu sekme yalnız
+    // müşteri modunda üretilir.
     if (!saglayici)
       (
-        key: 'ilanver',
-        label: 'İlan Ver',
-        asset: 'assets/svg/ic_addbox.svg',
-        onTap: () => Navigator.pushNamed(context, '/customer/new-listing'),
+        key: 'bul',
+        label: 'Bul',
+        asset: 'assets/svg/ic_search.svg',
+        onTap: () => Navigator.pushNamed(context, '/customer/find-provider'),
         rozet: false,
       ),
     (
@@ -63,6 +63,16 @@ List<({
       ),
       rozet: false,
     ),
+    // ⚠ "İlan Ver" ORTA konuma taşındı (Bul, İlanlarım, İlan Ver,
+    // Bildirim, Profil) — yalnız SIRASI değişti, davranışı AYNI.
+    if (!saglayici)
+      (
+        key: 'ilanver',
+        label: 'İlan Ver',
+        asset: 'assets/svg/ic_addbox.svg',
+        onTap: () => Navigator.pushNamed(context, '/customer/new-listing'),
+        rozet: false,
+      ),
     // ⚠ SAĞLAYICIYA ÖZEL SEKME.
     //
     // Üstteki "Kazandığım işler" segment sekmesi buraya taşındı:

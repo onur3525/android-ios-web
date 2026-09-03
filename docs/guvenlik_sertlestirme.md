@@ -6,15 +6,13 @@ ve altyapı kararı bekler.
 
 ## 1. Ekran koruması (FLAG_SECURE) — YAPILDI
 
-Cüzdan, bakiye yükleme ve teklif detayı ekranlarında açıktır.
-Kapsadığı: ekran görüntüsü, ekran kaydı ve son uygulamalar
-listesindeki önizleme.
+Teklif detayı ekranında açıktır. Kapsadığı: ekran görüntüsü, ekran
+kaydı ve son uygulamalar listesindeki önizleme.
 
 ⚠ Yalnız Android. iOS'ta FLAG_SECURE karşılığı yoktur; oradaki
 önizleme karartması ayrı bir iştir ve YAPILMAMIŞTIR.
 
-⚠ Sayaç mantığı: iç içe ekranlarda (cüzdan → kart formu) koruma
-erken kapanmaz.
+⚠ Sayaç mantığı: iç içe ekranlarda koruma erken kapanmaz.
 
 ## 2. Teşhis bayrakları — YAPILDI
 
@@ -79,8 +77,7 @@ Aşağıdaki kurallar YALNIZ uygulamada uygulanıyor. Değiştirilmiş bir
 istemci bunları atlayabilir:
 
 - çıkar çatışması (kendi kategorisinde ilan açma yasağı)
-- minimum bakiye yükleme tutarı
-- iletişim bedeli tahsilat sırası
 - ilan ömrü ve durum geçişleri
+- aynı ilana ikinci teklif verilememesi
 
 ⚠ Hiçbiri Flutter'da çözülemez; sunucuda TEKRAR uygulanmalıdır.

@@ -143,7 +143,6 @@ void main() {
       expect(r.contains("label: 'Hizmet Kategorileri'"), isTrue);
       expect(r.contains("label: 'Hizmet Verilen İl'"), isTrue);
       expect(r.contains("label: 'Hizmet Verilen İlçeler'"), isTrue);
-      // ⚠ METİN TEK KAYNAĞA TAŞINDI (`FormMesaj.kategoriSec`).
       expect(r.contains('_altAciklama(FormMesaj.kategoriSec)'), isTrue);
       expect(r.contains('Bir veya birden fazla ilçe seçebilirsiniz.'), isTrue);
     });
@@ -177,8 +176,6 @@ void main() {
     });
 
     test('zorunluluk kuralları korunur', () {
-      // ⚠ METİNLER TEK KAYNAĞA TAŞINDI (`FormMesaj`). Kural aynı,
-      // yazım artık ekranda gömülü değil.
       expect(r.contains('FormMesaj.kategoriSec'), isTrue);
       expect(r.contains('FormMesaj.bolgeSec'), isTrue);
     });

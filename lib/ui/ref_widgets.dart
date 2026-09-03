@@ -623,22 +623,6 @@ class RefFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ⚠ KLAVYE GÖRÜNÜRLÜĞÜ SARMALAYICISI KALDIRILDI.
-    //
-    // Her alanı `Focus` + `ensureVisible` ile sarmak ölçülebilir
-    // fayda sağlamadı; buna karşılık odak sırasında sayfayı
-    // kaydırarak düzen sıçraması yarattı (widget testlerinde buton
-    // konumu kayıyordu). Alanın görünür kalması Android tarafında
-    // `windowSoftInputMode=adjustResize` ve ekranların kendi
-    // `SingleChildScrollView` yapısıyla zaten sağlanıyor.
-    // ── ⚠ ETİKET KUTUNUN DIŞINDA, SOL ÜSTTE ──
-    //
-    // Alan adı ("Ad", "Telefon") kutunun içinde yer tutucu olarak
-    // yazılıyordu ve kullanıcı alanı doldurunca KAYBOLUYORDU. Formu
-    // gözden geçirirken hangi kutunun ne olduğu görünmüyordu.
-    //
-    // ⚠ Ad `hint`ten alınır: çağıran ekranlar zaten alan adını orada
-    // veriyor. Kaynak tek yerde çevrildi; ekranlar değişmedi.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -683,11 +667,6 @@ class RefFormField extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12), // gap:12px
-          // ⚠ AYRI YILDIZ BİLEŞENİ KALDIRILDI.
-          //
-          // Yıldız artık YER TUTUCUNUN SONUNDA çiziliyor
-          // (`refYerTutucu`). Solda ayrı durduğunda metinden kopuk
-          // görünüyordu ve alan boş değilken hiçbir bağlamı kalmıyordu.
           Expanded(
             child: TextFormField(
               // ⚠ KLAVYE ALTINDA KALMA — Flutter'ın KENDİ ÇÖZÜMÜ.
@@ -1254,7 +1233,6 @@ class RefBottomSheet extends StatelessWidget {
           child: Container(
       constraints: BoxConstraints(
         // Kalan yüksekliğin %80'i — klavye açıkken panel küçülür,
-        // kapalıyken eski davranış aynen sürer.
         maxHeight: (MediaQuery.sizeOf(context).height - klavye) * 0.8,
       ),
       decoration: const BoxDecoration(
@@ -2050,13 +2028,6 @@ class RefStars extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════
 
 
-// ⚠ `_Nokta` KALDIRILDI: `RefStepper` kendi nokta çizimini yapıyor,
-// bu sınıf hiçbir yerden çağrılmıyordu (analyzer `unused_element`).
-/// `.rg-vicon` — doğrulama ekranı daire ikonu.
-///
-/// ```css
-/// .rg-vicon{80×80;border-radius:50%;background:#EAF1FB;margin:24px auto 18px}
-/// ```
 class RefVerifyIcon extends StatelessWidget {
   const RefVerifyIcon({super.key, this.asset = 'assets/svg/ic_verify.svg'});
 
@@ -2290,31 +2261,6 @@ class RefDetailHeader extends StatelessWidget {
   ///
   /// ## KARARIN GEÇMİŞİ
   ///
-  /// 1. Önce ok 19 ekrandan KALDIRILDI: "gezinme cihazın kendi geri
-  ///    tuşuyla yapılır" denildi. Android'de bu doğruydu.
-  /// 2. iOS'ta donanım geri tuşu YOKTUR ve kenardan kaydırma jesti de
-  ///    kapalıdır (`theme.dart` iOS geçişine `HizliGecis` atıyor,
-  ///    Cupertino geçişini eziyor). iPhone'da bu ekranlarda GERİ
-  ///    DÖNÜŞ YOLU KALMIYORDU.
-  /// 3. Ok bir tur platforma bağlandı (Android'de yok, iOS/web'de var).
-  /// 4. NİHAİ KARAR: platform ayrımı KALDIRILDI. İki platformda da ok
-  ///    vardır.
-  ///
-  /// ⚠ GEREKÇE: platforma göre değişen gezinme, hem kullanıcı hem
-  /// geliştirici için karışıklık üretiyordu — aynı ekran iki cihazda
-  /// farklı görünüyor, ekran görüntüsü ve test beklentileri
-  /// ayrışıyordu. Tek davranış: ok HER YERDE.
-  ///
-  /// Açıkça `false` verilirse ok gizlenir (kök ekranlar için).
-  ///
-  /// ⚠ İSTİSNA — ÇOK ADIMLI AKIŞLAR: kayıt, SMS doğrulama, şifre
-  /// sıfırlama ve ilan oluşturma ekranlarında ok "ÖNCEKİ ADIM"
-  /// anlamına gelir; orada `true` verilir. O akışlarda cihaz geri
-  /// tuşu tüm akıştan çıkarken, ok yalnız bir adım geri alır.
-  ///
-  /// ⚠ HTML SÖZLEŞMESİ İSTİSNASI: referans `hizmetcep-v66-final`
-  /// içinde `rg-back` 34 yerde vardır. Bu, kategori verisinden sonra
-  /// UI tarafında verilen İKİNCİ bilinçli sapmadır.
   final bool? geriDugmesi;
 
   /// Varsayılan AÇIK — bkz. [geriDugmesi].
@@ -2738,11 +2684,6 @@ class RefTextField extends StatelessWidget {
         suffixIcon: suffix,
         suffixIconConstraints:
             const BoxConstraints(minWidth: 44, minHeight: 24),
-        // ⚠ W2-3'teki `prefixIcon` yıldızı KALDIRILDI.
-        //
-        // Yıldız artık yer tutucunun SONUNDA çiziliyor (kayıt ekranı
-        // deseni). Önekte durduğunda metinden kopuktu ve alan
-        // doldurulunca bağlamsız kalıyordu.
         border: _cerceve(hatali ? RC.danger : RC.borderAlt),
         enabledBorder: _cerceve(hatali ? RC.danger : RC.borderAlt),
         focusedBorder: _cerceve(hatali ? RC.danger : RC.blue),

@@ -116,17 +116,6 @@ class KategoriKarti extends StatelessWidget {
             const SizedBox(height: 6),
             // .pc-l — kategori adı
             //
-            // ⚠ SABİT BOYUT — `FittedBox` KALDIRILDI.
-            //
-            // `FittedBox(scaleDown)` metni sığacak kadar küçültüyordu:
-            // kısa adlar tam boyutta ("Özel Ders" iri), uzun adlar
-            // ufacık ("Araç Temizlik ve Detaylı Bakım") görünüyordu.
-            // Aynı ızgarada beş farklı yazı boyutu vardı ve düzen
-            // dağınık duruyordu.
-            //
-            // Artık tüm kartlar AYNI boyutta yazar. En uzun ad 30
-            // karakter ("Araç Temizlik ve Detaylı Bakım"); 11px'de
-            // üç satıra rahat sığar, kesilmez.
             SizedBox(
               // ⚠ SABİT YÜKSEKLİK: metin 1 satır da olsa 3 satır da
               // olsa görsel alanı aynı kalır — kartlar aynı hizada

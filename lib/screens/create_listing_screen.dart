@@ -734,20 +734,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               ),
                             ),
                           ),
-                          // ── ⚠ "Adım x/3" METNİ KALDIRILDI ──
-                          //
-                          // Adım bilgisi hemen ALTTAKİ `RefStepper`
-                          // göstergesinde zaten var (dolu daireler +
-                          // etiketler); sağ üstteki metin aynı bilgiyi
-                          // ikinci kez söylüyordu.
-                          //
-                          // ⚠ YERİNE DENGE BOŞLUĞU KONDU, boşluk
-                          // silinmedi. Solda geri düğmesi 38 dp yer
-                          // kaplıyor (22 ikon + 8+8 dolgu); sağ taraf
-                          // tamamen boşaltılsaydı `Expanded` içindeki
-                          // başlık EKRANIN ORTASINDA DEĞİL, 38 dp sağa
-                          // kaymış görünürdü. Aynı genişlikte boşluk
-                          // bırakılınca başlık gerçekten ortalanır.
                           const SizedBox(width: 38),
                         ],
                       ),
@@ -952,20 +938,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
           ],
 
-          // ── ⚠ KATEGORİ IZGARASI KALDIRILDI (15 Ağu, ürün kararı) ──
-          //
-          // İlan verme ekranında hizmet seçimi artık KARTLA değil,
-          // ARAMA ile yapılır. Kullanıcı aradığı işi yazar, çıkan
-          // gerçek hizmeti seçer.
-          //
-          // Gerekçe: katalog 640 hizmete çıktı. Fotoğraflı kart
-          // ızgarası yalnız 54 KATEGORİYİ gösterebiliyordu; kullanıcı
-          // "kolon hattı" ya da "sneaker tamiri" gibi bir işi
-          // ızgarada BULAMIYOR, kategoriyi tahmin etmek zorunda
-          // kalıyordu. Arama hepsini bulur.
-          //
-          // ⚠ Arama boşken ne gösterileceği AYRI BİR İŞ (popüler
-          // hizmetler listesi); bu turda kapsam dışı.
           if (_catQuery.trim().isEmpty && _cat == null) ...[
             const SizedBox(height: 16),
             Text(
@@ -1013,16 +985,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 const SizedBox(height: 4),
                 // ⚠ KARTTA YALNIZ SEÇİLEN HİZMET YAZAR.
                 //
-                // Altındaki "Ana > Alt" kırılımı KALDIRILDI: seçim
-                // zaten tek satırda görünüyor, kırılım aynı adı ikinci
-                // kez tekrar ediyordu (kategori seçildiğinde
-                // "Doğalgaz / Doğalgaz" gibi).
-                // ⚠ Kartta seçilen adın GÖRÜNEN hâli yazar; ızgaradaki
-                // kısa adla aynı olsun diye `kategoriEtiketi` geçer.
-                // Alt hizmet seçildiyse ad olduğu gibi kalır.
-                // ⚠ KATEGORİ SATIRI — hizmet adı tek başına ayırt
-                // etmiyor; kullanıcı ilanı OLUŞTURURKEN de hangi
-                // alanda ilan verdiğini görmeli.
                 if (kategoriAdi(_cat ?? '') != null)
                   Text(kategoriAdi(_cat ?? '')!,
                       style: refText(
@@ -1342,10 +1304,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
 }
 
-// ⚠ `_KategoriCipi` KALDIRILDI.
-//
-// Kategori seçimi ızgaraya geçince bu çip çağrılmaz oldu.
-
 /// `vPost3` — yayın başarılı ekranı.
 class _Adim3Tamam extends StatelessWidget {
   const _Adim3Tamam({
@@ -1436,21 +1394,10 @@ class _Adim3Tamam extends StatelessWidget {
           const SizedBox(height: 26),
           RefWideButton('Aktif İlanlarımı Gör', onPressed: onListem),
 
-          // ⚠ "Ana Sayfaya Dön" BAĞLANTISI KALDIRILDI.
-          //
-          // İlan yayınlandıktan sonra kullanıcının yapacağı iş
-          // ilanını izlemektir; ana sayfa oradan alt navigasyonla
-          // zaten bir dokunuş uzakta. İkinci bir çıkış yolu sunmak
-          // kararı böler ve asıl eylemi zayıflatır.
         ],
       );
 }
 
-
-// ⚠ `_KategoriKarti` KALDIRILDI.
-//
-// Kart artık `widgets/kategori_karti.dart` içinde ORTAK bileşendir;
-// ana sayfa da aynısını kullanır. İki kopya ölçü olarak ayrışmıştı.
 
 /// `.po-results` — arama önerileri.
 ///
@@ -1521,19 +1468,6 @@ class _OneriPaneli extends StatelessWidget {
                       children: [
                         // ── ⚠ HİZMET ADI — TEK SATIR ──
                         //
-                        // "Ana > Alt" kırılımı KALDIRILDI. Kullanıcı
-                        // hangi hizmetin hangi kategoriye bağlı
-                        // olduğunu GÖRMEZ; her satır kendi başına bir
-                        // hizmettir ve o hizmetle ilan açılır.
-                        //
-                        // ⚠ Kategori arka planda taşınmaya DEVAM
-                        // EDER: çıkar çatışması, ilan eşleştirmesi,
-                        // kategori fotoğrafı ve iletişim bedeli ona
-                        // bağlıdır. Gizlenen yalnız GÖSTERİMDİR.
-                        //
-                        // ⚠ `label` alias adını gösterir (kullanıcı
-                        // ne yazdıysa onu görür), seçime giden değer
-                        // yine katalog kimliğidir.
                         Text(liste[i].label,
                             style: refText(
                                 size: RF.s145,

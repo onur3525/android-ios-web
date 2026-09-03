@@ -50,23 +50,6 @@
 /// ürünün kurulumu, yapım imalattır — farklı hizmet veren, farklı
 /// fiyat.
 ///
-/// ⚠ ANA SAYFADAKİ HIZLI ERİŞİM SATIRI KALDIRILDI (15 Ağu). Yerine
-/// ÇATI katmanı geldi (`hizmet_alanlari.dart`): Ana Sayfa → Çatı →
-/// Kategori → Hizmet. Çatı bir KATEGORİ DEĞİLDİR, yalnız kısayol
-/// yüzeyidir ve hiçbir sayaca girmez. Kullanıcı 63 kategorinin
-/// tamamına Tüm Kategoriler ekranından ve aramadan ulaşır.
-///
-/// ## ⚠ İŞ KURALI — YENİ ALT HİZMET EKLENDİĞİNDE
-///
-/// Bu ağaca yeni bir alt hizmet girdiğinde `arama_es_anlamlilari.dart`
-/// dosyasına da o hizmetin ARAMA TERİMLERİ eklenmelidir.
-///
-/// Sebep: kullanıcı hizmet adını değil DERDİNİ yazar — "gaz kaçağı",
-/// "kapıda kaldım", "kombi yanmıyor". Terim eklenmezse hizmet yalnız
-/// tam adıyla aranabilir ve pratikte görünmez kalır.
-///
-/// Terim seçimi ve örnekler için `kAramaEsAnlamlilari` belgesine
-/// bakınız.
 library;
 
 /// ── ⚠ GÖMÜLÜ KATALOG — YEDEK VE İLK AÇILIŞ TOHUMU ──
@@ -1105,7 +1088,6 @@ const Map<String, String> _kKisaAd = {
   'Duvar Kağıdı ve Dekorasyon': 'Duvar Kağıdı',
   // ⚠ "Yenileme" yerine "Dekorasyon": kart artık dekorasyon işlerinin
   // de adresi olarak okunuyor (Duvar Kağıdı kartı kısaldığı için
-  // "dekorasyon" sözcüğü buraya taşındı).
   'Tadilat ve Yenileme': 'Tadilat & Dekorasyon',
   'İnşaat ve Kaba Yapı': 'İnşaat',
   'Çilingir ve Kilit': 'Çilingir',
@@ -1322,16 +1304,6 @@ bool kCategoryImageIsSvg(String kategori) =>
 // ═══════════════════════════════════════════════════════════════
 // HİZMET VEREN KATEGORİ KURALLARI
 // ═══════════════════════════════════════════════════════════════
-
-/// ⚠ ANA KATEGORİ SINIRI KALDIRILDI.
-///
-/// Eskiden `kMaxAnaKategori = 2` vardı: hizmet veren en fazla iki ana
-/// kategori seçebiliyordu. Katalog 53 kategoriye çıkınca bu sınır
-/// gerçekliğe aykırı hâle geldi — hem tesisat, hem kombi, hem ısıtma
-/// yapan bir hizmet veren üçünü birden seçemiyordu.
-///
-/// NİHAİ KURAL: hizmet veren BİRDEN FAZLA ana kategori ve BİRDEN FAZLA
-/// alt hizmet seçebilir. Sayı sınırı yoktur.
 
 /// Verilen adın ait olduğu ANA KATEGORİ.
 ///

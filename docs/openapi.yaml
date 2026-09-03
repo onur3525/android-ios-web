@@ -8,9 +8,6 @@
 #   EKLEMEZ.
 #
 # ⚠ BELGENİN AÇIK BIRAKTIKLARI BURADA DA AÇIK BIRAKILDI (§30):
-#   · ödeme sağlayıcısı seçilmedi → adapter ile soyutlanacak
-#   · iletişim bedeli algoritması tanımlanmadı → ilk sürüm Admin fiyatı
-#   · minimum teklif algoritması tanımlanmadı → ilk sürüm Admin fiyatı
 #   Bunlar VARSAYIMLA DOLDURULMADI.
 openapi: 3.1.0
 
@@ -146,7 +143,8 @@ components:
         - OTP_REQUIRED              # SMS doğrulaması gerekiyor
 
         # ── TEKLİF ──
-        - OFFER_ALREADY_EXISTS      # aynı ilana ikinci teklif (§1)
+        - OFFER_ALREADY_EXISTS
+        - OFFER_LIMIT_REACHED      # aynı ilana ikinci teklif (§1)
         - DUPLICATE_OFFER           # aynı anlam — eski ad
         - OWN_LISTING_OFFER         # kendi ilanına teklif verilemez
 
@@ -184,8 +182,6 @@ components:
         nextCursor:
           type: [string, 'null']
           description: Son sayfada `null`.
-
-    # ⚠ `OfferFundingSource` KALDIRILDI: teklif ücretsiz, kaynak yok.
 
     # ── DURUM ENUM'LARI (§24) ──
     UserStatus:        { type: string, enum: [ACTIVE, FROZEN, DELETED] }
@@ -303,9 +299,6 @@ components:
     # ── TEKLİF ──
     Offer:
       type: object
-      # ⚠ ÜCRETLENDİRME ALANLARI KALDIRILDI (ücretsiz model):
-      # holdStatus, fundingSource, usedFreeBenefit, escrowBlocked,
-      # escrowConsumed. HizmetCep tamamen ücretsizdir.
       required: [offerId, listingId, providerId, amount, note, status, communication, createdAt]
       properties:
         offerId: { type: string }
@@ -328,9 +321,6 @@ components:
         ⚠ GÜNCELLEME/SİLME UCU YOKTUR (§27). Teklif geri çekilemez ve
         değiştirilemez (§1, kabul testi 2).
 
-    # ⚠ `WalletSummary`, `WalletTransaction` ve `FreeBenefitGrant`
-    # şemaları KALDIRILDI (ücretsiz model): cüzdan, hareket ve
-    # ücretsiz hak kavramları ürün kapsamından çıktı.
 
     # ── DEĞERLENDİRME ──
     Review:
@@ -368,9 +358,8 @@ components:
           type: string
           maxLength: 1000
           description: |
-            ⚠ YORUM İSTEĞE BAĞLIDIR — boş gönderilebilir (ürün kararı).
-            Asgari kelime kuralı KALDIRILDI: kısa ama geçerli
-            yorumları engelliyordu. Yalnız PUAN zorunludur.
+            ⚠ YORUM İSTEĞE BAĞLIDIR — boş gönderilebilir. Asgari
+            kelime kuralı YOKTUR; yalnız PUAN zorunludur.
 
             Fotoğraf alanı YOKTUR.
 
@@ -450,8 +439,6 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
-  # ⚠ `POST /auth/google` KALDIRILDI — üçüncü taraf girişi yok.
-  # Giriş yalnızca telefon/e-posta + şifre ve SMS OTP ile yapılır.
   /auth/otp/request:
     post:
       tags: [Auth]
@@ -885,8 +872,8 @@ paths:
       tags: [Listings]
       summary: İlanı sil — TEK KANONİK UÇ
       description: |
-        ⚠ `POST /listings/{listingId}/cancel` KALDIRILDI. Aynı iş için
-        iki uç bırakılmaz; kanonik uç budur.
+        ⚠ Silme için TEK kanonik uç budur; aynı iş için ikinci bir uç
+        bulunmaz.
 
         ⚠ `cancel` adında yeni bir `ListingStatus` OLUŞTURULMAZ ve
         eski `CANCELLED` durumu GERİ GETİRİLMEZ. Kullanıcı sildiğinde
@@ -895,7 +882,7 @@ paths:
         kaldırma ucuyla BİRLEŞTİRİLMEZ.
 
         Silinen ilan geri getirilemez. Açılmamış normal blokeler iade
-        edilir; açılmış bedel ve ücretsiz hak İADE EDİLMEZ (§11).
+        edilir.
 
         ⚠ SUNUCU ZORUNLU KONTROLLERİ: başkasının ilanı silinemez ·
         yetkisiz kullanıcı silemez · silinmesi yasak durumdaki ilan
@@ -907,11 +894,6 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
 
-  # ⚠ `POST /listings/{listingId}/cancel` KALDIRILDI.
-  #
-  # Aynı işi `DELETE /listings/{listingId}` yapıyordu; iki kanonik uç
-  # bırakılmaz. İstemcideki `cancel()` metodu, repository ve port
-  # bağlantıları da temizlendi.
   /offers:
     post:
       tags: [Offers]
@@ -919,7 +901,9 @@ paths:
       description: |
         ⚠ Aynı hizmet veren aynı ilana İKİNCİ teklifi veremez → 409 OFFER_ALREADY_EXISTS.
         ⚠ Teklif geri çekilemez ve değiştirilemez (§1) — güncelleme/silme ucu YOKTUR.
-        ⚠ Teklif vermek ÜCRETSİZ ve SINIRSIZDIR: bakiye, kota ya da hak koşulu YOKTUR.
+        ⚠ Teklif vermek ÜCRETSİZDİR: bakiye, bedel ya da hak koşulu YOKTUR.
+        ⚠ Bir ilan EN FAZLA 3 açık teklif alır; dolduğunda 422 OFFER_LIMIT_REACHED.
+        ⚠ Hizmet verenin kaç ilana teklif vereceği SINIRSIZDIR.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '201': { description: Başarılı }
@@ -946,8 +930,7 @@ paths:
       summary: İletişimi aç
       description: |
         ⚠ İKİ TARAF İÇİN AYNI ANDA açılır ve SÜRESİZDİR (§8).
-        ⚠ İDEMPOTENT: tekrar istek ikinci kez ücret almaz; sunucu COMMUNICATION_ALREADY_OPEN döner ve bu BİR HATA DEĞİLDİR (§10).
-        ⚠ Bedel HİZMET VERENDEN alınır; hizmet alan hiçbir aşamada ödemez.
+        ⚠ İDEMPOTENT: tekrar istek hata üretmez; sunucu COMMUNICATION_ALREADY_OPEN döner ve bu BİR HATA DEĞİLDİR (§10).
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '200': { description: Başarılı }
@@ -976,7 +959,7 @@ paths:
       tags: [Communication]
       summary: Teklifi seç
       description: |
-        ⚠ TEK ATOMİK AKIŞ (§25): teklif SELECTED olur · `selectedOfferId` yazılır · tamamlanan iş sayısı +1 · diğer teklifler CLOSED · iletişimi AÇILMAMIŞ blokeler iade · açılmış bedel ve ücretsiz hak İADE EDİLMEZ.
+        ⚠ TEK ATOMİK AKIŞ (§25): teklif SELECTED olur · `selectedOfferId` yazılır · tamamlanan iş sayısı +1 · diğer teklifler CLOSED
         ⚠ İLAN DURUMU DEĞİŞMEZ: ACTIVE kalır. Tamamlanmışlık `selectedOfferId` ilişkisinden türetilir (§24).
         ⚠ İkinci istek ikinci tamamlanan iş ya da ikinci finansal işlem ÜRETMEZ.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
@@ -1140,16 +1123,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
-
-  # ⚠ ÜCRETLENDİRME UÇLARI KALDIRILDI (ücretsiz model):
-  #   /wallet/me · /wallet/me/ledger · /wallet/topup/session
-  #   /wallet/topup/confirm · /wallet/token-packages
-  #   /wallet/cards* (5 uç) · /free-rights/me/summary
-  #   /free-rights/me/funding-preview
-  #
-  # HizmetCep hem hizmet alan hem hizmet veren için TAMAMEN
-  # ÜCRETSİZDİR: cüzdan, bakiye, ödeme, kart, kredi ve
-  # ücretsiz hak kavramları ürün kapsamından çıktı.
 
   /regions/tree:
     get:

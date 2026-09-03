@@ -66,13 +66,6 @@ class RoleSelectScreen extends StatelessWidget {
                     onTap: () => _rolDegistir(context, r),
                   ),
                 ),
-            // ⚠ BİLGİLENDİRME KUTUSU KALDIRILDI.
-            //
-            // "Aynı hesapla hem hizmet alabilir hem hizmet
-            // verebilirsiniz" cümlesi, kullanıcı zaten iki rolü de
-            // ekranda görürken tekrardı. Rol Değiştir ekranlarında
-            // bilgilendirme metni GÖSTERİLMEZ: kartlar ve düğme
-            // yeterlidir.
           ],
         ],
       ),

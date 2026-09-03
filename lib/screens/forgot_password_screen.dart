@@ -39,14 +39,6 @@ import 'yeni_sifre_screen.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
-  // ⚠ `telefonYolu` PARAMETRESİ KALDIRILDI (ürün kararı).
-  //
-  // Bir tur giriş moduna bağlanmıştı: telefon modundan gelen
-  // kullanıcı doğrudan telefon formunu görüyordu. Karar geri alındı —
-  // ekran HER ZAMAN e-posta formuyla açılır, telefon doğrulama
-  // ekranın içindeki "E-posta adresime erişemiyorum" seçeneğinden
-  // ulaşılır.
-
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
@@ -127,26 +119,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return asil(v);
   }
 
-  /// ── ⚠ KAYITSIZ NUMARA DENETİMİ KALDIRILDI — GÜVENLİK KARARI ──
-  ///
-  /// Eskiden burada `_kayitsizNumaralar` kümesi tutuluyor, numara tam
-  /// yazılınca depoya "bu numara kayıtlı mı" diye soruluyor ve
-  /// kayıtsızsa uyarı gösterilip düğme kilitleniyordu.
-  ///
-  /// Bu, HESAP SAYIMINA (enumeration) açık kapı bırakıyordu:
-  /// saldırgan numara deneyerek hangi numaraların sistemde kayıtlı
-  /// olduğunu öğrenebiliyordu. Uyarıyı düğmeden alan altına taşımak
-  /// da çözmez — sızdıran şey uyarının YERİ değil, cevabın kayıtlı ve
-  /// kayıtsız numarada FARKLI olmasıdır.
-  ///
-  /// ⚠ YENİ KURAL: numara biçim olarak geçerliyse düğme aktiftir,
-  /// kod isteği gönderilir ve HER DURUMDA aynı nötr metin gösterilir
-  /// (`FormMesaj.kodGonderildiNotr`). Kayıtlıysa kod gider, değilse
-  /// gitmez; ekranda fark görünmez.
-  ///
-  /// E-posta yolu bu ilkeyi zaten uyguluyordu; telefon yolu ona
-  /// hizalandı. Kilit: test/kurtarma_ve_korunan_davranislar_test.dart
-
   /// Numara TAM mı? (10 hane, `5` ile başlar)
   bool get _telefonTam => Validators.phone(_phone.text) == null;
 
@@ -168,16 +140,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   /// ekranı çiz" davranışı geri gelmez.
   bool _sonTelefonGecerli = false;
 
-  /// ⚠ KAYIT DENETİMİ BURADAN KALDIRILDI (enumeration).
-  ///
-  /// Eskiden numara tamamlandığı anda depoya "bu numara kayıtlı mı"
-  /// diye soruluyordu. Sorgunun kendisi sızıntının kaynağıydı:
-  /// cevabı ekrana yansıyan her yol, saldırgana numara deneyerek
-  /// hesap varlığını öğrenme imkânı verir.
-  ///
-  /// ⚠ Numara biçim olarak geçerliyse düğme AÇILIR; kayıtlı olup
-  /// olmadığına BAKILMAZ. Kayıtlılık farkı yalnız kodun gerçekten
-  /// gönderilip gönderilmediğinde ortaya çıkar ve ekranda görünmez.
   void _telefonDegisti() {
     var degisti = false;
 
@@ -523,9 +485,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       // (numara artık tam değil).
                       // ⚠ YALNIZ BİÇİM DENETLENİR.
                       //
-                      // Kayıtsız numara uyarısı KALDIRILDI: kayıtlı ve
-                      // kayıtsız numarada farklı cevap vermek hesap
-                      // sayımına (enumeration) yol açıyordu.
                       validator: (v) =>
                           _kural('telefon', _fPhone, v, Validators.phone),
                     ),

@@ -25,12 +25,6 @@ class AuthApi {
   Future<Map<String, dynamic>> login({required String phone, required String password}) =>
       c.post('/auth/login', body: {'phone': phone, 'password': password});
 
-  // ⚠ `POST /auth/google` KALDIRILDI — üçüncü taraf girişi yok.
-  //
-  // ⚠ SÖZLEŞMEDEN DE ÇIKARILDI: istemcinin çağırmadığı bir ucu
-  // sözleşmede bırakmak, backend'in gereksiz yere uygulamasına yol
-  // açardı.
-
   Future<void> logout() => c.post('/auth/logout');
 
   Future<void> changePassword({required String current, required String next}) =>

@@ -104,9 +104,6 @@ void main() {
     await offerCtl.placeOffer(listingId: lc.id, providerId: p1, amount: 900, note: 'n');
     await offerCtl.selectOffer(
         listingId: lc.id, offerId: offerCtl.myOfferFor(lc.id, p1)!.id, actorId: cust);
-    // ⚠ `startWork`/`completeWork` KALDIRILDI (API sözleşmesi §11).
-    // Seçim ilanı zaten tamamlanmış duruma getirir.
-    // cancelled
     final lx = ilan();
     await listingCtl.delete(lx.id, actorId: cust);
     // silinmiş
