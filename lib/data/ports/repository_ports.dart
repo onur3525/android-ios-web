@@ -23,6 +23,12 @@ abstract class AuthPort extends ChangeNotifier {
   Role get activeRole;
   Account? accountById(String id);
 
+  /// ── ⚠ "BUL" AKIŞI — GERÇEK HİZMET VEREN EŞLEŞMESİ ──
+  ///
+  /// Bkz. `AuthRepository.saglayicilarKimSunuyor` — aynı kural.
+  List<Account> saglayicilarKimSunuyor(String kategori, String hizmet,
+      {required String haricTutulacakId});
+
   /// Bildirim tercihleri — yalnız verilen alanlar değişir.
   void setNotificationPrefs(
       {bool? teklif, bool? mesaj, bool? duyuru, bool? eposta});

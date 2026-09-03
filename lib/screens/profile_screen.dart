@@ -10,8 +10,6 @@ import '../data/services/share_service.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'nav_actions.dart';
-import 'teklif_istediklerim_screen.dart';
-import 'teklif_istekleri_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/models/support_info.dart';
 import '../data/remote/api/legal_api.dart';
@@ -149,18 +147,6 @@ class ProfileScreen extends StatelessWidget {
           subtitle: 'Kayıtlı adreslerinizi görüntüleyin ve yönetin.',
           onTap: () => Navigator.pushNamed(c, '/profile/address'),
         ),
-        // ⚠ "BUL" AKIŞINDAN GÖNDERİLEN DOĞRUDAN TEKLİF TALEPLERİ —
-        // mevcut "İlanlarım" listesinden AYRI, kalıcı giriş noktası.
-        RefMenuRow(
-          iconAsset: 'assets/svg/ic_send.svg',
-          iconBg: const Color(0xFFE7F8EC),
-          title: 'Teklif İstediklerim',
-          subtitle: '"Bul" üzerinden teklif istediğiniz hizmet verenler.',
-          onTap: () => Navigator.push<void>(
-              c,
-              MaterialPageRoute<void>(
-                  builder: (_) => const TeklifIstediklerimScreen())),
-        ),
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pswap.svg',
           iconBg: const Color(0xFFE7F8EC),
@@ -172,18 +158,6 @@ class ProfileScreen extends StatelessWidget {
 
   /// Hizmet veren satırları — referans `vProfileProv`.
   List<Widget> _saglayiciSatirlari(BuildContext c) => [
-        // ⚠ "BUL" AKIŞINDAN GELEN DOĞRUDAN TEKLİF TALEPLERİ — mevcut
-        // "İşlerim" listesinden AYRI, kalıcı giriş noktası.
-        RefMenuRow(
-          iconAsset: 'assets/svg/ic_send.svg',
-          iconBg: const Color(0xFFE7F8EC),
-          title: 'Teklif İstekleri',
-          subtitle: 'Müşterilerin size doğrudan gönderdiği talepler.',
-          onTap: () => Navigator.push<void>(
-              c,
-              MaterialPageRoute<void>(
-                  builder: (_) => const TeklifIstekleriScreen())),
-        ),
         RefMenuRow(
           iconAsset: 'assets/svg/ic_wrenchp.svg',
           iconBg: const Color(0xFFF3E9FD),

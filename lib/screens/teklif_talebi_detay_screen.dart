@@ -65,8 +65,18 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   }
 
   Future<void> _teklifVer(TeklifTalebi t) async {
+    if (_gonderiliyor) {
+      return;
+    }
     final f = int.tryParse(_fiyat.text.trim());
-    if (f == null || f <= 0 || _cevap.text.trim().isEmpty || _gonderiliyor) {
+    // ⚠ ÖNCEDEN: geçersiz girişte SESSİZCE hiçbir şey olmuyordu.
+    // Şimdi kullanıcıya HANGİ alanın eksik/geçersiz olduğu söyleniyor.
+    if (f == null || f <= 0) {
+      sysToastKural(context, 'Geçerli bir fiyat girin.');
+      return;
+    }
+    if (_cevap.text.trim().isEmpty) {
+      sysToastKural(context, 'Teklifinizi açıklayan bir cevap yazın.');
       return;
     }
     setState(() => _gonderiliyor = true);

@@ -44,6 +44,12 @@ class MockAuthPort extends AuthPort {
   Role get activeRole => repo.activeRole;
   @override
   Account? accountById(String id) => repo.byId(id);
+
+  @override
+  List<Account> saglayicilarKimSunuyor(String kategori, String hizmet,
+          {required String haricTutulacakId}) =>
+      repo.saglayicilarKimSunuyor(kategori, hizmet,
+          haricTutulacakId: haricTutulacakId);
   @override
   void setNotificationPrefs(
           {bool? teklif, bool? mesaj, bool? duyuru, bool? eposta}) =>

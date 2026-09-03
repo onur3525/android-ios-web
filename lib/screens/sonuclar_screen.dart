@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
+import '../data/controllers/auth_controller.dart';
+import '../data/controllers/listing_controller.dart';
+import '../data/controllers/offer_controller.dart';
 import '../data/controllers/region_controller.dart';
+import '../data/controllers/review_controller.dart';
 import '../data/mock_saglayici_dizini.dart';
 import '../domain/yakinlik_saglayici.dart';
 import '../ui/ref_tokens.dart';
@@ -58,11 +62,21 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
     // kaynağı ÜRETİLMEDİ, `RegionController.districtsOf` yeniden
     // kullanıldı.
     final rc = context.read<RegionController>();
-    final yakinlik = IlBazliYakinlikSaglayici((il) => rc.districtsOf(il));
+    // ⚠ GERÇEK KOORDİNAT TABANLI SIRALAMA — `IlBazliYakinlikSaglayici`
+    // artık yalnız koordinatı olmayan iller için sessiz geri düşüş
+    // (bkz. `KoordinatTabanliYakinlikSaglayici` içindeki kural).
+    final yakinlik =
+        KoordinatTabanliYakinlikSaglayici((il) => rc.districtsOf(il));
     _sonuclar = mockSaglayicilariBul(
       il: widget.il,
       ilce: widget.ilce,
       yakinlik: yakinlik,
+      gercekSaglayicilar: _gercekSaglayicilariBul(
+        context,
+        kategori: widget.kategori,
+        hizmet: widget.hizmet,
+        musteriIlcesi: widget.ilce,
+      ),
     );
   }
 
@@ -212,11 +226,26 @@ class _SaglayiciKarti extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // ── SIRA — İLK 3'TE MADALYA, SONRASI DÜZ SAYI ──
+          //
+          // ⚠ Projede madalya asset'i YOK; yeni bir SVG dosyası
+          // ÜRETİLMEDİ — Flutter'ın kendi Material ikon setinden
+          // (`Icons.workspace_premium`, gerçek madalya biçimi)
+          // kullanıldı; bu proje genelinde zaten `Icons.check` gibi
+          // küçük yerleşik ikonlar için yapılan aynı istisna.
           SizedBox(
-            width: 18,
-            child: Text('$sira',
-                style: refText(
-                    size: RF.s13, weight: RF.w700, color: RC.textSoft)),
+            width: 22,
+            child: switch (sira) {
+              1 => const Icon(Icons.workspace_premium,
+                  size: 22, color: Color(0xFFD4AF37)), // altın
+              2 => const Icon(Icons.workspace_premium,
+                  size: 22, color: Color(0xFFA8A9AD)), // gümüş
+              3 => const Icon(Icons.workspace_premium,
+                  size: 22, color: Color(0xFFCD7F32)), // bronz
+              _ => Text('$sira',
+                  style: refText(
+                      size: RF.s13, weight: RF.w700, color: RC.textSoft)),
+            },
           ),
           const SizedBox(width: 8),
 
@@ -331,4 +360,87 @@ class _TeklifIsteButonu extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ── ⚠ "BUL" AKIŞI — GERÇEK KAYITLI HİZMET VERENLERİ BULUR ──
+///
+/// `AuthController.saglayicilarKimSunuyor` — kendi `categories`
+/// kümesinde bu hizmeti/kategoriyi SEÇMİŞ, gerçek hesaplardır (bkz.
+/// `MyCategoriesScreen`). Bulunursa mock havuza EKLENİR, bulunamazsa
+/// liste yalnız mock kalır — sahte "gerçek" veri ÜRETİLMEZ.
+List<MockSaglayici> _gercekSaglayicilariBul(
+  BuildContext context, {
+  required String kategori,
+  required String hizmet,
+  required String musteriIlcesi,
+}) {
+  final auth = context.read<AuthController>();
+  final me = auth.currentAccount;
+  if (me == null) {
+    return const [];
+  }
+
+  final hesaplar = auth.saglayicilarKimSunuyor(kategori, hizmet,
+      haricTutulacakId: me.id);
+  if (hesaplar.isEmpty) {
+    return const [];
+  }
+
+  final reviews = context.read<ReviewController>();
+
+  return [
+    for (final acc in hesaplar)
+      MockSaglayici(
+        gercek: true,
+        id: acc.id,
+        adSoyad: acc.name,
+        // ⚠ Hizmet verenin KENDİ seçtiği bölgelerden (bkz.
+        // `MyAreasScreen`/`serviceDistricts`) müşterinin ilçesiyle
+        // eşleşen varsa O kullanılır — gerçekten "buraya hizmet
+        // veriyor" anlamına gelir. Yoksa ilk bölgesi gösterilir.
+        ilce: acc.serviceDistricts.contains(musteriIlcesi)
+            ? musteriIlcesi
+            : (acc.serviceDistricts.isNotEmpty
+                ? acc.serviceDistricts.first
+                : musteriIlcesi),
+        puan: reviews.averageOf(acc.id) ?? 0,
+        yorumSayisi: reviews.byProvider(acc.id).length,
+        tamamlananIs: _tamamlananIsGercek(context, acc.id),
+        aktiflikSkoru:
+            _aktiflikTahmini(context, acc.id, reviews.byProvider(acc.id).length),
+      ),
+  ];
+}
+
+/// ⚠ `offer_detail_screen.dart`'taki `_tamamlananIs` ile AYNI
+/// mantık — o fonksiyon dosyaya ÖZEL (private) olduğu için buraya
+/// yeniden yazıldı, davranışı BİREBİR aynı.
+int _tamamlananIsGercek(BuildContext c, String providerId) {
+  final ilanlar = c.read<ListingController>().all;
+  final teklifler = c.read<OfferController>();
+  var n = 0;
+  for (final l in ilanlar) {
+    if (!l.isTamamlanmisIs) {
+      continue;
+    }
+    final secili = teklifler
+        .offersForListing(l.id)
+        .where((o) => o.id == l.selectedOfferId);
+    if (secili.isNotEmpty && secili.first.providerId == providerId) {
+      n++;
+    }
+  }
+  return n;
+}
+
+/// ⚠ GERÇEK HESAPLAR İÇİN "AKTİFLİK" TAHMİNİ — dürüst bir vekil
+/// (proxy) değerdir, uydurma DEĞİL: tamamlanan iş ve yorum sayısı
+/// arttıkça platformu gerçekten kullandığını gösterir. Gerçek backend
+/// bunu yanıt süresi/son giriş gibi asıl sinyallerden hesaplayacak;
+/// bu, o gelene kadarki en dürüst yaklaşıklıktır.
+double _aktiflikTahmini(
+    BuildContext c, String providerId, int yorumSayisi) {
+  final tamamlanan = _tamamlananIsGercek(c, providerId);
+  final skor = tamamlanan * 0.05 + yorumSayisi * 0.03;
+  return skor > 1 ? 1 : skor;
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'job_detail_screen.dart';
 import 'listing_detail_screen.dart';
+import 'teklif_talebi_detay_screen.dart';
 import 'widgets/hata_gosterimi.dart';
 import '../domain/hata_mesajlari.dart';
 import 'package:provider/provider.dart';
+import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
 import '../data/models/account.dart';
@@ -125,6 +127,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const Color(0xFFFDF3E1),
             const Color(0xFFF5820C)
           ),
+        // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — YENİ TÜRLER ──
+        //
+        // `newOffer`/`offerSelected` ile AYNI görsel dilde ama ayrı
+        // ikon seçimleri değil — bu akış zaten kendi ikonunu
+        // (`ic_send.svg`) taşıyor, burada da tutarlılık için
+        // kullanıldı.
+        NotifType.teklifTalebiGeldi => (
+            'assets/svg/ic_send.svg',
+            const Color(0xFFE7F8EC),
+            HC.green
+          ),
+        NotifType.teklifVerildi => (
+            'assets/svg/ic_ndoc.svg',
+            const Color(0xFFEAF1FB),
+            RC.blue
+          ),
+        NotifType.teklifSecildi => (
+            'assets/svg/ic_checkc.svg',
+            const Color(0xFFE9F9EF),
+            RC.success
+          ),
+        NotifType.teklifReddedildi => (
+            'assets/svg/ic_close.svg',
+            const Color(0xFFF2F4F7),
+            RC.grey
+          ),
+        NotifType.teklifSuresiDoldu => (
+            'assets/svg/ic_clock.svg',
+            const Color(0xFFF2F4F7),
+            RC.grey
+          ),
+        NotifType.teklifIsiTamamlandi => (
+            'assets/svg/ic_shieldok.svg',
+            const Color(0xFFE9F9EF),
+            RC.success
+          ),
+        NotifType.teklifYeniMesaj => (
+            'assets/svg/ic_nchat.svg',
+            const Color(0xFFEAF1FB),
+            RC.blue
+          ),
         // `ntIcon` varsayılanı → `IC_NBELL`.
         NotifType.unknown => (
             'assets/svg/ic_nbell.svg',
@@ -179,6 +222,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               context,
               MaterialPageRoute<void>(
                   builder: (_) => JobDetailScreen(listingId: ilan)));
+        }
+
+      // ── DOĞRUDAN TEKLİF TALEBİ DETAYINA ──
+      //
+      // Tüm "Doğrudan Teklif İste" bildirimleri AYNI detay ekranına
+      // gider; ekran ROL FARKINDA (bkz. `TeklifTalebiDetayScreen`),
+      // hangi tarafa gittiğine bakılmaksızın doğru görünümü çizer.
+      case NotifType.teklifTalebiGeldi:
+      case NotifType.teklifVerildi:
+      case NotifType.teklifSecildi:
+      case NotifType.teklifReddedildi:
+      case NotifType.teklifSuresiDoldu:
+      case NotifType.teklifIsiTamamlandi:
+      case NotifType.teklifYeniMesaj:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => TeklifTalebiDetayScreen(talepId: ilan)));
         }
 
       case NotifType.refund:

@@ -89,6 +89,15 @@ class AppPorts {
   final ReviewPort reviews;
   final NotificationPort notifications;
 
+  /// ── ⚠ "DOĞRUDAN TEKLİF İSTE" BİLDİRİMLERİ İÇİN ──
+  ///
+  /// Diğer mock port'lar (`MockOfferPort` vb.) zaten `notifs:
+  /// notifRepo` alıp başarılı eylemlerde `notifs?.push(...)` çağırır
+  /// — AYNI ÖRNEĞİ `MockTeklifTalebiPort`e de vermek için buradan
+  /// dışa açıldı. API modunda YOKTUR (`null`) — gerçek bildirimler
+  /// sunucudan gelir, yerel depo İLGİSİZDİR.
+  final NotificationRepository? notifRepo;
+
   /// Bölge verisi (şehir/ilçe/mahalle) — API modunda sunucudan gelir.
   final RegionPort regions;
 
@@ -118,6 +127,7 @@ class AppPorts {
     required this.regions,
     required this.apiClient,
     this.expiry,
+    this.notifRepo,
   });
 }
 
@@ -193,6 +203,7 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     reviews: MockReviewPort(
         reviewRepo, listingRepo, offerRepo, contactRepo),
     notifications: MockNotificationPort(notifRepo),
+    notifRepo: notifRepo,
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
@@ -240,10 +251,12 @@ Future<void> main() async {
   // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — TEK ÖRNEKLEME ──
   //
   // Öteki portlarla AYNI kural: burada BİR KEZ kurulur, tüm ekranlar
-  // aynı örneği paylaşır. `AppPorts`/`buildPorts()` DEĞİŞMEDİ; bu
-  // yeni özellik kendi bağımsız zincirini taşır.
+  // aynı örneği paylaşır. `AppPorts`e yalnız `notifRepo` alanı
+  // EKLENDİ (bkz. sınıf tanımındaki not) — bildirimler mevcut
+  // `NotificationController`ın GÖRDÜĞÜ AYNI depoya yazılsın diye;
+  // başka hiçbir port/repository DEĞİŞMEDİ.
   final teklifTalebiPort =
-      MockTeklifTalebiPort(TeklifTalebiRepository());
+      MockTeklifTalebiPort(TeklifTalebiRepository(), notifs: ports.notifRepo);
   BootLog.olay('BUILD_PORTS_END');
 
   // İLAN SÜRESİ KURALI — yalnız mock modda istemcide işlenir.

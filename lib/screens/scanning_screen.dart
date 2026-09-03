@@ -108,7 +108,7 @@ class _ScanningScreenState extends State<ScanningScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── ÜST BAR: SOL GERİ · ORTA BAŞLIK · SAĞ KONUM ──
+            // ── ÜST BAR: SOL GERİ · ORTA BAŞLIK · SAĞ X ──
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
               child: Row(
@@ -120,13 +120,19 @@ class _ScanningScreenState extends State<ScanningScreen>
                         style: refText(
                             size: RF.s16, weight: RF.w700, color: RC.text)),
                   ),
-                  // ⚠ AŞAMA 1'DEKİYLE AYNI İKON/RENK — üç ekranın
-                  // aynı akışın parçası olduğu görsel olarak belli
-                  // olsun diye.
-                  const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: RefSvg('assets/svg/ic_pin.svg',
-                        size: 22, color: HC.green),
+                  // ⚠ KONUM İKONU BURADAN KALDIRILDI — aşağıya,
+                  // "Konum" YAZISININ YERİNE taşındı (ürün kararı).
+                  // Sağ üst artık X ile "Bul" akışından çıkışı
+                  // sağlıyor — `FindProviderScreen`'deki X ile AYNI
+                  // davranış ve hedef.
+                  RefTap(
+                    onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
+                        '/customer/listings', (r) => false),
+                    borderRadius: BorderRadius.circular(RR.circle),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: RefSvg('assets/svg/ic_close.svg', size: 20),
+                    ),
                   ),
                 ],
               ),
@@ -153,9 +159,21 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('Konum: ${widget.ilce} / ${widget.il}',
-                      style: refText(
-                          size: RF.s13, weight: RF.w500, color: RC.textSoft)),
+                  // ⚠ "Konum" YAZISI KALDIRILDI — üst bardaki ikon
+                  // BURAYA taşındı; adres kendi başına yeterli.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const RefSvg('assets/svg/ic_pin.svg',
+                          size: 14, color: HC.green),
+                      const SizedBox(width: 5),
+                      Text('${widget.ilce} / ${widget.il}',
+                          style: refText(
+                              size: RF.s13,
+                              weight: RF.w500,
+                              color: RC.textSoft)),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -205,29 +223,6 @@ class _ScanningScreenState extends State<ScanningScreen>
               ),
             ),
 
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: RefInfoBox(
-                child: Row(
-                  children: [
-                    const RefSvg('assets/svg/ic_shield.svg',
-                        size: 18, color: RC.blue),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Sizi en iyi hizmet verenlerle buluşturmak için '
-                        'tarama yapıyoruz. Lütfen bekleyiniz.',
-                        style: refText(
-                            size: RF.s125,
-                            weight: RF.w500,
-                            color: RC.textSoft),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),

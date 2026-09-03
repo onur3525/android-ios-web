@@ -13,6 +13,12 @@ class AuthController extends BaseController {
   Role get activeRole => _auth.activeRole;
   Account? accountById(String id) => _auth.accountById(id);
 
+  /// Bkz. `AuthPort.saglayicilarKimSunuyor`.
+  List<Account> saglayicilarKimSunuyor(String kategori, String hizmet,
+          {required String haricTutulacakId}) =>
+      _auth.saglayicilarKimSunuyor(kategori, hizmet,
+          haricTutulacakId: haricTutulacakId);
+
   /// Bildirim tercihleri — bkz. depo notu.
   void setNotificationPrefs({
     bool? teklif,

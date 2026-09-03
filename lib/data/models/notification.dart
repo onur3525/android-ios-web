@@ -8,6 +8,18 @@ enum NotifType {
   accountStatus,   // Hesap onay durumu değişti (hizmet verene)
   categoryRequest, // Kategori talebi karara bağlandı (hizmet verene)
   announcement,    // Yönetici duyurusu (toplu bildirim)
+  // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — YENİ TÜRLER ──
+  //
+  // Mevcut türlerle KARIŞTIRILMADI: bu akış `Offer`/`Listing`den
+  // AYRI bir modele (`TeklifTalebi`) dayanır; `newOffer` vb. genel
+  // ilan sistemine aittir.
+  teklifTalebiGeldi,     // Yeni doğrudan talep (hizmet verene)
+  teklifVerildi,         // Teklif geldi (hizmet alana)
+  teklifSecildi,         // Teklif kabul edildi, iş aktif (hizmet verene)
+  teklifReddedildi,      // Teklif reddedildi (hizmet verene)
+  teklifSuresiDoldu,     // 30 saat doldu (hizmet verene)
+  teklifIsiTamamlandi,   // İş tamamlandı işaretlendi (hizmet alana)
+  teklifYeniMesaj,       // Teklif talebi sohbetinde yeni mesaj (karşı tarafa)
   /// Sunucu yeni bir tip eklediyse uygulama ÇÖKMEZ: bilinmeyen tip
   /// nötr ikon ve başlıkla gösterilir.
   unknown,

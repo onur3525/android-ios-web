@@ -155,6 +155,29 @@ class AuthRepository extends ChangeNotifier {
     return null;
   }
 
+  /// ── ⚠ "BUL" AKIŞI — GERÇEK HİZMET VEREN EŞLEŞMESİ ──
+  ///
+  /// `kategori` veya `hizmet` adı, hizmet verenin KENDİ seçtiği
+  /// `categories` kümesinde varsa eşleşir — `MyCategoriesScreen`'de
+  /// hem ana kategori hem alt hizmet AYNI kümeye toggle edilir (bkz.
+  /// o ekranın notu), bu yüzden ikisi de burada aranır.
+  ///
+  /// ⚠ Yalnız hizmet veren rolü olan, KENDİ hesabı OLMAYAN hesaplar
+  /// döner — bir kullanıcı kendi aramasında kendini görmez.
+  List<Account> saglayicilarKimSunuyor(
+    String kategori,
+    String hizmet, {
+    required String haricTutulacakId,
+  }) {
+    return accounts
+        .where((a) =>
+            a.isProvider &&
+            a.id != haricTutulacakId &&
+            (a.categories.contains(kategori) ||
+                a.categories.contains(hizmet)))
+        .toList(growable: false);
+  }
+
   Account? findByPhone(String phone) {
     final p = _norm(phone);
     for (final a in accounts) {

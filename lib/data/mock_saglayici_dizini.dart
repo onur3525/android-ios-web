@@ -20,6 +20,7 @@ class MockSaglayici {
     required this.yorumSayisi,
     required this.tamamlananIs,
     required this.aktiflikSkoru,
+    this.gercek = false,
   });
 
   final String id;
@@ -36,37 +37,55 @@ class MockSaglayici {
   /// değeri yanıt süresi, son giriş, tamamlanma oranı gibi
   /// sinyallerden hesaplayacak — burada yalnız SABİT mock veridir.
   final double aktiflikSkoru;
+
+  /// ⚠ `true` İSE bu kayıt KURGUSAL DEĞİL — gerçek kayıtlı bir
+  /// hesaptan üretildi (`id` gerçek hesap id'sidir, "mock-saglayici-N"
+  /// DEĞİL). "Teklif İste" bu id'yi kullanır; gerçek hizmet veren
+  /// gerçekten kendi "Teklif İstekleri" sekmesinde talebi görür.
+  final bool gercek;
 }
 
-/// Seçilen hizmet + kullanıcının il/ilçesi için mock hizmet veren
+/// Seçilen hizmet + kullanıcının il/ilçesi için hizmet veren
 /// listesini, "yakınlık" bilgisiyle birlikte üretir.
 ///
-/// ⚠ HİZMET EŞLEŞMESİ GERÇEK DEĞİL: mock veride hizmet↔hizmet veren
-/// ilişkisi yok; havuzun TAMAMI her hizmet için "uygun" sayılır. Bu,
-/// gerçek backend gelene kadarki bilinen bir sadeleştirmedir.
+/// ⚠ GERÇEK EŞLEŞME + MOCK DOLGU: `gercekSaglayicilar` — o hizmeti
+/// GERÇEKTEN sunduğunu `MyCategoriesScreen`de kendi seçmiş, kayıtlı
+/// hesaplardan üretilir (bkz. `sonuclar_screen.dart`). Mock havuz,
+/// gerçek sonuç olsun ya da olmasın, listeyi DOLDURMAYA devam eder —
+/// gerçek backend/dizin tam kurulana kadarki bilinen bir
+/// sadeleştirmedir.
 List<({MockSaglayici saglayici, int yakinlikSirasi})> mockSaglayicilariBul({
   required String il,
   required String ilce,
   required YakinlikSaglayici yakinlik,
+  List<MockSaglayici> gercekSaglayicilar = const [],
 }) {
-  final yakinIlceler = yakinlik.yakinIlceler(il, ilce).toSet();
+  // ── ⚠ TAM SIRALI LİSTE — artık "yakın/uzak" gibi kaba İKİ grup
+  // DEĞİL. `yakinlik.yakinIlceler` (kendi ilçesi hariç) EN YAKINDAN
+  // EN UZAĞA sıralı gelir (bkz. `KoordinatTabanliYakinlikSaglayici`).
+  // Bu sıradaki KONUM doğrudan `yakinlikSirasi` olur — ilk sırada
+  // olan ilçe puan/aktiflik eşitliğinde önde çıkar.
+  final siraliIlceler = yakinlik.yakinIlceler(il, ilce);
+  final ilceSirasi = <String, int>{
+    ilce: 0, // ⚠ KENDİ İLÇESİ HER ZAMAN 0 — "Aşama 1".
+    for (var i = 0; i < siraliIlceler.length; i++) siraliIlceler[i]: i + 1,
+  };
 
-  int siraHesapla(String saglayiciIlcesi) {
-    if (saglayiciIlcesi == ilce) return 0;
-    if (yakinIlceler.contains(saglayiciIlcesi)) return 1;
-    return 2;
-  }
+  int siraHesapla(String saglayiciIlcesi) =>
+      ilceSirasi[saglayiciIlcesi] ?? (siraliIlceler.length + 1);
 
-  final havuz = _havuz(il: il, ilce: ilce, yakinIlceler: yakinIlceler);
+  final havuz =
+      _havuz(il: il, ilce: ilce, siraliIlceler: siraliIlceler);
 
   final sonuc = [
-    for (final s in havuz)
+    for (final s in [...gercekSaglayicilar, ...havuz])
       (saglayici: s, yakinlikSirasi: siraHesapla(s.ilce)),
   ];
 
   // ── ⚠ SIRALAMA: aktiflik → puan → yorum → tamamlanan iş → mesafe ──
   //
-  // Mesafe burada `yakinlikSirasi`dir (0=aynı ilçe, en yakın).
+  // Mesafe burada `yakinlikSirasi`dir — gerçek haversine sırasına
+  // göre 0 (kendi ilçe), 1 (en yakın), 2, 3... şeklinde artar.
   // Kullanıcıya GÖSTERİLMEZ — yalnız sıralama kriteridir.
   sonuc.sort((a, b) {
     var c = b.saglayici.aktiflikSkoru.compareTo(a.saglayici.aktiflikSkoru);
@@ -85,19 +104,22 @@ List<({MockSaglayici saglayici, int yakinlikSirasi})> mockSaglayicilariBul({
 
 /// ⚠ SABİT MOCK HAVUZ — gerçek isim/istatistik DEĞİL, yalnız ekranı
 /// doldurmak için kurgusaldır. İlk üç kayıt kasıtlı olarak
-/// kullanıcının kendi ilçesinde; kalanı "yakın ilçeler" ve il
-/// geneline dağıtılmıştır — sıralama mantığını gözle görünür kılmak
-/// için.
+/// kullanıcının kendi ilçesinde; kalanı `siraliIlceler`in BAŞINDAN
+/// SONUNA doğru dağıtılmıştır — yani gerçekten YAKINDAN UZAĞA giden
+/// ilçelere yerleştirilir, sıralama mantığı gözle görünür olsun diye.
 List<MockSaglayici> _havuz({
   required String il,
   required String ilce,
-  required Set<String> yakinIlceler,
+  required List<String> siraliIlceler,
 }) {
-  final yakinListe = yakinIlceler.toList();
   String ilceSec(int i) {
     if (i < 3) return ilce; // aynı ilçe
-    if (yakinListe.isNotEmpty) {
-      return yakinListe[(i - 3) % yakinListe.length]; // yakın ilçeler
+    if (siraliIlceler.isNotEmpty) {
+      // ⚠ (i - 3) arttıkça `siraliIlceler`de İLERİ gidilir — yani
+      // sonraki hizmet veren bir öncekinden DAHA UZAK bir ilçeye
+      // düşer. Modulo yalnız havuz ilçe sayısını AŞARSA devreye
+      // girer (30 ilçeden fazla mock kayıt varsa).
+      return siraliIlceler[(i - 3) % siraliIlceler.length];
     }
     return ilce;
   }

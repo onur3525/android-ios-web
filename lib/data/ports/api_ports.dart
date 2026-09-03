@@ -43,6 +43,15 @@ class ApiAuthPort extends AuthPort {
   Account? accountById(String id) =>
       repo.currentAccount?.id == id ? repo.currentAccount : null;
 
+  /// ⚠ API MODUNDA GERÇEK UÇ YOK: "kategoriye göre hizmet veren
+  /// bul" bir arama/dizin uç noktası (`GET /providers?service=...`)
+  /// gerektirir; henüz TANIMLANMADI. Sahte sonuç ÜRETİLMEZ — boş
+  /// liste dönülür, "Bul" akışı mock havuza düşer.
+  @override
+  List<Account> saglayicilarKimSunuyor(String kategori, String hizmet,
+          {required String haricTutulacakId}) =>
+      const [];
+
   /// ⚠ API modunda tercih SUNUCUYA da yazılmalıdır (`PATCH
   /// /profiles/me/notifications`). Uç hazır olmadığı için şimdilik
   /// yalnız yerel önbellek güncellenir; ekran davranışı iki modda da

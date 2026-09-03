@@ -23,6 +23,7 @@ import 'nav_actions.dart';
 import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
+import 'teklif_istekleri_screen.dart';
 
 /// Hizmet veren — İŞLERİM / KAZANDIĞIM sekmeleri (HTML vCust provider).
 ///
@@ -44,12 +45,16 @@ class JobsScreen extends StatefulWidget {
 class _JobsScreenState extends State<JobsScreen> {
   /// ÜST SEKME — yalnız `/provider/jobs` ekranında anlamlıdır.
   ///
-  /// `true`  → Yeni işler
-  /// `false` → Teklif verdiklerim
+  /// 0 → Yeni işler · 1 → Teklif verdiklerim · 2 → Teklif istekleri
   ///
   /// ⚠ `/provider/won` ekranında segment çizilmez; orada bu değer
-  /// `false` kalır ve liste `widget.kazandigim` ile belirlenir.
-  late bool _jobsTab = !widget.kazandigim;
+  /// `1` kalır ve liste `widget.kazandigim` ile belirlenir.
+  late int _sekme = widget.kazandigim ? 1 : 0;
+
+  /// ⚠ GERİYE UYUMLULUK: mevcut kod tabanı "Yeni işler" sekmesini
+  /// hep `_jobsTab: bool` ile kontrol ediyordu — bu getter, o
+  /// noktaların HİÇBİRİNİ değiştirmeden `_sekme`ye bağlar.
+  bool get _jobsTab => _sekme == 0;
 
   /// SIRALAMA — hizmet alan tarafıyla AYNI kart düzeni, sağlayıcıya
   /// uygun ölçütler.
@@ -361,52 +366,64 @@ class _JobsScreenState extends State<JobsScreen> {
           // seçim sunardı.
           if (!widget.kazandigim)
             RefSegmentTabs(
-              selected: _jobsTab ? 0 : 1,
-              onChanged: (i) => setState(() => _jobsTab = i == 0),
+              selected: _sekme,
+              onChanged: (i) => setState(() => _sekme = i),
               items: const [
                 (asset: 'assets/svg/ic_plane.svg', label: 'Yeni işler'),
                 (
                   asset: 'assets/svg/ic_checkc.svg',
                   label: 'Teklif verdiklerim'
                 ),
+                (
+                  asset: 'assets/svg/ic_send.svg',
+                  label: 'Teklif istekleri'
+                ),
               ],
             ),
 
           // ── `.cust-bar` — sayı + araçlar ──
           //
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: RefListCount(
-                      '${_jobsTab ? jobs.length : myOffers.length} ilan bulundu'),
-                ),
-                const SizedBox(width: 10),
-                RefPillButton(
-                  iconAsset: 'assets/svg/ic_sort.svg',
-                  label: 'Sırala',
-                  onTap: _siralaMenu,
-                ),
-                // ⚠ TEKLİF VERDİKLERİM SEKMESİNDE FİLTRE YOKTUR.
-                //
-                // O liste kısadır; filtre kutusu kullanıldığından çok
-                // yer kaplardı. Sıralama işi görüyor.
-                if (_jobsTab) ...[
-                  const SizedBox(width: 8),
-                  RefPillButton(
-                    iconAsset: 'assets/svg/ic_filter.svg',
-                    label: 'Filtreler',
-                    onTap: _filtreMenu,
+          // ⚠ "TEKLİF İSTEKLERİ" SEKMESİNDE BU SATIR ÇİZİLMEZ:
+          // `TeklifIstekleriListesi` kendi boş-durum metnini
+          // taşıyor; sayı/sırala/filtrele burada anlamsız.
+          if (_sekme != 2)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RefListCount(
+                        '${_jobsTab ? jobs.length : myOffers.length} ilan bulundu'),
                   ),
+                  const SizedBox(width: 10),
+                  RefPillButton(
+                    iconAsset: 'assets/svg/ic_sort.svg',
+                    label: 'Sırala',
+                    onTap: _siralaMenu,
+                  ),
+                  // ⚠ TEKLİF VERDİKLERİM SEKMESİNDE FİLTRE YOKTUR.
+                  //
+                  // O liste kısadır; filtre kutusu kullanıldığından çok
+                  // yer kaplardı. Sıralama işi görüyor.
+                  if (_jobsTab) ...[
+                    const SizedBox(width: 8),
+                    RefPillButton(
+                      iconAsset: 'assets/svg/ic_filter.svg',
+                      label: 'Filtreler',
+                      onTap: _filtreMenu,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
 
           Expanded(
-            // Liste ekranı: aşağı çekerek yenileme (her iki sekme için).
-            child: RefreshIndicator(
+            // ⚠ "TEKLİF İSTEKLERİ" — Profil menüsünden BURAYA taşındı
+            // (ürün kararı). Ayrı çekerek yenileme YOK: liste zaten
+            // `TeklifTalebiController`ı dinliyor, canlı güncellenir.
+            child: _sekme == 2
+                ? const TeklifIstekleriListesi()
+                : RefreshIndicator(
               onRefresh: _refresh,
               color: HC.blue,
               child: _jobsTab

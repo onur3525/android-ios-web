@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/services/search_service.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
+import 'teklif_istediklerim_screen.dart';
 
 /// "BUL" AKIŞI — 1. EKRAN: HİZMET VEREN BUL
 ///
@@ -52,10 +54,13 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
 
   void _ara() {
     final adres = context.read<AuthController>().currentAccount?.address;
-    // ⚠ Düğme zaten yalnız `_hizmet != null` iken aktif; adres de
-    // yoksa (profilde kayıtlı adres yoksa) arama BAŞLATILMAZ —
-    // sessizce hiçbir şey olmaz, kullanıcı önce adres eklemelidir.
+    // ⚠ ÖNCEDEN: adres yoksa SESSİZCE hiçbir şey olmuyordu. Şimdi
+    // kullanıcı NEDEN ilerleyemediğini görüyor VE adres ekleme
+    // sayfasına yönlendiriliyor — sessiz uç NOKTASI kalmadı.
     if (adres == null) {
+      sysToastKural(context,
+          'Arama yapabilmek için önce profilinize bir adres eklemelisiniz.');
+      Navigator.pushNamed(context, '/profile/address');
       return;
     }
     Navigator.push<void>(
@@ -79,20 +84,25 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── ÜST SATIR: SOLDA GERİ, SAĞDA KONUM İKONU ──
+          // ── ÜST SATIR: SOLDA GERİ, SAĞDA X (AKIŞTAN ÇIK) ──
           //
-          // ⚠ Projede "hedef/crosshair" ikonu YOK. En yakın karşılık
-          // `ic_pin.svg` — konum bildiren tek ikon. Yeşil renk zaten
-          // var olan `HC.green` token'ıyla boyanır; yeni asset veya
-          // yeni renk ÜRETİLMEDİ.
+          // ⚠ Konum ikonu buradan KALDIRILDI — aşağıdaki konum
+          // kartında "Konumum" yazısının SOLUNA taşındı (ürün
+          // kararı). Sağ üst artık `ic_close.svg` ile "Bul" akışının
+          // tamamından çıkışı sağlıyor — `SonuclarScreen`'deki X ile
+          // AYNI davranış ve AYNI hedef.
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const RefBackButton(),
-              const Padding(
-                padding: EdgeInsets.all(8),
-                child: RefSvg('assets/svg/ic_pin.svg',
-                    size: 22, color: HC.green),
+              RefTap(
+                onTap: () => Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/customer/listings', (r) => false),
+                borderRadius: BorderRadius.circular(RR.circle),
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: RefSvg('assets/svg/ic_close.svg', size: 20),
+                ),
               ),
             ],
           ),
@@ -100,7 +110,24 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
           RefPageTitle('Hizmet Veren Bul', geriDugmesi: false),
           RefSubtitle('Aradığın hizmeti yaz, en uygun hizmet verenleri '
               'bulalım.'),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
+
+          // ── ⚠ "TEKLİF İSTEDİKLERİM" GİRİŞ NOKTASI — BURAYA TAŞINDI ──
+          //
+          // Profil menüsündeki ayrı satır KALDIRILDI (ürün kararı):
+          // bu erişim artık "Bul" akışının kendi giriş ekranında.
+          Align(
+            alignment: Alignment.centerRight,
+            child: RefPillButton(
+              iconAsset: 'assets/svg/ic_send.svg',
+              label: 'Teklif İstediklerim',
+              onTap: () => Navigator.push<void>(
+                  context,
+                  MaterialPageRoute<void>(
+                      builder: (_) => const TeklifIstediklerimScreen())),
+            ),
+          ),
+          const SizedBox(height: 10),
 
           _HizmetAramaAlani(
             seciliHizmet: _hizmet,
@@ -123,9 +150,20 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Konumun (profil adresin)',
-                    style: refText(
-                        size: RF.s125, weight: RF.w500, color: RC.textSoft)),
+                // ⚠ İKON BURAYA TAŞINDI — üst bardaki konum ikonunun
+                // yeni yeri, "Konumum" yazısının SOLU.
+                Row(
+                  children: [
+                    const RefSvg('assets/svg/ic_pin.svg',
+                        size: 16, color: HC.green),
+                    const SizedBox(width: 6),
+                    Text('Konumum',
+                        style: refText(
+                            size: RF.s125,
+                            weight: RF.w500,
+                            color: RC.textSoft)),
+                  ],
+                ),
                 const SizedBox(height: 2),
                 Text(
                   adres != null
@@ -134,26 +172,32 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
                   style: refText(
                       size: RF.s15, weight: RF.w700, color: RC.text),
                 ),
-                const SizedBox(height: 4),
-                Text('Bu adres baz alınarak arama yapılacaktır.',
-                    style: refText(
-                        size: RF.s12, weight: RF.w400, color: RC.textSoft)),
               ],
             ),
           ),
 
-          // ── GÜVEN/AVANTAJ BİLDİRİMİ ──
-          RefInfoBox(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                _GuvenSatiri('Güvenilir Hizmet Verenler'),
-                SizedBox(height: 8),
-                _GuvenSatiri('Gerçek Yorumlar'),
-                SizedBox(height: 8),
-                _GuvenSatiri('Size En Yakınlar'),
-              ],
-            ),
+          // ── ÜÇ AVANTAJ KARTI — HER BİRİ AYRI VE KENDİ ÇERÇEVESİNDE ──
+          //
+          // ⚠ Düz metin bloğu DEĞİL: her satır kendi beyaz kartında,
+          // `RefMenuRow` GENUİNE yeniden kullanılarak (ikon dairesi +
+          // başlık, ok/alt yazı kapalı) — profildeki menü satırlarıyla
+          // AYNI bileşen, yeni bir tasarım dili İCAT EDİLMEDİ.
+          _AvantajKarti(
+            iconAsset: 'assets/svg/ic_search.svg',
+            iconBg: const Color(0xFFE7EFFD),
+            title: 'İhtiyacına uygun hizmet verenler',
+          ),
+          const SizedBox(height: 8),
+          _AvantajKarti(
+            iconAsset: 'assets/svg/ic_starfill.svg',
+            iconBg: const Color(0xFFFDF4E8),
+            title: 'Puan ve yorumları karşılaştır',
+          ),
+          const SizedBox(height: 8),
+          _AvantajKarti(
+            iconAsset: 'assets/svg/ic_chat.svg',
+            iconBg: const Color(0xFFE7F8EC),
+            title: 'Teklifini doğrudan iste',
           ),
 
           const SizedBox(height: 24),
@@ -169,22 +213,36 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
   }
 }
 
-class _GuvenSatiri extends StatelessWidget {
-  const _GuvenSatiri(this.metin);
-  final String metin;
+/// ── ⚠ AVANTAJ KARTI — `RefMenuRow`'un GENUİNE yeniden kullanımı ──
+///
+/// Profildeki menü satırlarıyla AYNI ikon-dairesi + başlık düzeni;
+/// yalnız her biri kendi beyaz/çerçeveli kutusuna ALINDI ki "ayrı ayrı
+/// şık" görünsün — düz alt alta metin bloğu DEĞİL.
+class _AvantajKarti extends StatelessWidget {
+  const _AvantajKarti({
+    required this.iconAsset,
+    required this.iconBg,
+    required this.title,
+  });
+
+  final String iconAsset;
+  final Color iconBg;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const RefSvg('assets/svg/ic_okgreen.svg', size: 16),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(metin,
-              style:
-                  refText(size: RF.s13, weight: RF.w500, color: RC.text)),
-        ),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: RC.white,
+        border: Border.all(color: const Color(0xFFECEEF2)),
+        borderRadius: BorderRadius.circular(RR.r13),
+      ),
+      child: RefMenuRow(
+        iconAsset: iconAsset,
+        iconBg: iconBg,
+        title: title,
+        showChevron: false,
+      ),
     );
   }
 }

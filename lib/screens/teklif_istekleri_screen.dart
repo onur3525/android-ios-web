@@ -10,15 +10,20 @@ import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
 import 'teklif_talebi_detay_screen.dart';
 
-/// "TEKLİF İSTEKLERİ" (Aşama D) — hizmet verene "Bul" akışından
-/// doğrudan gönderilen talepler.
+/// "TEKLİF İSTEKLERİ" — hizmet verene "Bul" akışından doğrudan
+/// gönderilen taleplerin liste GÖVDESİ.
+///
+/// ⚠ ARTIK KENDİ BAŞINA BİR EKRAN DEĞİL: bu içerik `JobsScreen`
+/// ("İşlerim") içine ÜÇÜNCÜ SEKME olarak gömülür (bkz.
+/// `jobs_screen.dart`) — Profil menüsündeki ayrı giriş noktası
+/// KALDIRILDI (ürün kararı). Bu yüzden `Scaffold`/geri
+/// düğmesi/başlık İÇERMEZ; yalnız gövde.
 ///
 /// ⚠ MEVCUT "İşlerim" (`JobsScreen`) İLE KARIŞTIRILMAZ: o ekran
-/// HERKESE AÇIK ilanları listeler; bu ekran yalnız belirli bu
-/// hizmet verene ÖZEL gönderilen talepleri listeler. `JobsScreen`e
-/// DOKUNULMADI.
-class TeklifIstekleriScreen extends StatelessWidget {
-  const TeklifIstekleriScreen({super.key});
+/// HERKESE AÇIK ilanları listeler; bu liste yalnız belirli bu
+/// hizmet verene ÖZEL gönderilen talepleri gösterir.
+class TeklifIstekleriListesi extends StatelessWidget {
+  const TeklifIstekleriListesi({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,56 +33,31 @@ class TeklifIstekleriScreen extends StatelessWidget {
         ? const <TeklifTalebi>[]
         : context.watch<TeklifTalebiController>().bySaglayici(me.id);
 
-    return Scaffold(
-      backgroundColor: RC.white,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
-              child: Row(
-                children: [
-                  const RefBackButton(),
-                  const SizedBox(width: 8),
-                  Text('Teklif İstekleri',
-                      style: refText(
-                          size: RF.s18, weight: RF.w700, color: RC.text)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: talepler.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Henüz doğrudan bir teklif talebiniz yok.',
-                          textAlign: TextAlign.center,
-                          style: refText(
-                              size: RF.s14,
-                              weight: RF.w400,
-                              color: RC.textSoft),
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
-                      itemCount: talepler.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) {
-                        final t = talepler[i];
-                        final hizmetAlan = auth.accountById(t.hizmetAlanId);
-                        return _TalepKarti(
-                          talep: t,
-                          hizmetAlanAdi: hizmetAlan?.name ?? 'Hizmet Alan',
-                        );
-                      },
-                    ),
-            ),
-          ],
+    if (talepler.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Henüz doğrudan bir teklif talebiniz yok.',
+            textAlign: TextAlign.center,
+            style: refText(size: RF.s14, weight: RF.w400, color: RC.textSoft),
+          ),
         ),
-      ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
+      itemCount: talepler.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) {
+        final t = talepler[i];
+        final hizmetAlan = auth.accountById(t.hizmetAlanId);
+        return _TalepKarti(
+          talep: t,
+          hizmetAlanAdi: hizmetAlan?.name ?? 'Hizmet Alan',
+        );
+      },
     );
   }
 }
