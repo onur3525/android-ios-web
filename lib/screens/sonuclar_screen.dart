@@ -143,20 +143,19 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
                 children: [
-                  // ── SONUÇ BİLGİ KARTI — DİNAMİK SAYI ──
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: RC.blueSoft,
-                      borderRadius: BorderRadius.circular(RR.r12),
-                    ),
-                    child: Text(
-                      '${widget.hizmet} için ${_sonuclar.length} hizmet '
-                      'veren bulundu',
+                  // ── SONUÇ SAYISI — ÇERÇEVESİZ, DÜZ METİN ──
+                  //
+                  // ⚠ ÖNCEDEN mavi zeminli bir kutu içindeydi ve
+                  // "{hizmet} için" öneki vardı — çok yer kaplıyordu.
+                  // Şimdi çerçevesiz, gerçek siyah, yalnız sayı +
+                  // "hizmet veren bulundu." Sayı HER ZAMAN gerçek
+                  // sonuç adedidir (`_sonuclar.length`) — sabit
+                  // değildir.
+                  Text('${_sonuclar.length} hizmet veren bulundu.',
                       style: refText(
-                          size: RF.s14, weight: RF.w600, color: RC.text),
-                    ),
-                  ),
+                          size: RF.s14,
+                          weight: RF.w600,
+                          color: const Color(0xFF000000))),
                   const SizedBox(height: 14),
 
                   // ── TEK KESİNTİSİZ LİSTE — İLÇE BAŞLIĞI YOK ──

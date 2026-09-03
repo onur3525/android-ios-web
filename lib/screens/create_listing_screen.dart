@@ -37,7 +37,7 @@ import '../core/teshis.dart';
 import 'category_ui.dart';
 
 /// Müşteri — İlan Oluştur 3 adım (HTML vPost):
-/// 1 Kategori Seç · 2 Açıklama (en az 5 kelime) + konum · 3 Önizle & Yayınla.
+/// 1 Kategori Seç · 2 Açıklama (en az `kMinAciklamaKelime` kelime) + konum · 3 Önizle & Yayınla.
 /// İlan vermek ÜCRETSİZ ve SINIRSIZDIR (müşteri hiçbir aşamada ödemez).
 class CreateListingScreen extends StatefulWidget {
   final String? initialCategory; // arama/kategori akışından önseçim
@@ -474,6 +474,14 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       if (!ok) {
         return;
       }
+      // ⚠ ANLAMSIZ METİN (klavye karması) — kelime sayısı yeterli
+      // olsa bile engellenir. Buton bunun için pasifleşmez (kural
+      // dürüst ama kusursuz değil); bu yüzden AÇIK bir uyarı verilir.
+      if (Validators.anlamsizKelimeVarMi(_desc.text)) {
+        sysToastKural(context,
+            'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
+        return;
+      }
 
       // Oturumsuzda 3 = kayıt formu, oturumluda 3 = önizleme.
       setState(() => _step = 3);
@@ -556,6 +564,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     if (_kelimeSayisi() < kMinAciklamaKelime) {
       // Uyarı alt satırda ve çerçevede görünür.
       setState(() {});
+      return;
+    }
+    // ⚠ ANLAMSIZ METİN (klavye karması) — bkz. `_next()` içindeki
+    // AYNI kontrol; bu, oturumsuz kullanıcının taslak-kaydet yolu.
+    if (Validators.anlamsizKelimeVarMi(_desc.text)) {
+      sysToastKural(context,
+          'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
       return;
     }
     // ⚠ KONUM BURADA ZORUNLU DEĞİL.

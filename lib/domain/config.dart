@@ -13,7 +13,7 @@ const int kAciklamaMaxLength = 1000;
 const int kMesajMaxLength = 1000;
 
 /// İlan açıklamasında istenen en az kelime sayısı.
-const int kMinAciklamaKelime = 5;
+const int kMinAciklamaKelime = 3;
 
 abstract final class DomainConfig {
   /// Bir ilana verilebilecek EN FAZLA teklif sayısı.

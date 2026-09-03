@@ -213,7 +213,6 @@ const Map<String, String> kKategoriIkonu = {
   'Oto Ekspertiz': 'assets/svg/categories/oto_servis.svg',
   'Kaporta ve Boya': 'assets/svg/categories/oto_servis.svg',
   'Lastik ve Jant Hizmetleri': 'assets/svg/categories/oto_servis.svg',
-  'Oto Bakım & Servis': 'assets/svg/categories/oto_servis.svg',
   'Oto Görsel & Koruma Hizmetleri': 'assets/svg/categories/oto_temizlik.svg',
   'Güneş Enerjisi Sistemleri': 'assets/svg/categories/elektrik.svg',
   'Jeneratör Servisi': 'assets/svg/categories/elektrik.svg',

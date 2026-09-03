@@ -18,7 +18,9 @@ String _oku(String p) => File(p).readAsStringSync();
 void main() {
   group('Katalog sayıları', () {
     test('58 ANA KATEGORİ', () {
-      expect(kCategoryTree.length, 158);
+      // ⚠ 158 → 157: "Oto Bakım & Servis" kaldırıldı — "Oto Servis
+      // ve Bakım" ile AYNI kelime kümesiydi (yalnız sırası farklı).
+      expect(kCategoryTree.length, 157);
       expect(kTreeCategories.length, 63);
     });
 

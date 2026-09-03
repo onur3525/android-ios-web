@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/sys_state.dart';
+import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api/storage_api.dart';
+import '../domain/config.dart';
+import '../domain/form_mesajlari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
@@ -64,10 +67,30 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
     super.dispose();
   }
 
-  bool get _zorunlularDolu => _aciklama.text.trim().isNotEmpty;
+  /// Açıklamadaki kelime sayısı.
+  int _kelimeSayisi() => _aciklama.text
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .length;
+
+  // ⚠ ÖNCEDEN yalnız "boş değil" kontrol ediliyordu — tek kelimelik
+  // ("tamir") ya da anlamsız ("asdasd") açıklamalar geçiyordu. Şimdi
+  // en az `kMinAciklamaKelime` kelime ZORUNLU.
+  bool get _zorunlularDolu =>
+      _aciklama.text.trim().isNotEmpty &&
+      _kelimeSayisi() >= kMinAciklamaKelime;
 
   Future<void> _gonder() async {
     if (!_zorunlularDolu || _gonderiliyor) {
+      return;
+    }
+    // ⚠ ANLAMSIZ METİN (klavye karması) — kelime sayısı yeterli olsa
+    // bile engellenir, açık uyarı verilir. Bkz. `Validators.
+    // anlamsizKelimeVarMi` — üç dürüst kural, sözlük YOKTUR.
+    if (Validators.anlamsizKelimeVarMi(_aciklama.text)) {
+      sysToastKural(context,
+          'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
       return;
     }
     final me = context.read<AuthController>().currentAccount;
@@ -179,6 +202,20 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
               hintText: 'Açıklama yazın.',
               alignLabelWithHint: true,
             ),
+          ),
+          // ⚠ GÖRÜNÜR KURAL — `FormMesaj.teklifAciklama` YENİDEN
+          // KULLANILDI: sayı `kMinAciklamaKelime`den gelir, iki yerde
+          // ayrı sayı tutulmaz.
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(FormMesaj.teklifAciklama,
+                style: refText(
+                    size: RF.s12,
+                    weight: RF.w500,
+                    color: _aciklama.text.trim().isEmpty ||
+                            _kelimeSayisi() >= kMinAciklamaKelime
+                        ? RC.textSoft
+                        : const Color(0xFFE5452C))),
           ),
 
           const SizedBox(height: 12),

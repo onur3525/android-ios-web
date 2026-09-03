@@ -67,7 +67,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Oto Çekici ve Yol Yardım', 'Oto Servis ve Bakım',
       'Araç Temizlik ve Detaylı Bakım', 'Oto Ekspertiz',
       'Kaporta ve Boya', 'Lastik ve Jant Hizmetleri',
-      'Oto Görsel & Koruma Hizmetleri', 'Oto Bakım & Servis'
+      'Oto Görsel & Koruma Hizmetleri'
     ],
   ),
   HizmetAlani(

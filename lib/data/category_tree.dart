@@ -1,4 +1,9 @@
-/// HİZMET KATALOĞU — 158 KATEGORİ · 1448 HİZMET (24 ÇATI)
+/// HİZMET KATALOĞU — 157 KATEGORİ · 1448 HİZMET (24 ÇATI)
+///
+/// ⚠ 158 → 157: "Oto Bakım & Servis" kaldırıldı — "Oto Servis ve
+/// Bakım" ile AYNI kelime kümesiydi (yalnız sırası farklı), gerçek
+/// iki kategori DEĞİLDİ. Tek hizmeti taşındı, hizmet sayısı
+/// DEĞİŞMEDİ (1448).
 ///
 /// ═══════════════════════════════════════════════════════════════
 ///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
@@ -218,7 +223,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Oto Elektrik', 'Oto Klima', 'Fren Balata Değişimi',
     'Periyodik Araç Bakımı', 'Motor Yağı Değişimi', 'Akü Değişimi',
     'Araç Klima Gaz Dolumu', 'Fren Bakımı', 'Bilgisayarlı Arıza Tespiti',
-    'Triger Seti Değişimi', 'Yağ ve Filtre Değişimi', 'Şanzıman Bakımı'
+    'Triger Seti Değişimi', 'Yağ ve Filtre Değişimi', 'Şanzıman Bakımı',
+    'Mobil Lastik Hizmeti'
   ],
   'Araç Temizlik ve Detaylı Bakım': [
     'Araç Detaylı Temizlik', 'Araç Koltuk Yıkama', 'Oto Yıkama',
@@ -237,9 +243,10 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Oto Görsel & Koruma Hizmetleri': [
     'Araç Kaplama', 'Oto Cam Filmi', 'Oto Boya Koruma', 'Oto Modifiye'
   ],
-  'Oto Bakım & Servis': [
-    'Mobil Lastik Hizmeti'
-  ],
+  // ⚠ "Oto Bakım & Servis" KATEGORİSİ KALDIRILDI (aynı kelime
+  // kümesi, farklı sıra — "Oto Servis ve Bakım" ile İÇERİK OLARAK
+  // AYNIYDI). Tek hizmeti ("Mobil Lastik Hizmeti") "Oto Servis ve
+  // Bakım"a taşındı; kategori sayısı 158 → 157.
   'Beyaz Eşya Servisi': [
     'Buzdolabı Tamiri', 'Çamaşır Makinesi Tamiri',
     'Bulaşık Makinesi Tamiri', 'Kurutma Makinesi Tamiri', 'Fırın Tamiri',

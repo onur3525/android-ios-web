@@ -58,6 +58,65 @@ const int kPhoneLocalMaxLength = 11;
 const String kZorunluAlan = 'Bu alan zorunludur';
 
 class Validators {
+  /// ── ⚠ ANLAMSIZ METİN (KLAVYE KARMASI) TESPİTİ ──
+  ///
+  /// "Jjjj", "dkdkdld", "skskdgaga", "dodkds" gibi rastgele tuş
+  /// vuruşlarını yakalamayı hedefler. Bir SÖZLÜK/DİL MODELİ YOKTUR —
+  /// üç basit, dürüst kural kullanılır:
+  ///   1. Aynı harf 3+ kez ÜST ÜSTE ("jjj", "kkkk")
+  ///   2. 4+ harfli kelimede HİÇ sesli harf yok ("dkdkdld")
+  ///   3. 4+ ÜST ÜSTE sessiz harf ("skskdgaga" içindeki "sksk")
+  ///
+  /// ⚠ Bu, İYİ NİYETLİ bir yaklaşıklıktır — gerçek bir dil modeli
+  /// DEĞİLDİR. Nadir gerçek kelimeleri (özellikle kısaltmalar)
+  /// yanlışlıkla işaretleyebilir; buna karşılık yaygın "klavye
+  /// karması" desenini güvenilir şekilde yakalar.
+  static bool anlamsizKelimeVarMi(String metin) {
+    const sesliler = 'aeıioöuüAEIİOÖUÜ';
+    final kelimeler =
+        metin.split(RegExp(r'\s+')).where((k) => k.trim().isNotEmpty);
+    for (final kelime in kelimeler) {
+      final harfler =
+          kelime.replaceAll(RegExp(r"[^a-zA-ZçÇğĞıİöÖşŞüÜ]"), '').split('');
+      if (harfler.length < 3) {
+        continue; // ⚠ Çok kısa kelimeler ("ve", "bir") serbest.
+      }
+
+      // Kural 1: aynı harf 3+ kez üst üste.
+      for (var i = 0; i + 2 < harfler.length; i++) {
+        if (harfler[i].toLowerCase() == harfler[i + 1].toLowerCase() &&
+            harfler[i].toLowerCase() == harfler[i + 2].toLowerCase()) {
+          return true;
+        }
+      }
+
+      if (harfler.length < 4) {
+        continue; // ⚠ 3 harfli kelimede yalnız Kural 1 uygulanır.
+      }
+
+      // Kural 2: hiç sesli harf yok.
+      final sesliSayisi =
+          harfler.where((h) => sesliler.contains(h)).length;
+      if (sesliSayisi == 0) {
+        return true;
+      }
+
+      // Kural 3: 4+ üst üste sessiz harf.
+      var ardisikSessiz = 0;
+      for (final h in harfler) {
+        if (sesliler.contains(h)) {
+          ardisikSessiz = 0;
+        } else {
+          ardisikSessiz++;
+          if (ardisikSessiz >= 4) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   /// Telefon: baştaki 0 atılır, yalnız rakam (HTML phFmt).
   static String phoneFmt(String v) =>
       v.replaceAll(RegExp(r'\D'), '').replaceFirst(RegExp(r'^0+'), '');
