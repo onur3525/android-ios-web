@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';

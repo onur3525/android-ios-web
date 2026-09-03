@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/theme.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/mock_saglayici_dizini.dart';
 import '../domain/yakinlik_saglayici.dart';

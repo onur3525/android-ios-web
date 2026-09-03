@@ -64,12 +64,6 @@ class HataBilgisi {
 /// Yeni bir hata türü eklendiğinde derleyici burada uyarır.
 HataBilgisi hataBilgisi(DomainError hata) {
   switch (hata) {
-      return const HataBilgisi(
-        baslik: 'Kart bakiyeniz yetersiz',
-        aciklama: 'Bakiyeniz değişmedi. Farklı bir kartla deneyebilirsiniz.',
-        eylem: 'Tekrar dene',
-        bicim: HataBicimi.tamEkran,
-      );
     case NetworkError():
       return const HataBilgisi(
         baslik: 'Sunucuya ulaşılamıyor',
