@@ -98,7 +98,7 @@ class ProviderReviewsScreen extends StatelessWidget {
                       itemBuilder: (_, i) {
                         final r = yorumlar[i];
                         final yazar = auth.accountById(r.authorId);
-                        return _YorumKarti(review: r, yazarAdi: yazar?.name);
+                        return YorumKarti(review: r, yazarAdi: yazar?.name);
                       },
                     ),
             ),
@@ -109,8 +109,14 @@ class ProviderReviewsScreen extends StatelessWidget {
   }
 }
 
-class _YorumKarti extends StatelessWidget {
-  const _YorumKarti({required this.review, required this.yazarAdi});
+/// ── ⚠ GENEL (PUBLIC) — `teklif_iste_screen.dart`da da kullanılır ──
+///
+/// Önceden bu dosyaya özeldi (`_YorumKarti`); "Teklif İste" ekranında
+/// hizmet verenin SON 5 yorumunu göstermek için de AYNI kart
+/// gerektiği için genele açıldı — ikinci bir kart tasarımı İCAT
+/// EDİLMEDİ.
+class YorumKarti extends StatelessWidget {
+  const YorumKarti({required this.review, required this.yazarAdi});
 
   final Review review;
   final String? yazarAdi;

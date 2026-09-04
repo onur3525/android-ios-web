@@ -20,152 +20,46 @@ import 'teklif_talebi_detay_screen.dart';
 /// `jobs_screen.dart`) — konteyner ekran DEĞİŞMEDİ (ürün kararı).
 /// Bu yüzden `Scaffold`/geri düğmesi/başlık İÇERMEZ; yalnız gövde.
 ///
-/// ⚠ ÜST KISIMDAKİ ARAMA ALANI + YEŞİL "Ara" DÜĞMESİ, müşterinin
-/// "Hizmet Veren Bul" ekranındaki AYNI görsel dil — ama farklı iş:
-/// orada YENİ hizmet verenler bulunur, burada hizmet verenin
-/// KENDİSİNE GELEN taleplerin arasında hizmet adına göre FİLTRELEME
-/// yapılır. Yeni bir arama motoru İCAT EDİLMEDİ, yalnız görsel
-/// bileşenler (arama kutusu + yeşil "Ara" düğmesi biçimi) yeniden
-/// kullanıldı.
+/// ⚠ ARAMA ÇUBUĞU / "Ara" DÜĞMESİ YOK (ürün kararı) — bu ekranda
+/// yalnız gelen teklif istekleri kartları listelenir; karta
+/// girilip teklif verilir. Önceden "Hizmet Veren Bul" ekranıyla
+/// aynı görsel dilde bir arama alanı vardı, KALDIRILDI.
 ///
 /// ⚠ MEVCUT "İşlerim" (`JobsScreen`) İLE KARIŞTIRILMAZ: o ekran
 /// HERKESE AÇIK ilanları listeler; bu liste yalnız belirli bu
 /// hizmet verene ÖZEL gönderilen talepleri gösterir.
-class TeklifIstekleriListesi extends StatefulWidget {
+class TeklifIstekleriListesi extends StatelessWidget {
   const TeklifIstekleriListesi({super.key});
-
-  @override
-  State<TeklifIstekleriListesi> createState() =>
-      _TeklifIstekleriListesiState();
-}
-
-class _TeklifIstekleriListesiState extends State<TeklifIstekleriListesi> {
-  final _ara = TextEditingController();
-
-  /// ⚠ Yazarken FİLTRELENMEZ — "Ara" basılınca uygulanır (referans
-  /// ekranla AYNI akış: yaz, sonra Ara'ya bas).
-  String _uygulananSorgu = '';
-
-  @override
-  void dispose() {
-    _ara.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final me = auth.currentAccount;
-    final tumTalepler = me == null
+    final talepler = me == null
         ? const <TeklifTalebi>[]
         : context.watch<TeklifTalebiController>().bySaglayici(me.id);
 
-    final sorgu = _uygulananSorgu.trim().toLowerCase();
-    final talepler = sorgu.isEmpty
-        ? tumTalepler
-        : tumTalepler
-            .where((t) => t.hizmet.toLowerCase().contains(sorgu))
-            .toList(growable: false);
+    if (talepler.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Henüz doğrudan bir teklif talebiniz yok.',
+            textAlign: TextAlign.center,
+            style: refText(size: RF.s14, weight: RF.w400, color: RC.textSoft),
+          ),
+        ),
+      );
+    }
 
-    return ListView(
+    return ListView.separated(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
-      children: [
-        // ── ARAMA ALANI ──
-        Container(
-          height: 53,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
-          decoration: BoxDecoration(
-            color: RC.white,
-            border: Border.all(color: const Color(0xFFECEEF2)),
-            borderRadius: BorderRadius.circular(RR.r13),
-          ),
-          child: Row(
-            children: [
-              const RefSvg('assets/svg/ic_search.svg',
-                  size: 23, color: Color(0xFFA8ADB4)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: _ara,
-                  onSubmitted: (v) => setState(() => _uygulananSorgu = v),
-                  style:
-                      refText(size: 14.5, weight: RF.w500, color: RC.text),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    filled: false,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: 'Hangi hizmette arıyorsun?',
-                    hintStyle: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF9AA0A6)),
-                  ),
-                ),
-              ),
-              RefAramaTemizle(
-                controller: _ara,
-                onTemizle: () => setState(() {
-                  _ara.clear();
-                  _uygulananSorgu = '';
-                }),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-
-        // ── "ARA" — AŞAMA 1'DEKİ YEŞİL DÜĞMEYLE AYNI GÖRSEL DİL ──
-        ClipRRect(
-          borderRadius: BorderRadius.circular(RR.r14),
-          child: Material(
-            color: HC.green,
-            child: InkWell(
-              onTap: () => setState(() => _uygulananSorgu = _ara.text),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const RefSvg('assets/svg/ic_search.svg',
-                        size: 18, color: RC.white),
-                    const SizedBox(width: 8),
-                    Text('Ara',
-                        style: refText(
-                            size: RF.s16, weight: RF.w700, color: RC.white)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // ── TALEP KARTLARI ──
-        if (talepler.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: Center(
-              child: Text(
-                sorgu.isEmpty
-                    ? 'Henüz doğrudan bir teklif talebiniz yok.'
-                    : '"$sorgu" için talep bulunamadı.',
-                textAlign: TextAlign.center,
-                style:
-                    refText(size: RF.s14, weight: RF.w400, color: RC.textSoft),
-              ),
-            ),
-          )
-        else
-          for (var i = 0; i < talepler.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
-            _TalepKarti(talep: talepler[i], hizmetAlan: auth.accountById(talepler[i].hizmetAlanId)),
-          ],
-      ],
+      itemCount: talepler.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) => _TalepKarti(
+        talep: talepler[i],
+        hizmetAlan: auth.accountById(talepler[i].hizmetAlanId),
+      ),
     );
   }
 }

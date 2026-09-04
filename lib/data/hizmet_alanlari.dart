@@ -101,13 +101,20 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ikon: 'assets/svg/alanlar/tasima.svg',
     kategoriler: [
       'Nakliyat ve Taşımacılık', 'Depolama Hizmetleri',
-      'Kurye ve Küçük Taşıma', 'Personel ve Öğrenci Servisi'
+      'Kurye ve Küçük Taşıma', 'Personel ve Öğrenci Servisi',
+      'Araç ve Ekipman Kiralama'
     ],
   ),
   HizmetAlani(
-    ad: 'Güzellik & Bakım & Spor',
+    // ⚠ AD GÜNCELLENDİ: "Güzellik & Bakım & Spor" → içine "Kişisel
+    // Gelişim ve Koçluk" kategorisi eklendiğinde (yaşam koçluğu)
+    // eski ad bunu TEMSİL ETMİYORDU — güzellik/bakım/spor ile
+    // koçluğun ilgisi yok. Kategori TAŞINMADI (referans bütünlüğü
+    // için), yalnız çatı adı içeriği doğru yansıtacak şekilde
+    // GENİŞLETİLDİ.
+    ad: 'Güzellik, Bakım, Spor & Kişisel Gelişim',
     aciklama:
-        'Güzellik, bakım ve spor',
+        'Güzellik, bakım, spor ve kişisel gelişim',
     gorsel: 'assets/alanlar/kisisel.jpg',
     ikon: 'assets/svg/alanlar/kisisel.svg',
     kategoriler: [
@@ -223,16 +230,20 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ],
   ),
   HizmetAlani(
-    ad: 'Hukuk & Finans',
+    // ⚠ AD GÜNCELLENDİ: "Hukuk & Finans" → "Tercüme ve Çeviri
+    // Hizmetleri" ile "Ofis & İş Yeri Hizmetleri" gibi kategoriler
+    // saf hukuk/finans değil, daha geniş PROFESYONEL DANIŞMANLIK
+    // hizmetleri — eski ad bunları tam temsil etmiyordu.
+    ad: 'Hukuk, Finans & Danışmanlık',
     aciklama:
-        'Hukuk ve muhasebe',
+        'Hukuk, muhasebe ve danışmanlık',
     gorsel: 'assets/alanlar/hukuk.jpg',
     ikon: 'assets/svg/alanlar/hukuk.svg',
     kategoriler: [
       'Avukatlık ve Hukuk', 'Muhasebe ve Mali Müşavirlik',
       'İş Güvenliği ve İSG', 'Marka ve Patent', 'Sigorta',
       'Ofis & İş Yeri Hizmetleri', 'Dış Ticaret & Gümrük',
-      'Teşvik & Hibe Danışmanlığı'
+      'Teşvik & Hibe Danışmanlığı', 'Tercüme ve Çeviri Hizmetleri'
     ],
   ),
   HizmetAlani(
@@ -245,7 +256,10 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Hasta Bakımı', 'Yaşlı Bakımı', 'Evde Hasta Bakımı',
       'Evde Yaşlı Bakımı', 'Hastane Refakatçisi', 'Evde Refakat',
       'Günlük Yaşam Desteği',
-      'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları'
+      'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları',
+      'Psikolojik Danışmanlık ve Terapi',
+      'Diyetisyen ve Beslenme Danışmanlığı',
+      'Fizyoterapi ve Rehabilitasyon', 'Evde Hemşirelik Hizmetleri'
     ],
   ),
   HizmetAlani(
@@ -335,7 +349,16 @@ const List<HizmetAlani> kHizmetAlanlari = [
     kategoriler: [
       'Çiçekçilik', 'Asistanlık & Günlük Destek',
       'Dedektiflik & Araştırma', 'Araştırma & Saha Hizmetleri',
-      'Günlük Eleman & Personel Desteği'
+      'Günlük Eleman & Personel Desteği',
+      // ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) — Armut'ta
+      // aktif ve talep gören ("İmam Nikahı Kıyma": yılda 2.463 talep,
+      // "Mevlüt Okuma": yalnız İzmir'de 100 hizmet veren) ama
+      // katalogda hiç olmayan dini hizmetler. Ayrı bir çatı AÇILMADI
+      // (kullanıcı kararı) — mevcut "Diğer Hizmetler" çatısına
+      // eklendi.
+      'Nikah ve Tören Hizmetleri', 'Mevlüt ve Dua Programları',
+      'Kur\'an-ı Kerim Eğitimi', 'İlahi ve Dini Musiki',
+      'Bileme ve Keskinleştirme Hizmetleri'
     ],
   ),
 ];

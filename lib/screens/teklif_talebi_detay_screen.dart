@@ -526,25 +526,54 @@ class _KarsiTarafBilgisi extends StatelessWidget {
             ),
           ),
         ],
-        if (!acik) ...[
-          const SizedBox(height: 6),
+        // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, PROVİDER TARAFINDAKİ
+        // `_MiniIletisimKutusu` İLE AYNI KUTULAR (sıfırdan YAPILMADI,
+        // aynı bileşen yeniden kullanıldı) ──
+        //
+        // ⚠ TELEFON HER ZAMAN KİLİTLİ KALIR: hizmet verenin telefonu
+        // bu akışta HİÇ paylaşılmıyor (yalnız hizmet ALANIN tercihi
+        // var — sağlayıcı tarafındaki kutuda). Mesajlaşma ise
+        // `teklifTarihi` dolana kadar kilitli, doldu andan itibaren
+        // açık.
+        const SizedBox(height: 10),
+        const Divider(height: 1, color: Color(0xFFF1F3F6)),
+        const SizedBox(height: 10),
+        if (!acik)
           Text(
               'Hizmet veren teklif verdiğinde kimliği ve mesajlaşma '
               'açılacak.',
               style: refText(
                   size: RF.s12, weight: RF.w400, color: RC.textSoft)),
-        ] else ...[
-          const SizedBox(height: 10),
-          const Divider(height: 1, color: Color(0xFFF1F3F6)),
-          const SizedBox(height: 10),
-          _MiniIletisimKutusu(
-            ikon: 'assets/svg/ic_chat.svg',
-            etiket: 'Mesajlaşma',
-            deger: 'Mesaj yaz',
-            kilitli: false,
-            onTap: () => _sohbeteGit(context, talep.hizmet),
+        if (!acik) const SizedBox(height: 8),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Expanded(
+                child: _MiniIletisimKutusu(
+                  ikon: 'assets/svg/ic_phone_f.svg',
+                  etiket: 'Telefon',
+                  deger: '05** *** ** **',
+                  kilitli: true,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: _MiniIletisimKutusu(
+                  ikon: 'assets/svg/ic_chat.svg',
+                  etiket: 'Mesajlaşma',
+                  deger: acik
+                      ? 'Mesaj yaz'
+                      : 'Teklif gelince açılır',
+                  kilitli: !acik,
+                  onTap: acik
+                      ? () => _sohbeteGit(context, talep.hizmet)
+                      : null,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ],
     );
   }

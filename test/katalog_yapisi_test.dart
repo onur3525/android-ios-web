@@ -18,11 +18,16 @@ String _oku(String p) => File(p).readAsStringSync();
 void main() {
   group('Katalog sayıları', () {
     test('58 ANA KATEGORİ', () {
-      // ⚠ 158 → 157 → 155: üç kategori kaldırıldı — "Oto Bakım &
-      // Servis", "Depolama & Lojistik", "Dijital Pazarlama & Reklam".
-      // Üçü de aynı desen: küçük, kavramsal olarak aynı/çok yakın bir
-      // kategori daha büyük bir kategoriye taşındı.
-      expect(kCategoryTree.length, 155);
+      // ⚠ 158 → 157 → 155 → 160 → 164: dört kategori DAHA eklendi
+      // (araştırma sonucu, kullanıcı onayıyla) — dini hizmetler
+      // ("Nikah ve Tören Hizmetleri", "Mevlüt ve Dua Programları",
+      // "Kur'an-ı Kerim Eğitimi", "İlahi ve Dini Musiki"), "Diğer
+      // Hizmetler" çatısına eklendi (ayrı çatı AÇILMADI — kullanıcı
+      // kararı). Öncesinde beş kategori eklenmişti (Sağlık
+      // Hizmetleri'ne dört, Hukuk/Finans/Danışmanlık'a bir).
+      // Öncesinde üç kategori kaldırılmıştı — "Oto Bakım & Servis",
+      // "Depolama & Lojistik", "Dijital Pazarlama & Reklam".
+      expect(kCategoryTree.length, 166);
       expect(kTreeCategories.length, 63);
     });
 
@@ -35,8 +40,10 @@ void main() {
       // sonra tekrar eden ve dağıtım şirketine ait olanlar kaldırıldı
       // (eski not: ayrı işler gerçek
       // hizmet kaydına çevrildi.
+      // ⚠ 1448 → 1493 → 1511: dini hizmetler kategorileriyle birlikte
+      // 18 yeni hizmet daha eklendi.
       expect(toplam, 640);
-      expect(kTreeServices.length, 1448);
+      expect(kTreeServices.length, 1541);
     });
 
 

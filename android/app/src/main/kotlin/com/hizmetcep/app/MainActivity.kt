@@ -71,8 +71,22 @@ class MainActivity : FlutterActivity() {
          *
          * Bu üst sınır dolduğunda splash KOŞULSUZ bırakılır; kalan
          * yükleme/karar durumu Flutter içinde güvenle yönetilir.
+         *
+         * ⚠ 5000 → 9000: Dart tarafındaki `_boot()` (splash_screen.
+         * dart) gerçek API modunda SIRALI olarak şu bütçeleri
+         * harcayabilir: config kontrolü (2000ms) + katalog çekme
+         * (2000ms) + ağ durumu sorgusu (~1100ms) + oturum geri yükleme
+         * (1200ms) = kötü ağda ~6300-6800ms. Bu, ESKİ 5000ms sınırını
+         * AŞIYORDU — fail-safe `bootReady` gelmeden ERKEN devreye
+         * giriyor, native splash zorla bırakılıyor, ALTINDA Flutter'ın
+         * KENDİ (daha küçük) `SplashView`'i bir süre görünüyor, SONRA
+         * gerçek hedef ekrana geçiliyordu. Kullanıcı bunu "logo birkaç
+         * saniye sonra küçülüp sonra uygulama açılıyor" olarak
+         * gözlemledi. 9000ms, gerçek en kötü durum bütçesini GÜVENLE
+         * aşarken, sonsuz kilitlenmeyi önleme amacını (asıl fail-safe
+         * gerekçesi) KORUR.
          */
-        private const val SPLASH_MAX_MS = 5000L
+        private const val SPLASH_MAX_MS = 9000L
 
         /** Sağlayıcı SDK adaptörü bağlandığında `true` yapılır. */
         private const val SCHEME = "hizmetcep"

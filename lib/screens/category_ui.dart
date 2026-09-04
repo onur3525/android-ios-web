@@ -145,6 +145,10 @@ const Map<String, String> kKategoriIkonu = {
       'assets/svg/categories/havuz.svg',
   'Nakliyat ve Taşımacılık':
       'assets/svg/categories/nakliyat.svg',
+  // ⚠ YENİ KATEGORİ — AYNI çatının nakliyat ikonuyla aynı tema
+  // (araç), yeni SVG ÜRETİLMEDİ.
+  'Araç ve Ekipman Kiralama':
+      'assets/svg/categories/nakliyat.svg',
   'Kurye ve Küçük Taşıma':
       'assets/svg/categories/kurye.svg',
   'Asansör Montaj ve Bakım':
@@ -263,10 +267,18 @@ const Map<String, String> kKategoriIkonu = {
   'Enerji ve Yapı Belgelendirme': 'assets/svg/categories/is_guvenligi.svg',
   'Ofis & İş Yeri Hizmetleri': 'assets/svg/categories/muhasebe.svg',
   'Dış Ticaret & Gümrük': 'assets/svg/categories/muhasebe.svg',
+  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — dil temalı mevcut ikon kullanıldı
+  // (`yabanci_dil.svg`, "Yabancı Dil Eğitimi" ile AYNI), YENİ SVG
+  // ÜRETİLMEDİ.
+  'Tercüme ve Çeviri Hizmetleri': 'assets/svg/categories/yabanci_dil.svg',
   'Teşvik & Hibe Danışmanlığı': 'assets/svg/categories/muhasebe.svg',
-  'Emlak Danışmanlığı': 'assets/svg/categories/hukuk.svg',
-  'Site ve Apartman Yönetimi': 'assets/svg/categories/hukuk.svg',
-  'Gayrimenkul Hizmetleri': 'assets/svg/categories/hukuk.svg',
+  // ⚠ DÜZELTİLDİ — önceden üçü de 'hukuk.svg' kullanıyordu; bu
+  // kategorilerin hukukla ilgisi yok, mülk/bina ile ilgili. En yakın
+  // temalı mevcut ikona ('insaat.svg', bina/yapı görselliği)
+  // değiştirildi — yeni SVG ÜRETİLMEDİ.
+  'Emlak Danışmanlığı': 'assets/svg/categories/insaat.svg',
+  'Site ve Apartman Yönetimi': 'assets/svg/categories/insaat.svg',
+  'Gayrimenkul Hizmetleri': 'assets/svg/categories/insaat.svg',
   'Özel Güvenlik': 'assets/svg/categories/guvenlik.svg',
   'Yakın Koruma': 'assets/svg/categories/guvenlik.svg',
   'Güvenlik Personeli': 'assets/svg/categories/guvenlik.svg',
@@ -278,6 +290,13 @@ const Map<String, String> kKategoriIkonu = {
   'Evde Refakat': 'assets/svg/categories/refakat.svg',
   'Günlük Yaşam Desteği': 'assets/svg/categories/refakat.svg',
   'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları': 'assets/svg/categories/saglik_geleneksel.svg',
+  // ⚠ ARAŞTIRMA SONUCU EKLENEN 4 KATEGORİ — YENİ SVG ÜRETİLMEDİ,
+  // mevcut genel sağlık ikonu (`saglik_bakim.svg`, "Hasta Bakımı" ile
+  // AYNI) kullanıldı.
+  'Psikolojik Danışmanlık ve Terapi': 'assets/svg/categories/saglik_bakim.svg',
+  'Diyetisyen ve Beslenme Danışmanlığı': 'assets/svg/categories/saglik_bakim.svg',
+  'Fizyoterapi ve Rehabilitasyon': 'assets/svg/categories/saglik_bakim.svg',
+  'Evde Hemşirelik Hizmetleri': 'assets/svg/categories/saglik_bakim.svg',
   'Tarım Danışmanlığı': 'assets/svg/categories/tarim.svg',
   'Tarla ve Bahçe İşleri': 'assets/svg/categories/tarla.svg',
   'Tarımsal Sulama': 'assets/svg/categories/sulama.svg',
@@ -308,6 +327,17 @@ const Map<String, String> kKategoriIkonu = {
   'Dedektiflik & Araştırma': 'assets/svg/categories/dedektif.svg',
   'Araştırma & Saha Hizmetleri': 'assets/svg/categories/dedektif.svg',
   'Günlük Eleman & Personel Desteği': 'assets/svg/categories/asistan.svg',
+  // ⚠ YENİ KATEGORİ — geleneksel metal alet zanaati; en yakın
+  // mevcut ikon (metal/demir teması) kullanıldı, YENİ SVG
+  // ÜRETİLMEDİ.
+  'Bileme ve Keskinleştirme Hizmetleri':
+      'assets/svg/categories/demir.svg',
+  // ⚠ ARAŞTIRMA SONUCU EKLENEN 4 KATEGORİ — YENİ SVG ÜRETİLMEDİ,
+  // en yakın temalı mevcut ikonlar kullanıldı.
+  'Nikah ve Tören Hizmetleri': 'assets/svg/categories/organizasyon.svg',
+  'Mevlüt ve Dua Programları': 'assets/svg/categories/organizasyon.svg',
+  'Kur\'an-ı Kerim Eğitimi': 'assets/svg/categories/ozel_ders.svg',
+  'İlahi ve Dini Musiki': 'assets/svg/categories/muzik.svg',
 };
 
 /// Kategori ikonu — bilinmeyen ad için teknik güvenlik ağı.

@@ -29,7 +29,7 @@ void main() {
             'Beyaz Eşya & Elektronik',
             'Temizlik',
             'Taşıma & Nakliyat',
-            'Güzellik & Bakım & Spor',
+            'Güzellik, Bakım, Spor & Kişisel Gelişim',
             'Evcil Hayvan Hizmetleri',
             'Eğitim',
             'Dijital Hizmetler',
@@ -38,7 +38,7 @@ void main() {
             'Teknik Hizmetler',
             'Giyim & Tekstil',
             'Mühendislik & Proje',
-            'Hukuk & Finans',
+            'Hukuk, Finans & Danışmanlık',
             'Sağlık Hizmetleri',
             'Tarım & Hayvancılık',
             'Turizm & Konaklama',
@@ -69,8 +69,8 @@ void main() {
       expect(kKategoriAlani['Oto Servis ve Bakım'], 'Araç Hizmetleri');
       expect(kKategoriAlani['Beyaz Eşya Servisi'], 'Beyaz Eşya & Elektronik');
       expect(kKategoriAlani['Nakliyat ve Taşımacılık'], 'Taşıma & Nakliyat');
-      expect(kKategoriAlani['Avukatlık ve Hukuk'], 'Hukuk & Finans');
-      expect(kKategoriAlani['Sigorta'], 'Hukuk & Finans');
+      expect(kKategoriAlani['Avukatlık ve Hukuk'], 'Hukuk, Finans & Danışmanlık');
+      expect(kKategoriAlani['Sigorta'], 'Hukuk, Finans & Danışmanlık');
       expect(kKategoriAlani['Fotoğraf Çekimi'], 'Organizasyon & Etkinlik');
       expect(kKategoriAlani['Su Tesisatı'], 'Ev & Yaşam');
       expect(kKategoriAlani['Elektrik'], 'Ev & Yaşam');

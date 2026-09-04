@@ -1703,13 +1703,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                // `.rg-primary` — referans metni "Devam Et"
-                ValueListenableBuilder<bool>(
-                  valueListenable: _formGecerli,
-                  builder: (_, gecerli, __) => RefPrimaryButton('Devam Et',
-                      busy: _busy, onPressed: gecerli ? _next : null),
-                ),
 
                 // `.rg-or` + `.rg-google` — kayıt akışında da bulunur
                 //
@@ -1724,6 +1717,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
           const TeshisPaneli(),
         ]),
+        // ── ⚠ "DEVAM ET" — ARTIK `bottomNavigationBar`DA ──
+        //
+        // ÖNCEDEN Column'un İÇİNDEYDİ (kaydırılabilir alanın SONUNDA)
+        // — form uzayınca ve klavye açılınca kullanıcı butonu
+        // GÖRMEK için ELLE aşağı/yukarı kaydırmak ZORUNDA kalıyordu.
+        // `Scaffold.bottomNavigationBar`, Flutter'ın KENDİ garantisiyle
+        // HER ZAMAN ekranın altında, klavye açıkken de klavyenin
+        // ÜSTÜNDE sabit durur (`resizeToAvoidBottomInset` varsayılan
+        // `true` olduğu için) — elle kaydırma GEREKMEZ.
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _formGecerli,
+              builder: (_, gecerli, __) => RefPrimaryButton('Devam Et',
+                  busy: _busy, onPressed: gecerli ? _next : null),
+            ),
+          ),
+        ),
 
       );
 

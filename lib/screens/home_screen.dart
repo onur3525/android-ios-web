@@ -757,8 +757,19 @@ class HizmetAlanlariPaneli extends StatefulWidget {
     'Organizasyon & Etkinlik': 'Organizasyon\n& Etkinlik',
     'Evcil Hayvan Hizmetleri': 'Evcil Hayvan\nHizmetleri',
     'Beyaz Eşya & Elektronik': 'Beyaz Eşya\nElektronik',
-    'Hukuk & Finans': 'Hukuk &\nFinans',
-    'Güzellik & Bakım & Spor': 'Güzellik &\nBakım',
+    // ⚠ İKİSİ DE YENİDEN AYARLANDI — güvenli 13 karakter/satır sınırını
+    // (yorum: "12.5 puntoda satır başına ~13 karakter") AŞIYORDU.
+    //
+    // "Hukuk, Finans" = 13, "& Danışmanlık" = 13 — diğer tüm
+    // örneklerin (azami 12 karakter) ÜZERİNDE, riskli. "Finans"
+    // düşürüldü, "Hukuk"+"Danışmanlık" (en tanıdık iki kelime) kaldı
+    // — ikisi de 6 karakterin altında, güvenli.
+    'Hukuk, Finans & Danışmanlık': 'Hukuk,\nFinans',
+    // "Güzellik &\nBakım" GÜVENLİ SIĞIYORDU ama çatının YENİDEN
+    // ADLANDIRILMA GEREKÇESİNİ (Kişisel Gelişim ve Koçluk) tamamen
+    // GİZLİYORDU. "Gelişim" ile değiştirildi — en tanıdık (Güzellik)
+    // ve rename'in gerekçesi (Gelişim) ikisi de görünür oldu.
+    'Güzellik, Bakım, Spor & Kişisel Gelişim': 'Güzellik &\nGelişim',
     'Geri Dönüşüm & Atık Yönetimi': 'Geri Dönüşüm\n& Atık',
     'Özel Güvenlik & Koruma': 'Özel Güvenlik\n& Koruma',
     'Çocuk & Bebek Bakımı': 'Çocuk &\nBebek Bakımı',

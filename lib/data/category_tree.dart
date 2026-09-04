@@ -229,7 +229,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Periyodik Araç Bakımı', 'Motor Yağı Değişimi', 'Akü Değişimi',
     'Araç Klima Gaz Dolumu', 'Fren Bakımı', 'Bilgisayarlı Arıza Tespiti',
     'Triger Seti Değişimi', 'Yağ ve Filtre Değişimi', 'Şanzıman Bakımı',
-    'Mobil Lastik Hizmeti'
+    'Mobil Lastik Hizmeti', 'Motor Rektifiye'
   ],
   'Araç Temizlik ve Detaylı Bakım': [
     'Araç Detaylı Temizlik', 'Araç Koltuk Yıkama', 'Oto Yıkama',
@@ -246,7 +246,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Lastik Değişimi', 'Lastik Tamiri', 'Rot Balans Ayarı', 'Jant Onarımı'
   ],
   'Oto Görsel & Koruma Hizmetleri': [
-    'Araç Kaplama', 'Oto Cam Filmi', 'Oto Boya Koruma', 'Oto Modifiye'
+    'Araç Kaplama', 'Oto Cam Filmi', 'Oto Boya Koruma', 'Oto Modifiye',
+    'PPF Kaplama'
   ],
   // ⚠ "Oto Bakım & Servis" KATEGORİSİ KALDIRILDI (aynı kelime
   // kümesi, farklı sıra — "Oto Servis ve Bakım" ile İÇERİK OLARAK
@@ -258,7 +259,9 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Aspiratör Tamiri', 'Ankastre Cihaz Montajı', 'Davlumbaz Tamiri',
     'Su Sebili Tamiri', 'Mikrodalga Fırın Tamiri',
     'Derin Dondurucu Tamiri', 'Buzdolabı Bakımı',
-    'Çamaşır Makinesi Bakımı', 'Bulaşık Makinesi Bakımı'
+    'Çamaşır Makinesi Bakımı', 'Bulaşık Makinesi Bakımı',
+    'Buzdolabı Gaz Dolumu', 'Motor Değişimi', 'Rezistans Değişimi',
+    'Rulman Değişimi'
   ],
   'Elektronik Cihaz Tamiri': [
     'Televizyon Tamiri', 'Bilgisayar Tamiri', 'Telefon Tamiri',
@@ -266,7 +269,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Telefon Batarya Değişimi', 'Bilgisayar Format ve Kurulum',
     'Veri Kurtarma', 'Projeksiyon Tamiri', 'Saat Tamiri', 'Yazıcı Tamiri',
     'Monitör Tamiri', 'Ses Sistemi Tamiri', 'Hoparlör Tamiri',
-    'Projeksiyon Kurulumu', 'Akıllı Saat Tamiri', 'Drone Tamiri'
+    'Projeksiyon Kurulumu', 'Akıllı Saat Tamiri', 'Drone Tamiri',
+    'Bilgisayar Temizliği'
   ],
   'Küçük Ev Aletleri': [
     'Küçük Ev Aletleri Tamiri', 'Kahve Makinesi Tamiri',
@@ -321,12 +325,21 @@ const Map<String, List<String>> kGomuluKatalog = {
     'İş Yeri Personel Servisi', 'Öğrenci Servisi', 'Okul Servisi',
     'Servis Aracı Kiralama'
   ],
+  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — Armut'ta gerçek, aktif bir alan
+  // (Kamyonet/Minibüs/Otobüs/Panelvan Kiralama) ama bizde şoförsüz
+  // araç kiralama kavramı HİÇ yoktu; yalnız "Servis Aracı Kiralama"
+  // (şoförlü) ve "Şoförlü Araç Hizmeti" (Turizm & Konaklama) vardı.
+  'Araç ve Ekipman Kiralama': [
+    'Kamyonet Kiralama', 'Minibüs Kiralama', 'Otobüs Kiralama',
+    'Panelvan Kiralama'
+  ],
   // ⚠ "Depolama & Lojistik" KATEGORİSİ KALDIRILDI — tek hizmeti
   // ("Antrepo") kavramsal olarak "Depolama Hizmetleri"nin bir
   // parçasıydı, ayrı bir kategori olacak kadar farklı değildi.
   'Güzellik ve Bakım Hizmetleri': [
     'Makyaj', 'Manikür Pedikür', 'Saç Tasarımı', 'Gelin Saçı ve Makyajı',
-    'Kalıcı Oje', 'Ağda ve Epilasyon', 'Cilt Bakımı', 'Evde Kuaför'
+    'Kalıcı Oje', 'Ağda ve Epilasyon', 'Cilt Bakımı', 'Evde Kuaför',
+    'Dövme Tattoo', 'Protez Tırnak Yapımı', 'Berber'
   ],
   'Masaj ve Wellness': [
     'Masaj', 'Evde Masaj', 'Spa Bakımı'
@@ -334,23 +347,28 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Spor': [
     'Personal Trainer', 'Pilates', 'Yoga', 'Yüzme Dersi',
     'Fitness Özel Ders', 'Tenis Dersi', 'Voleybol Dersi', 'Kiralık Kaleci',
-    'Evde Fitness Antrenörü', 'Beslenme ve Antrenman Programı'
+    'Evde Fitness Antrenörü', 'Beslenme ve Antrenman Programı',
+    'Dalış Eğitmeni', 'Kayak Dersi', 'Binicilik Dersi'
   ],
   'Kişisel Gelişim ve Koçluk': [
-    'Yaşam Koçu'
+    'Yaşam Koçu', 'Öğrenci Koçu', 'Eğitim Koçu'
   ],
   'Evcil Hayvan Hizmetleri': [
     'Köpek Gezdirme', 'Evcil Hayvan Bakımı', 'Pet Kuaför',
     'Evde Hayvan Bakıcılığı', 'Köpek Eğitimi', 'Evcil Hayvan Taşıma',
     'Pet Oteli ve Pansiyon', 'Pet Kreş Hizmeti', 'Kedi Bakımı',
     'Kedi Gezdirme', 'Evcil Hayvan Gezdirme', 'Evcil Hayvan Bakıcısı',
-    'Evde Evcil Hayvan Bakımı', 'Evcil Hayvan Eğitimi'
+    'Evde Evcil Hayvan Bakımı', 'Evcil Hayvan Eğitimi',
+    'Kedi Kısırlaştırma', 'Köpek Kısırlaştırma', 'Kedi Traşı',
+    'Köpek Traşı'
   ],
   'Özel Ders': [
     'Matematik Özel Ders', 'Fizik Özel Ders', 'Fen Bilimleri Özel Ders',
     'İlkokul Özel Ders', 'Kimya Özel Ders', 'Biyoloji Özel Ders',
     'Türkçe ve Edebiyat Özel Ders', 'Geometri Özel Ders', 'LGS Hazırlık',
-    'YKS Hazırlık', 'Okuma Yazma Özel Ders', 'Sınav Koçluğu'
+    'YKS Hazırlık', 'Okuma Yazma Özel Ders', 'Sınav Koçluğu',
+    'Disleksi Özel Ders', 'Diksiyon Dersi', 'Hızlı Okuma Dersi',
+    'İşaret Dili Özel Ders'
   ],
   'Yabancı Dil Eğitimi': [
     'İngilizce Özel Ders', 'Almanca Özel Ders', 'Fransızca Özel Ders',
@@ -411,7 +429,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Masa & Sandalye Kiralama', 'Palyaço', 'Doğum Günü Organizasyonu',
     'Düğün Organizasyonu', 'Balon ve Süsleme',
     'Kına ve Nişan Organizasyonu', 'Kurumsal Etkinlik Organizasyonu',
-    'Ses ve Işık Sistemi Kiralama'
+    'Ses ve Işık Sistemi Kiralama', 'Gelin Arabası Kiralama',
+    'Gelin Arabası Süsleme'
   ],
   'Fotoğraf Çekimi': [
     'Drone Çekimi', 'Ürün Fotoğraf Çekimi', 'Kurumsal Fotoğraf Çekimi',
@@ -420,7 +439,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Catering ve İkram': [
     'Catering Hizmeti', 'Kokteyl İkram Hizmeti', 'Etkinlik Yemek Servisi',
-    'Yaprak Sarma Yapımı'
+    'Yaprak Sarma Yapımı', 'Evde Yemek Pişirme'
   ],
   'Etkinlik Personeli': [
     'Garson', 'Servis Personeli', 'Host / Hostes', 'Karşılama Personeli',
@@ -440,7 +459,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Duvar Ustası', 'İnşaat Kalıp Ustası', 'Beton Kalıp Ustası',
     'İnşaat Demir Ustası', 'Demir Bağlama Ustası', 'İnşaat Demir Döşeme',
     'Kaba İnşaat', 'Anahtar Teslim İnşaat', 'Duvar Örme', 'Yıkım İşleri',
-    'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme'
+    'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme', 'Bina Güçlendirme'
   ],
   'Çatı Yapım ve Onarım': [
     'Çatı Tamiri', 'Çatı Yapımı', 'Çatı İzolasyonu', 'Çatı Aktarma',
@@ -528,7 +547,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Havalandırma Sistemleri': [
     'Havalandırma Sistemleri', 'Havalandırma Kanalı Montajı',
-    'Davlumbaz Havalandırma Montajı'
+    'Davlumbaz Havalandırma Montajı', 'Menfez Açma'
   ],
   'Çelik Yapı & Prefabrik Yapılar': [
     'Çelik Ev Yapımı', 'Anahtar Teslim Prefabrik Ev',
@@ -755,6 +774,15 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Gümrük Müşaviri', 'Gümrük Danışmanlığı', 'İthalat İşlemleri',
     'İhracat İşlemleri', 'Gümrük İşlemleri Danışmanlığı'
   ],
+  // ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) — katalogda
+  // "Tercüme"/"Çeviri" hiç yoktu. "Hukuk, Finans & Danışmanlık" çatısı
+  // tercih edildi çünkü yeminli/noter onaylı tercüme resmi belge
+  // işlemleriyle (gümrük, vize, dava) iç içedir.
+  'Tercüme ve Çeviri Hizmetleri': [
+    'Yeminli Tercüme', 'İngilizce Yeminli Tercüme',
+    'Almanca Yeminli Tercüme', 'Noter Onaylı Tercüme', 'Sözlü Tercüme',
+    'Teknik Çeviri', 'Akademik Çeviri', 'Hukuki Metin Çevirisi'
+  ],
   'Teşvik & Hibe Danışmanlığı': [
     'KOSGEB Danışmanlığı', 'Teşvik Danışmanlığı', 'Hibe Danışmanlığı',
     'Yatırım Teşvik Danışmanlığı', 'Devlet Destekleri Danışmanlığı'
@@ -812,6 +840,30 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Mezoterapi Uygulaması', 'Ozon Uygulaması', 'Proloterapi Uygulaması',
     'Kayropraktik Uygulaması'
   ],
+  // ── ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) — Armut.com
+  // karşılaştırmasında bu dört kategorinin TAMAMEN eksik olduğu
+  // tespit edildi; "Sağlık Hizmetleri" çatısı zaten VARDI, yeni çatı
+  // GEREKMEDİ.
+  'Psikolojik Danışmanlık ve Terapi': [
+    'Psikolog', 'Online Psikolog', 'Klinik Psikolog', 'Yetişkin Psikolog',
+    'Çocuk Psikoloğu', 'Ergen Psikoloğu', 'Online Çocuk Psikoloğu',
+    'Online Ergen Psikolog', 'Aile Danışmanı', 'Aile Terapisi',
+    'Çift Terapisi', 'Online Çift Terapisi', 'Bilişsel Davranışçı Terapi',
+    'EMDR Terapisi', 'Oyun Terapisi', 'Dil ve Konuşma Terapisi',
+    'Pedagog', 'Online Psikoterapi', 'Online Psikolojik Danışman'
+  ],
+  'Diyetisyen ve Beslenme Danışmanlığı': [
+    'Diyetisyen', 'Online Diyetisyen', 'Beslenme Danışmanlığı',
+    'Spor Beslenmesi Danışmanlığı'
+  ],
+  'Fizyoterapi ve Rehabilitasyon': [
+    'Fizyoterapist', 'Evde Fizik Tedavi', 'Ergoterapi', 'Manuel Terapi',
+    'Manuel Lenf Drenajı'
+  ],
+  'Evde Hemşirelik Hizmetleri': [
+    'Evde Hemşire', 'Evde Serum Takma', 'Evde Enjeksiyon',
+    'Evde Pansuman'
+  ],
   'Tarım Danışmanlığı': [
     'Tarım Danışmanlığı', 'Ziraat Danışmanlığı',
     'Tarımsal Sulama Danışmanlığı'
@@ -830,7 +882,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Hayvancılık Hizmetleri': [
     'Büyükbaş Hayvancılık Danışmanlığı',
-    'Küçükbaş Hayvancılık Danışmanlığı'
+    'Küçükbaş Hayvancılık Danışmanlığı', 'At Pansiyonu'
   ],
   'Veteriner Hizmetleri': [
     'Veteriner Hekim', 'Evde Veteriner Hizmeti', 'Hayvan Aşılama',
@@ -838,7 +890,8 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Tur Organizasyon': [
     'Tur Organizasyonu', 'Günübirlik Tur', 'Kültür Turu', 'Doğa Turu',
-    'Tekne Turu', 'Özel Tur Organizasyonu', 'Balık Turu'
+    'Tekne Turu', 'Özel Tur Organizasyonu', 'Balık Turu',
+    'Kaptanlı Yat Kiralama'
   ],
   'Konaklama': [
     'Otel Rezervasyonu', 'Pansiyon Rezervasyonu', 'Villa Kiralama',
@@ -846,7 +899,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Transfer ve Ulaşım': [
     'Havalimanı Transferi', 'VIP Transfer', 'Şoförlü Araç Hizmeti',
-    'Turizm Transferi', 'Özel Araç Tahsisi'
+    'Turizm Transferi', 'Özel Araç Tahsisi', 'Taksi', 'Saatlik Şoför'
   ],
   'Seyahat Danışmanlığı': [
     'Seyahat Planlama', 'Tatil Planlama', 'Yurtiçi Tatil Organizasyonu',
@@ -923,7 +976,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Tekstil Geri Dönüşüm', 'Plastik Geri Dönüşüm',
     'Kağıt ve Karton Geri Dönüşüm', 'Metal Geri Dönüşüm',
     'Elektronik Atık Geri Dönüşüm', 'Ahşap Geri Dönüşüm',
-    'Tekstil Atık Toplama', 'Plastik Atık Toplama',
+    'Tekstil Atık Toplama', 'Plastik Atık Toplama', 'Hurdacı',
     'Atık Ayrıştırma ve Sınıflandırma', 'Cam Geri Dönüşüm'
   ],
   'Bebek Bakımı': [
@@ -968,6 +1021,33 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Günlük Eleman', 'Günlük Yardımcı Eleman', 'Geçici Personel',
     'Kısa Süreli Personel', 'İş Gücü Desteği', 'Depo Yardımcı Personeli',
     'Yükleme / Boşaltma Personeli', 'Genel Yardımcı Personel'
+  ],
+  // ── ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) ──
+  //
+  // Armut'ta aktif ve talep gören ("İmam Nikahı Kıyma": yılda 2.463
+  // talep, 251 hizmet veren, 1.225 onaylı yorum; "Mevlüt Okuma":
+  // yalnız İzmir'de 100 hizmet veren) ama katalogda hiç olmayan dini
+  // hizmetler. Cenaze hizmetleri (gasil/kefen/defin) İNCELENDİ ama
+  // EKLENMEDİ — Türkiye'de bunlar belediye/vakıf tarafından ÜCRETSİZ
+  // sağlanıyor, ticari pazaryeri modeline uymuyor.
+  'Nikah ve Tören Hizmetleri': [
+    'İmam Nikahı Kıyma', 'Nikah Duası'
+  ],
+  'Mevlüt ve Dua Programları': [
+    'Mevlüt Okuma', 'Hatim Okuma', 'Dua Programı'
+  ],
+  'Kur\'an-ı Kerim Eğitimi': [
+    'Kur\'an-ı Kerim Özel Dersi', 'Tecvid Dersi', 'Hafızlık Eğitimi'
+  ],
+  'İlahi ve Dini Musiki': [
+    'İlahi Okuma'
+  ],
+  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — Armut'ta aktif, geleneksel bir
+  // zanaat (`armut.com/bicak-bileme`, `armut.com/makas-bileme`).
+  // Hiçbir mevcut kategoriye doğal olarak oturmadığı için "Diğer
+  // Hizmetler" çatısına eklendi.
+  'Bileme ve Keskinleştirme Hizmetleri': [
+    'Bıçak Bileme', 'Makas Bileme'
   ],
 };
 
@@ -1108,6 +1188,16 @@ const Map<String, String> _kKisaAd = {
   'İnşaat ve Kaba Yapı': 'İnşaat',
   'Çilingir ve Kilit': 'Çilingir',
   'Kurye ve Küçük Taşıma': 'Kurye',
+  // ⚠ ARAŞTIRMA SONUCU EKLENEN KATEGORİLERDEN EN UZUN İKİSİ — genel
+  // kural ("ve" → "&") uygulansa bile 31-34 karaktere ulaşıyorlardı
+  // (3 satır × ~11-15 karakter/satır kapasitesinin sınırına yakın);
+  // güvenli marj için elle kısaltıldı. Kalan yeni kategoriler (Nikah
+  // ve Tören Hizmetleri, Mevlüt ve Dua Programları, Kur'an-ı Kerim
+  // Eğitimi, İlahi ve Dini Musiki, Fizyoterapi ve Rehabilitasyon,
+  // Evde Hemşirelik Hizmetleri, Tercüme ve Çeviri Hizmetleri) genel
+  // kuralla GÜVENLE sığıyor, elle kısaltma GEREKMEDİ.
+  'Psikolojik Danışmanlık ve Terapi': 'Psikolog & Terapi',
+  'Diyetisyen ve Beslenme Danışmanlığı': 'Diyetisyen & Beslenme',
 };
 
 /// KATEGORİNİN EKRANDA GÖRÜNEN ADI.

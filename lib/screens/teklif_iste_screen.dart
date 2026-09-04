@@ -4,7 +4,11 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/listing_controller.dart';
+import '../data/controllers/offer_controller.dart';
+import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
+import '../data/models/review.dart';
 import '../data/models/teklif_talebi.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api/storage_api.dart';
@@ -13,6 +17,7 @@ import '../domain/form_mesajlari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
+import 'provider_reviews_screen.dart';
 import 'teklif_istediklerim_screen.dart';
 import 'widgets/photo_picker.dart';
 
@@ -184,6 +189,99 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                             size: RF.s145, weight: RF.w700, color: RC.text)),
                   ],
                 ),
+                // ── ⚠ İSTATİSTİKLER + SON 5 YORUM — KİMLİK HÂLÂ
+                // MASKELİ AMA İSTATİSTİKLER GÖSTERİLİR ──
+                //
+                // `sonuclar_screen.dart`daki kartlarla AYNI ilke:
+                // ad/fotoğraf maskeli kalsa da puan/yorum/tamamlanan
+                // iş SAKLANMAZ — hizmet alan teklif vermeden ÖNCE
+                // hizmet verenin GEÇMİŞİNİ görebilmeli.
+                Builder(builder: (context) {
+                  final reviews = context.watch<ReviewController>();
+                  final puan = reviews.averageOf(widget.saglayiciId);
+                  final yorumlar = reviews.byProvider(widget.saglayiciId);
+                  final tamamlanan =
+                      _tamamlananIsGercek(context, widget.saglayiciId);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const Divider(height: 1, color: Color(0xFFF1F3F6)),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          const RefSvg('assets/svg/ic_starfill.svg',
+                              size: 15, color: Color(0xFFF5A319)),
+                          const SizedBox(width: 4),
+                          Text(puan == null ? '—' : puan.toStringAsFixed(1),
+                              style: refText(
+                                  size: RF.s135,
+                                  weight: RF.w700,
+                                  color: RC.text)),
+                          const SizedBox(width: 4),
+                          Text('(${yorumlar.length} yorum)',
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w400,
+                                  color: RC.textSoft)),
+                          const SizedBox(width: 12),
+                          const RefSvg('assets/svg/ic_shieldok.svg',
+                              size: 14, color: Color(0xFF5B6472)),
+                          const SizedBox(width: 4),
+                          Text('$tamamlanan iş tamamladı',
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w400,
+                                  color: const Color(0xFF5B6472))),
+                        ],
+                      ),
+                      if (yorumlar.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text('Son Yorumlar',
+                            style: refText(
+                                size: RF.s13,
+                                weight: RF.w700,
+                                color: RC.text)),
+                        const SizedBox(height: 6),
+                        for (final r in yorumlar.take(5))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: YorumKarti(
+                              review: r,
+                              yazarAdi: context
+                                  .read<AuthController>()
+                                  .accountById(r.authorId)
+                                  ?.name,
+                            ),
+                          ),
+                        // ⚠ 5'TEN FAZLASI VARSA "Tümünü Gör" — kimlik
+                        // maskeliyken GERÇEK ad DEĞİL, maskeli ad
+                        // gösterilir (`ProviderReviewsScreen`'e giden
+                        // hâlâ AYNI maskeleme kuralına tabidir).
+                        if (yorumlar.length > 5)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: RefTap(
+                              onTap: () => Navigator.push<void>(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                      builder: (_) => ProviderReviewsScreen(
+                                          providerId: widget.saglayiciId,
+                                          providerAdi: maskeliAd(
+                                              widget.saglayiciAdi)))),
+                              borderRadius: BorderRadius.circular(RR.r8),
+                              child: Text(
+                                  'Tümünü Gör (${yorumlar.length})',
+                                  style: refText(
+                                      size: RF.s13,
+                                      weight: RF.w700,
+                                      color: RC.blue)),
+                            ),
+                          ),
+                      ],
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -301,4 +399,27 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
       ),
     );
   }
+}
+
+/// ⚠ `offer_detail_screen.dart`'taki `_tamamlananIs` (ve
+/// `sonuclar_screen.dart`daki `_tamamlananIsGercek`) İLE AYNI mantık
+/// — hizmet verenin SEÇİLMİŞ teklifle tamamlanmış iş sayısı. Üçüncü
+/// bir kopya değil, aynı hesaplama farklı dosyalarda AYNI şekilde
+/// tekrarlanıyor çünkü bu üçü birbirinden PRIVATE (import edilemez).
+int _tamamlananIsGercek(BuildContext c, String providerId) {
+  final ilanlar = c.read<ListingController>().all;
+  final teklifler = c.read<OfferController>();
+  var n = 0;
+  for (final l in ilanlar) {
+    if (!l.isTamamlanmisIs) {
+      continue;
+    }
+    final secili = teklifler
+        .offersForListing(l.id)
+        .where((o) => o.id == l.selectedOfferId);
+    if (secili.isNotEmpty && secili.first.providerId == providerId) {
+      n++;
+    }
+  }
+  return n;
 }
