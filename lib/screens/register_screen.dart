@@ -1037,16 +1037,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!zorunlu) {
       return Text(metin, style: gri, maxLines: 1, overflow: TextOverflow.ellipsis);
     }
+    // ⚠ YILDIZ SOLDA — bkz. `refYerTutucu`/`RefFieldLabel`daki AYNI
+    // düzeltme; uygulama genelinde TEK, TUTARLI konum.
     return RichText(
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       text: TextSpan(style: gri, children: [
-        TextSpan(text: '$metin '),
         TextSpan(
-          text: '*',
+          text: '* ',
           style: refText(
               size: RF.s15, weight: RF.w700, color: RC.requiredStar),
         ),
+        TextSpan(text: metin),
       ]),
     );
   }
@@ -1141,7 +1143,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: Stack(children: [
           SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            // ⚠ KLAVYE AÇIKKEN EK ALT BOŞLUK — "Devam Et" butonu
+            // klavyenin altında kalıp elle kaydırmak gerektiriyordu.
+            // Klavye açıkken içeriğin altına klavye yüksekliği kadar
+            // EK boşluk eklenir; bu, bir alana odaklanınca Flutter'ın
+            // KENDİ otomatik "görünür alana kaydır" davranışının
+            // (`Scrollable.ensureVisible`, TextField odaklanınca
+            // dahili olarak tetiklenir) butonu da görünür alana
+            // çekebilmesi için YETERLİ kaydırma payı sağlar — riskli
+            // bir Scaffold yeniden yapılandırması (`bottomNavigationBar`)
+            // GEREKMEDEN.
+            padding: EdgeInsets.fromLTRB(
+                20, 0, 20, 24 + MediaQuery.viewInsetsOf(context).bottom),
             child: Form(
               // ── ⚠ UYARI NE ZAMAN GÖRÜNÜR? ──
               //
@@ -1703,6 +1716,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                   ),
                 ),
+                const SizedBox(height: 8),
+                // ── ⚠ "DEVAM ET" — GERİ ESKİ KONUMUNA ALINDI ──
+                //
+                // ÖNCEKİ DENEME: bu buton `Scaffold.bottomNavigationBar`a
+                // taşınmıştı — TEORİDE doğru (Flutter'ın kendi garantisi
+                // klavye üstünde tutar) ama PRATİKTE ekranı BOZDU: form
+                // içeriği hiç görünmeyip yalnız bu buton kalıyordu, HER
+                // İKİ rolde de. Kesin neden GERÇEK CİHAZDA görülmeden
+                // (Flutter SDK yok, çalıştıramıyorum) DOĞRULANAMADI —
+                // riski analiz etmek yerine GARANTİ ÇALIŞAN eski yapıya
+                // dönüldü. Klavye sorunu AŞAĞIDAKİ `padding` ile (bkz.
+                // `SingleChildScrollView`) ÇÖZÜLDÜ — Scaffold yapısına
+                // DOKUNMADAN.
+                ValueListenableBuilder<bool>(
+                  valueListenable: _formGecerli,
+                  builder: (_, gecerli, __) => RefPrimaryButton('Devam Et',
+                      busy: _busy, onPressed: gecerli ? _next : null),
+                ),
 
                 // `.rg-or` + `.rg-google` — kayıt akışında da bulunur
                 //
@@ -1717,25 +1748,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
           const TeshisPaneli(),
         ]),
-        // ── ⚠ "DEVAM ET" — ARTIK `bottomNavigationBar`DA ──
-        //
-        // ÖNCEDEN Column'un İÇİNDEYDİ (kaydırılabilir alanın SONUNDA)
-        // — form uzayınca ve klavye açılınca kullanıcı butonu
-        // GÖRMEK için ELLE aşağı/yukarı kaydırmak ZORUNDA kalıyordu.
-        // `Scaffold.bottomNavigationBar`, Flutter'ın KENDİ garantisiyle
-        // HER ZAMAN ekranın altında, klavye açıkken de klavyenin
-        // ÜSTÜNDE sabit durur (`resizeToAvoidBottomInset` varsayılan
-        // `true` olduğu için) — elle kaydırma GEREKMEZ.
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _formGecerli,
-              builder: (_, gecerli, __) => RefPrimaryButton('Devam Et',
-                  busy: _busy, onPressed: gecerli ? _next : null),
-            ),
-          ),
-        ),
 
       );
 

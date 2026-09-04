@@ -352,9 +352,9 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
 
       KeyedSubtree(
         key: v.sifreKaydirKey,
-        child: _sifre('sifre', 'Şifreniz', v.sifre),
+        child: _sifre('sifre', 'Şifre', v.sifre),
       ),
-      _sifre('sifre2', 'Şifrenizi Tekrar Giriniz', v.sifre2),
+      _sifre('sifre2', 'Şifre tekrar', v.sifre2),
 
       // ── SÖZLEŞME SATIRI ──
       //
@@ -473,6 +473,10 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           iconAsset: ikon,
           controller: ctl,
           hint: ipucu,
+          // ⚠ ÜST ETİKET KALDIRILDI — alan adı artık KUTUNUN İÇİNDE,
+          // register_screen.dart'ın (hizmet veren kaydı) deseniyle
+          // TUTARLI: sol yıldızlı, gri, kutunun içinde.
+          etiketGoster: false,
           yerTutucu: yerTutucu,
           keyboardType: klavye,
           inputFormatters: bicim,
@@ -513,6 +517,8 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           // `_sifre` böyle bir parametre almadığı için derleme
           // kırılıyordu.
           hint: ipucu,
+          // ⚠ ÜST ETİKET KALDIRILDI — bkz. `_alan()` içindeki AYNI not.
+          etiketGoster: false,
           obscureText: !acik,
           // ⚠ Ara alanlar `next`, ZİNCİRİN SON ALANI `done`
           // (uygulamanın klavye standardı — `register_screen` ile aynı).

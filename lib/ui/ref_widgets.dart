@@ -492,19 +492,23 @@ Widget refYerTutucu(String metin, {required bool zorunlu, double? boyut}) {
     return Text(metin,
         style: gri, maxLines: 1, overflow: TextOverflow.ellipsis);
   }
+  // ⚠ YILDIZ SOLDA — `RefRegDropdown`daki (İl/İlçe/Mahalle/Hizmet
+  // Kategorileri) referans desenle TUTARLI hale getirildi. Önceden
+  // METNİN SONUNDAYDI ("Ad *"); artık ÖNÜNDE ("* Ad") — uygulama
+  // genelinde zorunlu alan yıldızının TEK, TUTARLI konumu budur.
   return RichText(
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     text: TextSpan(style: gri, children: [
-      TextSpan(text: '$metin '),
       TextSpan(
-        text: '*',
+        text: '* ',
         style: refText(
           size: boyut ?? RF.s145,
           weight: RF.w700,
           color: RC.requiredStar,
         ),
       ),
+      TextSpan(text: metin),
     ]),
   );
 }
@@ -554,6 +558,12 @@ class RefFormField extends StatelessWidget {
     this.iconColor,
     this.maxLength,
     this.buildCounter,
+    // ⚠ YENİ, VARSAYILANI `true` — diğer ekranlar (login, forgot_
+    // password, yeni_sifre) ETKİLENMEZ. `false` verildiğinde üst
+    // etiket (`RefFieldLabel`) hiç ÇİZİLMEZ, alan adı bunun yerine
+    // KUTUNUN İÇİNDE (`register_screen.dart`daki gibi, sol yıldızla)
+    // gösterilir — `ilan_kayit_adimi.dart` bunu kullanır.
+    this.etiketGoster = true,
   });
 
   final String iconAsset;
@@ -621,12 +631,15 @@ class RefFormField extends StatelessWidget {
   /// ⚠ Yalnız ipucudur; biçim zorlaması `inputFormatters` ile yapılır.
   final TextCapitalization textCapitalization;
 
+  /// Bkz. constructor notu — varsayılan `true`.
+  final bool etiketGoster;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RefFieldLabel(etiket ?? hint, zorunlu: zorunlu, ilk: true),
+        if (etiketGoster) RefFieldLabel(etiket ?? hint, zorunlu: zorunlu, ilk: true),
         _kutu(context),
       ],
     );
@@ -712,9 +725,21 @@ class RefFormField extends StatelessWidget {
                 //
                 // ⚠ Tek istisna BİÇİM ÖRNEĞİ ("5XX XXX XX XX"):
                 // o alan adı değil, yazım ipucudur.
-                hint: (yerTutucu == null || yerTutucu!.isEmpty)
-                    ? null
-                    : refYerTutucu(yerTutucu!, zorunlu: false, boyut: RF.s15),
+                //
+                // ⚠ `etiketGoster: false` İKEN TERS: üst etiket HİÇ
+                // yok, bu yüzden kutunun içi ARTIK BOŞ KALAMAZ — alan
+                // adı (`yerTutucu` verilmediyse `hint`) BURADA, kendi
+                // `zorunlu` değeriyle (sol yıldızlı) gösterilir.
+                hint: !etiketGoster
+                    ? refYerTutucu(
+                        (yerTutucu == null || yerTutucu!.isEmpty)
+                            ? hint
+                            : yerTutucu!,
+                        zorunlu: zorunlu,
+                        boyut: RF.s15)
+                    : (yerTutucu == null || yerTutucu!.isEmpty)
+                        ? null
+                        : refYerTutucu(yerTutucu!, zorunlu: false, boyut: RF.s15),
                 // Kutu `.rg-f` tarafından çiziliyor; girdi çerçevesizdir.
                 isDense: true,
                 border: InputBorder.none,
@@ -2563,30 +2588,23 @@ class RefFieldLabel extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(1, ilk ? 0 : 15, 1, 7),
         child: Row(
           children: [
+            // ── ⚠ YILDIZ SOLDA — `RefRegDropdown`daki (İl/İlçe/
+            // Mahalle/Hizmet Kategorileri) referans desenle TUTARLI
+            // hale getirildi. Önceden adın ARDINDAN geliyordu
+            // ("Ad *"); artık ÖNÜNDEN gelir ("* Ad") — uygulama
+            // genelinde zorunlu alan yıldızının TEK, TUTARLI konumu
+            // budur.
+            if (zorunlu)
+              Text(
+                '* ',
+                style: refText(
+                    size: RF.s135, weight: RF.w700, color: RC.requiredStar),
+              ),
             Text(
               text,
               style: refText(
                   size: RF.s135, weight: RF.w700, color: RC.text),
             ),
-            // ── ⚠ YILDIZ ETİKETTE ÇİZİLİR ──
-            //
-            // Nihai karar: alan adı KUTUNUN DIŞINDA, sol üstte durur
-            // ve zorunluluk yıldızı adın hemen ardından gelir:
-            //
-            //     Ad *
-            //     [                    ]
-            //
-            // Bir süre yıldız kutunun İÇİNDE, yer tutucunun sonunda
-            // çiziliyordu; o dönemde etiket hiç yoktu ve tekrar
-            // olmasın diye burada gizlenmişti. Artık etiket geri
-            // geldiği için yıldızın yeri de burasıdır.
-            //
-            if (zorunlu)
-              Text(
-                ' *',
-                style: refText(
-                    size: RF.s135, weight: RF.w700, color: RC.requiredStar),
-              ),
           ],
         ),
       );
