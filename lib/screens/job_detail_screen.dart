@@ -622,15 +622,29 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 // Önceki hâl TEK geniş satırdı ve MESAJLAŞMA kutusu
                 // hiç yoktu — hizmet veren, iletişim açıldıktan sonra
                 // sohbete nereden gireceğini göremiyordu.
-                Row(children: [
+                //
+                // ⚠ `IntrinsicHeight` + `stretch` EKLENDİ — kilitliyken
+                // Telefon kutusu (`deger`+`not`, 2 satır) Mesajlaşma
+                // kutusundan (yalnız `not`, 1 satır) DAHA UZUNDU, iki
+                // kutu FARKLI yükseklikte görünüyordu. `offer_detail_
+                // screen.dart`daki AYNI çözüm buraya da uygulandı.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                   Expanded(
                     child: _IletisimKutusu(
                       ikon: 'assets/svg/ic_phone_f.svg',
                       etiket: 'Telefon',
+                      // ⚠ KİLİTLİYKEN ARTIK `null` — Mesajlaşma
+                      // kutusuyla TUTARLI: ikisi de kilitliyken yalnız
+                      // `not` (açıklama) gösterir, maskeli numara
+                      // AYRICA gösterilmez (zaten gizli bilgi, tekrar
+                      // sayılır).
                       deger: acik
                           ? TelefonBicimlendirici.gruplu(
                               Validators.phoneLocal(owner?.phone ?? ''))
-                          : '05** *** *** **',
+                          : null,
                       // Referansta açık telefon BAĞLANTI gibi altı
                       // çizilidir; dokunulabilir olduğu böyle anlaşılır.
                       altiCizili: acik,
@@ -665,7 +679,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           : null,
                     ),
                   ),
-                ]);
+                ],
+                  ),
+                );
               }(),
 
               // ⚠ "İletişimi Aç" düğmesi YALNIZ kapalıyken ve teklif

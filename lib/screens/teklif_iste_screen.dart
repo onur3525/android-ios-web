@@ -154,7 +154,7 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           RefSubtitle('Talebin yalnız seçtiğin hizmet verene gönderilir.'),
           const SizedBox(height: 16),
 
-          // ── SEÇİLİ HİZMET + HİZMET VEREN — SALT OKUNUR ──
+          // ── SEÇİLİ HİZMET — SALT OKUNUR ──
           //
           // ⚠ `RefFormCard` — "İlan Ver" ekranındaki AYNI kart
           // bileşeni; yeni bir kutu tasarımı İCAT EDİLMEDİ.
@@ -173,118 +173,168 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                 Text(widget.hizmet,
                     style: refText(
                         size: 16.5, weight: RF.w700, color: RC.text)),
-                const SizedBox(height: 10),
-                const Divider(height: 1, color: Color(0xFFF1F3F6)),
-                const SizedBox(height: 10),
-                Text('Hizmet Veren',
-                    style:
-                        refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const RefSvg('assets/svg/ic_avlock.svg', size: 28),
-                    const SizedBox(width: 8),
-                    Text(maskeliAd(widget.saglayiciAdi),
-                        style: refText(
-                            size: RF.s145, weight: RF.w700, color: RC.text)),
-                  ],
-                ),
-                // ── ⚠ İSTATİSTİKLER + SON 5 YORUM — KİMLİK HÂLÂ
-                // MASKELİ AMA İSTATİSTİKLER GÖSTERİLİR ──
-                //
-                // `sonuclar_screen.dart`daki kartlarla AYNI ilke:
-                // ad/fotoğraf maskeli kalsa da puan/yorum/tamamlanan
-                // iş SAKLANMAZ — hizmet alan teklif vermeden ÖNCE
-                // hizmet verenin GEÇMİŞİNİ görebilmeli.
-                Builder(builder: (context) {
-                  final reviews = context.watch<ReviewController>();
-                  final puan = reviews.averageOf(widget.saglayiciId);
-                  final yorumlar = reviews.byProvider(widget.saglayiciId);
-                  final tamamlanan =
-                      _tamamlananIsGercek(context, widget.saglayiciId);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      const Divider(height: 1, color: Color(0xFFF1F3F6)),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const RefSvg('assets/svg/ic_starfill.svg',
-                              size: 15, color: Color(0xFFF5A319)),
-                          const SizedBox(width: 4),
-                          Text(puan == null ? '—' : puan.toStringAsFixed(1),
-                              style: refText(
-                                  size: RF.s135,
-                                  weight: RF.w700,
-                                  color: RC.text)),
-                          const SizedBox(width: 4),
-                          Text('(${yorumlar.length} yorum)',
-                              style: refText(
-                                  size: RF.s12,
-                                  weight: RF.w400,
-                                  color: RC.textSoft)),
-                          const SizedBox(width: 12),
-                          const RefSvg('assets/svg/ic_shieldok.svg',
-                              size: 14, color: Color(0xFF5B6472)),
-                          const SizedBox(width: 4),
-                          Text('$tamamlanan iş tamamladı',
-                              style: refText(
-                                  size: RF.s12,
-                                  weight: RF.w400,
-                                  color: const Color(0xFF5B6472))),
-                        ],
-                      ),
-                      if (yorumlar.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Text('Son Yorumlar',
-                            style: refText(
-                                size: RF.s13,
-                                weight: RF.w700,
-                                color: RC.text)),
-                        const SizedBox(height: 6),
-                        for (final r in yorumlar.take(5))
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: YorumKarti(
-                              review: r,
-                              yazarAdi: context
-                                  .read<AuthController>()
-                                  .accountById(r.authorId)
-                                  ?.name,
-                            ),
-                          ),
-                        // ⚠ 5'TEN FAZLASI VARSA "Tümünü Gör" — kimlik
-                        // maskeliyken GERÇEK ad DEĞİL, maskeli ad
-                        // gösterilir (`ProviderReviewsScreen`'e giden
-                        // hâlâ AYNI maskeleme kuralına tabidir).
-                        if (yorumlar.length > 5)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: RefTap(
-                              onTap: () => Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                      builder: (_) => ProviderReviewsScreen(
-                                          providerId: widget.saglayiciId,
-                                          providerAdi: maskeliAd(
-                                              widget.saglayiciAdi)))),
-                              borderRadius: BorderRadius.circular(RR.r8),
-                              child: Text(
-                                  'Tümünü Gör (${yorumlar.length})',
-                                  style: refText(
-                                      size: RF.s13,
-                                      weight: RF.w700,
-                                      color: RC.blue)),
-                            ),
-                          ),
-                      ],
-                    ],
-                  );
-                }),
               ],
             ),
           ),
+
+          // ── ⚠ HİZMET VEREN KARTI — `sonuclar_screen.dart`daki
+          // `_SaglayiciKarti` İLE AYNI GÖRSEL DİL, AYRI KART ──
+          //
+          // ÖNCEDEN "Seçili Hizmet" kartının İÇİNDE, sade bir satırdı.
+          // Artık Sonuçlar ekranındaki TAM kart düzeni (avatar,
+          // yıldız+yorum, tamamlanan iş, konum) — yalnız SIRA/MADALYA
+          // ve "Teklif İste" BUTONU YOK (zaten bu ekranın kendisi o
+          // butona tıklanınca açılıyor, tekrar sayılır).
+          const SizedBox(height: 12),
+          Builder(builder: (context) {
+            final reviews = context.watch<ReviewController>();
+            final puan = reviews.averageOf(widget.saglayiciId);
+            final yorumlar = reviews.byProvider(widget.saglayiciId);
+            final tamamlanan =
+                _tamamlananIsGercek(context, widget.saglayiciId);
+            final hesap =
+                context.read<AuthController>().accountById(widget.saglayiciId);
+            final konum = hesap?.address == null
+                ? null
+                : '${hesap!.address!.district} / ${hesap.address!.city}';
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: RC.white,
+                border: Border.all(color: const Color(0xFFECEEF2)),
+                borderRadius: BorderRadius.circular(RR.r13),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const RefSvg('assets/svg/ic_avlock.svg', size: 46),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(maskeliAd(widget.saglayiciAdi),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: refText(
+                                size: RF.s145,
+                                weight: RF.w700,
+                                color: RC.text)),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const RefSvg('assets/svg/ic_starfill.svg',
+                                size: 14, color: Color(0xFFF5A319)),
+                            const SizedBox(width: 4),
+                            Text(
+                                puan == null
+                                    ? '—'
+                                    : puan.toStringAsFixed(1),
+                                style: refText(
+                                    size: RF.s125,
+                                    weight: RF.w700,
+                                    color: RC.text)),
+                            const SizedBox(width: 4),
+                            Text('(${yorumlar.length} yorum)',
+                                style: refText(
+                                    size: RF.s12,
+                                    weight: RF.w400,
+                                    color: RC.textSoft)),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            const RefSvg('assets/svg/ic_shieldok.svg',
+                                size: 13, color: Color(0xFF5B6472)),
+                            const SizedBox(width: 5),
+                            Text('$tamamlanan iş tamamladı',
+                                style: refText(
+                                    size: RF.s12,
+                                    weight: RF.w400,
+                                    color: const Color(0xFF5B6472))),
+                          ],
+                        ),
+                        if (konum != null) ...[
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const RefSvg('assets/svg/ic_pin.svg',
+                                  size: 14, color: Color(0xFF98A2B3)),
+                              const SizedBox(width: 5),
+                              Text(konum,
+                                  style: refText(
+                                      size: RF.s12,
+                                      weight: RF.w400,
+                                      color: const Color(0xFF98A2B3))),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          // ── ⚠ YORUMLAR — AYRI KART, SON 3 YORUM ──
+          //
+          // ÖNCEDEN hizmet veren kartının İÇİNDE, 5 yorum
+          // gösteriyordu. Artık KENDİ kartı, 3 yorum — kullanıcı
+          // isteğiyle değişti.
+          Builder(builder: (context) {
+            final reviews = context.watch<ReviewController>();
+            final yorumlar = reviews.byProvider(widget.saglayiciId);
+            if (yorumlar.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: RC.white,
+                border: Border.all(color: const Color(0xFFECEEF2)),
+                borderRadius: BorderRadius.circular(RR.r13),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Yorumlar',
+                      style: refText(
+                          size: RF.s14, weight: RF.w700, color: RC.text)),
+                  const SizedBox(height: 8),
+                  for (final r in yorumlar.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: YorumKarti(
+                        review: r,
+                        yazarAdi: context
+                            .read<AuthController>()
+                            .accountById(r.authorId)
+                            ?.name,
+                      ),
+                    ),
+                  if (yorumlar.length > 3)
+                    RefTap(
+                      onTap: () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                              builder: (_) => ProviderReviewsScreen(
+                                  providerId: widget.saglayiciId,
+                                  providerAdi:
+                                      maskeliAd(widget.saglayiciAdi)))),
+                      borderRadius: BorderRadius.circular(RR.r8),
+                      child: Text('Tümünü Gör (${yorumlar.length})',
+                          style: refText(
+                              size: RF.s13,
+                              weight: RF.w700,
+                              color: RC.blue)),
+                    ),
+                ],
+              ),
+            );
+          }),
 
           const SizedBox(height: 20),
           Text('Açıklama',

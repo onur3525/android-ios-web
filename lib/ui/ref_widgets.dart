@@ -2625,6 +2625,7 @@ class RefDropdownField extends StatelessWidget {
     this.placeholder = 'Seçiniz',
     this.zorunlu = false,
     this.etiket,
+    this.iconAsset,
   });
 
   final String? value;
@@ -2635,13 +2636,18 @@ class RefDropdownField extends StatelessWidget {
   /// ⚠ Verilmezse etiket çizilmez — mevcut çağrılar etkilenmez.
   final String? etiket;
 
+  /// ⚠ YENİ, OPSİYONEL — verilmezse HİÇ İKON ÇİZİLMEZ, mevcut
+  /// çağrılar (ör. `addresses_screen.dart`) ETKİLENMEZ. Sol taraftaki
+  /// ikon `RefRegDropdown`daki (kayıt ekranının İl/İlçe/Mahalle
+  /// seçicileri) AYNI görsel yerleşimi kullanır — iki ayrı ikon
+  /// deseni İCAT EDİLMEDİ.
+  final String? iconAsset;
+
   /// ⚠ ZORUNLU SEÇİM — yıldız yer tutucunun ÖNÜNDE çizilir.
   ///
-  /// Metin alanlarında yıldız SONDA, açılır menülerde ÖNDE durur.
-  /// Bu tutarsızlık değil, kayıt ekranının kurulu deseni
-  /// (`RefRegDropdown`): seçim yapılınca yıldız kalkar ve yerini
-  /// seçilen değere bırakır, yani sonda dursaydı değerin arkasında
-  /// asılı kalırdı.
+  /// Seçim yapılınca yıldız kalkar ve yerini seçilen değere bırakır.
+  /// Metin alanlarındaki yıldızla (bkz. `refYerTutucu`) AYNI, tutarlı
+  /// konumdadır — ikisi de SOLDA.
   final bool zorunlu;
 
   @override
@@ -2678,6 +2684,16 @@ class RefDropdownField extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // ⚠ YENİ — `iconAsset` verilmediyse HİÇBİR ŞEY ÇİZİLMEZ
+            // (`addresses_screen.dart` gibi mevcut çağrılar aynı
+            // kalır). `RefRegDropdown` ile AYNI 22px/12px yerleşimi.
+            if (iconAsset != null) ...[
+              SizedBox(
+                width: 22,
+                child: Center(child: RefSvg(iconAsset!, size: 20)),
+              ),
+              const SizedBox(width: 12),
+            ],
             if (zorunlu && bos) ...[
               Text('*',
                   style: refText(

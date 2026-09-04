@@ -10,6 +10,9 @@ import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/listing_controller.dart';
+import '../data/controllers/offer_controller.dart';
+import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
@@ -446,9 +449,15 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   child: _MiniIletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
+                    // ⚠ KİLİTLİYKEN `deger: null` — Mesajlaşma
+                    // kutusuyla TUTARLI (job_detail_screen.dart'taki
+                    // AYNI düzeltme): ikisi de yalnız `not` gösterir.
                     deger: telefonAcik
                         ? _telefonGosterMetni(hizmetAlan?.phone)
-                        : '05** *** ** **',
+                        : null,
+                    not: telefonAcik
+                        ? null
+                        : 'İletişim bilgisi açıldığında görüntülenecektir.',
                     kilitli: !telefonAcik,
                     onTap: telefonAcik
                         ? () => _telefonAra(context, hizmetAlan?.phone)
@@ -460,11 +469,11 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   child: _MiniIletisimKutusu(
                     ikon: 'assets/svg/ic_chat.svg',
                     etiket: 'Mesajlaşma',
-                    deger: acik
-                        ? 'Mesaj yaz'
-                        : 'Mesaj göndermek için teklif verin',
+                    deger: acik ? 'Mesaj yaz' : null,
+                    not: acik
+                        ? null
+                        : 'İletişim bilgisi açıldığında görüntülenecektir.',
                     kilitli: !acik,
-                    kucukDeger: !acik,
                     onTap: acik
                         ? () => _sohbeteGit(context, talep.hizmet)
                         : null,
@@ -487,45 +496,155 @@ class _KarsiTarafBilgisi extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            acik
-                ? RefBasHarfAvatar(ad: talep.saglayiciAdi)
-                : const RefSvg('assets/svg/ic_avlock.svg', size: 28),
-            const SizedBox(width: 8),
-            Text(acik ? talep.saglayiciAdi : maskeliAd(talep.saglayiciAdi),
-                style:
-                    refText(size: RF.s145, weight: RF.w700, color: RC.text)),
-          ],
-        ),
-        // ── ⚠ "YORUMLARI GÖR" — YALNIZ KİMLİK AÇIKKEN ANLAMLI ──
+        // ── ⚠ HİZMET VEREN KARTI — `sonuclar_screen.dart`/
+        // `teklif_iste_screen.dart`daki AYNI TAM kart düzeni ──
         //
-        // Maskeliyken gerçek `saglayiciId`ye bağlı bir ekrana
-        // gitmek KİMLİĞİ dolaylı yoldan İFŞA ederdi; bu yüzden
-        // yalnız `acik` iken gösterilir.
-        if (acik) ...[
-          const SizedBox(height: 6),
-          RefTap(
-            onTap: () => Navigator.push<void>(
-                context,
-                MaterialPageRoute<void>(
-                    builder: (_) => ProviderReviewsScreen(
-                        providerId: talep.saglayiciId,
-                        providerAdi: talep.saglayiciAdi))),
-            borderRadius: BorderRadius.circular(RR.r8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+        // ÖNCEDEN yalnız avatar+isim+"Yorumları Gör" linkiydi.
+        // İstatistikler (puan/yorum/iş) kimlik hâlâ MASKELİYKEN bile
+        // gösterilir — diğer ekranlarla AYNI ilke, hizmet alan teklif
+        // gelmeden önce de hizmet verenin geçmişini görebilmeli.
+        Builder(builder: (context) {
+          final reviews = context.watch<ReviewController>();
+          final puan = reviews.averageOf(talep.saglayiciId);
+          final yorumlar = reviews.byProvider(talep.saglayiciId);
+          final tamamlanan = _tamamlananIsGercek(context, talep.saglayiciId);
+          final hesap =
+              context.read<AuthController>().accountById(talep.saglayiciId);
+          final konum = hesap?.address == null
+              ? null
+              : '${hesap!.address!.district} / ${hesap.address!.city}';
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              acik
+                  ? RefBasHarfAvatar(ad: talep.saglayiciAdi)
+                  : const RefSvg('assets/svg/ic_avlock.svg', size: 46),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        acik
+                            ? talep.saglayiciAdi
+                            : maskeliAd(talep.saglayiciAdi),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: refText(
+                            size: RF.s145,
+                            weight: RF.w700,
+                            color: RC.text)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const RefSvg('assets/svg/ic_starfill.svg',
+                            size: 14, color: Color(0xFFF5A319)),
+                        const SizedBox(width: 4),
+                        Text(puan == null ? '—' : puan.toStringAsFixed(1),
+                            style: refText(
+                                size: RF.s125,
+                                weight: RF.w700,
+                                color: RC.text)),
+                        const SizedBox(width: 4),
+                        Text('(${yorumlar.length} yorum)',
+                            style: refText(
+                                size: RF.s12,
+                                weight: RF.w400,
+                                color: RC.textSoft)),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const RefSvg('assets/svg/ic_shieldok.svg',
+                            size: 13, color: Color(0xFF5B6472)),
+                        const SizedBox(width: 5),
+                        Text('$tamamlanan iş tamamladı',
+                            style: refText(
+                                size: RF.s12,
+                                weight: RF.w400,
+                                color: const Color(0xFF5B6472))),
+                      ],
+                    ),
+                    if (konum != null) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const RefSvg('assets/svg/ic_pin.svg',
+                              size: 14, color: Color(0xFF98A2B3)),
+                          const SizedBox(width: 5),
+                          Text(konum,
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w400,
+                                  color: const Color(0xFF98A2B3))),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        }),
+
+        // ── ⚠ YORUMLAR — AYRI KART, `teklif_iste_screen.dart`daki
+        // AYNI düzen: son 3 yorum, "Tümünü Gör" ──
+        //
+        // ⚠ Kimlik maskeliyken "Tümünü Gör" GİZLENİR — gerçek
+        // `saglayiciId`ye bağlı bir ekrana gitmek kimliği dolaylı
+        // yoldan İFŞA ederdi.
+        Builder(builder: (context) {
+          final reviews = context.watch<ReviewController>();
+          final yorumlar = reviews.byProvider(talep.saglayiciId);
+          if (yorumlar.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Container(
+            margin: const EdgeInsets.only(top: 10),
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: RC.white,
+              border: Border.all(color: const Color(0xFFECEEF2)),
+              borderRadius: BorderRadius.circular(RR.r13),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const RefSvg('assets/svg/ic_starfill.svg',
-                    size: 13, color: Color(0xFFF5A319)),
-                const SizedBox(width: 5),
-                Text('Yorumları Gör',
+                Text('Yorumlar',
                     style: refText(
-                        size: RF.s125, weight: RF.w600, color: RC.blue)),
+                        size: RF.s14, weight: RF.w700, color: RC.text)),
+                const SizedBox(height: 8),
+                for (final r in yorumlar.take(3))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: YorumKarti(
+                      review: r,
+                      yazarAdi: context
+                          .read<AuthController>()
+                          .accountById(r.authorId)
+                          ?.name,
+                    ),
+                  ),
+                if (acik && yorumlar.length > 3)
+                  RefTap(
+                    onTap: () => Navigator.push<void>(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) => ProviderReviewsScreen(
+                                providerId: talep.saglayiciId,
+                                providerAdi: talep.saglayiciAdi))),
+                    borderRadius: BorderRadius.circular(RR.r8),
+                    child: Text('Tümünü Gör (${yorumlar.length})',
+                        style: refText(
+                            size: RF.s13,
+                            weight: RF.w700,
+                            color: RC.blue)),
+                  ),
               ],
             ),
-          ),
-        ],
+          );
+        }),
         // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, PROVİDER TARAFINDAKİ
         // `_MiniIletisimKutusu` İLE AYNI KUTULAR (sıfırdan YAPILMADI,
         // aynı bileşen yeniden kullanıldı) ──
@@ -553,7 +672,11 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 child: _MiniIletisimKutusu(
                   ikon: 'assets/svg/ic_phone_f.svg',
                   etiket: 'Telefon',
-                  deger: '05** *** ** **',
+                  // ⚠ Bu akışta hizmet verenin telefonu HİÇ
+                  // paylaşılmıyor — kutu HER ZAMAN kilitli, `deger`
+                  // yok, yalnız `not` (Mesajlaşma ile TUTARLI).
+                  deger: null,
+                  not: 'İletişim bilgisi açıldığında görüntülenecektir.',
                   kilitli: true,
                 ),
               ),
@@ -562,9 +685,10 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 child: _MiniIletisimKutusu(
                   ikon: 'assets/svg/ic_chat.svg',
                   etiket: 'Mesajlaşma',
-                  deger: acik
-                      ? 'Mesaj yaz'
-                      : 'Teklif gelince açılır',
+                  deger: acik ? 'Mesaj yaz' : null,
+                  not: acik
+                      ? null
+                      : 'İletişim bilgisi açıldığında görüntülenecektir.',
                   kilitli: !acik,
                   onTap: acik
                       ? () => _sohbeteGit(context, talep.hizmet)
@@ -608,14 +732,26 @@ class _MiniIletisimKutusu extends StatelessWidget {
     required this.etiket,
     required this.deger,
     required this.kilitli,
+    this.not,
     this.kucukDeger = false,
     this.onTap,
   });
 
   final String ikon;
   final String etiket;
-  final String deger;
+
+  /// ⚠ ARTIK OPSİYONEL — job_detail_screen.dart'taki `_IletisimKutusu`
+  /// İLE AYNI ilke: kilitliyken `deger` YERİNE yalnız `not`
+  /// (açıklama) gösterilir. İkisi BİRDEN doluysa Telefon kutusu
+  /// Mesajlaşma'dan DAHA UZUN görünüyordu — iki kutu farklı
+  /// yükseklikte duruyordu (kullanıcı bulgusu, job_detail_screen.
+  /// dart'ta da AYNI hataydı, orada da düzeltildi).
+  final String? deger;
   final bool kilitli;
+
+  /// Kilitliyken gösterilen açıklama — job_detail_screen.dart'taki
+  /// `_IletisimKutusu.not` İLE AYNI amaç, aynı metin.
+  final String? not;
   final bool kucukDeger;
   final VoidCallback? onTap;
 
@@ -649,28 +785,52 @@ class _MiniIletisimKutusu extends StatelessWidget {
                 Text(etiket,
                     style: refText(
                         size: RF.s12, weight: RF.w400, color: RC.textSoft)),
-                const SizedBox(height: 2),
-                Text(
-                  deger,
-                  maxLines: kucukDeger ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: kucukDeger
-                      ? refText(
-                          size: 11,
+                if (deger != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    deger!,
+                    maxLines: kucukDeger ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: kucukDeger
+                        ? refText(
+                            size: 11,
+                            weight: RF.w500,
+                            color: RC.text,
+                            height: 1.35)
+                        : refText(
+                            size: RF.s14, weight: RF.w700, color: RC.text),
+                  ),
+                ],
+                if (not != null) ...[
+                  const SizedBox(height: 2),
+                  Text(not!,
+                      style: refText(
+                          size: RF.s11,
                           weight: RF.w500,
                           color: RC.text,
-                          height: 1.35)
-                      : refText(
-                          size: RF.s14, weight: RF.w700, color: RC.text),
-                ),
+                          height: RF.lh135)),
+                ],
               ],
             ),
           ),
-          if (kilitli)
-            const Padding(
-              padding: EdgeInsets.only(left: 4),
-              child: Icon(Icons.lock_outline, size: 15, color: RC.textSoft),
+          if (kilitli) ...[
+            const SizedBox(width: 6),
+            // ⚠ job_detail_screen.dart'taki kilit rozetiyle AYNI —
+            // önceden `Icons.lock_outline` (Material ikonu, daire
+            // arka planı YOK) kullanılıyordu, uygulama genelindeki
+            // diğer iletişim kutularıyla TUTARSIZDI.
+            Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEF0F4),
+                shape: BoxShape.circle,
+              ),
+              child: const RefSvg('assets/svg/ic_plock.svg',
+                  size: 14, color: RC.greyLight),
             ),
+          ],
         ],
       ),
     );
@@ -935,3 +1095,25 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   }
 }
 
+/// ⚠ `teklif_iste_screen.dart`/`sonuclar_screen.dart`daki AYNI
+/// mantık — hizmet verenin SEÇİLMİŞ teklifle tamamlanmış iş sayısı.
+/// Üçüncü bir kopya değil, aynı hesaplama farklı dosyalarda AYNI
+/// şekilde tekrarlanıyor çünkü bu dosyalar birbirinden PRIVATE
+/// (import edilemez).
+int _tamamlananIsGercek(BuildContext c, String providerId) {
+  final ilanlar = c.read<ListingController>().all;
+  final teklifler = c.read<OfferController>();
+  var n = 0;
+  for (final l in ilanlar) {
+    if (!l.isTamamlanmisIs) {
+      continue;
+    }
+    final secili = teklifler
+        .offersForListing(l.id)
+        .where((o) => o.id == l.selectedOfferId);
+    if (secili.isNotEmpty && secili.first.providerId == providerId) {
+      n++;
+    }
+  }
+  return n;
+}

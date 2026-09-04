@@ -569,6 +569,18 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
             value: secili,
             placeholder: placeholder,
             onTap: onTap,
+            // ⚠ EKSİKTİ — fonksiyon `ikon` parametresini alıyordu ama
+            // hiç kullanmıyordu; `RefDropdownField`'ın kendisinde de
+            // ikon desteği HİÇ YOKTU (şimdi eklendi). İkisi birlikte,
+            // diğer kayıt ekranındaki (register_screen.dart,
+            // `RefRegDropdown`) ile AYNI görünüm sağlanıyor.
+            iconAsset: ikon,
+            // ⚠ EKSİKTİ — İl/İlçe/Mahalle HER ZAMAN zorunlu (kod
+            // yorumunda "İl artık ZORUNLU SEÇİMDİR" diye NİYET
+            // belirtilmişti ama widget'a hiç iletilmemişti, yıldız
+            // hiç görünmüyordu). `_secim()` bu ekranda yalnız
+            // zorunlu alanlar için çağrılır, koşullu kullanım yok.
+            zorunlu: true,
           ),
         ),
         if (u != null)
