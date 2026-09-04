@@ -18,9 +18,11 @@ String _oku(String p) => File(p).readAsStringSync();
 void main() {
   group('Katalog sayıları', () {
     test('58 ANA KATEGORİ', () {
-      // ⚠ 158 → 157: "Oto Bakım & Servis" kaldırıldı — "Oto Servis
-      // ve Bakım" ile AYNI kelime kümesiydi (yalnız sırası farklı).
-      expect(kCategoryTree.length, 157);
+      // ⚠ 158 → 157 → 155: üç kategori kaldırıldı — "Oto Bakım &
+      // Servis", "Depolama & Lojistik", "Dijital Pazarlama & Reklam".
+      // Üçü de aynı desen: küçük, kavramsal olarak aynı/çok yakın bir
+      // kategori daha büyük bir kategoriye taşındı.
+      expect(kCategoryTree.length, 155);
       expect(kTreeCategories.length, 63);
     });
 

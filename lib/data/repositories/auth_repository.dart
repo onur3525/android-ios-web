@@ -973,6 +973,28 @@ class AuthRepository extends ChangeNotifier {
         ..clear()
         ..addAll(serviceDistricts);
     }
+    // ── ⚠ MÜŞTERİ ROLÜ EKLENİYOR: ADRES OTOMATİK DOLDURULUR ──
+    //
+    // ÖNCEDEN: yalnız hizmet veren rolü eklenirken bölge/kategori
+    // toplanıyordu; müşteri rolü eklenirken `acc.address` hâlâ null
+    // kalabiliyordu — hizmet veren OLARAK kayıt olan bir kullanıcı
+    // müşteri rolüne geçtiğinde "Bul" akışı "adresiniz yok" diyordu,
+    // oysa hesapta zaten bir konum bilgisi (hizmet verdiği bölge)
+    // vardı.
+    //
+    // ⚠ YALNIZ MEVCUT ADRES YOKSA doldurulur — var olan bir adresin
+    // ÜZERİNE YAZILMAZ. Mahalle bilgisi YOKTUR (hizmet veren yalnız
+    // İLÇE seçer, sokak/mahalle vermez) — UYDURULMAZ, boş bırakılır;
+    // kullanıcı isterse "Adreslerim"den tamamlar.
+    if (role == Role.customer &&
+        acc.address == null &&
+        acc.serviceDistricts.isNotEmpty) {
+      acc.address = Address(
+        id: 'addr-${acc.id}',
+        district: acc.serviceDistricts.first,
+        neighborhood: '',
+      );
+    }
     acc.roles.add(role);
     acc.activeRole = role;
     notifyListeners();

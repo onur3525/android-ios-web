@@ -1,9 +1,14 @@
-/// HİZMET KATALOĞU — 157 KATEGORİ · 1448 HİZMET (24 ÇATI)
+/// HİZMET KATALOĞU — 155 KATEGORİ · 1448 HİZMET (24 ÇATI)
 ///
-/// ⚠ 158 → 157: "Oto Bakım & Servis" kaldırıldı — "Oto Servis ve
-/// Bakım" ile AYNI kelime kümesiydi (yalnız sırası farklı), gerçek
-/// iki kategori DEĞİLDİ. Tek hizmeti taşındı, hizmet sayısı
-/// DEĞİŞMEDİ (1448).
+/// ⚠ 158 → 157 → 155: üç kategori kaldırıldı, hepsi aynı desende —
+/// ismi farklı ama kavramsal olarak aynı/çok yakın, KÜÇÜK (1-3
+/// hizmetlik) bir kategori, daha büyük ve yerleşik bir kategoriye
+/// taşındı:
+///   • "Oto Bakım & Servis" → "Oto Servis ve Bakım"
+///   • "Depolama & Lojistik" → "Depolama Hizmetleri"
+///   • "Dijital Pazarlama & Reklam" → "Dijital Pazarlama"
+/// Hizmet sayısı DEĞİŞMEDİ (1448) — hepsi taşındı, hiçbiri
+/// silinmedi.
 ///
 /// ═══════════════════════════════════════════════════════════════
 ///  ⚠ BU DOSYA KATALOGUN OTORİTESİ DEĞİLDİR — YALNIZCA CACHE'TİR
@@ -304,7 +309,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Motosiklet Taşıma', 'Araç Taşıma', 'Uluslararası Nakliyat'
   ],
   'Depolama Hizmetleri': [
-    'Eşya Depolama', 'Mini Depo', 'Ticari Eşya Depolama', 'Arşiv Depolama'
+    'Eşya Depolama', 'Mini Depo', 'Ticari Eşya Depolama', 'Arşiv Depolama',
+    'Antrepo'
   ],
   'Kurye ve Küçük Taşıma': [
     'Moto Kurye', 'Paket Taşıma', 'Küçük Nakliye', 'Aynı Gün Kurye',
@@ -315,9 +321,9 @@ const Map<String, List<String>> kGomuluKatalog = {
     'İş Yeri Personel Servisi', 'Öğrenci Servisi', 'Okul Servisi',
     'Servis Aracı Kiralama'
   ],
-  'Depolama & Lojistik': [
-    'Antrepo'
-  ],
+  // ⚠ "Depolama & Lojistik" KATEGORİSİ KALDIRILDI — tek hizmeti
+  // ("Antrepo") kavramsal olarak "Depolama Hizmetleri"nin bir
+  // parçasıydı, ayrı bir kategori olacak kadar farklı değildi.
   'Güzellik ve Bakım Hizmetleri': [
     'Makyaj', 'Manikür Pedikür', 'Saç Tasarımı', 'Gelin Saçı ve Makyajı',
     'Kalıcı Oje', 'Ağda ve Epilasyon', 'Cilt Bakımı', 'Evde Kuaför'
@@ -382,7 +388,8 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Dijital Pazarlama': [
     'Sosyal Medya Yönetimi', 'Google Reklam Yönetimi', 'SEO Hizmeti',
     'Meta Reklam Yönetimi', 'İçerik Üretimi',
-    'E-Ticaret Pazaryeri Yönetimi'
+    'E-Ticaret Pazaryeri Yönetimi', 'Influencer Marketing',
+    'Mobil Reklamcılık', 'Reklam Ajansı'
   ],
   'Video ve Animasyon': [
     'Video Montajı', 'Reels ve Kısa Video Montajı', 'Motion Graphics',
@@ -392,9 +399,11 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Müzik Prodüksiyon', 'Ses Kayıt', 'Şarkı Aranje', 'Mix & Mastering',
     'Jingle Yapımı', 'Müzik Yapımı'
   ],
-  'Dijital Pazarlama & Reklam': [
-    'Influencer Marketing', 'Mobil Reklamcılık', 'Reklam Ajansı'
-  ],
+  // ⚠ "Dijital Pazarlama & Reklam" KATEGORİSİ KALDIRILDI — "Dijital
+  // Pazarlama" zaten reklam hizmetleri içeriyordu (Google/Meta Reklam
+  // Yönetimi); ikisi arasında temiz bir ayrım YOKTU. Üç hizmeti
+  // ("Influencer Marketing", "Mobil Reklamcılık", "Reklam Ajansı")
+  // "Dijital Pazarlama"ya taşındı.
   'Video, Ses & Animasyon': [
     'Seslendirme & Dublaj', 'Seslendirme', 'Dublaj'
   ],

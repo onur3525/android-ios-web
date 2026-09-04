@@ -373,6 +373,7 @@ class _ChatScreenState extends State<ChatScreen>
                       null,
                   minLines: 1,
                   maxLines: 4,
+                  textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
                       hintText: 'Mesaj yaz...',
                       contentPadding:

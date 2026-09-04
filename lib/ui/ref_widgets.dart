@@ -1753,9 +1753,120 @@ class RefBottomNav extends StatelessWidget {
   /// Etkin sekmenin anahtarı (`ilanver` / `ilanlarim` / `bildirim` / `profil`).
   final String activeKey;
 
+  static const double _butonCap = 46;
+  static const double _tasma = 16;
+  static const double _centikGenislik = 62;
+  static const double _centikDerinlik = 16;
+
   @override
   Widget build(BuildContext context) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
+
+    // ⚠ YALNIZ "İlan Ver" ÖĞESİ VARSA (hizmet alan tarafı) özel
+    // çentikli tasarım uygulanır. Hizmet verende bu öğe HİÇ YOK
+    // (`nav_actions.dart`daki `if (!saglayici)` koşulu) — o taraf
+    // ESKİ, düz bar tasarımıyla DEVAM EDER; DOKUNULMADI.
+    final ilanVerIndex = items.indexWhere((it) => it.key == 'ilanver');
+    if (ilanVerIndex == -1) {
+      return _duzBar(items, safeBottom);
+    }
+
+    final ilanVer = items[ilanVerIndex];
+    final digerOgeler = [...items]..removeAt(ilanVerIndex);
+    // ⚠ SIRA KORUNUR: "İlan Ver" ortadaydı (3./5. öğe) — kalan 4
+    // öğe iki eşit gruba bölünüp arada boşluk bırakılır, görünen
+    // SOL-SAĞ SIRALARI ve dokunma davranışları DEĞİŞMEZ.
+    final ortaNokta = (digerOgeler.length / 2).ceil();
+    final sol = digerOgeler.sublist(0, ortaNokta);
+    final sag = digerOgeler.sublist(ortaNokta);
+
+    // ⚠ TOPLAM YÜKSEKLİK: eski bara göre yalnız `_tasma` kadar
+    // artar — "gereksiz artırma" kuralına uyar; buton bunun
+    // İÇİNDE, bar kenarını hafifçe aşacak şekilde konumlanır.
+    return SizedBox(
+      height: 9 + 46 + 9 + safeBottom + _tasma,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          // ── ALT BAR — ÜST KENARI ORTADA YUMUŞAKÇA İÇERİ KIVRILIR ──
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Material(
+              color: RC.white,
+              // ⚠ `elevation`, `shape`e uyumlu gölge üretir — Flutter'ın
+              // `BottomAppBar`ında da AYNI mekanizma kullanılır; ayrı
+              // bir gölge çizimi İCAT EDİLMEDİ.
+              elevation: 3,
+              shadowColor: const Color(0x14142850),
+              shape: const _CentikliKenar(
+                genislik: _centikGenislik,
+                derinlik: _centikDerinlik,
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(4, 9, 4, 9 + safeBottom),
+                child: Row(
+                  children: [
+                    for (final it in sol)
+                      Expanded(child: _NavOgesi(it: it, aktifMi: it.key == activeKey)),
+                    const SizedBox(width: _centikGenislik),
+                    for (final it in sag)
+                      Expanded(child: _NavOgesi(it: it, aktifMi: it.key == activeKey)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // ── "İLAN VER" — KÜÇÜK, MERKEZİ, ÇENTİĞE OTURMUŞ ──
+          //
+          // ⚠ BÜYÜK BİR FAB DEĞİL: çapı diğer öğelerin ikon+etiket
+          // yüksekliğine YAKIN tutuldu (46px — standart FAB'in
+          // 56px'inden küçük). Bar üstüne yalnız `_tasma` (16px)
+          // kadar taşar — "hafifçe aşsın" kuralı.
+          Positioned(
+            bottom: 9 + safeBottom + (46 - _butonCap) / 2 + _tasma - 6,
+            child: RefTap(
+              onTap: ilanVer.onTap,
+              borderRadius: BorderRadius.circular(RR.circle),
+              child: Container(
+                width: _butonCap,
+                height: _butonCap,
+                decoration: BoxDecoration(
+                  color: RC.blue,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: RC.blue.withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: RefSvg(ilanVer.asset, size: 21, color: RC.white),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ⚠ ESKİ TASARIM — hizmet veren tarafı, DOKUNULMADI. Yalnızca
+  /// yeniden adlandırılmış bir yardımcı metoda taşındı ki yukarıdaki
+  /// yeni dal ile KOD TEKRARI olmasın.
+  Widget _duzBar(List<
+          ({
+            String key,
+            String label,
+            String asset,
+            VoidCallback onTap,
+            bool rozet
+          })>
+      ogeler, double safeBottom) {
     return Container(
       padding: EdgeInsets.fromLTRB(4, 9, 4, 9 + safeBottom),
       decoration: const BoxDecoration(
@@ -1765,72 +1876,136 @@ class RefBottomNav extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final it in items)
-            Expanded(
-              child: RefTap(
-                onTap: it.onTap,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // ── ⚠ OKUNMAMIŞ BİLDİRİM GÖSTERGESİ ──
-                      //
-                      // Kullanıcı Bildirimler ekranına GİRMEDEN yeni
-                      // bildirim olduğunu anlamalı.
-                      //
-                      // ⚠ SAYI DEĞİL NOKTA: sekme dar; iki haneli sayı
-                      // ikonu itip hizayı bozardı. Nokta yalnız "yeni
-                      // var" bilgisini verir, ekranda sayı zaten
-                      // görünür.
-                      //
-                      // ⚠ ÖLÇÜ DEĞİŞMEZ: nokta `Stack` içinde ikonun
-                      // ÜSTÜNE çizilir, yer kaplamaz.
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          RefSvg(
-                            it.asset,
-                            size: 22,
-                            color:
-                                it.key == activeKey ? RC.blue : RC.textMuted,
-                          ),
-                          if (it.rozet)
-                            Positioned(
-                              right: -2,
-                              top: -1,
-                              child: Container(
-                                width: 9,
-                                height: 9,
-                                decoration: BoxDecoration(
-                                  color: RC.blue,
-                                  shape: BoxShape.circle,
-                                  border:
-                                      Border.all(color: RC.white, width: 1.5),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4), // gap:4px
-                      Text(
-                        it.label,
-                        maxLines: 1,
-                        style: refText(
-                          size: RF.s11,
-                          weight: RF.w600,
-                          color: it.key == activeKey ? RC.blue : RC.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          for (final it in ogeler)
+            Expanded(child: _NavOgesi(it: it, aktifMi: it.key == activeKey)),
         ],
       ),
     );
   }
+}
+
+/// Tek bir alt bar öğesi (ikon + rozet + etiket) — hem eski düz bar
+/// hem yeni çentikli bar TARAFINDAN paylaşılır; iki AYRI kopya
+/// YAZILMADI.
+class _NavOgesi extends StatelessWidget {
+  const _NavOgesi({required this.it, required this.aktifMi});
+
+  final ({
+    String key,
+    String label,
+    String asset,
+    VoidCallback onTap,
+    bool rozet
+  }) it;
+  final bool aktifMi;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefTap(
+      onTap: it.onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── ⚠ OKUNMAMIŞ BİLDİRİM GÖSTERGESİ ──
+            //
+            // Kullanıcı Bildirimler ekranına GİRMEDEN yeni
+            // bildirim olduğunu anlamalı.
+            //
+            // ⚠ SAYI DEĞİL NOKTA: sekme dar; iki haneli sayı
+            // ikonu itip hizayı bozardı. Nokta yalnız "yeni
+            // var" bilgisini verir, ekranda sayı zaten
+            // görünür.
+            //
+            // ⚠ ÖLÇÜ DEĞİŞMEZ: nokta `Stack` içinde ikonun
+            // ÜSTÜNE çizilir, yer kaplamaz.
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                RefSvg(
+                  it.asset,
+                  size: 22,
+                  color: aktifMi ? RC.blue : RC.textMuted,
+                ),
+                if (it.rozet)
+                  Positioned(
+                    right: -2,
+                    top: -1,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: RC.blue,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: RC.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4), // gap:4px
+            Text(
+              it.label,
+              maxLines: 1,
+              style: refText(
+                size: RF.s11,
+                weight: RF.w600,
+                color: aktifMi ? RC.blue : RC.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ── ⚠ ALT BARIN ÜST KENARI — ORTADA YUMUŞAK, SİMETRİK BİR ÇENTİK ──
+///
+/// `ShapeBorder` alt sınıfı seçildi (bir `CustomClipper` DEĞİL):
+/// `Material(shape: ..., elevation: ...)` bu ikisini BİRLİKTE,
+/// birbirine uyumlu (gölge şekli KIRPILMIŞ şekli TAKİP eder) çizer —
+/// Flutter'ın kendi `BottomAppBar`/`NotchedShape` mekanizmasıyla
+/// AYNI temel. Çentik iki yumuşak `quadraticBezierTo` eğrisiyle
+/// çizilir — köşeli bir "V" DEĞİL, "yarım ay" görünümü.
+class _CentikliKenar extends ShapeBorder {
+  const _CentikliKenar({required this.genislik, required this.derinlik});
+
+  final double genislik;
+  final double derinlik;
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
+      getOuterPath(rect);
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    final merkezX = rect.left + rect.width / 2;
+    final yg = genislik / 2;
+    return Path()
+      ..moveTo(rect.left, rect.top)
+      ..lineTo(merkezX - yg, rect.top)
+      ..quadraticBezierTo(merkezX - yg * 0.5, rect.top, merkezX - yg * 0.5,
+          rect.top + derinlik * 0.6)
+      ..quadraticBezierTo(merkezX, rect.top + derinlik, merkezX + yg * 0.5,
+          rect.top + derinlik * 0.6)
+      ..quadraticBezierTo(
+          merkezX + yg * 0.5, rect.top, merkezX + yg, rect.top)
+      ..lineTo(rect.right, rect.top)
+      ..lineTo(rect.right, rect.bottom)
+      ..lineTo(rect.left, rect.bottom)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
 }
 
 /// Alt navigasyonlu sayfa iskeleti.

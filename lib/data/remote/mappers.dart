@@ -114,6 +114,11 @@ abstract final class Mappers {
       salt: '',
       roles: roles.isEmpty ? {Role.customer} : roles,
       activeRole: role((j['activeRole'] ?? 'CUSTOMER') as String),
+      // ⚠ Sunucu göndermezse `Account` kurucusu ŞİMDİKİ ZAMANI
+      // varsayar — yanlış olabilir ama çökmez.
+      kayitTarihi: j['createdAt'] != null
+          ? DateTime.tryParse(j['createdAt'] as String)
+          : null,
     );
     final p = j['providerProfile'] as Map<String, dynamic>?;
     if (p != null) {

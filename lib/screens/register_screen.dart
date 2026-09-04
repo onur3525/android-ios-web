@@ -698,11 +698,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_city == null) {
       return false;
     }
-    // Müşteri kaydında adres, sağlayıcı kaydında kategori + bölge.
-    if (widget.role == Role.customer) {
-      return _district != null && _hood.text.trim().isNotEmpty;
+    // ⚠ MAHALLE ARTIK HER İKİ ROLDE DE ZORUNLU (ürün kararı) —
+    // hizmet verenin KİŞİSEL adresidir, "hizmet verdiği ilçeler"
+    // (`_provDistricts`) İLE KARIŞTIRILMAZ; o ayrı ve hâlâ yalnız
+    // ilçe düzeyindedir. Bu mahalle müşteriye HİÇ GÖSTERİLMEZ —
+    // yalnız yönetim amaçlı tutulur (bkz. `addresses_screen.dart`
+    // ve `account.dart`daki not).
+    if (_district == null || _hood.text.trim().isEmpty) {
+      return false;
     }
-    return _cats.isNotEmpty && _provDistricts.isNotEmpty;
+    // Sağlayıcıda EK OLARAK kategori + hizmet bölgesi de gerekir.
+    if (widget.role == Role.provider) {
+      return _cats.isNotEmpty && _provDistricts.isNotEmpty;
+    }
+    return true;
   }
 
   Future<void> _next() async {
@@ -733,8 +742,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       sysToastErr(context, SysKind.genericError, extra: FormMesaj.ilSec);
       return;
     }
-    if (!isProvider &&
-        (_district == null || _hood.text.trim().isEmpty)) {
+    // ⚠ MAHALLE ARTIK HER İKİ ROLDE DE ZORUNLU — bkz. `_alanlarTamam`
+    // içindeki AYNI kural ve gerekçe.
+    if (_district == null || _hood.text.trim().isEmpty) {
       sysToastErr(context, SysKind.genericError,
           extra: 'İlçe ve mahalle seçiniz');
       return;
@@ -1413,58 +1423,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                if (!isProvider) ...[
-                  // ── İl / İlçe / Mahalle ──
-                  //
-                  // Referans `rgDrop()`: üçü de AYNI `.rg-f` kutu
-                  // ailesini kullanır. Alt çizgili Material görünümü
-                  // veya farklı üç stil KULLANILMAZ.
-                  //
-                  // Kontrollü seçim korunur: serbest metin yok,
-                  // ilçe seçilmeden mahalle açılmaz.
-                  // ⚠ İL GERÇEK SEÇİM ALANIDIR — hard-code YOKTUR.
-                  // Aktif iller sunucudan gelir; bugün mock veride
-                  // yalnız İzmir vardır, yeni il eklenince aynı alan
-                  // onu kendiliğinden gösterir.
-                  Builder(builder: (_) {
-                    // ⚠ TEŞHİS E3: bölge bildirimlerinin odak üzerindeki
-                    // etkisini izole etmek için `watch` yerine tek
-                    // seferlik okuma kullanılır.
-                    // ⚠ Otomatik seçim YOK — bkz. didChangeDependencies
-                    // notu. Controller yalnız DİNLENİR: aktif il listesi
-                    // sunucudan gelince alan tazelenir, ama değeri
-                    // kullanıcının seçimi belirler.
-                    if (Teshis.staticRegion) {
-                      context.read<RegionController>();
-                    } else {
-                      context.watch<RegionController>();
-                    }
-                    return RefRegDropdown(
-                      key: _ilKaydirKey,
-                      iconAsset: 'assets/svg/ic_pin.svg',
-                      label: 'İl',
-                      value: _city,
-                      onTap: () => _ilSec(context),
-                    );
-                  }),
-                  RefRegDropdown(
-                    key: _ilceKaydirKey,
-                    iconAsset: 'assets/svg/ic_build.svg',
-                    label: 'İlçe',
-                    value: _district,
-                    // ⚠ İL SEÇİLMEDEN İLÇE AÇILMAZ (mahalle zinciriyle
-                    // aynı kural). Kısıt metinle yazılmaz.
-                    onTap: _city == null ? null : () => _ilceSec(context),
-                  ),
-                  RefRegDropdown(
-                    key: _mahalleKaydirKey,
-                    iconAsset: 'assets/svg/ic_home2.svg',
-                    label: 'Mahalle',
-                    value: _hood.text.isEmpty ? null : _hood.text,
-                    // İlçe seçilmeden mahalle AÇILMAZ.
-                    onTap: _district == null ? null : () => _mahalleSec(context),
-                  ),
-                ] else ...[
+                // ── İl / İlçe / Mahalle — HER İKİ ROLDE DE ──
+                //
+                // ⚠ ÖNCEDEN yalnız müşteride gösteriliyordu. Artık
+                // hizmet veren de KENDİ (kişisel) adresini verir —
+                // "hizmet verdiği ilçeler" (`_provDistricts`, aşağıda)
+                // İLE KARIŞTIRILMAZ, o AYRI ve hâlâ yalnız ilçe
+                // düzeyinde çoklu seçimdir. Bu mahalle müşteriye HİÇ
+                // GÖSTERİLMEZ — yalnız yönetim amaçlı tutulur.
+                //
+                // Referans `rgDrop()`: üçü de AYNI `.rg-f` kutu
+                // ailesini kullanır. Alt çizgili Material görünümü
+                // veya farklı üç stil KULLANILMAZ.
+                //
+                // Kontrollü seçim korunur: serbest metin yok,
+                // ilçe seçilmeden mahalle açılmaz.
+                // ⚠ İL GERÇEK SEÇİM ALANIDIR — hard-code YOKTUR.
+                // Aktif iller sunucudan gelir; bugün mock veride
+                // yalnız İzmir vardır, yeni il eklenince aynı alan
+                // onu kendiliğinden gösterir.
+                Builder(builder: (_) {
+                  // ⚠ TEŞHİS E3: bölge bildirimlerinin odak üzerindeki
+                  // etkisini izole etmek için `watch` yerine tek
+                  // seferlik okuma kullanılır.
+                  // ⚠ Otomatik seçim YOK — bkz. didChangeDependencies
+                  // notu. Controller yalnız DİNLENİR: aktif il listesi
+                  // sunucudan gelince alan tazelenir, ama değeri
+                  // kullanıcının seçimi belirler.
+                  if (Teshis.staticRegion) {
+                    context.read<RegionController>();
+                  } else {
+                    context.watch<RegionController>();
+                  }
+                  return RefRegDropdown(
+                    key: _ilKaydirKey,
+                    iconAsset: 'assets/svg/ic_pin.svg',
+                    label: 'İl',
+                    value: _city,
+                    onTap: () => _ilSec(context),
+                  );
+                }),
+                RefRegDropdown(
+                  key: _ilceKaydirKey,
+                  iconAsset: 'assets/svg/ic_build.svg',
+                  label: 'İlçe',
+                  value: _district,
+                  // ⚠ İL SEÇİLMEDEN İLÇE AÇILMAZ (mahalle zinciriyle
+                  // aynı kural). Kısıt metinle yazılmaz.
+                  onTap: _city == null ? null : () => _ilceSec(context),
+                ),
+                RefRegDropdown(
+                  key: _mahalleKaydirKey,
+                  iconAsset: 'assets/svg/ic_home2.svg',
+                  label: 'Mahalle',
+                  value: _hood.text.isEmpty ? null : _hood.text,
+                  // İlçe seçilmeden mahalle AÇILMAZ.
+                  onTap: _district == null ? null : () => _mahalleSec(context),
+                ),
+                if (isProvider) ...[
                   // ── HİZMET VEREN: TEK SEÇİM ÇUBUKLARI ──
                   //
                   // ⚠ Referans `rgPickRow()` / `rgDrop()`: kategoriler ve

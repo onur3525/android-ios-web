@@ -29,12 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phone = TextEditingController();
   final _pass = TextEditingController();
 
-  /// "Beni Hatırla" işaretli mi?
-  ///
-  /// ⚠ VARSAYILAN AÇIK: kullanıcıların büyük çoğunluğu kendi kişisel
-  /// cihazından girer ve her açılışta şifre yazmak istemez. Ortak
-  /// cihazda kullanan kişi kutucuğu kapatabilir.
-  bool _beniHatirla = true;
   bool _busy = false;       // lockBtn karşılığı: reentry engeli
   bool _obscure = true;
   // ══════════════════════════════════════════════════════════════
@@ -282,11 +276,15 @@ class _LoginScreenState extends State<LoginScreen> {
       // sürer, sürmezse de giriş etkilenmez.
       // ⚠ SNAPSHOT KULLANILIR: istek sonrası denetleyici değerinin
       // değişmiş olabileceği varsayılır.
-      unawaited(_beniHatirla
-          ? OturumTercihi().kaydet(_epostaModu ? epostaAnlik : telefonAnlik)
-          // Kutucuk kapalıysa ÖNCEKİ tercih de silinir: kullanıcı
-          // "artık hatırlama" demiş olur.
-          : OturumTercihi().temizle());
+      //
+      // ⚠ ARTIK KOŞULSUZ — "Beni Hatırla" kutucuğu KALDIRILDI (ürün
+      // kararı): cihaz HER girişte otomatik hatırlar, kayıt akışıyla
+      // (bkz. `register_screen.dart`) AYNI davranış. Kullanıcı
+      // "hatırlama" DEMEK isterse çıkış yaparak bunu geri alabilir
+      // (`AuthController.logout` zaten `OturumTercihi().temizle()`
+      // çağırır).
+      unawaited(
+          OturumTercihi().kaydet(_epostaModu ? epostaAnlik : telefonAnlik));
 
       sysToastOk(context, 'Hoş geldiniz! Giriş yapıldı');
       _girisSonrasiYonlendir();
@@ -489,6 +487,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onChanged: (_) => _degerDegisti(),
                             enabled: !_busy,
                             hint: 'E-posta',
+                            yerTutucu: 'E mail giriniz.',
                             keyboardType: TextInputType.emailAddress,
                   // ⚠ E-postada baş harf büyütülmez.
                   textCapitalization: TextCapitalization.none,
@@ -560,6 +559,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // `kPasswordMinLength` karakter olmasıdır.
                           // Üst sınır ve içerik zorunluluğu YOKTUR.
                           hint: 'Şifre',
+                          yerTutucu: 'Şifre giriniz.',
                           obscureText: _obscure,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(),
@@ -581,59 +581,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffix: RefSifreGozu(
                             gizli: _obscure,
                             onDegisti: (g) => setState(() => _obscure = g),
-                          ),
-                        ),
-
-                        // ── BENİ HATIRLA ──
-                        //
-                        // ⚠ İşaretlenirse CİHAZ bu kullanıcıyı hatırlar:
-                        // uygulama bir daha açıldığında karşılama ekranı
-                        // atlanır ve doğrudan rol paneline gidilir.
-                        // Kullanıcı profilden ÇIKIŞ yapana kadar sürer.
-                        //
-                        // ⚠ ŞİFRE SAKLANMAZ — bkz. `OturumTercihi`.
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: RefTap(
-                            onTap: _busy
-                                ? null
-                                : () => setState(
-                                    () => _beniHatirla = !_beniHatirla),
-                            borderRadius: BorderRadius.circular(RR.r8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 6, horizontal: 2),
-                              child: Row(children: [
-                                Container(
-                                  width: 20,
-                                  height: 20,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: _beniHatirla
-                                        ? RC.blue
-                                        : Colors.transparent,
-                                    border: Border.all(
-                                        color: _beniHatirla
-                                            ? RC.blue
-                                            : const Color(0xFFD3D8E0),
-                                        width: 1.6),
-                                    borderRadius:
-                                        BorderRadius.circular(RR.r6),
-                                  ),
-                                  child: _beniHatirla
-                                      ? const RefSvg(
-                                          'assets/svg/ic_checkw.svg',
-                                          size: 12)
-                                      : null,
-                                ),
-                                const SizedBox(width: 9),
-                                Text('Beni Hatırla',
-                                    style: refText(
-                                        size: RF.s135,
-                                        weight: RF.w600,
-                                        color: RC.text)),
-                              ]),
-                            ),
                           ),
                         ),
 

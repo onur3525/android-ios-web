@@ -264,7 +264,15 @@ class MockAuthPort extends AuthPort {
       repo.setProviderPrefs(categories: categories, districts: districts);
 
   @override
-  Future<void> logout() async => repo.logout();
+  Future<void> logout() async {
+    repo.logout();
+    // ⚠ ÖNCEDEN EKSİKTİ: çıkış yapılsa bile cihaz hatırlamaya DEVAM
+    // ediyordu — bir sonraki açılışta OTOMATİK aynı hesaba giriş
+    // yapılıyordu. "Beni Hatırla" artık koşulsuz (`login_screen.dart`
+    // her girişte kaydeder), bu yüzden çıkışın bunu SİLMESİ şart —
+    // aksi hâlde "çıkış yap" görünürde bir şey yapmaz.
+    await OturumTercihi().temizle();
+  }
 
   /// ⚠ ÖNCEDEN BOŞTU — mock modda oturum HİÇ geri yüklenmiyordu.
   /// "Beni Hatırla" işaretliyse (bkz. `OturumTercihi`) hatırlanan

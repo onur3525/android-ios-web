@@ -101,8 +101,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     ikon: 'assets/svg/alanlar/tasima.svg',
     kategoriler: [
       'Nakliyat ve Taşımacılık', 'Depolama Hizmetleri',
-      'Kurye ve Küçük Taşıma', 'Personel ve Öğrenci Servisi',
-      'Depolama & Lojistik'
+      'Kurye ve Küçük Taşıma', 'Personel ve Öğrenci Servisi'
     ],
   ),
   HizmetAlani(
@@ -147,7 +146,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     kategoriler: [
       'Yazılım ve Web Hizmetleri', 'Grafik ve Logo Tasarım',
       'Dijital Pazarlama', 'Video ve Animasyon',
-      'Müzik & Ses Prodüksiyonu', 'Dijital Pazarlama & Reklam',
+      'Müzik & Ses Prodüksiyonu',
       'Video, Ses & Animasyon'
     ],
   ),

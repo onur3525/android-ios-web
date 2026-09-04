@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
 import 'widgets/ilan_no_etiketi.dart';
@@ -6,13 +7,16 @@ import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/listing.dart';
+import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
 import 'category_ui.dart';
+import 'teklif_talebi_detay_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// İLANLARIM — referans `vCust()`
@@ -109,6 +113,32 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
     final tumu = me == null ? <Listing>[] : ilanCtl.byOwner(me.id);
 
+    // ── ⚠ "BUL" ÜZERİNDEN KABUL EDİLEN TEKLİFLER — "TAMAMLANAN
+    // İŞLER" SEKMESİNE, NORMAL İLANLARLA TEK LİSTEDE ──
+    //
+    // Bu ekranın kendi kuralıyla TUTARLI: "Tamamlanan işler" burada
+    // "iş gerçekten bitti" değil, "teklifi seçildi/kesinleşti"
+    // anlamına gelir (bkz. `l.isTamamlanmisIs` yorumu). `TeklifTalebi`
+    // için AYNI eşik: `secildi` veya `tamamlandi` durumundaki HER
+    // talep buraya girer.
+    //
+    // ⚠ İKİ FARKLI MODEL (`Listing` / `TeklifTalebi`) TEK EKRANDA
+    // BİRLEŞTİRİLDİ: `ListingController`/`OfferController` DEĞİŞMEDİ,
+    // yalnız RENDER aşamasında iki kaynak birleştirilip TARİHE göre
+    // yeniden sıralanır — `_sort`/`_filtre` (teklif sayısına dayalı)
+    // yalnız `Listing` tarafına uygulanmaya devam eder, çünkü doğrudan
+    // talepte "teklif sayısı" kavramı YOKTUR (her biri zaten TEK
+    // kabul edilmiş tekliftir).
+    final kabulEdilenTalepler = (!saglayici && me != null && _tab == 1)
+        ? context
+            .watch<TeklifTalebiController>()
+            .byHizmetAlan(me.id)
+            .where((t) =>
+                t.durum == TeklifTalebiDurumu.secildi ||
+                t.durum == TeklifTalebiDurumu.tamamlandi)
+            .toList()
+        : const <TeklifTalebi>[];
+
     // Sekme süzgeci — mevcut iş kuralı korundu.
     var liste = tumu.where((l) => switch (_tab) {
           // ⚠ TEKLİF SEÇİLİNCE İLAN AÇIK SEKMESİNDEN ÇIKAR.
@@ -191,7 +221,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
             child: Row(
               children: [
                 // custCountText: rows.length + ' ilan bulundu'
-                Expanded(child: RefListCount('${liste.length} ilan bulundu')),
+                Expanded(
+                    child: RefListCount(
+                        '${liste.length + kabulEdilenTalepler.length} ilan '
+                        'bulundu')),
                 const SizedBox(width: 10),
                 // .cust-actions{gap:8px}
                 RefPillButton(
@@ -226,28 +259,58 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           if (hataGosterilsinMi(
               yukleniyor: ilanCtl.loading,
               hata: ilanCtl.lastError,
-              veriVar: liste.isNotEmpty))
+              veriVar: liste.isNotEmpty || kabulEdilenTalepler.isNotEmpty))
             HataTamEkran(
               hata: ilanCtl.lastError!,
               onTekrar: _refresh,
             )
-          else if (liste.isEmpty)
+          else if (liste.isEmpty && kabulEdilenTalepler.isEmpty)
             const _BosListe()
-          else
-            for (var i = 0; i < liste.length; i++) ...[
-              _IlanKarti(
-                listing: liste[i],
-                teklifSayisi: teklif(liste[i]),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        ListingDetailScreen(listingId: liste[i].id),
-                  ),
-                ),
+          else ...[
+            // ⚠ İKİ KAYNAK, TARİHE GÖRE TEK LİSTEDE BİRLEŞTİRİLDİ —
+            // `Listing.createdAt` / `TeklifTalebi.teklifTarihi`, en
+            // yeni üstte. `_sort`/`_filtre` yalnız `liste` (Listing)
+            // tarafına uygulanmış olarak buraya gelir; birleşik sıra
+            // yalnız tarihtir (bkz. yukarıdaki not).
+            for (final oge in [
+              ...liste.map((l) => (listing: l, talep: null as TeklifTalebi?)),
+              ...kabulEdilenTalepler
+                  .map((t) => (listing: null as Listing?, talep: t)),
+            ]..sort((a, b) {
+                final ta = a.listing?.createdAt ??
+                    a.talep!.teklifTarihi ??
+                    DateTime(2000);
+                final tb = b.listing?.createdAt ??
+                    b.talep!.teklifTarihi ??
+                    DateTime(2000);
+                return tb.compareTo(ta);
+              }))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: oge.listing != null
+                    ? _IlanKarti(
+                        listing: oge.listing!,
+                        teklifSayisi: teklif(oge.listing!),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => ListingDetailScreen(
+                                listingId: oge.listing!.id),
+                          ),
+                        ),
+                      )
+                    : _TeklifTalebiIsKarti(
+                        talep: oge.talep!,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => TeklifTalebiDetayScreen(
+                                talepId: oge.talep!.id),
+                          ),
+                        ),
+                      ),
               ),
-              if (i != liste.length - 1) const SizedBox(height: 8),
-            ],
+          ],
         ],
       ),
     );
@@ -551,4 +614,128 @@ class _BosListe extends StatelessWidget {
               size: RF.s14, weight: RF.w400, color: RC.greyLight),
         ),
       );
+}
+
+/// ── ⚠ "BUL" ÜZERİNDEN KABUL EDİLEN TEKLİF — `_IlanKarti` İLE AYNI
+/// GÖRSEL DİL (çerçeve, gölge, başlık+ok, meta satırı) ──
+///
+/// `_IlanKarti`'nin BİREBİR AYNISI DEĞİL çünkü `TeklifTalebi`nin
+/// alanları farklıdır (kategori/başlık yerine hizmet+hizmet veren
+/// adı; ilan konumu yerine fiyat). Görsel çerçeve — kutu, gölge,
+/// tipografi ölçüleri — KORUNDU; yeni bir kart dili İCAT EDİLMEDİ.
+class _TeklifTalebiIsKarti extends StatelessWidget {
+  const _TeklifTalebiIsKarti({required this.talep, required this.onTap});
+
+  final TeklifTalebi talep;
+  final VoidCallback onTap;
+
+  String get _zaman {
+    final baz = talep.teklifTarihi;
+    if (baz == null) return '';
+    final f = DateTime.now().difference(baz);
+    if (f.inMinutes < 60) return '${f.inMinutes} dk önce';
+    if (f.inHours < 24) return '${f.inHours} saat önce';
+    return '${f.inDays} gün önce';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefTap(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(RR.r12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+        decoration: BoxDecoration(
+          color: RC.white,
+          border: Border.all(color: RC.border),
+          borderRadius: BorderRadius.circular(RR.r12),
+          boxShadow: RS.soft6,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ⚠ "BUL" kökenli olduğu AYIRT EDİLEBİLİR
+                      // olsun diye küçük bir etiket satırı — normal
+                      // ilanlardan farkı kullanıcıya belli olsun.
+                      Text('Doğrudan Teklif',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: refText(
+                            size: RF.s11,
+                            weight: RF.w500,
+                            color: RC.textSoft,
+                            letterSpacing: RF.lsM01,
+                          )),
+                      Text(
+                        talep.hizmet,
+                        style: refText(
+                          size: RF.s15,
+                          weight: RF.w700,
+                          color: RC.text,
+                          letterSpacing: RF.lsM02,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: RefSvg('assets/svg/ic_chev.svg',
+                      size: 16, color: RC.text),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                const RefSvg('assets/svg/ic_avlock.svg',
+                    size: 13, color: RC.greyLight),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    talep.saglayiciAdi,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: refText(
+                        size: RF.s115, weight: RF.w400, color: RC.greyLight),
+                  ),
+                ),
+                if (_zaman.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text('|',
+                        style: refText(
+                            size: RF.s115,
+                            weight: RF.w400,
+                            color: const Color(0xFFD3D8E0))),
+                  ),
+                  Text(_zaman,
+                      style: refText(
+                          size: RF.s115,
+                          weight: RF.w400,
+                          color: RC.greyLight)),
+                ],
+              ],
+            ),
+            if (talep.teklifFiyati != null) ...[
+              const SizedBox(height: 6),
+              Text('${talep.teklifFiyati} TL',
+                  style: refText(
+                      size: RF.s135, weight: RF.w700, color: HC.green)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }

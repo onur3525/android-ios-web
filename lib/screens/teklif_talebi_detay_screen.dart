@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/telefon_bicimi.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
@@ -15,6 +15,7 @@ import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
+import 'teklif_talebi_sohbet_screen.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -119,17 +120,6 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     sysToastOk(context, 'İş tamamlandı olarak işaretlendi.');
   }
 
-  Future<void> _telefonAra(String? ham) async {
-    final d = Validators.phoneLocal(ham ?? '');
-    if (d.isEmpty) return;
-    final uri = Uri.parse('tel:$d');
-    final acildi = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!acildi && mounted) {
-      sysToastErr(context, SysKind.genericError,
-          extra: 'Arama uygulaması açılamadı');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<TeklifTalebiController>();
@@ -205,27 +195,15 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
             ),
 
             const SizedBox(height: 14),
-            // ── KARŞI TARAF + KONUM + İLETİŞİM ──
+            // ── KARŞI TARAF + KONUM + İLETİŞİM (telefon+mesaj) ──
             RefFormCard(
               marginTop: 0,
               child: _KarsiTarafBilgisi(
                 talep: t,
                 benSaglayiciMi: benSaglayiciMi,
                 auth: auth,
-                onAra: _telefonAra,
               ),
             ),
-
-            // ── UYGULAMA İÇİ MESAJLAŞMA — TEKLİF VERİLDİYSE ──
-            //
-            // ⚠ Tek tetikleyici `teklifTarihi`: telefon tercihinden
-            // BAĞIMSIZ olarak her zaman kullanılabilir kanaldır.
-            // "Sadece uygulama içi mesajlaşma" seçiliyse TEK kanal
-            // budur; "Telefon numaramı göster" seçiliyse EK kanaldır.
-            if (t.teklifTarihi != null) ...[
-              const SizedBox(height: 14),
-              _Mesajlasma(talep: t, benId: me.id),
-            ],
 
             const SizedBox(height: 20),
             if (benSaglayiciMi)
@@ -250,19 +228,33 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   }
 }
 
-/// Karşı tarafın maskeli kimliği + konum + iletişim tercihi.
+/// Karşı tarafın maskeli kimliği + konum + iletişim.
+///
+/// ⚠ İLETİŞİM ARTIK SABİT KURAL: yalnız uygulama içi mesajlaşma —
+/// telefon gösterme SEÇENEĞİ kaldırıldı (ürün kararı). Bu yüzden bu
+/// widget'ın artık bir "onAra" (telefon arama) bağımlılığı YOK.
 class _KarsiTarafBilgisi extends StatelessWidget {
   const _KarsiTarafBilgisi({
     required this.talep,
     required this.benSaglayiciMi,
     required this.auth,
-    required this.onAra,
   });
 
   final TeklifTalebi talep;
   final bool benSaglayiciMi;
   final AuthController auth;
-  final void Function(String? phone) onAra;
+
+  void _sohbeteGit(BuildContext context, String baslik) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TeklifTalebiSohbetScreen(
+          talepId: talep.id,
+          baslik: baslik,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,6 +269,9 @@ class _KarsiTarafBilgisi extends StatelessWidget {
       final adGoster = acik
           ? (hizmetAlan?.name ?? 'Hizmet Alan')
           : maskeliAd(hizmetAlan?.name ?? 'Hizmet Alan');
+      // ⚠ Telefon YALNIZ hizmet alan "Telefon numaramı göster"
+      // SEÇTİYSE açılır — "Sadece uygulama içi mesajlaşma"
+      // seçiliyse teklif verilse bile telefon HİÇ açılmaz.
       final telefonAcik =
           acik && talep.iletisimTercihi == IletisimTercihi.telefonGoster;
       return Column(
@@ -319,52 +314,58 @@ class _KarsiTarafBilgisi extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(height: 1, color: Color(0xFFF1F3F6)),
           const SizedBox(height: 10),
-          Text('İletişim Tercihi',
-              style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          const SizedBox(height: 4),
-          if (!acik)
-            Text(
-                'Teklif verdiğinizde iletişim bilgileri ve mesajlaşma '
-                'açılacak.',
-                style: refText(
-                    size: RF.s13, weight: RF.w500, color: RC.textSoft))
-          else if (telefonAcik)
-            RefTap(
-              onTap: () => onAra(hizmetAlan?.phone),
-              borderRadius: BorderRadius.circular(RR.r13),
-              child: Row(
-                children: [
-                  const RefSvg('assets/svg/ic_phone.svg',
-                      size: 15, color: RC.blue),
-                  const SizedBox(width: 6),
-                  Text(
-                      hizmetAlan != null
-                          ? '0${hizmetAlan.phone}'
-                          : 'Telefon numarası göster',
-                      style: refText(
-                          size: RF.s135, weight: RF.w700, color: RC.blue)),
-                ],
-              ),
-            )
-          else
-            Row(
+          // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, `offer_detail_
+          // screen.dart`daki `_IletisimKutusu` İLE AYNI GÖRSEL DİL ──
+          //
+          // O sınıf dosyaya ÖZEL (private) olduğu için buraya AYNEN
+          // yeniden oluşturuldu (bkz. `_MiniIletisimKutusu` altta) —
+          // yeni bir tasarım İCAT EDİLMEDİ, var olan desen taşındı.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const RefSvg('assets/svg/ic_chat.svg',
-                    size: 15, color: Color(0xFF5B6472)),
-                const SizedBox(width: 6),
-                Text('Sadece uygulama içi mesajlaşma — telefon gizli',
-                    style: refText(
-                        size: RF.s13,
-                        weight: RF.w500,
-                        color: const Color(0xFF5B6472))),
+                Expanded(
+                  child: _MiniIletisimKutusu(
+                    ikon: 'assets/svg/ic_phone_f.svg',
+                    etiket: 'Telefon',
+                    deger: telefonAcik
+                        ? _telefonGosterMetni(hizmetAlan?.phone)
+                        : '05** *** ** **',
+                    kilitli: !telefonAcik,
+                    onTap: telefonAcik
+                        ? () => _telefonAra(context, hizmetAlan?.phone)
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: _MiniIletisimKutusu(
+                    ikon: 'assets/svg/ic_chat.svg',
+                    etiket: 'Mesajlaşma',
+                    deger: acik
+                        ? 'Mesaj yaz'
+                        : 'Mesaj göndermek için teklif verin',
+                    kilitli: !acik,
+                    kucukDeger: !acik,
+                    onTap: acik
+                        ? () => _sohbeteGit(context, talep.hizmet)
+                        : null,
+                  ),
+                ),
               ],
             ),
+          ),
         ],
       );
     }
 
     // ── HİZMET ALAN GÖRÜNÜMÜ: hizmet veren TEKLİF VERENE KADAR
     // maskeli, sonra gerçek ad görünür. ──
+    //
+    // ⚠ YALNIZ MESAJLAŞMA KUTUSU: hizmet verenin telefonu bu akışta
+    // HİÇ paylaşılmıyor (yalnız hizmet ALANIN tercihi var — bkz.
+    // yukarısı) — bu yüzden burada Telefon kutusu YOK, iki kutuya
+    // zorlanmadı.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -386,9 +387,125 @@ class _KarsiTarafBilgisi extends StatelessWidget {
               'açılacak.',
               style: refText(
                   size: RF.s12, weight: RF.w400, color: RC.textSoft)),
+        ] else ...[
+          const SizedBox(height: 10),
+          const Divider(height: 1, color: Color(0xFFF1F3F6)),
+          const SizedBox(height: 10),
+          _MiniIletisimKutusu(
+            ikon: 'assets/svg/ic_chat.svg',
+            etiket: 'Mesajlaşma',
+            deger: 'Mesaj yaz',
+            kilitli: false,
+            onTap: () => _sohbeteGit(context, talep.hizmet),
+          ),
         ],
       ],
     );
+  }
+
+  String _telefonGosterMetni(String? ham) {
+    final d = Validators.phoneLocal(ham ?? '');
+    if (d.isEmpty) return '—';
+    return TelefonBicimlendirici.gruplu(d);
+  }
+
+  Future<void> _telefonAra(BuildContext context, String? ham) async {
+    final d = Validators.phoneLocal(ham ?? '');
+    if (d.isEmpty) return;
+    final uri = Uri.parse('tel:$d');
+    final acildi = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!acildi && context.mounted) {
+      sysToastErr(context, SysKind.genericError,
+          extra: 'Arama uygulaması açılamadı');
+    }
+  }
+}
+
+/// ── ⚠ `offer_detail_screen.dart`'taki `_IletisimKutusu`nun AYNI
+/// GÖRSEL DİLDE, sadeleştirilmiş yerel kopyası ──
+///
+/// Orijinal sınıf dosyaya özel (private) olduğu için import
+/// EDİLEMEDİ; ikon dairesi, kilitli/açık durum ve tipografi BİREBİR
+/// aynı tutuldu.
+class _MiniIletisimKutusu extends StatelessWidget {
+  const _MiniIletisimKutusu({
+    required this.ikon,
+    required this.etiket,
+    required this.deger,
+    required this.kilitli,
+    this.kucukDeger = false,
+    this.onTap,
+  });
+
+  final String ikon;
+  final String etiket;
+  final String deger;
+  final bool kilitli;
+  final bool kucukDeger;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final kutu = Container(
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: RC.white,
+        border: Border.all(color: const Color(0xFFECEEF2)),
+        borderRadius: BorderRadius.circular(RR.r11),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: RC.blueSoft,
+              shape: BoxShape.circle,
+            ),
+            child: RefSvg(ikon, size: 17, color: RC.blue),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(etiket,
+                    style: refText(
+                        size: RF.s12, weight: RF.w400, color: RC.textSoft)),
+                const SizedBox(height: 2),
+                Text(
+                  deger,
+                  maxLines: kucukDeger ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: kucukDeger
+                      ? refText(
+                          size: 11,
+                          weight: RF.w500,
+                          color: RC.text,
+                          height: 1.35)
+                      : refText(
+                          size: RF.s14, weight: RF.w700, color: RC.text),
+                ),
+              ],
+            ),
+          ),
+          if (kilitli)
+            const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(Icons.lock_outline, size: 15, color: RC.textSoft),
+            ),
+        ],
+      ),
+    );
+    return onTap == null
+        ? kutu
+        : RefTap(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(RR.r11),
+            child: kutu,
+          );
   }
 }
 
@@ -502,6 +619,7 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
         TextField(
           controller: cevapController,
           maxLines: 4,
+          textCapitalization: TextCapitalization.sentences,
           decoration:
               const InputDecoration(hintText: 'Teklifinizi açıklayın.'),
         ),
@@ -612,164 +730,3 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   }
 }
 
-/// ── ⚠ UYGULAMA İÇİ MESAJLAŞMA — TEKLİF VERİLDİKTEN SONRA ──
-///
-/// Metin ve TEK fotoğraf gönderimi destekler. Mevcut sohbet sistemi
-/// (`ChatController`) `Listing`/`Offer` kimliğine bağlıdır ve bu YENİ
-/// modele (`TeklifTalebi`) DOKUNULMADAN bağlanamaz; bu yüzden
-/// mesajlar `TeklifTalebi.mesajlar` üzerinde, KENDİ bağımsız
-/// zincirinde tutulur — `ChatController`a DOKUNULMADI.
-///
-/// Fotoğraf seçimi `image_picker` ile DOĞRUDAN yapılır (`ListingPhotoPicker`
-/// çoklu-seçim/yükleme akışı için tasarlanmıştı; burada tek dosya anlık
-/// gönderim ihtiyacı farklı, bu yüzden o bileşen ZORLA uydurulmadı).
-class _Mesajlasma extends StatefulWidget {
-  const _Mesajlasma({required this.talep, required this.benId});
-
-  final TeklifTalebi talep;
-  final String benId;
-
-  @override
-  State<_Mesajlasma> createState() => _MesajlasmaState();
-}
-
-class _MesajlasmaState extends State<_Mesajlasma> {
-  final _metin = TextEditingController();
-  bool _gonderiliyor = false;
-
-  @override
-  void dispose() {
-    _metin.dispose();
-    super.dispose();
-  }
-
-  Future<void> _gonder({String? fotografYolu}) async {
-    final t = _metin.text.trim();
-    if (t.isEmpty && fotografYolu == null) return;
-    setState(() => _gonderiliyor = true);
-    final err = await context.read<TeklifTalebiController>().mesajGonder(
-          widget.talep.id,
-          gonderenId: widget.benId,
-          metin: t.isEmpty ? null : t,
-          fotografYolu: fotografYolu,
-        );
-    if (!mounted) return;
-    setState(() => _gonderiliyor = false);
-    if (err != null) {
-      sysToastErr(context, SysKind.genericError, extra: err.message);
-      return;
-    }
-    _metin.clear();
-  }
-
-  Future<void> _fotografSecVeGonder() async {
-    final secilen =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (secilen == null) return;
-    await _gonder(fotografYolu: secilen.path);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final mesajlar = widget.talep.mesajlar;
-    return RefFormCard(
-      marginTop: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Mesajlaşma',
-              style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
-          const SizedBox(height: 8),
-          if (mesajlar.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text('Henüz mesaj yok.',
-                  style: refText(
-                      size: RF.s13, weight: RF.w400, color: RC.textSoft)),
-            )
-          else
-            Column(
-              children: [
-                for (final m in mesajlar) _MesajBalonu(m, widget.benId),
-              ],
-            ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              RefTap(
-                onTap: _gonderiliyor ? null : _fotografSecVeGonder,
-                borderRadius: BorderRadius.circular(RR.circle),
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: RefSvg('assets/svg/ic_cam.svg',
-                      size: 20, color: RC.blue),
-                ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _metin,
-                  enabled: !_gonderiliyor,
-                  decoration: const InputDecoration(hintText: 'Mesaj yaz...'),
-                  onSubmitted: (_) => _gonder(),
-                ),
-              ),
-              RefTap(
-                onTap: _gonderiliyor ? null : () => _gonder(),
-                borderRadius: BorderRadius.circular(RR.circle),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: RefSvg('assets/svg/ic_send.svg',
-                      size: 20,
-                      color: _gonderiliyor ? RC.textSoft : RC.blue),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MesajBalonu extends StatelessWidget {
-  const _MesajBalonu(this.mesaj, this.benId);
-
-  final TeklifMesaj mesaj;
-  final String benId;
-
-  @override
-  Widget build(BuildContext context) {
-    final benim = mesaj.gonderenId == benId;
-    return Align(
-      alignment: benim ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(10),
-        constraints: const BoxConstraints(maxWidth: 240),
-        decoration: BoxDecoration(
-          color: benim ? RC.blueSoft : const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(RR.r12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (mesaj.fotografYolu != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(RR.r12),
-                child: Image.file(File(mesaj.fotografYolu!),
-                    width: 160, height: 160, fit: BoxFit.cover),
-              ),
-            if (mesaj.metin != null)
-              Padding(
-                padding: EdgeInsets.only(
-                    top: mesaj.fotografYolu != null ? 6 : 0),
-                child: Text(mesaj.metin!,
-                    style: refText(
-                        size: RF.s135, weight: RF.w400, color: RC.text)),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}

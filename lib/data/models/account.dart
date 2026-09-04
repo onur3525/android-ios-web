@@ -122,6 +122,13 @@ class Account {
   /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
   bool termsAccepted;
 
+  /// Hesabın oluşturulduğu tarih — "kaç yıldır üye" gösterimi için
+  /// (bkz. `data/repositories/teklif_talebi_repository.dart`'ta
+  /// hizmet verene gösterilen talep kartı). Parametre verilmezse
+  /// (yeni kayıt) ŞİMDİKİ ZAMAN atanır; `Account.fromJson` (APK test
+  /// kalıcılığı) GERÇEK kayıt tarihini korur.
+  final DateTime kayitTarihi;
+
   Account({
     required this.id,
     this.name = '',
@@ -135,8 +142,10 @@ class Account {
     this.termsAccepted = false,
     Set<Role>? roles,
     Role? activeRole,
+    DateTime? kayitTarihi,
   })  : roles = roles ?? {Role.customer},
-        activeRole = activeRole ?? (roles ?? {Role.customer}).first {
+        activeRole = activeRole ?? (roles ?? {Role.customer}).first,
+        kayitTarihi = kayitTarihi ?? DateTime.now() {
     assert(this.roles.isNotEmpty, 'Hesabın en az bir rolü olmalı');
     if (!this.roles.contains(this.activeRole)) {
       this.activeRole = this.roles.first;
@@ -283,6 +292,7 @@ class Account {
         'emailVerified': emailVerified,
         'bekleyenEposta': bekleyenEposta,
         'termsAccepted': termsAccepted,
+        'kayitTarihi': kayitTarihi.toIso8601String(),
         'fotoAlan': fotografi(Role.customer),
         'fotoVeren': fotografi(Role.provider),
       };
@@ -302,6 +312,9 @@ class Account {
       phoneVerified: j['phoneVerified'] as bool? ?? false,
       emailVerified: j['emailVerified'] as bool? ?? false,
       termsAccepted: j['termsAccepted'] as bool? ?? false,
+      kayitTarihi: j['kayitTarihi'] != null
+          ? DateTime.tryParse(j['kayitTarihi'] as String)
+          : null,
       roles: roller,
       activeRole: j['activeRole'] != null
           ? Role.values.byName(j['activeRole'] as String)
