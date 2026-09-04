@@ -16,6 +16,17 @@ class ReviewRepository extends ChangeNotifier {
     return null;
   }
 
+  /// ⚠ `byOffer` İLE AYNI DESEN — "Bul" üzerinden doğrudan teklif
+  /// akışının kendi eşdeğeri. Tek fark kaynak alanı (`talepId`).
+  Review? byTalep(String talepId) {
+    for (final r in _items.values) {
+      if (r.talepId == talepId) {
+        return r;
+      }
+    }
+    return null;
+  }
+
   /// HİZMET VERENE ULAŞAN değerlendirmeler.
   ///
   /// ── ⚠ 1 GÜN YAYIN GECİKMESİ (API sözleşmesi §14) ──
@@ -55,8 +66,9 @@ class ReviewRepository extends ChangeNotifier {
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   Review create({
-    required String listingId,
-    required String offerId,
+    String? listingId,
+    String? offerId,
+    String? talepId,
     required String providerId,
     required String authorId,
     required int stars,
@@ -64,7 +76,8 @@ class ReviewRepository extends ChangeNotifier {
   }) {
     final r = Review(
         id: _uuid.v4(), listingId: listingId, offerId: offerId,
-        providerId: providerId, authorId: authorId, stars: stars, text: text);
+        talepId: talepId, providerId: providerId, authorId: authorId,
+        stars: stars, text: text);
     _items[r.id] = r;
     notifyListeners();
     return r;

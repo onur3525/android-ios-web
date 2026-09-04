@@ -100,10 +100,12 @@ class TeklifTalebiRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reddet(String id) {
+  void reddet(String id, {String? gerekce}) {
     final t = _items[id];
     if (t == null || t.durum != TeklifTalebiDurumu.teklifGeldi) return;
-    t.durum = TeklifTalebiDurumu.reddedildi;
+    t
+      ..durum = TeklifTalebiDurumu.reddedildi
+      ..redGerekcesi = gerekce;
     notifyListeners();
   }
 

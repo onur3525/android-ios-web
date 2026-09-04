@@ -99,6 +99,11 @@ class AppPorts {
   /// sunucudan gelir, yerel depo İLGİSİZDİR.
   final NotificationRepository? notifRepo;
 
+  /// ⚠ "Bul" doğrudan teklif akışının deposu — `MockReviewPort`un
+  /// artık bu talepleri de doğrulaması gerektiği için (yorum yazma
+  /// akışı) dışa açıldı; `notifRepo` İLE AYNI gerekçe/desen.
+  final TeklifTalebiRepository? teklifTalebiRepo;
+
   /// Bölge verisi (şehir/ilçe/mahalle) — API modunda sunucudan gelir.
   final RegionPort regions;
 
@@ -129,6 +134,7 @@ class AppPorts {
     required this.apiClient,
     this.expiry,
     this.notifRepo,
+    this.teklifTalebiRepo,
   });
 }
 
@@ -138,6 +144,9 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   final notifRepo = NotificationRepository();
   final chatRepo = ChatRepository();
   final reviewRepo = ReviewRepository();
+  // ⚠ `MockTeklifTalebiPort`un DIŞARIDA (main() gövdesinde) kurduğu
+  // AYNI örnek — bkz. aşağıdaki `AppPorts.teklifTalebiRepo` notu.
+  final teklifTalebiRepo = TeklifTalebiRepository();
 
   if (m == DataSourceMode.api) {
     final client = ApiClient(onSessionExpired: onSessionExpired);
@@ -202,9 +211,10 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     chat: MockChatPort(chatRepo, offerRepo, listingRepo,
         contacts: contactRepo, notifs: notifRepo),
     reviews: MockReviewPort(
-        reviewRepo, listingRepo, offerRepo, contactRepo),
+        reviewRepo, listingRepo, offerRepo, contactRepo, teklifTalebiRepo),
     notifications: MockNotificationPort(notifRepo),
     notifRepo: notifRepo,
+    teklifTalebiRepo: teklifTalebiRepo,
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
@@ -256,8 +266,9 @@ Future<void> main() async {
   // EKLENDİ (bkz. sınıf tanımındaki not) — bildirimler mevcut
   // `NotificationController`ın GÖRDÜĞÜ AYNI depoya yazılsın diye;
   // başka hiçbir port/repository DEĞİŞMEDİ.
-  final teklifTalebiPort =
-      MockTeklifTalebiPort(TeklifTalebiRepository(), notifs: ports.notifRepo);
+  final teklifTalebiPort = MockTeklifTalebiPort(
+      ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
+      notifs: ports.notifRepo);
   BootLog.olay('BUILD_PORTS_END');
 
   // ═══════════════════════════════════════════════════════════════

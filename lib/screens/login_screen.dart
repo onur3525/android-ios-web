@@ -487,7 +487,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             onChanged: (_) => _degerDegisti(),
                             enabled: !_busy,
                             hint: 'E-posta',
-                            yerTutucu: 'E mail giriniz.',
+                            yerTutucu: 'E posta giriniz.',
                             keyboardType: TextInputType.emailAddress,
                   // ⚠ E-postada baş harf büyütülmez.
                   textCapitalization: TextCapitalization.none,

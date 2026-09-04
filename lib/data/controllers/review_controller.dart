@@ -10,6 +10,7 @@ class ReviewController extends BaseController {
   ReviewController(this._reviews) : super([_reviews]);
 
   Review? byOffer(String offerId) => _reviews.byOffer(offerId);
+  Review? byTalep(String talepId) => _reviews.byTalep(talepId);
   List<Review> byProvider(String providerId) => _reviews.byProvider(providerId);
 
   /// Müşterinin YAZDIĞI değerlendirmeler — bkz. depo notu.
@@ -19,17 +20,20 @@ class ReviewController extends BaseController {
   Future<DomainError?> loadForProvider(String providerId) =>
       runLoad(() => _reviews.loadForProvider(providerId));
 
+  /// ⚠ İKİ MOD: `listingId`+`offerId` (normal akış) YA DA `talepId`
+  /// ("Bul" doğrudan teklif akışı) — bkz. `ReviewPort.submit` notu.
   Future<DomainError?> submit({
-    required String listingId,
-    required String offerId,
+    String? listingId,
+    String? offerId,
+    String? talepId,
     required String actorId,
     required int stars,
     required String text,
   }) =>
       runAction(
-        'review:$offerId',
+        'review:${offerId ?? talepId}',
         () => _reviews.submit(
-            listingId: listingId, offerId: offerId, actorId: actorId,
-            stars: stars, text: text),
+            listingId: listingId, offerId: offerId, talepId: talepId,
+            actorId: actorId, stars: stars, text: text),
       );
 }

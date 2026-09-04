@@ -5,6 +5,7 @@ import '../models/account.dart';
 import '../models/region.dart';
 import '../models/provider_approval.dart';
 import '../models/listing.dart';
+import '../models/teklif_talebi.dart' show IletisimTercihi;
 import '../models/chat.dart';
 import '../models/notification.dart';
 import '../models/offer.dart';
@@ -229,6 +230,8 @@ abstract class ListingPort extends ChangeNotifier {
     List<String>? photoPaths,
     // ⚠ İSTEĞE BAĞLI: `null` = kullanıcı zaman seçmedi.
     IsZamani? isZamani,
+    // ⚠ YENİ — bkz. `ListingController.publish` notu.
+    IletisimTercihi? iletisimTercihi,
   });
   Future<DomainError?> expire(String listingId, {required String actorId});
   Future<DomainError?> delete(String listingId,
@@ -322,9 +325,19 @@ abstract class ReviewPort extends ChangeNotifier {
   double? averageOf(String providerId);
 
   Future<DomainError?> loadForProvider(String providerId);
+
+  /// ⚠ "Bul" üzerinden doğrudan teklif akışının kendi eşdeğeri —
+  /// `byOffer` İLE AYNI DESEN.
+  Review? byTalep(String talepId);
+
+  /// ⚠ İKİ MOD: `listingId`+`offerId` (normal akış) YA DA `talepId`
+  /// ("Bul" doğrudan teklif akışı) — TAM OLARAK BİRİ dolu olmalı.
+  /// Eskiden yalnız ilk modu desteklerdi; ikinci mod EKLENDİ, ilk
+  /// modun sözleşmesi DEĞİŞMEDİ.
   Future<DomainError?> submit({
-    required String listingId,
-    required String offerId,
+    String? listingId,
+    String? offerId,
+    String? talepId,
     required String actorId,
     required int stars,
     required String text,

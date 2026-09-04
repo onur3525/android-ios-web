@@ -6,6 +6,7 @@ import '../models/region.dart';
 import '../models/provider_approval.dart';
 import '../models/chat.dart';
 import '../models/listing.dart';
+import '../models/teklif_talebi.dart' show IletisimTercihi;
 import '../models/notification.dart';
 import '../models/offer.dart';
 import '../models/review.dart';
@@ -327,6 +328,11 @@ class ApiListingPort extends ListingPort {
     required String desc,
     List<String>? photoPaths,
     IsZamani? isZamani,
+    // ⚠ API MODUNDA HENÜZ SUNUCUYA İLETİLMİYOR: `ApiListingRepository.
+    // create()`in bu alanı desteklediği DOĞRULANMADI — backend
+    // sözleşmesi UYDURULMADI. Parametre yalnız arayüz UYUMU için
+    // burada; gerçek entegrasyon backend hazır olunca eklenir.
+    IletisimTercihi? iletisimTercihi,
   }) async {
     final (l, err) = await repo.create(
         title: title, location: location, description: desc,
@@ -488,6 +494,11 @@ class ApiReviewPort extends ReviewPort {
 
   @override
   Review? byOffer(String offerId) => repo.byOffer(offerId);
+  /// ⚠ API MODUNDA GERÇEK UÇ YOK — "Bul" doğrudan teklif akışı henüz
+  /// sunucu tarafında TANIMLANMADI (bkz. `AuthPort.
+  /// saglayicilarKimSunuyor`daki AYNI not). Sahte sonuç ÜRETİLMEZ.
+  @override
+  Review? byTalep(String talepId) => null;
   @override
   List<Review> byProvider(String providerId) => repo.byProvider(providerId);
   @override
@@ -498,20 +509,29 @@ class ApiReviewPort extends ReviewPort {
   Future<DomainError?> loadForProvider(String providerId) => repo.loadForProvider(providerId);
 
   /// Kural denetimi SUNUCUDA; hizmet veren, seçilmiş tekliften çözülür.
+  ///
+  /// ⚠ `talepId` İLE ÇAĞRILAMAZ: API modunda "Bul" doğrudan teklif
+  /// akışı için gerçek bir uç YOK — sahte bir başarı DÖNDÜRÜLMEZ,
+  /// açık bir hata verilir.
   @override
   Future<DomainError?> submit({
-    required String listingId,
-    required String offerId,
+    String? listingId,
+    String? offerId,
+    String? talepId,
     required String actorId,
     required int stars,
     required String text,
   }) async {
-    final providerId = offers.byId(offerId)?.providerId;
+    if (talepId != null) {
+      return const NotFoundError(
+          'Bu değerlendirme türü şu an desteklenmiyor');
+    }
+    final providerId = offers.byId(offerId!)?.providerId;
     if (providerId == null) {
       return const NotFoundError('Teklif bulunamadı');
     }
     return repo.submit(
-        listingId: listingId, providerId: providerId, stars: stars, text: text);
+        listingId: listingId!, providerId: providerId, stars: stars, text: text);
   }
 }
 

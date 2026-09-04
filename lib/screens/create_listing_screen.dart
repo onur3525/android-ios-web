@@ -244,15 +244,18 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   }
 
   bool get _butonKilitli {
-    // ⚠ Adım 2 her iki akışta da açıklama yeterli olmadan geçilmez.
-    if (_step == 2 && _kelimeSayisi() < kMinAciklamaKelime) {
+    // ⚠ Adım 2 her iki akışta da açıklama yeterli olmadan geçilmez —
+    // artık kelime sayısı YETERSİZ olduğunda VEYA metin ANLAMSIZ
+    // (`Validators.anlamsizKelimeVarMi`) olduğunda ikisi de geçerli.
+    if (_step == 2 &&
+        (_kelimeSayisi() < kMinAciklamaKelime || _aciklamaAnlamsiz)) {
       return true;
     }
     if (!widget.preLogin) {
       return false;
     }
     return switch (_step) {
-      2 => _kelimeSayisi() < kMinAciklamaKelime,
+      2 => _kelimeSayisi() < kMinAciklamaKelime || _aciklamaAnlamsiz,
       3 => !_kayit.tamam,
       4 => !_otp.tamam,
       _ => false,
@@ -972,6 +975,13 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   bool get _aciklamaEksik =>
       _desc.text.trim().isNotEmpty && _kelimeSayisi() < kMinAciklamaKelime;
 
+  /// ⚠ CANLI KONTROL — her tuş vuruşunda değerlendirilir
+  /// (`onChanged: (_) => setState(() {})` zaten build'i tetikliyor,
+  /// ayrı bir dinleyici İCAT EDİLMEDİ). Boş alanda uyarı ÇIKMAZ.
+  bool get _aciklamaAnlamsiz =>
+      _desc.text.trim().isNotEmpty &&
+      Validators.anlamsizKelimeVarMi(_desc.text);
+
   /// Açıklamadaki kelime sayısı (referans `.po-wc`).
   /// ⚠ `RegExp` build İÇİNDE kurulmaz — klavye açılış/kapanış
   /// animasyonunun her karesinde yeniden derleniyordu.
@@ -1093,7 +1103,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               controller: _desc,
               // ⚠ Kenarlık doğrudan alanın kendisinde renklenir;
               // dış sarmalayıcı YOK (çift çerçeve + odak kaybı).
-              hatali: _aciklamaEksik,
+              hatali: _aciklamaEksik || _aciklamaAnlamsiz,
               maxLines: 6,
               maxLength: kAciklamaMaxLength,
               // Yerleşik sayaç gizlenir; referanstaki `.rv-cnt`
@@ -1157,6 +1167,23 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                       color: _aciklamaEksik ? RC.danger : RC.textSoft)),
             ],
           ),
+          // ── ⚠ CANLI ANLAMSIZ METİN UYARISI — YAZARKEN GÖRÜNÜR ──
+          //
+          // ÖNCEDEN yalnız GÖNDERİM ANINDA (toast ile) kontrol
+          // ediliyordu. Artık her tuş vuruşunda: "Bbbb" gibi ardışık
+          // anlamsız harfler yazılır yazılmaz çerçeve kırmızıya
+          // döner VE bu satır belirir. Kullanıcı yazıyı silip
+          // düzeltince (`Validators.anlamsizKelimeVarMi` artık
+          // `false` dönünce) satır ve kırmızı çerçeve KENDİLİĞİNDEN
+          // kalkar — ayrı bir "düzeltildi" mantığı İCAT EDİLMEDİ,
+          // aynı canlı kontrol iki yönde de çalışır.
+          if (_aciklamaAnlamsiz)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Anlamsız kelimeler içeriyor gibi görünüyor.',
+                  style: refText(
+                      size: RF.s125, weight: RF.w600, color: RC.danger)),
+            ),
 
           // ⚠ KONUM ALANLARI BU ADIMDA GÖSTERİLMEZ.
           //

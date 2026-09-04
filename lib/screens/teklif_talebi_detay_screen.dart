@@ -15,7 +15,9 @@ import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
+import 'provider_reviews_screen.dart';
 import 'teklif_talebi_sohbet_screen.dart';
+import 'teklif_talebi_yorum_screen.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -102,12 +104,123 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     sysToastOk(context, 'Teklif kabul edildi — iş aktif.');
   }
 
-  Future<void> _reddet(TeklifTalebi t) async {
-    final err = await context.read<TeklifTalebiController>().reddet(t.id);
+  Future<void> _reddet(TeklifTalebi t, {String? gerekce}) async {
+    final err = await context
+        .read<TeklifTalebiController>()
+        .reddet(t.id, gerekce: gerekce);
     if (!mounted) return;
     if (err != null) {
       sysToastErr(context, SysKind.genericError, extra: err.message);
     }
+  }
+
+  // ── ⚠ "3 NOKTA → TALEBİ SİL" — `listing_detail_screen.dart`daki
+  // "İlanı neden siliyorsunuz?" DESENİYLE AYNI (bottom sheet menü →
+  // onay → hazır gerekçe listesi → "Diğer" ise serbest metin).
+  // O ekranın private metotları BURAYA import EDİLEMEDİ, aynı genel
+  // bileşenler (`RefBottomSheet`, `RefSerbestNedenSayfasi`) yeniden
+  // kullanılarak BİREBİR aynı akış burada YENİDEN kuruldu.
+  static const _kTalepSilmeNedenleri = [
+    'İhtiyacım kalmadı / vazgeçtim',
+    'Dışarıdan biri ile anlaştım',
+    'Yanlış hizmet için talep oluşturdum',
+    'Gelen teklif uygun değildi',
+    'Diğer',
+  ];
+
+  Future<void> _talepMenusu(TeklifTalebi t) async {
+    final sil = await RefBottomSheet.goster<bool>(
+      context,
+      title: 'Talep Seçenekleri',
+      child: RefTap(
+        onTap: () => Navigator.of(context).pop(true),
+        borderRadius: BorderRadius.circular(RR.r12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
+          child: Row(children: [
+            const RefSvg('assets/svg/ic_trash.svg', size: 18, color: RC.danger),
+            const SizedBox(width: 10),
+            Text('Talebi Sil',
+                style: refText(
+                    size: RF.s145, weight: RF.w700, color: RC.danger)),
+          ]),
+        ),
+      ),
+    );
+    if (sil != true || !mounted) return;
+
+    final onay = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Talep silinsin mi?',
+            style: refText(size: RF.s17, weight: RF.w700, color: RC.text)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text('Sil',
+                style: refText(
+                    size: RF.s145, weight: RF.w700, color: RC.danger)),
+          ),
+        ],
+      ),
+    );
+    if (onay != true || !mounted) return;
+
+    final neden = await RefBottomSheet.goster<String>(
+      context,
+      title: 'Talebi neden siliyorsun?',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final r in _kTalepSilmeNedenleri)
+            RefTap(
+              onTap: () => Navigator.of(context).pop(r),
+              borderRadius: BorderRadius.circular(RR.r12),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(r,
+                        style: refText(
+                            size: RF.s145,
+                            weight: RF.w500,
+                            color: RC.text)),
+                  ),
+                  const RefSvg('assets/svg/ic_chev.svg',
+                      size: 18, color: Color(0xFFD3D8E0)),
+                ]),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (neden == null || !mounted) return;
+
+    var gerekce = neden;
+    if (neden == 'Diğer') {
+      final metin = await RefBottomSheet.goster<String>(
+        context,
+        title: 'Silme nedeniniz',
+        child: const RefSerbestNedenSayfasi(
+          baslik: 'Silme nedeniniz',
+          aciklama: 'Talebi neden sildiğinizi kısaca yazın. Bu açıklama '
+              'HizmetCep yönetimine iletilir ve hizmet kalitesini '
+              'iyileştirmek için kullanılır.',
+          ipucu: 'Örn. Taşındığım için ihtiyacım kalmadı',
+        ),
+      );
+      if (metin == null || metin.trim().isEmpty || !mounted) return;
+      gerekce = 'Diğer: ${metin.trim()}';
+    }
+
+    await _reddet(t, gerekce: gerekce);
+    if (!mounted) return;
+    sysToastOk(context, 'Talep silindi.');
   }
 
   Future<void> _tamamla(TeklifTalebi t) async {
@@ -219,7 +332,12 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
               _HizmetAlanAksiyonlari(
                 talep: t,
                 onSec: () => _sec(t),
-                onReddet: () => _reddet(t),
+                onMenuAc: () => _talepMenusu(t),
+                onYorumYaz: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (_) =>
+                            TeklifTalebiYorumScreen(talep: t))),
               ),
           ],
         ),
@@ -380,6 +498,34 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     refText(size: RF.s145, weight: RF.w700, color: RC.text)),
           ],
         ),
+        // ── ⚠ "YORUMLARI GÖR" — YALNIZ KİMLİK AÇIKKEN ANLAMLI ──
+        //
+        // Maskeliyken gerçek `saglayiciId`ye bağlı bir ekrana
+        // gitmek KİMLİĞİ dolaylı yoldan İFŞA ederdi; bu yüzden
+        // yalnız `acik` iken gösterilir.
+        if (acik) ...[
+          const SizedBox(height: 6),
+          RefTap(
+            onTap: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => ProviderReviewsScreen(
+                        providerId: talep.saglayiciId,
+                        providerAdi: talep.saglayiciAdi))),
+            borderRadius: BorderRadius.circular(RR.r8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const RefSvg('assets/svg/ic_starfill.svg',
+                    size: 13, color: Color(0xFFF5A319)),
+                const SizedBox(width: 5),
+                Text('Yorumları Gör',
+                    style: refText(
+                        size: RF.s125, weight: RF.w600, color: RC.blue)),
+              ],
+            ),
+          ),
+        ],
         if (!acik) ...[
           const SizedBox(height: 6),
           Text(
@@ -636,12 +782,22 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   const _HizmetAlanAksiyonlari({
     required this.talep,
     required this.onSec,
-    required this.onReddet,
+    required this.onMenuAc,
+    required this.onYorumYaz,
   });
 
   final TeklifTalebi talep;
   final VoidCallback onSec;
-  final VoidCallback onReddet;
+
+  /// ⚠ ÖNCEDEN `onReddet` — düz bir "Reddet" düğmesi doğrudan
+  /// reddediyordu. Artık 3 NOKTA MENÜSÜ açıyor (`listing_detail_
+  /// screen.dart`daki "İlanı neden siliyorsunuz?" DESENİYLE aynı —
+  /// onay + gerekçe sorma) — bkz. `_talepMenusu()`.
+  final VoidCallback onMenuAc;
+
+  /// ⚠ Yalnız `tamamlandi` durumunda kullanılır — iş bitince
+  /// "Teklifi Seç" düğmesinin YERİNİ "Yorum Yaz" alır.
+  final VoidCallback onYorumYaz;
 
   @override
   Widget build(BuildContext context) {
@@ -679,38 +835,43 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
                       weight: RF.w500,
                       color: const Color(0xFFF5820C))),
             const SizedBox(height: 16),
-            RefPrimaryButton('Teklifi Seç', onPressed: onSec),
-            const SizedBox(height: 8),
-            RefTap(
-              onTap: onReddet,
-              borderRadius: BorderRadius.circular(RR.r13),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFECEEF2)),
-                  borderRadius: BorderRadius.circular(RR.r13),
+            // ── ⚠ "TEKLİFİ SEÇ" + 3 NOKTA — YAN YANA ──
+            //
+            // Düz "Reddet" düğmesi KALDIRILDI; 3 nokta artık
+            // `listing_detail_screen.dart`daki "İlanı Sil"le AYNI
+            // akışı açıyor (onay + gerekçe sorma).
+            Row(
+              children: [
+                Expanded(
+                  child: RefPrimaryButton('Teklifi Seç', onPressed: onSec),
                 ),
-                child: Text('Reddet',
-                    style: refText(
-                        size: RF.s14, weight: RF.w700, color: RC.textSoft)),
-              ),
+                const SizedBox(width: 8),
+                RefTap(
+                  onTap: onMenuAc,
+                  borderRadius: BorderRadius.circular(RR.r13),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFECEEF2)),
+                      borderRadius: BorderRadius.circular(RR.r13),
+                    ),
+                    child: const RefSvg('assets/svg/ic_dots.svg',
+                        size: 18, color: RC.textSoft),
+                  ),
+                ),
+              ],
             ),
           ],
         );
 
       case TeklifTalebiDurumu.secildi:
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: HC.green.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(RR.r12),
-          ),
-          child: Text('Teklif Kabul Edildi — iş aktif.',
-              style: refText(
-                  size: RF.s135, weight: RF.w700, color: HC.green)),
-        );
+        // ── ⚠ ÖNCEDEN YEŞİL KUTU İÇİNDEYDİ — artık kutu YOK,
+        // yalnız şık/sade bir metin (ürün kararı).
+        return Text('Teklif Seçildi',
+            style: refText(
+                size: RF.s16, weight: RF.w700, color: HC.green));
 
       case TeklifTalebiDurumu.reddedildi:
         return Text('Bu teklifi reddettin.',
@@ -723,9 +884,24 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
                 refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
 
       case TeklifTalebiDurumu.tamamlandi:
-        return Text('İş tamamlandı.',
-            style:
-                refText(size: RF.s135, weight: RF.w700, color: RC.text));
+        // ── ⚠ "TEKLİFİ SEÇ" ARTIK "YORUM YAZ"A DÖNÜŞÜYOR ──
+        //
+        // İş tamamlanınca müşteri, mevcut ilan akışıyla AYNI
+        // değerlendirme sistemine (`ReviewController`/`Review`)
+        // yazan bir ekrana yönlendirilir — bkz.
+        // `TeklifTalebiYorumScreen`.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('İş tamamlandı.',
+                style: refText(
+                    size: RF.s135, weight: RF.w700, color: RC.text)),
+            const SizedBox(height: 12),
+            RefPrimaryButton('Yorum Yaz',
+                iconAsset: 'assets/svg/ic_starfill.svg',
+                onPressed: onYorumYaz),
+          ],
+        );
     }
   }
 }

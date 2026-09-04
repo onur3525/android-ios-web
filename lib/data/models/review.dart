@@ -3,8 +3,17 @@ import '../../domain/config.dart';
 /// Değerlendirme — HTML kuralı: yalnız hizmeti alan müşteri,
 class Review {
   final String id;
-  final String listingId;
-  final String offerId;
+
+  /// ⚠ İKİ KAYNAKTAN BİRİ DOLU OLUR — İKİSİ BİRDEN DEĞİL:
+  ///   • normal ilan/teklif akışı → `listingId`+`offerId` dolu, `talepId` null.
+  ///   • "Bul" üzerinden doğrudan teklif akışı → `talepId` dolu,
+  ///     `listingId`/`offerId` null (gerçek bir İlan/Teklif YOKTUR).
+  /// Üçü de OPSİYONEL yapıldı (önceden `listingId`/`offerId` zorunluydu) —
+  /// tek bir yeni alan (`talepId`) EKLENEREK genişletildi, var olan
+  /// hiçbir alan/anlam SİLİNMEDİ.
+  final String? listingId;
+  final String? offerId;
+  final String? talepId;
   final String providerId; // değerlendirilen hizmet veren
   final String authorId;   // ilan sahibi müşteri
   final int stars;         // 1..5
@@ -39,8 +48,9 @@ class Review {
   final DateTime? publishedAt;
   Review({
     required this.id,
-    required this.listingId,
-    required this.offerId,
+    this.listingId,
+    this.offerId,
+    this.talepId,
     required this.providerId,
     required this.authorId,
     required this.stars,
@@ -48,7 +58,12 @@ class Review {
     this.publishedAt,
     required this.text,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  })  : assert(
+            (listingId != null && offerId != null && talepId == null) ||
+                (listingId == null && offerId == null && talepId != null),
+            'Ya listingId+offerId ya da talepId dolu olmalı — ikisi birden '
+            'ya da hiçbiri OLAMAZ.'),
+        createdAt = createdAt ?? DateTime.now();
 
   /// Yayında mı?
   ///

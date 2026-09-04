@@ -5,6 +5,7 @@ import '../core/theme.dart';
 import '../data/remote/api_config.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/models/review.dart';
 import '../data/remote/api/review_api.dart';
@@ -442,15 +443,24 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
 
   /// Mock `Review` kaydını kartın beklediği haritaya çevirir.
   ///
+  /// ⚠ İKİ KAYNAK: normal ilan (`listingId`) YA DA "Bul" üzerinden
+  /// doğrudan teklif (`talepId`) — Review artık ikisinden birini
+  /// taşıyabilir (bkz. model notu). Hangisi doluysa o gösterilir.
   Map<String, dynamic> _mockSatir(Review r) {
     final yazar = context.read<AuthController>().accountById(r.authorId);
-    final ilan = context.read<ListingController>().byId(r.listingId);
+    final ilan = r.listingId == null
+        ? null
+        : context.read<ListingController>().byId(r.listingId!);
+    final talep = r.talepId == null
+        ? null
+        : context.read<TeklifTalebiController>().byId(r.talepId!);
+    final baslik = ilan?.title ?? talep?.hizmet ?? '';
     return {
       'stars': r.stars,
       'text': r.text,
       'createdAt': r.createdAt.toIso8601String(),
       'author': {'name': yazar?.name ?? ''},
-      'listing': {'title': ilan?.title ?? '', 'category': ilan?.title ?? ''},
+      'listing': {'title': baslik, 'category': baslik},
     };
   }
 

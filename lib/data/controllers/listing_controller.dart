@@ -1,5 +1,6 @@
 import '../../domain/failures.dart';
 import '../models/listing.dart';
+import '../models/teklif_talebi.dart' show IletisimTercihi;
 import '../ports/repository_ports.dart';
 import 'base_controller.dart';
 
@@ -35,6 +36,9 @@ class ListingController extends BaseController {
     List<String>? photoPaths,
     // ⚠ İsteğe bağlı işin yapılma zamanı; `null` = seçim yok.
     IsZamani? isZamani,
+    // ⚠ YENİ — "Doğrudan Teklif İste" akışıyla AYNI tercih. Verilmezse
+    // `Listing` kurucusundaki varsayılan (`telefonGoster`) uygulanır.
+    IletisimTercihi? iletisimTercihi,
   }) async {
     if (isBusy('publish')) {
       return (listing: null, error: const ValidationError('İlan yayınlanıyor — lütfen bekleyin'));
@@ -44,7 +48,8 @@ class ListingController extends BaseController {
     await runAction('publish', () async {
       result = await _listings.publish(
           ownerId: ownerId, title: title, location: location,
-          desc: desc, photoPaths: photoPaths, isZamani: isZamani);
+          desc: desc, photoPaths: photoPaths, isZamani: isZamani,
+          iletisimTercihi: iletisimTercihi);
       return result.error;
     }, onSuccess: () => _listings.loadMine(ownerId));
     return result;

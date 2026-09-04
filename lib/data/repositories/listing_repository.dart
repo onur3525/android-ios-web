@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/listing.dart';
+import '../models/teklif_talebi.dart' show IletisimTercihi;
 
 class ListingRepository extends ChangeNotifier {
   final _uuid = const Uuid();
@@ -80,6 +81,9 @@ class ListingRepository extends ChangeNotifier {
     DateTime? createdAt,
     // ⚠ İsteğe bağlı; `null` seçim yapılmadı demektir.
     IsZamani? isZamani,
+    // ⚠ YENİ — verilmezse `Listing` kurucusundaki varsayılan
+    // (`telefonGoster`) uygulanır.
+    IletisimTercihi? iletisimTercihi,
   }) {
     // ⚠ Numara BURADA üretilir; kullanıcıdan İSTENMEZ ve form
     // üzerinden geçirilmez.
@@ -88,6 +92,7 @@ class ListingRepository extends ChangeNotifier {
         title: title,
         location: location, desc: desc, photoPaths: photoPaths,
         isZamani: isZamani,
+        iletisimTercihi: iletisimTercihi ?? IletisimTercihi.telefonGoster,
         createdAt: createdAt);
     _items.insert(0, l); // UUID sayesinde index kaydırma derdi YOK
     notifyListeners();

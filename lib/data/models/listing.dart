@@ -1,4 +1,5 @@
 import '../../domain/config.dart';
+import 'teklif_talebi.dart' show IletisimTercihi;
 
 /// İLANIN YAŞAM DURUMU — nihai dört değer (API sözleşmesi §24).
 ///
@@ -106,6 +107,13 @@ class Listing {
   List<String> photoPaths;
   String? selectedOfferId;
 
+  /// ⚠ YENİ ALAN — "Doğrudan Teklif İste" akışındaki AYNI tercihin
+  /// normal ilan akışındaki karşılığı. Varsayılan `telefonGoster`:
+  /// eski davranışla (telefon her zaman açılırdı) GERİYE DÖNÜK
+  /// UYUMLU — mevcut ilanlar bu alan olmadan oluşturulmuştu, hepsi
+  /// sessizce eski davranışı KORUR.
+  IletisimTercihi iletisimTercihi;
+
   /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
   ///
   /// ⚠ `null` = kullanıcı seçim YAPMADI. Bu bir eksiklik değildir;
@@ -127,6 +135,7 @@ class Listing {
     this.status = ListingStatus.active,
     // ⚠ İSTEĞE BAĞLI: verilmezse `null` kalır, seçim yapılmamış demektir.
     this.isZamani,
+    this.iletisimTercihi = IletisimTercihi.telefonGoster,
     List<String>? photoPaths,
     DateTime? createdAt,
   })  : photoPaths = photoPaths ?? [],

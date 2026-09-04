@@ -35,7 +35,7 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
   Future<DomainError?> teklifVer(String id,
       {required int fiyat, required String aciklama});
   Future<DomainError?> secToVer(String id);
-  Future<DomainError?> reddet(String id);
+  Future<DomainError?> reddet(String id, {String? gerekce});
   Future<DomainError?> tamamla(String id);
 
   /// ⚠ Yalnız `teklifTarihi` dolduktan SONRA gerçek gönderim yapar
@@ -149,8 +149,8 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
   }
 
   @override
-  Future<DomainError?> reddet(String id) async {
-    _repo.reddet(id);
+  Future<DomainError?> reddet(String id, {String? gerekce}) async {
+    _repo.reddet(id, gerekce: gerekce);
     final t = _repo.byId(id);
     if (t != null && t.durum == TeklifTalebiDurumu.reddedildi) {
       // ⚠ HİZMET VERENE — teklifi reddedildi.

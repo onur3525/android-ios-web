@@ -45,8 +45,8 @@ class TeklifTalebiController extends BaseController {
 
   Future<DomainError?> secToVer(String id) =>
       runAction('teklif-sec-$id', () => _port.secToVer(id));
-  Future<DomainError?> reddet(String id) =>
-      runAction('teklif-reddet-$id', () => _port.reddet(id));
+  Future<DomainError?> reddet(String id, {String? gerekce}) =>
+      runAction('teklif-reddet-$id', () => _port.reddet(id, gerekce: gerekce));
   Future<DomainError?> tamamla(String id) =>
       runAction('teklif-tamamla-$id', () => _port.tamamla(id));
 

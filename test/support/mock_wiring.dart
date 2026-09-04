@@ -13,6 +13,7 @@ import 'package:hizmetcep/data/repositories/listing_repository.dart';
 import 'package:hizmetcep/data/repositories/notification_repository.dart';
 import 'package:hizmetcep/data/repositories/offer_repository.dart';
 import 'package:hizmetcep/data/repositories/review_repository.dart';
+import 'package:hizmetcep/data/repositories/teklif_talebi_repository.dart';
 
 /// Bellek içi (mock) kurulum — testler somut repository'leri kurar,
 /// controller'lar port üzerinden bağlanır. Uygulamadaki DI ile aynı
@@ -25,6 +26,12 @@ class MockWiring {
   final ChatRepository chats;
   final ReviewRepository reviews;
   final NotificationRepository notifs;
+
+  /// ⚠ `MockReviewPort`un artık "Bul" doğrudan teklif akışını da
+  /// doğrulaması gerektiği için EKLENDİ (bkz. `main.dart`daki AYNI
+  /// gerekçe/desen) — mevcut testler bunu bilmeden GEÇMEYE devam
+  /// eder, yalnız yeni testler isterse kullanır.
+  final TeklifTalebiRepository teklifTalepleri;
 
   late final MockOfferPort offerPort;
   late final MockListingPort listingPort;
@@ -49,7 +56,8 @@ class MockWiring {
         contacts = ContactRepository(),
         chats = ChatRepository(),
         reviews = ReviewRepository(),
-        notifs = NotificationRepository() {
+        notifs = NotificationRepository(),
+        teklifTalepleri = TeklifTalebiRepository() {
     offerPort = MockOfferPort(offers, listings, notifs: notifs);
     listingPort = MockListingPort(listings, offers, contacts, chats, offerPort);
     contactPort =
@@ -57,7 +65,8 @@ class MockWiring {
     authPort = MockAuthPort(authRepo);
     chatPort = MockChatPort(chats, offers, listings,
         contacts: contacts, notifs: notifs);
-    reviewPort = MockReviewPort(reviews, listings, offers, contacts);
+    reviewPort =
+        MockReviewPort(reviews, listings, offers, contacts, teklifTalepleri);
     notifPort = MockNotificationPort(notifs);
 
     authCtl = AuthController(authPort);

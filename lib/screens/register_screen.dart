@@ -1509,7 +1509,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       iconAsset: 'assets/svg/ic_pin.svg',
                       label: 'Hizmet Verilen İl',
                       value: _city,
-                      onTap: () => _ilSec(context),
+                      // ⚠ ARTIK AYRI SEÇİM NOKTASI DEĞİL — kişisel
+                      // "İl" alanından (yukarıda) OTOMATİK gelir ve
+                      // onunla SENKRONDUR. Kullanıcı BURADAN başka
+                      // bir il SEÇEMEZ; `onTap: null` bunu kilitler.
+                      // Değiştirmek isterse yukarıdaki "İl" alanına
+                      // dokunur, ikisi AYNI `_city` değişkenini
+                      // paylaştığı için otomatik güncellenir.
+                      onTap: null,
                     );
                   }),
 

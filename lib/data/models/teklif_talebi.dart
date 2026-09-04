@@ -86,6 +86,7 @@ class TeklifTalebi {
     this.teklifAciklamasi,
     this.teklifTarihi,
     List<TeklifMesaj>? mesajlar,
+    this.redGerekcesi,
   }) : mesajlar = mesajlar ?? [];
 
   final String id;
@@ -109,6 +110,12 @@ class TeklifTalebi {
   final DateTime createdAt;
 
   TeklifTalebiDurumu durum;
+
+  /// ⚠ YALNIZ "reddedildi" DURUMUNDA ANLAMLIDIR — hizmet alanın
+  /// talebi neden reddettiği/sildiği (`listing_detail_screen.dart`
+  /// içindeki "İlanı neden siliyorsunuz?" akışıyla AYNI desen).
+  /// Yönetim/denetim amaçlı tutulur; hizmet verene GÖSTERİLMEZ.
+  String? redGerekcesi;
 
   /// Hizmet verenin sunduğu fiyat — YALNIZ `teklifGeldi` ve sonrası
   /// durumlarda dolu.

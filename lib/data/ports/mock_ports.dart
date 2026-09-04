@@ -13,6 +13,7 @@ import '../models/notification.dart';
 import '../models/chat.dart';
 import '../models/offer.dart';
 import '../models/review.dart';
+import '../models/teklif_talebi.dart';
 import '../repositories/auth_repository.dart';
 import '../services/otp_service.dart';
 import '../repositories/chat_repository.dart';
@@ -22,6 +23,7 @@ import '../repositories/notification_repository.dart';
 import '../repositories/oturum_tercihi.dart';
 import '../repositories/offer_repository.dart';
 import '../repositories/review_repository.dart';
+import '../repositories/teklif_talebi_repository.dart';
 import 'repository_ports.dart';
 
 /// MOCK PORT UYGULAMALARI — bellek içi repository'leri sarar.
@@ -358,6 +360,7 @@ class MockListingPort extends ListingPort {
     required String desc,
     List<String>? photoPaths,
     IsZamani? isZamani,
+    IletisimTercihi? iletisimTercihi,
   }) async {
     final hata = _cikarCatismasi(ownerId, title);
     if (hata != null) {
@@ -365,7 +368,8 @@ class MockListingPort extends ListingPort {
     }
     final l = listings.create(
         ownerId: ownerId, title: title, location: location,
-        desc: desc, photoPaths: photoPaths, isZamani: isZamani);
+        desc: desc, photoPaths: photoPaths, isZamani: isZamani,
+        iletisimTercihi: iletisimTercihi);
     return (listing: l, error: null);
   }
 
@@ -888,7 +892,12 @@ class MockReviewPort extends ReviewPort {
   /// ⚠ SEÇİM DE BURADA YAPILIR: iletişim önkoşulu denetlenir.
   ///
   final ContactRepository contacts;
-  MockReviewPort(this.reviews, this.listings, this.offers, this.contacts) {
+
+  /// ⚠ "Bul" üzerinden doğrudan teklif akışının kendi doğrulaması
+  /// için EKLENDİ — `listings`/`offers` ile AYNI rol, farklı model.
+  final TeklifTalebiRepository teklifTalepleri;
+  MockReviewPort(this.reviews, this.listings, this.offers, this.contacts,
+      this.teklifTalepleri) {
     reviews.addListener(notifyListeners);
   }
   @override
@@ -899,6 +908,8 @@ class MockReviewPort extends ReviewPort {
 
   @override
   Review? byOffer(String offerId) => reviews.byOffer(offerId);
+  @override
+  Review? byTalep(String talepId) => reviews.byTalep(talepId);
   @override
   List<Review> byProvider(String providerId) => reviews.byProvider(providerId);
 
@@ -919,16 +930,50 @@ class MockReviewPort extends ReviewPort {
 
   /// İŞ KURALLARI AYNEN: yalnız ilan sahibi, tamamlanmış iş, seçilmiş
   /// teklif ve teklif başına tek değerlendirme.
+  ///
+  /// ⚠ İKİ MOD: `listingId`+`offerId` verilirse ESKİ mantık BİREBİR
+  /// aynı çalışır (aşağıdaki doğrulamalar DEĞİŞMEDİ). `talepId`
+  /// verilirse "Bul" doğrudan teklif akışının KENDİ eşdeğer
+  /// doğrulaması çalışır — iki mod birbirine KARIŞMAZ.
   @override
   Future<DomainError?> submit({
-    required String listingId,
-    required String offerId,
+    String? listingId,
+    String? offerId,
+    String? talepId,
     required String actorId,
     required int stars,
     required String text,
   }) async {
-    final l = listings.byId(listingId);
-    final o = offers.byId(offerId);
+    if (stars < 1 || stars > 5) {
+      return const ValidationError('Lütfen 1-5 arası bir puan seçin');
+    }
+
+    if (talepId != null) {
+      final t = teklifTalepleri.byId(talepId);
+      if (t == null) {
+        return const NotFoundError('Kayıt bulunamadı');
+      }
+      if (actorId != t.hizmetAlanId) {
+        return const UnauthorizedError(
+            'Değerlendirmeyi yalnızca talebi gönderen yapabilir');
+      }
+      if (t.durum != TeklifTalebiDurumu.tamamlandi) {
+        return const InvalidStateError(
+            'Yalnızca tamamlanmış işi değerlendirebilirsiniz');
+      }
+      if (reviews.byTalep(talepId) != null) {
+        return const InvalidStateError(
+            'Bu iş için değerlendirmeniz zaten alındı — değerlendirme bir '
+            'kez yapılabilir');
+      }
+      reviews.create(
+          talepId: talepId, providerId: t.saglayiciId, authorId: actorId,
+          stars: stars, text: text);
+      return null;
+    }
+
+    final l = listings.byId(listingId!);
+    final o = offers.byId(offerId!);
     if (l == null || o == null || o.listingId != listingId) {
       return const NotFoundError('Kayıt bulunamadı');
     }
@@ -949,9 +994,6 @@ class MockReviewPort extends ReviewPort {
     if (o.status != OfferStatus.selected || l.selectedOfferId != offerId) {
       return const InvalidStateError(
           'Yalnızca seçtiğiniz teklifi değerlendirebilirsiniz');
-    }
-    if (stars < 1 || stars > 5) {
-      return const ValidationError('Lütfen 1-5 arası bir puan seçin');
     }
     // ⚠ BİR KEZ: aynı teklif için ikinci yorum yazılamaz.
     if (reviews.byOffer(offerId) != null) {

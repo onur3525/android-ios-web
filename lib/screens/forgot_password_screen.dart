@@ -398,6 +398,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       focusNode: _fEmail,
                       enabled: !_busy,
                       hint: 'E-posta',
+                      yerTutucu: 'E posta giriniz.',
                       keyboardType: TextInputType.emailAddress,
                   // ⚠ E-postada baş harf büyütülmez.
                   textCapitalization: TextCapitalization.none,

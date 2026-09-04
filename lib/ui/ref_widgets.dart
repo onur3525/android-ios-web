@@ -1823,30 +1823,51 @@ class RefBottomNav extends StatelessWidget {
           //
           // ⚠ BÜYÜK BİR FAB DEĞİL: çapı diğer öğelerin ikon+etiket
           // yüksekliğine YAKIN tutuldu (46px — standart FAB'in
-          // 56px'inden küçük). Bar üstüne yalnız `_tasma` (16px)
-          // kadar taşar — "hafifçe aşsın" kuralı.
+          // 56px'inden küçük).
+          //
+          // ⚠ ÖNCEDEN ETİKET YOKTU — yalnız daire çiziliyordu, diğer
+          // 4 öğeyle TUTARSIZ görünüyordu. Şimdi AYNI desende: daire
+          // + altında "İlan Ver" yazısı. İkisi TEK bir `Column` —
+          // `bottom` değeri diğer öğelerle AYNI alt hizadan
+          // (`9 + safeBottom`) başlar, buton yalnız kendi
+          // yüksekliğince YUKARI çıkar — bar üstünü hâlâ hafifçe
+          // aşıyor, ama artık etiketi de bar İÇİNDE, kırpılmadan
+          // okunabiliyor.
           Positioned(
-            bottom: 9 + safeBottom + (46 - _butonCap) / 2 + _tasma - 6,
+            bottom: 9 + safeBottom,
             child: RefTap(
               onTap: ilanVer.onTap,
-              borderRadius: BorderRadius.circular(RR.circle),
-              child: Container(
-                width: _butonCap,
-                height: _butonCap,
-                decoration: BoxDecoration(
-                  color: RC.blue,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: RC.blue.withValues(alpha: 0.28),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+              borderRadius: BorderRadius.circular(RR.r10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: _butonCap,
+                    height: _butonCap,
+                    decoration: BoxDecoration(
+                      color: RC.blue,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: RC.blue.withValues(alpha: 0.28),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: RefSvg(ilanVer.asset, size: 21, color: RC.white),
-                ),
+                    child: Center(
+                      child:
+                          RefSvg(ilanVer.asset, size: 21, color: RC.white),
+                    ),
+                  ),
+                  const SizedBox(height: 4), // gap:4px — diğer öğelerle AYNI
+                  Text(
+                    ilanVer.label,
+                    maxLines: 1,
+                    style: refText(
+                        size: RF.s11, weight: RF.w600, color: RC.blue),
+                  ),
+                ],
               ),
             ),
           ),
@@ -4763,4 +4784,150 @@ class RefRolEtiketi extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// ── ⚠ İKİ SEÇENEKLİ, AŞAĞI AÇILIR SEÇİCİ ──
+///
+/// Referans: "arama çubuklarındaki gibi" — `find_provider_screen.
+/// dart`daki `_HizmetAramaAlani`nin öneri panelinde olduğu gibi,
+/// kutunun İÇİNDE (bottom sheet DEĞİL) aşağı doğru AÇILAN bir panel.
+///
+/// ⚠ MODELDEN BAĞIMSIZ TUTULDU: `ref_widgets.dart` hiçbir veri
+/// modelini import ETMEZ (proje genelindeki kural) — bu yüzden
+/// `IletisimTercihi` gibi belirli bir enume BAĞLANMADI; iki
+/// seçeneği başlık/açıklama metni olarak alır, hangi enum değerine
+/// karşılık geldiğine ÇAĞIRAN karar verir. Hem "Doğrudan Teklif
+/// İste" hem normal "İlan Ver" akışı AYNI widget'ı kullanır — iki
+/// ayrı seçici İCAT EDİLMEDİ.
+class RefAcilirSecici extends StatefulWidget {
+  const RefAcilirSecici({
+    super.key,
+    required this.ilkSeciliMi,
+    required this.ilkBaslik,
+    required this.ilkAciklama,
+    required this.ikinciBaslik,
+    required this.ikinciAciklama,
+    required this.onSec,
+  });
+
+  /// `true` → ilk seçenek şu an seçili; `false` → ikinci.
+  final bool ilkSeciliMi;
+  final String ilkBaslik;
+  final String ilkAciklama;
+  final String ikinciBaslik;
+  final String ikinciAciklama;
+
+  /// Kullanıcı DİĞER seçeneğe dokununca çağrılır — `true` verirse
+  /// ilk seçenek artık seçili demektir.
+  final ValueChanged<bool> onSec;
+
+  @override
+  State<RefAcilirSecici> createState() => _RefAcilirSeciciState();
+}
+
+class _RefAcilirSeciciState extends State<RefAcilirSecici> {
+  bool _acik = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final baslik = widget.ilkSeciliMi ? widget.ilkBaslik : widget.ikinciBaslik;
+    final aciklama =
+        widget.ilkSeciliMi ? widget.ilkAciklama : widget.ikinciAciklama;
+    final digerBaslik =
+        widget.ilkSeciliMi ? widget.ikinciBaslik : widget.ilkBaslik;
+    final digerAciklama =
+        widget.ilkSeciliMi ? widget.ikinciAciklama : widget.ilkAciklama;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        RefTap(
+          onTap: () => setState(() => _acik = !_acik),
+          borderRadius: BorderRadius.circular(RR.r13),
+          child: Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: RC.blueSoft,
+              border: Border.all(color: RC.blue),
+              borderRadius: BorderRadius.circular(RR.r13),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(baslik,
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w700,
+                              color: RC.text)),
+                      const SizedBox(height: 2),
+                      Text(aciklama,
+                          style: refText(
+                              size: RF.s12,
+                              weight: RF.w400,
+                              color: RC.textSoft)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // ⚠ Açık/kapalı — ok yönü döner, YENİ bir ikon
+                // İCAT EDİLMEDİ.
+                AnimatedRotation(
+                  turns: _acik ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: const RefSvg('assets/svg/ic_chevd.svg',
+                      size: 18, color: RC.blue),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // ⚠ AŞAĞI DOĞRU BÜYÜYEN PANEL — bottom sheet DEĞİL, kutunun
+        // hemen altında INLINE. `AnimatedSize` yumuşak açılış verir.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 150),
+          child: !_acik
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: RefTap(
+                    onTap: () {
+                      widget.onSec(!widget.ilkSeciliMi);
+                      setState(() => _acik = false);
+                    },
+                    borderRadius: BorderRadius.circular(RR.r13),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(13),
+                      decoration: BoxDecoration(
+                        color: RC.white,
+                        border:
+                            Border.all(color: const Color(0xFFECEEF2)),
+                        borderRadius: BorderRadius.circular(RR.r13),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(digerBaslik,
+                              style: refText(
+                                  size: RF.s135,
+                                  weight: RF.w700,
+                                  color: RC.text)),
+                          const SizedBox(height: 2),
+                          Text(digerAciklama,
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w400,
+                                  color: RC.textSoft)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
 }

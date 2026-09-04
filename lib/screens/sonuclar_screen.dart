@@ -51,9 +51,12 @@ class SonuclarScreen extends StatefulWidget {
 class _SonuclarScreenState extends State<SonuclarScreen> {
   List<({MockSaglayici saglayici, int yakinlikSirasi})> _sonuclar = const [];
 
-  /// İlk gösterilen kayıt sayısı — "Tümünü Gör" ile açılır.
-  static const _ilkGoster = 5;
-  bool _tumu = false;
+  /// ⚠ KESİN ÜST SINIR — 9. hizmet veren ASLA listelenmez. Bölgede
+  /// 1 varsa yalnız 1 gösterilir (yukarı doğru ZORLAMA yok, yalnız
+  /// aşağı doğru KIRPMA). Bu artık MUTLAK bir sınır olduğu için
+  /// "Tümünü Gör" ile daha fazlasını açma seçeneği KALDIRILDI —
+  /// zaten gösterilecek daha fazlası yok.
+  static const _maksimumGoster = 8;
 
   @override
   void initState() {
@@ -67,7 +70,7 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
     // (bkz. `KoordinatTabanliYakinlikSaglayici` içindeki kural).
     final yakinlik =
         KoordinatTabanliYakinlikSaglayici((il) => rc.districtsOf(il));
-    _sonuclar = mockSaglayicilariBul(
+    final tumSonuclar = mockSaglayicilariBul(
       il: widget.il,
       ilce: widget.ilce,
       yakinlik: yakinlik,
@@ -78,6 +81,11 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
         musteriIlcesi: widget.ilce,
       ),
     );
+    // ⚠ SIRALAMA ZATEN `mockSaglayicilariBul` İÇİNDE YAPILDI — burada
+    // yalnız KIRPILIYOR. En iyi kriterlere göre sıralı listenin İLK
+    // 8'i alınır; 8'den azsa (ör. bölgede tek 1 hizmet veren varsa)
+    // olduğu gibi kalır, UYDURMA/ÇOĞALTMA YAPILMAZ.
+    _sonuclar = tumSonuclar.take(_maksimumGoster).toList();
   }
 
   /// "Teklif İste" formuna geçer — hizmet ve hizmet veren bilgisi
@@ -106,10 +114,6 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gosterilen =
-        _tumu ? _sonuclar : _sonuclar.take(_ilkGoster).toList();
-    final kalan = _sonuclar.length - gosterilen.length;
-
     return Scaffold(
       backgroundColor: RC.white,
       body: SafeArea(
@@ -143,15 +147,14 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
                 children: [
-                  // ── SONUÇ SAYISI — ÇERÇEVESİZ, DÜZ METİN ──
+                  // ── BAŞLIK — SAYI VE AD YOK, SABİT METİN ──
                   //
-                  // ⚠ ÖNCEDEN mavi zeminli bir kutu içindeydi ve
-                  // "{hizmet} için" öneki vardı — çok yer kaplıyordu.
-                  // Şimdi çerçevesiz, gerçek siyah, yalnız sayı +
-                  // "hizmet veren bulundu." Sayı HER ZAMAN gerçek
-                  // sonuç adedidir (`_sonuclar.length`) — sabit
-                  // değildir.
-                  Text('${_sonuclar.length} hizmet veren bulundu.',
+                  // ⚠ ÖNCEDEN "{N} hizmet veren bulundu." yazıyordu —
+                  // sayı gösteriyordu. Artık liste zaten en fazla 8
+                  // sonuçla SINIRLI (aşağıdaki not), bu yüzden bir
+                  // sayı vermenin de anlamı kalmadı; sabit, nötr bir
+                  // başlık kullanılıyor.
+                  Text('Size en uygun hizmet verenler listelendi',
                       style: refText(
                           size: RF.s14,
                           weight: RF.w600,
@@ -159,35 +162,19 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                   const SizedBox(height: 14),
 
                   // ── TEK KESİNTİSİZ LİSTE — İLÇE BAŞLIĞI YOK ──
-                  for (var i = 0; i < gosterilen.length; i++) ...[
+                  //
+                  // ⚠ EN FAZLA 8 — `_sonuclar` zaten `initState`te
+                  // kırpıldı (bkz. `_maksimumGoster`); burada TÜMÜ
+                  // gösterilir, "Tümünü Gör" KALDIRILDI çünkü artık
+                  // gösterilecek DAHA FAZLASI yok.
+                  for (var i = 0; i < _sonuclar.length; i++) ...[
                     if (i > 0) const SizedBox(height: 10),
                     _SaglayiciKarti(
                       sira: i + 1,
-                      saglayici: gosterilen[i].saglayici,
+                      saglayici: _sonuclar[i].saglayici,
                       il: widget.il,
                       onTeklifIste: () =>
-                          _teklifIste(gosterilen[i].saglayici),
-                    ),
-                  ],
-
-                  if (kalan > 0) ...[
-                    const SizedBox(height: 14),
-                    RefTap(
-                      onTap: () => setState(() => _tumu = true),
-                      borderRadius: BorderRadius.circular(RR.r13),
-                      child: Container(
-                        padding: const EdgeInsets.all(13),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFECEEF2)),
-                          borderRadius: BorderRadius.circular(RR.r13),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text('Tümünü Gör (${_sonuclar.length})',
-                            style: refText(
-                                size: RF.s14,
-                                weight: RF.w700,
-                                color: RC.blue)),
-                      ),
+                          _teklifIste(_sonuclar[i].saglayici),
                     ),
                   ],
                 ],
@@ -227,20 +214,17 @@ class _SaglayiciKarti extends StatelessWidget {
         children: [
           // ── SIRA — İLK 3'TE MADALYA, SONRASI DÜZ SAYI ──
           //
-          // ⚠ Projede madalya asset'i YOK; yeni bir SVG dosyası
-          // ÜRETİLMEDİ — Flutter'ın kendi Material ikon setinden
-          // (`Icons.workspace_premium`, gerçek madalya biçimi)
-          // kullanıldı; bu proje genelinde zaten `Icons.check` gibi
-          // küçük yerleşik ikonlar için yapılan aynı istisna.
+          // ⚠ ÖNCEDEN `Icons.workspace_premium` (tek renkli Material
+          // ikonu, altın/gümüş/bronz rengiyle boyalı) kullanılıyordu
+          // — kullanıcı bunun "canlı" durmadığını belirtti. Şimdi
+          // gerçek emoji madalyalar (🥇🥈🥉) — cihazın kendi renkli
+          // emoji fontundan geliyor, yeni bir asset/paket YOK.
           SizedBox(
             width: 22,
             child: switch (sira) {
-              1 => const Icon(Icons.workspace_premium,
-                  size: 22, color: Color(0xFFD4AF37)), // altın
-              2 => const Icon(Icons.workspace_premium,
-                  size: 22, color: Color(0xFFA8A9AD)), // gümüş
-              3 => const Icon(Icons.workspace_premium,
-                  size: 22, color: Color(0xFFCD7F32)), // bronz
+              1 => const Text('🥇', style: TextStyle(fontSize: 20)),
+              2 => const Text('🥈', style: TextStyle(fontSize: 20)),
+              3 => const Text('🥉', style: TextStyle(fontSize: 20)),
               _ => Text('$sira',
                   style: refText(
                       size: RF.s13, weight: RF.w700, color: RC.textSoft)),
@@ -274,7 +258,12 @@ class _SaglayiciKarti extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const RefSvg('assets/svg/ic_starfill.svg', size: 14),
+                    // ⚠ RENK — diğer ekranlarla (review_screen.dart,
+                    // provider_reviews_screen.dart vb.) AYNI canlı
+                    // altın-turuncu (`#F5A319`); önceden hiç renk
+                    // verilmiyordu, projede TUTARSIZ görünüyordu.
+                    const RefSvg('assets/svg/ic_starfill.svg',
+                        size: 14, color: Color(0xFFF5A319)),
                     const SizedBox(width: 4),
                     Text(saglayici.puan.toStringAsFixed(1),
                         style: refText(

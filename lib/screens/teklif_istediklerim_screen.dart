@@ -11,7 +11,15 @@ import 'job_detail_screen.dart' show maskeliAd;
 import 'teklif_talebi_detay_screen.dart';
 
 /// "TEKLİF İSTEDİKLERİM" (Aşama C) — hizmet alanın "Bul" akışından
-/// gönderdiği doğrudan teklif taleplerinin listesi.
+/// gönderdiği doğrudan teklif taleplerinin BAĞIMSIZ ekranı.
+///
+/// ⚠ ARTIK "Bul" akışının BAŞ ekranında (`find_provider_screen.dart`)
+/// da AYNI liste GÖMÜLÜ olarak gösteriliyor (bkz.
+/// `TeklifIstediklerimListesi` altta) — bu bağımsız Scaffold'lu hâl
+/// SİLİNMEDİ çünkü `teklif_iste_screen.dart` bir talep gönderildikten
+/// SONRA hâlâ BURAYA yönlendiriyor (onay + tam liste). İki KULLANIM
+/// YERİ, TEK liste mantığını (`TeklifIstediklerimListesi`) paylaşır —
+/// kod tekrarı YOK.
 ///
 /// ⚠ MEVCUT "İlanlarım" (`MyListingsScreen`) İLE KARIŞTIRILMAZ: o
 /// ekran HERKESE AÇIK ilanları listeler; bu ekran yalnız belirli bir
@@ -22,11 +30,6 @@ class TeklifIstediklerimScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final me = context.watch<AuthController>().currentAccount;
-    final talepler = me == null
-        ? const <TeklifTalebi>[]
-        : context.watch<TeklifTalebiController>().byHizmetAlan(me.id);
-
     return Scaffold(
       backgroundColor: RC.white,
       body: SafeArea(
@@ -45,33 +48,64 @@ class TeklifIstediklerimScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Expanded(
-              child: talepler.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Henüz kimseden teklif istemedin.\n"Bul" '
-                          'üzerinden bir hizmet veren seçip teklif '
-                          'isteyebilirsin.',
-                          textAlign: TextAlign.center,
-                          style: refText(
-                              size: RF.s14,
-                              weight: RF.w400,
-                              color: RC.textSoft),
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 20),
-                      itemCount: talepler.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _TalepKarti(talep: talepler[i]),
-                    ),
-            ),
+            const Expanded(child: TeklifIstediklerimListesi()),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// ── ⚠ LİSTE GÖVDESİ — HEM BAĞIMSIZ EKRANDA HEM "Bul" AKIŞININ BAŞ
+/// EKRANINDA GÖMÜLÜ KULLANILIR ──
+///
+/// Scaffold/başlık İÇERMEZ — yalnız boş-durum metni + kart listesi.
+/// `find_provider_screen.dart`, "Ara" düğmesinin ALTINDA bunu
+/// DOĞRUDAN gömer; talep sayısı azsa doğal olarak kısa kalır,
+/// `Column` içinde `shrinkWrap` bir `ListView` kullanılır.
+class TeklifIstediklerimListesi extends StatelessWidget {
+  const TeklifIstediklerimListesi({super.key, this.gomulu = false});
+
+  /// ⚠ `true` iken bu widget kendi kaydırma alanı AÇMAZ
+  /// (`shrinkWrap: true`, `NeverScrollableScrollPhysics`) — çağıran
+  /// (ör. `find_provider_screen.dart`) zaten kaydırılabilir tek bir
+  /// `ListView` içinde olduğu için, İÇ İÇE kaydırma çakışmaz.
+  final bool gomulu;
+
+  @override
+  Widget build(BuildContext context) {
+    final me = context.watch<AuthController>().currentAccount;
+    final talepler = me == null
+        ? const <TeklifTalebi>[]
+        : context.watch<TeklifTalebiController>().byHizmetAlan(me.id);
+
+    if (talepler.isEmpty) {
+      return gomulu
+          ? const SizedBox.shrink()
+          : Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Henüz kimseden teklif istemedin.\n"Bul" '
+                  'üzerinden bir hizmet veren seçip teklif '
+                  'isteyebilirsin.',
+                  textAlign: TextAlign.center,
+                  style: refText(
+                      size: RF.s14, weight: RF.w400, color: RC.textSoft),
+                ),
+              ),
+            );
+    }
+
+    return ListView.separated(
+      shrinkWrap: gomulu,
+      physics: gomulu ? const NeverScrollableScrollPhysics() : null,
+      padding: gomulu
+          ? EdgeInsets.zero
+          : const EdgeInsets.fromLTRB(14, 8, 14, 20),
+      itemCount: talepler.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) => _TalepKarti(talep: talepler[i]),
     );
   }
 }

@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
+import '../data/models/teklif_talebi.dart';
 import '../data/services/search_service.dart';
+import '../domain/cikar_catismasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
@@ -38,7 +41,24 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
   String? _kategori;
   String? _hizmet;
 
+  // ⚠ Kural TEK KAYNAKTAN gelir: `lib/domain/cikar_catismasi.dart`
+  // — `create_listing_screen.dart`daki `_kategoriSec` İLE AYNI
+  // desen, yeni bir kural İCAT EDİLMEDİ. Hizmet veren kendi hizmet
+  // verdiği kategoride "Bul" ile ARAMA YAPAMAZ (rakiplerinden fiyat
+  // toplayamasın diye — İlan Ver akışıyla AYNI gerekçe). Kontrol
+  // `me.categories`i CANLI okur: rol sonradan eklenmiş olsa bile
+  // aynı anda devreye girer.
   void _hizmetSecildi(String kategori, String hizmet) {
+    final me = context.read<AuthController>().currentAccount;
+    final catisan = me == null
+        ? null
+        : catisanKategori(
+            saglayiciSecimleri: me.categories, ilanBasligi: hizmet);
+    if (catisan != null) {
+      sysToastErr(context, SysKind.genericError,
+          extra: catismaMesaji(catisan));
+      return;
+    }
     setState(() {
       _kategori = kategori;
       _hizmet = hizmet;
@@ -110,23 +130,6 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
           RefPageTitle('Hizmet Veren Bul', geriDugmesi: false),
           RefSubtitle('Aradığın hizmeti yaz, en uygun hizmet verenleri '
               'bulalım.'),
-          const SizedBox(height: 10),
-
-          // ── ⚠ "TEKLİF İSTEDİKLERİM" GİRİŞ NOKTASI — BURAYA TAŞINDI ──
-          //
-          // Profil menüsündeki ayrı satır KALDIRILDI (ürün kararı):
-          // bu erişim artık "Bul" akışının kendi giriş ekranında.
-          Align(
-            alignment: Alignment.centerRight,
-            child: RefPillButton(
-              iconAsset: 'assets/svg/ic_send.svg',
-              label: 'Teklif İstediklerim',
-              onTap: () => Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                      builder: (_) => const TeklifIstediklerimScreen())),
-            ),
-          ),
           const SizedBox(height: 10),
 
           _HizmetAramaAlani(
@@ -207,8 +210,44 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
             aktif: _hizmet != null,
             onPressed: _hizmet != null ? _ara : null,
           ),
+
+          // ── ⚠ DAHA ÖNCE İSTENEN TEKLİFLER — "Ara" DÜĞMESİNİN
+          // ALTINDA, DURUMLARIYLA BİRLİKTE ──
+          //
+          // ÖNCEDEN ayrı "Teklif İstediklerim" düğmesiyle BAŞKA bir
+          // ekrana gidiliyordu; artık aynı liste BURADA gömülü — kod
+          // tekrarı YOK, `TeklifIstediklerimListesi` iki yerde de
+          // AYNI widget.
+          const SizedBox(height: 24),
+          _GecmisTalepler(),
         ],
       ),
+    );
+  }
+}
+
+/// Başlık + gömülü talep listesi — talep yoksa HİÇ ÇİZİLMEZ (boş
+/// başlık kalabalık yaratmasın diye).
+class _GecmisTalepler extends StatelessWidget {
+  const _GecmisTalepler();
+
+  @override
+  Widget build(BuildContext context) {
+    final me = context.watch<AuthController>().currentAccount;
+    final talepler = me == null
+        ? const <TeklifTalebi>[]
+        : context.watch<TeklifTalebiController>().byHizmetAlan(me.id);
+    if (talepler.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Daha Önce İstediğin Teklifler',
+            style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
+        const SizedBox(height: 10),
+        const TeklifIstediklerimListesi(gomulu: true),
+      ],
     );
   }
 }

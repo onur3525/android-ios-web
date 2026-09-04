@@ -50,7 +50,9 @@ class TeklifIsteScreen extends StatefulWidget {
 class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   final _aciklama = TextEditingController();
   final List<PhotoItem> _photos = [];
-  IletisimTercihi _iletisim = IletisimTercihi.yalnizMesaj;
+  // ⚠ VARSAYILAN artık "Telefon + Uygulama İçi Mesaj" — kullanıcı
+  // isteğiyle değişti (önceden "Sadece Mesaj" varsayılandı).
+  IletisimTercihi _iletisim = IletisimTercihi.telefonGoster;
   bool _gonderiliyor = false;
 
   late final StorageApi _storageApi;
@@ -79,18 +81,20 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   // en az `kMinAciklamaKelime` kelime ZORUNLU.
   bool get _zorunlularDolu =>
       _aciklama.text.trim().isNotEmpty &&
-      _kelimeSayisi() >= kMinAciklamaKelime;
+      _kelimeSayisi() >= kMinAciklamaKelime &&
+      !_aciklamaAnlamsiz;
+
+  /// ⚠ CANLI KONTROL — her tuş vuruşunda değerlendirilir
+  /// (`onChanged: (_) => setState(() {})` zaten build'i tetikliyor).
+  /// Boş alanda uyarı ÇIKMAZ. Yazı silinip düzeltilince (ör. "Bbbb"
+  /// → "B") bu KENDİLİĞİNDEN `false`e döner — ayrı bir "düzeltildi"
+  /// mantığı İCAT EDİLMEDİ.
+  bool get _aciklamaAnlamsiz =>
+      _aciklama.text.trim().isNotEmpty &&
+      Validators.anlamsizKelimeVarMi(_aciklama.text);
 
   Future<void> _gonder() async {
     if (!_zorunlularDolu || _gonderiliyor) {
-      return;
-    }
-    // ⚠ ANLAMSIZ METİN (klavye karması) — kelime sayısı yeterli olsa
-    // bile engellenir, açık uyarı verilir. Bkz. `Validators.
-    // anlamsizKelimeVarMi` — üç dürüst kural, sözlük YOKTUR.
-    if (Validators.anlamsizKelimeVarMi(_aciklama.text)) {
-      sysToastKural(context,
-          'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
       return;
     }
     final me = context.read<AuthController>().currentAccount;
@@ -198,9 +202,23 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
             maxLines: 6,
             maxLength: 1000,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
+            // ⚠ ARTIK SABİT (const) DEĞİL — anlamsız metin
+            // tespit edilince çerçeve CANLI olarak kırmızıya döner.
+            decoration: InputDecoration(
               hintText: 'Açıklama yazın.',
               alignLabelWithHint: true,
+              enabledBorder: _aciklamaAnlamsiz
+                  ? OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(RR.r13),
+                      borderSide: const BorderSide(color: RC.danger),
+                    )
+                  : null,
+              focusedBorder: _aciklamaAnlamsiz
+                  ? OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(RR.r13),
+                      borderSide: const BorderSide(color: RC.danger, width: 1.6),
+                    )
+                  : null,
             ),
           ),
           // ⚠ GÖRÜNÜR KURAL — `FormMesaj.teklifAciklama` YENİDEN
@@ -217,6 +235,20 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                         ? RC.textSoft
                         : const Color(0xFFE5452C))),
           ),
+          // ── ⚠ CANLI ANLAMSIZ METİN UYARISI — YAZARKEN GÖRÜNÜR ──
+          //
+          // ÖNCEDEN yalnız GÖNDERİM ANINDA (toast ile) kontrol
+          // ediliyordu. "Bbbb" gibi ardışık anlamsız harfler
+          // yazılır yazılmaz çerçeve kırmızıya döner VE bu satır
+          // belirir; yazı silinip düzeltilince (ör. yalnız "B"
+          // kalınca) ikisi de KENDİLİĞİNDEN kalkar.
+          if (_aciklamaAnlamsiz)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Anlamsız kelimeler içeriyor gibi görünüyor.',
+                  style: refText(
+                      size: RF.s12, weight: RF.w600, color: RC.danger)),
+            ),
 
           const SizedBox(height: 12),
           Text('Fotoğraf (Opsiyonel)',
@@ -242,20 +274,20 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           Text('İletişim Tercihi',
               style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
           const SizedBox(height: 8),
-          _IletisimSecenegi(
-            secili: _iletisim == IletisimTercihi.telefonGoster,
-            baslik: 'Telefon numaramı göster',
-            aciklama: 'Hizmet veren telefonla da ulaşabilir.',
-            onTap: () =>
-                setState(() => _iletisim = IletisimTercihi.telefonGoster),
-          ),
-          const SizedBox(height: 8),
-          _IletisimSecenegi(
-            secili: _iletisim == IletisimTercihi.yalnizMesaj,
-            baslik: 'Sadece uygulama içi mesajlaşma',
-            aciklama: 'Telefon numaran hizmet verene gösterilmez.',
-            onTap: () =>
-                setState(() => _iletisim = IletisimTercihi.yalnizMesaj),
+          // ── ⚠ TEK SATIR, TIKLANINCA AŞAĞI AÇILIR ──
+          //
+          // ÖNCEDEN iki kart alt alta duruyordu. Artık `RefAcilirSecici`
+          // — "Bul" akışı ve normal "İlan Ver" akışı AYNI bileşeni
+          // paylaşır (bkz. `create_listing_screen.dart`).
+          RefAcilirSecici(
+            ilkSeciliMi: _iletisim == IletisimTercihi.telefonGoster,
+            ilkBaslik: 'Telefon + Uygulama İçi Mesaj',
+            ilkAciklama: 'Hizmet veren telefonla da ulaşabilir.',
+            ikinciBaslik: 'Sadece Uygulama İçi Mesaj',
+            ikinciAciklama: 'Telefon numaran hizmet verene gösterilmez.',
+            onSec: (ilkSecili) => setState(() => _iletisim = ilkSecili
+                ? IletisimTercihi.telefonGoster
+                : IletisimTercihi.yalnizMesaj),
           ),
 
           const SizedBox(height: 24),
@@ -266,72 +298,6 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
             onPressed: _zorunlularDolu ? _gonder : null,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _IletisimSecenegi extends StatelessWidget {
-  const _IletisimSecenegi({
-    required this.secili,
-    required this.baslik,
-    required this.aciklama,
-    required this.onTap,
-  });
-
-  final bool secili;
-  final String baslik;
-  final String aciklama;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return RefTap(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(RR.r13),
-      child: Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: secili ? RC.blueSoft : RC.white,
-          border: Border.all(
-              color: secili ? RC.blue : const Color(0xFFECEEF2)),
-          borderRadius: BorderRadius.circular(RR.r13),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: secili ? RC.blue : RC.white,
-                border: Border.all(
-                    color: secili ? RC.blue : const Color(0xFFA8ADB4),
-                    width: 2),
-              ),
-              child: secili
-                  ? const Icon(Icons.check, size: 12, color: RC.white)
-                  : null,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(baslik,
-                      style: refText(
-                          size: RF.s135, weight: RF.w700, color: RC.text)),
-                  const SizedBox(height: 2),
-                  Text(aciklama,
-                      style: refText(
-                          size: RF.s12,
-                          weight: RF.w400,
-                          color: RC.textSoft)),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
