@@ -15,6 +15,7 @@ import '../data/controllers/contact_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/models/listing.dart';
+import '../data/models/teklif_talebi.dart' show IletisimTercihi;
 import '../data/models/offer.dart';
 import '../domain/config.dart';
 import '../data/controllers/profile_controller.dart';
@@ -612,6 +613,15 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               // açıldığında aynı kutular gerçek veriyle dolar. Referans
               () {
                 final acik = contactCtl.isOpen(mine.id);
+                // ⚠ EKSİKTİ — `Listing.iletisimTercihi` HİÇ
+                // OKUNMUYORDU, telefon yalnız `acik` durumuna göre
+                // (koşulsuz) gösteriliyordu. Artık ilan sahibi
+                // "Sadece Uygulama İçi Mesaj" SEÇTİYSE, iletişim
+                // açılsa bile telefon HİÇ gösterilmez — "Doğrudan
+                // Teklif İste" akışındaki (`teklif_talebi_detay_
+                // screen.dart`taki `telefonAcik`) AYNI kural.
+                final telefonAcik =
+                    acik && l.iletisimTercihi == IletisimTercihi.telefonGoster;
                 return
                 // ── `.pr-cgrid` — İKİ SÜTUNLU İLETİŞİM KARTLARI ──
                 //
@@ -641,18 +651,23 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       // `not` (açıklama) gösterir, maskeli numara
                       // AYRICA gösterilmez (zaten gizli bilgi, tekrar
                       // sayılır).
-                      deger: acik
+                      //
+                      // ⚠ ARTIK `acik` DEĞİL `telefonAcik` — bkz.
+                      // yukarıdaki `telefonAcik` tanımı: ilan sahibi
+                      // "Sadece Uygulama İçi Mesaj" seçtiyse iletişim
+                      // açılsa bile telefon HİÇ gösterilmez.
+                      deger: telefonAcik
                           ? TelefonBicimlendirici.gruplu(
                               Validators.phoneLocal(owner?.phone ?? ''))
                           : null,
                       // Referansta açık telefon BAĞLANTI gibi altı
                       // çizilidir; dokunulabilir olduğu böyle anlaşılır.
-                      altiCizili: acik,
-                      not: acik
+                      altiCizili: telefonAcik,
+                      not: telefonAcik
                           ? null
                           : 'İletişim bilgisi açıldığında görüntülenecektir.',
-                      kilitli: !acik,
-                      onTap: acik
+                      kilitli: !telefonAcik,
+                      onTap: telefonAcik
                           ? () => _telefonAra(context, owner?.phone)
                           : null,
                     ),

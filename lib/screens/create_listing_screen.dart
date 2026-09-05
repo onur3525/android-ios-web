@@ -8,6 +8,7 @@ import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 // ⚠ `IsZamani` enum'u burada tanımlı; `_isZamani` alanı için gerekli.
 import '../data/models/listing.dart';
+import '../data/models/teklif_talebi.dart' show IletisimTercihi;
 import '../domain/cikar_catismasi.dart';
 import '../data/remote/api_config.dart';
 import '../data/services/otp_service.dart';
@@ -161,10 +162,29 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         widget.preLogin ? '/listing/new' : '/customer/new-listing';
 
     _storageApi = StorageApi(context.read<ApiClient>());
+    _descOdak.addListener(() {
+      if (!_descOdak.hasFocus && !_descDokunuldu) {
+        setState(() => _descDokunuldu = true);
+      }
+    });
   }
   final _desc = TextEditingController();
+  final _descOdak = FocusNode();
+
+  /// ⚠ EKSİK/ANLAMSIZ AÇIKLAMA UYARISI ARTIK YAZARKEN DEĞİL, ALANDAN
+  /// ÇIKINCA (ODAK KAYBINDA) GÖRÜNÜR — bkz. `teklif_iste_screen.dart`
+  /// daki AYNI düzeltme; kullanıcı tek harf yazar yazmaz kırmızı
+  /// çerçeve+uyarı görüyordu, henüz YAZMAYI BİTİRMEDEN.
+  bool _descDokunuldu = false;
   String? _district;
   final _hood = TextEditingController();
+
+  // ⚠ YENİ — "Doğrudan Teklif İste" akışındaki (`teklif_iste_screen.
+  // dart`) AYNI tercih. Önceden bu ekranda HİÇ SEÇİCİ YOKTU; `Listing.
+  // iletisimTercihi` alanı vardı ama kullanıcı bunu HİÇ GÖREMİYOR,
+  // DEĞİŞTİREMİYORDU — varsayılan (`telefonGoster`) sessizce
+  // uygulanıyordu.
+  IletisimTercihi _iletisim = IletisimTercihi.telefonGoster;
 
   /// Seçili il — sunucudan gelen aktif iller arasından belirlenir.
   /// ⚠ HARD-CODE DEĞİLDİR. Bu ekranda ayrı il seçici bulunmaz;
@@ -211,6 +231,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     }
     _photos.removeWhere((p) => !p.isUploaded);
     _desc.dispose();
+    _descOdak.dispose();
     _hood.dispose();
     super.dispose();
   }
@@ -482,7 +503,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       // dürüst ama kusursuz değil); bu yüzden AÇIK bir uyarı verilir.
       if (Validators.anlamsizKelimeVarMi(_desc.text)) {
         sysToastKural(context,
-            'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
+            'Açıklamanız anlaşılır ifadeler içermelidir. Lütfen talebinizi gerçek kelimelerle belirtiniz.');
         return;
       }
 
@@ -573,7 +594,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     // AYNI kontrol; bu, oturumsuz kullanıcının taslak-kaydet yolu.
     if (Validators.anlamsizKelimeVarMi(_desc.text)) {
       sysToastKural(context,
-          'Açıklamanız anlaşılır değil görünüyor. Lütfen ne istediğinizi gerçek kelimelerle yazın.');
+          'Açıklamanız anlaşılır ifadeler içermelidir. Lütfen talebinizi gerçek kelimelerle belirtiniz.');
       return;
     }
     // ⚠ KONUM BURADA ZORUNLU DEĞİL.
@@ -655,7 +676,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         location: '${_hood.text.trim()}, $_district / $cityName',
         desc: _desc.text.trim(),
         photoPaths: refs,
-        isZamani: _isZamani);
+        isZamani: _isZamani,
+        iletisimTercihi: _iletisim);
     if (!mounted) {
       return;
     }
@@ -1101,9 +1123,15 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           Stack(children: [
             RefTextField(
               controller: _desc,
+              focusNode: _descOdak,
               // ⚠ Kenarlık doğrudan alanın kendisinde renklenir;
               // dış sarmalayıcı YOK (çift çerçeve + odak kaybı).
-              hatali: _aciklamaEksik || _aciklamaAnlamsiz,
+              //
+              // ⚠ ARTIK `_descDokunuldu &&` — kullanıcı alandan
+              // ÇIKMADAN (odak kaybı) kırmızı çerçeve GÖRÜNMEZ; tek
+              // harf yazar yazmaz uyarı vermek yerine, YAZMAYI
+              // BİTİRİP başka alana geçtiğinde geçerli olur.
+              hatali: _descDokunuldu && (_aciklamaEksik || _aciklamaAnlamsiz),
               maxLines: 6,
               maxLength: kAciklamaMaxLength,
               // Yerleşik sayaç gizlenir; referanstaki `.rv-cnt`
@@ -1138,6 +1166,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           // ⚠ AYRI KIRMIZI SATIR YOK: kelime sayısı yetersizse bu
           // satırın KENDİSİ kırmızıya döner ve açıklama çerçevesi de
           // kırmızı olur. İkinci bir hata metni gösterilmez.
+          //
+          // ⚠ RENK ARTIK `_descDokunuldu &&` — bkz. yukarıdaki
+          // `hatali:` notu, AYNI gerekçe.
           const SizedBox(height: 7),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1147,7 +1178,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   style: refText(
                       size: RF.s125,
                       weight: RF.w400,
-                      color: _aciklamaEksik ? RC.danger : RC.textSoft),
+                      color: _descDokunuldu && _aciklamaEksik
+                          ? RC.danger
+                          : RC.textSoft),
                   children: [
                     const TextSpan(text: 'En az '),
                     TextSpan(
@@ -1155,7 +1188,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                         style: refText(
                             size: RF.s125,
                             weight: RF.w700,
-                            color: _aciklamaEksik ? RC.danger : RC.blue)),
+                            color: _descDokunuldu && _aciklamaEksik
+                                ? RC.danger
+                                : RC.blue)),
                     const TextSpan(text: ' ile açıklayınız.'),
                   ],
                 ),
@@ -1164,23 +1199,27 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   style: refText(
                       size: RF.s125,
                       weight: RF.w400,
-                      color: _aciklamaEksik ? RC.danger : RC.textSoft)),
+                      color: _descDokunuldu && _aciklamaEksik
+                          ? RC.danger
+                          : RC.textSoft)),
             ],
           ),
-          // ── ⚠ CANLI ANLAMSIZ METİN UYARISI — YAZARKEN GÖRÜNÜR ──
+          // ── ⚠ ANLAMSIZ METİN UYARISI — ARTIK ALANDAN ÇIKINCA
+          // GÖRÜNÜR, YAZARKEN DEĞİL ──
           //
-          // ÖNCEDEN yalnız GÖNDERİM ANINDA (toast ile) kontrol
-          // ediliyordu. Artık her tuş vuruşunda: "Bbbb" gibi ardışık
-          // anlamsız harfler yazılır yazılmaz çerçeve kırmızıya
-          // döner VE bu satır belirir. Kullanıcı yazıyı silip
-          // düzeltince (`Validators.anlamsizKelimeVarMi` artık
+          // ÖNCEDEN her tuş vuruşunda değerlendiriliyordu. Artık
+          // yalnız `_descDokunuldu` true olunca kontrol ediliyor:
+          // "Bbbb" gibi ardışık anlamsız harfler yazılıp ALANDAN
+          // ÇIKILINCA çerçeve kırmızıya döner VE bu satır belirir.
+          // Kullanıcı yazıyı silip düzeltince (`Validators.
+          // anlamsizKelimeVarMi` artık
           // `false` dönünce) satır ve kırmızı çerçeve KENDİLİĞİNDEN
           // kalkar — ayrı bir "düzeltildi" mantığı İCAT EDİLMEDİ,
           // aynı canlı kontrol iki yönde de çalışır.
-          if (_aciklamaAnlamsiz)
+          if (_descDokunuldu && _aciklamaAnlamsiz)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('Anlamsız kelimeler içeriyor gibi görünüyor.',
+              child: Text('Açıklamanız anlaşılır ifadeler içermelidir.',
                   style: refText(
                       size: RF.s125, weight: RF.w600, color: RC.danger)),
             ),
@@ -1242,6 +1281,28 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               color: RC.textSoft,
               height: RF.lh145,
             ),
+          ),
+
+          // ── ⚠ İLETİŞİM TERCİHİ — YENİ, `teklif_iste_screen.dart`
+          // İLE AYNI DESEN (`RefAcilirSecici`) ──
+          //
+          // Önceden bu ekranda HİÇ SEÇİCİ YOKTU; `Listing.
+          // iletisimTercihi` alanı sessizce varsayılanla
+          // (`telefonGoster`) yayınlanıyordu, kullanıcı bunu HİÇ
+          // GÖREMİYOR/DEĞİŞTİREMİYORDU.
+          const SizedBox(height: 20),
+          Text('İletişim Tercihi',
+              style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
+          const SizedBox(height: 8),
+          RefAcilirSecici(
+            ilkSeciliMi: _iletisim == IletisimTercihi.telefonGoster,
+            ilkBaslik: 'Telefon + Uygulama İçi Mesaj',
+            ilkAciklama: 'Hizmet veren telefonla da ulaşabilir.',
+            ikinciBaslik: 'Sadece Uygulama İçi Mesaj',
+            ikinciAciklama: 'Telefon numaran hizmet verene gösterilmez.',
+            onSec: (ilkSecili) => setState(() => _iletisim = ilkSecili
+                ? IletisimTercihi.telefonGoster
+                : IletisimTercihi.yalnizMesaj),
           ),
 
           // .po-freeband

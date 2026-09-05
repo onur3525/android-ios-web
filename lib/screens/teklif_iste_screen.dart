@@ -54,11 +54,21 @@ class TeklifIsteScreen extends StatefulWidget {
 
 class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   final _aciklama = TextEditingController();
+  final _aciklamaOdak = FocusNode();
   final List<PhotoItem> _photos = [];
   // ⚠ VARSAYILAN artık "Telefon + Uygulama İçi Mesaj" — kullanıcı
   // isteğiyle değişti (önceden "Sadece Mesaj" varsayılandı).
   IletisimTercihi _iletisim = IletisimTercihi.telefonGoster;
   bool _gonderiliyor = false;
+
+  /// ⚠ EKSİK/ANLAMSIZ AÇIKLAMA UYARISI ARTIK YAZARKEN DEĞİL, ALANDAN
+  /// ÇIKINCA (ODAK KAYBINDA) GÖRÜNÜR — kullanıcı "M" gibi tek harf
+  /// yazar yazmaz kırmızı çerçeve+uyarı görüyordu, henüz YAZMAYI
+  /// BİTİRMEDEN. Standart form davranışı: kullanıcı alanı bir kez
+  /// "ziyaret edip" TERK ETTİKTEN sonra geçerli kalır — bir daha
+  /// odaklanıp DÜZELTİRSE uyarı zaten `_aciklamaEksik`/`_aciklamaAnlamsiz`
+  /// `false` olduğu için kendiliğinden kalkar.
+  bool _aciklamaDokunuldu = false;
 
   late final StorageApi _storageApi;
 
@@ -66,11 +76,17 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   void initState() {
     super.initState();
     _storageApi = StorageApi(context.read<ApiClient>());
+    _aciklamaOdak.addListener(() {
+      if (!_aciklamaOdak.hasFocus && !_aciklamaDokunuldu) {
+        setState(() => _aciklamaDokunuldu = true);
+      }
+    });
   }
 
   @override
   void dispose() {
     _aciklama.dispose();
+    _aciklamaOdak.dispose();
     super.dispose();
   }
 
@@ -194,9 +210,15 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                 _tamamlananIsGercek(context, widget.saglayiciId);
             final hesap =
                 context.read<AuthController>().accountById(widget.saglayiciId);
-            final konum = hesap?.address == null
+            // ⚠ DÜZELTİLDİ — önceden `hesap.address!.district` (KİŞİSEL
+            // ikamet adresi) kullanılıyordu. `sonuclar_screen.dart`daki
+            // AYNI kart ise `serviceDistricts` (hizmet VERDİĞİ ilçe)
+            // gösteriyordu — iki ekran AYNI hesap için FARKLI konum
+            // gösteriyordu (kullanıcı bulgusu). Artık İKİSİ DE AYNI
+            // kaynağı okuyor.
+            final konum = hesap == null || hesap.serviceDistricts.isEmpty
                 ? null
-                : '${hesap!.address!.district} / ${hesap.address!.city}';
+                : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
             return Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -283,12 +305,15 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           // ÖNCEDEN hizmet veren kartının İÇİNDE, 5 yorum
           // gösteriyordu. Artık KENDİ kartı, 3 yorum — kullanıcı
           // isteğiyle değişti.
+          //
+          // ⚠ ARTIK YORUM YOKKEN DE GÖRÜNÜR — önceden `yorumlar.
+          // isEmpty` iken kart TAMAMEN gizleniyordu, hizmet verenin
+          // hiç yorumu olmadığı durumda kullanıcı "Yorumlar" bölümünün
+          // VAR OLDUĞUNU bile göremiyordu. Şimdi boşken "Henüz yorum
+          // yok." yazıyor.
           Builder(builder: (context) {
             final reviews = context.watch<ReviewController>();
             final yorumlar = reviews.byProvider(widget.saglayiciId);
-            if (yorumlar.isEmpty) {
-              return const SizedBox.shrink();
-            }
             return Container(
               margin: const EdgeInsets.only(top: 12),
               padding: const EdgeInsets.all(13),
@@ -304,33 +329,41 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                       style: refText(
                           size: RF.s14, weight: RF.w700, color: RC.text)),
                   const SizedBox(height: 8),
-                  for (final r in yorumlar.take(3))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: YorumKarti(
-                        review: r,
-                        yazarAdi: context
-                            .read<AuthController>()
-                            .accountById(r.authorId)
-                            ?.name,
+                  if (yorumlar.isEmpty)
+                    Text('Henüz yorum yok.',
+                        style: refText(
+                            size: RF.s13,
+                            weight: RF.w400,
+                            color: RC.textSoft))
+                  else ...[
+                    for (final r in yorumlar.take(3))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: YorumKarti(
+                          review: r,
+                          yazarAdi: context
+                              .read<AuthController>()
+                              .accountById(r.authorId)
+                              ?.name,
+                        ),
                       ),
-                    ),
-                  if (yorumlar.length > 3)
-                    RefTap(
-                      onTap: () => Navigator.push<void>(
-                          context,
-                          MaterialPageRoute<void>(
-                              builder: (_) => ProviderReviewsScreen(
-                                  providerId: widget.saglayiciId,
-                                  providerAdi:
-                                      maskeliAd(widget.saglayiciAdi)))),
-                      borderRadius: BorderRadius.circular(RR.r8),
-                      child: Text('Tümünü Gör (${yorumlar.length})',
-                          style: refText(
-                              size: RF.s13,
-                              weight: RF.w700,
-                              color: RC.blue)),
-                    ),
+                    if (yorumlar.length > 3)
+                      RefTap(
+                        onTap: () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute<void>(
+                                builder: (_) => ProviderReviewsScreen(
+                                    providerId: widget.saglayiciId,
+                                    providerAdi:
+                                        maskeliAd(widget.saglayiciAdi)))),
+                        borderRadius: BorderRadius.circular(RR.r8),
+                        child: Text('Tümünü Gör (${yorumlar.length})',
+                            style: refText(
+                                size: RF.s13,
+                                weight: RF.w700,
+                                color: RC.blue)),
+                      ),
+                  ],
                 ],
               ),
             );
@@ -344,31 +377,54 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
               style:
                   refText(size: RF.s13, weight: RF.w400, color: RC.textSoft)),
           const SizedBox(height: 10),
-          TextField(
-            controller: _aciklama,
-            onChanged: (_) => setState(() {}),
-            maxLines: 6,
-            maxLength: 1000,
-            textCapitalization: TextCapitalization.sentences,
-            // ⚠ ARTIK SABİT (const) DEĞİL — anlamsız metin
-            // tespit edilince çerçeve CANLI olarak kırmızıya döner.
-            decoration: InputDecoration(
-              hintText: 'Açıklama yazın.',
-              alignLabelWithHint: true,
-              enabledBorder: _aciklamaAnlamsiz
-                  ? OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(RR.r13),
-                      borderSide: const BorderSide(color: RC.danger),
-                    )
-                  : null,
-              focusedBorder: _aciklamaAnlamsiz
-                  ? OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(RR.r13),
-                      borderSide: const BorderSide(color: RC.danger, width: 1.6),
-                    )
-                  : null,
+          Stack(children: [
+            TextField(
+              controller: _aciklama,
+              focusNode: _aciklamaOdak,
+              onChanged: (_) => setState(() {}),
+              maxLines: 6,
+              maxLength: 1000,
+              textCapitalization: TextCapitalization.sentences,
+              // ⚠ Flutter'ın KENDİ OTOMATİK karakter sayacı GİZLENDİ —
+              // kendi PADDING'İYLE geliyordu ve altındaki uyarı
+              // metniyle arasında GEREKSİZ büyük boşluk bırakıyordu.
+              // `create_listing_screen.dart`daki ÖZEL sayaç deseni
+              // (kutunun İÇİNDE, sağ altta) buraya da uygulandı.
+              buildCounter: (_,
+                      {required currentLength,
+                      required isFocused,
+                      required maxLength}) =>
+                  null,
+              // ⚠ ARTIK SABİT (const) DEĞİL — anlamsız metin tespit
+              // edilince çerçeve kırmızıya döner. Ama yalnız kullanıcı
+              // alandan ÇIKTIKTAN SONRA (`_aciklamaDokunuldu`) — YAZARKEN
+              // DEĞİL, aksi hâlde tek harf yazar yazmaz kırmızı görünürdü.
+              decoration: InputDecoration(
+                hintText: 'Açıklama yazın.',
+                alignLabelWithHint: true,
+                enabledBorder: _aciklamaDokunuldu && _aciklamaAnlamsiz
+                    ? OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(RR.r13),
+                        borderSide: const BorderSide(color: RC.danger),
+                      )
+                    : null,
+                focusedBorder: _aciklamaDokunuldu && _aciklamaAnlamsiz
+                    ? OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(RR.r13),
+                        borderSide:
+                            const BorderSide(color: RC.danger, width: 1.6),
+                      )
+                    : null,
+              ),
             ),
-          ),
+            Positioned(
+              right: 14,
+              bottom: 12,
+              child: Text('${_aciklama.text.characters.length}/1000',
+                  style: refText(
+                      size: RF.s125, weight: RF.w400, color: RC.textSoft)),
+            ),
+          ]),
           // ⚠ GÖRÜNÜR KURAL — `FormMesaj.teklifAciklama` YENİDEN
           // KULLANILDI: sayı `kMinAciklamaKelime`den gelir, iki yerde
           // ayrı sayı tutulmaz.
@@ -378,22 +434,25 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                 style: refText(
                     size: RF.s12,
                     weight: RF.w500,
-                    color: _aciklama.text.trim().isEmpty ||
+                    color: !_aciklamaDokunuldu ||
+                            _aciklama.text.trim().isEmpty ||
                             _kelimeSayisi() >= kMinAciklamaKelime
                         ? RC.textSoft
                         : const Color(0xFFE5452C))),
           ),
-          // ── ⚠ CANLI ANLAMSIZ METİN UYARISI — YAZARKEN GÖRÜNÜR ──
+          // ── ⚠ ANLAMSIZ METİN UYARISI — ARTIK ALANDAN ÇIKINCA
+          // GÖRÜNÜR, YAZARKEN DEĞİL ──
           //
-          // ÖNCEDEN yalnız GÖNDERİM ANINDA (toast ile) kontrol
-          // ediliyordu. "Bbbb" gibi ardışık anlamsız harfler
-          // yazılır yazılmaz çerçeve kırmızıya döner VE bu satır
-          // belirir; yazı silinip düzeltilince (ör. yalnız "B"
-          // kalınca) ikisi de KENDİLİĞİNDEN kalkar.
-          if (_aciklamaAnlamsiz)
+          // ÖNCEDEN her tuş vuruşunda değerlendiriliyordu — kullanıcı
+          // tek harf yazar yazmaz kırmızı çerçeve+uyarı görüyordu,
+          // henüz YAZMAYI BİTİRMEDEN. Artık yalnız `_aciklamaDokunuldu`
+          // (kullanıcı alana bir kez girip ÇIKTI) true olunca kontrol
+          // ediliyor; yazı silinip düzeltilince ikisi de KENDİLİĞİNDEN
+          // kalkar.
+          if (_aciklamaDokunuldu && _aciklamaAnlamsiz)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('Anlamsız kelimeler içeriyor gibi görünüyor.',
+              child: Text('Açıklamanız anlaşılır ifadeler içermelidir.',
                   style: refText(
                       size: RF.s12, weight: RF.w600, color: RC.danger)),
             ),

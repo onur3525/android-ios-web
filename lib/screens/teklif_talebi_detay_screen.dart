@@ -510,9 +510,12 @@ class _KarsiTarafBilgisi extends StatelessWidget {
           final tamamlanan = _tamamlananIsGercek(context, talep.saglayiciId);
           final hesap =
               context.read<AuthController>().accountById(talep.saglayiciId);
-          final konum = hesap?.address == null
+          // ⚠ DÜZELTİLDİ — bkz. `teklif_iste_screen.dart`daki AYNI not:
+          // önceden kişisel adres kullanılıyordu, `sonuclar_screen.
+          // dart`daki kartla FARKLI konum gösteriyordu.
+          final konum = hesap == null || hesap.serviceDistricts.isEmpty
               ? null
-              : '${hesap!.address!.district} / ${hesap.address!.city}';
+              : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -594,12 +597,12 @@ class _KarsiTarafBilgisi extends StatelessWidget {
         // ⚠ Kimlik maskeliyken "Tümünü Gör" GİZLENİR — gerçek
         // `saglayiciId`ye bağlı bir ekrana gitmek kimliği dolaylı
         // yoldan İFŞA ederdi.
+        //
+        // ⚠ ARTIK YORUM YOKKEN DE GÖRÜNÜR — bkz. `teklif_iste_screen.
+        // dart`daki AYNI düzeltme.
         Builder(builder: (context) {
           final reviews = context.watch<ReviewController>();
           final yorumlar = reviews.byProvider(talep.saglayiciId);
-          if (yorumlar.isEmpty) {
-            return const SizedBox.shrink();
-          }
           return Container(
             margin: const EdgeInsets.only(top: 10),
             padding: const EdgeInsets.all(13),
@@ -615,32 +618,40 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     style: refText(
                         size: RF.s14, weight: RF.w700, color: RC.text)),
                 const SizedBox(height: 8),
-                for (final r in yorumlar.take(3))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: YorumKarti(
-                      review: r,
-                      yazarAdi: context
-                          .read<AuthController>()
-                          .accountById(r.authorId)
-                          ?.name,
+                if (yorumlar.isEmpty)
+                  Text('Henüz yorum yok.',
+                      style: refText(
+                          size: RF.s13,
+                          weight: RF.w400,
+                          color: RC.textSoft))
+                else ...[
+                  for (final r in yorumlar.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: YorumKarti(
+                        review: r,
+                        yazarAdi: context
+                            .read<AuthController>()
+                            .accountById(r.authorId)
+                            ?.name,
+                      ),
                     ),
-                  ),
-                if (acik && yorumlar.length > 3)
-                  RefTap(
-                    onTap: () => Navigator.push<void>(
-                        context,
-                        MaterialPageRoute<void>(
-                            builder: (_) => ProviderReviewsScreen(
-                                providerId: talep.saglayiciId,
-                                providerAdi: talep.saglayiciAdi))),
-                    borderRadius: BorderRadius.circular(RR.r8),
-                    child: Text('Tümünü Gör (${yorumlar.length})',
-                        style: refText(
-                            size: RF.s13,
-                            weight: RF.w700,
-                            color: RC.blue)),
-                  ),
+                  if (acik && yorumlar.length > 3)
+                    RefTap(
+                      onTap: () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                              builder: (_) => ProviderReviewsScreen(
+                                  providerId: talep.saglayiciId,
+                                  providerAdi: talep.saglayiciAdi))),
+                      borderRadius: BorderRadius.circular(RR.r8),
+                      child: Text('Tümünü Gör (${yorumlar.length})',
+                          style: refText(
+                              size: RF.s13,
+                              weight: RF.w700,
+                              color: RC.blue)),
+                    ),
+                ],
               ],
             ),
           );

@@ -261,7 +261,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Derin Dondurucu Tamiri', 'Buzdolabı Bakımı',
     'Çamaşır Makinesi Bakımı', 'Bulaşık Makinesi Bakımı',
     'Buzdolabı Gaz Dolumu', 'Motor Değişimi', 'Rezistans Değişimi',
-    'Rulman Değişimi'
+    'Rulman Değişimi', 'Bakır Kalaylama', 'Çaydanlık Tamiri',
+    'Çaydanlık Parlatma', 'Çelik Tencere Parlatma', 'Ütü Tamiri'
   ],
   'Elektronik Cihaz Tamiri': [
     'Televizyon Tamiri', 'Bilgisayar Tamiri', 'Telefon Tamiri',
@@ -270,7 +271,9 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Veri Kurtarma', 'Projeksiyon Tamiri', 'Saat Tamiri', 'Yazıcı Tamiri',
     'Monitör Tamiri', 'Ses Sistemi Tamiri', 'Hoparlör Tamiri',
     'Projeksiyon Kurulumu', 'Akıllı Saat Tamiri', 'Drone Tamiri',
-    'Bilgisayar Temizliği'
+    'Bilgisayar Temizliği', 'Elektrikli Scooter Tamiri',
+    'Elektrikli Scooter Servisi', 'Scooter Tamiri', 'PlayStation Tamiri',
+    'Xbox Tamiri'
   ],
   'Küçük Ev Aletleri': [
     'Küçük Ev Aletleri Tamiri', 'Kahve Makinesi Tamiri',
@@ -310,7 +313,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Asansörlü Taşıma', 'Sigortalı Nakliyat', 'Şehir İçi Nakliyat',
     'Minivan Nakliye', 'Yük Taşıma', 'Koli Taşıma', 'Koltuk Taşıma',
     'Buzdolabı Taşıma', 'Çeyiz Taşıma', 'Paletli Yük Taşıma',
-    'Motosiklet Taşıma', 'Araç Taşıma', 'Uluslararası Nakliyat'
+    'Motosiklet Taşıma', 'Araç Taşıma', 'Uluslararası Nakliyat',
+    'Eşya Paketleme Hizmeti'
   ],
   'Depolama Hizmetleri': [
     'Eşya Depolama', 'Mini Depo', 'Ticari Eşya Depolama', 'Arşiv Depolama',
@@ -430,7 +434,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Düğün Organizasyonu', 'Balon ve Süsleme',
     'Kına ve Nişan Organizasyonu', 'Kurumsal Etkinlik Organizasyonu',
     'Ses ve Işık Sistemi Kiralama', 'Gelin Arabası Kiralama',
-    'Gelin Arabası Süsleme'
+    'Gelin Arabası Süsleme', 'Doğum Günü Mekanı Hizmeti',
+    'Düğün Salonu Hizmeti'
   ],
   'Fotoğraf Çekimi': [
     'Drone Çekimi', 'Ürün Fotoğraf Çekimi', 'Kurumsal Fotoğraf Çekimi',
@@ -439,12 +444,17 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Catering ve İkram': [
     'Catering Hizmeti', 'Kokteyl İkram Hizmeti', 'Etkinlik Yemek Servisi',
-    'Yaprak Sarma Yapımı', 'Evde Yemek Pişirme'
+    'Yaprak Sarma Yapımı', 'Evde Yemek Pişirme', 'Tavuklu Pilav Yapımı',
+    'İrmik Helvası Yapımı', 'Aşure Yapımı', 'Çiğ Köfte Yapımı',
+    'İçli Köfte Yapımı', 'Su Böreği Yapımı', 'Baklava Yapımı',
+    'Lahmacun Yapımı', 'Pide Yapımı', 'Künefe Yapımı', 'Kurabiye Yapımı',
+    'Kokoreç Yapımı'
   ],
   'Etkinlik Personeli': [
     'Garson', 'Servis Personeli', 'Host / Hostes', 'Karşılama Personeli',
     'Komi', 'Barmen / Bar Servis Personeli', 'Etkinlik Görevlisi',
-    'Etkinlik Kurulum Personeli', 'Etkinlik Söküm Personeli'
+    'Etkinlik Kurulum Personeli', 'Etkinlik Söküm Personeli',
+    'Vale Hizmeti'
   ],
   'Müzik & Eğlence': [
     'Orkestra', 'Solist', 'Canlı Müzik', 'Müzik Grubu', 'DJ',
@@ -459,7 +469,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Duvar Ustası', 'İnşaat Kalıp Ustası', 'Beton Kalıp Ustası',
     'İnşaat Demir Ustası', 'Demir Bağlama Ustası', 'İnşaat Demir Döşeme',
     'Kaba İnşaat', 'Anahtar Teslim İnşaat', 'Duvar Örme', 'Yıkım İşleri',
-    'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme', 'Bina Güçlendirme'
+    'Moloz Taşıma', 'Şap Atma', 'Kolon Güçlendirme', 'Bina Güçlendirme',
+    'Şömine Yapımı'
   ],
   'Çatı Yapım ve Onarım': [
     'Çatı Tamiri', 'Çatı Yapımı', 'Çatı İzolasyonu', 'Çatı Aktarma',
@@ -554,7 +565,8 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Prefabrik Ev Yapımı', 'Prefabrik Ev Montajı', 'Çelik Ev Montajı',
     'Konteyner Yapımı', 'Konteyner Ev', 'Konteyner Ofis',
     'Konteyner Montajı', 'Konteyner Demontajı', 'Konteyner Taşıma',
-    'Konteyner Tadilatı', 'Yangın Merdiveni'
+    'Konteyner Tadilatı', 'Yangın Merdiveni', 'Bungalov Ev Yapımı',
+    'Tiny House Yapımı', 'Konteyner Ev Yapımı'
   ],
   'Pergola & Gölgelendirme Sistemleri': [
     'Alüminyum Pergola', 'Pergola Montajı', 'Pergola Kapatma',
@@ -785,7 +797,15 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   'Teşvik & Hibe Danışmanlığı': [
     'KOSGEB Danışmanlığı', 'Teşvik Danışmanlığı', 'Hibe Danışmanlığı',
-    'Yatırım Teşvik Danışmanlığı', 'Devlet Destekleri Danışmanlığı'
+    'Yatırım Teşvik Danışmanlığı', 'Devlet Destekleri Danışmanlığı',
+    // ⚠ Kullanıcı listesinden — "genel iş/yönetim danışmanlığı" diye
+    // ayrı bir kategori HİÇ yoktu; bu yedisi en yakın mevcut
+    // danışmanlık kategorisine (girişimcilik/işletme destek teması
+    // ortak) eklendi.
+    'İşe Alım Danışmanlığı', 'Girişim Danışmanlığı',
+    'Üretim Danışmanlığı', 'Ticari Danışmanlık',
+    'Şirket Satışı Danışmanlığı', 'ArGe Danışmanlığı',
+    'Satış Danışmanlığı'
   ],
   'Hasta Bakımı': [
     'Günlük Hasta Bakımı', 'Yatılı Hasta Bakımı', 'Hasta Öz Bakım',
@@ -891,15 +911,19 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Tur Organizasyon': [
     'Tur Organizasyonu', 'Günübirlik Tur', 'Kültür Turu', 'Doğa Turu',
     'Tekne Turu', 'Özel Tur Organizasyonu', 'Balık Turu',
-    'Kaptanlı Yat Kiralama'
+    'Kaptanlı Yat Kiralama', 'Tekne Kiralama Hizmeti',
+    'Düğün Teknesi Hizmeti'
   ],
   'Konaklama': [
     'Otel Rezervasyonu', 'Pansiyon Rezervasyonu', 'Villa Kiralama',
-    'Günlük Ev Kiralama', 'Bungalov Kiralama', 'Apart Konaklama'
+    'Günlük Ev Kiralama', 'Bungalov Kiralama', 'Apart Konaklama',
+    'Karavan Kiralama Hizmeti'
   ],
   'Transfer ve Ulaşım': [
     'Havalimanı Transferi', 'VIP Transfer', 'Şoförlü Araç Hizmeti',
-    'Turizm Transferi', 'Özel Araç Tahsisi', 'Taksi', 'Saatlik Şoför'
+    'Turizm Transferi', 'Özel Araç Tahsisi', 'Taksi', 'Saatlik Şoför',
+    'Karavan Transfer Hizmeti', 'Tekne Transfer Hizmeti',
+    'Özel Şoför Hizmeti', 'Tekne Çekme Hizmeti'
   ],
   'Seyahat Danışmanlığı': [
     'Seyahat Planlama', 'Tatil Planlama', 'Yurtiçi Tatil Organizasyonu',
@@ -999,7 +1023,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   'Çiçekçilik': [
     'Çiçekçi', 'Buket Hazırlama', 'Çiçek Aranjmanı', 'Çelenk Hazırlama',
     'Özel Gün Çiçekleri', 'Açılış Çiçekleri', 'Düğün Çiçekleri',
-    'Çiçek Gönderme'
+    'Çiçek Gönderme', 'Butik Sabun Yapımı', 'Mum Yapımı', 'Mum İmalatı'
   ],
   'Asistanlık & Günlük Destek': [
     'Günlük Asistan', 'Kişisel Asistan', 'Özel Asistan', 'Sanal Asistan',
@@ -1031,10 +1055,11 @@ const Map<String, List<String>> kGomuluKatalog = {
   // EKLENMEDİ — Türkiye'de bunlar belediye/vakıf tarafından ÜCRETSİZ
   // sağlanıyor, ticari pazaryeri modeline uymuyor.
   'Nikah ve Tören Hizmetleri': [
-    'İmam Nikahı Kıyma', 'Nikah Duası'
+    'İmam Nikahı Kıyma', 'Nikah Duası', 'Nikah Şekeri Yapımı'
   ],
   'Mevlüt ve Dua Programları': [
-    'Mevlüt Okuma', 'Hatim Okuma', 'Dua Programı'
+    'Mevlüt Okuma', 'Hatim Okuma', 'Dua Programı', 'Mevlüt Pilavı Yapımı',
+    'Lokma Yapımı', 'Lokma Döktürme Hizmeti'
   ],
   'Kur\'an-ı Kerim Eğitimi': [
     'Kur\'an-ı Kerim Özel Dersi', 'Tecvid Dersi', 'Hafızlık Eğitimi'
