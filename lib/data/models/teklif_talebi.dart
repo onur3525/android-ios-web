@@ -46,13 +46,26 @@ enum IletisimTercihi {
 /// Bu yüzden ham adlar (`hizmetAlanAdi`, `saglayiciAdi`) modelde
 /// SAKLANIR; maskeleme yalnız GÖSTERİM anında, `teklifTarihi`
 /// durumuna göre EKRAN TARAFINDA uygulanır.
+/// Mesajın gönderim/okunma durumu — `chat_screen.dart`daki
+/// `MessageStatus` ile AYNI kavram, ama `TeklifTalebi` kendi
+/// bağımsız zincirinde tutulduğu için (bkz. yukarıdaki not) o enum
+/// PAYLAŞILMADI, buraya özel bir kopyası tanımlandı.
+enum TeklifMesajDurumu {
+  gonderildi,
+  iletildi,
+
+  /// Karşı taraf sohbeti AÇTIĞINDA bu duruma geçer.
+  okundu,
+}
+
 class TeklifMesaj {
-  const TeklifMesaj({
+  TeklifMesaj({
     required this.id,
     required this.gonderenId,
     required this.zaman,
     this.metin,
     this.fotografYolu,
+    this.durum = TeklifMesajDurumu.gonderildi,
   });
 
   final String id;
@@ -62,6 +75,12 @@ class TeklifMesaj {
   /// ⚠ İKİSİNDEN EN AZ BİRİ dolu olmalı — metin VEYA fotoğraf.
   final String? metin;
   final String? fotografYolu;
+
+  /// ⚠ MUTABLE — `TeklifTalebiRepository.mesajlariOkunduIsaretle()`
+  /// karşı taraf sohbeti açtığında bunu günceller (`final` değil,
+  /// modelin geri kalanı gibi yeni bir kopya OLUŞTURULMAZ; bkz. o
+  /// metodun kendi notu).
+  TeklifMesajDurumu durum;
 }
 
 /// ⚠ TEK BİR İSTEK/İŞ KAYDI. `saglayiciId` mock veya gerçek hizmet

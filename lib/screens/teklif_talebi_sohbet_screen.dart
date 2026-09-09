@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../core/sys_state.dart';
@@ -10,6 +9,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import 'widgets/sohbet_fotograf_akisi.dart';
 
 /// "TEKLİF TALEBİ" SOHBETİ — AYRI EKRAN.
 ///
@@ -52,6 +52,23 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   bool _gonderiliyor = false;
 
   @override
+  void initState() {
+    super.initState();
+    // ⚠ YENİ — sohbet açılınca karşı taraftan gelen mesajlar
+    // "okundu" işaretlenir (2 tik, renk değişir). Kare sonrası
+    // çalışır — `context.read` build dışında güvenli.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final me = context.read<AuthController>().currentAccount;
+      if (me == null || !mounted) {
+        return;
+      }
+      context
+          .read<TeklifTalebiController>()
+          .mesajlariOkunduIsaretle(widget.talepId, me.id);
+    });
+  }
+
+  @override
   void dispose() {
     _metin.dispose();
     super.dispose();
@@ -79,10 +96,18 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   }
 
   Future<void> _fotografSecVeGonder() async {
-    final secilen =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (secilen == null) return;
-    await _gonder(fotografYolu: secilen.path);
+    // ⚠ ARTIK PAYLAŞIMLI AKIŞ — `sohbet_fotograf_akisi.dart`. Önceden
+    // doğrudan galeriye gidip SEÇİLİR SEÇİLMEZ gönderiyordu; artık
+    // kaynak seçimi (galeri/kamera) + gönderim öncesi ÖNİZLEME var —
+    // `chat_screen.dart` ile AYNI akış.
+    final sonuc = await sohbetFotografiSecVeOnizle(context);
+    if (sonuc == null) {
+      return;
+    }
+    if (sonuc.aciklama != null) {
+      _metin.text = sonuc.aciklama!;
+    }
+    await _gonder(fotografYolu: sonuc.yol);
   }
 
   @override
@@ -142,7 +167,7 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
                       borderRadius: BorderRadius.circular(RR.circle),
                       child: const Padding(
                         padding: EdgeInsets.all(8),
-                        child: RefSvg('assets/svg/ic_cam.svg',
+                        child: RefSvg('assets/svg/ic_camplus.svg',
                             size: 22, color: RC.blue),
                       ),
                     ),
@@ -186,6 +211,55 @@ class _MesajBalonu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final benim = mesaj.gonderenId == benId;
+    // ⚠ YENİ — kullanıcı bulgusu: "fotoğraflar mesaj kısmında
+    // çerçeveli vs gösterilmemeli, sadece fotoğraf gösterilmeli".
+    // `chat_screen.dart` ile AYNI ilke: yalnız fotoğraf İÇEREN
+    // (metinsiz) mesajlar RENKLİ BALONUN DIŞINDA, şeffaf zeminde
+    // gösterilir.
+    final yalnizFoto = mesaj.fotografYolu != null && mesaj.metin == null;
+
+    Widget durumSatiri({required bool acikZemin}) {
+      if (!benim) {
+        return const SizedBox.shrink();
+      }
+      // ⚠ KULLANICI İSTEĞİ — "gönderilen mesaj 1 tik, iletilen mesaj
+      // 2 tik, okunduysa renk değişik 2 tik". `TeklifMesajDurumu`da
+      // "sending"/"failed" ara durumu YOK (`mesajGonder` başarısız
+      // olursa mesaj listeye hiç eklenmez, hata ayrıca gösterilir).
+      final aktifRenk = acikZemin ? RC.textSoft : Colors.white70;
+      final okunduRenk =
+          acikZemin ? const Color(0xFF1D9BF0) : const Color(0xFF5EE1FF);
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        if (mesaj.durum == TeklifMesajDurumu.gonderildi)
+          RefSvg('assets/svg/ic_checksm.svg', size: 12, color: aktifRenk),
+        if (mesaj.durum == TeklifMesajDurumu.iletildi)
+          RefSvg('assets/svg/ic_tick2.svg', size: 14, color: aktifRenk),
+        if (mesaj.durum == TeklifMesajDurumu.okundu)
+          RefSvg('assets/svg/ic_tick2.svg', size: 14, color: okunduRenk),
+      ]);
+    }
+
+    if (yalnizFoto) {
+      return Align(
+        alignment: benim ? Alignment.centerRight : Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            crossAxisAlignment:
+                benim ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TeklifSohbetFotografi(yol: mesaj.fotografYolu!, benim: benim),
+              if (benim) ...[
+                const SizedBox(height: 3),
+                durumSatiri(acikZemin: true),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     return Align(
       alignment: benim ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -193,26 +267,100 @@ class _MesajBalonu extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         constraints: const BoxConstraints(maxWidth: 260),
         decoration: BoxDecoration(
-          color: benim ? RC.blueSoft : const Color(0xFFF3F4F6),
+          color: benim ? RC.blue : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(RR.r12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (mesaj.fotografYolu != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(RR.r12),
-                child: Image.file(File(mesaj.fotografYolu!),
-                    width: 180, height: 180, fit: BoxFit.cover),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child:
+                    _TeklifSohbetFotografi(yol: mesaj.fotografYolu!, benim: benim),
               ),
             if (mesaj.metin != null)
-              Padding(
-                padding: EdgeInsets.only(
-                    top: mesaj.fotografYolu != null ? 6 : 0),
-                child: Text(mesaj.metin!,
-                    style: refText(
-                        size: RF.s135, weight: RF.w400, color: RC.text)),
+              Text(mesaj.metin!,
+                  style: refText(
+                      size: RF.s135,
+                      weight: RF.w400,
+                      color: benim ? RC.white : RC.text)),
+            if (benim) ...[
+              const SizedBox(height: 4),
+              durumSatiri(acikZemin: false),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sohbet fotoğrafı — küçük önizleme, dokununca TAM EKRAN.
+///
+/// ⚠ `chat_screen.dart`daki `_SohbetFotografi`/`_FotografTamEkran`
+/// İLE AYNI görsel dil — o sınıflar PRIVATE olduğu için buraya AYNEN
+/// yeniden oluşturuldu (Dart dosyalar arası private import ETMEZ).
+class _TeklifSohbetFotografi extends StatelessWidget {
+  const _TeklifSohbetFotografi({required this.yol, required this.benim});
+
+  final String yol;
+  final bool benim;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: 190,
+        height: 140,
+        child: RefTap(
+          // ⚠ Dokununca TAM EKRAN: kullanıcı isteği — "tıklanınca
+          // büyüyebilmeli ekrana sığmalı diğer mesaj kısımlarındaki
+          // gibi".
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => _TeklifFotografTamEkran(yol: yol),
+            ),
+          ),
+          child: Image.file(File(yol), fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tam ekran fotoğraf görüntüleyici — `chat_screen.dart`daki
+/// `_FotografTamEkran` ile AYNI (yakınlaştırma `InteractiveViewer`
+/// ile, ayrı bir paket EKLENMEDİ).
+class _TeklifFotografTamEkran extends StatelessWidget {
+  const _TeklifFotografTamEkran({required this.yol});
+
+  final String yol;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: Image.file(File(yol)),
               ),
+            ),
+            Positioned(
+              left: 4,
+              top: 4,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
           ],
         ),
       ),

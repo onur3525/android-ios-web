@@ -7,8 +7,13 @@ import '../data/models/offer.dart';
 /// ⚠ YALNIZ YAŞAM DURUMU (§24). "Tamamlandı" burada YOKTUR —
 /// tamamlanmışlık `Listing.isTamamlanmisIs` ile türetilir ve
 /// `listingRozetiUi` ile çizilir.
-(String, Color) listingStatusUi(ListingStatus s) => switch (s) {
-      ListingStatus.active => ('Açık', HC.green),
+///
+/// ⚠ "Açık" burada DÖNMEZ (`null`) — kullanıcı isteğiyle: bir ilanın
+/// normal/varsayılan hali gereksiz görsel gürültü, yalnız İSTİSNAİ
+/// durumlar (süresi doldu, kapatıldı, kaldırıldı, tamamlandı) rozet
+/// olarak gösterilir.
+(String, Color)? listingStatusUi(ListingStatus s) => switch (s) {
+      ListingStatus.active => null,
       ListingStatus.expired => ('Süresi Doldu', HC.lightGrey),
       ListingStatus.userDeleted => ('Kapatıldı', HC.lightGrey),
       ListingStatus.adminRemoved => ('Kaldırıldı', HC.red),
@@ -19,7 +24,11 @@ import '../data/models/offer.dart';
 /// ⚠ TEK KAYNAK: ekranlar "Tamamlandı" etiketini kendileri
 /// hesaplamaz. Sıra önemlidir — tamamlanmış bir iş sonradan
 /// silinse de "Tamamlandı" kalır.
-(String, Color) listingRozetiUi(Listing l) =>
+///
+/// ⚠ NULLABLE — "Açık" durumunda rozet YOK; çağıran ekranlar `null`
+/// ise hiçbir widget çizmemeli (bkz. `job_detail_screen.dart`daki
+/// kullanım).
+(String, Color)? listingRozetiUi(Listing l) =>
     l.isTamamlanmisIs ? ('Tamamlandı', HC.green) : listingStatusUi(l.status);
 
 (String, Color) offerStatusUi(OfferStatus s) => switch (s) {

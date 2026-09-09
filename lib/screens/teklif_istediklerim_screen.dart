@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/listing_controller.dart';
+import '../data/controllers/offer_controller.dart';
+import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
@@ -118,6 +121,21 @@ class _TalepKarti extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (metin, renk) = _durumGoster(talep.durum);
+    // ⚠ EKLENDİ — kullanıcı bulgusu: bu kart yalnız maskeli ad
+    // gösteriyordu. `teklif_iste_screen.dart`/`teklif_talebi_detay_
+    // screen.dart`daki AYNI hizmet veren kartı (puan, yorum sayısı,
+    // tamamlanan iş, konum) — istatistikler kimlik maskeliyken bile
+    // gösterilir, o ekranlardaki AYNI ilke.
+    final acik = talep.teklifTarihi != null;
+    final reviews = context.watch<ReviewController>();
+    final puan = reviews.averageOf(talep.saglayiciId);
+    final yorumlar = reviews.byProvider(talep.saglayiciId);
+    final tamamlanan = _tamamlananIsGercek(context, talep.saglayiciId);
+    final hesap =
+        context.read<AuthController>().accountById(talep.saglayiciId);
+    final konum = hesap == null || hesap.serviceDistricts.isEmpty
+        ? null
+        : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
     return RefTap(
       onTap: () => Navigator.push<void>(
           context,
@@ -137,25 +155,77 @@ class _TalepKarti extends StatelessWidget {
             Text(talep.hizmet,
                 style:
                     refText(size: RF.s145, weight: RF.w700, color: RC.text)),
-            const SizedBox(height: 4),
-            // ⚠ TEKLİF VERİLENE KADAR MASKELİ — hizmet veren teklif
-            // verdiği an (`teklifTarihi` dolar) gerçek ad görünür.
+            const SizedBox(height: 8),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                talep.teklifTarihi != null
+                acik
                     ? SizedBox(
-                        width: 20,
-                        height: 20,
+                        width: 40,
+                        height: 40,
                         child: FittedBox(
                             child: RefBasHarfAvatar(ad: talep.saglayiciAdi)))
-                    : const RefSvg('assets/svg/ic_avlock.svg', size: 20),
-                const SizedBox(width: 6),
-                Text(
-                    talep.teklifTarihi != null
-                        ? talep.saglayiciAdi
-                        : maskeliAd(talep.saglayiciAdi),
-                    style: refText(
-                        size: RF.s13, weight: RF.w500, color: RC.textSoft)),
+                    : const RefSvg('assets/svg/ic_avlock.svg', size: 40),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(acik ? talep.saglayiciAdi : maskeliAd(talep.saglayiciAdi),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: refText(
+                              size: RF.s14, weight: RF.w700, color: RC.text)),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const RefSvg('assets/svg/ic_starfill.svg',
+                              size: 13, color: Color(0xFFF5A319)),
+                          const SizedBox(width: 4),
+                          Text(puan == null ? '—' : puan.toStringAsFixed(1),
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w700,
+                                  color: RC.text)),
+                          const SizedBox(width: 4),
+                          Text('(${yorumlar.length} yorum)',
+                              style: refText(
+                                  size: RF.s115,
+                                  weight: RF.w400,
+                                  color: RC.textSoft)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const RefSvg('assets/svg/ic_shieldok.svg',
+                              size: 12, color: Color(0xFF5B6472)),
+                          const SizedBox(width: 4),
+                          Text('$tamamlanan iş tamamladı',
+                              style: refText(
+                                  size: RF.s115,
+                                  weight: RF.w400,
+                                  color: const Color(0xFF5B6472))),
+                        ],
+                      ),
+                      if (konum != null) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const RefSvg('assets/svg/ic_pin.svg',
+                                size: 13, color: Color(0xFF98A2B3)),
+                            const SizedBox(width: 4),
+                            Text(konum,
+                                style: refText(
+                                    size: RF.s115,
+                                    weight: RF.w400,
+                                    color: const Color(0xFF98A2B3))),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -182,4 +252,26 @@ class _TalepKarti extends StatelessWidget {
         TeklifTalebiDurumu.suresiDoldu => ('Süresi doldu', HC.grey),
         TeklifTalebiDurumu.tamamlandi => ('İş tamamlandı', RC.blue),
       };
+}
+
+/// ⚠ `teklif_iste_screen.dart`/`teklif_talebi_detay_screen.dart`daki
+/// AYNI hesaplama — üçüncü bir kopya değil, bu dosyalar birbirinden
+/// PRIVATE (import edilemez) olduğu için AYNI mantık burada da
+/// tekrarlanıyor.
+int _tamamlananIsGercek(BuildContext c, String providerId) {
+  final ilanlar = c.read<ListingController>().all;
+  final teklifler = c.read<OfferController>();
+  var n = 0;
+  for (final l in ilanlar) {
+    if (!l.isTamamlanmisIs) {
+      continue;
+    }
+    final secili = teklifler
+        .offersForListing(l.id)
+        .where((o) => o.id == l.selectedOfferId);
+    if (secili.isNotEmpty && secili.first.providerId == providerId) {
+      n++;
+    }
+  }
+  return n;
 }

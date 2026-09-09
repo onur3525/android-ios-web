@@ -53,8 +53,12 @@ enum IsZamani {
   ///
   /// ⚠ TEK KAYNAK: ekranlar kendi metnini yazmaz, ikisi de buradan
   /// okur; oluşturma ile görüntüleme ayrışmaz.
+  ///
+  /// ⚠ "Hemen" → "Acil" — kullanıcı isteğiyle GÖRÜNEN metin
+  /// değişti; enum değeri (`hemen`) ve sunucu kodu (`NOW`) AYNI
+  /// kaldı, geniş bir refaktör gerekmedi.
   String get etiket => switch (this) {
-        IsZamani.hemen => 'Hemen',
+        IsZamani.hemen => 'Acil',
         IsZamani.buHafta => 'Bu hafta',
         IsZamani.esnek => 'Esnek zaman',
       };
@@ -162,7 +166,10 @@ class Listing {
   ///
   /// ⚠ Ekranlar "İlan No: " önekini elle yazmaz; biçim değişirse
   /// tek yerden değişsin.
-  String get ilanNoEtiketi => 'İlan No: $ilanNo';
+  // ⚠ FORMAT DEĞİŞTİ — kullanıcı isteğiyle: "İlan No: X" yerine
+  // "#X". Kartlarda göz önünde olmaması gereken, hafif/silik bir
+  // referans numarası; "İlan No" etiketi olmadan da anlaşılır.
+  String get ilanNoEtiketi => '#$ilanNo';
 
   /// ── ⚠ TAMAMLANMIŞ İŞ — TEK KAYNAK ──
   ///

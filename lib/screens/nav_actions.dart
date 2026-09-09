@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
 
 /// ALT NAVİGASYON ÖĞELERİ
 ///
@@ -19,7 +20,8 @@ List<({
   String label,
   String asset,
   VoidCallback onTap,
-  bool rozet
+  bool rozet,
+  bool belirginRozet
 })>
     custNavItems(BuildContext context, {required bool saglayici}) {
   // ── ⚠ OKUNMAMIŞ BİLDİRİM ──
@@ -33,12 +35,24 @@ List<({
   final okunmamis = me != null &&
       context.watch<NotificationController>().unreadCount(me.id) > 0;
 
+  // ── ⚠ "BUL" İKONU — GELEN TEKLİF GÖSTERGESİ ──
+  //
+  // Kullanıcı bulgusu: hizmet verenden teklif geldiğinde, bildirim
+  // dışında "Bul" ikonunda da GÖZE ÇARPAN bir gösterge olmalı —
+  // Bildirimler sekmesindeki küçük mavi nokta YETERSİZ görüldü.
+  // `belirginRozet` bu yüzden ayrı bir alan: `_NavOgesi` bunu daha
+  // büyük/kırmızı çizer (bkz. `ref_widgets.dart`).
+  final yeniTeklif = !saglayici &&
+      me != null &&
+      context.watch<TeklifTalebiController>().yeniTeklifVarMi(me.id);
+
   final t = <({
   String key,
   String label,
   String asset,
   VoidCallback onTap,
-  bool rozet
+  bool rozet,
+  bool belirginRozet
 })>[
     // ── ⚠ "BUL" YALNIZ MÜŞTERİDE, EN SOLDA ──
     //
@@ -51,6 +65,7 @@ List<({
         asset: 'assets/svg/ic_search.svg',
         onTap: () => Navigator.pushNamed(context, '/customer/find-provider'),
         rozet: false,
+        belirginRozet: yeniTeklif,
       ),
     (
       key: 'ilanlarim',
@@ -62,6 +77,7 @@ List<({
         (r) => false,
       ),
       rozet: false,
+      belirginRozet: false,
     ),
     // ⚠ "İlan Ver" ORTA konuma taşındı (Bul, İlanlarım, İlan Ver,
     // Bildirim, Profil) — yalnız SIRASI değişti, davranışı AYNI.
@@ -72,6 +88,7 @@ List<({
         asset: 'assets/svg/ic_addbox.svg',
         onTap: () => Navigator.pushNamed(context, '/customer/new-listing'),
         rozet: false,
+        belirginRozet: false,
       ),
     // ⚠ SAĞLAYICIYA ÖZEL SEKME.
     //
@@ -89,6 +106,7 @@ List<({
           (r) => false,
         ),
         rozet: false,
+        belirginRozet: false,
       ),
     (
       key: 'bildirim',
@@ -98,6 +116,7 @@ List<({
       // ⚠ YALNIZ BİLDİRİM SEKMESİNDE: nokta okunmamış bildirim
       // varsa çizilir.
       rozet: okunmamis,
+      belirginRozet: false,
     ),
     (
       key: 'profil',
@@ -105,6 +124,7 @@ List<({
       asset: 'assets/svg/ic_profile.svg',
       onTap: () => Navigator.pushNamed(context, '/profile'),
       rozet: false,
+      belirginRozet: false,
     ),
   ];
   return t;

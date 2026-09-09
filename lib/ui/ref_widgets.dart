@@ -1585,11 +1585,18 @@ class RefSegmentTabs extends StatelessWidget {
     required this.items,
     required this.selected,
     required this.onChanged,
+    this.badges,
   });
 
   final List<({String asset, String label})> items;
   final int selected;
   final ValueChanged<int> onChanged;
+
+  /// ⚠ YENİ, OPSİYONEL — verilmezse HİÇBİR ŞEY DEĞİŞMEZ (mevcut
+  /// tüm çağrı yerleri etkilenmez). Verilirse, `items` ile AYNI
+  /// uzunlukta olmalı; `badges[i] > 0` olan sekmenin ikonunun sağ
+  /// üstünde kırmızı bir sayı rozeti çizilir.
+  final List<int>? badges;
 
   @override
   Widget build(BuildContext context) {
@@ -1625,10 +1632,50 @@ class RefSegmentTabs extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          RefSvg(
-                            items[i].asset,
-                            size: 20,
-                            color: i == selected ? RC.white : RC.text,
+                          // ⚠ ROZET — yalnız `badges` verildiyse ve
+                          // ilgili sekme için sayı > 0 ise çizilir.
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              RefSvg(
+                                items[i].asset,
+                                size: 20,
+                                color: i == selected ? RC.white : RC.text,
+                              ),
+                              if (badges != null &&
+                                  i < badges!.length &&
+                                  badges![i] > 0)
+                                Positioned(
+                                  right: -7,
+                                  top: -5,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4.5, vertical: 1.5),
+                                    constraints:
+                                        const BoxConstraints(minWidth: 16),
+                                    decoration: BoxDecoration(
+                                      color: RC.danger,
+                                      borderRadius:
+                                          BorderRadius.circular(RR.circle),
+                                      border: Border.all(
+                                          color: i == selected
+                                              ? RC.blue
+                                              : RC.white,
+                                          width: 1.4),
+                                    ),
+                                    child: Text(
+                                      badges![i] > 99
+                                          ? '99+'
+                                          : '${badges![i]}',
+                                      textAlign: TextAlign.center,
+                                      style: refText(
+                                          size: 9.5,
+                                          weight: RF.w700,
+                                          color: RC.white),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 5), // gap:5px
                           // ⚠ ETİKET KESİLMEZ, KÜÇÜLÜR.
@@ -1835,10 +1882,28 @@ class RefBottomNav extends StatelessWidget {
                 child: Row(
                   children: [
                     for (final it in sol)
-                      Expanded(child: _NavOgesi(it: it, aktifMi: it.key == activeKey)),
+                      Expanded(
+                        // ⚠ DÜZELTME: `_NavOgesi` kendi `Expanded`
+                        // alanının GENİŞLİĞİNİ doldurmuyordu (Column
+                        // içeriği sarıyor), bu yüzden VARSAYILAN olarak
+                        // SOLA yaslanıyordu — notch'a yakın öğeler
+                        // (İlanlarım) merkeze daha yakın, kenar öğeler
+                        // (Bul) daha kenarda görünüyor, aralıklar EŞİT
+                        // DEĞİLMİŞ gibi duruyordu. `Center` EKLENDİ —
+                        // ikonun/etiketin şekli, boyutu, rengi HİÇ
+                        // DEĞİŞMEDİ, yalnız kendi alanının ortasına
+                        // hizalandı.
+                        child: Center(
+                            child: _NavOgesi(
+                                it: it, aktifMi: it.key == activeKey)),
+                      ),
                     const SizedBox(width: _centikGenislik),
                     for (final it in sag)
-                      Expanded(child: _NavOgesi(it: it, aktifMi: it.key == activeKey)),
+                      Expanded(
+                        child: Center(
+                            child: _NavOgesi(
+                                it: it, aktifMi: it.key == activeKey)),
+                      ),
                   ],
                 ),
               ),
@@ -1941,7 +2006,8 @@ class _NavOgesi extends StatelessWidget {
     String label,
     String asset,
     VoidCallback onTap,
-    bool rozet
+    bool rozet,
+    bool belirginRozet
   }) it;
   final bool aktifMi;
 
@@ -1986,6 +2052,35 @@ class _NavOgesi extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: RC.white, width: 1.5),
                       ),
+                    ),
+                  ),
+                // ── ⚠ BELİRGİN ROZET — "Bul" ikonu, gelen teklif ──
+                //
+                // Kullanıcı bulgusu: yukarıdaki küçük mavi nokta
+                // ("okunmamış bildirim" göstergesi ile AYNI görsel)
+                // yeterince dikkat çekmiyordu. Bu yüzden AYRI bir
+                // görsel dil: daha büyük, KIRMIZI, üzerinde "!" olan
+                // bir rozet — "Bildirimler"deki nokta ile
+                // KARIŞTIRILMASIN diye bilinçli olarak farklı.
+                if (it.belirginRozet)
+                  Positioned(
+                    right: -5,
+                    top: -4,
+                    child: Container(
+                      width: 15,
+                      height: 15,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: RC.danger,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: RC.white, width: 1.5),
+                      ),
+                      child: const Text('!',
+                          style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: RC.white,
+                              height: 1)),
                     ),
                   ),
               ],

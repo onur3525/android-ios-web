@@ -170,7 +170,10 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     final mine = offerCtl.myOfferFor(l.id, me.id);
     // ⚠ Rozet tamamlanmışlığı da kapsar (§24) — hizmet veren, işin
     // tamamlandığını ilan durumundan değil ilişkiden görür.
-    final (label, color) = listingRozetiUi(l);
+    //
+    // ⚠ NULLABLE — "Açık" durumunda `null` döner, kullanıcı isteğiyle
+    // rozet hiç çizilmez (bkz. `status_ui.dart`daki not).
+    final rozet = listingRozetiUi(l);
     final owner = auth.accountById(l.ownerId);
 
     // ⚠ MASKELEME: iletişim bilgisi AÇILMADAN önce ilan sahibinin adı
@@ -210,6 +213,10 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       .where((x) => x.isTamamlanmisIs)
                       .length,
                   teklifSayisi: offerCtl.offersForListing(l.id).length,
+                  // ⚠ YENİ — kullanıcı isteği: hizmet alanın ne
+                  // zamandır üye olduğu, tamamlanan iş sayısının
+                  // altına eklendi.
+                  kayitTarihi: owner?.kayitTarihi,
                 ),
 
                 // .pl-div{height:1px;background:#F2F4F7;margin:12px 0}
@@ -258,36 +265,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                                   weight: RF.w700,
                                   color: RC.text,
                                   letterSpacing: -0.2)),
-                          const SizedBox(height: 4),
-                          // .ld-meta{11.5px;#98A2B3;gap:5px}
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 5,
-                            children: [
-                              const RefSvg('assets/svg/ic_pin.svg',
-                                  size: 16, color: Color(0xFF98A2B3)),
-                              Text(l.location,
-                                  style: refText(
-                                      size: 11.5,
-                                      weight: RF.w400,
-                                      color: const Color(0xFF98A2B3))),
-                              Text('|',
-                                  style: refText(
-                                      size: 11.5,
-                                      weight: RF.w400,
-                                      color: const Color(0xFFD0D5DD))),
-                              const RefSvg('assets/svg/ic_nclock.svg',
-                                  size: 14, color: Color(0xFF98A2B3)),
-                              Text(gecenSure(l.createdAt),
-                                  style: refText(
-                                      size: 11.5,
-                                      weight: RF.w400,
-                                      color: const Color(0xFF98A2B3))),
-                            ],
-                          ),
+                          // ⚠ KALDIRILDI — kullanıcı bulgusu: konum +
+                          // "az önce" satırı burada TEKRAR ediyordu;
+                          // aynı bilgi aşağıda "İlan Detayı" bölümünde
+                          // (İl/İlçe/Mahalle, İlan Tarihi) zaten var.
                         ]),
                   ),
-                  StatusChip(label, color),
+                  if (rozet != null) StatusChip(rozet.$1, rozet.$2),
                 ]),
 
                 // .pl-h2{15px/700;margin:14px 0 7px}
@@ -304,9 +288,16 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 //
                 // ⚠ SEÇİM YOKSA HİÇ ÇİZİLMEZ — `IsZamaniRozeti`
                 // `null` durumunda boş döner, yer tutucu göstermez.
+                //
+                // ⚠ ETİKET EKLENDİ — kullanıcı bulgusu: chip tek
+                // başına ("Hemen"/"Acil") ne olduğu belirsizdi.
                 if (l.isZamani != null) ...[
+                  Text('Zaman tercihi',
+                      style: refText(
+                          size: RF.s12, weight: RF.w400, color: RC.grey)),
+                  const SizedBox(height: 4),
                   IsZamaniRozeti(l.isZamani),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                 ],
 
                 // ── İLAN AÇIKLAMASI ──
@@ -323,6 +314,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 //
                 // ⚠ İletişim açıksa metin AYNEN gösterilir (mevcut
                 // `iletisimAcik` kullanılır; yeni mekanizma yok).
+                //
+                // ⚠ ETİKET EKLENDİ — "Zaman tercihi" ile AYNI görsel
+                // dil, kullanıcı bulgusu.
+                Text('İşin detayı',
+                    style: refText(
+                        size: RF.s12, weight: RF.w400, color: RC.grey)),
+                const SizedBox(height: 4),
                 Text(gorunenMetin(l.desc, iletisimAcik: iletisimAcik),
                     style: refText(
                         size: RF.s135,
@@ -665,7 +663,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       altiCizili: telefonAcik,
                       not: telefonAcik
                           ? null
-                          : 'İletişim bilgisi açıldığında görüntülenecektir.',
+                          : 'İletişim açılınca görünür.',
                       kilitli: !telefonAcik,
                       onTap: telefonAcik
                           ? () => _telefonAra(context, owner?.phone)
@@ -681,7 +679,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       deger: acik ? 'Mesaj yaz' : null,
                       not: acik
                           ? null
-                          : 'İletişim bilgisi açıldığında görüntülenecektir.',
+                          : 'İletişim açılınca görünür.',
                       kilitli: !acik,
                       // ⚠ AÇIK UÇ KAPATILDI: sohbete giriş buradan.
                       onTap: acik
@@ -806,12 +804,18 @@ class _SahipKarti extends StatelessWidget {
     required this.acik,
     required this.tamamlananIs,
     required this.teklifSayisi,
+    this.kayitTarihi,
   });
 
   final String adSoyad;
   final bool acik;
   final int tamamlananIs;
   final int teklifSayisi;
+
+  /// ⚠ YENİ — hizmet alanın üyelik tarihi (tamamlanan iş sayısının
+  /// altında gösterilir). `null` ise (hesap bulunamazsa) satır hiç
+  /// çizilmez.
+  final DateTime? kayitTarihi;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -885,6 +889,16 @@ class _SahipKarti extends StatelessWidget {
                             weight: RF.w400,
                             color: const Color(0xFF5B6472))),
                   ]),
+                  // ⚠ YENİ — kullanıcı isteği: üyelik tarihi,
+                  // tamamlanan iş sayısının altında.
+                  if (kayitTarihi != null) ...[
+                    const SizedBox(height: 3),
+                    Text(_uyelikTarihiMetni(kayitTarihi!),
+                        style: refText(
+                            size: 11.8,
+                            weight: RF.w400,
+                            color: const Color(0xFF5B6472))),
+                  ],
                 ]),
           ),
           const SizedBox(width: 8),
@@ -1043,7 +1057,14 @@ class _IletisimKutusu extends StatelessWidget {
                   if (not != null) ...[
                     const SizedBox(height: 2),
                     // `.pr-cv2`
+                    //
+                    // ⚠ EK GÜVENLİK — metin artık kısa ("İletişim
+                    // açılınca görünür.") ama yine de `maxLines`/
+                    // `overflow` eklendi: çok dar bir ekranda taşarsa
+                    // "…" ile kesilir, kelime ORTASINDAN BÖLÜNMEZ.
                     Text(not!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: refText(
                             size: RF.s11,
                             weight: RF.w500,
@@ -1092,3 +1113,16 @@ Future<void> _telefonAra(BuildContext context, String? ham) async {
         extra: 'Arama uygulaması açılamadı');
   }
 }
+
+/// ⚠ `teklif_talebi_detay_screen.dart`daki AYNI biçimlendirme —
+/// `intl` paketi projede kullanılmıyor, sabit Türkçe ay adları
+/// listesiyle basitçe formatlanıyor. O dosya bu dosyadan PRIVATE
+/// olduğu için (Dart dosyalar arası private import etmez) buraya
+/// AYNEN yeniden oluşturuldu.
+const _kAyAdlariSahip = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+];
+
+String _uyelikTarihiMetni(DateTime tarih) =>
+    "${_kAyAdlariSahip[tarih.month - 1]} ${tarih.year}'ten beri üye";

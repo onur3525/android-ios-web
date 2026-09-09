@@ -16,31 +16,33 @@ import '../../ui/ref_tokens.dart';
 /// ## GÖRSEL KURAL
 ///
 /// ⚠ İKİNCİL BİLGİDİR. Başlık, kategori, konum ve fiyatın ÖNÜNE
-/// GEÇMEZ: küçük punto, soluk renk, kalın değil. Kartlarda tek
+/// GEÇMEZ: küçük punto, soluk renk, kalın değil.
 /// ── ⚠ TEK KURAL: SAĞ ÜST KÖŞE ──
 ///
-/// İlan numarası YALNIZ DETAY ekranlarında gösterilir ve her zaman
-/// başlığın ÜSTÜNDE, sağ köşede durur.
+/// İlan numarası HER İLAN KARTINDA (önizleme dahil) ve her detay
+/// ekranında gösterilir; her zaman kartın/ekranın EN ÜST SAĞ
+/// KÖŞESİNDE durur.
 ///
-/// ⚠ ÖNİZLEME KARTLARINDA GÖSTERİLMEZ: liste kartında numara yer
-/// kaplıyor ve kullanıcı kartları başlığa göre tarıyor. Numara
-/// karta girince gerekli.
+/// ⚠ DEĞİŞTİ (kullanıcı isteği) — ÖNCEDEN yalnız detay ekranlarında
+/// gösteriliyordu, önizleme kartlarında "yer kaplıyor" gerekçesiyle
+/// GİZLENİYORDU. Artık "#12345" gibi kısa, soluk bir biçimde HER
+/// kartta da var — göz önünde değil, hafif/silik.
 ///
-/// ⚠ YENİ İLAN EKRANLARI DA BU KURALA UYAR: numara göstermek gereken
-/// her detay ekranı bu bileşeni çağırır, kendi hizalamasını YAZMAZ.
+/// ⚠ TÜM İLAN KARTI EKRANLARI BU KURALA UYAR: kart çizen her ekran
+/// bu bileşeni çağırır, kendi hizalamasını YAZMAZ.
 ///
 /// ## BOŞ NUMARA
 ///
 /// ⚠ Numara yoksa HİÇBİR ŞEY ÇİZİLMEZ. API modunda sunucu alanı
-/// göndermediğinde `ilanNo` boş kalır; "İlan No: " yazan boş bir
-/// etiket göstermek kullanıcıyı yanıltır.
+/// göndermediğinde `ilanNo` boş kalır; "#" yazan boş bir etiket
+/// göstermek kullanıcıyı yanıltır.
 /// ═══════════════════════════════════════════════════════════════
 class IlanNoEtiketi extends StatelessWidget {
   /// ⚠ VARSAYILAN: SAĞ ÜST KÖŞE.
   ///
-  /// Ürün kuralı gereği ilan numarası detay ekranlarında başlığın
-  /// ÜSTÜNDE, sağ köşede durur. Bu yüzden varsayılan davranış budur;
-  /// çağıran ekranların ayrıca hizalama yazmasına gerek yoktur.
+  /// Ürün kuralı gereği ilan numarası her kartın/ekranın EN ÜSTÜNDE,
+  /// sağ köşede durur. Bu yüzden varsayılan davranış budur; çağıran
+  /// ekranların ayrıca hizalama yazmasına gerek yoktur.
   const IlanNoEtiketi(this.listing, {super.key});
 
   final Listing listing;
@@ -52,6 +54,11 @@ class IlanNoEtiketi extends StatelessWidget {
     }
     // ⚠ SAĞA YASLI + ALTINDA BOŞLUK: başlıkla arasında sabit aralık,
     // ekranlar kendi `SizedBox`ını eklemez — ölçü tek yerde.
+    //
+    // ⚠ RENK/PUNTO DAHA DA SOLUK — kullanıcı isteği: "çok göz önünde
+    // değil hafif silik okunabilir olsun". Önceki `RC.textSoft`tan
+    // (detay ekranlarında yeterliydi) daha açık bir tona geçildi;
+    // artık HER kartta göründüğü için dikkat çekmemesi daha önemli.
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Align(
@@ -59,9 +66,9 @@ class IlanNoEtiketi extends StatelessWidget {
         child: Text(
           listing.ilanNoEtiketi,
           style: refText(
-            size: RF.s12,
+            size: RF.s11,
             weight: RF.w400,
-            color: RC.textSoft,
+            color: RC.greyLight,
             letterSpacing: RF.lsM02,
           ),
         ),

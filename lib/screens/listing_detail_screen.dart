@@ -682,6 +682,12 @@ class _DurumChipi extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ⚠ KULLANICI İSTEĞİ — "Açık" durumu artık HİÇ gösterilmez (bir
+    // ilanın normal/varsayılan hali, rozet gerektirmiyor). Diğer
+    // durumlar (Tamamlandı, Süresi Doldu, Kapatıldı) DEĞİŞMEDİ.
+    if (!tamamlandi && status == ListingStatus.active) {
+      return const SizedBox.shrink();
+    }
     // ⚠ SIRA ÖNEMLİ: tamamlanmışlık yaşam durumundan ÖNCE bakılır.
     // Tamamlanmış bir iş sonradan silinse de "Tamamlandı" kalır.
     final (bg, fg, nokta, metin) = tamamlandi

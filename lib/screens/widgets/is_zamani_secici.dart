@@ -54,6 +54,16 @@ class IsZamaniSecici extends StatelessWidget {
 
   Widget _secenek(IsZamani z) {
     final aktif = secili == z;
+    // ⚠ DÜZELTİLDİ — kullanıcı isteğiyle: yalnız "Acil" (`hemen`)
+    // seçiliyken KIRMIZI olur; bu, aciliyeti göze hitap ederek
+    // vurgular. Önceki karar ("anlam yükleyen renk yok, hepsi mavi")
+    // TERSİNE ÇEVRİLDİ — diğer iki seçenek (Bu hafta, Esnek zaman)
+    // hâlâ mevcut mavi/soft dilde kalıyor.
+    final acilMi = z == IsZamani.hemen;
+    // ⚠ "Acil" seçiliyken İÇİ TAM DOLU kırmızı (soft zemin DEĞİL) —
+    // kullanıcı açıkça "içi kırmızı olsun" dedi. Diğer iki seçenek
+    // (Bu hafta, Esnek zaman) hâlâ soft mavi zeminde kalıyor.
+    final renk = acilMi ? RC.danger : RC.blue;
     return RefTap(
       // ⚠ AYNI DÜĞMEYE TEKRAR DOKUNMAK SEÇİMİ KALDIRIR.
       onTap: () => onDegisti(aktif ? null : z),
@@ -61,12 +71,11 @@ class IsZamaniSecici extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          // ⚠ ANLAM YÜKLEYEN RENK YOK (kırmızı/yeşil değil).
-          // Seçim, uygulamanın mevcut birincil mavisiyle belirtilir —
-          // öteki seçim yüzeyleriyle aynı dil.
-          color: aktif ? RC.blueSoft : RC.white,
+          color: !aktif
+              ? RC.white
+              : (acilMi ? renk : renk.withValues(alpha: 0.1)),
           border: Border.all(
-            color: aktif ? RC.blue : RC.border,
+            color: aktif ? renk : RC.border,
             width: 1.4,
           ),
           borderRadius: BorderRadius.circular(RR.r12),
@@ -78,7 +87,13 @@ class IsZamaniSecici extends StatelessWidget {
           style: refText(
             size: RF.s135,
             weight: aktif ? RF.w700 : RF.w500,
-            color: aktif ? RC.blue : RC.textDark,
+            // ⚠ "Acil" seçiliyken zemin TAM DOLU kırmızı — yazı
+            // BEYAZ olmalı (kırmızı üzerinde kırmızı yazı okunmaz).
+            // Diğer iki seçenek soft zeminde kaldığı için yazı hâlâ
+            // kendi rengini (mavi) taşıyor.
+            color: !aktif
+                ? RC.textDark
+                : (acilMi ? RC.white : renk),
           ),
         ),
       ),

@@ -97,14 +97,28 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     sysToastOk(context, 'Teklifiniz gönderildi.');
   }
 
+  // ⚠ DÜZELTİLDİ — kullanıcı isteği: "Bul" akışında (`TeklifTalebi`)
+  // normal İlan Ver akışındaki gibi ayrı bir "işi tamamla" adımı YOK
+  // — hizmet alan teklifi seçtiği anda iş, uygulama için TAMAMLANMIŞ
+  // sayılır (tek adımda "Kazandığım"a/"Tamamlanan İşler"e geçer).
+  // Bu yüzden `secToVer` hemen ardından `tamamla` da çağrılır; UI
+  // tarafında da "Teklifi Seç" butonu bu andan sonra "Yorum Yaz"a
+  // dönüşür (bkz. `_HizmetAlanAksiyonlari.build()`).
   Future<void> _sec(TeklifTalebi t) async {
-    final err = await context.read<TeklifTalebiController>().secToVer(t.id);
+    final ctl = context.read<TeklifTalebiController>();
+    final err = await ctl.secToVer(t.id);
     if (!mounted) return;
     if (err != null) {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    sysToastOk(context, 'Teklif kabul edildi — iş aktif.');
+    final err2 = await ctl.tamamla(t.id);
+    if (!mounted) return;
+    if (err2 != null) {
+      sysToastErr(context, SysKind.genericError, extra: err2.message);
+      return;
+    }
+    sysToastOk(context, 'Teklif kabul edildi — iş tamamlandı.');
   }
 
   Future<void> _reddet(TeklifTalebi t, {String? gerekce}) async {
@@ -435,6 +449,52 @@ class _KarsiTarafBilgisi extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(height: 1, color: Color(0xFFF1F3F6)),
           const SizedBox(height: 10),
+          // ── ⚠ YENİ — HİZMET ALANIN TAMAMLANAN İŞ SAYISI + ÜYELİK
+          // TARİHİ ──
+          //
+          // Kullanıcı isteği: hizmet veren, teklif verirken karşı
+          // tarafın (hizmet alanın) GEÇMİŞİNİ de görebilmeli — kaç
+          // iş tamamlatmış, ne zamandır üye. İki akıştaki (normal
+          // İlan Ver + doğrudan Bul) tamamlanan işler TOPLANIR, tek
+          // bir sayı gösterilir.
+          Builder(builder: (context) {
+            final tamamlanan =
+                _hizmetAlanTamamlananIs(context, talep.hizmetAlanId);
+            final uyelikMetni = hizmetAlan == null
+                ? null
+                : _uyelikTarihiMetni(hizmetAlan.kayitTarihi);
+            return Row(
+              children: [
+                const RefSvg('assets/svg/ic_shieldok.svg',
+                    size: 14, color: Color(0xFF5B6472)),
+                const SizedBox(width: 5),
+                Text('$tamamlanan iş tamamladı',
+                    style: refText(
+                        size: RF.s13,
+                        weight: RF.w500,
+                        color: const Color(0xFF5B6472))),
+                if (uyelikMetni != null) ...[
+                  const SizedBox(width: 10),
+                  Text('•',
+                      style: refText(
+                          size: RF.s13, weight: RF.w500, color: RC.grey)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(uyelikMetni,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: refText(
+                            size: RF.s13,
+                            weight: RF.w500,
+                            color: const Color(0xFF5B6472))),
+                  ),
+                ],
+              ],
+            );
+          }),
+          const SizedBox(height: 10),
+          const Divider(height: 1, color: Color(0xFFF1F3F6)),
+          const SizedBox(height: 10),
           // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, `offer_detail_
           // screen.dart`daki `_IletisimKutusu` İLE AYNI GÖRSEL DİL ──
           //
@@ -457,7 +517,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                         : null,
                     not: telefonAcik
                         ? null
-                        : 'İletişim bilgisi açıldığında görüntülenecektir.',
+                        : 'İletişim açılınca görünür.',
                     kilitli: !telefonAcik,
                     onTap: telefonAcik
                         ? () => _telefonAra(context, hizmetAlan?.phone)
@@ -472,7 +532,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     deger: acik ? 'Mesaj yaz' : null,
                     not: acik
                         ? null
-                        : 'İletişim bilgisi açıldığında görüntülenecektir.',
+                        : 'İletişim açılınca görünür.',
                     kilitli: !acik,
                     onTap: acik
                         ? () => _sohbeteGit(context, talep.hizmet)
@@ -600,26 +660,28 @@ class _KarsiTarafBilgisi extends StatelessWidget {
         //
         // ⚠ ARTIK YORUM YOKKEN DE GÖRÜNÜR — bkz. `teklif_iste_screen.
         // dart`daki AYNI düzeltme.
+        //
+        // ⚠ DIŞ ÇERÇEVE KALDIRILDI (kullanıcı bulgusu) — `YorumKarti`
+        // ZATEN kendi çerçeveli kartını çiziyordu; bunu BİR DE dış
+        // bir kutunun içine koymak "kart içinde kart", sıkışık bir
+        // görünüm yaratıyordu. "Yorumlar" başlığı artık ORTALI,
+        // "Tümünü Gör" artık SAĞA yaslı.
         Builder(builder: (context) {
           final reviews = context.watch<ReviewController>();
           final yorumlar = reviews.byProvider(talep.saglayiciId);
-          return Container(
-            margin: const EdgeInsets.only(top: 10),
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              color: RC.white,
-              border: Border.all(color: const Color(0xFFECEEF2)),
-              borderRadius: BorderRadius.circular(RR.r13),
-            ),
+          return Padding(
+            padding: const EdgeInsets.only(top: 14),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text('Yorumlar',
+                    textAlign: TextAlign.center,
                     style: refText(
-                        size: RF.s14, weight: RF.w700, color: RC.text)),
-                const SizedBox(height: 8),
+                        size: RF.s16, weight: RF.w700, color: RC.text)),
+                const SizedBox(height: 10),
                 if (yorumlar.isEmpty)
                   Text('Henüz yorum yok.',
+                      textAlign: TextAlign.center,
                       style: refText(
                           size: RF.s13,
                           weight: RF.w400,
@@ -637,19 +699,22 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                       ),
                     ),
                   if (acik && yorumlar.length > 3)
-                    RefTap(
-                      onTap: () => Navigator.push<void>(
-                          context,
-                          MaterialPageRoute<void>(
-                              builder: (_) => ProviderReviewsScreen(
-                                  providerId: talep.saglayiciId,
-                                  providerAdi: talep.saglayiciAdi))),
-                      borderRadius: BorderRadius.circular(RR.r8),
-                      child: Text('Tümünü Gör (${yorumlar.length})',
-                          style: refText(
-                              size: RF.s13,
-                              weight: RF.w700,
-                              color: RC.blue)),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: RefTap(
+                        onTap: () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute<void>(
+                                builder: (_) => ProviderReviewsScreen(
+                                    providerId: talep.saglayiciId,
+                                    providerAdi: talep.saglayiciAdi))),
+                        borderRadius: BorderRadius.circular(RR.r8),
+                        child: Text('Tümünü Gör (${yorumlar.length})',
+                            style: refText(
+                                size: RF.s13,
+                                weight: RF.w700,
+                                color: RC.blue)),
+                      ),
                     ),
                 ],
               ],
@@ -679,18 +744,33 @@ class _KarsiTarafBilgisi extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Expanded(
-                child: _MiniIletisimKutusu(
-                  ikon: 'assets/svg/ic_phone_f.svg',
-                  etiket: 'Telefon',
-                  // ⚠ Bu akışta hizmet verenin telefonu HİÇ
-                  // paylaşılmıyor — kutu HER ZAMAN kilitli, `deger`
-                  // yok, yalnız `not` (Mesajlaşma ile TUTARLI).
-                  deger: null,
-                  not: 'İletişim bilgisi açıldığında görüntülenecektir.',
-                  kilitli: true,
-                ),
-              ),
+              // ── ⚠ DÜZELTİLDİ — kullanıcı bulgusu: bu kutu HER
+              // ZAMAN kilitliydi ("hizmet verenin telefonu hiç
+              // paylaşılmıyor" sabit kararı vardı). Hizmet verenin
+              // profilinde `Account` düzeyinde ayrı bir gizlilik
+              // tercihi YOK (yalnız hizmet ALANIN `iletisimTercihi`si
+              // var, o da bu akışta KARŞI yönde/sağlayıcı tarafında
+              // kullanılıyor) — teklif geldiğinde (`acik`) hizmet
+              // verenin telefonu da diğer bilgileriyle (ad, avatar)
+              // AYNI anda, koşulsuz açılır.
+              Builder(builder: (context) {
+                final hizmetVeren = context
+                    .read<AuthController>()
+                    .accountById(talep.saglayiciId);
+                return Expanded(
+                  child: _MiniIletisimKutusu(
+                    ikon: 'assets/svg/ic_phone_f.svg',
+                    etiket: 'Telefon',
+                    deger:
+                        acik ? _telefonGosterMetni(hizmetVeren?.phone) : null,
+                    not: acik ? null : 'İletişim açılınca görünür.',
+                    kilitli: !acik,
+                    onTap: acik
+                        ? () => _telefonAra(context, hizmetVeren?.phone)
+                        : null,
+                  ),
+                );
+              }),
               const SizedBox(width: 11),
               Expanded(
                 child: _MiniIletisimKutusu(
@@ -699,7 +779,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   deger: acik ? 'Mesaj yaz' : null,
                   not: acik
                       ? null
-                      : 'İletişim bilgisi açıldığında görüntülenecektir.',
+                      : 'İletişim açılınca görünür.',
                   kilitli: !acik,
                   onTap: acik
                       ? () => _sohbeteGit(context, talep.hizmet)
@@ -814,7 +894,11 @@ class _MiniIletisimKutusu extends StatelessWidget {
                 ],
                 if (not != null) ...[
                   const SizedBox(height: 2),
+                  // ⚠ EK GÜVENLİK — bkz. job_detail_screen.dart'taki
+                  // AYNI not.
                   Text(not!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: refText(
                           size: RF.s11,
                           weight: RF.w500,
@@ -1003,9 +1087,35 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (talep.durum) {
       case TeklifTalebiDurumu.beklemede:
-        return Text('Hizmet verenin teklifi bekleniyor.',
-            style:
-                refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
+        // ── ⚠ EKSİKTİ — 3 NOKTA MENÜSÜ YALNIZ `teklifGeldi`
+        // DURUMUNDA VARDI, "TEKLİFİ SEÇ" BUTONUNUN YANINDA. Hizmet
+        // alan, teklif GELMEDEN ÖNCE (beklerken) talebi silme/iptal
+        // etme seçeneğine HİÇ SAHİP DEĞİLDİ. `_talepMenusu()` zaten
+        // vardı (Talebi Sil → onay → "neden siliyorsun?" gerekçe
+        // seçimi) — burada da AYNI mekanizma, yeni bir akış İCAT
+        // EDİLMEDİ.
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Expanded(child: _BeklemeGostergesi()),
+            const SizedBox(width: 8),
+            RefTap(
+              onTap: onMenuAc,
+              borderRadius: BorderRadius.circular(RR.r13),
+              child: Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFECEEF2)),
+                  borderRadius: BorderRadius.circular(RR.r13),
+                ),
+                child: const RefSvg('assets/svg/ic_dots.svg',
+                    size: 18, color: RC.textSoft),
+              ),
+            ),
+          ],
+        );
 
       case TeklifTalebiDurumu.teklifGeldi:
         final kalan = talep.suresiDolacagiZaman?.difference(DateTime.now());
@@ -1128,3 +1238,105 @@ int _tamamlananIsGercek(BuildContext c, String providerId) {
   }
   return n;
 }
+
+/// ── ⚠ "BEKLENİYOR" GÖSTERGESİ — NABIZ ATAN ANİMASYON ──
+///
+/// Kullanıcı isteğiyle: metin daha "canlı" olmalı, ama daha fazla
+/// AÇIKLAMA eklenerek DEĞİL, GÖRSEL olarak. Önceden düz, gri, tek
+/// satırlık bir `Text` idi. Şimdi hafif mavi zeminli bir kutu içinde,
+/// sürekli nabız atan bir gönderi ikonu ile birlikte — "teklif
+/// gerçekten iletildi, canlı olarak yanıt bekleniyor" hissi.
+class _BeklemeGostergesi extends StatefulWidget {
+  const _BeklemeGostergesi();
+
+  @override
+  State<_BeklemeGostergesi> createState() => _BeklemeGostergesiState();
+}
+
+class _BeklemeGostergesiState extends State<_BeklemeGostergesi>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: RC.blueSoft,
+        borderRadius: BorderRadius.circular(RR.r13),
+      ),
+      child: Row(
+        children: [
+          FadeTransition(
+            opacity: Tween(begin: 0.35, end: 1.0).animate(
+                CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut)),
+            child: Container(
+              width: 30,
+              height: 30,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: RC.blue,
+                shape: BoxShape.circle,
+              ),
+              child: const RefSvg('assets/svg/ic_send.svg',
+                  size: 15, color: RC.white),
+            ),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text('Hizmet verenin teklifi bekleniyor.',
+                style: refText(
+                    size: RF.s135, weight: RF.w600, color: RC.text)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ⚠ Hizmet ALANIN (müşterinin) TAMAMLANAN iş sayısı — hizmet
+/// verenin `_tamamlananIsGercek`sinin AYNADAKİ karşılığı. İki akıştaki
+/// tamamlanan işler toplanır:
+/// 1) Normal "İlan Ver" — bu kullanıcının SAHİBİ olduğu, tamamlanmış
+///    ilanlar (`Listing.isTamamlanmisIs`).
+/// 2) Doğrudan "Bul" — bu kullanıcının GÖNDERDİĞİ, `tamamlandi`
+///    durumuna ulaşmış teklif talepleri.
+int _hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) {
+  final ilanSayisi = c
+      .read<ListingController>()
+      .all
+      .where((l) => l.ownerId == hizmetAlanId && l.isTamamlanmisIs)
+      .length;
+  final talepSayisi = c
+      .read<TeklifTalebiController>()
+      .byHizmetAlan(hizmetAlanId)
+      .where((t) => t.durum == TeklifTalebiDurumu.tamamlandi)
+      .length;
+  return ilanSayisi + talepSayisi;
+}
+
+/// ⚠ "Ocak 2025'ten beri üye" — `intl` paketi PROJEDE HİÇ
+/// kullanılmıyor (yeni bağımlılık eklemek yerine, sabit bir Türkçe
+/// ay adları listesiyle basitçe formatlanıyor).
+const _kAyAdlari = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+];
+
+String _uyelikTarihiMetni(DateTime tarih) =>
+    "${_kAyAdlari[tarih.month - 1]} ${tarih.year}'ten beri üye";

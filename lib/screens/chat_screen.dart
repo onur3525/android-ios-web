@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
@@ -15,6 +14,7 @@ import '../ui/ref_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/validators.dart';
 import '../domain/config.dart';
+import 'widgets/sohbet_fotograf_akisi.dart';
 
 /// Sohbet (HTML vChat): balonlar, mesaj durumları
 /// (Gönderiliyor / Gönderildi / Okundu / Gönderilemedi + Tekrar Gönder),
@@ -91,18 +91,19 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickPhoto() async {
-    try {
-      final x = await ImagePicker()
-          .pickImage(source: ImageSource.gallery, maxWidth: 1280);
-      if (x == null) {
-        return;
-      }
-      await _send(imagePath: x.path);
-    } catch (_) {
-      if (mounted) {
-        sysToastErr(context, SysKind.photoUploadError);
-      }
+    // ⚠ ARTIK PAYLAŞIMLI AKIŞ — `sohbet_fotograf_akisi.dart`. Önceden
+    // doğrudan galeriye gidip SEÇİLİR SEÇİLMEZ gönderiyordu; artık
+    // kaynak seçimi (galeri/kamera) + gönderim öncesi ÖNİZLEME var.
+    final sonuc = await sohbetFotografiSecVeOnizle(context);
+    if (sonuc == null) {
+      return;
     }
+    // ⚠ `_send()` metni `_input.text`ten OKUR — önizlemedeki
+    // (opsiyonel) açıklama buraya yazılıp aynı yoldan gönderilir.
+    if (sonuc.aciklama != null) {
+      _input.text = sonuc.aciklama!;
+    }
+    await _send(imagePath: sonuc.yol);
   }
 
   String _statusText(MessageStatus s) => switch (s) {
@@ -244,6 +245,95 @@ class _ChatScreenState extends State<ChatScreen>
               itemBuilder: (_, i) {
                 final m = msgs[i];
                 final mine = m.senderId == me.id;
+                // ⚠ YENİ — kullanıcı bulgusu: "fotoğraflar mesaj
+                // kısmında çerçeveli vs gösterilmemeli, sadece
+                // fotoğraf gösterilmeli". Yalnız fotoğraf İÇEREN
+                // (metinsiz) mesajlar artık RENKLİ BALONUN DIŞINDA,
+                // şeffaf zeminde gösterilir — WhatsApp'taki gibi.
+                // Metin de varsa (fotoğraf+açıklama), mevcut balon
+                // KORUNUR (fotoğraf balonun İÇİNDE, üstte).
+                final yalnizFoto = m.imagePath != null && m.text == null;
+
+                Widget durumSatiri({required bool acikZemin}) {
+                  if (!mine) {
+                    return const SizedBox.shrink();
+                  }
+                  // ⚠ Şeffaf/açık zeminde (yalnız-fotoğraf durumunda)
+                  // beyaz tikler/metin OKUNMAZ — koyu bir renk seti
+                  // kullanılır. Mavi balon zemininde ise mevcut
+                  // beyaz/yarı-saydam renkler KORUNUR.
+                  final aktifRenk =
+                      acikZemin ? RC.textSoft : Colors.white70;
+                  final okunduRenk =
+                      acikZemin ? const Color(0xFF1D9BF0) : const Color(0xFF5EE1FF);
+                  return Row(mainAxisSize: MainAxisSize.min, children: [
+                    if (m.status == MessageStatus.sending)
+                      SizedBox(
+                          width: 10, height: 10,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 1.6, color: aktifRenk)),
+                    // ⚠ DÜZELTİLDİ — kullanıcı bulgusu: "sent" ve
+                    // "delivered" ikisi de AYNI tek tik ikonunu
+                    // gösteriyordu. Artık: gönderildi = 1 tik,
+                    // iletildi = 2 tik (soluk), okundu = 2 tik
+                    // (WhatsApp'taki gibi FARKLI, canlı bir renkte).
+                    if (m.status == MessageStatus.sent)
+                      RefSvg('assets/svg/ic_checksm.svg',
+                          size: 13, color: aktifRenk),
+                    if (m.status == MessageStatus.delivered)
+                      RefSvg('assets/svg/ic_tick2.svg',
+                          size: 15, color: aktifRenk),
+                    if (m.status == MessageStatus.read)
+                      RefSvg('assets/svg/ic_tick2.svg',
+                          size: 15, color: okunduRenk),
+                    const SizedBox(width: 4),
+                    Text(_statusText(m.status),
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: m.status == MessageStatus.failed
+                                ? const Color(0xFFE5452C)
+                                : aktifRenk)),
+                    if (m.status == MessageStatus.failed) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => context
+                            .read<ChatController>()
+                            .retry(widget.offerId, m),
+                        child: const Text('Tekrar Gönder',
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE5452C),
+                                decoration: TextDecoration.underline,
+                                decorationColor: Color(0xFFE5452C))),
+                      ),
+                    ],
+                  ]);
+                }
+
+                if (yalnizFoto) {
+                  return Align(
+                    alignment:
+                        mine ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: mine
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _SohbetFotografi(yol: m.imagePath!, benim: mine),
+                          if (mine) ...[
+                            const SizedBox(height: 3),
+                            durumSatiri(acikZemin: true),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
                 return Align(
                   alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
                   // ── `.ch-bub` ──
@@ -303,42 +393,7 @@ class _ChatScreenState extends State<ChatScreen>
                                     color: mine ? Colors.white : HC.dark)),
                           if (mine) ...[
                             const SizedBox(height: 3),
-                            Row(mainAxisSize: MainAxisSize.min, children: [
-                              if (m.status == MessageStatus.sending)
-                                const SizedBox(
-                                    width: 10, height: 10,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 1.6, color: Colors.white70)),
-                              if (m.status == MessageStatus.read)
-                                const RefSvg('assets/svg/ic_checkc.svg',
-                                    size: 13, color: Colors.white),
-                              if (m.status == MessageStatus.sent ||
-                                  m.status == MessageStatus.delivered)
-                                const RefSvg('assets/svg/ic_checksm.svg',
-                                    size: 13, color: Colors.white70),
-                              const SizedBox(width: 4),
-                              Text(_statusText(m.status),
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      color: m.status == MessageStatus.failed
-                                          ? const Color(0xFFFFC7BD)
-                                          : Colors.white70)),
-                              if (m.status == MessageStatus.failed) ...[
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () => context
-                                      .read<ChatController>()
-                                      .retry(widget.offerId, m),
-                                  child: const Text('Tekrar Gönder',
-                                      style: TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                          decoration: TextDecoration.underline,
-                                          decorationColor: Colors.white)),
-                                ),
-                              ],
-                            ]),
+                            durumSatiri(acikZemin: false),
                           ],
                         ]),
                   ),

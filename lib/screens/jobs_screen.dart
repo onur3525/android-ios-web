@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
+import '../data/models/teklif_talebi.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -24,6 +26,7 @@ import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
 import 'teklif_istekleri_screen.dart';
+import 'teklif_talebi_detay_screen.dart';
 
 /// Hizmet veren — İŞLERİM / KAZANDIĞIM sekmeleri (HTML vCust provider).
 ///
@@ -315,6 +318,22 @@ class _JobsScreenState extends State<JobsScreen> {
             : o.status == OfferStatus.active)
         .toList();
 
+    // ── ⚠ YENİ — "Bul" AKIŞINDAN KAZANILAN İŞLER ──
+    //
+    // Kullanıcı bulgusu: hizmet alan doğrudan bir teklif isteğine
+    // (`TeklifTalebi`) verilen teklifi SEÇTİĞİNDE, bu iş "Kazandığım"
+    // bölümüne HİÇ YANSIMIYORDU — o bölüm yalnız normal "İlan Ver"
+    // akışındaki `Offer`ları biliyordu. `TeklifTalebi` AYRI bir model
+    // olduğu için (bkz. model notu) `myOffers` listesine KARIŞTIRILMAZ
+    // — aynı ekranda AYRI bir bölüm olarak eklenir.
+    final secilenTalepler = widget.kazandigim
+        ? context
+            .watch<TeklifTalebiController>()
+            .bySaglayici(me.id)
+            .where((t) => t.durum == TeklifTalebiDurumu.secildi)
+            .toList()
+        : const <TeklifTalebi>[];
+
     // ── SIRALAMA ──
     //
     // ⚠ AYRI DURUM (`_kazSort`). Bu listenin ölçütleri "Yeni işler"
@@ -367,7 +386,28 @@ class _JobsScreenState extends State<JobsScreen> {
           if (!widget.kazandigim)
             RefSegmentTabs(
               selected: _sekme,
-              onChanged: (i) => setState(() => _sekme = i),
+              onChanged: (i) {
+                setState(() => _sekme = i);
+                // ⚠ KULLANICI İSTEĞİ — sekmeye girince rozet silinsin.
+                // "Teklif istekleri" 3. sekme (index 2).
+                if (i == 2) {
+                  context
+                      .read<TeklifTalebiController>()
+                      .talepleriGorulduIsaretle(me.id);
+                }
+              },
+              // ⚠ YENİ — hizmet verene "Bul" akışından doğrudan
+              // teklif isteği geldiğinde, yalnız bildirim değil,
+              // "Teklif istekleri" sekmesinin ikonunda da kırmızı bir
+              // sayı rozeti görünür. Sekmeye girilince (yukarıdaki
+              // `talepleriGorulduIsaretle`) silinir.
+              badges: [
+                0,
+                0,
+                context
+                    .watch<TeklifTalebiController>()
+                    .gorulmemisTalepSayisi(me.id),
+              ],
               items: const [
                 (asset: 'assets/svg/ic_plane.svg', label: 'Yeni işler'),
                 (
@@ -461,7 +501,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                   ? const StatusChip('Teklif Verildi', HC.blue)
                                   : RefSvg('assets/svg/ic_chev.svg', size: 20, color: RC.greyLight));
                         }))
-                : (myOffers.isEmpty
+                : ((myOffers.isEmpty && secilenTalepler.isEmpty)
                     // ⚠ BOŞ DURUM METNİ EKRANA GÖRE DEĞİŞİR.
                     //
                     // İki liste ayrı şeydir: `/provider/won` kazanılan
@@ -480,9 +520,17 @@ class _JobsScreenState extends State<JobsScreen> {
                     : ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                        itemCount: myOffers.length,
+                        // ⚠ İKİ LİSTE BİRLEŞİK — `myOffers` (normal
+                        // İlan Ver akışı) + `secilenTalepler` ("Bul"
+                        // akışından kazanılan, yalnız `kazandigim`
+                        // ekranında dolu olur).
+                        itemCount: myOffers.length + secilenTalepler.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) {
+                          if (i >= myOffers.length) {
+                            final t = secilenTalepler[i - myOffers.length];
+                            return _kazanilanTalepKarti(context, t);
+                          }
                           final o = myOffers[i];
                           final l = listingCtl.byId(o.listingId);
                           final (label, color) = offerStatusUi(o.status);
@@ -538,6 +586,60 @@ class _JobsScreenState extends State<JobsScreen> {
             ),
           ),
         ]),
+      ),
+    );
+  }
+
+  /// ⚠ YENİ — "Bul" akışından kazanılan iş kartı. `myOffers`
+  /// listesindeki KART İLE GÖRSEL OLARAK TUTARLI (aynı çerçeve,
+  /// aynı tipografi) — yeni bir tasarım İCAT EDİLMEDİ, `TeklifTalebi`
+  /// alanlarıyla dolduruldu. `Offer`ın aksine `Listing` yok, bu
+  /// yüzden `JobDetailScreen` yerine `TeklifTalebiDetayScreen`e gider.
+  Widget _kazanilanTalepKarti(BuildContext context, TeklifTalebi t) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => TeklifTalebiDetayScreen(talepId: t.id))),
+        child: Container(
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+              border: Border.all(color: HC.border),
+              borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(t.hizmet,
+                        style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: HC.dark)),
+                    const SizedBox(height: 3),
+                    // ⚠ "Bul" akışından geldiğini AYIRT ETTİRİR —
+                    // aksi hâlde bu kart normal ilan kartından
+                    // görsel olarak ayrışmaz, kullanıcı KARIŞTIRIR.
+                    const Text('Doğrudan Teklif İsteği',
+                        style: TextStyle(fontSize: 12, color: HC.grey)),
+                  ]),
+            ),
+            Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(tl(t.teklifFiyati ?? 0),
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: HC.dark)),
+                  const StatusChip('Seçildi', HC.blue),
+                ]),
+          ]),
+        ),
       ),
     );
   }
@@ -614,7 +716,17 @@ class _JobsScreenState extends State<JobsScreen> {
             // ⚠ ÜSTTEN HİZALI: teklif rozeti kartın SAĞ ÜST köşesinde
             // durmalı; `center` olsaydı kart yüksekliğine göre
             // ortalanır, başlık hizasından kayardı.
-            child: Row(
+            //
+            // ⚠ İLAN NUMARASI ARTIK ÖNİZLEMEDE de GÖSTERİLİR
+            // (kullanıcı isteği) — `IlanNoEtiketi` kartın TÜM
+            // genişliğinde, `Row`un ÜSTÜNDE ayrı bir satır: yalnız
+            // `Expanded` Column'un içine konsaydı kartın gerçek sağ
+            // kenarına değil, trailing rozetin SOLUNA yaslanırdı.
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                IlanNoEtiketi(l),
+                Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
               Expanded(
@@ -636,8 +748,6 @@ class _JobsScreenState extends State<JobsScreen> {
                           fontWeight:
                               incelendi ? FontWeight.w600 : FontWeight.w800,
                           color: incelendi ? HC.dark : _kYeniKoyu)),
-                  // ⚠ İLAN NUMARASI ÖNİZLEMEDE GÖSTERİLMEZ
-                  // (bkz. `IlanNoEtiketi` — yalnız detayda, sağ üstte).
                   // ── ⚠ MÜŞTERİ ADI — İLETİŞİM DURUMUNA GÖRE ──
                   //
                   // Hizmet veren ilanın kime ait olduğunu kartta görür.
@@ -700,18 +810,25 @@ class _JobsScreenState extends State<JobsScreen> {
                 ]),
               ),
               const SizedBox(width: 8),
-              // ── ⚠ TEKLİF DURUMU — SAĞ ÜST KÖŞE ──
-              //
-              // "Henüz teklif verilmedi" / "N teklif verildi".
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _TeklifRozeti(adet: teklifAdedi),
-                  const SizedBox(height: 6),
-                  trailing,
-                ],
-              ),
+              // ⚠ Rozet buradan KALDIRILDI — kullanıcı isteğiyle
+              // kartın gerçek ALT kısmına taşındı (aşağıda). Burada
+              // yalnız `trailing` (durum rozeti / ok ikonu) kalır.
+              trailing,
             ]),
+              // ── ⚠ TEKLİF DURUMU — ARTIK KARTIN GERÇEK SAĞ ALT
+              // KÖŞESİNDE ──
+              //
+              // Kullanıcı bulgusu: rozet ("Teklif verilmedi" / "N
+              // teklif verildi") önceden başlığın YANINDA (sağ üst)
+              // duruyordu. Artık kartın TÜM içeriğinin altında, ayrı
+              // bir satır olarak, sağa yaslı.
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: _TeklifRozeti(adet: teklifAdedi),
+              ),
+              ],
+            ),
           ),
         ),
       );
@@ -741,7 +858,9 @@ class _TeklifRozeti extends StatelessWidget {
       < 4 => (RC.blueSoft, RC.blue),
       _ => (const Color(0xFFFFF4E5), const Color(0xFFF5820C)),
     };
-    final metin = adet == 0 ? 'Henüz teklif verilmedi' : '$adet teklif verildi';
+    // ⚠ DÜZELTİLDİ — kullanıcı isteği: "Henüz" kaldırıldı, yalnız
+    // "Teklif verilmedi".
+    final metin = adet == 0 ? 'Teklif verilmedi' : '$adet teklif verildi';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),

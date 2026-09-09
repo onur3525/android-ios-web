@@ -1171,7 +1171,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // ya da HENÜZ TERK EDİLMEMİŞSE `null` döner. Böylece
               // "hangi anda uyarılır" kararı çerçeveye değil bize ait
               // olur ve testle kilitlenebilir.
-              autovalidateMode: AutovalidateMode.always,
+              // ⚠ DÜZELTİLDİ — `AutovalidateMode.always` her odak
+              // değişiminde (her `setState(() {})` çağıran focus
+              // listener tetiklendiğinde, ki bu TAM OLARAK bir alana
+              // dokunup klavye açılırken olur) formun TÜM 6 alanını
+              // yeniden doğruluyordu — klavye açılma animasyonuyla
+              // AYNI ANDA. `onUserInteraction`a geçildi: kırmızı
+              // uyarı METİNLERİNİN ne zaman göründüğü zaten `_kural()`
+              // fonksiyonunun KENDİ mantığıyla (odak/terkEdilen
+              // kontrolü) yönetiliyor — bu değişmedi. Buton aktifliği
+              // (`_formGecerli`) de `Form.validate()`den TAMAMEN
+              // BAĞIMSIZ, kendi `Validators.*` çağrılarını yapıyor —
+              // o da etkilenmez.
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               key: _form,
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 Align(
@@ -1508,30 +1520,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   _altAciklama(FormMesaj.kategoriSec),
 
-                  Builder(builder: (_) {
-                    // ⚠ TEŞHİS E3: bölge bildirimlerinin odak üzerindeki
-                    // etkisini izole etmek için `watch` yerine tek
-                    // seferlik okuma kullanılır.
-                    // ⚠ Otomatik seçim YOK — bkz. didChangeDependencies notu.
-                    if (Teshis.staticRegion) {
-                      context.read<RegionController>();
-                    } else {
-                      context.watch<RegionController>();
-                    }
-                    return RefRegDropdown(
-                      iconAsset: 'assets/svg/ic_pin.svg',
-                      label: 'Hizmet Verilen İl',
-                      value: _city,
-                      // ⚠ ARTIK AYRI SEÇİM NOKTASI DEĞİL — kişisel
-                      // "İl" alanından (yukarıda) OTOMATİK gelir ve
-                      // onunla SENKRONDUR. Kullanıcı BURADAN başka
-                      // bir il SEÇEMEZ; `onTap: null` bunu kilitler.
-                      // Değiştirmek isterse yukarıdaki "İl" alanına
-                      // dokunur, ikisi AYNI `_city` değişkenini
-                      // paylaştığı için otomatik güncellenir.
-                      onTap: null,
-                    );
-                  }),
+                  // ── ⚠ "HİZMET VERİLEN İL" KALDIRILDI ──
+                  //
+                  // Zaten AYRI bir veri DEĞİLDİ — kişisel "İl" alanıyla
+                  // (yukarıda) AYNI `_city` değişkenini paylaşan,
+                  // kilitli (`onTap: null`), yalnız KOPYASINI gösteren
+                  // bir satırdı. Kullanıcı isteğiyle: "hizmet verilen
+                  // il" artık kişisel İl'in KENDİSİ SAYILIR, ayrıca
+                  // gösterilmez. Aşağıdaki "Hizmet Verilen İlçeler"e
+                  // (gerçek, çoklu seçilebilir veri) DOKUNULMADI.
 
                   RefRegDropdown(
                     iconAsset: 'assets/svg/ic_build.svg',

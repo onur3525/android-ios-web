@@ -102,7 +102,16 @@ class TeklifTalebiRepository extends ChangeNotifier {
 
   void reddet(String id, {String? gerekce}) {
     final t = _items[id];
-    if (t == null || t.durum != TeklifTalebiDurumu.teklifGeldi) return;
+    // ⚠ DÜZELTİLDİ — önceden yalnız `teklifGeldi` durumu kabul
+    // ediliyordu; `beklemede` (teklif henüz verilmeden) durumundaki
+    // bir talebi silme/iptal isteği SESSİZCE HİÇBİR ŞEY YAPMADAN
+    // reddediliyordu (kullanıcı tüm akışı tamamlasa bile talep
+    // silinmiyordu). Artık ikisi de kabul edilir.
+    if (t == null ||
+        (t.durum != TeklifTalebiDurumu.teklifGeldi &&
+            t.durum != TeklifTalebiDurumu.beklemede)) {
+      return;
+    }
     t
       ..durum = TeklifTalebiDurumu.reddedildi
       ..redGerekcesi = gerekce;
@@ -140,5 +149,32 @@ class TeklifTalebiRepository extends ChangeNotifier {
       fotografYolu: fotografYolu,
     ));
     notifyListeners();
+  }
+
+  /// ⚠ KULLANICI İSTEĞİ — "gönderildi = 1 tik, iletildi/okundu = 2
+  /// tik, okunduysa renk değişik" (`chat_screen.dart`daki
+  /// `MessageStatus` ile AYNI ürün mantığı). Karşı taraf sohbet
+  /// ekranını AÇTIĞINDA çağrılır; kendi gönderdiği mesajlara
+  /// dokunmaz, yalnız KARŞI TARAFTAN gelenleri "okundu" yapar.
+  ///
+  /// ⚠ MUTABLE ALAN DOĞRUDAN GÜNCELLENİR — `TeklifMesaj.durum`
+  /// `final` değil (bkz. model notu); yeni bir liste/kopya
+  /// OLUŞTURULMAZ, mevcut nesneler yerinde değiştirilir.
+  void mesajlariOkunduIsaretle(String talepId, String okuyanId) {
+    final t = _items[talepId];
+    if (t == null) {
+      return;
+    }
+    var degisti = false;
+    for (final m in t.mesajlar) {
+      if (m.gonderenId != okuyanId &&
+          m.durum != TeklifMesajDurumu.okundu) {
+        m.durum = TeklifMesajDurumu.okundu;
+        degisti = true;
+      }
+    }
+    if (degisti) {
+      notifyListeners();
+    }
   }
 }

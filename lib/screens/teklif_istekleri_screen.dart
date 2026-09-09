@@ -35,9 +35,17 @@ class TeklifIstekleriListesi extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final me = auth.currentAccount;
+    // ⚠ DÜZELTİLDİ — kullanıcı bulgusu: hizmet alan teklifi
+    // SEÇTİĞİNDE (`secildi`) talep bu listede KALMAYA devam
+    // ediyordu; artık "Kazandığım" bölümüne TAŞINIYOR (bkz.
+    // `jobs_screen.dart`), bu yüzden burada GÖSTERİLMEZ.
     final talepler = me == null
         ? const <TeklifTalebi>[]
-        : context.watch<TeklifTalebiController>().bySaglayici(me.id);
+        : context
+            .watch<TeklifTalebiController>()
+            .bySaglayici(me.id)
+            .where((t) => t.durum != TeklifTalebiDurumu.secildi)
+            .toList();
 
     if (talepler.isEmpty) {
       return Center(

@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
-import '../data/models/teklif_talebi.dart';
 import '../data/services/search_service.dart';
 import '../domain/cikar_catismasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
-import 'teklif_istediklerim_screen.dart';
 
 /// "BUL" AKIŞI — 1. EKRAN: HİZMET VEREN BUL
 ///
@@ -40,6 +39,24 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
   /// Seçilen hizmet — HER İKİSİ DE dolu olmadan arama yapılamaz.
   String? _kategori;
   String? _hizmet;
+
+  @override
+  void initState() {
+    super.initState();
+    // ⚠ YENİ — kullanıcı isteği: "Bul" ikonundaki gösterge, ekran
+    // açılınca silinir (alt bardaki `_talepleriGorulduIsaretleHizmetAlan`
+    // ile AYNI ilke — hizmet verenin "Teklif İstekleri" sekmesindeki
+    // rozetle simetrik).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final me = context.read<AuthController>().currentAccount;
+      if (me == null || !mounted) {
+        return;
+      }
+      context
+          .read<TeklifTalebiController>()
+          .teklifleriGorulduIsaretleHizmetAlan(me.id);
+    });
+  }
 
   // ⚠ Kural TEK KAYNAKTAN gelir: `lib/domain/cikar_catismasi.dart`
   // — `create_listing_screen.dart`daki `_kategoriSec` İLE AYNI
@@ -106,31 +123,63 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
         children: [
           // ── ÜST SATIR: SOLDA GERİ, SAĞDA X (AKIŞTAN ÇIK) ──
           //
-          // ⚠ Konum ikonu buradan KALDIRILDI — aşağıdaki konum
-          // kartında "Konumum" yazısının SOLUNA taşındı (ürün
-          // kararı). Sağ üst artık `ic_close.svg` ile "Bul" akışının
-          // tamamından çıkışı sağlıyor — `SonuclarScreen`'deki X ile
-          // AYNI davranış ve AYNI hedef.
+          // ⚠ Referans tasarımdaki gibi HER İKİ buton da beyaz,
+          // hafif gölgeli bir daire içine alındı — `RefBackButton`
+          // ve `ic_close.svg` DAVRANIŞI (hedefleri, dokunma alanları)
+          // HİÇ DEĞİŞMEDİ, yalnız görsel çerçeve eklendi.
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const RefBackButton(),
-              RefTap(
-                onTap: () => Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/customer/listings', (r) => false),
-                borderRadius: BorderRadius.circular(RR.circle),
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: RefSvg('assets/svg/ic_close.svg', size: 20),
+              _DaireCerceve(child: RefBackButton()),
+              _DaireCerceve(
+                child: RefTap(
+                  onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/customer/listings', (r) => false),
+                  borderRadius: BorderRadius.circular(RR.circle),
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: RefSvg('assets/svg/bul_ic_close.svg', size: 20),
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          // ── BAŞLIK + İLLÜSTRASYON — REFERANS TASARIMDAKİ YAN YANA
+          // DÜZEN ──
+          //
+          // ⚠ Kullanıcının sağladığı gerçek illüstrasyon asset'i
+          // kullanılıyor (`assets/art/bul_character.png`) — önceki
+          // turda PNG asset olmadığı için bu bölüm yalnız metinden
+          // oluşuyordu.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    style: refText(
+                        size: 27,
+                        weight: RF.w800,
+                        color: RC.text,
+                        height: 1.1),
+                    children: [
+                      const TextSpan(text: 'Hizmet\n'),
+                      TextSpan(
+                          text: 'Veren Bul',
+                          style: TextStyle(color: HC.green)),
+                    ],
+                  ),
+                ),
+              ),
+              Image.asset('assets/art/bul_character.png',
+                  width: 132, fit: BoxFit.contain),
+            ],
+          ),
           const SizedBox(height: 4),
-          RefPageTitle('Hizmet Veren Bul', geriDugmesi: false),
           RefSubtitle('Aradığın hizmeti yaz, en uygun hizmet verenleri '
               'bulalım.'),
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
 
           _HizmetAramaAlani(
             seciliHizmet: _hizmet,
@@ -143,64 +192,116 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
           // ⚠ Kullanıcı burada adres SEÇMEZ. Profildeki kayıtlı
           // adres (`Account.address`) otomatik kullanılır; ekran
           // yalnız hangi konumun baz alınacağını gösterir.
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: RC.blueSoft,
-              borderRadius: BorderRadius.circular(RR.r12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ⚠ İKON BURAYA TAŞINDI — üst bardaki konum ikonunun
-                // yeni yeri, "Konumum" yazısının SOLU.
-                Row(
-                  children: [
-                    const RefSvg('assets/svg/ic_pin.svg',
-                        size: 16, color: HC.green),
-                    const SizedBox(width: 6),
-                    Text('Konumum',
-                        style: refText(
-                            size: RF.s125,
-                            weight: RF.w500,
-                            color: RC.textSoft)),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  adres != null
-                      ? '${adres.district} / ${adres.city}'
-                      : 'Profilinizde kayıtlı bir adres yok',
-                  style: refText(
-                      size: RF.s15, weight: RF.w700, color: RC.text),
-                ),
-              ],
+          //
+          // ⚠ TASARIM YENİLENDİ (referans görsel + gerçek asset'ler)
+          // — arka planda `bul_location_bg.svg` gradyanı, sağda
+          // GERÇEK şehir illüstrasyonu (`bul_location.png`). Buton
+          // veya ok EKLENMEDİ — kart hâlâ salt bilgilendirme, `RefTap`
+          // ile SARILMADI, tıklanamaz kalmaya devam ediyor.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(RR.r16),
+            child: SizedBox(
+              height: 84,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // ⚠ `RefSvg`'nin `fit:` parametresi YOK (yalnız
+                  // sabit `size:`), bu yüzden arka planı KAPLAMASI
+                  // gereken bu SVG için doğrudan `SvgPicture.asset`
+                  // kullanıldı — `RefSvg` zaten aynı paketi sarıyor.
+                  SvgPicture.asset('assets/svg/bul_location_bg.svg',
+                      fit: BoxFit.cover),
+                  Positioned(
+                    right: -6,
+                    bottom: 0,
+                    child: Image.asset('assets/art/bul_location.png',
+                        height: 62, fit: BoxFit.contain),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: RC.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const RefSvg('assets/svg/ic_pin.svg',
+                              size: 19, color: RC.white),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Konumum',
+                                style: refText(
+                                    size: RF.s125,
+                                    weight: RF.w500,
+                                    color: RC.textSoft)),
+                            const SizedBox(height: 2),
+                            Text(
+                              adres != null
+                                  ? '${adres.district} / ${adres.city}'
+                                  : 'Profilinizde kayıtlı bir adres yok',
+                              style: refText(
+                                  size: RF.s16,
+                                  weight: RF.w700,
+                                  color: RC.text),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // ── ÜÇ AVANTAJ KARTI — HER BİRİ AYRI VE KENDİ ÇERÇEVESİNDE ──
+          // ── ÜÇ AVANTAJ KARTI — YAN YANA, GERÇEK ASSET'LERLE ──
           //
-          // ⚠ Düz metin bloğu DEĞİL: her satır kendi beyaz kartında,
-          // `RefMenuRow` GENUİNE yeniden kullanılarak (ikon dairesi +
-          // başlık, ok/alt yazı kapalı) — profildeki menü satırlarıyla
-          // AYNI bileşen, yeni bir tasarım dili İCAT EDİLMEDİ.
-          _AvantajKarti(
-            iconAsset: 'assets/svg/ic_search.svg',
-            iconBg: const Color(0xFFE7EFFD),
-            title: 'İhtiyacına uygun hizmet verenler',
-          ),
-          const SizedBox(height: 8),
-          _AvantajKarti(
-            iconAsset: 'assets/svg/ic_starfill.svg',
-            iconBg: const Color(0xFFFDF4E8),
-            title: 'Puan ve yorumları karşılaştır',
-          ),
-          const SizedBox(height: 8),
-          _AvantajKarti(
-            iconAsset: 'assets/svg/ic_chat.svg',
-            iconBg: const Color(0xFFE7F8EC),
-            title: 'Teklifini doğrudan iste',
+          // ⚠ TASARIM YENİLENDİ — artık kullanıcının sağladığı gerçek
+          // SVG dekoratif arka planlar (`bul_card_bg_*.svg`, iki
+          // örtüşen daire deseni) ve kendi rengini taşıyan ikonlar
+          // (`bul_ic_*.svg`) kullanılıyor. Önceki turda düz pastel
+          // Color + tek renkli ikon vardı.
+          const SizedBox(height: 20),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Expanded(
+                child: _AvantajKarti(
+                  bgAsset: 'assets/svg/bul_card_bg_users.svg',
+                  iconAsset: 'assets/svg/bul_ic_users.svg',
+                  title: 'Sana uygun\nhizmet verenler',
+                  aciklama: 'İhtiyacına ve konumuna uygun kişileri keşfet.',
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _AvantajKarti(
+                  bgAsset: 'assets/svg/bul_card_bg_star.svg',
+                  iconAsset: 'assets/svg/bul_ic_star.svg',
+                  title: 'Puan ve yorumları\nkarşılaştır',
+                  aciklama:
+                      'Gerçek kullanıcı deneyimlerini incele, doğru seçimi yap.',
+                ),
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: _AvantajKarti(
+                  bgAsset: 'assets/svg/bul_card_bg_chat.svg',
+                  iconAsset: 'assets/svg/bul_ic_chat.svg',
+                  title: 'Teklifini\ndoğrudan iste',
+                  aciklama: 'Hızlı ve kolay bir şekilde iletişime geç.',
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 24),
@@ -210,77 +311,103 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
             aktif: _hizmet != null,
             onPressed: _hizmet != null ? _ara : null,
           ),
-
-          // ── ⚠ DAHA ÖNCE İSTENEN TEKLİFLER — "Ara" DÜĞMESİNİN
-          // ALTINDA, DURUMLARIYLA BİRLİKTE ──
-          //
-          // ÖNCEDEN ayrı "Teklif İstediklerim" düğmesiyle BAŞKA bir
-          // ekrana gidiliyordu; artık aynı liste BURADA gömülü — kod
-          // tekrarı YOK, `TeklifIstediklerimListesi` iki yerde de
-          // AYNI widget.
-          const SizedBox(height: 24),
-          _GecmisTalepler(),
         ],
       ),
     );
   }
 }
 
-/// Başlık + gömülü talep listesi — talep yoksa HİÇ ÇİZİLMEZ (boş
-/// başlık kalabalık yaratmasın diye).
-class _GecmisTalepler extends StatelessWidget {
-  const _GecmisTalepler();
-
-  @override
-  Widget build(BuildContext context) {
-    final me = context.watch<AuthController>().currentAccount;
-    final talepler = me == null
-        ? const <TeklifTalebi>[]
-        : context.watch<TeklifTalebiController>().byHizmetAlan(me.id);
-    if (talepler.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Daha Önce İstediğin Teklifler',
-            style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
-        const SizedBox(height: 10),
-        const TeklifIstediklerimListesi(gomulu: true),
-      ],
-    );
-  }
-}
-
-/// ── ⚠ AVANTAJ KARTI — `RefMenuRow`'un GENUİNE yeniden kullanımı ──
+/// ── ⚠ SAYFA ÜST BUTONLARI İÇİN BEYAZ DAİRE ÇERÇEVE ──
 ///
-/// Profildeki menü satırlarıyla AYNI ikon-dairesi + başlık düzeni;
-/// yalnız her biri kendi beyaz/çerçeveli kutusuna ALINDI ki "ayrı ayrı
-/// şık" görünsün — düz alt alta metin bloğu DEĞİL.
-class _AvantajKarti extends StatelessWidget {
-  const _AvantajKarti({
-    required this.iconAsset,
-    required this.iconBg,
-    required this.title,
-  });
+/// Referans tasarımdaki gibi geri/kapat butonlarını hafif gölgeli
+/// beyaz bir daire içine alır. `RefBackButton`/`RefTap`ın KENDİSİ
+/// değişmedi — yalnız dışına bir görsel çerçeve eklendi.
+class _DaireCerceve extends StatelessWidget {
+  const _DaireCerceve({required this.child});
 
-  final String iconAsset;
-  final Color iconBg;
-  final String title;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: RC.white,
-        border: Border.all(color: const Color(0xFFECEEF2)),
-        borderRadius: BorderRadius.circular(RR.r13),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: RefMenuRow(
-        iconAsset: iconAsset,
-        iconBg: iconBg,
-        title: title,
-        showChevron: false,
+      child: child,
+    );
+  }
+}
+
+/// ── ⚠ AVANTAJ KARTI — GERÇEK SVG DEKORATİF ARKA PLAN + KENDİ
+/// RENGİNİ TAŞIYAN İKON ──
+///
+/// ⚠ TASARIM YENİLENDİ — `bgAsset` artık düz bir pastel `Color`
+/// değil, kullanıcının sağladığı gerçek SVG deseni (iki örtüşen
+/// daire, `card_bg_*.svg`). `iconAsset` de KENDİ RENGİNİ taşıyor
+/// (`ic_users.svg` zaten turuncu, `ic_star.svg` zaten mor, vb.) —
+/// bu yüzden `RefSvg`ye renk override VERİLMEDİ, ikon olduğu gibi
+/// kullanıldı. Beyaz daire arka planı, ikonun pastel zemin üzerinde
+/// öne çıkması için eklendi.
+class _AvantajKarti extends StatelessWidget {
+  const _AvantajKarti({
+    required this.bgAsset,
+    required this.iconAsset,
+    required this.title,
+    required this.aciklama,
+  });
+
+  final String bgAsset;
+  final String iconAsset;
+  final String title;
+  final String aciklama;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(RR.r16),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(bgAsset, fit: BoxFit.cover),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: RC.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: RefSvg(iconAsset, size: 24),
+                ),
+                const SizedBox(height: 12),
+                Text(title,
+                    style: refText(
+                        size: RF.s135, weight: RF.w800, color: RC.text)),
+                const SizedBox(height: 6),
+                Text(aciklama,
+                    style: refText(
+                        size: RF.s115,
+                        weight: RF.w400,
+                        color: RC.textSoft,
+                        height: 1.3)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -322,7 +449,7 @@ class _AraButonu extends StatelessWidget {
                   const RefSvg('assets/svg/ic_search.svg',
                       size: 18, color: RC.white),
                   const SizedBox(width: 8),
-                  Text('Ara',
+                  Text('Hizmet Verenleri Bul',
                       style: refText(
                           size: RF.s16, weight: RF.w700, color: RC.white)),
                 ],
@@ -385,46 +512,96 @@ class _HizmetAramaAlaniState extends State<_HizmetAramaAlani> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // ── ⚠ TASARIM YENİLENDİ (referans görsel) — daire içinde
+        // arama ikonu, yumuşak gölge, İKİ SATIRLI yer tutucu (kalın
+        // ana metin + gri örnek metin). `TextField`ın KENDİSİ,
+        // `controller`ı, `onChanged` mantığı HİÇ DEĞİŞMEDİ — yalnız
+        // görsel çerçeve ve boş durumdaki placeholder değişti.
         Container(
-          height: 53,
-          padding: const EdgeInsets.symmetric(horizontal: 11),
+          constraints: const BoxConstraints(minHeight: 62),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: RC.white,
-            border: Border.all(color: const Color(0xFFECEEF2)),
-            borderRadius: BorderRadius.circular(RR.r13),
+            borderRadius: BorderRadius.circular(RR.r16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const RefSvg('assets/svg/ic_search.svg',
-                  size: 23, color: Color(0xFFA8ADB4)),
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF1F3F6),
+                  shape: BoxShape.circle,
+                ),
+                child: const RefSvg('assets/svg/ic_search.svg',
+                    size: 18, color: Color(0xFF8A94A6)),
+              ),
               const SizedBox(width: 10),
               Expanded(
-                child: TextField(
-                  controller: _ara,
-                  onChanged: (v) {
-                    // ⚠ Kullanıcı yazmaya devam ederken önceki seçim
-                    // GEÇERSİZ sayılır — yazılan metin katalogla
-                    // yeniden eşleşene kadar "Ara" pasif kalır.
-                    if (widget.seciliHizmet != null) {
-                      widget.onTemizle();
-                    }
-                    _sorgula(v);
-                  },
-                  style:
-                      refText(size: 14.5, weight: RF.w500, color: RC.text),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    filled: false,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    hintText: 'Hangi hizmeti arıyorsun?',
-                    hintStyle: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF9AA0A6)),
-                  ),
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    // ⚠ Boşken ÖZEL iki satırlı yer tutucu — Flutter'ın
+                    // `hintText`i tek satır/tek stil olduğu için
+                    // referanstaki İKİ satırlı, İKİ stilli görünüm
+                    // (kalın ana metin + gri örnek metin) `hintText`
+                    // ile yapılamıyordu.
+                    if (_ara.text.isEmpty)
+                      IgnorePointer(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Hangi hizmeti arıyorsun?',
+                                style: refText(
+                                    size: RF.s145,
+                                    weight: RF.w700,
+                                    color: RC.text)),
+                            Text(
+                                'Örn. ev temizliği, boya badana, '
+                                'tesisatçı...',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: refText(
+                                    size: RF.s12,
+                                    weight: RF.w400,
+                                    color: RC.textSoft)),
+                          ],
+                        ),
+                      ),
+                    TextField(
+                      controller: _ara,
+                      onChanged: (v) {
+                        // ⚠ Kullanıcı yazmaya devam ederken önceki
+                        // seçim GEÇERSİZ sayılır — yazılan metin
+                        // katalogla yeniden eşleşene kadar "Ara"
+                        // pasif kalır.
+                        if (widget.seciliHizmet != null) {
+                          widget.onTemizle();
+                        }
+                        _sorgula(v);
+                      },
+                      style: refText(
+                          size: 14.5, weight: RF.w600, color: RC.text),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               RefAramaTemizle(

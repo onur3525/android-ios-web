@@ -42,6 +42,10 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
   /// (bkz. repository).
   Future<DomainError?> mesajGonder(String id,
       {required String gonderenId, String? metin, String? fotografYolu});
+
+  /// ⚠ YENİ — karşı taraf sohbet ekranını açtığında "okundu" tik
+  /// durumunu tetikler.
+  Future<void> mesajlariOkunduIsaretle(String talepId, String okuyanId);
 }
 
 /// ── ⚠ BİLDİRİM ZİNCİRİ — MEVCUT `NotificationRepository`YE YAZAR ──
@@ -114,13 +118,22 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
   @override
   Future<DomainError?> teklifVer(String id,
       {required int fiyat, required String aciklama}) async {
-    final onceki = _repo.byId(id);
+    // ⚠ DÜZELTİLDİ — KESİN BUG: `_repo.byId(id)` bir REFERANS
+    // döndürür (`TeklifTalebi` reference type). `onceki` burada
+    // NESNENİN KENDİSİNİ tutuyordu; `_repo.teklifVer(...)` çağrısı
+    // AYNI nesneyi YERİNDE değiştirdiği için `onceki.teklifTarihi`
+    // de otomatik doluyordu — "önce/sonra" karşılaştırması HER ZAMAN
+    // false dönüyor, bildirim ASLA gönderilmiyordu. Düzeltme: nesne
+    // yerine, değişmeyecek bir DEĞER (bool) saklanır — `reddet()`/
+    // `mesajGonder()`teki AYNI doğru desen (enum/int, reference
+    // DEĞİL).
+    final oncedenTeklifVardi = _repo.byId(id)?.teklifTarihi != null;
     _repo.teklifVer(id, fiyat: fiyat, aciklama: aciklama);
     final t = _repo.byId(id);
     // ⚠ Yalnız GERÇEKTEN değiştiyse bildirim gider — `teklifVer`
     // ikinci kez çağrılırsa (kilitli) repository SESSİZCE hiçbir
     // şey yapmaz; burada da bildirim TEKRARLANMAZ.
-    if (t != null && onceki?.teklifTarihi == null && t.teklifTarihi != null) {
+    if (t != null && !oncedenTeklifVardi && t.teklifTarihi != null) {
       // ⚠ HİZMET ALANA — teklif geldi.
       notifs?.push(
           userId: t.hizmetAlanId,
@@ -150,16 +163,26 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
 
   @override
   Future<DomainError?> reddet(String id, {String? gerekce}) async {
+    // ⚠ İŞLEM ÖNCESİ DURUM SAKLANIR — bildirim metni buna göre
+    // değişir. `beklemede` (teklif hiç verilmeden) iptal edilen bir
+    // talep için hizmet verene "Teklifiniz reddedildi" demek YANLIŞ
+    // olurdu — henüz hiç teklif vermemişti. Bkz. `_repo.reddet()`
+    // artık `beklemede` durumunu da kabul ediyor.
+    final oncekiDurum = _repo.byId(id)?.durum;
     _repo.reddet(id, gerekce: gerekce);
     final t = _repo.byId(id);
     if (t != null && t.durum == TeklifTalebiDurumu.reddedildi) {
-      // ⚠ HİZMET VERENE — teklifi reddedildi.
+      final teklifVerilmisti = oncekiDurum == TeklifTalebiDurumu.teklifGeldi;
+      // ⚠ HİZMET VERENE — teklifi reddedildi / talebi iptal edildi.
       notifs?.push(
           userId: t.saglayiciId,
           type: NotifType.teklifReddedildi,
           refId: t.id,
-          title: 'Teklifiniz reddedildi',
-          body: '"${t.hizmet}" için verdiğiniz teklif reddedildi.');
+          title: teklifVerilmisti ? 'Teklifiniz reddedildi' : 'Talep iptal edildi',
+          body: teklifVerilmisti
+              ? '"${t.hizmet}" için verdiğiniz teklif reddedildi.'
+              : '"${t.hizmet}" için gönderdiğiniz talep, hizmet alan '
+                  'tarafından iptal edildi.');
     }
     return null;
   }
@@ -200,5 +223,11 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
           body: metin ?? 'Fotoğraf gönderildi.');
     }
     return null;
+  }
+
+  @override
+  Future<void> mesajlariOkunduIsaretle(
+      String talepId, String okuyanId) async {
+    _repo.mesajlariOkunduIsaretle(talepId, okuyanId);
   }
 }
