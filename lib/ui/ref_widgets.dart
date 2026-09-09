@@ -1813,13 +1813,19 @@ class RefBottomNav extends StatelessWidget {
 
   /// ⚠ `rozet`: sekmenin üstünde okunmamış göstergesi çizilsin mi?
   /// Varsayılan davranış YOK — her çağıran açıkça belirtir.
+  ///
+  /// ⚠ `belirginRozet` EKLENDİ (kullanıcı isteği — "Bul" ikonunda
+  /// daha göze çarpan bir gösterge). Bu tip `_NavOgesi.it` ile
+  /// AYNI olmalı — biri güncellenip diğeri unutulursa derleme hatası
+  /// olur (bkz. bu satırın filed edildiği build log bulgusu).
   final List<
       ({
         String key,
         String label,
         String asset,
         VoidCallback onTap,
-        bool rozet
+        bool rozet,
+        bool belirginRozet
       })> items;
 
   /// Etkin sekmenin anahtarı (`ilanver` / `ilanlarim` / `bildirim` / `profil`).
@@ -1969,13 +1975,18 @@ class RefBottomNav extends StatelessWidget {
   /// ⚠ ESKİ TASARIM — hizmet veren tarafı, DOKUNULMADI. Yalnızca
   /// yeniden adlandırılmış bir yardımcı metoda taşındı ki yukarıdaki
   /// yeni dal ile KOD TEKRARI olmasın.
+  ///
+  /// ⚠ `belirginRozet` EKLENDİ — `_NavOgesi.it` ile AYNI tip olmak
+  /// zorunda (derleme hatası bulgusu, bkz. `RefBottomNav.items`daki
+  /// AYNI not).
   Widget _duzBar(List<
           ({
             String key,
             String label,
             String asset,
             VoidCallback onTap,
-            bool rozet
+            bool rozet,
+            bool belirginRozet
           })>
       ogeler, double safeBottom) {
     return Container(
