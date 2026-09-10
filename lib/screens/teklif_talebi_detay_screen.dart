@@ -8,12 +8,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/tutar_bicimi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
+import '../domain/saglayici_ozeti.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
-import '../data/controllers/offer_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
@@ -29,6 +28,8 @@ import 'teklif_talebi_yorum_screen.dart';
 // akışıyla aynı davranış için kopya yazılmaz.
 import 'widgets/foto_goruntuleyici.dart';
 import 'widgets/is_zamani_secici.dart';
+import 'widgets/saglayici_ozet_satiri.dart';
+import 'widgets/teklif_tutar_karti.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -57,6 +58,20 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   final _cevap = TextEditingController();
   bool _gonderiliyor = false;
 
+  /// ── ⚠ "TEKLİFİNİZ GÖNDERİLDİ" ONAYI — 2 SANİYE ──
+  ///
+  /// Kullanıcı isteği (9 Eyl): yazı gönderim sonrası görünsün, 2 sn
+  /// sonra kaybolsun.
+  ///
+  /// ⚠ DURUMDAN TÜRETİLMEZ: `talep.teklifTarihi != null` koşuluna
+  /// bağlansaydı ekran her açıldığında yeniden görünürdü. Bu bir
+  /// EYLEM ONAYI; durumu zaten teklif kartı söylüyor.
+  bool _gonderimOnayi = false;
+
+  /// ⚠ SAKLANIR VE İPTAL EDİLİR: ekran 2 sn dolmadan kapanırsa
+  /// zamanlayıcı ölü bir `setState` çağırırdı.
+  Timer? _onayZamanlayici;
+
   /// ⚠ 30 SAATLİK GERİ SAYIM GÖRÜNTÜSÜNÜ TAZELEMEK İÇİN — süre
   /// GERÇEK `teklifTarihi`den hesaplanır (bkz. model); bu zamanlayıcı
   /// yalnız EKRANI dakikada bir yeniden çizer, süreyi UYDURMAZ.
@@ -73,6 +88,9 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   @override
   void dispose() {
     _tik?.cancel();
+    // ⚠ İPTAL ŞART: ekran 2 sn dolmadan kapanırsa zamanlayıcı ölü
+    // bir `setState` çağırır.
+    _onayZamanlayici?.cancel();
     _fiyat.dispose();
     _cevap.dispose();
     super.dispose();
@@ -104,7 +122,15 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    sysToastOk(context, 'Teklifiniz gönderildi.');
+    // ⚠ ALTTAKİ ONAY UYARISI KALDIRILMIŞTI (`sysToastOk` susturuldu);
+    // onay artık ekranın kendi içinde, 2 saniyeliğine gösterilir.
+    _onayZamanlayici?.cancel();
+    setState(() => _gonderimOnayi = true);
+    _onayZamanlayici = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _gonderimOnayi = false);
+      }
+    });
   }
 
   // ⚠ DÜZELTİLDİ — kullanıcı isteği: "Bul" akışında (`TeklifTalebi`)
@@ -406,6 +432,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                 fiyatController: _fiyat,
                 cevapController: _cevap,
                 gonderiliyor: _gonderiliyor,
+                gonderimOnayi: _gonderimOnayi,
                 onTeklifVer: () => _teklifVer(t),
                 onTamamla: () => _tamamla(t),
               )
@@ -620,99 +647,38 @@ class _KarsiTarafBilgisi extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── ⚠ HİZMET VEREN KARTI — `sonuclar_screen.dart`/
-        // `teklif_iste_screen.dart`daki AYNI TAM kart düzeni ──
+        // ── ⚠ BEŞİNCİ KOPYA KALDIRILDI (kullanıcı bulgusu, 9 Eyl) ──
         //
-        // ÖNCEDEN yalnız avatar+isim+"Yorumları Gör" linkiydi.
-        // İstatistikler (puan/yorum/iş) kimlik hâlâ MASKELİYKEN bile
-        // gösterilir — diğer ekranlarla AYNI ilke, hizmet alan teklif
-        // gelmeden önce de hizmet verenin geçmişini görebilmeli.
+        // BULGU: profilde "Karşıyaka / İzmir" yazan hizmet veren, bu
+        // ekranda "Aliağa / İzmir" görünüyordu; "Bul" ekranındaki
+        // kartla AYNI kişi FARKLI adresle çıkıyordu.
+        //
+        // KÖK NEDEN: bu ekran hizmet veren kartını KENDİ çiziyordu ve
+        // konumu `serviceDistricts.first`ten alıyordu — yani hizmet
+        // VERDİĞİ ilk bölgeden. Adres tutarlılığı turunda öteki dört
+        // yüzey `hesap.address`e bağlanmıştı, bu kopya gözden
+        // kaçmıştı.
+        //
+        // ⚠ NEREYE HİZMET VERDİĞİ İLE NEREDE OTURDUĞU AYRI SORULAR:
+        // eşleştirme hizmet bölgesine, GÖSTERİM adrese bakar. Kart
+        // artık ortak `SaglayiciOzetSatiri` + `gercekSaglayiciOzeti`
+        // üzerinden çiziliyor; adres değişince beş yüzey birden
+        // değişir.
+        //
+        // ⚠ MASKELEME: teklif gelene kadar kimlik gizlidir; `acik`
+        // kuralı DEĞİŞMEDİ, yalnız bileşene parametre olarak geçti.
         Builder(builder: (context) {
-          final reviews = context.watch<ReviewController>();
-          final puan = reviews.averageOf(talep.saglayiciId);
-          final yorumlar = reviews.byProvider(talep.saglayiciId);
-          final tamamlanan = _tamamlananIsGercek(context, talep.saglayiciId);
-          final hesap =
-              context.read<AuthController>().accountById(talep.saglayiciId);
-          // ⚠ DÜZELTİLDİ — bkz. `teklif_iste_screen.dart`daki AYNI not:
-          // önceden kişisel adres kullanılıyordu, `sonuclar_screen.
-          // dart`daki kartla FARKLI konum gösteriyordu.
-          final konum = hesap == null || hesap.serviceDistricts.isEmpty
-              ? null
-              : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              acik
-                  ? RefBasHarfAvatar(ad: talep.saglayiciAdi)
-                  : const RefSvg('assets/svg/ic_avlock.svg', size: 46),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                        acik
-                            ? talep.saglayiciAdi
-                            : maskeliAd(talep.saglayiciAdi),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s145,
-                            weight: RF.w700,
-                            color: RC.text)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const RefSvg('assets/svg/ic_starfill.svg',
-                            size: 14, color: Color(0xFFF5A319)),
-                        const SizedBox(width: 4),
-                        Text(puan == null ? '—' : puan.toStringAsFixed(1),
-                            style: refText(
-                                size: RF.s125,
-                                weight: RF.w700,
-                                color: RC.text)),
-                        const SizedBox(width: 4),
-                        Text('(${yorumlar.length} yorum)',
-                            style: refText(
-                                size: RF.s12,
-                                weight: RF.w400,
-                                color: RC.textSoft)),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        const RefSvg('assets/svg/ic_briefcase.svg',
-                            size: 13, color: Color(0xFF5B6472)),
-                        const SizedBox(width: 5),
-                        Text('$tamamlanan iş tamamladı',
-                            style: refText(
-                                size: RF.s12,
-                                weight: RF.w400,
-                                color: const Color(0xFF5B6472))),
-                      ],
-                    ),
-                    if (konum != null) ...[
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          const RefSvg('assets/svg/ic_pin.svg',
-                              size: 14, color: Color(0xFF98A2B3)),
-                          const SizedBox(width: 5),
-                          Text(konum,
-                              style: refText(
-                                  size: RF.s12,
-                                  weight: RF.w400,
-                                  color: const Color(0xFF98A2B3))),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          );
+          final ozet = gercekSaglayiciOzeti(context, id: talep.saglayiciId) ??
+              (
+                id: talep.saglayiciId,
+                adSoyad: talep.saglayiciAdi,
+                puan: null,
+                yorumSayisi: 0,
+                tamamlananIs: 0,
+                ilce: null,
+                il: null,
+              );
+          return SaglayiciOzetSatiri(ozet, maskeli: !acik);
         }),
 
         // ── ⚠ YORUMLAR — AYRI KART, `teklif_iste_screen.dart`daki
@@ -1011,6 +977,7 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
     required this.fiyatController,
     required this.cevapController,
     required this.gonderiliyor,
+    required this.gonderimOnayi,
     required this.onTeklifVer,
     required this.onTamamla,
   });
@@ -1019,6 +986,11 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
   final TextEditingController fiyatController;
   final TextEditingController cevapController;
   final bool gonderiliyor;
+
+  /// ⚠ GEÇİCİ ONAY: yalnız gönderim ANINDA `true` olur, 2 sn sonra
+  /// söner. Talebin durumundan TÜRETİLMEZ — türetilseydi ekran her
+  /// açıldığında yeniden görünürdü.
+  final bool gonderimOnayi;
   final VoidCallback onTeklifVer;
   final VoidCallback onTamamla;
 
@@ -1030,30 +1002,45 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: RC.blueSoft,
-              borderRadius: BorderRadius.circular(RR.r12),
+          // ── ⚠ "GÖNDERİLDİ" ŞERİDİ ARTIK GEÇİCİ (kullanıcı
+          // isteği, 9 Eyl) ──
+          //
+          // "Teklif gönderildiyse yazı gözüksün, 2 sn sonra
+          // kaybolsun."
+          //
+          // ÖNCEDEN KALICIYDI: teklif verilmiş her talepte, ekran
+          // her açıldığında yeniden görünüyordu. Oysa bu bir DURUM
+          // değil, bir EYLEM ONAYI — ve durumu zaten altındaki
+          // teklif kartı söylüyor.
+          //
+          // ⚠ YALNIZ GÖNDERİM ANINDA: bayrak `_gonder` başarıyla
+          // dönünce açılır, 2 sn sonra kapanır. Ekrana sonradan
+          // girildiğinde HİÇ çizilmez.
+          if (gonderimOnayi) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: RC.blueSoft,
+                borderRadius: BorderRadius.circular(RR.r12),
+              ),
+              child: Row(
+                children: [
+                  const RefSvg('assets/svg/ic_checkc.svg',
+                      size: 18, color: RC.blue),
+                  const SizedBox(width: 8),
+                  Text('Teklifiniz gönderildi.',
+                      style: refText(
+                          size: RF.s135, weight: RF.w700, color: RC.text)),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                const RefSvg('assets/svg/ic_checkc.svg',
-                    size: 18, color: RC.blue),
-                const SizedBox(width: 8),
-                Text('Teklifiniz gönderildi.',
-                    style: refText(
-                        size: RF.s135, weight: RF.w700, color: RC.text)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text('Fiyat',
-              style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          Text(tutarMetni(talep.teklifFiyati!),
-              style:
-                  refText(size: RF.s18, weight: RF.w700, color: RC.text)),
-          const SizedBox(height: 8),
+            const SizedBox(height: 12),
+          ],
+          // ⚠ ORTAK KART: "Fiyat" başlıklı düz metin yerine
+          // `TeklifTutarKarti`. Hizmet alan tarafı da AYNI kartı
+          // kullanır — biri değişince öteki de değişir.
+          TeklifTutarKarti(talep.teklifFiyati!),
+          const SizedBox(height: 10),
           Text('Açıklamanız',
               style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
           Text(talep.teklifAciklamasi ?? '',
@@ -1198,13 +1185,10 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Fiyat',
-                style:
-                    refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-            Text(tutarMetni(talep.teklifFiyati!),
-                style: refText(
-                    size: RF.s18, weight: RF.w700, color: RC.text)),
-            const SizedBox(height: 8),
+            // ⚠ ORTAK KART (bkz. hizmet veren tarafı): iki taraf da
+            // aynı tutarı aynı biçimde görür.
+            TeklifTutarKarti(talep.teklifFiyati!),
+            const SizedBox(height: 10),
             Text('Hizmet Verenin Açıklaması',
                 style:
                     refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
@@ -1386,28 +1370,10 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   }
 }
 
-/// ⚠ `teklif_iste_screen.dart`/`sonuclar_screen.dart`daki AYNI
-/// mantık — hizmet verenin SEÇİLMİŞ teklifle tamamlanmış iş sayısı.
-/// Üçüncü bir kopya değil, aynı hesaplama farklı dosyalarda AYNI
-/// şekilde tekrarlanıyor çünkü bu dosyalar birbirinden PRIVATE
-/// (import edilemez).
-int _tamamlananIsGercek(BuildContext c, String providerId) {
-  final ilanlar = c.read<ListingController>().all;
-  final teklifler = c.read<OfferController>();
-  var n = 0;
-  for (final l in ilanlar) {
-    if (!l.isTamamlanmisIs) {
-      continue;
-    }
-    final secili = teklifler
-        .offersForListing(l.id)
-        .where((o) => o.id == l.selectedOfferId);
-    if (secili.isNotEmpty && secili.first.providerId == providerId) {
-      n++;
-    }
-  }
-  return n;
-}
+/// ⚠ BEŞİNCİ KOPYA KALDIRILDI (9 Eyl): hizmet verenin tamamlanmış iş
+/// sayımı `domain/saglayici_ozeti.dart` içindeki `tamamlananIsSayisi`
+/// ile TEK yerde. Bu dosyadaki kopya, kartın ortak bileşene
+/// taşınmasıyla kullanılmaz hâle geldi.
 
 /// ── ⚠ "BEKLENİYOR" GÖSTERGESİ — NABIZ ATAN ANİMASYON ──
 ///

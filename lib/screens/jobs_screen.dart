@@ -25,6 +25,7 @@ import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
+import 'widgets/yeni_mesaj_seridi.dart';
 import 'widgets/hizmet_alan_ozet_satiri.dart';
 import 'category_ui.dart';
 import 'nav_actions.dart';
@@ -673,6 +674,20 @@ class _JobsScreenState extends State<JobsScreen> {
                               color: HC.dark)),
                       const StatusChip('Seçildi', HC.blue),
                     ]),
+              // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
+              //
+              // Kazanılan işte sohbet devam ediyor; kartta mesaj
+              // geldiğine dair hiçbir iz yoktu.
+              //
+              // ⚠ İZLEYEN BURADA DAİMA HİZMET VERENDİR.
+              if (okunmamisMesajSayisi(t, t.saglayiciId) > 0) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: YeniMesajSeridi(
+                      okunmamisMesajSayisi(t, t.saglayiciId)),
+                ),
+              ],
               ]),
 
               // ── ⚠ HİZMET ALAN BİLGİLERİ (kullanıcı isteği, 9 Eyl) ──

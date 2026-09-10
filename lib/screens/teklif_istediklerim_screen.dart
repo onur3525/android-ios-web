@@ -9,6 +9,7 @@ import '../data/models/teklif_talebi.dart';
 import '../domain/saglayici_ozeti.dart';
 import '../domain/teklif_talebi_asamasi.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
+import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'teklif_talebi_detay_screen.dart';
@@ -208,6 +209,20 @@ class _TalepKarti extends StatelessWidget {
                           style: refText(
                               size: RF.s115, weight: RF.w700, color: renk)),
                     ),
+                    // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
+                    //
+                    // Kartta mesaj geldiğine dair hiçbir iz yoktu;
+                    // anlamanın tek yolu talebi açıp sohbete
+                    // girmekti. Sayım `okunmamisMesajSayisi` ile TEK
+                    // yerde — iki taraf da aynı ölçütü kullanır.
+                    // ⚠ İZLEYEN BU EKRANDA DAİMA HİZMET ALANDIR;
+                    // okunmamış sayısı ONUN gözünden hesaplanır.
+                    if (okunmamisMesajSayisi(talep, talep.hizmetAlanId) >
+                        0) ...[
+                      const SizedBox(height: 4),
+                      YeniMesajSeridi(
+                          okunmamisMesajSayisi(talep, talep.hizmetAlanId)),
+                    ],
                     // ⚠ TUTAR YALNIZ GELDİYSE: teklif verilmemişken
                     // sıfır ya da yer tutucu GÖSTERİLMEZ. "TL" ve
                     // binlik ayracı `core/tutar_bicimi.dart`ta.

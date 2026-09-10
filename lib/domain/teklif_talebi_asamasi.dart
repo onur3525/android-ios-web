@@ -70,3 +70,28 @@ List<TeklifTalebi> surenTalepler(List<TeklifTalebi> hepsi) =>
 /// [hepsi] içinden kazanılmış/tamamlanmış talepler.
 List<TeklifTalebi> kazanilanTalepler(List<TeklifTalebi> hepsi) =>
     [for (final t in hepsi) if (talepKazanildiMi(t.durum)) t];
+
+/// ── ⚠ OKUNMAMIŞ MESAJ SAYISI — TEK KAYNAK ──
+///
+/// KULLANICI İSTEĞİ (9 Eyl): "Gelen mesajları iki tarafta da bu
+/// kartlar üzerinde yeni mesajın geldiğini gösteren bir yazı vb. bir
+/// şey olmalı."
+///
+/// ⚠ ÖNCEDEN KARTLARDA HİÇ İZ YOKTU: mesaj geldiğini anlamanın tek
+/// yolu talebi açıp sohbete girmekti. Listeye bakan kullanıcı hangi
+/// işte yeni mesaj olduğunu göremiyordu.
+///
+/// Sayım kuralı: KARŞI TARAFIN gönderdiği ve henüz `okundu`
+/// olmayan mesajlar. Kendi gönderdiğin mesaj asla "yeni" sayılmaz.
+///
+/// ⚠ İKİ TARAF AYNI FONKSİYONU KULLANIR: hizmet alan da hizmet veren
+/// de kendi id'sini geçer. Ayrı ayrı yazılsaydı biri "okundu"yu,
+/// öteki "iletildi"yi ölçüt alabilirdi.
+///
+/// ⚠ OKUNDU İŞARETİ SOHBET AÇILINCA KONUR
+/// (`mesajlariOkunduIsaretle`); bu fonksiyon yalnız OKUR, durumu
+/// değiştirmez.
+int okunmamisMesajSayisi(TeklifTalebi t, String benimId) => t.mesajlar
+    .where((m) =>
+        m.gonderenId != benimId && m.durum != TeklifMesajDurumu.okundu)
+    .length;

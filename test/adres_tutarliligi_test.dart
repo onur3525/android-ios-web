@@ -99,4 +99,39 @@ void main() {
           reason: 'yedek kaldırılmış — adressiz hesapta konum boş kalır');
     });
   });
+
+  group('4 — HİZMET VEREN KARTLARI TEK ÇİZİMDEN', () {
+    // ⚠ BEŞİNCİ KOPYA (9 Eyl): profilde "Karşıyaka / İzmir" yazan
+    // hizmet veren, talep detay ekranında "Aliağa / İzmir"
+    // görünüyordu. O ekran kartı KENDİ çiziyor ve konumu
+    // `serviceDistricts.first`ten alıyordu — yani hizmet VERDİĞİ ilk
+    // bölgeden, oturduğu adresten değil.
+    const yuzeyler = <String>[
+      'lib/screens/sonuclar_screen.dart',
+      'lib/screens/teklif_iste_screen.dart',
+      'lib/screens/teklif_istediklerim_screen.dart',
+      'lib/screens/teklif_talebi_detay_screen.dart',
+    ];
+
+    test('hepsi ortak bilgi satırını kullanır', () {
+      for (final yol in yuzeyler) {
+        expect(_kodu(yol).contains('SaglayiciOzetSatiri('), isTrue,
+            reason: '$yol hizmet veren kartını kendi çiziyor');
+      }
+    });
+
+    test('⚠ KONUM HİZMET BÖLGESİNDEN TÜRETİLMEZ', () {
+      // `sonuclar_screen` hariç: orada `serviceDistricts` YALNIZ
+      // sıralama ölçütüdür, ekranda gösterilmez.
+      for (final yol in const [
+        'lib/screens/teklif_iste_screen.dart',
+        'lib/screens/teklif_istediklerim_screen.dart',
+        'lib/screens/teklif_talebi_detay_screen.dart',
+      ]) {
+        expect(_kodu(yol).contains('serviceDistricts'), isFalse,
+            reason: '$yol konumu hizmet bölgesinden üretiyor — '
+                'profildeki adresten farklı çıkar');
+      }
+    });
+  });
 }

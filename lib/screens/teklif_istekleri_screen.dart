@@ -8,6 +8,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
@@ -170,16 +171,36 @@ class _TalepKarti extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: renk.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(RR.r13),
-                    ),
-                    child: Text(metin,
-                        style: refText(
-                            size: RF.s12, weight: RF.w700, color: renk)),
+                  // ⚠ DURUM VE YENİ MESAJ YAN YANA: ikisi de kartın
+                  // "şu an ne oluyor" bilgisi. Alt alta konsaydı kart
+                  // uzar, liste seyrekleşirdi.
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: renk.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(RR.r13),
+                        ),
+                        child: Text(metin,
+                            style: refText(
+                                size: RF.s12, weight: RF.w700, color: renk)),
+                      ),
+                      // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
+                      //
+                      // ⚠ İZLEYEN BU EKRANDA DAİMA HİZMET VERENDİR;
+                      // okunmamış sayısı ONUN gözünden hesaplanır.
+                      // Sayım `okunmamisMesajSayisi` ile TEK yerde.
+                      if (okunmamisMesajSayisi(talep, talep.saglayiciId) >
+                          0) ...[
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: YeniMesajSeridi(okunmamisMesajSayisi(
+                              talep, talep.saglayiciId)),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
