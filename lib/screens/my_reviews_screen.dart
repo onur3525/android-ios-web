@@ -420,11 +420,26 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                   // ⚠ ORAN HESABI DEĞİŞMEDİ: `n / _count` aynen
                   // duruyor; 1/1 tam dolu, 0/1 en az %3 görünür.
                   //
-                  // ⚠ EN AZ %3: sıfır olsa bile çubuğun ucu görünür
-                  // (referans `Math.max(3, ...)`), böylece satırın
-                  // ölçek çizgisi olduğu anlaşılır.
+                  // ── ⚠ EN AZ %3 KURALI KALDIRILDI (kullanıcı
+                  // kararı, 9 Eyl) ──
+                  //
+                  // BULGU: "Puan verilmemiş olmasına rağmen o
+                  // satırlar az dolu görünüyor. 0 ise boş olmalı;
+                  // orana göre hesaplanıp dolmalı."
+                  //
+                  // ÖNCEDEN `Math.max(3, ...)` referansı gereği taban
+                  // %3 uygulanıyordu; amaç satırın bir ölçek çizgisi
+                  // olduğunu belli etmekti. Ama sonuç yanıltıcıydı:
+                  // hiç oy almamış yıldız da bir miktar dolu
+                  // görünüyor, "az da olsa puan var" izlenimi
+                  // veriyordu.
+                  //
+                  // ⚠ ARTIK ORAN DOĞRUDAN UYGULANIR: 0 oy → çubuk
+                  // TAMAMEN boş, 1/1 → tam dolu, aradaki her değer
+                  // kendi oranında. Gri raylar zaten görünür olduğu
+                  // için satırın ölçek olduğu yine anlaşılıyor.
                   FractionallySizedBox(
-                    widthFactor: oran < 0.03 ? 0.03 : oran,
+                    widthFactor: oran,
                     heightFactor: 1,
                     child: const ColoredBox(color: Color(0xFFF5A319)),
                   ),

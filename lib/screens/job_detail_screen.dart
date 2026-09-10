@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
+import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/listing_controller.dart';
@@ -174,7 +175,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     //
     // ⚠ NULLABLE — "Açık" durumunda `null` döner, kullanıcı isteğiyle
     // rozet hiç çizilmez (bkz. `status_ui.dart`daki not).
-    final rozet = listingRozetiUi(l);
+    // ⚠ `listingRozetiUi` ARTIK ÇAĞRILMIYOR (9 Eyl): "Tamamlandı"
+    // rozeti kaldırıldı. Yardımcının kendisi duruyor, öteki ekranlar
+    // kullanıyor.
     final owner = auth.accountById(l.ownerId);
 
     // ⚠ MASKELEME: iletişim bilgisi AÇILMADAN önce ilan sahibinin adı
@@ -213,7 +216,6 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
                       .where((x) => x.isTamamlanmisIs)
                       .length,
-                  teklifSayisi: offerCtl.offersForListing(l.id).length,
                   // ⚠ YENİ — kullanıcı isteği: hizmet alanın ne
                   // zamandır üye olduğu, tamamlanan iş sayısının
                   // altına eklendi.
@@ -272,7 +274,14 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           // (İl/İlçe/Mahalle, İlan Tarihi) zaten var.
                         ]),
                   ),
-                  if (rozet != null) StatusChip(rozet.$1, rozet.$2),
+                  // ⚠ DURUM ROZETİ KALDIRILDI (kullanıcı isteği,
+                  // 9 Eyl): "Tamamlandı" yazısı bu ekranda gereksizdi
+                  // — aşağıdaki teklif kartı zaten işin durumunu
+                  // söylüyor ve rozet, ilan numarasını sağ köşeden
+                  // ittiriyordu.
+                  //
+                  // ⚠ `rozet` ARTIK KULLANILMIYOR; hesaplandığı yer
+                  // de kaldırıldı.
                 ]),
 
                 // .pl-h2{15px/700;margin:14px 0 7px}
@@ -528,49 +537,24 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       style: refText(
                           size: RF.s145, weight: RF.w800, color: RC.blue)),
                   const SizedBox(height: 6),
-                  Text(tl(mine.amount),
+                  // ⚠ TUTAR ORTAK BİÇİMDEN (9 Eyl): `tl()` "₺5000"
+                  // yazıyordu; uygulamanın her yerinde binlik ayracı
+                  // ve "TL" `core/tutar_bicimi.dart`tan geliyor.
+                  Text(tutarMetni(mine.amount),
                       style: refText(
                           size: 30, weight: RF.w800, color: RC.blue)),
-                  const SizedBox(height: 10),
-                  // Durum satırı: iletişim açıksa yeşil onay, değilse
-                  // "Teklifiniz iletildi" rozeti.
-                  if (contactCtl.isOpen(mine.id))
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      const RefSvg('assets/svg/ic_checkcircle.svg',
-                          size: 16, color: Color(0xFF16A34A)),
-                      const SizedBox(width: 6),
-                      Text('İletişim Bilgileri Açıldı',
-                          style: refText(
-                              size: RF.s135,
-                              weight: RF.w700,
-                              color: const Color(0xFF16A34A))),
-                    ])
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE9F9EF),
-                        borderRadius: BorderRadius.circular(RR.circle),
-                      ),
-                      child: Text('Teklifiniz iletildi',
-                          style: refText(
-                              size: RF.s125,
-                              weight: RF.w700,
-                              color: const Color(0xFF16A34A))),
-                    ),
-                  const SizedBox(height: 8),
-                  Row(mainAxisSize: MainAxisSize.min, children: [
-                    const RefSvg('assets/svg/ic_clock.svg',
-                        size: 14, color: RC.textSoft),
-                    const SizedBox(width: 5),
-                    // ⚠ Mevcut yardımcı kullanılır; yenisi uydurulmaz.
-                    Text('${gecenSure(mine.createdAt)} teklif verildi',
-                        style: refText(
-                            size: RF.s125,
-                            weight: RF.w400,
-                            color: RC.textSoft)),
-                  ]),
+                  // ── ⚠ DURUM VE ZAMAN SATIRLARI KALDIRILDI
+                  // (kullanıcı isteği, 9 Eyl) ──
+                  //
+                  // Kartta "İletişim Bilgileri Açıldı" ve
+                  // "33 dk önce teklif verildi" satırları vardı.
+                  //
+                  // İkisi de başka yerde zaten görünüyor: iletişim
+                  // durumunu hemen alttaki telefon/mesajlaşma kutuları
+                  // söylüyor (açıksa numara yazıyor, kapalıysa
+                  // "Kilitli"), teklifin ne zaman verildiği de
+                  // kararı etkilemiyor. Kart artık tek işi yapıyor:
+                  // verilen tutarı göstermek.
                 ]),
               ),
               const SizedBox(height: 10),
@@ -593,7 +577,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(children: [
-                          Text(tl(mine.amount),
+                          // ⚠ ORTAK BİÇİM (9 Eyl): aynı ekranda iki
+                          // tutar vardı ve ikisi de "₺5000" yazıyordu;
+                          // uygulamanın geri kalanı "5.000 TL"
+                          // gösteriyor.
+                          Text(tutarMetni(mine.amount),
                               style: const TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.w800,
@@ -808,14 +796,14 @@ class _SahipKarti extends StatelessWidget {
     required this.adSoyad,
     required this.acik,
     required this.tamamlananIs,
-    required this.teklifSayisi,
     this.kayitTarihi,
   });
 
   final String adSoyad;
   final bool acik;
   final int tamamlananIs;
-  final int teklifSayisi;
+  // ⚠ `teklifSayisi` KALDIRILDI (9 Eyl): teklif sayısı rozeti bu
+  // ekrandan çıkarıldı, alan da gereksiz kaldı.
 
   /// ⚠ YENİ — hizmet alanın üyelik tarihi (tamamlanan iş sayısının
   /// altında gösterilir). `null` ise (hesap bulunamazsa) satır hiç
@@ -912,20 +900,10 @@ class _SahipKarti extends StatelessWidget {
                   ],
                 ]),
           ),
-          const SizedBox(width: 8),
-          // .cc-badge.blue — teklif sayısı rozeti
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(
-                color: RC.blueSoft, borderRadius: BorderRadius.circular(8)),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const RefSvg('assets/svg/ic_chat.svg', size: 15, color: RC.blue),
-              const SizedBox(width: 6),
-              Text('$teklifSayisi teklif verildi',
-                  style: refText(
-                      size: 11.5, weight: RF.w600, color: RC.blue)),
-            ]),
-          ),
+          // ⚠ TEKLİF SAYISI ROZETİ KALDIRILDI (kullanıcı isteği,
+          // 9 Eyl): hizmet veren zaten KENDİ teklifini görüyor;
+          // ilanın kaç teklif aldığı onun kararını ilgilendirmiyor
+          // ve kartın üst satırını kalabalıklaştırıyordu.
         ],
       );
 

@@ -1153,9 +1153,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
             // çekebilmesi için YETERLİ kaydırma payı sağlar — riskli
             // bir Scaffold yeniden yapılandırması (`bottomNavigationBar`)
             // GEREKMEDEN.
-            padding: EdgeInsets.fromLTRB(
-                20, 0, 20, 24 + MediaQuery.viewInsetsOf(context).bottom),
-            child: Form(
+            // ── ⚠ KLAVYE DOLGUSU AĞACIN TAMAMINDAN AYRILDI
+            // (kullanıcı bulgusu, 9 Eyl) ──
+            //
+            // BULGU: "Zorunlu alanları doldurmaya başlayınca klavye
+            // zor açılıp kapanıyor; alanlara hiç dokunmadan il-ilçe-
+            // mahalle seçince sorun yok."
+            //
+            // AÇIKLAMASI: alanlara dokunulmazsa klavye HİÇ AÇILMAZ.
+            // Dokunulduğunda ise il satırına basıldığı an iki
+            // animasyon üst üste biner — klavye iniyor, panel
+            // çıkıyor.
+            //
+            // ⚠ ÖLÇÜLEN KÖK NEDEN: `MediaQuery.viewInsetsOf` DOĞRUDAN
+            // bu `build` metodunda okunuyordu. Bu değer klavye
+            // animasyonunun HER KARESİNDE değişir, dolayısıyla 613
+            // satırlık ağacın tamamı kare başına yeniden kuruluyordu.
+            //
+            // ⚠ ÇÖZÜM AĞACI KÜÇÜLTMEK DEĞİL, BAĞIMLILIĞI TAŞIMAK:
+            // `MediaQuery` okuması `_KlavyeDolgusu` bileşenine indi.
+            // Artık klavye kareleri YALNIZ o küçük bileşeni yeniden
+            // çiziyor; `child` AYNI widget örneği olarak geçtiği için
+            // Flutter altındaki ağacı YENİDEN KURMAZ, yalnız dolgu
+            // değerini günceller.
+            //
+            // ⚠ DAVRANIŞ AYNI: dolgu formülü (`24 + klavye`)
+            // değişmedi; "Devam Et" düğmesi klavye açıkken yine
+            // görünür alana kaydırılabiliyor.
+            child: _KlavyeDolgusu(
+              child: Form(
               // ── ⚠ UYARI NE ZAMAN GÖRÜNÜR? ──
               //
               // KURAL: kullanıcı alanı DOLDURUP ÇIKINCA uyarılır.
@@ -1741,6 +1767,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ.
               ]),
             ),
+            ),
           ),
         ),
           const TeshisPaneli(),
@@ -1748,4 +1775,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       );
 
+}
+
+/// ── ⚠ KLAVYE DOLGUSU — YALNIZ KENDİSİ YENİDEN ÇİZİLİR ──
+///
+/// KULLANICI BULGUSU (9 Eyl): "Zorunlu alanları doldurmaya
+/// başladığımda klavye zor açılıp kapanıyor, kasmaya başlıyor. Ancak
+/// il-ilçe-mahalle bilgilerini diğer bilgilere hiç dokunmadan
+/// girdiğimde bu sorun yok."
+///
+/// AÇIKLAMASI: alanlara dokunulmazsa klavye HİÇ AÇILMAZ. Dokunulunca
+/// il satırına basıldığı an iki animasyon üst üste biner — klavye
+/// iniyor, seçim paneli çıkıyor.
+///
+/// ⚠ ÖLÇÜLEN KÖK NEDEN: `MediaQuery.viewInsetsOf` doğrudan kayıt
+/// ekranının `build` metodunda okunuyordu. Bu değer klavye
+/// animasyonunun HER KARESİNDE değişir; `MediaQuery`ye bağlanan
+/// eleman da her karede yeniden çizilir. Bağlanan eleman 613 satırlık
+/// formun TAMAMIYDI.
+///
+/// ⚠ ÇÖZÜM AĞACI KÜÇÜLTMEK DEĞİL, BAĞIMLILIĞI AŞAĞI TAŞIMAK:
+/// `MediaQuery` okuması bu küçük bileşene indi. Klavye kareleri
+/// artık yalnız BURAYI yeniden çiziyor. `child` dışarıdan AYNI widget
+/// örneği olarak geldiği için Flutter altındaki ağacı YENİDEN KURMAZ
+/// — yalnız dolgu değerini günceller.
+///
+/// ⚠ FORMÜL DEĞİŞMEDİ: `24 + klavye yüksekliği`. "Devam Et" düğmesi
+/// klavye açıkken yine görünür alana kaydırılabiliyor.
+///
+/// ⚠ `const` OLAMAZ: `child` çalışma zamanında kurulur. Ama `child`ın
+/// KİMLİĞİ korunduğu sürece kazanç aynıdır — önemli olan sabitlik
+/// değil, örneğin değişmemesidir.
+class _KlavyeDolgusu extends StatelessWidget {
+  const _KlavyeDolgusu({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 0, 20, 24 + MediaQuery.viewInsetsOf(context).bottom),
+        child: child,
+      );
 }

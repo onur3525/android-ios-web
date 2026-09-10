@@ -53,10 +53,18 @@ void main() {
   final kart = _kodu('lib/screens/widgets/teklif_tutar_karti.dart');
 
   group('1 — TEKLİF TUTARI KARTI', () {
-    test('başlık "Teklif", "Fiyat" DEĞİL', () {
-      expect(kart.contains("Text('Teklif'"), isTrue);
+    test('başlık "Verilen teklif", "Fiyat" DEĞİL', () {
+      // ⚠ METİN GÜNCELLENDİ (9 Eyl): tek başına "Teklif", kartın
+      // neyi içerdiğini belirsiz bırakıyordu.
+      expect(kart.contains("Text('Verilen teklif'"), isTrue);
       expect(detay.contains("Text('Fiyat'"), isFalse,
           reason: 'eski "Fiyat" başlığı kalmış');
+    });
+
+    test('⚠ İÇERİK KART İÇİNDE ORTALI', () {
+      // Sola yaslıyken kartın sağ yarısı boş kalıyor, tutar kenara
+      // yapışık görünüyordu.
+      expect(kart.contains('CrossAxisAlignment.center'), isTrue);
     });
 
     test('⚠ İKİ TARAF DA AYNI KARTI KULLANIR', () {

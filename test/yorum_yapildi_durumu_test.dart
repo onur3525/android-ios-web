@@ -88,15 +88,27 @@ void main() {
           reason: 'yorum denetimi yok — düğme her zaman çizilir');
     });
 
-    test('yorum yokken düğme, varken "Yorum Yapıldı" yazısı', () {
+    test('yorum yokken düğme, varken "Yorum yapıldı" yazısı', () {
       expect(k.contains('if (yorum == null)'), isTrue,
           reason: 'düğmeyi gizleyen kapı yok');
-      final p = _pencere(k, 'if (yorum == null)', 'RefTap(');
+      final p = _pencere(k, 'if (yorum == null)', 'Center(');
       expect(p.contains("'Yorum Yaz'"), isTrue,
           reason: 'düğme kapının içinde değil');
-      expect(k.contains("'Yorum Yapıldı ("), isTrue);
-      expect(k.contains(r'${yorum.stars} puan'), isTrue,
-          reason: 'puan bu talebin yorumundan okunmuyor');
+
+      // ⚠ GÖSTERİM SADELEŞTİ (9 Eyl): bu bölüm sırayla üç hâl aldı —
+      // yeşil şerit, yıldızlı kart, şimdi ortalı sade yazı. Yıldızlı
+      // kart hemen üstündeki "Yorumlar" bölümüyle yarışıyor ve aynı
+      // yorum sayfada İKİ KEZ görünüyordu.
+      expect(k.contains("Text('Yorum yapıldı'"), isTrue);
+      expect(k.contains('Center('), isTrue, reason: 'yazı ortalı değil');
+    });
+
+    test('⚠ GÖRÜNTÜLEME YOLU KAYBOLMADI', () {
+      // Kullanıcının "yorumu ve puanı sonradan görebilmeli" kuralı.
+      // Yazı kutusuz olduğu için dokunulabilirliğin tek ipucu MAVİ
+      // renktir.
+      expect(k.contains('onTap: onYorumYaz'), isTrue);
+      expect(k.contains('color: RC.blue'), isTrue);
     });
   });
 

@@ -611,6 +611,23 @@ class MockOfferPort extends OfferPort {
       o.status = OfferStatus.closed;
     }
     l.selectedOfferId = offerId;
+    // ── ⚠ HİZMET VERENİN SAYACI ARTAR (kullanıcı bulgusu, 9 Eyl) ──
+    //
+    // `Listing.isTamamlanmisIs` seçimle birlikte true olur; bu
+    // ilanın hizmet vereni bir iş daha bitirmiş sayılır.
+    //
+    // ⚠ NEDEN HESABA YAZILIYOR: sayı, izleyenin görebildiği ilan ve
+    // tekliflerden türetilirse yeni açılmış bir hesap DAİMA 0 görür.
+    // Bir kişinin geçmişi, ona bakan kişinin verisinden hesaplanamaz.
+    //
+    // ⚠ MÜKERRER SAYIM YOK: bu satıra yalnız seçim ANINDA gelinir;
+    // `chosen.status` yukarıda `selected` yapıldı ve zaten seçilmiş
+    // ilan bu akışa ikinci kez giremez (`selectedOfferId` dolu
+    // ilanda seçim reddedilir).
+    final saglayiciHesabi = auth?.byId(chosen.providerId);
+    if (saglayiciHesabi != null) {
+      saglayiciHesabi.tamamlananIs += 1;
+    }
     // ── ⚠ SEÇİM İLANI DOĞRUDAN TAMAMLAR (ürün kararı) ──
     //
     // Referans `submitReviewDo`: seçim yapıldığında ilan `done` olur.

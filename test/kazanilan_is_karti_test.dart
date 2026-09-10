@@ -32,10 +32,30 @@ void main() {
   final satir = _kodu('lib/screens/widgets/hizmet_alan_ozet_satiri.dart');
 
   group('1 — KART HİZMET ALANI GÖSTERİR', () {
-    test('ortak bilgi satırı kullanılıyor', () {
-      expect(jobs.contains('HizmetAlanOzetSatiri('), isTrue,
-          reason: 'kazanılan iş kartı hizmet alan bilgilerini taşımıyor');
-      expect(jobs.contains('hizmetAlanOzeti('), isTrue);
+    test('⚠ HER İKİ KART TÜRÜ DE HİZMET ALANI GÖSTERİR', () {
+      // Kullanıcı isteği (9 Eyl): "İlan oluşturma yolu ile gelen
+      // kartlar da doğrudan teklif kartları gibi olsun."
+      //
+      // Önceden yalnız "Bul" akışından kazanılan kart bu bilgiyi
+      // taşıyordu; ilan tabanlı kart yalnız başlık, adres, tutar ve
+      // durum gösteriyordu.
+      expect(RegExp(r'HizmetAlanOzetSatiri\(').allMatches(jobs).length, 2,
+          reason: 'iki kart türünden biri hizmet alanı göstermiyor');
+      expect(RegExp(r'hizmetAlanOzeti\(').allMatches(jobs).length, 2);
+    });
+
+    test('⚠ KAZANILAN İŞTE MASKELEME YOK', () {
+      // Bu ekran kabul edilmiş işleri listeler; kimlik zaten açık.
+      expect(jobs.contains('maskeli: false'), isTrue);
+    });
+
+    test('⚠ MAHALLE GÖSTERİLİR', () {
+      // Hizmet veren işin NEREDE olduğunu bilmek zorunda; ilçe tek
+      // başına yetmiyor. İlan tabanlı kart mahalleyi zaten
+      // gösteriyordu, özet göstermiyordu — aynı ekranda iki farklı
+      // ayrıntı düzeyi vardı.
+      final o = _kodu('lib/domain/hizmet_alan_ozeti.dart');
+      expect(o.contains('konumMetni(adres, mahalleDahil: true)'), isTrue);
     });
 
     test('ad, konum, tamamlanan iş ve üyelik çizilir', () {
@@ -71,10 +91,12 @@ void main() {
   });
 
   group('3 — TUTAR VE SAYAÇ', () {
-    test('kart tutarı ortak biçimden gelir', () {
+    test('⚠ İKİ KART DA ORTAK TUTAR BİÇİMİNİ KULLANIR', () {
+      // Aynı ekranda "₺5000" ve "3.000 TL" yan yana duruyordu.
       expect(jobs.contains('tutarMetni(t.teklifFiyati ?? 0)'), isTrue);
-      // ⚠ `tl()` ham yazıyordu ("₺5000"): ne binlik ayracı ne "TL".
+      expect(jobs.contains('tutarMetni(o.amount)'), isTrue);
       expect(jobs.contains('tl(t.teklifFiyati'), isFalse);
+      expect(jobs.contains('tl(o.amount)'), isFalse);
     });
 
     test('⚠ SAYAÇ KAZANILAN TALEPLERİ DE SAYAR', () {

@@ -6,6 +6,7 @@ import '../../domain/failures.dart';
 import '../models/listing.dart' show IsZamani;
 import '../models/notification.dart';
 import '../models/teklif_talebi.dart';
+import '../repositories/auth_repository.dart';
 import '../repositories/notification_repository.dart';
 import '../repositories/teklif_talebi_repository.dart';
 
@@ -60,7 +61,7 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
 /// GÖRÜR — ayrı bir bildirim sistemi İCAT EDİLMEDİ, var olana
 /// bağlanıldı.
 class MockTeklifTalebiPort extends TeklifTalebiPort {
-  MockTeklifTalebiPort(this._repo, {this.notifs}) {
+  MockTeklifTalebiPort(this._repo, {this.notifs, this.auth}) {
     _repo.addListener(notifyListeners);
   }
 
@@ -70,6 +71,11 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
   /// yine de çalışır (testlerde kolayca kurulabilsin diye) —
   /// `MockOfferPort`taki `notifs` ile AYNI kural.
   final NotificationRepository? notifs;
+
+  /// ⚠ İSTEĞE BAĞLI: `null` verilirse tamamlanan iş sayacı
+  /// GÜNCELLENMEZ ama akış çalışır — `notifs` ile AYNI kural, eski
+  /// çağrılar ve testler kırılmaz.
+  final AuthRepository? auth;
 
   @override
   void dispose() {
@@ -195,8 +201,24 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
 
   @override
   Future<DomainError?> tamamla(String id) async {
+    // ⚠ ÖNCEKİ DURUM OKUNUR: sayaç yalnız GERÇEKTEN bu çağrıda
+    // tamamlanan işler için artmalı. Zaten `tamamlandi` olan bir
+    // talep ikinci kez tamamlanırsa sayaç YANLIŞ artardı.
+    final oncekiDurum = _repo.byId(id)?.durum;
     _repo.tamamla(id);
     final t = _repo.byId(id);
+    if (t != null &&
+        t.durum == TeklifTalebiDurumu.tamamlandi &&
+        oncekiDurum != TeklifTalebiDurumu.tamamlandi) {
+      // ── ⚠ HİZMET VERENİN SAYACI ARTAR (kullanıcı bulgusu, 9 Eyl) ──
+      //
+      // "Bul" akışından kazanılan iş de bitirilmiş bir iştir; ilan
+      // akışıyla aynı sayaca yazılır, yoksa iki akış ayrı sayılırdı.
+      final hesap = auth?.byId(t.saglayiciId);
+      if (hesap != null) {
+        hesap.tamamlananIs += 1;
+      }
+    }
     if (t != null && t.durum == TeklifTalebiDurumu.tamamlandi) {
       // ⚠ HİZMET ALANA — iş tamamlandı işaretlendi.
       notifs?.push(

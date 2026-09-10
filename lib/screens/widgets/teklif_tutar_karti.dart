@@ -37,9 +37,17 @@ class TeklifTutarKarti extends StatelessWidget {
           border: Border.all(color: RC.blue.withValues(alpha: 0.25)),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // ⚠ ORTALANDI (kullanıcı isteği, 9 Eyl): etiket ve tutar
+          // kartın içinde ortada durur; sola yaslıyken kartın sağ
+          // yarısı boş kalıyor, tutar kartın kenarına yapışık
+          // görünüyordu.
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text('Teklif',
+            // ⚠ "Teklif" → "Verilen teklif": tek başına "Teklif"
+            // kartın ne olduğunu değil neyi içerdiğini belirsiz
+            // bırakıyordu.
+            Text('Verilen teklif',
+                textAlign: TextAlign.center,
                 style: refText(
                     size: RF.s125, weight: RF.w500, color: RC.blue)),
             const SizedBox(height: 2),
@@ -47,6 +55,7 @@ class TeklifTutarKarti extends StatelessWidget {
             // punto w700 — pubspec'te Poppins 700 VAR, sentezlenmez.
             Text(tutarMetni(tutar),
                 maxLines: 1,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: refText(
                     size: 26,

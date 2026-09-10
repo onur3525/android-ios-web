@@ -150,6 +150,38 @@ class MainActivity : FlutterActivity() {
         val splash = installSplashScreen()
         basladi = SystemClock.uptimeMillis()
         bootLog("NATIVE_ON_CREATE")
+
+        // ── ⚠ ÇIKIŞ ANİMASYONU DEVRALINIR (2. deneme, 9 Eyl) ──
+        //
+        // BULGU: "Splash kapanmasına yakın logoda anlık bir küçülme
+        // oluyor." Sebep, bu listener'ın TANIMSIZ olmasıydı: Android
+        // 12+ splash'ı bırakırken kimse devralmazsa SİSTEMİN varsayılan
+        // çıkış animasyonunu oynatır ve ikonu küçültüp soldurur.
+        //
+        // ⚠ 1. DENEME UYGULAMAYI BOZMUŞTU: yalnız `remove()` çağıran
+        // hâli, uygulamanın altında ve üstünde SİYAH BANTLAR bıraktı
+        // ve geri alındı. En güçlü açıklama, çıkış devralınınca
+        // `postSplashScreenTheme` geçişinin uygulanmaması ve pencerenin
+        // `Theme.SplashScreen` üzerinde kalmasıydı — o temanın sistem
+        // çubuğu renkleri koyudur.
+        //
+        // ⚠ BU YÜZDEN TEMA ELLE UYGULANIR: `remove()`tan ÖNCE
+        // `NormalTheme`e geçilir. `styles.xml`de `postSplashScreenTheme`
+        // zaten bu temayı gösteriyor; yeni bir tema TANIMLANMADI,
+        // yalnız var olanı biz uyguluyoruz.
+        //
+        // ⚠ İKİ SATIRIN SIRASI ÖNEMLİ: tema önce, kaldırma sonra.
+        // Ters sırada pencere bir kare boyunca eski temada kalırdı.
+        //
+        // ⚠ SİYAH BANTLAR YİNE ÇIKARSA hipotez yanlıştır ve bu blok
+        // BÜTÜNÜYLE geri alınmalıdır; küçülme kozmetiktir, bozuk
+        // pencere değildir.
+        splash.setOnExitAnimationListener { yuzey ->
+            setTheme(R.style.NormalTheme)
+            bootLog("NATIVE_SPLASH_EXIT_NO_ANIM")
+            yuzey.remove()
+        }
+
         splash.setKeepOnScreenCondition {
             val gecen = SystemClock.uptimeMillis() - basladi
             // ⚠ Koşul HER KAREDE sorulur; olaylar TEK KEZ loglanır.

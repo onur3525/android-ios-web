@@ -574,40 +574,98 @@ class _JobsScreenState extends State<JobsScreen> {
                                 decoration: BoxDecoration(
                                     border: Border.all(color: HC.border),
                                     borderRadius: BorderRadius.circular(14)),
-                                child: Row(children: [
-                                  Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(l?.title ?? 'İlan kaldırıldı',
-                                              style: const TextStyle(
-                                                  fontSize: 14.5,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: HC.dark)),
-                                          const SizedBox(height: 3),
-                                          // ⚠ GÜNCEL ADRES (9 Eyl).
-                                          Text(
-                                              kullaniciKonumu(
-                                                      context, l?.ownerId,
-                                                      mahalleDahil: true) ??
-                                                  l?.location ??
-                                                  '',
-                                              style: const TextStyle(
-                                                  fontSize: 12, color: HC.grey)),
-                                        ]),
-                                  ),
-                                  Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(tl(o.amount),
-                                            style: const TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w800,
-                                                color: HC.dark)),
-                                        StatusChip(label, color),
-                                      ]),
-                                ]),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(children: [
+                                      Expanded(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                  l?.title ??
+                                                      'İlan kaldırıldı',
+                                                  style: const TextStyle(
+                                                      fontSize: 14.5,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: HC.dark)),
+                                              const SizedBox(height: 3),
+                                              // ⚠ GÜNCEL ADRES (9 Eyl).
+                                              Text(
+                                                  kullaniciKonumu(
+                                                          context, l?.ownerId,
+                                                          mahalleDahil:
+                                                              true) ??
+                                                      l?.location ??
+                                                      '',
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: HC.grey)),
+                                            ]),
+                                      ),
+                                      Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            // ⚠ TUTAR ORTAK BİÇİMDEN
+                                            // (9 Eyl): `tl()` "₺5000"
+                                            // yazıyordu; aynı ekrandaki
+                                            // doğrudan teklif kartı
+                                            // "3.000 TL" gösteriyordu.
+                                            // İki biçim yan yana
+                                            // duruyordu.
+                                            Text(tutarMetni(o.amount),
+                                                style: const TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight:
+                                                        FontWeight.w800,
+                                                    color: HC.dark)),
+                                            StatusChip(label, color),
+                                          ]),
+                                    ]),
+
+                                    // ── ⚠ HİZMET ALAN BİLGİLERİ
+                                    // (kullanıcı isteği, 9 Eyl) ──
+                                    //
+                                    // "İlan oluşturma yolu ile gelen
+                                    // kartlar da doğrudan teklif
+                                    // kartları gibi olsun; hizmet
+                                    // alanın bilgileri görünsün."
+                                    //
+                                    // ⚠ AYNI BİLEŞEN: doğrudan teklif
+                                    // kartının kullandığı
+                                    // `HizmetAlanOzetSatiri`. İki kart
+                                    // artık aynı bilgiyi aynı biçimde
+                                    // gösteriyor.
+                                    //
+                                    // ⚠ MASKELEME YOK: bu ekran
+                                    // KAZANILAN işleri listeler; teklif
+                                    // kabul edilmiş, kimlik zaten
+                                    // açılmıştır.
+                                    if (l != null) ...[
+                                      const SizedBox(height: 10),
+                                      const Divider(
+                                          height: 1,
+                                          color: Color(0xFFF1F3F6)),
+                                      const SizedBox(height: 10),
+                                      Builder(builder: (c) {
+                                        final ad = c
+                                                .read<AuthController>()
+                                                .accountById(l.ownerId)
+                                                ?.name ??
+                                            'Hizmet Alan';
+                                        return HizmetAlanOzetSatiri(
+                                          hizmetAlanOzeti(c,
+                                              id: l.ownerId, adGoster: ad),
+                                          maskeli: false,
+                                        );
+                                      }),
+                                    ],
+                                  ],
+                                ),
                               ),
                             ),
                           );

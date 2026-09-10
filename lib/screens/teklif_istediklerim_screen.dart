@@ -8,6 +8,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/saglayici_ozeti.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import 'widgets/durum_rozeti.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
@@ -198,16 +199,26 @@ class _TalepKarti extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: renk.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(RR.r8),
-                      ),
-                      child: Text(metin,
-                          style: refText(
-                              size: RF.s115, weight: RF.w700, color: renk)),
+                    // ── ⚠ DURUM ROZETİ ORTAK BİLEŞENE ALINDI
+                    // (kullanıcı isteği, 9 Eyl) ──
+                    //
+                    // "Teklif bekleniyor yazısı çok gelişi güzel
+                    // konulmuş, daha orantılı olmalı; teklif bekliyor
+                    // canlı hissi vermeli."
+                    //
+                    // ⚠ ÖLÇÜ KÜÇÜLDÜ: rozet kartın içinde adla aynı
+                    // ağırlıkta duruyordu; bilgi ikincil, ad birincil.
+                    //
+                    // ⚠ CANLILIK YALNIZ BEKLEYEN DURUMDA: karşı taraf
+                    // henüz yanıt vermediyse metnin sağında üç nokta
+                    // sırayla parlar. Sonuçlanmış durumlarda
+                    // ("Teklif geldi", "İş tamamlandı") nokta hiç
+                    // çizilmez — sürekli oynayan bir öğe, bitmiş işi
+                    // bitmemiş gibi gösterirdi.
+                    DurumRozeti(
+                      metin: metin,
+                      renk: renk,
+                      bekliyor: talep.durum == TeklifTalebiDurumu.beklemede,
                     ),
                     // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
                     //
@@ -245,7 +256,7 @@ class _TalepKarti extends StatelessWidget {
   }
 
   (String, Color) _durumGoster(TeklifTalebiDurumu d) => switch (d) {
-        TeklifTalebiDurumu.beklemede => ('Teklif bekleniyor', RC.blue),
+        TeklifTalebiDurumu.beklemede => (kTeklifBekleniyorMetni, RC.blue),
         TeklifTalebiDurumu.teklifGeldi => ('Teklif geldi', HC.green),
         TeklifTalebiDurumu.secildi => ('İş aktif', HC.green),
         TeklifTalebiDurumu.reddedildi => ('Reddedildi', HC.grey),

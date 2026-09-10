@@ -122,6 +122,29 @@ class Account {
   /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
   bool termsAccepted;
 
+  /// ── ⚠ TAMAMLANAN İŞ SAYACI — HESAPTA SAKLANIR ──
+  ///
+  /// KULLANICI BULGUSU (9 Eyl): "Yeni hesap açan bir hizmet alan,
+  /// hizmet verenin güncel iş bitirme sayısını kartlarda göremiyor."
+  ///
+  /// ⚠ KÖK NEDEN: sayı, izleyenin GÖREBİLDİĞİ ilan ve tekliflerden
+  /// TÜRETİLİYORDU (`tamamlananIsSayisi`). Yeni açılmış bir hesabın
+  /// hiç ilanı yoktur; dolayısıyla türetilen sayı daima 0 çıkıyordu.
+  /// Hizmet veren yüz iş bitirmiş olsa bile.
+  ///
+  /// Bir kişinin geçmişi, ona BAKAN kişinin verisinden hesaplanamaz.
+  /// Bu yüzden sayaç kişinin KENDİ hesabında tutulur.
+  ///
+  /// ⚠ TÜRETİM KALDIRILMADI: `tamamlananIsSayisi` ikisinin
+  /// BÜYÜĞÜNÜ döndürür. Böylece bu sayacın işlenmediği eski
+  /// kayıtlarda ilan sahibi kendi doğru sayısını görmeye devam eder;
+  /// mükerrer sayım da olmaz, çünkü toplama değil karşılaştırma
+  /// yapılır.
+  ///
+  /// ⚠ SON SÖZ SUNUCUNUNDUR: gerçek backend bu alanı yanıtta
+  /// döndürmelidir. Buradaki sayaç yerel köprüdür.
+  int tamamlananIs;
+
   /// Hesabın oluşturulduğu tarih — "kaç yıldır üye" gösterimi için
   /// (bkz. `data/repositories/teklif_talebi_repository.dart`'ta
   /// hizmet verene gösterilen talep kartı). Parametre verilmezse
@@ -140,6 +163,10 @@ class Account {
     this.phoneVerified = false,
     this.emailVerified = false,
     this.termsAccepted = false,
+    // ⚠ VARSAYILAN 0: yeni hesap hiç iş bitirmemiştir. Eski
+    // kayıtlarda da 0 gelir; türetilen sayı devrede olduğu için
+    // ilan sahibi yine doğru sayıyı görür.
+    this.tamamlananIs = 0,
     Set<Role>? roles,
     Role? activeRole,
     DateTime? kayitTarihi,
@@ -293,6 +320,9 @@ class Account {
         'bekleyenEposta': bekleyenEposta,
         'termsAccepted': termsAccepted,
         'kayitTarihi': kayitTarihi.toIso8601String(),
+        // ⚠ KALICI: APK testlerinde uygulama kapanıp açılınca sayaç
+        // sıfırlanmamalı.
+        'tamamlananIs': tamamlananIs,
         'fotoAlan': fotografi(Role.customer),
         'fotoVeren': fotografi(Role.provider),
       };
@@ -312,6 +342,8 @@ class Account {
       phoneVerified: j['phoneVerified'] as bool? ?? false,
       emailVerified: j['emailVerified'] as bool? ?? false,
       termsAccepted: j['termsAccepted'] as bool? ?? false,
+      // ⚠ ESKİ KAYITTA ALAN YOK: `?? 0` ile güvenle okunur.
+      tamamlananIs: (j['tamamlananIs'] as num?)?.toInt() ?? 0,
       kayitTarihi: j['kayitTarihi'] != null
           ? DateTime.tryParse(j['kayitTarihi'] as String)
           : null,

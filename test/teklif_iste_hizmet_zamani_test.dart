@@ -142,4 +142,42 @@ void main() {
           reason: 'seçim yokken yer tutucu çizilmemeli');
     });
   });
+
+  group('4 — TALEP DETAYI YERLEŞİMİ (9 Eyl)', () {
+    final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+
+    test('⚠ İLETİŞİM KUTULARI YORUMLARDAN ÖNCE', () {
+      // Kullanıcı isteği: "telefon ve mesaj kartlarını olduğu gibi,
+      // açıklama ve yorum kısmının arasına konumlandır."
+      //
+      // Önceden "Yorumlar"ın ALTINDAYDI; kilitli iletişim, onu
+      // açıklayan not ve yorumlar arasında sıra bozuktu.
+      final iNot = k.indexOf('Hizmet veren teklif verdiğinde');
+      final iYorum = k.indexOf("Text('Yorumlar',");
+      expect(iNot, greaterThan(-1));
+      expect(iYorum, greaterThan(iNot),
+          reason: 'iletişim bloğu yorumların altında kalmış');
+    });
+
+    test('⚠ ÜÇ NOKTA TEK YERDE — SAĞ ÜST KÖŞE', () {
+      // Önceden iki ayrı durumda iki ayrı konumda çiziliyordu;
+      // menünün nerede olduğu öğrenilemiyordu.
+      expect(RegExp(r'ic_dots\.svg').allMatches(k).length, 1,
+          reason: 'üç nokta birden fazla yerde çiziliyor');
+      // Menü talebi silme içindir; hizmet verende çizilmez.
+      expect(k.contains('if (!benSaglayiciMi)'), isTrue);
+    });
+
+    test('⚠ MENÜ AKIŞI DEĞİŞMEDİ', () {
+      // Taşıma, silme/onay/gerekçe akışına dokunmamalı.
+      expect(k.contains('_talepMenusu(t)'), isTrue);
+    });
+
+    test('⚠ "Teklifi Seç" TAM GENİŞLİK', () {
+      // Üç nokta yanından kalkınca düğme dar hâlinde kalıp "yarım"
+      // görünüyordu; saran `Column`un hizası `start`.
+      expect(k.contains('width: double.infinity'), isTrue,
+          reason: 'düğme satırın tamamına yayılmıyor');
+    });
+  });
 }

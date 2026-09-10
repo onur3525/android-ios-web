@@ -27,6 +27,7 @@ import 'teklif_talebi_yorum_screen.dart';
 // ⚠ Tam ekran fotoğraf görüntüleyici ORTAK bileşendir — ilan
 // akışıyla aynı davranış için kopya yazılmaz.
 import 'widgets/foto_goruntuleyici.dart';
+import 'widgets/durum_rozeti.dart';
 import 'widgets/is_zamani_secici.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
 import 'widgets/teklif_tutar_karti.dart';
@@ -308,9 +309,34 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
           children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: RefBackButton(),
+            // ── ⚠ ÜÇ NOKTA EKRANIN SAĞ ÜST KÖŞESİNE ALINDI
+            // (kullanıcı isteği, 9 Eyl) ──
+            //
+            // ÖNCEDEN sayfanın ALTINDA, "bekleniyor" kutusunun
+            // yanında 48x48'lik bir kutu olarak duruyordu; kutunun
+            // genişliğini kısıtlıyor ve orantısız görünüyordu.
+            //
+            // ⚠ MENÜNÜN KENDİSİ DEĞİŞMEDİ: aynı `_talepMenusu()`
+            // çağrısı — talebi silme, onay ve gerekçe sorma akışı
+            // aynen duruyor. Değişen yalnız düğmenin YERİ.
+            //
+            // ⚠ YALNIZ HİZMET ALANDA: menü talebi silme içindir;
+            // hizmet verenin böyle bir yetkisi yok, onda çizilmez.
+            Row(
+              children: [
+                const RefBackButton(),
+                const Spacer(),
+                if (!benSaglayiciMi)
+                  RefTap(
+                    onTap: () => _talepMenusu(t),
+                    borderRadius: BorderRadius.circular(RR.circle),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: RefSvg('assets/svg/ic_dots.svg',
+                          size: 20, color: RC.textSoft),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 4),
             RefPageTitle('Teklif Talebi', geriDugmesi: false),
@@ -440,7 +466,6 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
               _HizmetAlanAksiyonlari(
                 talep: t,
                 onSec: () => _sec(t),
-                onMenuAc: () => _talepMenusu(t),
                 onYorumYaz: () => Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
@@ -691,66 +716,19 @@ class _KarsiTarafBilgisi extends StatelessWidget {
         // ⚠ ARTIK YORUM YOKKEN DE GÖRÜNÜR — bkz. `teklif_iste_screen.
         // dart`daki AYNI düzeltme.
         //
-        // ⚠ DIŞ ÇERÇEVE KALDIRILDI (kullanıcı bulgusu) — `YorumKarti`
-        // ZATEN kendi çerçeveli kartını çiziyordu; bunu BİR DE dış
-        // bir kutunun içine koymak "kart içinde kart", sıkışık bir
-        // görünüm yaratıyordu. "Yorumlar" başlığı artık ORTALI,
-        // "Tümünü Gör" artık SAĞA yaslı.
-        Builder(builder: (context) {
-          final reviews = context.watch<ReviewController>();
-          final yorumlar = reviews.byProvider(talep.saglayiciId);
-          return Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Yorumlar',
-                    textAlign: TextAlign.center,
-                    style: refText(
-                        size: RF.s16, weight: RF.w700, color: RC.text)),
-                const SizedBox(height: 10),
-                if (yorumlar.isEmpty)
-                  Text('Henüz yorum yok.',
-                      textAlign: TextAlign.center,
-                      style: refText(
-                          size: RF.s13,
-                          weight: RF.w400,
-                          color: RC.textSoft))
-                else ...[
-                  for (final r in yorumlar.take(3))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: YorumKarti(
-                        review: r,
-                        yazarAdi: context
-                            .read<AuthController>()
-                            .accountById(r.authorId)
-                            ?.name,
-                      ),
-                    ),
-                  if (acik && yorumlar.length > 3)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: RefTap(
-                        onTap: () => Navigator.push<void>(
-                            context,
-                            MaterialPageRoute<void>(
-                                builder: (_) => ProviderReviewsScreen(
-                                    providerId: talep.saglayiciId,
-                                    providerAdi: talep.saglayiciAdi))),
-                        borderRadius: BorderRadius.circular(RR.r8),
-                        child: Text('Tümünü Gör (${yorumlar.length})',
-                            style: refText(
-                                size: RF.s13,
-                                weight: RF.w700,
-                                color: RC.blue)),
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          );
-        }),
+        // ── ⚠ KONUM DEĞİŞTİ (kullanıcı isteği, 9 Eyl) ──
+        //
+        // "Telefon ve mesaj kartlarını OLDUĞU GİBİ, açıklama ve yorum
+        // kısmının arasına konumlandır."
+        //
+        // ÖNCEDEN "Yorumlar"ın ALTINDAYDI: kilitli iletişim, onu
+        // açıklayan not ve yorumlar arasında sıra bozuktu — önce
+        // yorumlar, sonra "teklif verdiğinde açılacak" notu geliyordu.
+        // Yeni sıra: özet → not → iletişim kutuları → yorumlar.
+        //
+        // ⚠ KUTULARIN İÇİNE HİÇ DOKUNULMADI: aynı `_MiniIletisimKutusu`
+        // çağrıları, aynı kilit kuralları, aynı ölçüler. Değişen tek
+        // şey bloğun dosyadaki YERİ.
         // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, PROVİDER TARAFINDAKİ
         // `_MiniIletisimKutusu` İLE AYNI KUTULAR (sıfırdan YAPILMADI,
         // aynı bileşen yeniden kullanıldı) ──
@@ -819,6 +797,67 @@ class _KarsiTarafBilgisi extends StatelessWidget {
             ],
           ),
         ),
+
+        // ⚠ DIŞ ÇERÇEVE KALDIRILDI (kullanıcı bulgusu) — `YorumKarti`
+        // ZATEN kendi çerçeveli kartını çiziyordu; bunu BİR DE dış
+        // bir kutunun içine koymak "kart içinde kart", sıkışık bir
+        // görünüm yaratıyordu. "Yorumlar" başlığı artık ORTALI,
+        // "Tümünü Gör" artık SAĞA yaslı.
+        Builder(builder: (context) {
+          final reviews = context.watch<ReviewController>();
+          final yorumlar = reviews.byProvider(talep.saglayiciId);
+          return Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Yorumlar',
+                    textAlign: TextAlign.center,
+                    style: refText(
+                        size: RF.s16, weight: RF.w700, color: RC.text)),
+                const SizedBox(height: 10),
+                if (yorumlar.isEmpty)
+                  Text('Henüz yorum yok.',
+                      textAlign: TextAlign.center,
+                      style: refText(
+                          size: RF.s13,
+                          weight: RF.w400,
+                          color: RC.textSoft))
+                else ...[
+                  for (final r in yorumlar.take(3))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: YorumKarti(
+                        review: r,
+                        yazarAdi: context
+                            .read<AuthController>()
+                            .accountById(r.authorId)
+                            ?.name,
+                      ),
+                    ),
+                  if (acik && yorumlar.length > 3)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: RefTap(
+                        onTap: () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute<void>(
+                                builder: (_) => ProviderReviewsScreen(
+                                    providerId: talep.saglayiciId,
+                                    providerAdi: talep.saglayiciAdi))),
+                        borderRadius: BorderRadius.circular(RR.r8),
+                        child: Text('Tümünü Gör (${yorumlar.length})',
+                            style: refText(
+                                size: RF.s13,
+                                weight: RF.w700,
+                                color: RC.blue)),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
@@ -1129,7 +1168,6 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   const _HizmetAlanAksiyonlari({
     required this.talep,
     required this.onSec,
-    required this.onMenuAc,
     required this.onYorumYaz,
   });
 
@@ -1140,7 +1178,9 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
   /// reddediyordu. Artık 3 NOKTA MENÜSÜ açıyor (`listing_detail_
   /// screen.dart`daki "İlanı neden siliyorsunuz?" DESENİYLE aynı —
   /// onay + gerekçe sorma) — bkz. `_talepMenusu()`.
-  final VoidCallback onMenuAc;
+  // ⚠ `onMenuAc` KALDIRILDI (9 Eyl): üç nokta menüsü artık ekranın
+  // sağ üst köşesinde, sayfa başlığının yanında. Bu bileşen menüyü
+  // hiç çizmiyor, dolayısıyla geri çağrıya da ihtiyacı yok.
 
   /// ⚠ Yalnız `tamamlandi` durumunda kullanılır — iş bitince
   /// "Teklifi Seç" düğmesinin YERİNİ "Yorum Yaz" alır.
@@ -1157,28 +1197,9 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         // vardı (Talebi Sil → onay → "neden siliyorsun?" gerekçe
         // seçimi) — burada da AYNI mekanizma, yeni bir akış İCAT
         // EDİLMEDİ.
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Expanded(child: _BeklemeGostergesi()),
-            const SizedBox(width: 8),
-            RefTap(
-              onTap: onMenuAc,
-              borderRadius: BorderRadius.circular(RR.r13),
-              child: Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFECEEF2)),
-                  borderRadius: BorderRadius.circular(RR.r13),
-                ),
-                child: const RefSvg('assets/svg/ic_dots.svg',
-                    size: 18, color: RC.textSoft),
-              ),
-            ),
-          ],
-        );
+        // ⚠ ÜÇ NOKTA BURADAN ALINDI (9 Eyl): artık ekranın sağ üst
+        // köşesinde. Kutu tam genişliği kullanabiliyor.
+        return const _BeklemeGostergesi();
 
       case TeklifTalebiDurumu.teklifGeldi:
         final kalan = talep.suresiDolacagiZaman?.difference(DateTime.now());
@@ -1205,33 +1226,22 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
                       weight: RF.w500,
                       color: const Color(0xFFF5820C))),
             const SizedBox(height: 16),
-            // ── ⚠ "TEKLİFİ SEÇ" + 3 NOKTA — YAN YANA ──
+            // ⚠ ÜÇ NOKTA BURADAN DA ALINDI (9 Eyl): ekranın sağ üst
+            // köşesinde TEK bir yerde. İki farklı durumda iki ayrı
+            // konumda çizilmesi, menünün nerede olduğunu
+            // öğrenilemez kılıyordu.
             //
-            // Düz "Reddet" düğmesi KALDIRILDI; 3 nokta artık
-            // `listing_detail_screen.dart`daki "İlanı Sil"le AYNI
-            // akışı açıyor (onay + gerekçe sorma).
-            Row(
-              children: [
-                Expanded(
-                  child: RefPrimaryButton('Teklifi Seç', onPressed: onSec),
-                ),
-                const SizedBox(width: 8),
-                RefTap(
-                  onTap: onMenuAc,
-                  borderRadius: BorderRadius.circular(RR.r13),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFECEEF2)),
-                      borderRadius: BorderRadius.circular(RR.r13),
-                    ),
-                    child: const RefSvg('assets/svg/ic_dots.svg',
-                        size: 18, color: RC.textSoft),
-                  ),
-                ),
-              ],
+            // ⚠ MENÜ AKIŞI DEĞİŞMEDİ: aynı `_talepMenusu()` — talebi
+            // silme, onay ve gerekçe sorma.
+            //
+            // ⚠ TAM GENİŞLİK ŞART (kullanıcı isteği, 9 Eyl): üç nokta
+            // yanından kalkınca düğme eski dar hâlinde kalıp "yarım"
+            // görünüyordu. Saran `Column`un hizası `start` olduğu için
+            // düğme kendi doğal genişliğinde kalıyordu; `SizedBox` ile
+            // satırın tamamına yayılır ve yazı ortalanır.
+            SizedBox(
+              width: double.infinity,
+              child: RefPrimaryButton('Teklifi Seç', onPressed: onSec),
             ),
           ],
         );
@@ -1296,71 +1306,40 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
                   iconAsset: 'assets/svg/ic_starfill.svg',
                   onPressed: onYorumYaz)
             else
-              // ── ⚠ YEŞİL ŞERİT YERİNE YORUM KARTI (kullanıcı
+              // ── ⚠ KART KALKTI, SADE YAZI KALDI (kullanıcı
               // isteği, 9 Eyl) ──
               //
-              // ÖNCEDEN tek satırlık yeşil bir şeritti: "Yorum
-              // Yapıldı (5 puan) · Görüntüle". Puanı sayı olarak
-              // söylüyor, yorumun kendisini hiç göstermiyordu.
+              // Bu bölüm sırayla üç hâl aldı: önce tek satırlık yeşil
+              // şerit, sonra yıldız + puan + metin taşıyan bir kart,
+              // şimdi ortalı ve sade bir yazı.
               //
-              // Artık kart: yıldızlar + puan + yazılan metin. Karta
-              // dokununca yine salt okunur değerlendirme ekranı
-              // açılır — görüntüleme yolu KAYBOLMADI.
+              // GEREKÇE: bu ekranın ana konusu TALEP; yorum, işin
+              // bittiğini söyleyen bir dipnot. Yıldızlı kart, hemen
+              // üstündeki "Yorumlar" bölümüyle görsel olarak
+              // yarışıyordu ve aynı yorum sayfada iki kez
+              // görünüyordu.
               //
-              // ⚠ KAPSAM: gösterilen yorum YALNIZ BU TALEBE aittir
-              // (`byTalep(talep.id)`); hizmet verenin öteki yorumları
-              // bu kartta GÖSTERİLMEZ.
-              RefTap(
-                onTap: onYorumYaz,
-                borderRadius: BorderRadius.circular(RR.r13),
-                child: Container(
-                  padding: const EdgeInsets.all(13),
-                  decoration: BoxDecoration(
-                    color: RC.white,
-                    border: Border.all(color: const Color(0xFFECEEF2)),
-                    borderRadius: BorderRadius.circular(RR.r13),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          // ⚠ BEŞ YILDIZ ÇİZİLİR: dolu yıldız sayısı
-                          // puandır, kalanlar soluk. Sayıyı tek başına
-                          // yazmak "5 puan" gibi soyut kalıyordu.
-                          for (var i = 1; i <= 5; i++) ...[
-                            RefSvg('assets/svg/ic_starfill.svg',
-                                size: 16,
-                                color: i <= yorum.stars
-                                    ? const Color(0xFFF5A319)
-                                    : const Color(0xFFE1E5EC)),
-                            const SizedBox(width: 3),
-                          ],
-                          const SizedBox(width: 5),
-                          Text('${yorum.stars}.0',
-                              style: refText(
-                                  size: RF.s145,
-                                  weight: RF.w700,
-                                  color: RC.text)),
-                          const Spacer(),
-                          Text('Görüntüle',
-                              style: refText(
-                                  size: RF.s125,
-                                  weight: RF.w700,
-                                  color: RC.blue)),
-                        ],
-                      ),
-                      // ⚠ METİN YALNIZ VARSA: yorum yazılmadan da
-                      // puan verilebiliyor; boş satır bırakılmaz.
-                      if (yorum.text.trim().isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(yorum.text.trim(),
-                            style: refText(
-                                size: RF.s135,
-                                weight: RF.w400,
-                                color: RC.text)),
-                      ],
-                    ],
+              // ⚠ GÖRÜNTÜLEME YOLU KAYBOLMADI: yazıya dokununca yine
+              // salt okunur değerlendirme ekranı açılır. Kullanıcının
+              // "yorumu ve puanı sonradan görebilmeli" kuralı
+              // korunuyor.
+              //
+              // ⚠ MAVİ RENK BİLEREK: metin dokunulabilir olduğunu
+              // kendisi söylemeli; kutu ya da çerçeve olmadığı için
+              // tek ipucu renktir.
+              Center(
+                child: RefTap(
+                  onTap: onYorumYaz,
+                  borderRadius: BorderRadius.circular(RR.r8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 6, horizontal: 10),
+                    child: Text('Yorum yapıldı',
+                        textAlign: TextAlign.center,
+                        style: refText(
+                            size: RF.s135,
+                            weight: RF.w700,
+                            color: RC.blue)),
                   ),
                 ),
               ),
@@ -1375,38 +1354,30 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
 /// ile TEK yerde. Bu dosyadaki kopya, kartın ortak bileşene
 /// taşınmasıyla kullanılmaz hâle geldi.
 
-/// ── ⚠ "BEKLENİYOR" GÖSTERGESİ — NABIZ ATAN ANİMASYON ──
+/// ── ⚠ "BEKLENİYOR" GÖSTERGESİ — KART ROZETİYLE AYNI DİL ──
 ///
-/// Kullanıcı isteğiyle: metin daha "canlı" olmalı, ama daha fazla
-/// AÇIKLAMA eklenerek DEĞİL, GÖRSEL olarak. Önceden düz, gri, tek
-/// satırlık bir `Text` idi. Şimdi hafif mavi zeminli bir kutu içinde,
-/// sürekli nabız atan bir gönderi ikonu ile birlikte — "teklif
-/// gerçekten iletildi, canlı olarak yanıt bekleniyor" hissi.
-class _BeklemeGostergesi extends StatefulWidget {
+/// KULLANICI SORUSU (9 Eyl): "Bu ekranda da aynı yazı ve işleyişle
+/// uygulandı mı?" — HAYIR, uygulanmamıştı. İki fark vardı:
+///
+///   1. METİN AYRIYDI — listede "Teklif bekleniyor", burada "Hizmet
+///      verenin teklifi bekleniyor."
+///   2. ANİMASYON AYRIYDI — listede sırayla parlayan üç nokta,
+///      burada nabız atan bir gönderi ikonu.
+///
+/// ⚠ KULLANICININ KESİN KURALI: aynı metin/kural birden çok ekranda
+/// görünüyorsa önce TEK KAYNAĞA taşınır. Noktalar artık ortak
+/// `BekleyenNoktalar` bileşeninden geliyor; metin de `DurumRozeti`nin
+/// kullandığı ifadeyle aynı.
+///
+/// ⚠ İKON KALDI, NABIZ GİTTİ: kutunun kimliği olan gönderi ikonu
+/// duruyor ama artık yanıp sönmüyor. İki ayrı animasyonun aynı anda
+/// oynaması "canlı" değil huzursuz görünürdü; hareket TEK yerde.
+///
+/// ⚠ `w600` DÜZELTİLDİ: pubspec'te Poppins'in yalnız 400/500/700
+/// ağırlıkları var; `w600` sentezlenip bulanık basıyordu (ilan
+/// açıklaması tipografisinde kurulan kural).
+class _BeklemeGostergesi extends StatelessWidget {
   const _BeklemeGostergesi();
-
-  @override
-  State<_BeklemeGostergesi> createState() => _BeklemeGostergesiState();
-}
-
-class _BeklemeGostergesiState extends State<_BeklemeGostergesi>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1418,27 +1389,27 @@ class _BeklemeGostergesiState extends State<_BeklemeGostergesi>
       ),
       child: Row(
         children: [
-          FadeTransition(
-            opacity: Tween(begin: 0.35, end: 1.0).animate(
-                CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut)),
-            child: Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: RC.blue,
-                shape: BoxShape.circle,
-              ),
-              child: const RefSvg('assets/svg/ic_send.svg',
-                  size: 15, color: RC.white),
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: RC.blue,
+              shape: BoxShape.circle,
             ),
+            child: const RefSvg('assets/svg/ic_send.svg',
+                size: 15, color: RC.white),
           ),
           const SizedBox(width: 11),
-          Expanded(
-            child: Text('Hizmet verenin teklifi bekleniyor.',
+          Flexible(
+            child: Text(kTeklifBekleniyorMetni,
                 style: refText(
-                    size: RF.s135, weight: RF.w600, color: RC.text)),
+                    size: RF.s135, weight: RF.w700, color: RC.text)),
           ),
+          const SizedBox(width: 6),
+          // ⚠ Kutu geniş olduğu için nokta çapı büyütüldü; kural ve
+          // zamanlama AYNI bileşenden geliyor.
+          const BekleyenNoktalar(renk: RC.blue, cap: 5),
         ],
       ),
     );

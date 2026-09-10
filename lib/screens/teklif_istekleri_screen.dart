@@ -8,6 +8,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import 'widgets/durum_rozeti.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -176,16 +177,17 @@ class _TalepKarti extends StatelessWidget {
                   // uzar, liste seyrekleşirdi.
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: renk.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(RR.r13),
-                        ),
-                        child: Text(metin,
-                            style: refText(
-                                size: RF.s12, weight: RF.w700, color: renk)),
+                      // ⚠ AYNI ROZET, AYNI BİLEŞEN: hizmet veren
+                      // tarafında da ölçü ve canlılık kuralı aynı
+                      // olmalı; iki liste ayrı çizilseydi biri
+                      // güncellenip öteki eskide kalırdı.
+                      //
+                      // ⚠ BEKLEYEN DURUM BURADA `beklemede`DİR:
+                      // hizmet veren henüz teklif vermemiştir.
+                      DurumRozeti(
+                        metin: metin,
+                        renk: renk,
+                        bekliyor: talep.durum == TeklifTalebiDurumu.beklemede,
                       ),
                       // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
                       //

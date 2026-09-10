@@ -1,27 +1,28 @@
-// SPLASH ÇIKIŞI — GERİ ALINDI (KİLİT)
+// SPLASH ÇIKIŞI — DEVRALINIR, TEMA ELLE UYGULANIR (KİLİT)
 //
-// ⚠ NE OLDU: kullanıcı "splash kapanmasına yakın logoda anlık bir
-// küçülme" bildirdi. Sebep olarak `MainActivity`de
-// `setOnExitAnimationListener`ın hiç tanımlı olmaması gösterildi ve
-// listener eklendi (`remove()` ile animasyonsuz kaldırma).
+// ⚠ KULLANICI BULGUSU: "Splash kapanmasına yakın logoda anlık bir
+// küçülme oluyor."
 //
-// ⚠ SONUÇ KÖTÜ OLDU: o derlemede uygulamanın ALTINDA VE ÜSTÜNDE siyah
-// bantlar çıktı; ekrana tam sığmayı bıraktı. Android tarafında o
-// turda DEĞİŞEN TEK DOSYA `MainActivity.kt` idi ve tek değişiklik bu
-// listener'dı (tema, manifest, gradle dosyalarına dokunulmadı —
-// MD5'lerle doğrulandı).
+// SEBEP: `setOnExitAnimationListener` tanımsızdı. Android 12+ splash'ı
+// bırakırken kimse devralmazsa SİSTEMİN varsayılan çıkış animasyonunu
+// oynatır — ikonu küçültüp soldurur.
 //
-// ⚠ DEĞİŞİKLİK GERİ ALINDI: dosya referans sürümüyle BİREBİR aynı.
-// Logodaki anlık küçülme geri geldi; bozuk pencereye tercih edildi.
+// ⚠ 1. DENEME UYGULAMAYI BOZDU: yalnız `remove()` çağıran hâli,
+// uygulamanın altında ve üstünde SİYAH BANTLAR bıraktı ve tamamen
+// geri alındı. O turda Android tarafında değişen tek dosya bu dosya,
+// tek değişiklik de bu listener'dı (MD5'lerle doğrulandı).
 //
-// ⚠ KÖK NEDEN KESİN İLAN EDİLMEDİ: siyah bantların listener yüzünden
-// çıktığı ÖLÇÜLMEDİ, yalnız "tek değişen dosya" kanıtına dayanıyor.
-// En güçlü aday, `postSplashScreenTheme` geçişinin çıkış devralınınca
-// uygulanmaması ve pencerenin `Theme.SplashScreen`de kalması —
-// doğrulanması cihaz gerektirir.
+// EN GÜÇLÜ AÇIKLAMA: çıkış devralınınca `postSplashScreenTheme`
+// geçişi uygulanmıyor ve pencere `Theme.SplashScreen` üzerinde
+// kalıyor; o temanın sistem çubuğu renkleri koyu.
 //
-// Bu test, düzeltme denenmeden dosyanın sessizce değişmemesini
-// sağlar.
+// ⚠ 2. DENEME BU YÜZDEN TEMAYI ELLE UYGULUYOR: `remove()`tan ÖNCE
+// `NormalTheme`e geçilir. `styles.xml`de `postSplashScreenTheme`
+// zaten bu temayı gösterir; yeni tema TANIMLANMADI.
+//
+// ⚠ HİPOTEZ, ÖLÇÜM DEĞİL: siyah bantlar yine çıkarsa açıklama
+// yanlıştır ve blok BÜTÜNÜYLE geri alınmalıdır. Küçülme kozmetiktir,
+// bozuk pencere değildir.
 
 import 'dart:io';
 
@@ -32,21 +33,36 @@ const _yol = 'android/app/src/main/kotlin/com/hizmetcep/app/MainActivity.kt';
 void main() {
   final ham = File(_yol).readAsStringSync();
 
-  test('⚠ ÇIKIŞ ANİMASYONU DEVRALINMIYOR', () {
-    // Yeniden denenecekse, aynı turda `postSplashScreenTheme`
-    // geçişinin de elle uygulanması gerekir; yoksa siyah bantlar
-    // geri gelir.
-    expect(ham.contains('setOnExitAnimationListener'), isFalse,
-        reason: 'çıkış devralınmış — siyah bant sorunu geri gelebilir');
+  test('çıkış devralınır ve animasyonsuz kaldırılır', () {
+    expect(ham.contains('setOnExitAnimationListener'), isTrue);
+    expect(ham.contains('yuzey.remove()'), isTrue);
+  });
+
+  test('⚠ TEMA ELLE UYGULANIR — SİYAH BANT KORUMASI', () {
+    // Bu satır olmadan 1. denemedeki bant sorunu geri gelir.
+    expect(ham.contains('setTheme(R.style.NormalTheme)'), isTrue,
+        reason: 'tema geçişi elle uygulanmıyor');
+  });
+
+  test('⚠ SIRA: ÖNCE TEMA, SONRA KALDIRMA', () {
+    // Ters sırada pencere bir kare boyunca eski temada kalır.
+    final iTema = ham.indexOf('setTheme(R.style.NormalTheme)');
+    final iKaldir = ham.indexOf('yuzey.remove()');
+    expect(iTema, greaterThan(-1));
+    expect(iKaldir, greaterThan(iTema),
+        reason: 'kaldırma temadan önce çağrılıyor');
   });
 
   test('splash süreleri ve tutma koşulu KORUNDU', () {
+    // Bu tur YALNIZ çıkış anını değiştirir.
     expect(ham.contains('SPLASH_MIN_MS = 2000L'), isTrue);
     expect(ham.contains('SPLASH_MAX_MS = 9000L'), isTrue);
     expect(ham.contains('setKeepOnScreenCondition'), isTrue);
   });
 
-  test('⚠ FLUTTER SPLASH ÖLÇÜSÜNE HİÇ DOKUNULMADI', () {
+  test('⚠ FLUTTER SPLASH ÖLÇÜSÜNE DOKUNULMADI', () {
+    // Elenen ikinci aday (native ikon kutusu ile `SplashView`in
+    // 240 dp'si arasındaki uyumsuzluk) hâlâ elenmiş durumda.
     final s = File('lib/screens/splash_screen.dart').readAsStringSync();
     expect(s.contains('const double _kMarkaKutusu = 240;'), isTrue);
   });

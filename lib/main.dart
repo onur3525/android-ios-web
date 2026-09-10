@@ -105,6 +105,12 @@ class AppPorts {
   /// akışı) dışa açıldı; `notifRepo` İLE AYNI gerekçe/desen.
   final TeklifTalebiRepository? teklifTalebiRepo;
 
+  /// ⚠ HESAP DEPOSU DIŞARI AÇILDI (9 Eyl): tamamlanan iş sayacı
+  /// hizmet verenin HESABINA yazılıyor; `MockTeklifTalebiPort` bu
+  /// depoya erişmeli. `teklifTalebiRepo` ile AYNI gerekçe — aynı
+  /// örneğin paylaşılması.
+  final AuthRepository? authRepo;
+
   /// Bölge verisi (şehir/ilçe/mahalle) — API modunda sunucudan gelir.
   final RegionPort regions;
 
@@ -136,6 +142,7 @@ class AppPorts {
     this.expiry,
     this.notifRepo,
     this.teklifTalebiRepo,
+    this.authRepo,
   });
 }
 
@@ -216,6 +223,7 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     notifications: MockNotificationPort(notifRepo),
     notifRepo: notifRepo,
     teklifTalebiRepo: teklifTalebiRepo,
+    authRepo: authRepo,
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
@@ -300,7 +308,9 @@ Future<void> main() async {
   // başka hiçbir port/repository DEĞİŞMEDİ.
   final teklifTalebiPort = MockTeklifTalebiPort(
       ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
-      notifs: ports.notifRepo);
+      notifs: ports.notifRepo,
+      // ⚠ Tamamlanan iş sayacı hizmet verenin hesabına yazılır.
+      auth: ports.authRepo);
   BootLog.olay('BUILD_PORTS_END');
 
   // ═══════════════════════════════════════════════════════════════

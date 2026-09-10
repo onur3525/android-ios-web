@@ -87,7 +87,18 @@ HizmetAlanOzeti hizmetAlanOzeti(
     adSoyad: adGoster,
     // ⚠ BİÇİM TEK YERDE (`konumMetni`): elle kurulan metin, aynı
     // kişiyi başka kartta başka biçimde gösteriyordu.
-    konum: konumMetni(adres),
+    // ⚠ MAHALLE DÂHİL (kullanıcı bulgusu, 9 Eyl): "Doğrudan teklif
+    // isteği kartlarında hizmet alanın mahalle bilgisi eksik."
+    //
+    // Hizmet veren işin NEREDE olduğunu bilmek zorunda; ilçe tek
+    // başına yetmiyor. İlan tabanlı kartlar zaten mahalleyi
+    // gösteriyordu (`kullaniciKonumu(..., mahalleDahil: true)`), bu
+    // özet göstermiyordu — aynı ekranda iki farklı ayrıntı düzeyi
+    // vardı.
+    //
+    // ⚠ BİÇİM YİNE TEK KAYNAKTAN: `konumMetni`. Mahalle girilmemişse
+    // satır kendiliğinden ilçe/il olarak kalır.
+    konum: konumMetni(adres, mahalleDahil: true),
     tamamlananIs: hizmetAlanTamamlananIs(context, id),
     uyelikMetni:
         hesap == null ? null : uyelikTarihiMetni(hesap.kayitTarihi),

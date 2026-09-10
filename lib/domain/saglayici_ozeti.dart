@@ -67,9 +67,33 @@ typedef SaglayiciOzeti = ({
 /// Sayım kuralı: tamamlanmış ilanlar arasında, SEÇİLİ teklifi bu
 /// hizmet verene ait olanlar.
 int tamamlananIsSayisi(BuildContext context, String saglayiciId) {
+  // ── ⚠ İKİ KAYNAĞIN BÜYÜĞÜ (kullanıcı bulgusu, 9 Eyl) ──
+  //
+  // BULGU: "Yeni hesap açan bir hizmet alan, hizmet verenin güncel iş
+  // bitirme sayısını kartlarda göremiyor."
+  //
+  // KÖK NEDEN: sayı YALNIZ türetiliyordu — izleyenin görebildiği
+  // ilan ve teklifler taranıyordu. Yeni açılmış bir hesabın hiç
+  // ilanı yoktur, dolayısıyla sonuç DAİMA 0 çıkıyordu. Bir kişinin
+  // geçmişi, ona BAKAN kişinin verisinden hesaplanamaz.
+  //
+  // Artık hizmet verenin KENDİ hesabında bir sayaç duruyor
+  // (`Account.tamamlananIs`); iş tamamlandığında oraya yazılıyor.
+  //
+  // ⚠ TÜRETİM KALDIRILMADI, BÜYÜĞÜ ALINIYOR: sayacın işlenmediği
+  // eski kayıtlarda ilan sahibi kendi doğru sayısını görmeye devam
+  // eder. Toplama DEĞİL karşılaştırma yapıldığı için mükerrer sayım
+  // imkânsızdır.
+  //
+  // ⚠ SON SÖZ SUNUCUNUNDUR: gerçek backend bu sayıyı yanıtta
+  // döndürmelidir; buradaki sayaç yerel köprüdür.
+  final saklanan =
+      context.read<AuthController>().accountById(saglayiciId)?.tamamlananIs ??
+          0;
+
   final ilanlar = context.read<ListingController>().all;
   final teklifler = context.read<OfferController>();
-  var n = 0;
+  var turetilen = 0;
   for (final l in ilanlar) {
     if (!l.isTamamlanmisIs) {
       continue;
@@ -77,10 +101,10 @@ int tamamlananIsSayisi(BuildContext context, String saglayiciId) {
     final secili =
         teklifler.offersForListing(l.id).where((o) => o.id == l.selectedOfferId);
     if (secili.isNotEmpty && secili.first.providerId == saglayiciId) {
-      n++;
+      turetilen++;
     }
   }
-  return n;
+  return saklanan > turetilen ? saklanan : turetilen;
 }
 
 /// Gerçek bir hesabın özetini üretir.

@@ -40,9 +40,21 @@ void main() {
           reason: 'dolgu oranı yıldız sayısından gelmiyor');
     });
 
-    test('⚠ SIFIRDA DA ÇUBUK GÖRÜNÜR', () {
-      // Ölçek çizgisi olduğu anlaşılsın diye en az %3.
-      expect(my.contains('oran < 0.03 ? 0.03 : oran'), isTrue);
+    test('⚠ SIFIRDA ÇUBUK TAMAMEN BOŞ (kullanıcı kararı, 9 Eyl)', () {
+      // ÖNCEDEN taban %3 vardı (`Math.max(3, ...)` referansı): hiç oy
+      // almamış yıldız da bir miktar dolu görünüyor, "az da olsa puan
+      // var" izlenimi veriyordu. Kullanıcı bunu istemedi.
+      //
+      // Oran artık DOĞRUDAN uygulanır; gri raylar zaten görünür
+      // olduğu için satırın ölçek olduğu yine anlaşılıyor.
+      expect(my.contains('widthFactor: oran,'), isTrue);
+      expect(my.contains('oran < 0.03 ? 0.03 : oran'), isFalse,
+          reason: 'taban dolgu geri gelmiş — 0 oy dolu görünür');
+    });
+
+    test('⚠ SIFIRA BÖLME KORUNDU', () {
+      // Hiç değerlendirme yokken `n / _count` NaN üretirdi.
+      expect(my.contains('_count == 0 ? 0.0 : n / _count'), isTrue);
     });
   });
 
