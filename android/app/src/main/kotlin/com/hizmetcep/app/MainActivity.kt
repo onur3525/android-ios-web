@@ -150,37 +150,6 @@ class MainActivity : FlutterActivity() {
         val splash = installSplashScreen()
         basladi = SystemClock.uptimeMillis()
         bootLog("NATIVE_ON_CREATE")
-
-        // ── ⚠ ÇIKIŞ ANİMASYONU KAPATILDI (kullanıcı bulgusu, 9 Eyl) ──
-        //
-        // BULGU: "splash ekranın kapanmasına yakın anlık bir küçülme
-        // oldu logoda."
-        //
-        // SEBEP: bu listener HİÇ TANIMLI DEĞİLDİ. Android 12+ splash'ı
-        // bırakırken, kimse devralmazsa SİSTEMİN VARSAYILAN çıkış
-        // animasyonunu oynatır — ikonu küçültüp soldurur. Yani
-        // küçülmeyi uygulama yapmıyordu, uygulamanın YAPMADIĞI şey
-        // yapıyordu.
-        //
-        // ⚠ ÖLÇÜM BUNU AYIRT ETTİ: küçülme ANLIK ve yalnız kapanış
-        // anında. Ölçü uyuşmazlığı olsaydı (native ikon kutusu ile
-        // `SplashView`in 240 dp'si farklı olsaydı) logo küçülüp ÖYLE
-        // KALIRDI. O ikinci aday bu gözlemle elendi ve o yüzden
-        // `_kMarkaKutusu`ya DOKUNULMADI — iki şeyi birden değiştirip
-        // hangisinin çözdüğünü bilememek olmaz.
-        //
-        // `remove()` splash yüzeyini animasyonsuz kaldırır; altında
-        // AYNI marka bloğunu çizen `SplashView` durduğu için kullanıcı
-        // kesintisiz tek görüntü görür.
-        //
-        // ⚠ SÜRELER DEĞİŞMEDİ: `SPLASH_MIN_MS`, `SPLASH_MAX_MS` ve
-        // `setKeepOnScreenCondition` aynen duruyor. Değişen tek şey,
-        // bırakma ANINDAKİ animasyon.
-        splash.setOnExitAnimationListener { yuzey ->
-            bootLog("NATIVE_SPLASH_EXIT_NO_ANIM")
-            yuzey.remove()
-        }
-
         splash.setKeepOnScreenCondition {
             val gecen = SystemClock.uptimeMillis() - basladi
             // ⚠ Koşul HER KAREDE sorulur; olaylar TEK KEZ loglanır.

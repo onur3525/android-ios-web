@@ -15,10 +15,37 @@
 // `pageTransitionsTheme` içindedir ve o satır DEĞİŞMEDİ.
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'klavye.dart';
 
 /// HizmetCep tasarım dili — HTML prototipiyle birebir.
 /// YALNIZ görsel değerler içerir; iş kuralı sabitleri lib/domain/config.dart'tadır.
+/// ── ⚠ SİSTEM ÇUBUKLARI — TEK KAYNAK ──
+///
+/// KULLANICI İSTEĞİ (9 Eyl): "Android ikonları gri/koyu ve belirgin
+/// olmalı; zemin beyaz olacağı için kaybolmamalı."
+///
+/// ⚠ ÖNCEDEN HİÇ AYARLANMAMIŞTI: ne `SystemChrome` çağrısı ne de
+/// temada `windowLightStatusBar` vardı; çubuklar cihaz varsayılanına
+/// bırakılmıştı ve beyaz ikonlar beyaz zeminde kayboluyordu.
+///
+/// ⚠ İKİ YERDE UYGULANIR, TEK YERDE TANIMLIDIR: `main()` uygulama
+/// açılışında bunu kurar, `AppBarTheme` de aynı değeri taşır —
+/// çünkü `AppBar` kendi `systemOverlayStyle`ı ile açılıştaki ayarı
+/// EZER. Uygulamada iki `AppBar` var (`route_guard`, `legal_screen`);
+/// buraya bağlanmasaydı o iki ekranda ikonlar yine kaybolabilirdi.
+///
+/// ⚠ UYGULAMANIN KOYU TEMASI YOK: tüm ekranların zemini beyaz, bu
+/// yüzden ikon parlaklığı cihazın açık/koyu temasına göre DEĞİŞMEZ.
+const SystemUiOverlayStyle kSistemCubuklari = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+  systemNavigationBarColor: Colors.white,
+  systemNavigationBarIconBrightness: Brightness.dark,
+  systemNavigationBarDividerColor: Color(0xFFECEEF2),
+);
+
 class HC {
   // Renkler (hizmetcep.html ile aynı)
   static const blue = Color(0xFF1D6BE3);
@@ -66,7 +93,11 @@ class HC {
         textTheme: Typography.blackMountainView
             .apply(bodyColor: grey, displayColor: dark, fontFamily: 'Poppins'),
         appBarTheme: const AppBarTheme(
-            backgroundColor: bg, foregroundColor: dark, elevation: 0),
+            backgroundColor: bg,
+            foregroundColor: dark,
+            elevation: 0,
+            // ⚠ AppBar açılıştaki ayarı ezer — aynı değer buraya da.
+            systemOverlayStyle: kSistemCubuklari),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: blue,

@@ -1,21 +1,27 @@
-// SPLASH ÇIKIŞI — ANİMASYONSUZ (KİLİT)
+// SPLASH ÇIKIŞI — GERİ ALINDI (KİLİT)
 //
-// ⚠ KULLANICI BULGUSU (9 Eyl, gerçek cihazda APK ile): "splash
-// ekranın kapanmasına yakın anlık bir küçülme oldu logoda."
+// ⚠ NE OLDU: kullanıcı "splash kapanmasına yakın logoda anlık bir
+// küçülme" bildirdi. Sebep olarak `MainActivity`de
+// `setOnExitAnimationListener`ın hiç tanımlı olmaması gösterildi ve
+// listener eklendi (`remove()` ile animasyonsuz kaldırma).
 //
-// SEBEP: `MainActivity`de `setOnExitAnimationListener` HİÇ TANIMLI
-// DEĞİLDİ. Android 12+ splash'ı bırakırken, kimse devralmazsa
-// sistemin VARSAYILAN çıkış animasyonunu oynatır — ikonu küçültüp
-// soldurur.
+// ⚠ SONUÇ KÖTÜ OLDU: o derlemede uygulamanın ALTINDA VE ÜSTÜNDE siyah
+// bantlar çıktı; ekrana tam sığmayı bıraktı. Android tarafında o
+// turda DEĞİŞEN TEK DOSYA `MainActivity.kt` idi ve tek değişiklik bu
+// listener'dı (tema, manifest, gradle dosyalarına dokunulmadı —
+// MD5'lerle doğrulandı).
 //
-// ⚠ İKİNCİ ADAY ELENDİ: küçülme ANLIK ve yalnız kapanış anındaydı.
-// Native ikon kutusu ile `SplashView`in 240 dp'si uyuşmasaydı logo
-// küçülüp ÖYLE KALIRDI. Bu yüzden `_kMarkaKutusu`ya dokunulmadı;
-// iki şeyi birden değiştirmek hangisinin çözdüğünü ölçülemez yapardı.
+// ⚠ DEĞİŞİKLİK GERİ ALINDI: dosya referans sürümüyle BİREBİR aynı.
+// Logodaki anlık küçülme geri geldi; bozuk pencereye tercih edildi.
 //
-// ⚠ NEDEN KOTLIN METNİ OKUNUYOR: `flutter test` Android kaynağını
-// derlemez. Bu test kuralın kodda DURDUĞUNU kilitler — "cihazda
-// düzeldi" iddiası ETMEZ, onu APK doğrular.
+// ⚠ KÖK NEDEN KESİN İLAN EDİLMEDİ: siyah bantların listener yüzünden
+// çıktığı ÖLÇÜLMEDİ, yalnız "tek değişen dosya" kanıtına dayanıyor.
+// En güçlü aday, `postSplashScreenTheme` geçişinin çıkış devralınınca
+// uygulanmaması ve pencerenin `Theme.SplashScreen`de kalması —
+// doğrulanması cihaz gerektirir.
+//
+// Bu test, düzeltme denenmeden dosyanın sessizce değişmemesini
+// sağlar.
 
 import 'dart:io';
 
@@ -23,61 +29,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _yol = 'android/app/src/main/kotlin/com/hizmetcep/app/MainActivity.kt';
 
-/// Kotlin kaynağından satır ve blok yorumlarını eler.
-///
-/// ⚠ GEREKLİ: bu dosyadaki açıklamalar hem eski davranışı hem yeni
-/// kuralı ANLATIYOR; ham metinde arama yapmak yanlış alarm verirdi.
-String _kodu() {
-  final ham = File(_yol).readAsStringSync();
-  final sb = StringBuffer();
-  var i = 0;
-  while (i < ham.length) {
-    if (i + 1 < ham.length && ham[i] == '/' && ham[i + 1] == '/') {
-      while (i < ham.length && ham[i] != '\n') {
-        i++;
-      }
-      continue;
-    }
-    if (i + 1 < ham.length && ham[i] == '/' && ham[i + 1] == '*') {
-      i += 2;
-      while (i + 1 < ham.length && !(ham[i] == '*' && ham[i + 1] == '/')) {
-        i++;
-      }
-      i += 2;
-      continue;
-    }
-    sb.write(ham[i]);
-    i++;
-  }
-  return sb.toString();
-}
-
 void main() {
-  test('splash bırakılırken sistem animasyonu OYNATILMAZ', () {
-    final k = _kodu();
-    expect(k.contains('setOnExitAnimationListener'), isTrue,
-        reason: 'listener kaldırılmış — sistemin varsayılan küçülme '
-            'animasyonu geri gelir');
-    expect(k.contains('.remove()'), isTrue,
-        reason: 'splash yüzeyi animasyonsuz kaldırılmıyor');
+  final ham = File(_yol).readAsStringSync();
+
+  test('⚠ ÇIKIŞ ANİMASYONU DEVRALINMIYOR', () {
+    // Yeniden denenecekse, aynı turda `postSplashScreenTheme`
+    // geçişinin de elle uygulanması gerekir; yoksa siyah bantlar
+    // geri gelir.
+    expect(ham.contains('setOnExitAnimationListener'), isFalse,
+        reason: 'çıkış devralınmış — siyah bant sorunu geri gelebilir');
   });
 
-  test('⚠ SÜRELER VE TUTMA KOŞULU DEĞİŞMEDİ', () {
-    // Değişen tek şey bırakma ANINDAKİ animasyondu. Süreler ya da
-    // tutma koşulu da değişseydi, düzelmenin hangisinden geldiği
-    // ölçülemezdi.
-    final k = _kodu();
-    expect(k.contains('SPLASH_MIN_MS = 2000L'), isTrue);
-    expect(k.contains('SPLASH_MAX_MS = 9000L'), isTrue);
-    expect(k.contains('setKeepOnScreenCondition'), isTrue);
+  test('splash süreleri ve tutma koşulu KORUNDU', () {
+    expect(ham.contains('SPLASH_MIN_MS = 2000L'), isTrue);
+    expect(ham.contains('SPLASH_MAX_MS = 9000L'), isTrue);
+    expect(ham.contains('setKeepOnScreenCondition'), isTrue);
   });
 
-  test('⚠ FLUTTER SPLASH ÖLÇÜSÜNE DOKUNULMADI', () {
-    // Elenen ikinci adayın kilidi: ölçü değiştirilirse bu test düşer
-    // ve değişikliğin bilinçli olduğu yeniden kanıtlanması gerekir.
+  test('⚠ FLUTTER SPLASH ÖLÇÜSÜNE HİÇ DOKUNULMADI', () {
     final s = File('lib/screens/splash_screen.dart').readAsStringSync();
-    expect(s.contains('const double _kMarkaKutusu = 240;'), isTrue,
-        reason: 'marka kutusu değişmiş — küçülme sorunu bununla '
-            'düzeltilmedi, sebep çıkış animasyonuydu');
+    expect(s.contains('const double _kMarkaKutusu = 240;'), isTrue);
   });
 }

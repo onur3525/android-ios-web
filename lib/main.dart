@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/route_guard.dart';
 import 'screens/account_settings_screen.dart';
@@ -238,6 +239,37 @@ Future<void> main() async {
   // Platform kanalı çağrılarından ÖNCE binding hazır olmalıdır.
   WidgetsFlutterBinding.ensureInitialized();
   BootLog.olay('ENSURE_INITIALIZED_END');
+
+  // ── ⚠ SİSTEM ÇUBUKLARI: BEYAZ ZEMİN, KOYU İKON ──
+  //
+  // KULLANICI İSTEĞİ (9 Eyl): "Android ikonları gri/koyu ve belirgin
+  // olmalı; zemin beyaz olacağı için kaybolmamalı."
+  //
+  // ⚠ ÖNCEDEN HİÇ AYARLANMAMIŞTI: uygulamada `SystemChrome`
+  // çağrısı da, temada `statusBarColor`/`windowLightStatusBar` da
+  // YOKTU. Yani durum çubuğu ve gezinme çubuğu tamamen cihazın
+  // varsayılanına bırakılmıştı — bir cihazda koyu ikon, ötekinde
+  // beyaz ikon çıkabiliyordu ve beyaz ikonlar beyaz zeminde
+  // KAYBOLUYORDU.
+  //
+  // ⚠ NEDEN DART, NEDEN ANDROID TEMASI DEĞİL: aynı sonuç
+  // `windowLightStatusBar` ile de alınabilirdi. Bu turda Android
+  // tema/pencere tarafına DOKUNMAMAYI seçtim — bir önceki turda
+  // `MainActivity`ye eklenen tek satır, uygulamanın altında ve
+  // üstünde siyah bantlara yol açmıştı ve geri alındı. Değer
+  // `core/theme.dart` içinde tek yerde (`kSistemCubuklari`).
+  //
+  // ⚠ UYGULAMANIN KOYU TEMASI YOK: her ekranın zemini beyaz, bu
+  // yüzden ikon parlaklığı cihazın açık/koyu temasına göre
+  // DEĞİŞMEZ — her koşulda koyu ikon istenir.
+  //
+  // ⚠ AppBar AYRICA BAĞLANDI: uygulamada iki `AppBar` var
+  // (`route_guard`, `legal_screen`) ve `AppBar` kendi
+  // `systemOverlayStyle`ı ile buradaki ayarı EZER. Bu yüzden aynı
+  // sabit `AppBarTheme`e de verildi; o iki ekranda da ikonlar koyu
+  // kalır.
+  SystemChrome.setSystemUIOverlayStyle(kSistemCubuklari);
+
 
   // DERİN BAĞLANTI: uygulama açık/arka plandayken gelen bağlantılar için
   // dinleyici başlatılır. Uygulama TAMAMEN KAPALIYKEN açılışa sebep olan
