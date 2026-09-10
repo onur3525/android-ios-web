@@ -7,10 +7,12 @@ import 'widgets/ilan_no_etiketi.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
+import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import '../domain/hizmet_alan_ozeti.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -22,6 +24,7 @@ import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
+import 'widgets/hizmet_alan_ozet_satiri.dart';
 import 'category_ui.dart';
 import 'nav_actions.dart';
 import '../domain/config.dart';
@@ -441,8 +444,17 @@ class _JobsScreenState extends State<JobsScreen> {
               child: Row(
                 children: [
                   Expanded(
+                    // ── ⚠ SAYIYA KAZANILAN TALEPLER DE GİRER ──
+                    //
+                    // ÖLÇÜLEN HATA: "Kazandığım" ekranında listede bir
+                    // kart dururken üstte "0 ilan bulundu" yazıyordu.
+                    // Sayaç yalnız `myOffers`ı biliyordu; "Bul"
+                    // akışından kazanılan işler (`TeklifTalebi`) ayrı
+                    // bir bölüm olarak çizildiği için sayıma HİÇ
+                    // girmiyordu.
                     child: RefListCount(
-                        '${_jobsTab ? jobs.length : myOffers.length} ilan bulundu'),
+                        '${_jobsTab ? jobs.length : myOffers.length + secilenTalepler.length}'
+                        ' ilan bulundu'),
                   ),
                   const SizedBox(width: 10),
                   RefPillButton(
@@ -619,35 +631,78 @@ class _JobsScreenState extends State<JobsScreen> {
           decoration: BoxDecoration(
               border: Border.all(color: HC.border),
               borderRadius: BorderRadius.circular(14)),
-          child: Row(children: [
-            Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(t.hizmet,
-                        style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: HC.dark)),
-                    const SizedBox(height: 3),
-                    // ⚠ "Bul" akışından geldiğini AYIRT ETTİRİR —
-                    // aksi hâlde bu kart normal ilan kartından
-                    // görsel olarak ayrışmaz, kullanıcı KARIŞTIRIR.
-                    const Text('Doğrudan Teklif İsteği',
-                        style: TextStyle(fontSize: 12, color: HC.grey)),
-                  ]),
-            ),
-            Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(tl(t.teklifFiyati ?? 0),
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: HC.dark)),
-                  const StatusChip('Seçildi', HC.blue),
-                ]),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(t.hizmet,
+                            style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                color: HC.dark)),
+                        const SizedBox(height: 3),
+                        // ⚠ "Bul" akışından geldiğini AYIRT ETTİRİR —
+                        // aksi hâlde bu kart normal ilan kartından
+                        // görsel olarak ayrışmaz, kullanıcı KARIŞTIRIR.
+                        const Text('Doğrudan Teklif İsteği',
+                            style: TextStyle(fontSize: 12, color: HC.grey)),
+                      ]),
+                ),
+                Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // ⚠ TUTAR ORTAK BİÇİMDEN: `tl()` ham yazıyordu
+                      // ("₺5000"). Binlik ayracı ve "TL" artık
+                      // `core/tutar_bicimi.dart`ta tek yerde —
+                      // "5.000 TL".
+                      Text(tutarMetni(t.teklifFiyati ?? 0),
+                          style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: HC.dark)),
+                      const StatusChip('Seçildi', HC.blue),
+                    ]),
+              ]),
+
+              // ── ⚠ HİZMET ALAN BİLGİLERİ (kullanıcı isteği, 9 Eyl) ──
+              //
+              // "Kazandığım ekranına taşındığında hizmet alan kart
+              // yapısı buraya olduğu gibi taşınmalı."
+              //
+              // ÖNCEDEN bu kartta karşı taraftan HİÇBİR iz yoktu;
+              // hizmet veren, kazandığı işin kime ait olduğunu ancak
+              // detaya girerek görebiliyordu.
+              //
+              // ⚠ ORTAK BİLEŞEN: ad, konum, tamamlanan iş ve üyelik
+              // `HizmetAlanOzetSatiri` ile çizilir; hesaplama
+              // `domain/hizmet_alan_ozeti.dart`ta tek yerde. Detay
+              // ekranı da aynı kaynağı kullanır.
+              //
+              // ⚠ MASKELEME: bu kart YALNIZ kazanılmış işlerde
+              // görünür, yani teklif verilmiş ve kimlik açılmıştır.
+              // Yine de kural çağıranda: `teklifTarihi` dolu mu?
+              const SizedBox(height: 10),
+              const Divider(height: 1, color: Color(0xFFF1F3F6)),
+              const SizedBox(height: 10),
+              Builder(builder: (c) {
+                final acik = t.teklifTarihi != null;
+                final ad = c.read<AuthController>()
+                        .accountById(t.hizmetAlanId)
+                        ?.name ??
+                    'Hizmet Alan';
+                return HizmetAlanOzetSatiri(
+                  hizmetAlanOzeti(c,
+                      id: t.hizmetAlanId,
+                      adGoster: acik ? ad : maskeliAd(ad)),
+                  maskeli: !acik,
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/telefon_bicimi.dart';
 import '../core/tutar_bicimi.dart';
+import '../domain/hizmet_alan_ozeti.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
@@ -1485,27 +1486,11 @@ class _BeklemeGostergesiState extends State<_BeklemeGostergesi>
 ///    ilanlar (`Listing.isTamamlanmisIs`).
 /// 2) Doğrudan "Bul" — bu kullanıcının GÖNDERDİĞİ, `tamamlandi`
 ///    durumuna ulaşmış teklif talepleri.
-int _hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) {
-  final ilanSayisi = c
-      .read<ListingController>()
-      .all
-      .where((l) => l.ownerId == hizmetAlanId && l.isTamamlanmisIs)
-      .length;
-  final talepSayisi = c
-      .read<TeklifTalebiController>()
-      .byHizmetAlan(hizmetAlanId)
-      .where((t) => t.durum == TeklifTalebiDurumu.tamamlandi)
-      .length;
-  return ilanSayisi + talepSayisi;
-}
+/// ⚠ KOPYALAR KALDIRILDI (9 Eyl): hizmet alanın tamamlanan iş sayısı
+/// ve üyelik metni artık `domain/hizmet_alan_ozeti.dart` içinde TEK
+/// yerde. "Kazandığım" listesindeki kart da aynı kaynağı kullanıyor;
+/// iki yüzey ayrı hesaplasaydı sayılar sessizce ayrışırdı.
+int _hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) =>
+    hizmetAlanTamamlananIs(c, hizmetAlanId);
 
-/// ⚠ "Ocak 2025'ten beri üye" — `intl` paketi PROJEDE HİÇ
-/// kullanılmıyor (yeni bağımlılık eklemek yerine, sabit bir Türkçe
-/// ay adları listesiyle basitçe formatlanıyor).
-const _kAyAdlari = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
-];
-
-String _uyelikTarihiMetni(DateTime tarih) =>
-    "${_kAyAdlari[tarih.month - 1]} ${tarih.year}'ten beri üye";
+String _uyelikTarihiMetni(DateTime tarih) => uyelikTarihiMetni(tarih);
