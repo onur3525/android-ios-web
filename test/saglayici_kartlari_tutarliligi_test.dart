@@ -84,8 +84,15 @@ void main() {
       expect(teklifIste.contains('isTamamlanmisIs'), isFalse);
     });
 
-    test('konum kuralı TEK yerde: müşterinin ilçesi varsa o', () {
-      expect(ozet.contains('bolgeler.contains(musteriIlcesi)'), isTrue);
+    test('konum TEK yerde ve HESABIN KENDİ ADRESİNDEN okunur', () {
+      // ⚠ KURAL DEĞİŞTİ (9 Eyl, kullanıcı bulgusu): kart, hizmet
+      // verdiği bölgeyi değil hesabın girdiği adresi gösterir.
+      // Önceki kural (müşterinin ilçesini tercih etme) kullanıcının
+      // "adresim farklı görünüyor" şikâyetini üreten şeydi.
+      expect(ozet.contains('hesap.address'), isTrue,
+          reason: 'konum adresten okunmuyor');
+      expect(ozet.contains('bolgeler.contains(musteriIlcesi)'), isFalse,
+          reason: 'hizmet bölgesi yeniden konum olarak gösteriliyor');
       // Ekranlar kendi konum kuralını yazmamalı.
       expect(teklifIste.contains('serviceDistricts.first'), isFalse,
           reason: 'Teklif İste hâlâ kendi konum kuralını uyguluyor');

@@ -117,6 +117,21 @@ void main() {
   });
 
   group('3 — HİZMET VEREN TARAFI GÖRÜR', () {
+    test('⚠ BÖLÜM SIRASI: Hizmet Zamanı → Açıklama → Fotoğraflar', () {
+      // KULLANICI KARARI (9 Eyl): fotoğraflar açıklamanın İÇİNDE
+      // değil, kendi başlıklı bölümünde ve en altta olmalı.
+      final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+      final iZaman = k.indexOf("Text('Hizmet Zamanı'");
+      final iAciklama = k.indexOf("Text('Açıklama'");
+      final iFoto = k.indexOf("Text('Fotoğraflar'");
+      expect(iZaman, greaterThan(-1), reason: 'Hizmet Zamanı başlığı yok');
+      expect(iAciklama, greaterThan(iZaman),
+          reason: 'Açıklama, Hizmet Zamanı bölümünden önce geliyor');
+      expect(iFoto, greaterThan(iAciklama),
+          reason: 'Fotoğraflar bölümü açıklamadan önce ya da '
+              'açıklamanın içinde çiziliyor');
+    });
+
     test('talep detayında rozet çizilir', () {
       // ⚠ Karşı taraf görmezse seçici gönderende kalan ölü bir alan
       // olurdu. Rozet ORTAK bileşendir (`IsZamaniRozeti`), ilan

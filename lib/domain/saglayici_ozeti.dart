@@ -85,14 +85,31 @@ int tamamlananIsSayisi(BuildContext context, String saglayiciId) {
 
 /// Gerçek bir hesabın özetini üretir.
 ///
-/// [musteriIlcesi] verilirse ve hizmet veren o ilçeye hizmet
-/// veriyorsa konum olarak O gösterilir — "buraya hizmet veriyor"
-/// bilgisi, listedeki ilk bölgeden daha anlamlıdır. Kural TEK
-/// yerdedir; iki ekran da aynı sonucu alır.
+/// ── ⚠ KONUM = HESABIN KENDİ ADRESİ (kullanıcı bulgusu, 9 Eyl) ──
+///
+/// BULGU: "Hizmet veren hesabı açtım ve adres bilgilerim, hizmet alan
+/// usta bul ekranında FARKLI adres bilgisi olarak görünüyor."
+///
+/// SEBEP: kart, hesabın adresini değil HİZMET VERDİĞİ BÖLGELERİ
+/// (`serviceDistricts`) gösteriyordu; üstelik müşterinin ilçesi o
+/// kümede varsa onu tercih ediyordu. Yani Aliağa'da oturup Karşıyaka'ya
+/// da hizmet veren biri, Karşıyaka'daki müşteriye "Karşıyaka" olarak
+/// görünüyordu. Kullanıcının girdiği adres ekranda hiç yer almıyordu.
+///
+/// Artık konum `address` alanından — kullanıcının KENDİ girdiği
+/// il/ilçe — okunur. Adres değişince kart da değişir.
+///
+/// ⚠ SIRALAMA AYRI BİR ŞEYDİR ve DEĞİŞMEDİ: "bu hizmet vereni bana
+/// göster" kararı hâlâ `serviceDistricts` ile verilir (bkz.
+/// `sonuclar_screen`). Eşleştirme hizmet bölgesine, GÖSTERİLEN bilgi
+/// adrese bakar. İkisini aynı alana bağlamak, kullanıcının şikâyet
+/// ettiği yanlış adresi üretiyordu.
+///
+/// ⚠ ADRES EKSİKSE `null` döner ve konum satırı HİÇ ÇİZİLMEZ —
+/// hizmet bölgesinden yaklaşık bir adres UYDURULMAZ.
 SaglayiciOzeti? gercekSaglayiciOzeti(
   BuildContext context, {
   required String id,
-  String? musteriIlcesi,
   String? ilYedegi,
 }) {
   final hesap = context.read<AuthController>().accountById(id);
@@ -100,13 +117,9 @@ SaglayiciOzeti? gercekSaglayiciOzeti(
     return null;
   }
   final reviews = context.watch<ReviewController>();
-  final bolgeler = hesap.serviceDistricts;
-  final ilce = bolgeler.isEmpty
-      ? null
-      : (musteriIlcesi != null && bolgeler.contains(musteriIlcesi)
-          ? musteriIlcesi
-          : bolgeler.first);
-  final il = hesap.address?.city;
+  final adres = hesap.address;
+  final ilce = (adres == null || adres.district.isEmpty) ? null : adres.district;
+  final il = adres?.city;
   return (
     id: hesap.id,
     adSoyad: hesap.name,

@@ -253,33 +253,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                 ? FontStyle.italic
                                 : FontStyle.normal),
                       ),
-                      // .rv-done-note
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 9, horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE9F9EF),
-                          borderRadius: BorderRadius.circular(RR.r9),
-                        ),
-                        child: Row(
-                          children: [
-                            const RefSvg('assets/svg/ic_okgreen.svg',
-                                size: 15),
-                            const SizedBox(width: 7),
-                            Expanded(
-                              child: Text(
-                                'Değerlendirmeniz yayınlandı. '
-                                'Değiştirilemez ve silinemez.',
-                                style: refText(
-                                    size: RF.s12,
-                                    weight: RF.w600,
-                                    color: const Color(0xFF16A34A)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // ⚠ YEŞİL BİLGİ ŞERİDİ KALDIRILDI (kullanıcı
+                      // isteği, 9 Eyl): "Değerlendirmeniz yayınlandı.
+                      // Değiştirilemez ve silinemez."
+                      //
+                      // ⚠ KURAL DEĞİŞMEDİ, YALNIZ CÜMLE GİTTİ: yorum
+                      // hâlâ tek sefer yazılır ve düzeltilemez —
+                      // kayıt varken bu ekran form dalını HİÇ
+                      // çizmez, yalnız salt okunur kartı gösterir.
+                      // Kuralın kilidi cümlede değil, o dalda.
                     ],
                   ),
                 ),

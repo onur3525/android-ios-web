@@ -67,6 +67,21 @@ class TeklifTalebiController extends BaseController {
         (sinir == null || t.teklifTarihi!.isAfter(sinir)));
   }
 
+  /// GÖRÜLMEMİŞ yeni teklif SAYISI.
+  ///
+  /// ⚠ `yeniTeklifVarMi` ile AYNI ölçüt, yalnız sayıya çevrilmiş
+  /// hâli — iki ayrı kural yazılmadı. "Bul" sekmesindeki rozet
+  /// artık "!" değil SAYI gösterdiği için gerekli.
+  int yeniTeklifSayisi(String hizmetAlanId) {
+    final sinir = _sonGorulmeHizmetAlan[hizmetAlanId];
+    return byHizmetAlan(hizmetAlanId)
+        .where((t) =>
+            t.durum == TeklifTalebiDurumu.teklifGeldi &&
+            t.teklifTarihi != null &&
+            (sinir == null || t.teklifTarihi!.isAfter(sinir)))
+        .length;
+  }
+
   /// Hizmet alan "Bul" ekranına girdiğinde çağrılır — bkz. yukarıdaki
   /// AYNA fonksiyon notu.
   void teklifleriGorulduIsaretleHizmetAlan(String hizmetAlanId) {

@@ -7,6 +7,7 @@ import '../data/controllers/listing_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
@@ -44,7 +45,14 @@ class TeklifIstekleriListesi extends StatelessWidget {
         : context
             .watch<TeklifTalebiController>()
             .bySaglayici(me.id)
-            .where((t) => t.durum != TeklifTalebiDurumu.secildi)
+            // ── ⚠ YALNIZ SÜREN TALEPLER (kullanıcı kuralı, 9 Eyl) ──
+            //
+            // ÖNCEDEN `!= secildi` idi. Ama seçim anında akış
+            // `secToVer` ardından `tamamla` çağırıyor, yani durum
+            // `tamamlandi` oluyordu — kart bu listede KALIYORDU.
+            // Tek bir durumu dışlamak yetmez; aşama kuralı tek
+            // yerden gelir.
+            .where((t) => talepSurenMi(t.durum))
             .toList();
 
     if (talepler.isEmpty) {

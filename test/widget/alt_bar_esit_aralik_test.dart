@@ -33,7 +33,7 @@ typedef NavOge = ({
   String asset,
   VoidCallback onTap,
   bool rozet,
-  bool belirginRozet
+  int belirginRozetSayisi
 });
 
 NavOge _oge(String key, String label, String asset) => (
@@ -42,7 +42,7 @@ NavOge _oge(String key, String label, String asset) => (
       asset: asset,
       onTap: () {},
       rozet: false,
-      belirginRozet: false,
+      belirginRozetSayisi: 0,
     );
 
 /// Hizmet ALAN sekmeleri — `nav_actions.dart` ile AYNI sıra ve

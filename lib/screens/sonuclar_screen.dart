@@ -134,10 +134,26 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                 children: [
                   const RefBackButton(),
                   Expanded(
-                    child: Text('Sonuçlar',
+                    // ── ⚠ BAŞLIK (kullanıcı isteği, 9 Eyl) ──
+                    //
+                    // "Sonuçlar" → "En Uygun Hizmet Verenler", daha
+                    // kalın bir başlık görünümü istendi.
+                    //
+                    // ⚠ KALINLIK DEĞİL ÖLÇÜ ARTIRILDI: yazı zaten
+                    // `w700` idi ve pubspec'te Poppins'in YALNIZ
+                    // 400/500/700 ağırlıkları var — `w800` istenseydi
+                    // sentezlenip bulanık basardı. Bu yüzden başlık
+                    // hissi 16 → 18 punto ile verildi.
+                    //
+                    // ⚠ TEK SATIR: geri düğmesi ile X arasındaki
+                    // genişliğe sığar; sığmazsa kırpılır, satır
+                    // ATLAMAZ — üst bar yüksekliği sabit kalmalı.
+                    child: Text('En Uygun Hizmet Verenler',
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: refText(
-                            size: RF.s16, weight: RF.w700, color: RC.text)),
+                            size: RF.s18, weight: RF.w700, color: RC.text)),
                   ),
                   RefTap(
                     onTap: _cikisYap,
@@ -162,12 +178,56 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                   // sonuçla SINIRLI (aşağıdaki not), bu yüzden bir
                   // sayı vermenin de anlamı kalmadı; sabit, nötr bir
                   // başlık kullanılıyor.
-                  Text('Size en uygun hizmet verenler listelendi',
+                  // ⚠ BAŞLIK DURUMA GÖRE (9 Eyl): kurgusal havuz
+                  // kaldırıldığı için liste artık gerçekten BOŞ
+                  // olabilir. Boşken "listelendi" demek yanlış olurdu.
+                  // ── ⚠ ALT SATIR (kullanıcı isteği, 9 Eyl) ──
+                  //
+                  // Metin "İhtiyacınıza uygun hizmet verenler
+                  // listelendi" oldu, ORTALANDI ve başlıktan bir tık
+                  // silik kalması istendi.
+                  //
+                  // ⚠ SİLİKLİK RENKLE VERİLDİ: siyah (#000000) →
+                  // `RC.textSoft`. Ağırlık da w600 → w500; w600
+                  // pubspec'te YOK, sentezleniyordu (bkz. ilan
+                  // açıklaması tipografisi kuralı).
+                  //
+                  // ⚠ Başlığın kendisi 18/w700 olduğu için aradaki
+                  // fark hem ölçü hem renkle kuruluyor.
+                  Text(
+                      _sonuclar.isEmpty
+                          ? 'Bu hizmet için sonuç bulunamadı'
+                          : 'İhtiyacınıza uygun hizmet verenler listelendi',
+                      textAlign: TextAlign.center,
                       style: refText(
-                          size: RF.s14,
-                          weight: RF.w600,
-                          color: const Color(0xFF000000))),
+                          size: RF.s135,
+                          weight: RF.w500,
+                          color: RC.textSoft)),
                   const SizedBox(height: 14),
+
+                  // ── ⚠ BOŞ DURUM ──
+                  //
+                  // ÖNCEDEN bu ekran HİÇ boş kalmazdı: eşleşen gerçek
+                  // hesap yoksa kurgusal havuz listeyi doldururdu.
+                  // Kullanıcı kararıyla o havuz silindi, dolayısıyla
+                  // boş durumun kendisi artık gerçek bir hâl.
+                  //
+                  // ⚠ SAYI YA DA TAHMİN YAZILMAZ: "yakında eklenecek",
+                  // "N kişi bekleniyor" gibi bilmediğimiz şeyler
+                  // söylenmez. Yalnız durum ve tek bir öneri.
+                  if (_sonuclar.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Text(
+                          'Seçtiğiniz hizmeti bu bölgede sunan kayıtlı '
+                          'hizmet veren bulunmuyor. İlan vererek '
+                          'teklif toplayabilirsiniz.',
+                          textAlign: TextAlign.center,
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w400,
+                              color: RC.textSoft)),
+                    ),
 
                   // ── TEK KESİNTİSİZ LİSTE — İLÇE BAŞLIĞI YOK ──
                   //
@@ -340,8 +400,11 @@ class _TeklifIsteButonu extends StatelessWidget {
 ///
 /// `AuthController.saglayicilarKimSunuyor` — kendi `categories`
 /// kümesinde bu hizmeti/kategoriyi SEÇMİŞ, gerçek hesaplardır (bkz.
-/// `MyCategoriesScreen`). Bulunursa mock havuza EKLENİR, bulunamazsa
-/// liste yalnız mock kalır — sahte "gerçek" veri ÜRETİLMEZ.
+/// `MyCategoriesScreen`).
+///
+/// ⚠ ARTIK LİSTENİN TAMAMI BUDUR (9 Eyl): kurgusal havuz silindi.
+/// Eşleşen kayıtlı hesap yoksa liste BOŞ döner ve ekran boş durumunu
+/// gösterir — sahte doluluk üretilmez.
 List<MockSaglayici> _gercekSaglayicilariBul(
   BuildContext context, {
   required String kategori,
@@ -368,10 +431,16 @@ List<MockSaglayici> _gercekSaglayicilariBul(
         gercek: true,
         id: acc.id,
         adSoyad: acc.name,
-        // ⚠ Hizmet verenin KENDİ seçtiği bölgelerden (bkz.
-        // `MyAreasScreen`/`serviceDistricts`) müşterinin ilçesiyle
-        // eşleşen varsa O kullanılır — gerçekten "buraya hizmet
-        // veriyor" anlamına gelir. Yoksa ilk bölgesi gösterilir.
+        // ── ⚠ BU ALAN YALNIZ SIRALAMA İÇİNDİR, EKRANDA GÖSTERİLMEZ ──
+        //
+        // Kartta görünen konum `gercekSaglayiciOzeti` tarafından
+        // hesabın KENDİ ADRESİNDEN okunur (kullanıcı bulgusu, 9 Eyl:
+        // "adres bilgilerim farklı görünüyor").
+        //
+        // Buradaki ilçe ise "bu hizmet vereni bana göster" kararını
+        // ve yakınlık sırasını belirler; onun için hizmet VERDİĞİ
+        // bölge doğru ölçüttür. İki soru ayrıdır: nereye hizmet
+        // veriyor (eşleştirme) ve nerede oturuyor (gösterim).
         ilce: acc.serviceDistricts.contains(musteriIlcesi)
             ? musteriIlcesi
             : (acc.serviceDistricts.isNotEmpty

@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -20,6 +21,7 @@ import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
+import 'widgets/teklif_rozeti.dart';
 import 'category_ui.dart';
 import 'nav_actions.dart';
 import '../domain/config.dart';
@@ -330,7 +332,14 @@ class _JobsScreenState extends State<JobsScreen> {
         ? context
             .watch<TeklifTalebiController>()
             .bySaglayici(me.id)
-            .where((t) => t.durum == TeklifTalebiDurumu.secildi)
+            // ── ⚠ `secildi` TEK BAŞINA YETMEZ (kullanıcı bulgusu,
+            // 9 Eyl) ──
+            //
+            // Seçim anında akış `secToVer` ardından `tamamla`
+            // çağırıyor; kayıt `tamamlandi` olarak duruyor. Yalnız
+            // `secildi` arandığı için kazanılan iş buraya HİÇ
+            // DÜŞMÜYORDU. Aşama kuralı tek yerden gelir.
+            .where((t) => talepKazanildiMi(t.durum))
             .toList()
         : const <TeklifTalebi>[];
 
@@ -772,9 +781,11 @@ class _JobsScreenState extends State<JobsScreen> {
                               incelendi ? FontWeight.w400 : FontWeight.w600,
                           color: incelendi ? HC.grey : _kYeniKoyu)),
                   // ── TEKLİF SAYISI ──
-                  // Referans `.cc-badge`: "Henüz teklif verilmedi" /
-                  // "N teklif verildi". Sağlayıcı, ilana kaç kişinin
-                  // teklif verdiğini görür.
+                  //
+                  // ⚠ METİN VE RENK BURADA TANIMLI DEĞİL: tek kaynak
+                  // `widgets/teklif_rozeti.dart`. Sağlayıcı, ilana kaç
+                  // kişinin teklif verdiğini görür; 0 iken "Teklif
+                  // verilmedi" yazar.
                   const SizedBox(height: 7),
                   // ── ⚠ HİZMET ZAMANI ──
                   //
@@ -825,7 +836,7 @@ class _JobsScreenState extends State<JobsScreen> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: _TeklifRozeti(adet: teklifAdedi),
+                child: TeklifRozeti(sayi: teklifAdedi),
               ),
               ],
             ),
@@ -835,46 +846,10 @@ class _JobsScreenState extends State<JobsScreen> {
 }
 
 
-/// TEKLİF SAYISI ROZETİ — referans `.cc-badge`
-///
-/// ```css
-/// .cc-badge{display:inline-flex;gap:6px;padding:4px 9px;
-///           border-radius:8px;font-size:11.5px;font-weight:600}
-/// ```
-///
-/// Sağlayıcı, ilana kaç kişinin teklif verdiğini görür:
-///   • 0 teklif → gri  "Henüz teklif verilmedi"
-///   • 1-3      → mavi "N teklif verildi"
-///   • 4+       → turuncu (rekabet yüksek)
-class _TeklifRozeti extends StatelessWidget {
-  const _TeklifRozeti({required this.adet});
-
-  final int adet;
-
-  @override
-  Widget build(BuildContext context) {
-    final (zemin, yazi) = switch (adet) {
-      0 => (const Color(0xFFF2F4F7), const Color(0xFF667085)),
-      < 4 => (RC.blueSoft, RC.blue),
-      _ => (const Color(0xFFFFF4E5), const Color(0xFFF5820C)),
-    };
-    // ⚠ DÜZELTİLDİ — kullanıcı isteği: "Henüz" kaldırıldı, yalnız
-    // "Teklif verilmedi".
-    final metin = adet == 0 ? 'Teklif verilmedi' : '$adet teklif verildi';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration:
-          BoxDecoration(color: zemin, borderRadius: BorderRadius.circular(8)),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        RefSvg('assets/svg/ic_chat.svg', size: 14, color: yazi),
-        const SizedBox(width: 6),
-        Text(metin,
-            style: refText(size: 11.5, weight: RF.w600, color: yazi)),
-      ]),
-    );
-  }
-}
+/// ⚠ KOPYA ROZET KALDIRILDI (9 Eyl): metin ve renk artık
+/// `widgets/teklif_rozeti.dart` içinde TEK yerde tanımlı. Aynı rozet
+/// burada ve `my_listings_screen`de AYRI AYRI yazılmıştı; ikisi
+/// ayrışmıştı.
 
 
 

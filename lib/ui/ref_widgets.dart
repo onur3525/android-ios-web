@@ -1579,6 +1579,49 @@ class RefMenuRow extends StatelessWidget {
 ///   padding:10px 4px;background:#fff}
 /// .cust-tab.on{background:#1D6BE3;color:#fff}
 /// ```
+/// ── ⚠ SAYI ROZETİ — TEK ÇİZİM ──
+///
+/// Kırmızı, halkalı, sayı taşıyan rozet. Hem sekme çubuğunda
+/// (`RefSegmentTabs`) hem alt navigasyonda (`RefBottomNav`) AYNI
+/// bileşen kullanılır.
+///
+/// ⚠ NEDEN ORTAK: iki yerde ayrı ayrı çizilseydi ölçü, konum ve
+/// halka kalınlığı kaçınılmaz olarak ayrışırdı — nitekim alt bardaki
+/// rozet 15 px ve "!" işaretliyken sekmedeki 17 px ve sayılıydı.
+///
+/// [halkaRengi] rozetin oturduğu ZEMİNİN rengidir: halka zemine
+/// uymazsa rozet yamalı görünür.
+class RefSayiRozeti extends StatelessWidget {
+  const RefSayiRozeti({
+    super.key,
+    required this.sayi,
+    required this.halkaRengi,
+  });
+
+  final int sayi;
+  final Color halkaRengi;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+        // ⚠ `minHeight` de verilir: tek haneli sayıda rozet DAİRE
+        // kalır, yassı bir hap gibi görünmez.
+        constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: RC.danger,
+          borderRadius: BorderRadius.circular(RR.circle),
+          border: Border.all(color: halkaRengi, width: 2),
+        ),
+        child: Text(
+          sayi > 99 ? '99+' : '$sayi',
+          textAlign: TextAlign.center,
+          style: refText(size: 9.5, weight: RF.w700, color: RC.white),
+        ),
+      );
+}
+
 class RefSegmentTabs extends StatelessWidget {
   const RefSegmentTabs({
     super.key,
@@ -1645,34 +1688,38 @@ class RefSegmentTabs extends StatelessWidget {
                               if (badges != null &&
                                   i < badges!.length &&
                                   badges![i] > 0)
+                                // ── ⚠ ROZET KONUMU (kullanıcı isteği,
+                                // 9 Eyl) ──
+                                //
+                                // BULGU: "sayı, ikonun TAM ÜSTÜNDE
+                                // kalmasın, daha kaliteli olsun."
+                                //
+                                // ÖNCEDEN `right: -7, top: -5` idi:
+                                // 20 px ikonun sağ üst köşesinin
+                                // İÇİNE biniyordu. "Yeni işler"
+                                // ikonu (kâğıt uçak) görsel ağırlığını
+                                // zaten sağ üstte taşıdığı için rozet
+                                // ikonu örtüyordu.
+                                //
+                                // Rozet dışarı alındı: köşeye TEĞET
+                                // durur, ikonun gövdesini örtmez.
+                                //
+                                // ⚠ HALKA KALINLAŞTIRILDI (1,4 → 2):
+                                // kırmızı ile ikon arasında net bir
+                                // boşluk oluşur; seçili sekmede mavi,
+                                // seçilmemişte beyaz olarak zemine
+                                // uyum sağlamayı SÜRDÜRÜR.
+                                //
+                                // ⚠ TAŞMA GÜVENLİ: `Stack`
+                                // `Clip.none` ve üstteki dolgu 10 px;
+                                // rozet dışarı taşsa da kırpılmaz.
                                 Positioned(
-                                  right: -7,
-                                  top: -5,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4.5, vertical: 1.5),
-                                    constraints:
-                                        const BoxConstraints(minWidth: 16),
-                                    decoration: BoxDecoration(
-                                      color: RC.danger,
-                                      borderRadius:
-                                          BorderRadius.circular(RR.circle),
-                                      border: Border.all(
-                                          color: i == selected
-                                              ? RC.blue
-                                              : RC.white,
-                                          width: 1.4),
-                                    ),
-                                    child: Text(
-                                      badges![i] > 99
-                                          ? '99+'
-                                          : '${badges![i]}',
-                                      textAlign: TextAlign.center,
-                                      style: refText(
-                                          size: 9.5,
-                                          weight: RF.w700,
-                                          color: RC.white),
-                                    ),
+                                  right: -10,
+                                  top: -8,
+                                  child: RefSayiRozeti(
+                                    sayi: badges![i],
+                                    halkaRengi:
+                                        i == selected ? RC.blue : RC.white,
                                   ),
                                 ),
                             ],
@@ -1814,7 +1861,7 @@ class RefBottomNav extends StatelessWidget {
   /// ⚠ `rozet`: sekmenin üstünde okunmamış göstergesi çizilsin mi?
   /// Varsayılan davranış YOK — her çağıran açıkça belirtir.
   ///
-  /// ⚠ `belirginRozet` EKLENDİ (kullanıcı isteği — "Bul" ikonunda
+  /// ⚠ `belirginRozetSayisi` (kullanıcı isteği — "Bul" ikonunda
   /// daha göze çarpan bir gösterge). Bu tip `_NavOgesi.it` ile
   /// AYNI olmalı — biri güncellenip diğeri unutulursa derleme hatası
   /// olur (bkz. bu satırın filed edildiği build log bulgusu).
@@ -1825,7 +1872,7 @@ class RefBottomNav extends StatelessWidget {
         String asset,
         VoidCallback onTap,
         bool rozet,
-        bool belirginRozet
+        int belirginRozetSayisi
       })> items;
 
   /// Etkin sekmenin anahtarı (`ilanver` / `ilanlarim` / `bildirim` / `profil`).
@@ -2010,7 +2057,7 @@ class RefBottomNav extends StatelessWidget {
   /// yeniden adlandırılmış bir yardımcı metoda taşındı ki yukarıdaki
   /// yeni dal ile KOD TEKRARI olmasın.
   ///
-  /// ⚠ `belirginRozet` EKLENDİ — `_NavOgesi.it` ile AYNI tip olmak
+  /// ⚠ `belirginRozetSayisi` — `_NavOgesi.it` ile AYNI tip olmak
   /// zorunda (derleme hatası bulgusu, bkz. `RefBottomNav.items`daki
   /// AYNI not).
   Widget _duzBar(List<
@@ -2020,7 +2067,7 @@ class RefBottomNav extends StatelessWidget {
             String asset,
             VoidCallback onTap,
             bool rozet,
-            bool belirginRozet
+            int belirginRozetSayisi
           })>
       ogeler, double safeBottom) {
     return Container(
@@ -2052,7 +2099,7 @@ class _NavOgesi extends StatelessWidget {
     String asset,
     VoidCallback onTap,
     bool rozet,
-    bool belirginRozet
+    int belirginRozetSayisi
   }) it;
   final bool aktifMi;
 
@@ -2101,31 +2148,32 @@ class _NavOgesi extends StatelessWidget {
                   ),
                 // ── ⚠ BELİRGİN ROZET — "Bul" ikonu, gelen teklif ──
                 //
-                // Kullanıcı bulgusu: yukarıdaki küçük mavi nokta
-                // ("okunmamış bildirim" göstergesi ile AYNI görsel)
-                // yeterince dikkat çekmiyordu. Bu yüzden AYRI bir
-                // görsel dil: daha büyük, KIRMIZI, üzerinde "!" olan
-                // bir rozet — "Bildirimler"deki nokta ile
-                // KARIŞTIRILMASIN diye bilinçli olarak farklı.
-                if (it.belirginRozet)
+                // KULLANICI BULGUSU (9 Eyl): "Bul butonu üzerindeki
+                // ! rozeti hatalı; teklif geldiğini gösteren bir
+                // rozet olmalı."
+                //
+                // ÖNCEDEN 15 px'lik, üzerinde "!" olan bir uyarı
+                // işaretiydi. "!" bir SORUN/UYARI anlatır — oysa
+                // burada iyi bir haber var: gelen teklif. Üstelik
+                // sayı taşımadığı için kaç teklif geldiği
+                // görünmüyordu.
+                //
+                // Artık sekme çubuğundaki rozetle AYNI bileşen
+                // (`RefSayiRozeti`) ve AYNI ölçü/konum kuralı:
+                // görülmemiş teklif SAYISI yazar.
+                //
+                // ⚠ İKİ ROZET DİLİ AYRI KALIR: "Bildirimler"deki
+                // küçük mavi nokta okunmamış bildirimi anlatır;
+                // buradaki kırmızı sayı ise gelen teklifi. Karışması
+                // istenmiyordu, karışmıyor.
+                if (it.belirginRozetSayisi > 0)
                   Positioned(
-                    right: -5,
-                    top: -4,
-                    child: Container(
-                      width: 15,
-                      height: 15,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: RC.danger,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: RC.white, width: 1.5),
-                      ),
-                      child: const Text('!',
-                          style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: RC.white,
-                              height: 1)),
+                    right: -10,
+                    top: -8,
+                    child: RefSayiRozeti(
+                      sayi: it.belirginRozetSayisi,
+                      // Alt bar zemini daima beyazdır.
+                      halkaRengi: RC.white,
                     ),
                   ),
               ],

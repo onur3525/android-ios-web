@@ -118,9 +118,20 @@ void main() {
     });
 
     test('⚠ YORUM DEĞİŞTİRİLEMEZ KURALI DURUYOR', () {
-      // Salt okunur kart, değiştirilemezlik notunu taşımalı.
-      final a = _kodu('lib/screens/teklif_talebi_yorum_screen.dart');
-      expect(a.contains('Değiştirilemez ve silinemez.'), isTrue);
+      // ⚠ KİLİT CÜMLEDEN DAVRANIŞA TAŞINDI (9 Eyl): yeşil bilgi
+      // şeridi kullanıcı isteğiyle kaldırıldı. Kural DEĞİŞMEDİ —
+      // kayıt varken ekran form dalını HİÇ çizmez, yalnız salt
+      // okunur kartı gösterir. Test artık o dalı denetliyor;
+      // metnin varlığını değil.
+      for (final yol in const [
+        'lib/screens/teklif_talebi_yorum_screen.dart',
+        'lib/screens/review_screen.dart',
+      ]) {
+        final a = _kodu(yol);
+        expect(a.contains('done == null'), isTrue,
+            reason: '$yol yorum var/yok ayrımını yapmıyor — '
+                'yazılmış yorum yeniden düzenlenebilir hâle gelir');
+      }
     });
   });
 }

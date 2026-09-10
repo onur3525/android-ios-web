@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/telefon_bicimi.dart';
+import '../core/tutar_bicimi.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
@@ -80,7 +81,9 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     if (_gonderiliyor) {
       return;
     }
-    final f = int.tryParse(_fiyat.text.trim());
+    // ⚠ `int.tryParse` DEĞİL: alanda binlik ayracı var ("3.000"),
+    // doğrudan çözümlenirse null döner ve geçerli fiyat reddedilirdi.
+    final f = tutarOku(_fiyat.text);
     // ⚠ ÖNCEDEN: geçersiz girişte SESSİZCE hiçbir şey olmuyordu.
     // Şimdi kullanıcıya HANGİ alanın eksik/geçersiz olduğu söyleniyor.
     if (f == null || f <= 0) {
@@ -299,27 +302,44 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                           size: RF.s115,
                           weight: RF.w500,
                           color: RC.textSoft)),
-                  // ── ⚠ HİZMET ZAMANI ROZETİ ──
+                  // ── ⚠ BÖLÜM SIRASI (kullanıcı kararı, 9 Eyl) ──
                   //
-                  // Hizmet alan "Teklif İste" ekranında bir zaman
-                  // seçtiyse karşı taraf bunu GÖRMELİ; yoksa seçici
-                  // yalnız gönderende kalan ölü bir alan olurdu.
+                  //   Hizmet / Kategori
+                  //   Hizmet Zamanı   → rozet
+                  //   Açıklama        → metin
+                  //   Fotoğraflar     → şerit
                   //
-                  // ⚠ AYNI BİLEŞEN: `IsZamaniRozeti` — ilan akışındaki
-                  // (`jobs_screen`, `job_detail_screen`) rozetle
-                  // birebir aynı ölçü ve renk; "Acil" burada da
-                  // KIRMIZI çıkar. Kopya rozet yazılmadı.
+                  // ⚠ FOTOĞRAFLAR AÇIKLAMANIN İÇİNDEN ÇIKARILDI:
+                  // önceden açıklama metninin hemen altına, aynı
+                  // bölümün içine çiziliyordu ve başlıksızdı —
+                  // açıklamanın parçası gibi duruyordu. Artık KENDİ
+                  // başlığı olan ayrı bir bölüm.
                   //
-                  // ⚠ SEÇİM YOKSA HİÇ ÇİZİLMEZ: bileşen `null`da
-                  // `SizedBox.shrink()` döner, "belirtilmemiş" gibi
-                  // bir yer tutucu GÖSTERİLMEZ.
+                  // ⚠ BAŞLIK BİÇİMİ TEK: üç bölüm başlığı da
+                  // (`Hizmet Zamanı`, `Açıklama`, `Fotoğraflar`) aynı
+                  // 12/w400/`RC.grey` ile çizilir; biri değişirse
+                  // ötekiler de değişmeli.
+                  //
+                  // ⚠ BOŞ BÖLÜM ÇİZİLMEZ: zaman seçilmemişse ya da
+                  // fotoğraf yoksa o bölüm başlığıyla birlikte HİÇ
+                  // görünmez — sahipsiz başlık bırakılmaz.
                   if (t.isZamani != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: Color(0xFFF1F3F6)),
+                    const SizedBox(height: 10),
+                    Text('Hizmet Zamanı',
+                        style: refText(
+                            size: RF.s12, weight: RF.w400, color: RC.grey)),
+                    const SizedBox(height: 6),
                     Align(
                       alignment: Alignment.centerLeft,
+                      // ⚠ AYNI BİLEŞEN: `IsZamaniRozeti` — ilan
+                      // akışındaki rozetle birebir aynı ölçü ve renk;
+                      // "Acil" burada da KIRMIZI çıkar.
                       child: IsZamaniRozeti(t.isZamani),
                     ),
                   ],
+
                   const SizedBox(height: 10),
                   const Divider(height: 1, color: Color(0xFFF1F3F6)),
                   const SizedBox(height: 10),
@@ -330,8 +350,15 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                   Text(t.aciklama,
                       style: refText(
                           size: RF.s14, weight: RF.w400, color: RC.text)),
+
                   if (t.fotograflar.isNotEmpty) ...[
                     const SizedBox(height: 10),
+                    const Divider(height: 1, color: Color(0xFFF1F3F6)),
+                    const SizedBox(height: 10),
+                    Text('Fotoğraflar',
+                        style: refText(
+                            size: RF.s12, weight: RF.w400, color: RC.grey)),
+                    const SizedBox(height: 6),
                     SizedBox(
                       height: 64,
                       child: ListView.separated(
@@ -339,22 +366,10 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         itemCount: t.fotograflar.length,
                         separatorBuilder: (_, __) =>
                             const SizedBox(width: 8),
-                        // ── ⚠ FOTOĞRAFA DOKUNUNCA TAM EKRAN AÇILIR
-                        // (kullanıcı isteği, 9 Eyl) ──
-                        //
-                        // ÖNCEDEN: 64 px küçük resimler ÖLÜ görseldi,
-                        // dokunmak hiçbir şey yapmıyordu; hizmet veren
-                        // işi göremeden teklif vermek zorundaydı.
-                        //
-                        // ⚠ YENİ GÖRÜNTÜLEYİCİ YAZILMADI: ilan akışının
-                        // kullandığı AYNI bileşen (`FotoGoruntuleyici`,
-                        // `listing_detail` ve `job_detail` da onu
-                        // çağırır) — yakınlaştırma, kaydırarak gezinme
-                        // ve sayaç davranışı tanım gereği aynı.
-                        //
-                        // ⚠ TÜM LİSTE VERİLİR, TEK FOTOĞRAF DEĞİL:
-                        // `baslangic: i` ile dokunulan fotoğraftan
-                        // açılır, kullanıcı ötekilere kaydırarak geçer.
+                        // ⚠ FOTOĞRAFA DOKUNUNCA TAM EKRAN AÇILIR:
+                        // ilan akışının kullandığı AYNI bileşen
+                        // (`FotoGoruntuleyici`). Tüm liste verilir,
+                        // `baslangic: i` ile dokunulandan açılır.
                         itemBuilder: (_, i) => RefTap(
                           onTap: () => FotoGoruntuleyici.ac(context,
                               yollar: t.fotograflar, baslangic: i),
@@ -1034,7 +1049,7 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
           const SizedBox(height: 12),
           Text('Fiyat',
               style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          Text('${talep.teklifFiyati} TL',
+          Text(tutarMetni(talep.teklifFiyati!),
               style:
                   refText(size: RF.s18, weight: RF.w700, color: RC.text)),
           const SizedBox(height: 8),
@@ -1085,10 +1100,22 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
         Text('Fiyatınız (TL)',
             style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
         const SizedBox(height: 8),
+        // ── ⚠ CANLI BİNLİK AYRACI (kullanıcı isteği, 9 Eyl) ──
+        //
+        // "1000 yazdığında 1.000 olarak otomatik atasın; 1, 10, 100
+        // haricinde sonraki büyük rakamlara otomatik nokta konulsun."
+        //
+        // Biçim kuralı `core/tutar_bicimi.dart` içinde TEK yerde;
+        // alan onu uygular, kendi kuralını yazmaz.
+        //
+        // ⚠ ALAN ARTIK "3.000" GİBİ OKUNUR: gönderimde
+        // `int.tryParse` ÇÖKER, bu yüzden okuma `tutarOku` ile
+        // yapılır (bkz. `_gonder`).
         TextField(
           controller: fiyatController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: 'Örn. 1500'),
+          inputFormatters: const [TutarBicimlendirici()],
+          decoration: const InputDecoration(hintText: 'Örn. 1.500'),
         ),
         const SizedBox(height: 16),
         Text('Cevabınız',
@@ -1173,7 +1200,7 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
             Text('Fiyat',
                 style:
                     refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-            Text('${talep.teklifFiyati} TL',
+            Text(tutarMetni(talep.teklifFiyati!),
                 style: refText(
                     size: RF.s18, weight: RF.w700, color: RC.text)),
             const SizedBox(height: 8),
@@ -1269,47 +1296,85 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         // düğme de AYNI hedefi açar; ayrı bir görüntüleme ekranı
         // YAZILMADI.
         final yorum = context.watch<ReviewController>().byTalep(talep.id);
+        // ⚠ "İş tamamlandı." YAZISI KALDIRILDI (kullanıcı isteği,
+        // 9 Eyl): altındaki "Yorum Yaz" düğmesi zaten işin bittiğini
+        // anlatıyordu, satır tekrar ediyordu.
+        //
+        // ⚠ HİZMET VEREN TARAFINDAKİ AYNI CÜMLE KALDI: orada düğme
+        // YOK, cümle kaldırılsaydı bölüm bomboş kalırdı — durumu
+        // söyleyen tek şey o.
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('İş tamamlandı.',
-                style: refText(
-                    size: RF.s135, weight: RF.w700, color: RC.text)),
-            const SizedBox(height: 12),
             if (yorum == null)
               RefPrimaryButton('Yorum Yaz',
                   iconAsset: 'assets/svg/ic_starfill.svg',
                   onPressed: onYorumYaz)
             else
-              // ⚠ KAPSAM: açılan kart YALNIZ BU TALEBE ait yorumu
-              // gösterir (`byTalep(talep.id)`) — hizmet verenin öteki
-              // yorumları bu yolla GÖSTERİLMEZ. Ekranın alt
-              // kısmındaki "Yorumlar" bölümü (hizmet verenin son 3
-              // yorumu) AYRI bir bölümdür ve DEĞİŞTİRİLMEDİ.
+              // ── ⚠ YEŞİL ŞERİT YERİNE YORUM KARTI (kullanıcı
+              // isteği, 9 Eyl) ──
+              //
+              // ÖNCEDEN tek satırlık yeşil bir şeritti: "Yorum
+              // Yapıldı (5 puan) · Görüntüle". Puanı sayı olarak
+              // söylüyor, yorumun kendisini hiç göstermiyordu.
+              //
+              // Artık kart: yıldızlar + puan + yazılan metin. Karta
+              // dokununca yine salt okunur değerlendirme ekranı
+              // açılır — görüntüleme yolu KAYBOLMADI.
+              //
+              // ⚠ KAPSAM: gösterilen yorum YALNIZ BU TALEBE aittir
+              // (`byTalep(talep.id)`); hizmet verenin öteki yorumları
+              // bu kartta GÖSTERİLMEZ.
               RefTap(
                 onTap: onYorumYaz,
-                borderRadius: BorderRadius.circular(RR.r9),
+                borderRadius: BorderRadius.circular(RR.r13),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 9, horizontal: 12),
+                  padding: const EdgeInsets.all(13),
                   decoration: BoxDecoration(
-                    color: RC.successSoft,
-                    borderRadius: BorderRadius.circular(RR.r9),
+                    color: RC.white,
+                    border: Border.all(color: const Color(0xFFECEEF2)),
+                    borderRadius: BorderRadius.circular(RR.r13),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const RefSvg('assets/svg/ic_okgreen.svg', size: 15),
-                      const SizedBox(width: 7),
-                      Flexible(
-                        child: Text(
-                            'Yorum Yapıldı (${yorum.stars} puan) · '
-                            'Görüntüle',
-                            style: refText(
-                                size: RF.s125,
-                                weight: RF.w600,
-                                color: RC.success)),
+                      Row(
+                        children: [
+                          // ⚠ BEŞ YILDIZ ÇİZİLİR: dolu yıldız sayısı
+                          // puandır, kalanlar soluk. Sayıyı tek başına
+                          // yazmak "5 puan" gibi soyut kalıyordu.
+                          for (var i = 1; i <= 5; i++) ...[
+                            RefSvg('assets/svg/ic_starfill.svg',
+                                size: 16,
+                                color: i <= yorum.stars
+                                    ? const Color(0xFFF5A319)
+                                    : const Color(0xFFE1E5EC)),
+                            const SizedBox(width: 3),
+                          ],
+                          const SizedBox(width: 5),
+                          Text('${yorum.stars}.0',
+                              style: refText(
+                                  size: RF.s145,
+                                  weight: RF.w700,
+                                  color: RC.text)),
+                          const Spacer(),
+                          Text('Görüntüle',
+                              style: refText(
+                                  size: RF.s125,
+                                  weight: RF.w700,
+                                  color: RC.blue)),
+                        ],
                       ),
+                      // ⚠ METİN YALNIZ VARSA: yorum yazılmadan da
+                      // puan verilebiliyor; boş satır bırakılmaz.
+                      if (yorum.text.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(yorum.text.trim(),
+                            style: refText(
+                                size: RF.s135,
+                                weight: RF.w400,
+                                color: RC.text)),
+                      ],
                     ],
                   ),
                 ),

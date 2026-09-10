@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
+import '../data/models/account.dart' show Role;
+import '../domain/bildirim_rolu.dart';
 
 /// ALT NAVİGASYON ÖĞELERİ
 ///
@@ -21,7 +23,7 @@ List<({
   String asset,
   VoidCallback onTap,
   bool rozet,
-  bool belirginRozet
+  int belirginRozetSayisi
 })>
     custNavItems(BuildContext context, {required bool saglayici}) {
   // ── ⚠ OKUNMAMIŞ BİLDİRİM ──
@@ -32,19 +34,36 @@ List<({
   // ⚠ `watch`: yeni bildirim gelince alt bar KENDİLİĞİNDEN yenilenir;
   // kullanıcı ekrana girmeden noktayı görür.
   final me = context.watch<AuthController>().currentAccount;
+  // ── ⚠ ROZET AKTİF ROLE GÖRE SÜZÜLÜR (kullanıcı kuralı, 9 Eyl) ──
+  //
+  // "Rol değiştirince diğer rolüne ait bildirimleri görmemeli."
+  //
+  // ⚠ ROZET DE SÜZÜLMELİ, YALNIZ LİSTE DEĞİL: rozet ham sayıyı
+  // okusaydı kullanıcı noktayı görüp Bildirimler'i açtığında boş
+  // liste bulurdu — karşı rolün bildirimi noktayı yakıyor olurdu.
+  //
+  // Süzme kuralı `domain/bildirim_rolu.dart` içinde TEK yerde.
   final okunmamis = me != null &&
-      context.watch<NotificationController>().unreadCount(me.id) > 0;
+      rolOkunmamisSayisi(
+            context.watch<NotificationController>().forUser(me.id),
+            saglayici ? Role.provider : Role.customer,
+          ) >
+          0;
 
   // ── ⚠ "BUL" İKONU — GELEN TEKLİF GÖSTERGESİ ──
   //
   // Kullanıcı bulgusu: hizmet verenden teklif geldiğinde, bildirim
   // dışında "Bul" ikonunda da GÖZE ÇARPAN bir gösterge olmalı —
   // Bildirimler sekmesindeki küçük mavi nokta YETERSİZ görüldü.
-  // `belirginRozet` bu yüzden ayrı bir alan: `_NavOgesi` bunu daha
-  // büyük/kırmızı çizer (bkz. `ref_widgets.dart`).
-  final yeniTeklif = !saglayici &&
-      me != null &&
-      context.watch<TeklifTalebiController>().yeniTeklifVarMi(me.id);
+  // `belirginRozetSayisi` bu yüzden ayrı bir alan: `_NavOgesi` bunu
+  // kırmızı SAYI rozetiyle çizer (bkz. `ref_widgets.dart`).
+  // ⚠ SAYI (bool DEĞİL): rozet artık "!" değil, görülmemiş teklif
+  // SAYISINI gösteriyor. Ölçüt `yeniTeklifVarMi` ile AYNI — o da
+  // "son görülme"den sonra gelen `teklifGeldi` kayıtlarına bakar,
+  // yani sekmeye girilince rozet sıfırlanır.
+  final yeniTeklifSayi = (!saglayici && me != null)
+      ? context.watch<TeklifTalebiController>().yeniTeklifSayisi(me.id)
+      : 0;
 
   final t = <({
   String key,
@@ -52,7 +71,7 @@ List<({
   String asset,
   VoidCallback onTap,
   bool rozet,
-  bool belirginRozet
+  int belirginRozetSayisi
 })>[
     // ── ⚠ "BUL" YALNIZ MÜŞTERİDE, EN SOLDA ──
     //
@@ -65,7 +84,7 @@ List<({
         asset: 'assets/svg/ic_search.svg',
         onTap: () => Navigator.pushNamed(context, '/customer/find-provider'),
         rozet: false,
-        belirginRozet: yeniTeklif,
+        belirginRozetSayisi: yeniTeklifSayi,
       ),
     (
       key: 'ilanlarim',
@@ -77,7 +96,7 @@ List<({
         (r) => false,
       ),
       rozet: false,
-      belirginRozet: false,
+      belirginRozetSayisi: 0,
     ),
     // ⚠ "İlan Ver" ORTA konuma taşındı (Bul, İlanlarım, İlan Ver,
     // Bildirim, Profil) — yalnız SIRASI değişti, davranışı AYNI.
@@ -88,7 +107,7 @@ List<({
         asset: 'assets/svg/ic_addbox.svg',
         onTap: () => Navigator.pushNamed(context, '/customer/new-listing'),
         rozet: false,
-        belirginRozet: false,
+        belirginRozetSayisi: 0,
       ),
     // ⚠ SAĞLAYICIYA ÖZEL SEKME.
     //
@@ -106,7 +125,7 @@ List<({
           (r) => false,
         ),
         rozet: false,
-        belirginRozet: false,
+        belirginRozetSayisi: 0,
       ),
     (
       key: 'bildirim',
@@ -116,7 +135,7 @@ List<({
       // ⚠ YALNIZ BİLDİRİM SEKMESİNDE: nokta okunmamış bildirim
       // varsa çizilir.
       rozet: okunmamis,
-      belirginRozet: false,
+      belirginRozetSayisi: 0,
     ),
     (
       key: 'profil',
@@ -124,7 +143,7 @@ List<({
       asset: 'assets/svg/ic_profile.svg',
       onTap: () => Navigator.pushNamed(context, '/profile'),
       rozet: false,
-      belirginRozet: false,
+      belirginRozetSayisi: 0,
     ),
   ];
   return t;

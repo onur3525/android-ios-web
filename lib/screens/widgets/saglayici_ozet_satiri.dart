@@ -21,9 +21,21 @@ import '../job_detail_screen.dart' show maskeliAd;
 /// 12,5/w700, yorum 12/w400, alt satırlar 12/w400 (#5B6472 ve
 /// #98A2B3), yıldız #F5A319.
 class SaglayiciOzetSatiri extends StatelessWidget {
-  const SaglayiciOzetSatiri(this.ozet, {super.key});
+  const SaglayiciOzetSatiri(this.ozet, {super.key, this.maskeli = true});
 
   final SaglayiciOzeti ozet;
+
+  /// Kimlik gizli mi?
+  ///
+  /// ⚠ VARSAYILAN GİZLİ: teklif verilmeden önce hizmet verenin adı
+  /// maskelidir. İletişim açıldıktan sonra çağıran `maskeli: false`
+  /// geçer; ad tam yazılır ve kilitli avatar yerine baş harf avatarı
+  /// çizilir.
+  ///
+  /// ⚠ İSTATİSTİKLER İKİ DURUMDA DA GÖSTERİLİR: puan, yorum sayısı,
+  /// tamamlanan iş ve konum kimlik maskeliyken de görünür — maskelenen
+  /// yalnız KİMLİKTİR.
+  final bool maskeli;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +49,21 @@ class SaglayiciOzetSatiri extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // ⚠ Kimliği gizli avatarı: hazır `ic_avlock.svg`.
-        const RefSvg('assets/svg/ic_avlock.svg', size: 46),
+        if (maskeli)
+          const RefSvg('assets/svg/ic_avlock.svg', size: 46)
+        else
+          SizedBox(
+            width: 46,
+            height: 46,
+            child: FittedBox(child: RefBasHarfAvatar(ad: ozet.adSoyad)),
+          ),
         const SizedBox(width: 11),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ⚠ `maskeliAd` — tek maskeleme kuralı.
-              Text(maskeliAd(ozet.adSoyad),
+              Text(maskeli ? maskeliAd(ozet.adSoyad) : ozet.adSoyad,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: refText(

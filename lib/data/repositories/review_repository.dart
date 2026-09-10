@@ -43,7 +43,11 @@ class ReviewRepository extends ChangeNotifier {
     final sinir = DateTime.now().subtract(DomainConfig.yorumYayinGecikmesi);
     return _items.values
         .where((r) => r.providerId == providerId)
-        .where((r) => r.createdAt.isBefore(sinir))
+        // ⚠ `isBefore` DEĞİL `!isAfter`: gecikme sıfır olduğunda
+        // sınır "şimdi"dir; aynı milisaniyede yazılan yorum
+        // `isBefore` ile ELENİRDİ ve "anında yansısın" kuralı ilk
+        // saniyede bozulurdu.
+        .where((r) => !r.createdAt.isAfter(sinir))
         .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }

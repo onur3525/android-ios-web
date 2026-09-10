@@ -804,7 +804,11 @@ class _BosTeklif extends StatelessWidget {
         child: Text(
           suresiDoldu
               ? 'Süresi dolan ilanlarda teklifler görüntülenmez.'
-              : 'Bu ilana henüz teklif verilmedi.',
+              // ⚠ AYNI DİL (9 Eyl): rozette "Henüz" kaldırıldı,
+              // burada da kaldırıldı. Aynı durumun iki farklı
+              // cümleyle anlatılması kullanıcının şikâyet ettiği
+              // tutarsızlığın ta kendisi.
+              : 'Bu ilana teklif verilmedi.',
           textAlign: TextAlign.center,
           style:
               refText(size: RF.s14, weight: RF.w400, color: RC.greyLight),

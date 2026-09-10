@@ -82,7 +82,12 @@ void main() {
 
   group('Değerlendirme', () {
     test('TEK SEFERLİK — gönderilmiş değerlendirme değiştirilemez', () {
-      expect(degerlendirme.contains('Değiştirilemez ve silinemez'), isTrue);
+      // ⚠ KİLİT CÜMLEDEN DAVRANIŞA TAŞINDI (9 Eyl): yeşil bilgi
+      // şeridi kullanıcı isteğiyle kaldırıldı. Kural aynen duruyor —
+      // kayıt varken ekran form dalını hiç çizmez.
+      expect(degerlendirme.contains('done == null'), isTrue,
+          reason: 'yorum var/yok ayrımı kaybolmuş — yazılmış '
+              'değerlendirme yeniden düzenlenebilir hâle gelir');
       // ⚠ TEK KİLİT KALDI: `reviewed`.
       //
       // Referans `vOffer`: `reviewed ? "Değerlendirme" : "Teklifi Seç"`.
@@ -199,14 +204,21 @@ void main() {
       expect(degerlendirme.contains('byOffer(widget.offerId)'), isTrue);
     });
 
-    test('⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14)', () {
-      // Yorum anında kaydedilir — yazan kişi "Yorum Yapıldı" görür —
-      // ama hizmet verenin ortalamasına ve listesine gecikmeyle girer.
-      expect(DomainConfig.yorumYayinGecikmesi, const Duration(days: 1));
+    test('⚠ DEĞERLENDİRME ANINDA YANSIR (kullanıcı kararı, 9 Eyl)', () {
+      // ⚠ ÖNCEKİ KURAL EZİLDİ: §14 / kabul testi 15 bir GÜN gecikme
+      // istiyordu. Kullanıcı, yorum ve puanın hizmet verenin
+      // profiline ve tüm kartlarına ANINDA yansımasını istedi.
+      //
+      // ⚠ MEKANİZMA SİLİNMEDİ: süzgeç yerinde, yalnız süre sıfır.
+      // Karar değişirse tek satır yeter.
+      expect(DomainConfig.yorumYayinGecikmesi, Duration.zero);
       final r = read('lib/data/repositories/review_repository.dart');
       expect(r.contains('DomainConfig.yorumYayinGecikmesi'), isTrue);
-      expect(r.contains('r.createdAt.isBefore(sinir)'), isTrue,
-          reason: 'gecikme süzgeci yok');
+      // ⚠ `isBefore` DEĞİL `!isAfter`: süre sıfırken sınır
+      // "şimdi"dir; aynı milisaniyede yazılan yorum `isBefore` ile
+      // elenir ve "anında yansısın" kuralı ilk saniyede bozulurdu.
+      expect(r.contains('!r.createdAt.isAfter(sinir)'), isTrue,
+          reason: 'sınır karşılaştırması anlık yorumu eliyor');
       // ⚠ `byOffer` SÜZÜLMEZ: yazan kişi kendi yorumunu hemen görmeli.
       final i = r.indexOf('Review? byOffer(');
       final j = r.indexOf('List<Review> byProvider(');

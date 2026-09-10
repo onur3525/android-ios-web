@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../core/tutar_bicimi.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
 import 'widgets/ilan_no_etiketi.dart';
@@ -11,7 +12,9 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/listing.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../ui/ref_tokens.dart';
+import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
@@ -133,9 +136,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         ? context
             .watch<TeklifTalebiController>()
             .byHizmetAlan(me.id)
-            .where((t) =>
-                t.durum == TeklifTalebiDurumu.secildi ||
-                t.durum == TeklifTalebiDurumu.tamamlandi)
+            // ⚠ Kural doğruydu ama BURADA yazılıydı; dört listeden
+            // yalnız biri doğru olunca sapma görünmez kalıyordu.
+            // Artık aşama kuralı tek kaynaktan geliyor.
+            .where((t) => talepKazanildiMi(t.durum))
             .toList()
         : const <TeklifTalebi>[];
 
@@ -546,7 +550,7 @@ class _IlanKarti extends StatelessWidget {
 
             // custBadge(x.offers)
             const SizedBox(height: 6), // .cc-badge{margin-top:6px}
-            _TeklifRozeti(sayi: teklifSayisi),
+            TeklifRozeti(sayi: teklifSayisi),
           ],
         ),
       ),
@@ -554,51 +558,10 @@ class _IlanKarti extends StatelessWidget {
   }
 }
 
-/// Referans `custBadge(o)`:
-/// ```js
-/// var cls = o===0 ? 'gray' : (o>=4 ? 'orange' : 'blue');
-/// var txt = o===0 ? 'Henüz teklif verilmedi' : (o+' teklif verildi');
-/// ```
-class _TeklifRozeti extends StatelessWidget {
-  const _TeklifRozeti({required this.sayi});
-
-  final int sayi;
-
-  @override
-  Widget build(BuildContext context) {
-    final (bg, fg) = switch (sayi) {
-      0 => (RC.surface, const Color(0xFF6B7683)),        // gray
-      >= 4 => (const Color(0xFFFDEBDA), const Color(0xFFF5820C)), // orange
-      _ => (RC.blueSoft, RC.blue),                       // blue
-    };
-    final metin =
-        sayi == 0 ? 'Henüz teklif verilmedi' : '$sayi teklif verildi';
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 9),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(RR.r8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ⚠ `.cc-badge svg{width:13px;height:13px}` — `IC_CHAT(16)`
-            // çağrısını EZER.
-            RefSvg('assets/svg/ic_chat.svg', size: 13, color: fg),
-            const SizedBox(width: 6), // gap:6px
-            Text(
-              metin,
-              style: refText(size: RF.s115, weight: RF.w600, color: fg),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+/// ⚠ KOPYA ROZET KALDIRILDI (9 Eyl): metin ve renk artık
+/// `widgets/teklif_rozeti.dart` içinde TEK yerde tanımlı. Bu dosyada
+/// ayrı bir kopya vardı ve "Henüz" düzeltmesi yalnız `jobs_screen`e
+/// uygulandığı için burada eski metin kalmıştı.
 
 /// `.cust-empty{text-align:center;color:#98A2B3;font-size:14px;padding:40px 0}`
 class _BosListe extends StatelessWidget {
@@ -729,7 +692,7 @@ class _TeklifTalebiIsKarti extends StatelessWidget {
             ),
             if (talep.teklifFiyati != null) ...[
               const SizedBox(height: 6),
-              Text('${talep.teklifFiyati} TL',
+              Text(tutarMetni(talep.teklifFiyati!),
                   style: refText(
                       size: RF.s135, weight: RF.w700, color: HC.green)),
             ],

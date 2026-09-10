@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
+import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
-import '../data/controllers/offer_controller.dart';
-import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/saglayici_ozeti.dart';
+import '../domain/teklif_talebi_asamasi.dart';
+import 'widgets/saglayici_ozet_satiri.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import 'job_detail_screen.dart' show maskeliAd;
 import 'teklif_talebi_detay_screen.dart';
 
 /// "TEKLİF İSTEDİKLERİM" (Aşama C) — hizmet alanın "Bul" akışından
@@ -80,7 +80,20 @@ class TeklifIstediklerimListesi extends StatelessWidget {
     final me = context.watch<AuthController>().currentAccount;
     final talepler = me == null
         ? const <TeklifTalebi>[]
-        : context.watch<TeklifTalebiController>().byHizmetAlan(me.id);
+        // ── ⚠ YALNIZ SÜREN TALEPLER (kullanıcı kuralı, 9 Eyl) ──
+        //
+        // "Teklifi seçtikten sonra ilgili kart Bul'da görünmemeli,
+        // tamamlanan işlere taşınmalı."
+        //
+        // ÖNCEDEN HİÇ SÜZGEÇ YOKTU: seçilen ve tamamlanan talepler bu
+        // listede kalmaya devam ediyordu; kart iki yerde birden
+        // görünüyordu.
+        //
+        // ⚠ SÜZGEÇ BURADA YAZILMAZ: aşama kuralı
+        // `domain/teklif_talebi_asamasi.dart` içinde TEK yerde. Dört
+        // liste aynı kaynaktan okur.
+        : surenTalepler(
+            context.watch<TeklifTalebiController>().byHizmetAlan(me.id));
 
     if (talepler.isEmpty) {
       return gomulu
@@ -127,15 +140,27 @@ class _TalepKarti extends StatelessWidget {
     // tamamlanan iş, konum) — istatistikler kimlik maskeliyken bile
     // gösterilir, o ekranlardaki AYNI ilke.
     final acik = talep.teklifTarihi != null;
-    final reviews = context.watch<ReviewController>();
-    final puan = reviews.averageOf(talep.saglayiciId);
-    final yorumlar = reviews.byProvider(talep.saglayiciId);
-    final tamamlanan = _tamamlananIsGercek(context, talep.saglayiciId);
-    final hesap =
-        context.read<AuthController>().accountById(talep.saglayiciId);
-    final konum = hesap == null || hesap.serviceDistricts.isEmpty
-        ? null
-        : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
+    // ── ⚠ KOPYA ÖZET KALDIRILDI (9 Eyl) ──
+    //
+    // Bu kart puanı, yorum sayısını, tamamlanan işi ve konumu KENDİ
+    // hesaplıyordu — "Sonuçlar" ve "Teklif İste" kartlarıyla dördüncü
+    // bir kopya. Üstelik konumu `serviceDistricts.first`ten alıyordu,
+    // yani düzeltilmiş "hesabın kendi adresi" kuralının DIŞINDA
+    // kalmıştı: aynı hizmet veren burada başka adresle görünüyordu.
+    //
+    // Artık ortak `SaglayiciOzetSatiri` + `gercekSaglayiciOzeti`.
+    // Yorum/puan `context.watch` ile canlı okunduğu için yeni bir
+    // değerlendirme yazıldığı anda bu kart da güncellenir.
+    final ozet = gercekSaglayiciOzeti(context, id: talep.saglayiciId) ??
+        (
+          id: talep.saglayiciId,
+          adSoyad: talep.saglayiciAdi,
+          puan: null,
+          yorumSayisi: 0,
+          tamamlananIs: 0,
+          ilce: null,
+          il: null,
+        );
     return RefTap(
       onTap: () => Navigator.push<void>(
           context,
@@ -156,88 +181,48 @@ class _TalepKarti extends StatelessWidget {
                 style:
                     refText(size: RF.s145, weight: RF.w700, color: RC.text)),
             const SizedBox(height: 8),
+            // ── ⚠ DURUM VE TUTAR, ÖZETİN SAĞINDA ──
+            //
+            // Kullanıcı isteği (9 Eyl): "Teklif bekleniyor / Teklif
+            // geldi yazıları altta olmasın, isim bilgisinin yanında
+            // yer alsın." Özet satırı ile durum AYNI hizada duruyor;
+            // durum, adın hemen sağına düşüyor.
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                acik
-                    ? SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: FittedBox(
-                            child: RefBasHarfAvatar(ad: talep.saglayiciAdi)))
-                    : const RefSvg('assets/svg/ic_avlock.svg', size: 40),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(acik ? talep.saglayiciAdi : maskeliAd(talep.saglayiciAdi),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                // ⚠ MASKELEME: teklif geldiyse kimlik açılır.
+                Expanded(child: SaglayiciOzetSatiri(ozet, maskeli: !acik)),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: renk.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(RR.r8),
+                      ),
+                      child: Text(metin,
                           style: refText(
-                              size: RF.s14, weight: RF.w700, color: RC.text)),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          const RefSvg('assets/svg/ic_starfill.svg',
-                              size: 13, color: Color(0xFFF5A319)),
-                          const SizedBox(width: 4),
-                          Text(puan == null ? '—' : puan.toStringAsFixed(1),
-                              style: refText(
-                                  size: RF.s12,
-                                  weight: RF.w700,
-                                  color: RC.text)),
-                          const SizedBox(width: 4),
-                          Text('(${yorumlar.length} yorum)',
-                              style: refText(
-                                  size: RF.s115,
-                                  weight: RF.w400,
-                                  color: RC.textSoft)),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          const RefSvg('assets/svg/ic_briefcase.svg',
-                              size: 12, color: Color(0xFF5B6472)),
-                          const SizedBox(width: 4),
-                          Text('$tamamlanan iş tamamladı',
-                              style: refText(
-                                  size: RF.s115,
-                                  weight: RF.w400,
-                                  color: const Color(0xFF5B6472))),
-                        ],
-                      ),
-                      if (konum != null) ...[
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            const RefSvg('assets/svg/ic_pin.svg',
-                                size: 13, color: Color(0xFF98A2B3)),
-                            const SizedBox(width: 4),
-                            Text(konum,
-                                style: refText(
-                                    size: RF.s115,
-                                    weight: RF.w400,
-                                    color: const Color(0xFF98A2B3))),
-                          ],
-                        ),
-                      ],
+                              size: RF.s115, weight: RF.w700, color: renk)),
+                    ),
+                    // ⚠ TUTAR YALNIZ GELDİYSE: teklif verilmemişken
+                    // sıfır ya da yer tutucu GÖSTERİLMEZ. "TL" ve
+                    // binlik ayracı `core/tutar_bicimi.dart`ta.
+                    if (talep.teklifFiyati != null) ...[
+                      const SizedBox(height: 4),
+                      Text(tutarMetni(talep.teklifFiyati!),
+                          style: refText(
+                              size: RF.s135, weight: RF.w700, color: renk)),
                     ],
-                  ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: renk.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(RR.r13),
-              ),
-              child: Text(metin,
-                  style: refText(size: RF.s12, weight: RF.w700, color: renk)),
-            ),
+            // ⚠ ALTTAKİ DURUM ROZETİ KALDIRILDI (9 Eyl): artık
+            // ismin yanında, tutarla birlikte gösteriliyor.
           ],
         ),
       ),
@@ -254,24 +239,7 @@ class _TalepKarti extends StatelessWidget {
       };
 }
 
-/// ⚠ `teklif_iste_screen.dart`/`teklif_talebi_detay_screen.dart`daki
-/// AYNI hesaplama — üçüncü bir kopya değil, bu dosyalar birbirinden
-/// PRIVATE (import edilemez) olduğu için AYNI mantık burada da
-/// tekrarlanıyor.
-int _tamamlananIsGercek(BuildContext c, String providerId) {
-  final ilanlar = c.read<ListingController>().all;
-  final teklifler = c.read<OfferController>();
-  var n = 0;
-  for (final l in ilanlar) {
-    if (!l.isTamamlanmisIs) {
-      continue;
-    }
-    final secili = teklifler
-        .offersForListing(l.id)
-        .where((o) => o.id == l.selectedOfferId);
-    if (secili.isNotEmpty && secili.first.providerId == providerId) {
-      n++;
-    }
-  }
-  return n;
-}
+/// ⚠ DÖRDÜNCÜ KOPYA KALDIRILDI (9 Eyl): tamamlanan iş sayımı
+/// `domain/saglayici_ozeti.dart` içindeki `tamamlananIsSayisi` ile
+/// TEK yerde tanımlıdır. Bu dosyadaki kopya, kartın ortak özet
+/// bileşenine taşınmasıyla kullanılmaz hâle geldi.

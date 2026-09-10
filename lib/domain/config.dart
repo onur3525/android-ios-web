@@ -31,12 +31,26 @@ abstract final class DomainConfig {
   // HİÇ YOKTU.
   static const int kYorumMaxKarakter = 1000;
 
-  /// ⚠ DEĞERLENDİRME 1 GÜN SONRA YANSIR (§14, kabul testi 15).
+  /// ⚠ DEĞERLENDİRME ANINDA YANSIR (kullanıcı kararı, 9 Eyl).
   ///
-  /// Yorum anında kaydedilir ama hizmet verenin ortalamasına ve
-  /// yorum listesine bu süre dolmadan GİRMEZ. Amaç, sıcağı sıcağına
-  /// yazılan yorumun düzeltilme/silinme baskısı olmadan yerleşmesi.
-  static const Duration yorumYayinGecikmesi = Duration(days: 1);
+  /// "Bir hizmet verene yorum/puan yapıldığı anda hizmet veren
+  /// profiline bunlar ANINDA yansısın ve o hizmet verenin TÜM
+  /// kartlarında anında görünsün."
+  ///
+  /// ⚠ ÖNCEKİ KURAL EZİLDİ: §14 / kabul testi 15 uyarınca burada
+  /// `Duration(days: 1)` yazıyordu — yorum anında kaydedilir ama
+  /// hizmet verenin ortalamasına ve listesine bir gün sonra girerdi.
+  /// Gerekçesi, sıcağı sıcağına yazılan yorumun düzeltilme/silinme
+  /// baskısı olmadan yerleşmesiydi. Kullanıcı bu davranışı
+  /// istemediğini açıkça bildirdi.
+  ///
+  /// ⚠ MEKANİZMA SİLİNMEDİ: süzgeç ve `yayinlandiMi` yerinde duruyor,
+  /// yalnız süre sıfır. Karar değişirse tek satır yeter — kural
+  /// yeniden ekranlara dağıtılmaz.
+  ///
+  /// ⚠ SUNUCU SON SÖZÜ SÖYLER: `Review.status` alanı geldiğinde o
+  /// öncelikli kalır; buradaki süre yalnız yerel köprüdür.
+  static const Duration yorumYayinGecikmesi = Duration.zero;
 
   /// Minimum bakiye yükleme tutarı.
   static const int minTopup = 500;

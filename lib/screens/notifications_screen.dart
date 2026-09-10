@@ -10,6 +10,7 @@ import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/notification.dart';
+import '../domain/bildirim_rolu.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'nav_actions.dart';
@@ -266,10 +267,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final auth = context.watch<AuthController>();
     final me = auth.currentAccount;
     final ctl = context.watch<NotificationController>();
+    // ── ⚠ AKTİF ROLE GÖRE SÜZME (kullanıcı kuralı, 9 Eyl) ──
+    //
+    // "Rol değiştirince diğer rolüne ait bildirimleri görmemeli."
+    //
+    // Aynı kişi iki rolde de AYNI hesabı kullanır (kimlik telefon
+    // ya da e-posta değil, değişmeyen `userId`), bu yüzden
+    // `forUser(me.id)` iki rolün bildirimlerini birlikte döndürür.
+    // Hangi türün hangi role ait olduğu `domain/bildirim_rolu.dart`
+    // içinde TEK yerde tanımlı; bu ekran kendi listesini SÜZMEZ,
+    // oradan geçirir.
+    final rol = auth.activeRole;
     final liste = me == null
         ? const <AppNotification>[]
-        : ctl.forUser(me.id);
-    final okunmamis = me == null ? 0 : ctl.unreadCount(me.id);
+        : rolBildirimleri(ctl.forUser(me.id), rol);
+    // ⚠ SAYI DA SÜZÜLÜR: ham sayı gösterilseydi "3 okunmamış" yazıp
+    // listede hiçbiri görünmeyebilirdi.
+    final okunmamis = liste.where((n) => !n.read).length;
 
     return RefShell(
       nav: RefBottomNav(
@@ -302,9 +316,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 // .nt-readall — okunmamış varken anlamlıdır.
                 if (okunmamis > 0)
                   RefTap(
-                    onTap: () => context
-                        .read<NotificationController>()
-                        .markAllRead(me!.id),
+                    // ── ⚠ YALNIZ GÖRÜNENLER OKUNDU İŞARETLENİR ──
+                    //
+                    // `markAllRead(userId)` hesabın TÜM bildirimlerini
+                    // okundu yapar — karşı rolünkileri de. Kullanıcı
+                    // hizmet alan rolünde "Tümünü Okundu Yap"a
+                    // bastığında, hiç görmediği hizmet veren
+                    // bildirimleri de sessizce okunmuş sayılırdı; rol
+                    // değiştirdiğinde onlardan haberi olmazdı.
+                    //
+                    // ⚠ BU YÜZDEN TEK TEK: ekranda görünen okunmamış
+                    // bildirimler `markRead` ile işaretlenir. Liste
+                    // zaten role göre süzülmüş durumda.
+                    //
+                    // ⚠ BACKEND İŞİ (yapılmadı): sunucuda role göre
+                    // toplu işaretleyen bir uç yok. Uç eklenirse bu
+                    // döngü tek çağrıya iner; davranış sözleşmesi
+                    // aynı kalır.
+                    onTap: () {
+                      final ctl = context.read<NotificationController>();
+                      for (final n in liste.where((n) => !n.read)) {
+                        ctl.markRead(n.id);
+                      }
+                    },
                     borderRadius: BorderRadius.circular(RR.r8),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),

@@ -74,11 +74,24 @@ List<({MockSaglayici saglayici, int yakinlikSirasi})> mockSaglayicilariBul({
   int siraHesapla(String saglayiciIlcesi) =>
       ilceSirasi[saglayiciIlcesi] ?? (siraliIlceler.length + 1);
 
-  final havuz =
-      _havuz(il: il, ilce: ilce, siraliIlceler: siraliIlceler);
-
+  // ── ⚠ KURGUSAL HAVUZ ARTIK LİSTEYE KARIŞMIYOR (9 Eyl) ──
+  //
+  // KULLANICI KARARI: "Buradaki bilgiler görüntü olarak kalmayacak,
+  // gerçek bilgilerle doldurulacak."
+  //
+  // ÖNCEDEN `_havuz(...)` sonuçları gerçek hesapların ARDINA
+  // ekleniyordu; ekran hep dolu görünsün diye. Sonuç: kullanıcı,
+  // gerçek olmayan isim/puan/iş sayısı gören bir liste ile karşı
+  // karşıya kalıyordu ve hangisinin gerçek olduğunu ayırt edemiyordu.
+  //
+  // ⚠ SONUÇ: o hizmeti gerçekten sunan kayıtlı hesap yoksa liste BOŞ
+  // döner. Bu bilinçlidir — boş liste, sahte doluluktan dürüsttür.
+  // Ekran boş durumu kendi gösterir.
+  //
+  // ⚠ `_havuz` SİLİNMEDİ: sıralama mantığının elle denenmesi için
+  // duruyor, ama HİÇBİR ÜRÜN AKIŞINDAN çağrılmıyor.
   final sonuc = [
-    for (final s in [...gercekSaglayicilar, ...havuz])
+    for (final s in gercekSaglayicilar)
       (saglayici: s, yakinlikSirasi: siraHesapla(s.ilce)),
   ];
 
@@ -110,53 +123,14 @@ List<({MockSaglayici saglayici, int yakinlikSirasi})> mockSaglayicilariBul({
   return sonuc;
 }
 
-/// ⚠ SABİT MOCK HAVUZ — gerçek isim/istatistik DEĞİL, yalnız ekranı
-/// doldurmak için kurgusaldır. İlk üç kayıt kasıtlı olarak
-/// kullanıcının kendi ilçesinde; kalanı `siraliIlceler`in BAŞINDAN
-/// SONUNA doğru dağıtılmıştır — yani gerçekten YAKINDAN UZAĞA giden
-/// ilçelere yerleştirilir, sıralama mantığı gözle görünür olsun diye.
-List<MockSaglayici> _havuz({
-  required String il,
-  required String ilce,
-  required List<String> siraliIlceler,
-}) {
-  String ilceSec(int i) {
-    if (i < 3) return ilce; // aynı ilçe
-    if (siraliIlceler.isNotEmpty) {
-      // ⚠ (i - 3) arttıkça `siraliIlceler`de İLERİ gidilir — yani
-      // sonraki hizmet veren bir öncekinden DAHA UZAK bir ilçeye
-      // düşer. Modulo yalnız havuz ilçe sayısını AŞARSA devreye
-      // girer (30 ilçeden fazla mock kayıt varsa).
-      return siraliIlceler[(i - 3) % siraliIlceler.length];
-    }
-    return ilce;
-  }
-
-  const isimler = [
-    'Ahmet Bulut', 'Mehmet Kaya', 'Ayşe Demir', 'Fatma Şahin',
-    'Mustafa Çelik', 'Emine Aydın', 'Hüseyin Öztürk', 'Zeynep Arslan',
-    'Ali Doğan', 'Elif Yıldız', 'İbrahim Kurt', 'Hatice Aksoy',
-    'Osman Koç', 'Merve Tan',
-  ];
-  const puanlar = [
-    5.0, 4.9, 4.8, 4.7, 4.9, 4.6, 5.0, 4.5, 4.8, 4.4, 4.7, 4.3, 4.9, 4.2,
-  ];
-  const yorumlar = [126, 84, 210, 45, 97, 33, 156, 12, 68, 9, 51, 6, 73, 4];
-  const tamamlanan = [140, 90, 230, 50, 105, 38, 170, 15, 72, 11, 55, 8, 80, 5];
-  const aktiflik = [
-    0.95, 0.88, 0.92, 0.60, 0.85, 0.55, 0.90, 0.40, 0.78, 0.35, 0.70,
-    0.30, 0.82, 0.25,
-  ];
-
-  return List.generate(isimler.length, (i) {
-    return MockSaglayici(
-      id: 'mock-saglayici-$i',
-      adSoyad: isimler[i],
-      ilce: ilceSec(i),
-      puan: puanlar[i],
-      yorumSayisi: yorumlar[i],
-      tamamlananIs: tamamlanan[i],
-      aktiflikSkoru: aktiflik[i],
-    );
-  });
-}
+/// ⚠ KURGUSAL HAVUZ SİLİNDİ (9 Eyl, kullanıcı kararı): "Buradaki
+/// bilgiler görüntü olarak kalmayacak, gerçek bilgilerle
+/// doldurulacak."
+///
+/// Burada 14 uydurma isim, puan, yorum ve tamamlanan iş sayısı
+/// duruyordu ve sonuç listesine karışıyordu. Dosyada BIRAKILSAYDI
+/// bir sonraki turda yeniden bağlanması an meselesiydi.
+///
+/// ⚠ Sıralama mantığı (`mockSaglayicilariBul`) DURUYOR: ilçe
+/// yakınlığı → aktiflik → puan → yorum → tamamlanan iş. Değişen tek
+/// şey, artık YALNIZ gerçek hesapların sıralanması.
