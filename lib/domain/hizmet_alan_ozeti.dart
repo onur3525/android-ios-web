@@ -5,6 +5,7 @@ import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
+import 'kullanici_konumu.dart';
 
 /// ── ⚠ HİZMET ALAN ÖZETİ — TEK KAYNAK ──
 ///
@@ -84,7 +85,9 @@ HizmetAlanOzeti hizmetAlanOzeti(
   return (
     id: id,
     adSoyad: adGoster,
-    konum: adres == null ? null : '${adres.district} / ${adres.city}',
+    // ⚠ BİÇİM TEK YERDE (`konumMetni`): elle kurulan metin, aynı
+    // kişiyi başka kartta başka biçimde gösteriyordu.
+    konum: konumMetni(adres),
     tamamlananIs: hizmetAlanTamamlananIs(context, id),
     uyelikMetni:
         hesap == null ? null : uyelikTarihiMetni(hesap.kayitTarihi),

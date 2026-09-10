@@ -143,27 +143,61 @@ class ProviderReviewsScreen extends StatelessWidget {
 /// ⚠ TEK KART, ÜÇ EKRAN: bu bileşen `provider_reviews_screen`,
 /// `teklif_iste_screen` ve `teklif_talebi_detay_screen` tarafından
 /// kullanılır — biri değişince üçü birden değişir.
-class YorumKarti extends StatefulWidget {
+/// `Review` nesnesinden çizen sarmalayıcı.
+///
+/// ⚠ İKİ GİRİŞ, TEK ÇİZİM: bazı ekranlar elinde `Review` tutar,
+/// "Genel Puanım" ekranı ise sunucudan gelen HAM MAP tutar. Model
+/// dönüştürmek yerine çizim `YorumKartiGovde`ye taşındı; iki giriş de
+/// oraya varır. Kart bir daha iki ayrı yerde çizilmiyor.
+class YorumKarti extends StatelessWidget {
   const YorumKarti({super.key, required this.review, required this.yazarAdi});
 
   final Review review;
   final String? yazarAdi;
 
   @override
-  State<YorumKarti> createState() => _YorumKartiState();
+  Widget build(BuildContext context) => YorumKartiGovde(
+        adTam: yazarAdi,
+        hizmet: yorumHizmetAdi(context, review),
+        tarih: yorumTarihi(review.createdAt),
+        yildiz: review.stars,
+        metin: review.text,
+      );
 }
 
-class _YorumKartiState extends State<YorumKarti> {
+class YorumKartiGovde extends StatefulWidget {
+  const YorumKartiGovde({
+    super.key,
+    required this.adTam,
+    required this.hizmet,
+    required this.tarih,
+    required this.yildiz,
+    required this.metin,
+  });
+
+  /// ⚠ TAM AD VERİLİR, KISALTMA BURADA YAPILIR: çağıranlar kendi
+  /// kısaltmasını yazarsa biri "Gönül B.", öteki "Gönül Bütün"
+  /// gösterebilir — soyad sızıntısı tam böyle olur.
+  final String? adTam;
+  final String? hizmet;
+  final String tarih;
+  final int yildiz;
+  final String metin;
+
+  @override
+  State<YorumKartiGovde> createState() => _YorumKartiState();
+}
+
+class _YorumKartiState extends State<YorumKartiGovde> {
   bool _acik = false;
 
   @override
   Widget build(BuildContext context) {
-    final r = widget.review;
-    final ad = (widget.yazarAdi == null || widget.yazarAdi!.trim().isEmpty)
+    final ad = (widget.adTam == null || widget.adTam!.trim().isEmpty)
         ? 'Hizmet Alan'
-        : kisaYazarAdi(widget.yazarAdi!);
-    final hizmet = yorumHizmetAdi(context, r);
-    final metin = r.text.trim();
+        : kisaYazarAdi(widget.adTam!);
+    final hizmet = widget.hizmet;
+    final metin = widget.metin.trim();
     final uzun = uzunYorumMu(metin);
 
     return Container(
@@ -189,7 +223,7 @@ class _YorumKartiState extends State<YorumKarti> {
               const SizedBox(width: 8),
               // ⚠ TARİH SAĞ ÜSTTE: ad uzasa bile kırpılan AD olur,
               // tarih yerinde kalır.
-              Text(yorumTarihi(r.createdAt),
+              Text(widget.tarih,
                   style: refText(
                       size: RF.s115, weight: RF.w400, color: RC.textMuted)),
             ],
@@ -208,7 +242,7 @@ class _YorumKartiState extends State<YorumKarti> {
             children: [
               for (var i = 1; i <= 5; i++)
                 RefSvg(
-                    i <= r.stars
+                    i <= widget.yildiz
                         ? 'assets/svg/ic_starfill.svg'
                         : 'assets/svg/ic_starempty.svg',
                     size: 13,

@@ -11,6 +11,8 @@ import '../data/models/review.dart';
 import '../data/remote/api/review_api.dart';
 import '../data/remote/api_client.dart';
 import '../ui/ref_widgets.dart';
+// ⚠ Yorum kartı ORTAK — kopya çizim yok.
+import 'provider_reviews_screen.dart' show YorumKartiGovde;
 import '../ui/ref_tokens.dart';
 
 /// HİZMET VEREN — DEĞERLENDİRMELERİM (HTML vMyRevs)
@@ -401,10 +403,29 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                 children: [
                   const Positioned.fill(
                       child: ColoredBox(color: Color(0xFFEDF0F4))),
-                  // ⚠ En az %3 genişlik: sıfır olsa bile çubuk görünür
-                  // (referans `Math.max(3, ...)`).
+                  // ── ⚠ DOLGU GÖRÜNMÜYORDU (kullanıcı bulgusu, 9 Eyl) ──
+                  //
+                  // BULGU: "Kaç yıldız verildiyse hesaplanarak içi
+                  // dolmalı" — tek değerlendirme varken 5 yıldız
+                  // satırı bile BOŞ çiziliyordu.
+                  //
+                  // KÖK NEDEN: `heightFactor` VERİLMEMİŞTİ.
+                  // `FractionallySizedBox` yalnız `widthFactor` ile
+                  // çocuğa GEVŞEK yükseklik geçirir; `ColoredBox`un
+                  // kendi ölçüsü olmadığı için yüksekliği SIFIR
+                  // oluyordu. Genişlik doğru hesaplanıyordu ama
+                  // boyanan alanın yüksekliği yoktu — bu yüzden
+                  // hiçbir oranda görünmüyordu.
+                  //
+                  // ⚠ ORAN HESABI DEĞİŞMEDİ: `n / _count` aynen
+                  // duruyor; 1/1 tam dolu, 0/1 en az %3 görünür.
+                  //
+                  // ⚠ EN AZ %3: sıfır olsa bile çubuğun ucu görünür
+                  // (referans `Math.max(3, ...)`), böylece satırın
+                  // ölçek çizgisi olduğu anlaşılır.
                   FractionallySizedBox(
                     widthFactor: oran < 0.03 ? 0.03 : oran,
+                    heightFactor: 1,
                     child: const ColoredBox(color: Color(0xFFF5A319)),
                   ),
                 ],
@@ -473,80 +494,44 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
     final stars = (r['stars'] as num?)?.toInt() ?? 0;
     final text = (r['text'] as String? ?? '').trim();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 11), // .mr-list{gap:11px}
-      padding: const EdgeInsets.all(13), // .mr-card{padding:13px}
-      decoration: BoxDecoration(
-        color: RC.white,
-        border: Border.all(color: RC.border),
-        borderRadius: BorderRadius.circular(RR.r14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // .mr-head{gap:11px}
-          Row(
-            children: [
-              // .mr-av{44px daire;19px/700} — baş harf rozeti
-              RefBasHarfAvatar(
-                  ad: (author == null || author.isEmpty) ? 'Hizmet Alan' : author),
-              const SizedBox(width: 11),
-              // .mr-hx{gap:2px}
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      (author == null || author.isEmpty) ? 'Hizmet Alan' : author,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: refText(
-                          size: RF.s145, weight: RF.w700, color: RC.text),
-                    ),
-                    // .mr-svc — hizmet adı
-                    if (title != null && title.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        category != null && category.isNotEmpty
-                            ? '$title · $category'
-                            : title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s12,
-                            weight: RF.w400,
-                            color: RC.textSoft),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // .mr-date{11.5px;#8A94A6}
-              Text(_date(r['createdAt']),
-                  style: refText(
-                      size: RF.s115,
-                      weight: RF.w400,
-                      color: RC.greyLight)),
-            ],
-          ),
-          // .mr-card .mr-stars{margin-top:9px}
-          const SizedBox(height: 9),
-          _stars(stars.toDouble(), size: 16),
-          if (text.isNotEmpty) ...[
-            const SizedBox(height: 8), // .mr-txt{margin-top:8px}
-            Text(text,
-                style: refText(
-                    size: 12.8,
-                    weight: RF.w400,
-                    color: const Color(0xFF3A4658),
-                    height: RF.lh155)),
-          ],
-        ],
+    // ── ⚠ KOPYA KART KALDIRILDI (kullanıcı kuralları, 9 Eyl) ──
+    //
+    // Bu ekran yorum kartını KENDİ çiziyordu ve o yüzden yeni
+    // kurallardan hiçbirini almamıştı: profil fotoğrafı hâlâ
+    // vardı, ad TAM SOYADIYLA yazıyordu ("Gönül Bütün"), uzun
+    // yorumda aç/kapa yoktu.
+    //
+    // ⚠ MODEL DÖNÜŞTÜRÜLMEDİ: bu ekran sunucudan gelen HAM MAP ile
+    // çalışıyor, elinde `Review` nesnesi yok. Bu yüzden çizim
+    // `YorumKartiGovde`ye taşındı; `Review` tutan ekranlar
+    // `YorumKarti` sarmalayıcısını, bu ekran doğrudan gövdeyi
+    // kullanıyor. Tek çizim, iki giriş.
+    //
+    // ⚠ TAM AD GEÇİRİLİR: kısaltma bileşenin içinde yapılır
+    // (`kisaYazarAdi`). Burada kısaltsaydım iki ekran ayrışabilirdi.
+    //
+    // ⚠ HİZMET ADI TEKRARI GİDERİLDİ: veri `title` ve `category`
+    // alanlarını AYNI değerle döndürebiliyor ve kart
+    // "Doğalgaz Tesisatı · Doğalgaz Tesisatı" yazıyordu. Aynıysa
+    // tek kez yazılır.
+    final hizmet = (title == null || title.isEmpty)
+        ? null
+        : ((category == null || category.isEmpty || category == title)
+            ? title
+            : '$title · $category');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 11), // .mr-list{gap:11px}
+      child: YorumKartiGovde(
+        adTam: author,
+        hizmet: hizmet,
+        tarih: _date(r['createdAt']),
+        yildiz: stars,
+        metin: text,
       ),
     );
   }
+
 
   Widget _footer() {
     if (_loadingMore) {

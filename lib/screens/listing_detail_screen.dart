@@ -19,6 +19,7 @@ import 'category_ui.dart';
 import 'status_ui.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../domain/iletisim_maskesi.dart';
+import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -443,7 +444,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 const SizedBox(width: 5),
                                 Flexible(
                                   child: Text(
-                                    l.location,
+                                    // ⚠ GÜNCEL ADRES (9 Eyl): donmuş
+                                    // `l.location` yerine ilan
+                                    // sahibinin güncel adresi.
+                                    kullaniciKonumu(context, l.ownerId,
+                                            mahalleDahil: true) ??
+                                        l.location,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: refText(

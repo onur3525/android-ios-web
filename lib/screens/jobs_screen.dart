@@ -22,6 +22,7 @@ import 'job_detail_screen.dart';
 import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
+import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import 'widgets/hizmet_alan_ozet_satiri.dart';
@@ -584,7 +585,13 @@ class _JobsScreenState extends State<JobsScreen> {
                                                   fontWeight: FontWeight.w700,
                                                   color: HC.dark)),
                                           const SizedBox(height: 3),
-                                          Text(l?.location ?? '',
+                                          // ⚠ GÜNCEL ADRES (9 Eyl).
+                                          Text(
+                                              kullaniciKonumu(
+                                                      context, l?.ownerId,
+                                                      mahalleDahil: true) ??
+                                                  l?.location ??
+                                                  '',
                                               style: const TextStyle(
                                                   fontSize: 12, color: HC.grey)),
                                         ]),
@@ -828,7 +835,12 @@ class _JobsScreenState extends State<JobsScreen> {
                               incelendi ? FontWeight.w500 : FontWeight.w700,
                           color: incelendi ? HC.dark : _kYeniKoyu)),
                   const SizedBox(height: 3),
-                  Text(l.location,
+                  // ⚠ GÜNCEL ADRES (9 Eyl): donmuş `l.location`
+                  // yerine ilan sahibinin güncel adresi.
+                  Text(
+                      kullaniciKonumu(context, l.ownerId,
+                              mahalleDahil: true) ??
+                          l.location,
                       style: TextStyle(
                           fontSize: 12,
                           // Okunmamışta konum da bir tık kalın.

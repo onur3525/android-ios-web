@@ -13,6 +13,7 @@ import 'create_listing_screen.dart';
 import 'job_detail_screen.dart';
 import '../data/izmir.dart';
 import '../ui/ref_widgets.dart';
+import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'prelogin_listing_route.dart';
 
@@ -158,7 +159,17 @@ class _SearchScreenState extends State<SearchScreen> {
                                   fontWeight: FontWeight.w800,
                                   color: HC.dark)),
                           const SizedBox(height: 8),
-                          ...listingHits.map((l) => _listingRow(l.id, l.title, l.location)),
+                          // ⚠ GÜNCEL ADRES (9 Eyl): arama sonucunda
+                          // da donmuş `l.location` yerine ilan
+                          // sahibinin güncel adresi gösterilir; aynı
+                          // ilan iki ekranda farklı adresle
+                          // görünmemeli.
+                          ...listingHits.map((l) => _listingRow(
+                              l.id,
+                              l.title,
+                              kullaniciKonumu(context, l.ownerId,
+                                      mahalleDahil: true) ??
+                                  l.location)),
                         ],
                       ],
                     ],

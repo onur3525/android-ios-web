@@ -25,6 +25,7 @@ import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../ui/ref_widgets.dart';
+import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'category_ui.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
@@ -342,7 +343,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     _BilgiSatiri(
                         ikon: 'assets/svg/ic_pin.svg',
                         etiket: 'İl / İlçe / Mahalle',
-                        deger: l.location),
+                        // ⚠ GÜNCEL ADRES (9 Eyl): donmuş kopya
+                        // yerine ilan sahibinin adresi.
+                        deger: kullaniciKonumu(context, l.ownerId,
+                                mahalleDahil: true) ??
+                            l.location),
                     _BilgiSatiri(
                         ikon: 'assets/svg/ic_nclock.svg',
                         etiket: 'İlan Tarihi',

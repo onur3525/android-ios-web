@@ -13,6 +13,7 @@ import '../data/models/account.dart';
 import '../data/models/listing.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
@@ -500,7 +501,15 @@ class _IlanKarti extends StatelessWidget {
                 const SizedBox(width: 5), // gap:5px
                 Flexible(
                   child: Text(
-                    listing.location,
+                    // ⚠ DONMUŞ KOPYA YERİNE GÜNCEL ADRES (9 Eyl):
+                    // `listing.location` ilan oluşturulurken yazılan
+                    // bir METİNDİR; kullanıcı adresini değiştirince
+                    // kart eski adresi göstermeye devam ediyordu.
+                    // Artık sahibinin güncel adresinden üretilir;
+                    // adres yoksa kayıtlı metne düşülür.
+                    kullaniciKonumu(context, listing.ownerId,
+                            mahalleDahil: true) ??
+                        listing.location,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: refText(

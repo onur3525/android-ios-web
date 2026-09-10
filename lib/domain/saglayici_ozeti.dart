@@ -117,6 +117,10 @@ SaglayiciOzeti? gercekSaglayiciOzeti(
     return null;
   }
   final reviews = context.watch<ReviewController>();
+  // ⚠ BİÇİM TEK YERDE: `domain/kullanici_konumu.dart`. Ekranlar ya
+  // da özetler kendi metnini kurarsa aynı kişi kartlar arasında
+  // "Karşıyaka / İzmir" ve "Örnekköy, Karşıyaka / İzmir" diye iki
+  // farklı biçimde görünür — kullanıcının bildirdiği sapma buydu.
   final adres = hesap.address;
   final ilce = (adres == null || adres.district.isEmpty) ? null : adres.district;
   final il = adres?.city;
