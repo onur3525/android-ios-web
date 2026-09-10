@@ -58,6 +58,79 @@ const int kPhoneLocalMaxLength = 11;
 const String kZorunluAlan = 'Bu alan zorunludur';
 
 class Validators {
+  // ── ⚠ DESENLER BİR KEZ DERLENİR (kullanıcı bulgusu, 9 Eyl) ──
+  //
+  // BULGU: "Ad/soyad/telefon girildikten sonra il-ilçe-mahalle
+  // seçimine gelindiğinde yavaşlama oluyor; hiç dokunmadan doğrudan
+  // seçime gidilirse kasma yok."
+  //
+  // ÖLÇÜLEN ZİNCİR:
+  //   1. Form `AutovalidateMode.onUserInteraction` ile çalışır —
+  //      alanlara DOKUNULANA KADAR hiçbir doğrulayıcı koşmaz. Kasmanın
+  //      yalnız yazdıktan sonra başlamasının sebebi budur.
+  //   2. Dokunulduktan sonra HER yeniden çizim altı alanı yeniden
+  //      doğrular.
+  //   3. Kayıt ekranının dolgusu `MediaQuery.viewInsetsOf` değerine
+  //      bağlıdır; klavye inip çıkarken 613 satırlık `build` metodu
+  //      animasyon boyunca ~15-20 KEZ koşar. İl satırına dokunulduğu
+  //      an klavye kapanma ve panel açılma animasyonları ÜST ÜSTE
+  //      biner.
+  //
+  // ⚠ ASIL MALİYET: `RegExp(...)` her çağrıldığında deseni YENİDEN
+  // DERLER — Dart bunları önbelleğe almaz. `name()` tek çağrıda dört
+  // desen kuruyordu; ad ve soyad ayrı alanlar olduğu için bir
+  // doğrulama turu dokuz desen derliyordu. Bunu animasyon kare
+  // sayısıyla çarpın.
+  //
+  // Desenler `static final` alanlara taşındı: SINIF İLK
+  // KULLANILDIĞINDA bir kez derlenir, sonra yeniden kullanılır.
+  //
+  // ⚠ HİÇBİR KURAL DEĞİŞMEDİ: desenlerin metinleri BİREBİR aynı.
+  // Değişen tek şey, nerede ve kaç kez derlendikleri. Doğrulama
+  // sonuçları aynı kalmalıdır.
+  //
+  // ⚠ `static final`, `static const` DEĞİL: `RegExp` sabit ifade
+  // olamaz; `final` ilk erişimde tembelce kurulur.
+
+  /// Boşluklara böler (`anlamsizKelimeVarMi`).
+  static final RegExp _reBosluk = RegExp(r'\s+');
+
+  /// Harf dışı her şeyi atar (`anlamsizKelimeVarMi`).
+  static final RegExp _reHarfDisi = RegExp(r"[^a-zA-ZçÇğĞıİöÖşŞüÜ]");
+
+  /// Rakam dışı her şeyi atar — telefon ve kart alanları.
+  static final RegExp _reRakamDisi = RegExp(r'\D');
+
+  /// Baştaki sıfırlar (telefon sadeleştirme).
+  static final RegExp _reBastakiSifir = RegExp(r'^0+');
+
+  /// E-posta biçimi.
+  static final RegExp _reEposta =
+      RegExp(r'^[\w.!#$%&*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}$');
+
+  /// Kelimenin baş/son noktalama kırpması (`eposta` önerisi).
+  static final RegExp _reKenarNoktalama =
+      RegExp(r'^[^a-zçğıöşü]+|[^a-zçğıöşü]+$');
+
+  /// Ad/soyad genel biçimi.
+  static final RegExp _reAdBicimi =
+      RegExp(r"^[a-zçğıiöşü]+(?:[ '\-][a-zçğıiöşü]+)*$");
+
+  /// Ad içindeki ayırıcılar (boşluk, kesme, tire).
+  static final RegExp _reAdAyirici = RegExp(r"[ '\-]+");
+
+  /// Aynı harfin üç kez üst üste gelmesi.
+  static final RegExp _reUcTekrar = RegExp(r'(.)\1\1');
+
+  /// Arka arkaya dört sessiz harf.
+  static final RegExp _reDortSessiz = RegExp(r'[bcçdfgğhjklmnprsştvyz]{4,}');
+
+  /// Dörtlü gruplama (kart numarası görünümü).
+  static final RegExp _reDortluGrup = RegExp(r'.{1,4}');
+
+  /// Son kullanma tarihi AA/YY.
+  static final RegExp _reSonKullanma = RegExp(r'^(0[1-9]|1[0-2])/\d{2}$');
+
   /// ── ⚠ ANLAMSIZ METİN (KLAVYE KARMASI) TESPİTİ ──
   ///
   /// "Jjjj", "dkdkdld", "skskdgaga", "dodkds" gibi rastgele tuş
@@ -74,10 +147,10 @@ class Validators {
   static bool anlamsizKelimeVarMi(String metin) {
     const sesliler = 'aeıioöuüAEIİOÖUÜ';
     final kelimeler =
-        metin.split(RegExp(r'\s+')).where((k) => k.trim().isNotEmpty);
+        metin.split(_reBosluk).where((k) => k.trim().isNotEmpty);
     for (final kelime in kelimeler) {
       final harfler =
-          kelime.replaceAll(RegExp(r"[^a-zA-ZçÇğĞıİöÖşŞüÜ]"), '').split('');
+          kelime.replaceAll(_reHarfDisi, '').split('');
       if (harfler.length < 3) {
         continue; // ⚠ Çok kısa kelimeler ("ve", "bir") serbest.
       }
@@ -119,7 +192,7 @@ class Validators {
 
   /// Telefon: baştaki 0 atılır, yalnız rakam (HTML phFmt).
   static String phoneFmt(String v) =>
-      v.replaceAll(RegExp(r'\D'), '').replaceFirst(RegExp(r'^0+'), '');
+      v.replaceAll(_reRakamDisi, '').replaceFirst(_reBastakiSifir, '');
 
   /// KULLANICIYA GÖSTERİLEN yerel biçim: başında `0`.
   ///
@@ -150,7 +223,7 @@ class Validators {
     }
     // ⚠ Üst düzey alan adı EN AZ 2 HARF olmalı: `ornek@site.c`
     // gibi eksik adresler kabul EDİLMEZ.
-    if (!RegExp(r'^[\w.!#$%&*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}$')
+    if (!_reEposta
         .hasMatch(v.trim())) {
       return 'Geçerli bir e-posta adresi giriniz';
     }
@@ -285,7 +358,7 @@ class Validators {
     if (_zayifSifreler.contains(k)) {
       return true;
     }
-    final cekirdek = k.replaceAll(RegExp(r'^[^a-zçğıöşü]+|[^a-zçğıöşü]+$'), '');
+    final cekirdek = k.replaceAll(_reKenarNoktalama, '');
     return cekirdek.length >= 3 && _zayifSifreler.contains(cekirdek);
   }
 
@@ -355,16 +428,16 @@ class Validators {
     if (t.length < min) {
       return bad();
     }
-    if (!RegExp(r"^[a-zçğıiöşü]+(?:[ '\-][a-zçğıiöşü]+)*$").hasMatch(t)) {
+    if (!_reAdBicimi.hasMatch(t)) {
       return bad();
     }
     const vowels = 'aeıioöuü';
-    for (final w in t.split(RegExp(r"[ '\-]+"))) {
+    for (final w in t.split(_reAdAyirici)) {
       if (w.length < 2 ||
           _nameBlock.contains(w) ||
           !w.split('').any(vowels.contains) ||
-          RegExp(r'(.)\1\1').hasMatch(w) ||
-          RegExp(r'[bcçdfgğhjklmnprsştvyz]{4,}').hasMatch(w)) {
+          _reUcTekrar.hasMatch(w) ||
+          _reDortSessiz.hasMatch(w)) {
         return bad();
       }
     }
@@ -373,18 +446,18 @@ class Validators {
 
   /// Kart numarası: 16 hane, 4'lü gruplu görünüm (HTML ncNumFmt).
   static String cardNumFmt(String v) {
-    var d = v.replaceAll(RegExp(r'\D'), '');
+    var d = v.replaceAll(_reRakamDisi, '');
     if (d.length > 16) {
       d = d.substring(0, 16);
     }
-    return RegExp(r'.{1,4}')
+    return _reDortluGrup
         .allMatches(d)
         .map((m) => m.group(0))
         .join(' ');
   }
 
   static String? cardNum(String? v) {
-    final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
+    final d = (v ?? '').replaceAll(_reRakamDisi, '');
     if (d.isEmpty) {
       return kZorunluAlan;
     }
@@ -396,7 +469,7 @@ class Validators {
 
   /// AA/YY: yazarken otomatik '/', silerken eklenmez (HTML ncExpFmt kuralı).
   static String expFmt(String v, {required bool deleting}) {
-    var d = v.replaceAll(RegExp(r'\D'), '');
+    var d = v.replaceAll(_reRakamDisi, '');
     if (d.length > 4) {
       d = d.substring(0, 4);
     }
@@ -422,14 +495,14 @@ class Validators {
     if (v == null || v.isEmpty) {
       return kZorunluAlan;
     }
-    if (!RegExp(r'^(0[1-9]|1[0-2])/\d{2}$').hasMatch(v)) {
+    if (!_reSonKullanma.hasMatch(v)) {
       return 'Geçerli bir son kullanma tarihi giriniz';
     }
     return null;
   }
 
   static String? cvv(String? v) {
-    final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
+    final d = (v ?? '').replaceAll(_reRakamDisi, '');
     if (d.isEmpty) {
       return kZorunluAlan;
     }
