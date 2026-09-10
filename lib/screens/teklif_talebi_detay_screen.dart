@@ -21,6 +21,12 @@ import 'job_detail_screen.dart' show maskeliAd;
 import 'provider_reviews_screen.dart';
 import 'teklif_talebi_sohbet_screen.dart';
 import 'teklif_talebi_yorum_screen.dart';
+// ⚠ Rozet ORTAK bileşendir — ilan akışıyla aynı ölçü/renk için
+// kopya çizim yapılmaz, bileşenin kendisi kullanılır.
+// ⚠ Tam ekran fotoğraf görüntüleyici ORTAK bileşendir — ilan
+// akışıyla aynı davranış için kopya yazılmaz.
+import 'widgets/foto_goruntuleyici.dart';
+import 'widgets/is_zamani_secici.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -293,6 +299,27 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                           size: RF.s115,
                           weight: RF.w500,
                           color: RC.textSoft)),
+                  // ── ⚠ HİZMET ZAMANI ROZETİ ──
+                  //
+                  // Hizmet alan "Teklif İste" ekranında bir zaman
+                  // seçtiyse karşı taraf bunu GÖRMELİ; yoksa seçici
+                  // yalnız gönderende kalan ölü bir alan olurdu.
+                  //
+                  // ⚠ AYNI BİLEŞEN: `IsZamaniRozeti` — ilan akışındaki
+                  // (`jobs_screen`, `job_detail_screen`) rozetle
+                  // birebir aynı ölçü ve renk; "Acil" burada da
+                  // KIRMIZI çıkar. Kopya rozet yazılmadı.
+                  //
+                  // ⚠ SEÇİM YOKSA HİÇ ÇİZİLMEZ: bileşen `null`da
+                  // `SizedBox.shrink()` döner, "belirtilmemiş" gibi
+                  // bir yer tutucu GÖSTERİLMEZ.
+                  if (t.isZamani != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IsZamaniRozeti(t.isZamani),
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   const Divider(height: 1, color: Color(0xFFF1F3F6)),
                   const SizedBox(height: 10),
@@ -312,10 +339,31 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         itemCount: t.fotograflar.length,
                         separatorBuilder: (_, __) =>
                             const SizedBox(width: 8),
-                        itemBuilder: (_, i) => ClipRRect(
+                        // ── ⚠ FOTOĞRAFA DOKUNUNCA TAM EKRAN AÇILIR
+                        // (kullanıcı isteği, 9 Eyl) ──
+                        //
+                        // ÖNCEDEN: 64 px küçük resimler ÖLÜ görseldi,
+                        // dokunmak hiçbir şey yapmıyordu; hizmet veren
+                        // işi göremeden teklif vermek zorundaydı.
+                        //
+                        // ⚠ YENİ GÖRÜNTÜLEYİCİ YAZILMADI: ilan akışının
+                        // kullandığı AYNI bileşen (`FotoGoruntuleyici`,
+                        // `listing_detail` ve `job_detail` da onu
+                        // çağırır) — yakınlaştırma, kaydırarak gezinme
+                        // ve sayaç davranışı tanım gereği aynı.
+                        //
+                        // ⚠ TÜM LİSTE VERİLİR, TEK FOTOĞRAF DEĞİL:
+                        // `baslangic: i` ile dokunulan fotoğraftan
+                        // açılır, kullanıcı ötekilere kaydırarak geçer.
+                        itemBuilder: (_, i) => RefTap(
+                          onTap: () => FotoGoruntuleyici.ac(context,
+                              yollar: t.fotograflar, baslangic: i),
                           borderRadius: BorderRadius.circular(RR.r12),
-                          child: Image.file(File(t.fotograflar[i]),
-                              width: 64, height: 64, fit: BoxFit.cover),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(RR.r12),
+                            child: Image.file(File(t.fotograflar[i]),
+                                width: 64, height: 64, fit: BoxFit.cover),
+                          ),
                         ),
                       ),
                     ),
@@ -465,7 +513,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 : _uyelikTarihiMetni(hizmetAlan.kayitTarihi);
             return Row(
               children: [
-                const RefSvg('assets/svg/ic_shieldok.svg',
+                const RefSvg('assets/svg/ic_briefcase.svg',
                     size: 14, color: Color(0xFF5B6472)),
                 const SizedBox(width: 5),
                 Text('$tamamlanan iş tamamladı',
@@ -517,7 +565,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                         : null,
                     not: telefonAcik
                         ? null
-                        : 'İletişim açılınca görünür.',
+                        : 'Kilitli',
                     kilitli: !telefonAcik,
                     onTap: telefonAcik
                         ? () => _telefonAra(context, hizmetAlan?.phone)
@@ -532,7 +580,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     deger: acik ? 'Mesaj yaz' : null,
                     not: acik
                         ? null
-                        : 'İletişim açılınca görünür.',
+                        : 'Kilitli',
                     kilitli: !acik,
                     onTap: acik
                         ? () => _sohbeteGit(context, talep.hizmet)
@@ -619,7 +667,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     const SizedBox(height: 3),
                     Row(
                       children: [
-                        const RefSvg('assets/svg/ic_shieldok.svg',
+                        const RefSvg('assets/svg/ic_briefcase.svg',
                             size: 13, color: Color(0xFF5B6472)),
                         const SizedBox(width: 5),
                         Text('$tamamlanan iş tamamladı',
@@ -763,7 +811,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     etiket: 'Telefon',
                     deger:
                         acik ? _telefonGosterMetni(hizmetVeren?.phone) : null,
-                    not: acik ? null : 'İletişim açılınca görünür.',
+                    not: acik ? null : 'Kilitli',
                     kilitli: !acik,
                     onTap: acik
                         ? () => _telefonAra(context, hizmetVeren?.phone)
@@ -779,7 +827,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   deger: acik ? 'Mesaj yaz' : null,
                   not: acik
                       ? null
-                      : 'İletişim açılınca görünür.',
+                      : 'Kilitli',
                   kilitli: !acik,
                   onTap: acik
                       ? () => _sohbeteGit(context, talep.hizmet)
@@ -1200,6 +1248,27 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         // değerlendirme sistemine (`ReviewController`/`Review`)
         // yazan bir ekrana yönlendirilir — bkz.
         // `TeklifTalebiYorumScreen`.
+        //
+        // ── ⚠ YORUM YAPILDIYSA DÜĞME ÇİZİLMEZ (kullanıcı bulgusu,
+        // 9 Eyl) ──
+        //
+        // ÖLÇÜLEN EKSİK: bu dal yorum yazılıp yazılmadığına HİÇ
+        // BAKMIYORDU — `ReviewController.byTalep()` pakette vardı ve
+        // teklif talebi yorumu tam bu anahtarla kaydediliyordu, ama
+        // burada çağrılmıyordu. Sonuç: yorum gönderildikten sonra da
+        // "Yorum Yaz" düğmesi duruyor, hâlâ yapılacak bir iş varmış
+        // izlenimi veriyordu.
+        //
+        // ⚠ İLAN AKIŞIYLA AYNI DESEN: `offer_detail_screen.dart`
+        // zaten `if (!reviewed)` ile düğmeyi gizleyip yerine durum
+        // yazısı koyuyordu. Yeni bir kural İCAT EDİLMEDİ, eksik olan
+        // akış ötekine EŞİTLENDİ.
+        //
+        // ⚠ AYNI EKRAN İKİ İŞ GÖRÜR: `TeklifTalebiYorumScreen`, kayıt
+        // varsa formu değil SALT OKUNUR kartı çizer. Bu yüzden yazı da
+        // düğme de AYNI hedefi açar; ayrı bir görüntüleme ekranı
+        // YAZILMADI.
+        final yorum = context.watch<ReviewController>().byTalep(talep.id);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1207,9 +1276,44 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
                 style: refText(
                     size: RF.s135, weight: RF.w700, color: RC.text)),
             const SizedBox(height: 12),
-            RefPrimaryButton('Yorum Yaz',
-                iconAsset: 'assets/svg/ic_starfill.svg',
-                onPressed: onYorumYaz),
+            if (yorum == null)
+              RefPrimaryButton('Yorum Yaz',
+                  iconAsset: 'assets/svg/ic_starfill.svg',
+                  onPressed: onYorumYaz)
+            else
+              // ⚠ KAPSAM: açılan kart YALNIZ BU TALEBE ait yorumu
+              // gösterir (`byTalep(talep.id)`) — hizmet verenin öteki
+              // yorumları bu yolla GÖSTERİLMEZ. Ekranın alt
+              // kısmındaki "Yorumlar" bölümü (hizmet verenin son 3
+              // yorumu) AYRI bir bölümdür ve DEĞİŞTİRİLMEDİ.
+              RefTap(
+                onTap: onYorumYaz,
+                borderRadius: BorderRadius.circular(RR.r9),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 9, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: RC.successSoft,
+                    borderRadius: BorderRadius.circular(RR.r9),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const RefSvg('assets/svg/ic_okgreen.svg', size: 15),
+                      const SizedBox(width: 7),
+                      Flexible(
+                        child: Text(
+                            'Yorum Yapıldı (${yorum.stars} puan) · '
+                            'Görüntüle',
+                            style: refText(
+                                size: RF.s125,
+                                weight: RF.w600,
+                                color: RC.success)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         );
     }

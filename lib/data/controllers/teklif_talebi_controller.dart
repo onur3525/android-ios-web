@@ -1,4 +1,7 @@
 import '../../domain/failures.dart';
+// ⚠ `IsZamani` tip olarak `listing.dart`ta tanımlıdır; `show` ile
+// YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
+import '../models/listing.dart' show IsZamani;
 import '../models/teklif_talebi.dart';
 import '../ports/teklif_talebi_port.dart';
 import 'base_controller.dart';
@@ -80,6 +83,7 @@ class TeklifTalebiController extends BaseController {
     required String aciklama,
     required IletisimTercihi iletisimTercihi,
     List<String> fotograflar = const [],
+    IsZamani? isZamani,
   }) =>
       runAction(
           'teklif-talebi-gonder',
@@ -92,6 +96,7 @@ class TeklifTalebiController extends BaseController {
                 aciklama: aciklama,
                 iletisimTercihi: iletisimTercihi,
                 fotograflar: fotograflar,
+                isZamani: isZamani,
               ));
 
   Future<DomainError?> teklifVer(String id,

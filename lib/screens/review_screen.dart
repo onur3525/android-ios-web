@@ -170,7 +170,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
               // ⚠ Ekran başlığı da düğmeyle AYNI: kullanıcı "Yorum Yaz"
               // düğmesine basıp "Hizmeti Değerlendir" başlıklı bir
               // ekrana düşünce doğru yere geldiğinden emin olamıyordu.
-              Text('Yorum Yaz',
+              // ⚠ BAŞLIK DURUMA GÖRE (9 Eyl): teklif detayındaki
+              // "Yorum Yapıldı · Görüntüle" şeridi bu ekranı SALT
+              // OKUNUR açıyor; o durumda "Yorum Yaz" başlığı yanlış.
+              Text(done == null ? 'Yorum Yaz' : 'Değerlendirmen',
                   style: refText(
                       size: 26,
                       weight: RF.w700,
@@ -178,7 +181,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       letterSpacing: -0.3)),
               // .rv-sub{14px;#5B6472;margin-top:7px}
               const SizedBox(height: 7),
-              Text('Aldığınız hizmet için puan ve yorumunuzu paylaşın.',
+              Text(
+                  done == null
+                      ? 'Aldığınız hizmet için puan ve yorumunuzu paylaşın.'
+                      : 'Bu hizmet için verdiğiniz puan ve yorum.',
                   style: refText(
                       size: RF.s14, weight: RF.w400, color: RC.textSoft)),
 

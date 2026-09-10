@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/failures.dart';
+// ⚠ `IsZamani` tip olarak `listing.dart`ta tanımlıdır; `show` ile
+// YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
+import '../models/listing.dart' show IsZamani;
 import '../models/notification.dart';
 import '../models/teklif_talebi.dart';
 import '../repositories/notification_repository.dart';
@@ -30,6 +33,7 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
     required String aciklama,
     required IletisimTercihi iletisimTercihi,
     List<String> fotograflar,
+    IsZamani? isZamani,
   });
 
   Future<DomainError?> teklifVer(String id,
@@ -94,6 +98,7 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
     required String aciklama,
     required IletisimTercihi iletisimTercihi,
     List<String> fotograflar = const [],
+    IsZamani? isZamani,
   }) async {
     final t = _repo.create(
       hizmetAlanId: hizmetAlanId,
@@ -104,6 +109,7 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
       aciklama: aciklama,
       iletisimTercihi: iletisimTercihi,
       fotograflar: fotograflar,
+      isZamani: isZamani,
     );
     // ⚠ HİZMET VERENE — yeni doğrudan talep geldi.
     notifs?.push(

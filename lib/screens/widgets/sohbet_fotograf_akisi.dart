@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
+import 'fotograf_kaynak_paneli.dart';
 
 /// ── ⚠ PAYLAŞIMLI SOHBET FOTOĞRAFI AKIŞI ──
 ///
@@ -14,52 +15,29 @@ import '../../ui/ref_widgets.dart';
 /// import EDİLEMEDİĞİ için (Dart kısıtı), bu akış PUBLIC bir
 /// yardımcı olarak buraya çıkarıldı; kod tekrarı YOK, TEK kaynak.
 ///
-/// Akış: "+" ikonuna dokunulunca ALT MENÜ (Galeriden Seç / Kamera ile
-/// Çek) açılır → seçilen kaynaktan fotoğraf alınır → TAM EKRAN bir
-/// ÖNİZLEME açılır (fotoğraf + opsiyonel açıklama + "Gönder") →
-/// kullanıcı onaylamadan HİÇBİR ŞEY gönderilmez.
+/// Akış: "+" ikonuna dokunulunca ORTAK fotoğraf paneli (Fotoğraf Çek
+/// / Galeriden Seç) açılır → seçilen kaynaktan fotoğraf alınır → TAM
+/// EKRAN bir ÖNİZLEME açılır (fotoğraf + opsiyonel açıklama +
+/// "Gönder") → kullanıcı onaylamadan HİÇBİR ŞEY gönderilmez.
 ///
 /// Döner: kullanıcı gönderirse `(yol, aciklama)`, vazgeçerse `null`.
 Future<({String yol, String? aciklama})?> sohbetFotografiSecVeOnizle(
     BuildContext context) async {
-  final kaynak = await RefBottomSheet.goster<ImageSource>(
-    context,
-    title: 'Fotoğraf Ekle',
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RefTap(
-          onTap: () => Navigator.of(context).pop(ImageSource.gallery),
-          borderRadius: BorderRadius.circular(RR.r12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
-            child: Row(children: [
-              const RefSvg('assets/svg/ic_gallery.svg',
-                  size: 20, color: RC.blue),
-              const SizedBox(width: 12),
-              Text('Galeriden Seç',
-                  style: refText(
-                      size: RF.s145, weight: RF.w600, color: RC.text)),
-            ]),
-          ),
-        ),
-        RefTap(
-          onTap: () => Navigator.of(context).pop(ImageSource.camera),
-          borderRadius: BorderRadius.circular(RR.r12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
-            child: Row(children: [
-              const RefSvg('assets/svg/ic_cam.svg', size: 20, color: RC.blue),
-              const SizedBox(width: 12),
-              Text('Kamera ile Çek',
-                  style: refText(
-                      size: RF.s145, weight: RF.w600, color: RC.text)),
-            ]),
-          ),
-        ),
-      ],
-    ),
-  );
+  // ── ⚠ PANEL ARTIK ORTAK ──
+  //
+  // Kullanıcı isteği (9 Eyl): "mesaj gönderirken fotoğraf yükleme
+  // ikonuna basınca da bu şekilde görünmeli" — yani ilan oluşturma
+  // ekranlarındaki panelin AYNISI.
+  //
+  // ⚠ BURADAKİ PANEL SAPMIŞTI: başlık "Fotoğraf Ekle" (büyük E),
+  // renkli daire rozet YOK, satır açıklamaları YOK, chevron YOK,
+  // iki ikon da MAVİ ve sıra TERSTİ (önce galeri). Hepsi silindi;
+  // çizim `widgets/fotograf_kaynak_paneli.dart`tan geliyor.
+  //
+  // ⚠ AKIŞIN GERİSİ DEĞİŞMEDİ: seçilen kaynaktan fotoğraf alınır,
+  // TAM EKRAN önizleme açılır, kullanıcı onaylamadan hiçbir şey
+  // gönderilmez.
+  final kaynak = await fotografKaynagiSec(context);
   if (kaynak == null || !context.mounted) {
     return null;
   }

@@ -198,7 +198,7 @@ class _TalepKarti extends StatelessWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          const RefSvg('assets/svg/ic_shieldok.svg',
+                          const RefSvg('assets/svg/ic_briefcase.svg',
                               size: 12, color: Color(0xFF5B6472)),
                           const SizedBox(width: 4),
                           Text('$tamamlanan iş tamamladı',

@@ -220,8 +220,33 @@ class SysButton extends StatelessWidget {
 }
 
 /// Bildirimler (HTML toast dili).
-void sysToastOk(BuildContext context, String msg) =>
-    _toast(context, '$msg ✓');
+///
+/// ── ⚠ BAŞARI/BİLGİLENDİRME UYARILARI KALDIRILDI (9 Eyl) ──
+///
+/// Kullanıcı isteği: "Altta çıkan bilgilendirme yazılarını tamamen
+/// kaldır." Ekranın altında beliren "Adresiniz güncellendi ✓" türü
+/// onay şeritleri artık HİÇ ÇİZİLMEZ.
+///
+/// ⚠ ÇAĞRI YERLERİ SİLİNMEDİ, KAYNAK SUSTURULDU: uygulamada 33 çağrı
+/// var. Hepsini tek tek silmek 21 dosyaya dokunmak ve her birinde
+/// akış hatası riski demekti; oysa sorun TEK YERDE — uyarıyı çizen
+/// fonksiyonun kendisi. Bu, alt bar boşluğu düzeltmesinde de
+/// uygulanan AYNI ilke ("77 uyarının tamamı aynı yerden çiziliyor,
+/// çözüm de tek yerde").
+///
+/// ⚠ İŞLEVSEL SONUÇ DEĞİŞMEZ: bu fonksiyon zaten yalnız GÖRSEL bir
+/// onay gösteriyordu; hiçbir kaydetme, gönderme ya da yönlendirme
+/// buna bağlı değil.
+///
+/// ⚠ HATA VE KURAL UYARILARI KALDIRILMADI (`sysToastErr`,
+/// `sysToastKural`): onlar bilgilendirme değil, kullanıcının bilmesi
+/// ZORUNLU geri bildirimlerdir. Susturulsalardı başarısız bir kayıt
+/// ya da izin vermeyen bir kural SESSİZCE geçer, kullanıcı neden
+/// ilerleyemediğini anlayamazdı.
+void sysToastOk(BuildContext context, String msg) {
+  // Bilerek boş — bkz. yukarıdaki not.
+}
+
 void sysToastErr(BuildContext context, SysKind kind, {String? extra}) =>
     _toast(context,
         _sysText[kind]!.title + (extra != null ? ' — $extra' : ''));

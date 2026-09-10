@@ -4,10 +4,11 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
-import '../data/controllers/offer_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
+// ⚠ `IsZamani` enum'u burada tanımlı — `_isZamani` alanı için gerekli
+// (`create_listing_screen.dart`taki AYNI import notu).
+import '../data/models/listing.dart';
 import '../data/models/review.dart';
 import '../data/models/teklif_talebi.dart';
 import '../data/remote/api_client.dart';
@@ -19,6 +20,9 @@ import '../ui/ref_widgets.dart';
 import 'job_detail_screen.dart' show maskeliAd;
 import 'provider_reviews_screen.dart';
 import 'teklif_istediklerim_screen.dart';
+import '../domain/saglayici_ozeti.dart';
+import 'widgets/is_zamani_secici.dart';
+import 'widgets/saglayici_ozet_satiri.dart';
 import 'widgets/photo_picker.dart';
 
 /// "DOĞRUDAN TEKLİF İSTE" — hizmet alan formu (Aşama A).
@@ -39,14 +43,35 @@ class TeklifIsteScreen extends StatefulWidget {
     required this.hizmet,
     required this.saglayiciId,
     required this.saglayiciAdi,
+    this.puan,
+    this.yorumSayisi = 0,
+    this.tamamlananIs = 0,
+    this.ilce,
+    this.il,
   });
 
   final String kategori;
   final String hizmet;
   final String saglayiciId;
-  /// ⚠ HAM AD — bu ekranda daima `maskeliAd()` ile GÖSTERİLİR: teklif
-  /// henüz verilmedi, hizmet veren burada hâlâ maskelidir.
+  /// ⚠ HAM AD — ekranda daima MASKELİ gösterilir (maskeleme artık
+  /// `SaglayiciOzetSatiri` içinde, tek yerde yapılır): teklif henüz
+  /// verilmedi, hizmet veren burada hâlâ maskelidir.
   final String saglayiciAdi;
+
+  // ── ⚠ YALNIZ KURGUSAL (MOCK) KAYITLAR İÇİN YEDEK DEĞERLER ──
+  //
+  // GERÇEK hesaplarda bu alanlar KULLANILMAZ: özet
+  // `gercekSaglayiciOzeti` ile denetleyicilerden CANLI okunur, yani
+  // yorum/iş/konum değişince bu ekran da değişir.
+  //
+  // Kurgusal hizmet verenin hesabı yoktur; geldiği listede görünen
+  // değerler buradan taşınır ki iki kart AYNI şeyi göstersin.
+  // ⚠ Sayı UYDURULMAZ: taşınmazsa 0 kalır, sahte veri üretilmez.
+  final double? puan;
+  final int yorumSayisi;
+  final int tamamlananIs;
+  final String? ilce;
+  final String? il;
 
   @override
   State<TeklifIsteScreen> createState() => _TeklifIsteScreenState();
@@ -59,6 +84,11 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   // ⚠ VARSAYILAN artık "Telefon + Uygulama İçi Mesaj" — kullanıcı
   // isteğiyle değişti (önceden "Sadece Mesaj" varsayılandı).
   IletisimTercihi _iletisim = IletisimTercihi.telefonGoster;
+
+  /// ⚠ İSTEĞE BAĞLI: `null` = seçim yapılmadı, bu NORMAL bir
+  /// durumdur ("İlan Ver" ekranındaki `_isZamani` ile AYNI kural).
+  /// Seçim yapılmadan talep gönderilebilir.
+  IsZamani? _isZamani;
   bool _gonderiliyor = false;
 
   /// ⚠ EKSİK/ANLAMSIZ AÇIKLAMA UYARISI ARTIK YAZARKEN DEĞİL, ALANDAN
@@ -132,6 +162,9 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           aciklama: _aciklama.text.trim(),
           iletisimTercihi: _iletisim,
           fotograflar: _photos.map((p) => p.localPath).toList(),
+          // ⚠ SEÇİM YOKSA `null` GİDER — "belirtilmedi" demektir,
+          // varsayılan bir değere ÇEVRİLMEZ.
+          isZamani: _isZamani,
         );
     if (!mounted) {
       return;
@@ -202,23 +235,35 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           // ve "Teklif İste" BUTONU YOK (zaten bu ekranın kendisi o
           // butona tıklanınca açılıyor, tekrar sayılır).
           const SizedBox(height: 12),
+          // ── ⚠ KART ORTAK BİLEŞENDEN (kullanıcı kuralı, 9 Eyl) ──
+          //
+          // "Sonuçlar" listesindeki kartla bu kartın bilgileri AYNI
+          // olmalı ve BİRLİKTE değişmeli. Buradaki kopya çizim
+          // silindi; iki ekran da `SaglayiciOzetSatiri`ni kullanıyor,
+          // veri `gercekSaglayiciOzeti` ile tek yerden geliyor.
+          //
+          // ⚠ DÜZELTİLEN İKİ SAPMA:
+          //   • PUAN — burada `—`, Sonuçlar'da `0.0` yazıyordu.
+          //   • KONUM — burada HER ZAMAN `serviceDistricts.first`,
+          //     Sonuçlar'da müşterinin ilçesi varsa O gösteriliyordu;
+          //     aynı kişi iki ekranda farklı ilçede görünüyordu.
+          //
+          // ⚠ MOCK KAYIT: kurgusal hizmet verenin gerçek hesabı
+          // yoktur; `gercekSaglayiciOzeti` `null` döner ve ad dışında
+          // sayı UYDURULMAZ — geldiği listedeki değerler
+          // `widget` üzerinden taşınır.
           Builder(builder: (context) {
-            final reviews = context.watch<ReviewController>();
-            final puan = reviews.averageOf(widget.saglayiciId);
-            final yorumlar = reviews.byProvider(widget.saglayiciId);
-            final tamamlanan =
-                _tamamlananIsGercek(context, widget.saglayiciId);
-            final hesap =
-                context.read<AuthController>().accountById(widget.saglayiciId);
-            // ⚠ DÜZELTİLDİ — önceden `hesap.address!.district` (KİŞİSEL
-            // ikamet adresi) kullanılıyordu. `sonuclar_screen.dart`daki
-            // AYNI kart ise `serviceDistricts` (hizmet VERDİĞİ ilçe)
-            // gösteriyordu — iki ekran AYNI hesap için FARKLI konum
-            // gösteriyordu (kullanıcı bulgusu). Artık İKİSİ DE AYNI
-            // kaynağı okuyor.
-            final konum = hesap == null || hesap.serviceDistricts.isEmpty
-                ? null
-                : '${hesap.serviceDistricts.first} / ${hesap.address?.city ?? ''}';
+            final ozet = gercekSaglayiciOzeti(context,
+                    id: widget.saglayiciId) ??
+                (
+                  id: widget.saglayiciId,
+                  adSoyad: widget.saglayiciAdi,
+                  puan: widget.puan,
+                  yorumSayisi: widget.yorumSayisi,
+                  tamamlananIs: widget.tamamlananIs,
+                  ilce: widget.ilce,
+                  il: widget.il,
+                );
             return Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -226,77 +271,7 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                 border: Border.all(color: const Color(0xFFECEEF2)),
                 borderRadius: BorderRadius.circular(RR.r13),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const RefSvg('assets/svg/ic_avlock.svg', size: 46),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(maskeliAd(widget.saglayiciAdi),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: refText(
-                                size: RF.s145,
-                                weight: RF.w700,
-                                color: RC.text)),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const RefSvg('assets/svg/ic_starfill.svg',
-                                size: 14, color: Color(0xFFF5A319)),
-                            const SizedBox(width: 4),
-                            Text(
-                                puan == null
-                                    ? '—'
-                                    : puan.toStringAsFixed(1),
-                                style: refText(
-                                    size: RF.s125,
-                                    weight: RF.w700,
-                                    color: RC.text)),
-                            const SizedBox(width: 4),
-                            Text('(${yorumlar.length} yorum)',
-                                style: refText(
-                                    size: RF.s12,
-                                    weight: RF.w400,
-                                    color: RC.textSoft)),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            const RefSvg('assets/svg/ic_shieldok.svg',
-                                size: 13, color: Color(0xFF5B6472)),
-                            const SizedBox(width: 5),
-                            Text('$tamamlanan iş tamamladı',
-                                style: refText(
-                                    size: RF.s12,
-                                    weight: RF.w400,
-                                    color: const Color(0xFF5B6472))),
-                          ],
-                        ),
-                        if (konum != null) ...[
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              const RefSvg('assets/svg/ic_pin.svg',
-                                  size: 14, color: Color(0xFF98A2B3)),
-                              const SizedBox(width: 5),
-                              Text(konum,
-                                  style: refText(
-                                      size: RF.s12,
-                                      weight: RF.w400,
-                                      color: const Color(0xFF98A2B3))),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: SaglayiciOzetSatiri(ozet),
             );
           }),
 
@@ -368,6 +343,46 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
               ),
             );
           }),
+
+          // ── ⚠ HİZMET ZAMANI — "İLAN VER" EKRANIYLA BİREBİR AYNI ──
+          //
+          // Kullanıcı isteği (9 Eyl): "İlan Ver"deki Acil / Bu hafta /
+          // Esnek zaman düğmeleri, AYNI ölçü, AYNI renk ve AYNI çalışma
+          // mantığıyla bu ekranda da olsun.
+          //
+          // ⚠ KOPYA DÜĞME YAZILMADI: `IsZamaniSecici` bileşeninin
+          // KENDİSİ kullanılıyor. Ölçü, renk, "Acil kırmızı", "seçiliye
+          // tekrar dokununca seçim kalkar" ve "üç seçenek
+          // `IsZamani.values`tan gelir" kurallarının hepsi bileşenin
+          // içinde olduğu için otomatik olarak aynı.
+          //
+          // ⚠ ZORUNLU DEĞİL: doğrulama, yıldız, uyarı YOK — "İlan
+          // Ver"deki kuralla aynı; seçim yapılmadan talep gönderilir.
+          //
+          // ⚠ KONUM: hizmet veren kartının (ve ona ait "Yorumlar"
+          // kartının) ALTINA, "Açıklama"nın ÜSTÜNE kondu.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(1, 20, 1, 3),
+            child: Row(
+              children: [
+                Text('Hizmet Zamanı',
+                    style: refText(
+                        size: RF.s16, weight: RF.w700, color: RC.text)),
+                const SizedBox(width: 6),
+                Text('(Opsiyonel)',
+                    style: refText(
+                        size: RF.s125, weight: RF.w500, color: RC.textSoft)),
+              ],
+            ),
+          ),
+          Text('Zaman tercihiniz varsa belirtin.',
+              style: refText(
+                  size: RF.s13, weight: RF.w400, color: RC.textSoft)),
+          const SizedBox(height: 10),
+          IsZamaniSecici(
+            secili: _isZamani,
+            onDegisti: (z) => setState(() => _isZamani = z),
+          ),
 
           const SizedBox(height: 20),
           Text('Açıklama',
@@ -510,25 +525,8 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
   }
 }
 
-/// ⚠ `offer_detail_screen.dart`'taki `_tamamlananIs` (ve
-/// `sonuclar_screen.dart`daki `_tamamlananIsGercek`) İLE AYNI mantık
-/// — hizmet verenin SEÇİLMİŞ teklifle tamamlanmış iş sayısı. Üçüncü
-/// bir kopya değil, aynı hesaplama farklı dosyalarda AYNI şekilde
-/// tekrarlanıyor çünkü bu üçü birbirinden PRIVATE (import edilemez).
-int _tamamlananIsGercek(BuildContext c, String providerId) {
-  final ilanlar = c.read<ListingController>().all;
-  final teklifler = c.read<OfferController>();
-  var n = 0;
-  for (final l in ilanlar) {
-    if (!l.isTamamlanmisIs) {
-      continue;
-    }
-    final secili = teklifler
-        .offersForListing(l.id)
-        .where((o) => o.id == l.selectedOfferId);
-    if (secili.isNotEmpty && secili.first.providerId == providerId) {
-      n++;
-    }
-  }
-  return n;
-}
+/// ⚠ KOPYA KALDIRILDI (9 Eyl): tamamlanan iş sayımı artık
+/// `domain/saglayici_ozeti.dart` içindeki `tamamlananIsSayisi` ile
+/// TEK yerde tanımlıdır. Bu dosyada, `sonuclar_screen.dart`ta ve
+/// `offer_detail_screen.dart`ta üç ayrı kopyası vardı; biri
+/// değişince ötekiler sessizce ayrışıyordu.

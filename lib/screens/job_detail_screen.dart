@@ -663,7 +663,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       altiCizili: telefonAcik,
                       not: telefonAcik
                           ? null
-                          : 'İletişim açılınca görünür.',
+                          : 'Kilitli',
                       kilitli: !telefonAcik,
                       onTap: telefonAcik
                           ? () => _telefonAra(context, owner?.phone)
@@ -679,7 +679,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       deger: acik ? 'Mesaj yaz' : null,
                       not: acik
                           ? null
-                          : 'İletişim açılınca görünür.',
+                          : 'Kilitli',
                       kilitli: !acik,
                       // ⚠ AÇIK UÇ KAPATILDI: sohbete giriş buradan.
                       onTap: acik
@@ -874,13 +874,19 @@ class _SahipKarti extends StatelessWidget {
                   const SizedBox(height: 4),
                   // .pl-osub{11.8px;#5B6472}
                   Row(mainAxisSize: MainAxisSize.min, children: [
-                    // ⚠ `ic_shieldok` — ONAY İŞARETLİ kalkan.
+                    // ⚠ `ic_briefcase` — ÇANTA (kullanıcı kararı, 9 Eyl).
                     //
-                    // Referansta `IC_SHIELDOK(15)` kullanılır: bu rozet
-                    // "doğrulanmış geçmiş" anlamı taşır. Düz kalkan
-                    // (`ic_shield`) yalnız koruma anlatır, tamamlanan
-                    // iş sayısıyla eşleşmiyordu.
-                    const RefSvg('assets/svg/ic_shieldok.svg',
+                    // ÖNCEDEN `ic_shieldok` (onay işaretli kalkan)
+                    // kullanılıyordu. Kalkan "doğrulanmış / güvenli"
+                    // anlatır; buradaki sayı ise YAPILAN İŞ sayısıdır.
+                    // Çanta o anlamı doğrudan taşır.
+                    //
+                    // ⚠ KAPSAM: değişiklik YALNIZ "iş tamamladı"
+                    // satırlarını kapsar (7 yer). "Onaylı Hizmet
+                    // Veren", "İletişim Açıldı" ve bildirim türü
+                    // ikonları HÂLÂ `ic_shieldok`tur — onların anlamı
+                    // gerçekten doğrulama/onaydır.
+                    const RefSvg('assets/svg/ic_briefcase.svg',
                         size: 15, color: Color(0xFF5B6472)),
                     const SizedBox(width: 5),
                     Text('$tamamlananIs iş tamamladı',

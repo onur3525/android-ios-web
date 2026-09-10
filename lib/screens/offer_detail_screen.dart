@@ -18,6 +18,7 @@ import 'status_ui.dart';
 import 'widgets/hc_widgets.dart';
 import 'chat_screen.dart';
 import 'review_screen.dart';
+import '../domain/saglayici_ozeti.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -600,8 +601,37 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                   ),
                 ),
                 if (reviewed)
-                  _UcretsizSerit('Yorum Yapıldı '
-                      '(${reviewCtl.byOffer(offer.id)!.stars} puan)'),
+                  // ── ⚠ ŞERİT ARTIK DOKUNULABİLİR (kullanıcı isteği,
+                  // 9 Eyl) ──
+                  //
+                  // Önceden yalnız puanı yazan ÖLÜ bir şeritti; yazdığı
+                  // yoruma dönmenin hiçbir yolu yoktu. Şimdi dokununca
+                  // `ReviewScreen` açılıyor — o ekran, kayıt varsa form
+                  // yerine SALT OKUNUR "Değerlendirmeniz" kartını
+                  // çiziyor (puan, metin, tarih + "değiştirilemez ve
+                  // silinemez" notu). Yeni bir görüntüleme ekranı
+                  // YAZILMADI.
+                  //
+                  // ⚠ KAPSAM: açılan kart YALNIZ BU TEKLİFE ait yorumu
+                  // gösterir (`byOffer(offer.id)`), hizmet verenin
+                  // öteki yorumlarını DEĞİL — kullanıcı kuralı: "sadece
+                  // ilgili ilan için yapılmış yorum ve puan".
+                  //
+                  // ⚠ YORUM YİNE DEĞİŞTİRİLEMEZ: ekran yorum varken
+                  // form dalını hiç çizmez, bu yol salt görüntülemedir.
+                  RefTap(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            ReviewScreen(listingId: l.id, offerId: offer.id),
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(RR.r9),
+                    child: _UcretsizSerit('Yorum Yapıldı '
+                        '(${reviewCtl.byOffer(offer.id)!.stars} puan) · '
+                        'Görüntüle'),
+                  ),
               ],
             ],
           ),
@@ -697,24 +727,8 @@ String _yorumcuAdi(String? tamAd, {required bool acik}) {
 /// ⚠ TÜRETİLİR, SAKLANMAZ: seçilmiş teklifi bu hizmet verene ait olan
 /// ve tamamlanmış ilanlar sayılır. Saklanan bir sayaç, iptal/silme
 /// durumlarında gerçek veriyle ayrışırdı.
-int _tamamlananIs(BuildContext c, String providerId) {
-  final ilanlar = c.read<ListingController>().all;
-  final teklifler = c.read<OfferController>();
-  var n = 0;
-  for (final l in ilanlar) {
-    // ⚠ Tamamlanmışlık ilişkiden gelir (§24); yaşam durumuna bakılmaz.
-    if (!l.isTamamlanmisIs) {
-      continue;
-    }
-    final secili = teklifler
-        .offersForListing(l.id)
-        .where((o) => o.id == l.selectedOfferId);
-    if (secili.isNotEmpty && secili.first.providerId == providerId) {
-      n++;
-    }
-  }
-  return n;
-}
+int _tamamlananIs(BuildContext c, String providerId) =>
+    tamamlananIsSayisi(c, providerId);
 
 int? _olumluOran(List<Review> revs) {
   if (revs.isEmpty) {

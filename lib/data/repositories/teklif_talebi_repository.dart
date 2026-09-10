@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+// ⚠ `IsZamani` tip olarak `listing.dart`ta tanımlıdır; `show` ile
+// YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
+import '../models/listing.dart' show IsZamani;
 import '../models/teklif_talebi.dart';
 
 /// ── ⚠ MOCK DEPO — GERÇEK BACKEND DEĞİL ──
@@ -56,6 +59,7 @@ class TeklifTalebiRepository extends ChangeNotifier {
     required String aciklama,
     required IletisimTercihi iletisimTercihi,
     List<String> fotograflar = const [],
+    IsZamani? isZamani,
   }) {
     final t = TeklifTalebi(
       id: _uuid.v4(),
@@ -67,6 +71,7 @@ class TeklifTalebiRepository extends ChangeNotifier {
       aciklama: aciklama,
       iletisimTercihi: iletisimTercihi,
       fotograflar: fotograflar,
+      isZamani: isZamani,
       createdAt: DateTime.now(),
     );
     _items[t.id] = t;

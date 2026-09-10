@@ -11,6 +11,7 @@ import '../domain/cikar_catismasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
+import 'teklif_istediklerim_screen.dart';
 
 /// "BUL" AKIŞI — 1. EKRAN: HİZMET VEREN BUL
 ///
@@ -89,6 +90,27 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
     });
   }
 
+  /// Bu kullanıcının gönderdiği en az bir teklif talebi var mı?
+  ///
+  /// ⚠ Başlık ("Teklif İstediklerim") YALNIZ liste doluyken çizilsin
+  /// diye ayrı sorulur: `TeklifIstediklerimListesi` gömülü modda
+  /// boşken `SizedBox.shrink()` döner, başlık tek başına kalırsa
+  /// SAHİPSİZ bir başlık görünürdü (alt bardaki sahipsiz "veya"
+  /// ayırıcısı dersiyle AYNI hata).
+  ///
+  /// ⚠ `watch` KULLANILIR: talep gönderildikten sonra bu ekrana
+  /// dönüldüğünde liste kendiliğinden görünmeli.
+  bool _talepVar(BuildContext context) {
+    final me = context.watch<AuthController>().currentAccount;
+    if (me == null) {
+      return false;
+    }
+    return context
+        .watch<TeklifTalebiController>()
+        .byHizmetAlan(me.id)
+        .isNotEmpty;
+  }
+
   void _ara() {
     final adres = context.read<AuthController>().currentAccount?.address;
     // ⚠ ÖNCEDEN: adres yoksa SESSİZCE hiçbir şey olmuyordu. Şimdi
@@ -121,28 +143,22 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── ÜST SATIR: SOLDA GERİ, SAĞDA X (AKIŞTAN ÇIK) ──
+          // ── ÜST SATIR: YALNIZ GERİ ──
           //
-          // ⚠ Referans tasarımdaki gibi HER İKİ buton da beyaz,
-          // hafif gölgeli bir daire içine alındı — `RefBackButton`
-          // ve `ic_close.svg` DAVRANIŞI (hedefleri, dokunma alanları)
-          // HİÇ DEĞİŞMEDİ, yalnız görsel çerçeve eklendi.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _DaireCerceve(child: RefBackButton()),
-              _DaireCerceve(
-                child: RefTap(
-                  onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/customer/listings', (r) => false),
-                  borderRadius: BorderRadius.circular(RR.circle),
-                  child: const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: RefSvg('assets/svg/bul_ic_close.svg', size: 20),
-                  ),
-                ),
-              ),
-            ],
+          // ⚠ SAĞ ÜSTTEKİ X KALDIRILDI (kullanıcı isteği, 9 Eyl).
+          // Eskiden akıştan çıkıp `/customer/listings`e atan ikinci
+          // bir çıkış vardı; iki çıkışın ikisi de aynı yere gidiyor
+          // (geri okuyla da bar sekmesiyle de listeye dönülüyor), bu
+          // yüzden ekranda TEK çıkış bırakıldı.
+          //
+          // ⚠ `_DaireCerceve` SİLİNMEDİ — geri düğmesi hâlâ aynı
+          // beyaz daire çerçevesini kullanıyor; görsel dil değişmedi.
+          //
+          // ⚠ `bul_ic_close.svg` asset'i pakette DURUYOR (silinmedi);
+          // yalnız bu ekrandan çağrılmıyor.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _DaireCerceve(child: RefBackButton()),
           ),
           const SizedBox(height: 14),
           // ── BAŞLIK + İLLÜSTRASYON — REFERANS TASARIMDAKİ YAN YANA
@@ -311,6 +327,36 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
             aktif: _hizmet != null,
             onPressed: _hizmet != null ? _ara : null,
           ),
+
+          // ── ⚠ GÖNDERİLEN TALEPLER — GERİ GETİRİLDİ (9 Eyl) ──
+          //
+          // KULLANICI BULGUSU: "hizmet verenden teklif istedikten
+          // sonra gönderilen talep görüntülenemiyor; bu kart daha önce
+          // Bul ekranında görünüyordu."
+          //
+          // ⚠ ÖLÇÜLEN KÖK NEDEN (tahmin değil): `TeklifIstediklerimListesi`
+          // `gomulu: true` ile HİÇBİR YERDE çağrılmıyordu — pakette tek
+          // kullanımı kendi Scaffold'lu ekranıydı. Yani `gomulu`
+          // parametresi ölü koda dönmüştü. Buna karşılık
+          // `teklif_istediklerim_screen.dart`ın baş yorumu hâlâ "Bul
+          // akışının baş ekranında da AYNI liste GÖMÜLÜ gösteriliyor"
+          // diyordu: YORUM-KOD SAPMASI.
+          //
+          // Sonuç iki şikâyeti de açıklıyor: `TeklifIstediklerimScreen`
+          // için ADLANDIRILMIŞ ROTA YOK ve alt barda/profilde girişi
+          // YOK; oraya giden tek yol `teklif_iste_screen.dart`ın
+          // gönderim sonrası yönlendirmesiydi. O ekrandan çıkan
+          // kullanıcının talebe dönebileceği hiçbir yol kalmıyordu.
+          //
+          // ⚠ AYNI LİSTE MANTIĞI paylaşılır, kopya kart YAZILMADI.
+          if (_talepVar(context)) ...[
+            const SizedBox(height: 26),
+            Text('Teklif İstediklerim',
+                style:
+                    refText(size: RF.s18, weight: RF.w700, color: RC.text)),
+            const SizedBox(height: 10),
+            const TeklifIstediklerimListesi(gomulu: true),
+          ],
         ],
       ),
     );
@@ -523,6 +569,17 @@ class _HizmetAramaAlaniState extends State<_HizmetAramaAlani> {
           decoration: BoxDecoration(
             color: RC.white,
             borderRadius: BorderRadius.circular(RR.r16),
+            // ── ⚠ ÇERÇEVE EKLENDİ (kullanıcı isteği, 9 Eyl) ──
+            //
+            // Kutu yalnız gölgeyle ayrılıyordu; beyaz zemin üstünde
+            // sınırı belirsizdi. Diğer arama kutuları (`RefSearchBox`)
+            // #ECEEF2 kullanır — burada kullanıcı çerçevenin BELİRGİN
+            // olmasını istediği için bir ton koyu olan `RC.borderAlt`
+            // (#E1E5EC) seçildi.
+            //
+            // ⚠ YENİ RENK İCAT EDİLMEDİ: `RC.borderAlt` referans
+            // paletinde ZATEN VAR (kenarlık varyantı, ×9 kullanım).
+            border: Border.all(color: RC.borderAlt),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -561,11 +618,30 @@ class _HizmetAramaAlaniState extends State<_HizmetAramaAlani> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // ── ⚠ SİLİK YER TUTUCU (kullanıcı isteği,
+                            // 9 Eyl) ──
+                            //
+                            // ÖNCEDEN `w700` + `RC.text` (#16233D) idi:
+                            // yer tutucu, GİRİLMİŞ metinden ayırt
+                            // edilemeyecek kadar koyu ve kalın
+                            // duruyordu. Artık `RefSearchBox`ın (ana
+                            // sayfa arama kutusu) TAM AYNI tonları:
+                            // başlık #9AA0A6 / w400, örnek satırı
+                            // #BCC0C6 / w400.
+                            //
+                            // ⚠ PUNTO DEĞİŞMEDİ (14,5 ve 12) — şikâyet
+                            // koyuluk/kalınlıktı, ölçü değil; iki
+                            // satırlı düzenin yüksekliği aynı kalsın
+                            // diye ölçüye DOKUNULMADI.
+                            //
+                            // ⚠ AŞAĞIDAKİ `TextField.style` KOYU KALIR:
+                            // kullanıcının YAZDIĞI metin okunaklı
+                            // olmalı; silikleşen yalnız yer tutucudur.
                             Text('Hangi hizmeti arıyorsun?',
                                 style: refText(
                                     size: RF.s145,
-                                    weight: RF.w700,
-                                    color: RC.text)),
+                                    weight: RF.w400,
+                                    color: const Color(0xFF9AA0A6))),
                             Text(
                                 'Örn. ev temizliği, boya badana, '
                                 'tesisatçı...',
@@ -574,7 +650,7 @@ class _HizmetAramaAlaniState extends State<_HizmetAramaAlani> {
                                 style: refText(
                                     size: RF.s12,
                                     weight: RF.w400,
-                                    color: RC.textSoft)),
+                                    color: const Color(0xFFBCC0C6))),
                           ],
                         ),
                       ),

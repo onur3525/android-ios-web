@@ -1,3 +1,5 @@
+import 'listing.dart' show IsZamani;
+
 /// ── ⚠ "DOĞRUDAN TEKLİF İSTE" — AYRI VE YENİ BİR MODEL ──
 ///
 /// Bu, mevcut `Offer`/`Listing` çiftinden BİLİNÇLİ OLARAK AYRIDIR:
@@ -100,6 +102,7 @@ class TeklifTalebi {
     required this.iletisimTercihi,
     required this.createdAt,
     this.fotograflar = const [],
+    this.isZamani,
     this.durum = TeklifTalebiDurumu.beklemede,
     this.teklifFiyati,
     this.teklifAciklamasi,
@@ -126,6 +129,21 @@ class TeklifTalebi {
   final String aciklama;
   final List<String> fotograflar;
   final IletisimTercihi iletisimTercihi;
+
+  /// HİZMET ZAMANI TERCİHİ — Acil / Bu hafta / Esnek zaman.
+  ///
+  /// ⚠ İSTEĞE BAĞLIDIR: `null` normaldir ve "belirtilmedi" demektir;
+  /// seçim yoksa hizmet verene HİÇBİR ŞEY gösterilmez (`Listing`
+  /// tarafındaki AYNI kural).
+  ///
+  /// ⚠ TİP PAYLAŞILDI, MODEL PAYLAŞILMADI: `IsZamani` enum'u
+  /// `listing.dart`tan alınır — üç seçeneğin, etiketlerin ve sunucu
+  /// kodlarının (`NOW`/`THIS_WEEK`/`FLEXIBLE`) iki akışta AYRI AYRI
+  /// tanımlanması sapmaya davetiye olurdu. `TeklifTalebi`nin
+  /// `Listing`den bağımsız kalma kuralı, ORTAK BİR ENUM'u kullanmayı
+  /// engellemez.
+  final IsZamani? isZamani;
+
   final DateTime createdAt;
 
   TeklifTalebiDurumu durum;

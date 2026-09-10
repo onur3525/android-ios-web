@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../data/remote/api/storage_api.dart';
 import '../../ui/ref_widgets.dart';
 import '../../ui/ref_tokens.dart';
+import 'fotograf_kaynak_paneli.dart';
 
 /// İLAN FOTOĞRAFI SEÇİCİ
 ///
@@ -397,99 +398,20 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
     if (!widget.enabled || _full) {
       return;
     }
-    // ⚠ `showModalBottomSheet` yerine `RefBottomSheet`:
-    // uygulamadaki tüm yarım ekranlar aynı sözleşmeye tabidir —
-    // başlık + X düğmesi + boş alana dokununca kapanma.
-    await RefBottomSheet.goster<void>(
-      context,
-      title: 'Fotoğraf ekle',
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        // ⚠ İKİ SEÇENEK AYRI İKON KULLANIR.
-        //
-        // Önceden ikisi de KAMERA ikonuydu (`ic_cam` dolu, `ic_camg`
-        // konturlu) — kullanıcı hangisinin galeri olduğunu ikondan
-        // ayırt edemiyordu. Artık:
-        //   • Kamera  → fotoğraf makinesi (`ic_cam`)
-        //   • Galeri  → fotoğraf albümü   (`ic_gallery`)
-        //
-        // `ic_cam` BEYAZ gövdelidir; yalnız renkli daire rozetin
-        // İÇİNDE okunur, beyaz zemine doğrudan konulmaz.
-        _secenek(
-          rozetRengi: RC.blue,
-          ikon: 'assets/svg/ic_cam.svg',
-          baslik: 'Fotoğraf Çek',
-          aciklama: 'Kamerayı açar',
-          onTap: () => _pick(ImageSource.camera),
-        ),
-        const SizedBox(height: 2),
-        _secenek(
-          rozetRengi: const Color(0xFF16A34A),
-          ikon: 'assets/svg/ic_gallery.svg',
-          ikonRengi: RC.white,
-          baslik: 'Galeriden Seç',
-          aciklama: 'Kayıtlı fotoğraflarınız',
-          onTap: () => _pick(ImageSource.gallery),
-        ),
-      ]),
-    );
+    // ── ⚠ PANEL ARTIK TEK KAYNAKTAN GELİYOR ──
+    //
+    // Kullanıcı isteği (9 Eyl): ilan oluşturma ekranlarındaki ve
+    // mesajlaşmadaki fotoğraf paneli AYNI olmalı. Panelin çizimi
+    // `widgets/fotograf_kaynak_paneli.dart`a taşındı — buradaki
+    // kopya (başlık + iki `_secenek` satırı) SİLİNDİ, davranış
+    // AYNEN korundu: seçim yapılırsa `_pick` çağrılır, panel
+    // kapatılırsa hiçbir şey olmaz.
+    final kaynak = await fotografKaynagiSec(context);
+    if (kaynak == null || !mounted) {
+      return;
+    }
+    await _pick(kaynak);
   }
-
-  /// Yarım ekrandaki tek seçenek satırı.
-  /// Yarım ekrandaki tek seçenek satırı.
-  ///
-  /// Her seçenek KENDİ RENGİNDE 38px daire rozet taşır: kamera mavi,
-  /// galeri yeşil. Başlığın altında ne yapacağını söyleyen kısa bir
-  /// açıklama bulunur — kullanıcı dokunmadan önce sonucu bilir.
-  Widget _secenek({
-    required Color rozetRengi,
-    required String ikon,
-    required String baslik,
-    required String aciklama,
-    required VoidCallback onTap,
-    Color? ikonRengi,
-  }) =>
-      RefTap(
-        onTap: () {
-          Navigator.of(context).pop();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(RR.r12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-          child: Row(children: [
-            Container(
-              width: 38,
-              height: 38,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: rozetRengi,
-                shape: BoxShape.circle,
-              ),
-              child: RefSvg(ikon, size: 20, color: ikonRengi),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(baslik,
-                      style: refText(
-                          size: RF.s145, weight: RF.w600, color: RC.text)),
-                  const SizedBox(height: 2),
-                  Text(aciklama,
-                      style: refText(
-                          size: RF.s125,
-                          weight: RF.w400,
-                          color: RC.textSoft)),
-                ],
-              ),
-            ),
-            const RefSvg('assets/svg/ic_chev.svg',
-                size: 18, color: RC.greyLight),
-          ]),
-        ),
-      );
 
   @override
   Widget build(BuildContext context) {

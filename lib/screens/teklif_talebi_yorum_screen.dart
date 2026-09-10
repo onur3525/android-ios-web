@@ -109,14 +109,20 @@ class _TeklifTalebiYorumScreenState extends State<TeklifTalebiYorumScreen> {
                 ],
               ),
               const SizedBox(height: 6),
-              Text('Yorum Yaz',
+              // ⚠ BAŞLIK DURUMA GÖRE (9 Eyl): yorum zaten yazılmışken
+              // bu ekran SALT OKUNUR açılıyor; "Yorum Yaz" başlığı
+              // yapılacak bir iş varmış izlenimi veriyordu.
+              Text(done == null ? 'Yorum Yaz' : 'Değerlendirmen',
                   style: refText(
                       size: 26,
                       weight: RF.w700,
                       color: RC.text,
                       letterSpacing: -0.3)),
               const SizedBox(height: 7),
-              Text('Aldığınız hizmet için puan ve yorumunuzu paylaşın.',
+              Text(
+                  done == null
+                      ? 'Aldığınız hizmet için puan ve yorumunuzu paylaşın.'
+                      : 'Bu hizmet için verdiğiniz puan ve yorum.',
                   style: refText(
                       size: RF.s14, weight: RF.w400, color: RC.textSoft)),
 

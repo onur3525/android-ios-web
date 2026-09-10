@@ -1903,7 +1903,41 @@ class RefBottomNav extends StatelessWidget {
                             child: _NavOgesi(
                                 it: it, aktifMi: it.key == activeKey)),
                       ),
-                    const SizedBox(width: _centikGenislik),
+                    // ── ⚠ ORTA YUVA: SABİT GENİŞLİK DEĞİL, EŞİT PAY ──
+                    //
+                    // ESKİDEN `SizedBox(width: _centikGenislik)` idi:
+                    // dört öğe kalan genişliği eşit paylaşıyor, ortaya
+                    // 62 dp SABİT boşluk giriyordu. Çentik bir yuvadan
+                    // DAR olduğu için çentiğe komşu öğelerin merkez
+                    // mesafesi (yuva + çentik) / 2'ye düşüyor, kenardaki
+                    // komşularda ise TAM yuva kalıyordu.
+                    //
+                    // ⚠ ÖLÇÜLDÜ (kullanıcı ekran görüntüsü, 1080 px /
+                    // 480 dp): etiket merkezleri 123,5 · 354,5 · 540 ·
+                    // 725,5 · 955 px → aralıklar 231 · 185,5 · 185,5 ·
+                    // 229,5 px. Koddaki 4 dp dolgu + 62 dp çentikle
+                    // hesaplanan merkezler bu ölçümü 1 px içinde
+                    // veriyor; kök neden TAHMİN DEĞİL.
+                    //
+                    // Orta boşluk da EŞİT PAYLI yuva yapıldı: bar beş
+                    // eşit yuvaya bölünür, beş merkez eşit aralıklı
+                    // olur. Buton yine TAM ORTADADIR (iki yuva + yarım
+                    // yuva = genişliğin yarısı), yani `Stack`in
+                    // `bottomCenter` hizası ile çakışır.
+                    //
+                    // ⚠ `_centikGenislik` KALDIRILMADI — kenar çizimi
+                    // (`_CentikliKenar`) ve çentik derinliği hâlâ onu
+                    // kullanır. Değişen YALNIZ satırdaki boşluğun
+                    // genişliğidir; ikon, etiket, renk, buton çapı ve
+                    // çentiğin kendisi AYNEN durur.
+                    //
+                    // ⚠ DAR EKRAN: yuva genişliği azalır (480 dp'de
+                    // 102,25 → 94,4; 360 dp'de 72,5 → 70,4). Orta yuva
+                    // 360 dp'de bile çentikten (62) geniş kalır. En
+                    // uzun etiket "Bildirimler"dir; daha dar bir ekranda
+                    // taşarsa çözüm punto düşürmek DEĞİL, etiketi
+                    // kısaltmaktır (ürün kararı).
+                    const Expanded(child: SizedBox.shrink()),
                     for (final it in sag)
                       Expanded(
                         child: Center(

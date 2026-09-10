@@ -119,15 +119,35 @@ class IsZamaniRozeti extends StatelessWidget {
     if (z == null) {
       return const SizedBox.shrink();
     }
+    // ── ⚠ "ACİL" ROZETİ KIRMIZI (kullanıcı bulgusu, 9 Eyl) ──
+    //
+    // ÖLÇÜLEN EKSİK: bu rozet etiketin NE OLDUĞUNA hiç bakmıyordu —
+    // zemin `RC.blueSoft`, yazı `RC.blue` SABİTTİ. Hizmet alan seçim
+    // ekranında "Acil"i kırmızı görüp gönderiyor, hizmet verene düşen
+    // önizleme kartında ve detayda AYNI bilgi mavi görünüyordu.
+    //
+    // ⚠ KURAL YENİ DEĞİL: yukarıdaki `_secenek` zaten `acilMi` ile
+    // tam dolu kırmızı + beyaz yazı uyguluyor. Rozet o kurala
+    // EŞİTLENDİ, yeni bir renk ya da yeni bir kural İCAT EDİLMEDİ —
+    // `RC.danger` seçicinin kullandığı tokendır.
+    //
+    // ⚠ DİĞER İKİ SEÇENEK DEĞİŞMEDİ: "Bu hafta" ve "Esnek zaman"
+    // hâlâ soft mavi zemin + mavi yazı.
+    final acilMi = z == IsZamani.hemen;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: RC.blueSoft,
+        color: acilMi ? RC.danger : RC.blueSoft,
         borderRadius: BorderRadius.circular(RR.r10),
       ),
       child: Text(
         z.etiket,
-        style: refText(size: RF.s12, weight: RF.w600, color: RC.blue),
+        style: refText(
+            size: RF.s12,
+            weight: RF.w600,
+            // ⚠ Kırmızı zeminde kırmızı yazı okunmaz — seçicideki
+            // AYNI çözüm: dolu zeminde yazı BEYAZ.
+            color: acilMi ? RC.white : RC.blue),
       ),
     );
   }

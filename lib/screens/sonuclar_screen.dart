@@ -3,15 +3,14 @@ import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
-import '../data/controllers/offer_controller.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/mock_saglayici_dizini.dart';
+import '../domain/saglayici_ozeti.dart';
 import '../domain/yakinlik_saglayici.dart';
+import 'widgets/saglayici_ozet_satiri.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import 'job_detail_screen.dart' show maskeliAd;
 import 'teklif_iste_screen.dart';
 
 /// "BUL" AKIŞI — 3. EKRAN: SONUÇLAR
@@ -99,6 +98,15 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
           hizmet: widget.hizmet,
           saglayiciId: s.id,
           saglayiciAdi: s.adSoyad,
+          // ⚠ KARTTA NE GÖRÜNDÜYSE O TAŞINIR (kullanıcı kuralı,
+          // 9 Eyl): kurgusal kayıtlarda hesap olmadığı için öteki
+          // ekran bu değerleri başka yerden bulamaz. Gerçek
+          // hesaplarda bunlar yok sayılır, canlı okunur.
+          puan: s.yorumSayisi == 0 ? null : s.puan,
+          yorumSayisi: s.yorumSayisi,
+          tamamlananIs: s.tamamlananIs,
+          ilce: s.ilce,
+          il: widget.il,
         ),
       ),
     );
@@ -232,79 +240,38 @@ class _SaglayiciKarti extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // ── FOTOĞRAF — TAMAMEN BUZLU ──
+          // ── ⚠ BİLGİ SATIRI ORTAK BİLEŞENDEN ──
           //
-          // ⚠ Yeni bir blur efekti/asset ÜRETİLMEDİ: `ic_avlock.svg`
-          // projede zaten "kimliği gizli" avatarı temsil eden hazır
-          // görsel (bkz. `job_detail_screen.dart` içindeki
-          // `_SahipKarti`).
-          const RefSvg('assets/svg/ic_avlock.svg', size: 46),
-          const SizedBox(width: 11),
-
+          // KULLANICI KURALI (9 Eyl): bu karttaki bilgilerle "Teklif
+          // İste" ekranındaki kartın bilgileri AYNI olmalı ve BİRLİKTE
+          // değişmeli. Kopya çizim silindi; iki ekran da
+          // `SaglayiciOzetSatiri`ni kullanıyor.
+          //
+          // ⚠ GERÇEK HESAP CANLI OKUNUR: `gercek == true` ise özet
+          // denetleyicilerden ÜRETİLİR (puan, yorum, tamamlanan iş,
+          // konum). Listeyi kuran anlık görüntü kullanılmaz — yorum
+          // ya da iş sayısı bu ekran açıkken değişirse kart da
+          // değişir.
+          //
+          // ⚠ MOCK KAYIT DİZİNDEN OKUNUR: kurgusal hizmet verenin
+          // gerçek hesabı yoktur; değerleri `mock_saglayici_dizini`
+          // sabitlerinden gelir. Denetleyicilerden okunsaydı hepsi
+          // 0 çıkardı — "Teklif İste" ekranının eski hatası buydu.
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── AD SOYAD — MASKELİ ──
-                //
-                // ⚠ `maskeliAd` YENİDEN KULLANILDI (job_detail_screen
-                // içinde tanımlı, "E*** K******" biçimi) — yeni bir
-                // maskeleme kuralı İCAT EDİLMEDİ.
-                Text(maskeliAd(saglayici.adSoyad),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: refText(
-                        size: RF.s145, weight: RF.w700, color: RC.text)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    // ⚠ RENK — diğer ekranlarla (review_screen.dart,
-                    // provider_reviews_screen.dart vb.) AYNI canlı
-                    // altın-turuncu (`#F5A319`); önceden hiç renk
-                    // verilmiyordu, projede TUTARSIZ görünüyordu.
-                    const RefSvg('assets/svg/ic_starfill.svg',
-                        size: 14, color: Color(0xFFF5A319)),
-                    const SizedBox(width: 4),
-                    Text(saglayici.puan.toStringAsFixed(1),
-                        style: refText(
-                            size: RF.s125,
-                            weight: RF.w700,
-                            color: RC.text)),
-                    const SizedBox(width: 4),
-                    Text('(${saglayici.yorumSayisi} yorum)',
-                        style: refText(
-                            size: RF.s12,
-                            weight: RF.w400,
-                            color: RC.textSoft)),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const RefSvg('assets/svg/ic_shieldok.svg',
-                        size: 13, color: Color(0xFF5B6472)),
-                    const SizedBox(width: 5),
-                    Text('${saglayici.tamamlananIs} iş tamamladı',
-                        style: refText(
-                            size: RF.s12,
-                            weight: RF.w400,
-                            color: const Color(0xFF5B6472))),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    const RefSvg('assets/svg/ic_pin.svg',
-                        size: 14, color: Color(0xFF98A2B3)),
-                    const SizedBox(width: 5),
-                    Text('${saglayici.ilce} / $il',
-                        style: refText(
-                            size: RF.s12,
-                            weight: RF.w400,
-                            color: const Color(0xFF98A2B3))),
-                  ],
-                ),
-              ],
+            child: SaglayiciOzetSatiri(
+              (saglayici.gercek
+                      ? gercekSaglayiciOzeti(context,
+                          id: saglayici.id, ilYedegi: il)
+                      : null) ??
+                  (
+                    id: saglayici.id,
+                    adSoyad: saglayici.adSoyad,
+                    puan: saglayici.yorumSayisi == 0 ? null : saglayici.puan,
+                    yorumSayisi: saglayici.yorumSayisi,
+                    tamamlananIs: saglayici.tamamlananIs,
+                    ilce: saglayici.ilce,
+                    il: il,
+                  ),
             ),
           ),
 
@@ -316,10 +283,17 @@ class _SaglayiciKarti extends StatelessWidget {
   }
 }
 
-/// ── ⚠ KÜÇÜK YEŞİL BUTON — AŞAMA 1'DEKİ "ARA" İLE AYNI TASARIM ──
+/// ── ⚠ KÜÇÜK BUTON — RENK MAVİ (kullanıcı kararı, 9 Eyl) ──
 ///
-/// Ayrı bir buton dili İCAT EDİLMEDİ: dolgu (`HC.green`) ve köşe
-/// yarıçapı Aşama 1'de kurulan yeşil düğmeyle aynı. İkon
+/// ÖNCEDEN `HC.green` idi (Aşama 1'deki "Ara" düğmesiyle aynı dil).
+/// Kullanıcı bu ekrandaki düğmelerin MAVİ olmasını istedi; dolgu
+/// `RC.blue` oldu. Ölçü, köşe yarıçapı, ikon ve tipografi
+/// DEĞİŞMEDİ — yalnız dolgu rengi.
+///
+/// ⚠ YENİ RENK ÜRETİLMEDİ: `RC.blue` uygulamanın birincil düğme
+/// rengidir (`RefPrimaryButton` de onu kullanır).
+///
+/// İkon
 /// (`ic_send.svg`) da yeni değil — `teklif_iste_screen.dart`'taki
 /// asıl "Teklif İste" gönder düğmesiyle AYNI ikon; tutarlılık için
 /// tekrar kullanıldı, yeni bir görsel dil eklenmedi.
@@ -337,7 +311,7 @@ class _TeklifIsteButonu extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(RR.r13),
       child: Material(
-        color: HC.green,
+        color: RC.blue,
         child: InkWell(
           onTap: onTap,
           child: const Padding(
@@ -412,26 +386,11 @@ List<MockSaglayici> _gercekSaglayicilariBul(
   ];
 }
 
-/// ⚠ `offer_detail_screen.dart`'taki `_tamamlananIs` ile AYNI
-/// mantık — o fonksiyon dosyaya ÖZEL (private) olduğu için buraya
-/// yeniden yazıldı, davranışı BİREBİR aynı.
-int _tamamlananIsGercek(BuildContext c, String providerId) {
-  final ilanlar = c.read<ListingController>().all;
-  final teklifler = c.read<OfferController>();
-  var n = 0;
-  for (final l in ilanlar) {
-    if (!l.isTamamlanmisIs) {
-      continue;
-    }
-    final secili = teklifler
-        .offersForListing(l.id)
-        .where((o) => o.id == l.selectedOfferId);
-    if (secili.isNotEmpty && secili.first.providerId == providerId) {
-      n++;
-    }
-  }
-  return n;
-}
+/// ⚠ KOPYA KALDIRILDI: sayım artık `domain/saglayici_ozeti.dart`
+/// içindeki `tamamlananIsSayisi` ile TEK yerde tanımlı. Burada üç
+/// ayrı kopya vardı ve biri değişince ötekiler sessizce ayrışıyordu.
+int _tamamlananIsGercek(BuildContext c, String providerId) =>
+    tamamlananIsSayisi(c, providerId);
 
 /// ⚠ GERÇEK HESAPLAR İÇİN "AKTİFLİK" TAHMİNİ — dürüst bir vekil
 /// (proxy) değerdir, uydurma DEĞİL: tamamlanan iş ve yorum sayısı

@@ -133,7 +133,7 @@ class _TalepKarti extends StatelessWidget {
                   // ── KAÇ İŞ BİTİRDİĞİ ──
                   Row(
                     children: [
-                      const RefSvg('assets/svg/ic_shieldok.svg',
+                      const RefSvg('assets/svg/ic_briefcase.svg',
                           size: 13, color: Color(0xFF5B6472)),
                       const SizedBox(width: 5),
                       Text(
