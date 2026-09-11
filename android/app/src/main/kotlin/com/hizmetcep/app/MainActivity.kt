@@ -5,9 +5,11 @@ import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
+import android.graphics.Color
 import android.view.WindowManager
 import android.util.Log
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -178,6 +180,34 @@ class MainActivity : FlutterActivity() {
         // pencere değildir.
         splash.setOnExitAnimationListener { yuzey ->
             setTheme(R.style.NormalTheme)
+
+            // ── ⚠ SİSTEM ÇUBUĞU RENKLERİ ELLE UYGULANIR
+            // (kullanıcı bulgusu, 10 Eyl) ──
+            //
+            // BULGU: "Splash sorunsuz ama ekranın altı ve üstü siyah,
+            // tam ekran değil."
+            //
+            // SEBEP: `setTheme` PENCERE ÖZNİTELİKLERİNİ GERİ
+            // ALMAZ. Pencere zaten oluşturulmuş durumdadır; durum ve
+            // gezinme çubuğu renkleri `Theme.SplashScreen`den
+            // çözülmüş hâlde kalır ve o tema koyu çubuk kullanır.
+            // Tema geçişi logonun küçülmesini çözdü ama bantları
+            // çözmedi — çünkü ikisi FARKLI şeylerden geliyordu.
+            //
+            // ⚠ RENKLER DART'TAKİ SABİTLE AYNI: `core/theme.dart`
+            // içindeki `kSistemCubuklari` saydam durum çubuğu + beyaz
+            // gezinme çubuğu + koyu ikon diyor. Burada AYNI değerler
+            // uygulanıyor; iki taraf ayrışırsa açılışta renk zıplar.
+            //
+            // ⚠ İKON PARLAKLIĞI DA AYARLANIR: zemin beyaz olduğu için
+            // ikonlar KOYU olmalı, yoksa beyaz üstünde beyaz kalır.
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.WHITE
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightStatusBars = true
+                isAppearanceLightNavigationBars = true
+            }
+
             bootLog("NATIVE_SPLASH_EXIT_NO_ANIM")
             yuzey.remove()
         }

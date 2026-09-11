@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/hizmet_alan_ozeti.dart';
+import '../domain/kullanici_konumu.dart';
 import '../domain/teklif_talebi_asamasi.dart';
 import 'widgets/durum_rozeti.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
@@ -157,19 +158,40 @@ class _TalepKarti extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
 
-                  // ── KAÇ YILDIR ÜYE ──
-                  Row(
-                    children: [
-                      const RefSvg('assets/svg/ic_clock.svg',
-                          size: 13, color: Color(0xFF98A2B3)),
-                      const SizedBox(width: 5),
-                      Text(_uyelikSuresi(hizmetAlan?.kayitTarihi),
-                          style: refText(
-                              size: RF.s12,
-                              weight: RF.w400,
-                              color: const Color(0xFF98A2B3))),
-                    ],
-                  ),
+                  // ── ⚠ KONUM (kullanıcı isteği, 10 Eyl) ──
+                  //
+                  // ÖNCEDEN "Yeni üye" / "N yıldır üye" yazıyordu.
+                  // Hizmet veren için üyelik süresi teklif kararını
+                  // etkilemiyor; işin NEREDE olduğu ise doğrudan
+                  // etkiliyor.
+                  //
+                  // ⚠ MAHALLE DÂHİL: ilçe tek başına yetmiyor —
+                  // "Kazandığım" kartlarında da mahalle gösteriliyor.
+                  //
+                  // ⚠ BİÇİM TEK KAYNAKTAN: `kullaniciKonumu`. Adres
+                  // yoksa satır HİÇ çizilmez, yer tutucu konmaz.
+                  if (kullaniciKonumu(context, talep.hizmetAlanId,
+                          mahalleDahil: true) !=
+                      null) ...[
+                    Row(
+                      children: [
+                        const RefSvg('assets/svg/ic_pin.svg',
+                            size: 13, color: Color(0xFF98A2B3)),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                              kullaniciKonumu(context, talep.hizmetAlanId,
+                                  mahalleDahil: true)!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: refText(
+                                  size: RF.s12,
+                                  weight: RF.w400,
+                                  color: const Color(0xFF98A2B3))),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 8),
 
                   // ⚠ DURUM VE YENİ MESAJ YAN YANA: ikisi de kartın
@@ -217,24 +239,27 @@ class _TalepKarti extends StatelessWidget {
   /// içindeki `_tamamlananIs` (PROVIDER için) ile AYNI mantık, yalnız
   /// yön TERS: burada ilan SAHİBİNİN (`ownerId`) kaç ilanı
   /// tamamlanmış sayılıyor.
-  int _tamamlananIs(BuildContext c, String hizmetAlanId) {
-    final ilanlar = c.read<ListingController>().all;
-    return ilanlar
-        .where((l) => l.ownerId == hizmetAlanId && l.isTamamlanmisIs)
-        .length;
-  }
+  /// ⚠ KOPYA KALDIRILDI (10 Eyl): hizmet alanın tamamlanan iş
+  /// sayısı `domain/hizmet_alan_ozeti.dart` içinde TEK yerde. Bu
+  /// kopya YALNIZ ilanları sayıyordu; "Bul" akışından tamamlanan
+  /// talepleri hiç saymıyordu, dolayısıyla aynı kişi bu kartta daha
+  /// düşük görünüyordu.
+  ///
+  /// ⚠ Ortak fonksiyon denetleyicileri `watch` ile okur; iş
+  /// tamamlandığında bu kart da anında tazelenir.
+  int _tamamlananIs(BuildContext c, String hizmetAlanId) =>
+      hizmetAlanTamamlananIs(c, hizmetAlanId);
+
+
 
   /// ⚠ GERÇEK KAYIT TARİHİNDEN — uydurma bir süre DEĞİLDİR.
-  String _uyelikSuresi(DateTime? kayitTarihi) {
-    if (kayitTarihi == null) {
-      return 'Üyelik süresi bilinmiyor';
-    }
-    final yil = DateTime.now().difference(kayitTarihi).inDays ~/ 365;
-    if (yil < 1) {
-      return 'Yeni üye';
-    }
-    return '$yil yıldır üye';
-  }
+  // ⚠ `_uyelikSuresi` KALDIRILDI (10 Eyl): "Yeni üye" satırı yerini
+  // konuma bıraktı; yardımcı kullanılmaz hâle geldi. Üyelik bilgisi
+  // hâlâ gerekiyorsa tek kaynağı `domain/hizmet_alan_ozeti.dart`
+  // içindeki `uyelikTarihiMetni`dir — burada ikinci bir tanım
+  // bırakmak ikisinin ayrışmasına davetiye olurdu.
+
+
 
   (String, Color) _durumGoster(TeklifTalebiDurumu d) => switch (d) {
         TeklifTalebiDurumu.beklemede => ('Yanıt bekliyor', RC.blue),

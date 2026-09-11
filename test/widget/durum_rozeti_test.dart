@@ -62,6 +62,20 @@ void main() {
         reason: 'bitmiş iş, sürüyormuş gibi gösteriliyor');
   });
 
+  testWidgets('⚠ NOKTALAR ROZETTE DE SATIRIN ALTINDA', (t) async {
+    // Kullanıcı isteği (10 Eyl): noktalar kelimenin ortasında değil,
+    // "Teklif bekleniyor..." gibi altında olmalı. Talep detayındaki
+    // geniş kutu ile AYNI kural.
+    await ciz(t, bekliyor: true);
+    await t.pump(const Duration(milliseconds: 100));
+
+    final yazi = t.getRect(find.text('Teklif bekleniyor'));
+    final nokta = t.getRect(find.byType(Opacity).first);
+    // Noktanın merkezi, yazının dikey ORTASININ ALTINDA olmalı.
+    expect(nokta.center.dy, greaterThan(yazi.center.dy),
+        reason: 'noktalar hâlâ satırın ortasında');
+  });
+
   testWidgets('⚠ ROZET GENİŞLİĞİ OYNAMAZ', (t) async {
     // Noktalar metne eklenseydi genişlik her karede değişirdi.
     await ciz(t, bekliyor: true);
@@ -97,6 +111,38 @@ void main() {
       // huzursuz görünürdü; hareket TEK yerde.
       final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
       expect(k.contains('FadeTransition'), isFalse);
+    });
+
+    test('⚠ GÖNDERİ İKONU KALDIRILDI (10 Eyl)', () {
+      // Kutu zaten mavi zeminli ve metin ne beklendiğini söylüyordu;
+      // soldaki mavi daire fazladan görsel ağırlıktı.
+      final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(k.contains('ic_send.svg'), isFalse);
+    });
+
+    test('⚠ NOKTALAR SATIRIN ALTINDA, ORTASINDA DEĞİL', () {
+      // Ortada duruyorlardı ve "Teklif bekleniyor..." izlenimi
+      // vermiyorlardı. `end` hizası + 3 px alt dolgu, noktaları
+      // yazının taban çizgisine oturtur.
+      final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(k.contains('CrossAxisAlignment.end'), isTrue);
+      expect(k.contains('EdgeInsets.only(bottom: 3)'), isTrue);
+    });
+  });
+
+  group('KART YERLEŞİMİ', () {
+    test('⚠ ROZET KARTIN SAĞ ÜST KÖŞESİNDE', () {
+      // Kullanıcı isteği (10 Eyl): "Teklif bekleniyor yazısı kartın
+      // sağ üst köşesine konumlansın." Önceden özet satırının
+      // sağındaydı, yani hizmet adının BİR SATIR ALTINDA
+      // başlıyordu.
+      final k = _kodu('lib/screens/teklif_istediklerim_screen.dart');
+      final iBaslik = k.indexOf('Text(talep.hizmet');
+      final iRozet = k.indexOf('DurumRozeti(');
+      final iOzet = k.indexOf('SaglayiciOzetSatiri(');
+      expect(iRozet, greaterThan(iBaslik));
+      expect(iRozet, lessThan(iOzet),
+          reason: 'rozet hâlâ özet satırının içinde/altında');
     });
   });
 

@@ -640,10 +640,9 @@ class MockOfferPort extends OfferPort {
     // `chosen.status` yukarıda `selected` yapıldı ve zaten seçilmiş
     // ilan bu akışa ikinci kez giremez (`selectedOfferId` dolu
     // ilanda seçim reddedilir).
-    final saglayiciHesabi = auth?.byId(chosen.providerId);
-    if (saglayiciHesabi != null) {
-      saglayiciHesabi.tamamlananIs += 1;
-    }
+    // ⚠ DOĞRUDAN DEĞİL DEPO ÜZERİNDEN (10 Eyl): alanı elle artırmak
+    // bildirim göndermiyordu ve ekranlar eski sayıda kalıyordu.
+    auth?.tamamlananIsArtir(chosen.providerId);
     // ── ⚠ SEÇİM İLANI DOĞRUDAN TAMAMLAR (ürün kararı) ──
     //
     // Referans `submitReviewDo`: seçim yapıldığında ilan `done` olur.

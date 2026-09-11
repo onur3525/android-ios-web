@@ -6,7 +6,6 @@ import '../domain/form_mesajlari.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
@@ -22,7 +21,9 @@ import '../domain/config.dart';
 import '../data/controllers/profile_controller.dart';
 import '../data/models/provider_approval.dart';
 import 'provider_status_screen.dart';
-import 'status_ui.dart';
+// ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
+// ne `offerStatusUi` ne `tl` kullanılıyor — teklif durum kutusu
+// kaldırıldı ve tutarlar `core/tutar_bicimi.dart`tan biçimleniyor.
 import 'widgets/hc_widgets.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../ui/ref_widgets.dart';
@@ -102,7 +103,10 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       return;
     }
     setState(() { _amtError = null; _formError = null; });
-    final amount = int.tryParse(_amt.text.trim());
+    // ⚠ `int.tryParse` DEĞİL: alan artık binlik ayracı taşıyor
+    // ("3.000"); doğrudan çözümlenirse null döner ve geçerli tutar
+    // REDDEDİLİRDİ (teklif talebi ekranında yaşanan aynı tuzak).
+    final amount = tutarOku(_amt.text);
     var ok = true;
     if (amount == null || amount <= 0) {
       _amtError = FormMesaj.teklifTutari;
@@ -203,6 +207,20 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   border: Border.all(color: HC.border),
                   borderRadius: BorderRadius.circular(15)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // ── ⚠ İLAN NUMARASI KARTIN EN ÜST SAĞINDA
+                // (kullanıcı isteği, 10 Eyl) ──
+                //
+                // ÖNCEDEN kartın ORTASINDA, kategori ikonunun
+                // yanındaki sütunun içindeydi; o sütun `Expanded`
+                // olduğu için numara kartın gerçek sağ kenarına
+                // değil, o sütunun sağına yaslanıyordu ve ikonun
+                // hizasını da bozuyordu.
+                //
+                // ⚠ ORTAK BİLEŞEN: `IlanNoEtiketi` kendi içinde sağa
+                // yaslı; kartın TAM genişliğinde ayrı bir satır
+                // olunca gerçek köşeye oturur.
+                IlanNoEtiketi(l),
+
                 // ── .pl-own — ilan sahibi kartı ──
                 //
                 // ⚠ MASKELEME: iletişim AÇILMADAN önce ad maskeli
@@ -229,8 +247,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       height: 1, child: ColoredBox(color: Color(0xFFF2F4F7))),
                 ),
 
-                // ── .ld-top — kategori ikonu + başlık + konum/zaman ──
-                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // ── .ld-top — kategori ikonu + başlık ──
+                //
+                // ⚠ DİKEY ORTALI (kullanıcı bulgusu, 10 Eyl): hiza
+                // `start` olduğu için ikon metnin ÜSTÜNDE kalıyordu.
+                // İlan numarası bu sütundan çıkınca metin tek satıra
+                // indi; `center` ile ikon ve yazı yan yana oturuyor.
+                Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                   // .ld-ic{40×40;radius:50%;background:#EAF1FB}
                   Container(
                     width: 40,
@@ -248,12 +271,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                         children: [
                           // ⚠ KATEGORİ SATIRI — hizmet adı tek başına
                           // ayırt etmiyor (bkz. category_ui.kategoriAdi).
-                          // ── ⚠ İLAN NUMARASI — SAĞ ÜST KÖŞE ──
                           //
-                          // İlan detayıyla AYNI kural; iki detay
-                          // ekranı ayrışmasın diye ortak bileşen
-                          // kullanılır ve hizalama orada sabittir.
-                          IlanNoEtiketi(l),
+                          // ⚠ İLAN NUMARASI BURADAN KALKTI (10 Eyl):
+                          // kartın en üstüne taşındı. Burada
+                          // durduğunda ikonun yanındaki metni AŞAĞI
+                          // itiyor, ikon yukarıda kalıyordu.
                           if (kategoriAdi(l.title) != null)
                             Text(kategoriAdi(l.title)!,
                                 style: refText(
@@ -345,10 +367,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       border: Border(
                           top: BorderSide(color: Color(0xFFF2F4F7)))),
                   child: Column(children: [
-                    _BilgiSatiri(
-                        ikon: 'assets/svg/ic_addbox.svg',
-                        etiket: 'Kategori',
-                        deger: l.title),
+                    // ⚠ "Kategori" SATIRI KALDIRILDI (kullanıcı
+                    // isteği, 10 Eyl): aynı bilgi kartın üstünde,
+                    // kategori ikonunun yanında ZATEN yazıyor
+                    // ("Doğalgaz"). Alt bilgi tablosunda ikinci kez
+                    // tekrar ediyordu.
                     _BilgiSatiri(
                         ikon: 'assets/svg/ic_pin.svg',
                         etiket: 'İl / İlçe / Mahalle',
@@ -451,10 +474,25 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 // da burada tazelenir.
                 onChanged: (_) => setState(() => _amtError = null),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(6),
-                ],
+                // ── ⚠ CANLI BİNLİK AYRACI (kullanıcı isteği, 10 Eyl) ──
+                //
+                // BULGU: "Bu ekranda girilen tutarlarda noktalamayı
+                // teklif talebindeki gibi otomatik koymuyor."
+                //
+                // Teklif talebi ekranı `TutarBicimlendirici` kullanıyordu,
+                // bu alan ise yalnız rakama süzüp uzunluk sınırlıyordu:
+                // aynı iş için iki farklı giriş davranışı vardı.
+                //
+                // ⚠ `digitsOnly` KALDIRILDI: biçimlendirici zaten rakam
+                // dışındaki her şeyi atıyor; ikisi birlikte çalışsaydı
+                // `digitsOnly` eklenen noktaları da silerdi.
+                //
+                // ⚠ UZUNLUK SINIRI DA KALDIRILDI: 6 KARAKTER sayıyordu,
+                // ama "1.000.000" dokuz karakter — ayraçlar eklenince
+                // sınır rakamdan önce dolar ve kullanıcı tutarı
+                // yazamazdı. Sınır artık biçimin kendisinde: alan
+                // rakam kabul eder, üst sınır iş kuralıdır.
+                inputFormatters: const [TutarBicimlendirici()],
                 // ⚠ REFERANSTA BİRİM SAĞDADIR.
                 //
                 // Etikette `(₺)`, solda cüzdan ikonu vardı; referansta
@@ -557,45 +595,28 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   // verilen tutarı göstermek.
                 ]),
               ),
-              const SizedBox(height: 10),
-              // ⚠ TUTAR YUKARIDAKİ MAVİ KARTTA ZATEN VAR.
-              //
-              // Bu kutu artık yalnız TEKLİF NOTUNU ve bloke durumunu
-              // gösterir; tutarı ikinci kez yazmak kafa karıştırıyordu.
               const SizedBox(height: 12),
-              Builder(builder: (context) {
-                final (oLabel, oColor) = offerStatusUi(mine.status);
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                          color: mine.status == OfferStatus.selected
-                              ? HC.green
-                              : HC.border),
-                      borderRadius: BorderRadius.circular(15)),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          // ⚠ ORTAK BİÇİM (9 Eyl): aynı ekranda iki
-                          // tutar vardı ve ikisi de "₺5000" yazıyordu;
-                          // uygulamanın geri kalanı "5.000 TL"
-                          // gösteriyor.
-                          Text(tutarMetni(mine.amount),
-                              style: const TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
-                                  color: HC.blue)),
-                          const Spacer(),
-                          StatusChip(oLabel, oColor),
-                        ]),
-                        const SizedBox(height: 6),
-                        Text(mine.note,
-                            style: const TextStyle(
-                                fontSize: 13, height: 1.5, color: HC.grey)),
-                      ]),
-                );
-              }),
+
+              // ── ⚠ TUTAR/DURUM KUTUSU TAMAMEN KALDIRILDI
+              // (kullanıcı isteği, 10 Eyl) ──
+              //
+              // Telefon ve mesaj kutularının hemen üstünde
+              // "5.000 TL · Aktif" yazan çerçeveli bir kutu vardı.
+              //
+              // Tutar zaten hemen ÜSTÜNDEKİ mavi "Verdiğiniz Teklif"
+              // kartında büyük puntoyla yazıyordu; aynı sayı aynı
+              // ekranda iki kez görünüyordu. Durum rozeti de tek
+              // başına bir kutuyu hak etmiyordu.
+              //
+              // ⚠ TEKLİF NOTU DA GİTTİ: kutunun altında `mine.note`
+              // gösteriliyordu. Notu hizmet verenin KENDİSİ yazmıştı;
+              // kendi yazdığı metni kendisine geri okutmak bilgi
+              // taşımıyordu. Hizmet ALAN tarafında not aynen
+              // görünmeye devam eder.
+              //
+              // ⚠ `offerStatusUi` KALDIRILMADI — öteki ekranlar
+              // kullanıyor.
+
               const SizedBox(height: 12),
 
               // ⚠ KUTULAR HER ZAMAN ÇİZİLİR.

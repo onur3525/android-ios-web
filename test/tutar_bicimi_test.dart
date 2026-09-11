@@ -127,9 +127,39 @@ void main() {
       expect(v.selection.baseOffset, v.text.length);
     });
 
-    test('fiyat alanı biçimlendiriciyi kullanır', () {
-      final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
-      expect(k.contains('TutarBicimlendirici()'), isTrue);
+    test('⚠ TUTAR GİRİLEN HER ALAN AYNI BİÇİMLENDİRİCİYİ KULLANIR', () {
+      // KULLANICI BULGUSU (10 Eyl): "Bu ekranda girilen tutarlarda
+      // noktalamayı teklif talebindeki gibi otomatik koymuyor."
+      // İki ekran aynı işi iki farklı giriş davranışıyla yapıyordu.
+      for (final yol in const [
+        'lib/screens/teklif_talebi_detay_screen.dart',
+        'lib/screens/job_detail_screen.dart',
+      ]) {
+        expect(_kodu(yol).contains('TutarBicimlendirici()'), isTrue,
+            reason: '$yol canlı binlik ayracı uygulamıyor');
+      }
+    });
+
+    test('⚠ digitsOnly VE UZUNLUK SINIRI BİRLİKTE KULLANILMAZ', () {
+      // `digitsOnly` eklenen NOKTALARI da silerdi; 6 karakterlik
+      // sınır ise "1.000.000" (dokuz karakter) yazılmasını
+      // engellerdi — ayraçlar sınırı rakamdan önce doldurur.
+      final k = _kodu('lib/screens/job_detail_screen.dart');
+      expect(k.contains('FilteringTextInputFormatter.digitsOnly'), isFalse);
+      expect(k.contains('LengthLimitingTextInputFormatter'), isFalse);
+    });
+
+    test('⚠ HER İKİ EKRAN DA `tutarOku` İLE OKUR', () {
+      // Ayraçlı metni `int.tryParse` null döndürür ve GEÇERLİ tutar
+      // reddedilir.
+      expect(
+          _kodu('lib/screens/job_detail_screen.dart')
+              .contains('tutarOku(_amt.text)'),
+          isTrue);
+      expect(
+          _kodu('lib/screens/teklif_talebi_detay_screen.dart')
+              .contains('tutarOku(_fiyat.text)'),
+          isTrue);
     });
   });
 

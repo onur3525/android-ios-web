@@ -27,19 +27,21 @@ class HizmetAlanOzetSatiri extends StatelessWidget {
   final HizmetAlanOzeti ozet;
   final bool maskeli;
 
+  // ── ⚠ PROFİL FOTOĞRAFI KALDIRILDI (kullanıcı isteği, 10 Eyl) ──
+  //
+  // Solda 38 px'lik avatar (maskeliyken kilit ikonu, açıkken baş
+  // harf) çiziliyordu. Kaldırıldı; yazılar kartın sol kenarından
+  // başlıyor.
+  //
+  // ⚠ `maskeli` PARAMETRESİ KALDI: adın maskelenip maskelenmeyeceğini
+  // hâlâ o belirliyor. Yalnız avatar gitti, kimlik kuralı DEĞİL.
+  //
+  // ⚠ TEK BİLEŞEN, İKİ KART: bu satırı "Kazandığım" ekranındaki iki
+  // kart türü de kullanıyor; ikisinde birden avatar kalkar.
   @override
   Widget build(BuildContext context) => Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (maskeli)
-            const RefSvg('assets/svg/ic_avlock.svg', size: 38)
-          else
-            SizedBox(
-              width: 38,
-              height: 38,
-              child: FittedBox(child: RefBasHarfAvatar(ad: ozet.adSoyad)),
-            ),
-          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -155,6 +155,37 @@ class AuthRepository extends ChangeNotifier {
     return null;
   }
 
+  /// ── ⚠ TAMAMLANAN İŞ SAYACINI ARTIR ──
+  ///
+  /// KULLANICI BULGUSU (10 Eyl): "Bir iş bitirildiğinde hizmet
+  /// verenin bilgisi tüm ekranlarda aynı anda güncelleniyor mu?"
+  /// — HAYIR.
+  ///
+  /// ⚠ KÖK NEDEN: portlar sayacı `auth.byId(id)!.tamamlananIs += 1`
+  /// diye DOĞRUDAN artırıyordu. Bu, hesap nesnesini yerinde
+  /// değiştirir ama deponun BİLDİRİM mekanizmasını hiç tetiklemez;
+  /// hiçbir ekran "bir şey değişti" haberini almaz.
+  ///
+  /// Pratikte yalnız `OfferController`/`ListingController` izleyen
+  /// ekranlar tesadüfen tazeleniyordu (o denetleyiciler kendi
+  /// bildirimlerini gönderdiği için). Sonuçlar, Teklif İste, Teklif
+  /// İstediklerim ve Teklif İstekleri ekranları eski sayıda
+  /// kalıyordu.
+  ///
+  /// ⚠ ARTIRIM TEK KAPIDAN: portlar artık bu metodu çağırır. Alanı
+  /// doğrudan değiştiren her yeni kod aynı hatayı yeniden üretir.
+  ///
+  /// Hesap bulunamazsa sessizce hiçbir şey yapılmaz — sayaç
+  /// olmayan bir hesaba yazılamaz.
+  void tamamlananIsArtir(String userId) {
+    final a = byId(userId);
+    if (a == null) {
+      return;
+    }
+    a.tamamlananIs += 1;
+    notifyListeners();
+  }
+
   /// ── ⚠ "BUL" AKIŞI — GERÇEK HİZMET VEREN EŞLEŞMESİ ──
   ///
   /// `kategori` veya `hizmet` adı, hizmet verenin KENDİ seçtiği

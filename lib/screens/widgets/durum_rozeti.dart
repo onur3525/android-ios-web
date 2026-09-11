@@ -58,13 +58,26 @@ class DurumRozeti extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          // ⚠ NOKTALAR SATIRIN ALTINA HİZALANIR (kullanıcı isteği,
+          // 10 Eyl): ortada duruyorlardı ve "Teklif bekleniyor..."
+          // izlenimi vermiyorlardı. Talep detayındaki geniş kutu ile
+          // AYNI kural.
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(metin,
                 style:
                     refText(size: RF.s11, weight: RF.w700, color: renk)),
             if (bekliyor) ...[
               const SizedBox(width: 3),
-              BekleyenNoktalar(renk: renk),
+              // ⚠ ALT DOLGU: `end` hizası noktaları metin kutusunun
+              // EN altına, yani alt uzantı (descender) hizasına
+              // indirir; 2 px yukarı alınca yazının TABAN çizgisine
+              // oturur. Kutuda 3 px, burada 2 px — nokta çapı ve
+              // punto daha küçük.
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: BekleyenNoktalar(renk: renk),
+              ),
             ],
           ],
         ),

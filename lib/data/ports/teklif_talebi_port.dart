@@ -214,10 +214,9 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
       //
       // "Bul" akışından kazanılan iş de bitirilmiş bir iştir; ilan
       // akışıyla aynı sayaca yazılır, yoksa iki akış ayrı sayılırdı.
-      final hesap = auth?.byId(t.saglayiciId);
-      if (hesap != null) {
-        hesap.tamamlananIs += 1;
-      }
+      // ⚠ DOĞRUDAN DEĞİL DEPO ÜZERİNDEN (10 Eyl): bkz.
+      // `AuthRepository.tamamlananIsArtir` notu.
+      auth?.tamamlananIsArtir(t.saglayiciId);
     }
     if (t != null && t.durum == TeklifTalebiDurumu.tamamlandi) {
       // ⚠ HİZMET ALANA — iş tamamlandı işaretlendi.

@@ -66,7 +66,21 @@ typedef SaglayiciOzeti = ({
 ///
 /// Sayım kuralı: tamamlanmış ilanlar arasında, SEÇİLİ teklifi bu
 /// hizmet verene ait olanlar.
-int tamamlananIsSayisi(BuildContext context, String saglayiciId) {
+int tamamlananIsSayisi(
+  BuildContext context,
+  String saglayiciId, {
+  // ── ⚠ `initState`TEN ÇAĞRILIRKEN İZLEME KAPATILIR ──
+  //
+  // `watch` yalnız `build` içinde geçerlidir; `initState` içinde
+  // çağrılırsa Flutter HATA ATAR. `sonuclar_screen` listesini
+  // `initState`te bir kez kurup sıralıyor — orası `izle: false`
+  // geçer.
+  //
+  // ⚠ VARSAYILAN `true`: asıl kullanım `build` içindedir ve orada
+  // izleme ŞARTTIR; varsayılanı `false` yapmak, unutulan her çağrıyı
+  // sessizce eski davranışa döndürürdü.
+  bool izle = true,
+}) {
   // ── ⚠ İKİ KAYNAĞIN BÜYÜĞÜ (kullanıcı bulgusu, 9 Eyl) ──
   //
   // BULGU: "Yeni hesap açan bir hizmet alan, hizmet verenin güncel iş
@@ -87,12 +101,30 @@ int tamamlananIsSayisi(BuildContext context, String saglayiciId) {
   //
   // ⚠ SON SÖZ SUNUCUNUNDUR: gerçek backend bu sayıyı yanıtta
   // döndürmelidir; buradaki sayaç yerel köprüdür.
-  final saklanan =
-      context.read<AuthController>().accountById(saglayiciId)?.tamamlananIs ??
-          0;
+  // ── ⚠ `watch`, `read` DEĞİL (kullanıcı bulgusu, 10 Eyl) ──
+  //
+  // BULGU: "Bir iş bitirildiğinde hizmet verenin bilgisi tüm
+  // ekranlarda aynı anda güncelleniyor mu?" — hayır.
+  //
+  // `read` yalnız o anki değeri okur, aboneliğe DÖNÜŞMEZ. Sayı
+  // değiştiğinde bu fonksiyonu çağıran ekran yeniden çizilmiyordu.
+  // `OfferController`/`ListingController` izleyen ekranlar tesadüfen
+  // tazeleniyordu; izlemeyenler (Sonuçlar, Teklif İste, Teklif
+  // İstediklerim, Teklif İstekleri) eski sayıda kalıyordu.
+  //
+  // ⚠ ÜÇÜ DE İZLENİR: sayı hem hesaptaki sayaçtan hem ilan/teklif
+  // ilişkisinden türüyor; biri izlenmezse o yoldan gelen değişiklik
+  // ekrana yansımaz.
+  //
+  // ⚠ YALNIZ `build` İÇİNDEN ÇAĞRILIR: `watch` yapı dışı bağlamda
+  // hata verir. Tüm çağrı yerleri `build`/`Builder` içindedir.
+  final saklanan = Provider.of<AuthController>(context, listen: izle)
+          .accountById(saglayiciId)
+          ?.tamamlananIs ??
+      0;
 
-  final ilanlar = context.read<ListingController>().all;
-  final teklifler = context.read<OfferController>();
+  final ilanlar = Provider.of<ListingController>(context, listen: izle).all;
+  final teklifler = Provider.of<OfferController>(context, listen: izle);
   var turetilen = 0;
   for (final l in ilanlar) {
     if (!l.isTamamlanmisIs) {
@@ -136,7 +168,10 @@ SaglayiciOzeti? gercekSaglayiciOzeti(
   required String id,
   String? ilYedegi,
 }) {
-  final hesap = context.read<AuthController>().accountById(id);
+  // ⚠ `watch`: adres profilden değiştiğinde bu kartı da tazelemeli.
+  // `read` ile yalnız `AuthController`ı ayrıca izleyen ekranlar
+  // güncelleniyordu.
+  final hesap = context.watch<AuthController>().accountById(id);
   if (hesap == null) {
     return null;
   }

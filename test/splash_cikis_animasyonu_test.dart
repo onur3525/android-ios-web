@@ -38,10 +38,37 @@ void main() {
     expect(ham.contains('yuzey.remove()'), isTrue);
   });
 
-  test('⚠ TEMA ELLE UYGULANIR — SİYAH BANT KORUMASI', () {
-    // Bu satır olmadan 1. denemedeki bant sorunu geri gelir.
+  test('tema elle uygulanır', () {
     expect(ham.contains('setTheme(R.style.NormalTheme)'), isTrue,
         reason: 'tema geçişi elle uygulanmıyor');
+  });
+
+  test('⚠ SİYAH BANT KORUMASI — PENCERE RENKLERİ ELLE', () {
+    // 2. DENEME BULGUSU (10 Eyl): tema geçişi logonun küçülmesini
+    // çözdü ama bantları ÇÖZMEDİ. Sebep: `setTheme` PENCERE
+    // ÖZNİTELİKLERİNİ geri almaz — pencere zaten oluşturulmuştur ve
+    // çubuk renkleri `Theme.SplashScreen`den çözülmüş hâlde kalır.
+    //
+    // İki sorun FARKLI şeylerden geliyordu; ikisi ayrı ayrı
+    // çözülmek zorundaydı.
+    expect(ham.contains('window.statusBarColor = Color.TRANSPARENT'), isTrue);
+    expect(ham.contains('window.navigationBarColor = Color.WHITE'), isTrue);
+  });
+
+  test('⚠ İKON PARLAKLIĞI DA AYARLANIR', () {
+    // Zemin beyaz; ikonlar koyu olmazsa beyaz üstünde beyaz kalır.
+    expect(ham.contains('isAppearanceLightStatusBars = true'), isTrue);
+    expect(ham.contains('isAppearanceLightNavigationBars = true'), isTrue);
+  });
+
+  test('⚠ RENKLER DART SABİTİYLE AYNI', () {
+    // `core/theme.dart` içindeki `kSistemCubuklari`: saydam durum
+    // çubuğu + beyaz gezinme çubuğu + koyu ikon. İki taraf ayrışırsa
+    // açılışta renk zıplar.
+    final dart = File('lib/core/theme.dart').readAsStringSync();
+    expect(dart.contains('statusBarColor: Colors.transparent'), isTrue);
+    expect(dart.contains('systemNavigationBarColor: Colors.white'), isTrue);
+    expect(dart.contains('statusBarIconBrightness: Brightness.dark'), isTrue);
   });
 
   test('⚠ SIRA: ÖNCE TEMA, SONRA KALDIRMA', () {

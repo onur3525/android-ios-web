@@ -65,6 +65,18 @@ void main() {
       expect(satir.contains('ozet.uyelikMetni'), isTrue);
     });
 
+    test('⚠ PROFİL FOTOĞRAFI YOK (kullanıcı isteği, 10 Eyl)', () {
+      // Solda 38 px'lik avatar çiziliyordu (maskeliyken kilit ikonu,
+      // açıkken baş harf). Yazılar artık kartın sol kenarından
+      // başlıyor.
+      //
+      // ⚠ `maskeli` parametresi KALDI: adın maskelenip
+      // maskelenmeyeceğini hâlâ o belirliyor; giden yalnız avatar.
+      expect(satir.contains('RefBasHarfAvatar'), isFalse);
+      expect(satir.contains('ic_avlock'), isFalse);
+      expect(satir.contains('this.maskeli'), isTrue);
+    });
+
     test('⚠ PUAN/YORUM YOK', () {
       // Değerlendirme yalnız hizmet verene yapılır; buraya yıldız
       // koymak olmayan bir veriyi varmış gibi gösterirdi.

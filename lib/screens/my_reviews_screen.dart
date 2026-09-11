@@ -11,6 +11,7 @@ import '../data/models/review.dart';
 import '../data/remote/api/review_api.dart';
 import '../data/remote/api_client.dart';
 import '../ui/ref_widgets.dart';
+import 'widgets/puan_dagilim_satiri.dart';
 // ⚠ Yorum kartı ORTAK — kopya çizim yok.
 import 'provider_reviews_screen.dart' show YorumKartiGovde;
 import '../ui/ref_tokens.dart';
@@ -380,84 +381,17 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   /// .pr-dbar{7px;r4;#EDF0F4}  dolgu: #F5A319 (turuncu — mavi DEĞİL)
   /// .mr-dc{12px/600;width:28px;text-align:right}   ← ADET, yüzde DEĞİL
   /// ```
-  Widget _distRow(String star, int n) {
-    final oran = _count == 0 ? 0.0 : n / _count;
-    return Row(
-      children: [
-        SizedBox(
-          width: 8, // .mr-dn
-          child: Text(star,
-              textAlign: TextAlign.right,
-              style: refText(size: RF.s12, weight: RF.w700, color: RC.text)),
-        ),
-        const SizedBox(width: 6),
-        const RefSvg('assets/svg/ic_starfill.svg',
-            size: 13, color: Color(0xFFF5A319)),
-        const SizedBox(width: 6),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: SizedBox(
-              height: 7,
-              child: Stack(
-                children: [
-                  const Positioned.fill(
-                      child: ColoredBox(color: Color(0xFFEDF0F4))),
-                  // ── ⚠ DOLGU GÖRÜNMÜYORDU (kullanıcı bulgusu, 9 Eyl) ──
-                  //
-                  // BULGU: "Kaç yıldız verildiyse hesaplanarak içi
-                  // dolmalı" — tek değerlendirme varken 5 yıldız
-                  // satırı bile BOŞ çiziliyordu.
-                  //
-                  // KÖK NEDEN: `heightFactor` VERİLMEMİŞTİ.
-                  // `FractionallySizedBox` yalnız `widthFactor` ile
-                  // çocuğa GEVŞEK yükseklik geçirir; `ColoredBox`un
-                  // kendi ölçüsü olmadığı için yüksekliği SIFIR
-                  // oluyordu. Genişlik doğru hesaplanıyordu ama
-                  // boyanan alanın yüksekliği yoktu — bu yüzden
-                  // hiçbir oranda görünmüyordu.
-                  //
-                  // ⚠ ORAN HESABI DEĞİŞMEDİ: `n / _count` aynen
-                  // duruyor; 1/1 tam dolu, 0/1 en az %3 görünür.
-                  //
-                  // ── ⚠ EN AZ %3 KURALI KALDIRILDI (kullanıcı
-                  // kararı, 9 Eyl) ──
-                  //
-                  // BULGU: "Puan verilmemiş olmasına rağmen o
-                  // satırlar az dolu görünüyor. 0 ise boş olmalı;
-                  // orana göre hesaplanıp dolmalı."
-                  //
-                  // ÖNCEDEN `Math.max(3, ...)` referansı gereği taban
-                  // %3 uygulanıyordu; amaç satırın bir ölçek çizgisi
-                  // olduğunu belli etmekti. Ama sonuç yanıltıcıydı:
-                  // hiç oy almamış yıldız da bir miktar dolu
-                  // görünüyor, "az da olsa puan var" izlenimi
-                  // veriyordu.
-                  //
-                  // ⚠ ARTIK ORAN DOĞRUDAN UYGULANIR: 0 oy → çubuk
-                  // TAMAMEN boş, 1/1 → tam dolu, aradaki her değer
-                  // kendi oranında. Gri raylar zaten görünür olduğu
-                  // için satırın ölçek olduğu yine anlaşılıyor.
-                  FractionallySizedBox(
-                    widthFactor: oran,
-                    heightFactor: 1,
-                    child: const ColoredBox(color: Color(0xFFF5A319)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        SizedBox(
-          width: 28, // .mr-dc
-          child: Text('$n',
-              textAlign: TextAlign.right,
-              style: refText(size: RF.s12, weight: RF.w600, color: RC.text)),
-        ),
-      ],
-    );
-  }
+  /// ⚠ ORTAK BİLEŞENE DELEGE EDİLDİ (10 Eyl): dağılım satırı artık
+  /// `widgets/puan_dagilim_satiri.dart` içinde TEK yerde. Teklif
+  /// detayındaki kopya yüzde yazıyor ve çubuğu hiç doldurmuyordu;
+  /// iki grafik aynı olmalı.
+  Widget _distRow(String star, int n) => PuanDagilimSatiri(
+        yildiz: int.parse(star),
+        adet: n,
+        toplam: _count,
+      );
+
+
 
 
   Widget _stars(double v, {double size = 18}) => Row(

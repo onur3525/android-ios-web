@@ -59,10 +59,15 @@ String? konumMetni(Address? adres, {bool mahalleDahil = false}) {
 
 /// Bir kullanıcının GÜNCEL konumu.
 ///
-/// ⚠ `watch` DEĞİL `read`: çağıran ekranlar zaten `AuthController`ı
-/// izliyor; burada ikinci bir abonelik kurmak gereksiz yeniden çizim
-/// üretirdi. Adres değişikliği hesabı güncellediği için kartlar yine
-/// tazelenir.
+/// ── ⚠ `read` → `watch` (kullanıcı bulgusu, 10 Eyl) ──
+///
+/// ÖNCEKİ VARSAYIM YANLIŞTI: "çağıran ekranlar zaten `AuthController`ı
+/// izliyor" diye `read` kullanılıyordu. Ölçüldü — Sonuçlar, Teklif
+/// İste ve Arama ekranları `AuthController`ı İZLEMİYOR. O ekranlar
+/// açıkken profilden adres değiştirmek hiçbir şeyi değiştirmiyordu.
+///
+/// ⚠ YALNIZ `build` İÇİNDEN ÇAĞRILIR: `watch` yapı dışı bağlamda hata
+/// verir. Tüm çağrı yerleri `build` içindedir.
 ///
 /// Hesap ya da adres yoksa `null` döner — satır çizilmez, yaklaşık
 /// bir konum UYDURULMAZ.
@@ -74,6 +79,6 @@ String? kullaniciKonumu(
   if (userId == null) {
     return null;
   }
-  final hesap = context.read<AuthController>().accountById(userId);
+  final hesap = context.watch<AuthController>().accountById(userId);
   return konumMetni(hesap?.address, mahalleDahil: mahalleDahil);
 }

@@ -458,8 +458,14 @@ List<MockSaglayici> _gercekSaglayicilariBul(
 /// ⚠ KOPYA KALDIRILDI: sayım artık `domain/saglayici_ozeti.dart`
 /// içindeki `tamamlananIsSayisi` ile TEK yerde tanımlı. Burada üç
 /// ayrı kopya vardı ve biri değişince ötekiler sessizce ayrışıyordu.
+///
+/// ⚠ `izle: false` — bu yardımcı `initState`ten çağrılan liste
+/// kurulumunda kullanılıyor. `watch` yapı dışında hata atar; liste
+/// zaten bir kez kurulup sıralanıyor, canlı izlemeye ihtiyacı yok.
+/// Ekrandaki KART ise ortak `gercekSaglayiciOzeti` üzerinden okur ve
+/// O izler.
 int _tamamlananIsGercek(BuildContext c, String providerId) =>
-    tamamlananIsSayisi(c, providerId);
+    tamamlananIsSayisi(c, providerId, izle: false);
 
 /// ⚠ GERÇEK HESAPLAR İÇİN "AKTİFLİK" TAHMİNİ — dürüst bir vekil
 /// (proxy) değerdir, uydurma DEĞİL: tamamlanan iş ve yorum sayısı

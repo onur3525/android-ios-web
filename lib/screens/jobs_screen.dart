@@ -3,7 +3,6 @@ import '../domain/iletisim_maskesi.dart';
 import 'widgets/is_zamani_secici.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
-import 'widgets/ilan_no_etiketi.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
@@ -19,7 +18,10 @@ import '../data/controllers/offer_controller.dart';
 import '../data/models/listing.dart';
 import '../data/models/offer.dart';
 import 'job_detail_screen.dart';
-import 'status_ui.dart';
+// ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
+// `offerStatusUi`, `listingRozetiUi` ve `tl` kullanılmıyor —
+// "Aktif" rozeti kalktı, tutarlar `core/tutar_bicimi.dart`tan
+// biçimleniyor.
 import 'widgets/hc_widgets.dart';
 import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
@@ -520,9 +522,18 @@ class _JobsScreenState extends State<JobsScreen> {
                               incelendi: incelenenCtl.incelendiMi(l.id),
                               teklifAdedi:
                                   offerCtl.offersForListing(l.id).length,
+                              // ⚠ OK KALDIRILDI (kullanıcı isteği,
+                              // 10 Eyl): sağ üstteki chevron, kartın
+                              // dokunulabilir olduğunu anlatmak için
+                              // konmuştu ama kartın tamamı zaten
+                              // dokunulabilir; tek işlevi köşeyi
+                              // doldurmaktı.
+                              //
+                              // ⚠ "Teklif Verildi" rozeti DURUYOR:
+                              // o bir durum bilgisi, süs değil.
                               trailing: mine != null
                                   ? const StatusChip('Teklif Verildi', HC.blue)
-                                  : RefSvg('assets/svg/ic_chev.svg', size: 20, color: RC.greyLight));
+                                  : null);
                         }))
                 : ((myOffers.isEmpty && secilenTalepler.isEmpty)
                     // ⚠ BOŞ DURUM METNİ EKRANA GÖRE DEĞİŞİR.
@@ -556,7 +567,10 @@ class _JobsScreenState extends State<JobsScreen> {
                           }
                           final o = myOffers[i];
                           final l = listingCtl.byId(o.listingId);
-                          final (label, color) = offerStatusUi(o.status);
+                          // ⚠ `offerStatusUi` ARTIK ÇAĞRILMIYOR
+                          // (10 Eyl): "Aktif" rozeti kaldırıldı.
+                          // Yardımcının kendisi duruyor, öteki
+                          // ekranlar kullanıyor.
                           return Material(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(14),
@@ -592,39 +606,46 @@ class _JobsScreenState extends State<JobsScreen> {
                                                       fontWeight:
                                                           FontWeight.w700,
                                                       color: HC.dark)),
-                                              const SizedBox(height: 3),
-                                              // ⚠ GÜNCEL ADRES (9 Eyl).
-                                              Text(
-                                                  kullaniciKonumu(
-                                                          context, l?.ownerId,
-                                                          mahalleDahil:
-                                                              true) ??
-                                                      l?.location ??
-                                                      '',
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: HC.grey)),
+                                              // ⚠ ADRES SATIRI
+                                              // KALDIRILDI (kullanıcı
+                                              // bulgusu, 10 Eyl): aynı
+                                              // adres kartta İKİ KEZ
+                                              // yazıyordu — burada,
+                                              // bir de alttaki hizmet
+                                              // alan bilgi satırında.
+                                              //
+                                              // ⚠ ALTTAKİ KALDI: orada
+                                              // adres, kime ait
+                                              // olduğuyla birlikte
+                                              // görünüyor; burada
+                                              // sahipsiz duruyordu.
                                             ]),
                                       ),
-                                      Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            // ⚠ TUTAR ORTAK BİÇİMDEN
-                                            // (9 Eyl): `tl()` "₺5000"
-                                            // yazıyordu; aynı ekrandaki
-                                            // doğrudan teklif kartı
-                                            // "3.000 TL" gösteriyordu.
-                                            // İki biçim yan yana
-                                            // duruyordu.
-                                            Text(tutarMetni(o.amount),
-                                                style: const TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight:
-                                                        FontWeight.w800,
-                                                    color: HC.dark)),
-                                            StatusChip(label, color),
-                                          ]),
+                                      // ── ⚠ DURUM ROZETİ KALDIRILDI
+                                      // (kullanıcı isteği, 10 Eyl) ──
+                                      //
+                                      // "Aktif" yazısı bilgi
+                                      // taşımıyordu: bu sekme ZATEN
+                                      // "Teklif verdiklerim" — burada
+                                      // listelenen her teklif aktif.
+                                      // Sonuçlananlar öteki sekmelere
+                                      // düşüyor.
+                                      //
+                                      // ⚠ TUTAR MAVİ OLDU: hizmet
+                                      // verenin KENDİ verdiği teklif,
+                                      // iş detayındaki "Verdiğiniz
+                                      // Teklif" kartında da mavi
+                                      // yazıyor. Aynı sayı iki ekranda
+                                      // iki farklı renkteydi.
+                                      //
+                                      // ⚠ TUTAR BİÇİMİ ORTAK KAYNAKTAN
+                                      // (`tutarMetni`) — `tl()` "₺5000"
+                                      // yazıyordu.
+                                      Text(tutarMetni(o.amount),
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                              color: HC.blue)),
                                     ]),
 
                                     // ── ⚠ HİZMET ALAN BİLGİLERİ
@@ -830,7 +851,11 @@ class _JobsScreenState extends State<JobsScreen> {
   }
 
   Widget _jobCard(BuildContext context, Listing l,
-          {required Widget trailing,
+          {
+          // ⚠ `null` OLABİLİR (10 Eyl): teklif verilmemiş kartta sağ
+          // üstte ok çiziliyordu; ok kaldırılınca orada gösterilecek
+          // bir şey kalmadı.
+          Widget? trailing,
           bool incelendi = false,
           int teklifAdedi = 0}) =>
       Material(
@@ -861,15 +886,21 @@ class _JobsScreenState extends State<JobsScreen> {
             // durmalı; `center` olsaydı kart yüksekliğine göre
             // ortalanır, başlık hizasından kayardı.
             //
-            // ⚠ İLAN NUMARASI ARTIK ÖNİZLEMEDE de GÖSTERİLİR
-            // (kullanıcı isteği) — `IlanNoEtiketi` kartın TÜM
-            // genişliğinde, `Row`un ÜSTÜNDE ayrı bir satır: yalnız
-            // `Expanded` Column'un içine konsaydı kartın gerçek sağ
-            // kenarına değil, trailing rozetin SOLUNA yaslanırdı.
+            // ── ⚠ İLAN NUMARASI ÖNİZLEMEDEN KALDIRILDI (kullanıcı
+            // isteği, 10 Eyl) ──
+            //
+            // `IlanNoEtiketi` kartın en üstünde AYRI BİR SATIRDI ve
+            // altındaki içeriği aşağı itiyordu: kullanıcının
+            // bildirdiği "yazıların üstünde boşluk" tam olarak bu
+            // satırdı. Numara ilan DETAYINDA duruyor.
+            //
+            // ⚠ SARAN `Column` KALDI: altında teklif durumu rozeti
+            // ayrı bir satır olarak duruyor, yani `Column`un hâlâ
+            // birden çok çocuğu var. Kaldırılan YALNIZ en üstteki
+            // numara satırıdır.
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                IlanNoEtiketi(l),
                 Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -960,11 +991,16 @@ class _JobsScreenState extends State<JobsScreen> {
                           height: RF.lh145)),
                 ]),
               ),
-              const SizedBox(width: 8),
               // ⚠ Rozet buradan KALDIRILDI — kullanıcı isteğiyle
               // kartın gerçek ALT kısmına taşındı (aşağıda). Burada
-              // yalnız `trailing` (durum rozeti / ok ikonu) kalır.
-              trailing,
+              // yalnız `trailing` (durum rozeti) kalır.
+              //
+              // ⚠ BOŞLUK DA KOŞULLU: `trailing` yokken 8 px'lik
+              // ayırıcı tek başına kalıp başlığı sola daraltıyordu.
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing,
+              ],
             ]),
               // ── ⚠ TEKLİF DURUMU — ARTIK KARTIN GERÇEK SAĞ ALT
               // KÖŞESİNDE ──

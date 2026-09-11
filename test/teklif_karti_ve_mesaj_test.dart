@@ -156,4 +156,68 @@ void main() {
       }
     });
   });
+
+  group('5 — CEVAP ZORUNLU DEĞİL (kullanıcı kararı, 10 Eyl)', () {
+    test('boş cevap gönderimi ENGELLEMEZ', () {
+      // "Hizmet veren teklif talebine cevap vermek zorunda değil;
+      // sadece fiyat verebilir." Teklifin taşıdığı asıl bilgi FİYAT.
+      expect(detay.contains('Teklifinizi açıklayan bir cevap yazın'), isFalse,
+          reason: 'boş cevapta gönderim hâlâ reddediliyor');
+    });
+
+    test('⚠ FİYAT DOĞRULAMASI DURUYOR', () {
+      // Kalkan tek şey açıklamanın zorunluluğu; fiyatsız teklif
+      // gönderilememeli.
+      expect(detay.contains('Geçerli bir fiyat girin.'), isTrue);
+    });
+
+    test('alan isteğe bağlı olduğunu söyler', () {
+      // Kullanıcı boş bırakabileceğini bilmeli, yoksa gereksiz yere
+      // doldurmaya çalışır. "Fotoğraf (Opsiyonel)" ile aynı dil.
+      expect(detay.contains("'(Opsiyonel)'"), isTrue);
+    });
+
+    test('⚠ BOŞ AÇIKLAMA BÖLÜMÜ HİÇ ÇİZİLMEZ', () {
+      // İki tarafta da: boşken başlık tek başına kalır ve karşı
+      // tarafa "açıklama var ama okunamıyor" izlenimi verirdi.
+      expect(
+          RegExp(r"\(talep\.teklifAciklamasi \?\? ''\)\.trim\(\)\.isNotEmpty")
+              .allMatches(detay)
+              .length,
+          2,
+          reason: 'iki taraftan biri boş başlık çiziyor');
+    });
+  });
+
+  group('6 — AÇIKLAMA KARTI (kullanıcı isteği, 10 Eyl)', () {
+    final kart = _kodu('lib/screens/widgets/teklif_aciklama_karti.dart');
+
+    test('⚠ İKİ TARAF DA AYNI KARTI KULLANIR', () {
+      // Önceden iki yerde ayrı ayrı, çerçevesiz düz metin olarak
+      // çiziliyordu; biri değişse öteki eskide kalırdı.
+      expect(RegExp(r'TeklifAciklamaKarti\(').allMatches(detay).length, 2,
+          reason: 'taraflardan biri hâlâ kendi çizimini yapıyor');
+    });
+
+    test('başlık ortalı', () {
+      expect(kart.contains('textAlign: TextAlign.center'), isTrue);
+    });
+
+    test('⚠ BAŞLIK DIŞARIDAN GELİR', () {
+      // İki taraf aynı metne kendi açısından bakıyor. Başlığı
+      // sabitlemek, hizmet verene kendi yazdığı metni "Hizmet
+      // Verenin Açıklaması" diye okutmak olurdu.
+      expect(detay.contains("baslik: 'Açıklamanız'"), isTrue);
+      expect(detay.contains("baslik: 'Hizmet Verenin Açıklaması'"), isTrue);
+    });
+
+    test('⚠ BOŞ AÇIKLAMADA KART ÇİZİLMEZ', () {
+      // Cevap yazmak zorunlu değil; kart boş bir kutu çizmemeli.
+      expect(
+          RegExp(r"\(talep\.teklifAciklamasi \?\? ''\)\.trim\(\)\.isNotEmpty")
+              .allMatches(detay)
+              .length,
+          2);
+    });
+  });
 }

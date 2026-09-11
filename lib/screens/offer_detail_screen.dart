@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/validators.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../core/telefon_bicimi.dart';
+import '../core/tutar_bicimi.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/contact_controller.dart';
@@ -14,11 +15,15 @@ import '../data/controllers/review_controller.dart';
 import '../data/models/listing.dart';
 import '../data/models/offer.dart';
 import '../data/models/review.dart';
-import 'status_ui.dart';
+// ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
+// `tl` kullanılmıyor, tutar `core/tutar_bicimi.dart`tan biçimleniyor.
 import 'widgets/hc_widgets.dart';
 import 'chat_screen.dart';
 import 'review_screen.dart';
 import '../domain/saglayici_ozeti.dart';
+// ⚠ Yorum kartı ORTAK — kopya çizim yok.
+import 'provider_reviews_screen.dart' show YorumKarti;
+import 'widgets/puan_dagilim_satiri.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -192,8 +197,13 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                           Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              const RefSvg('assets/svg/ic_starb.svg',
-                                  size: 15),
+                              // ⚠ SARI YILDIZ (kullanıcı isteği,
+                              // 10 Eyl): bu ekranda mavi yıldız
+                              // (`ic_starb`) kullanılıyordu;
+                              // uygulamadaki bütün yıldızlar
+                              // `ic_starfill` + #F5A319.
+                              const RefSvg('assets/svg/ic_starfill.svg',
+                                  size: 15, color: Color(0xFFF5A319)),
                               const SizedBox(width: 5),
                               Text(
                                 avg == null ? '—' : avg.toStringAsFixed(1),
@@ -290,11 +300,16 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 ),
                 child: Column(
                   children: [
-                    Text('Teklif Fiyatı',
+                    // ⚠ "Teklif Fiyatı" → "Verilen teklif" (10 Eyl):
+                    // aynı bilgi öteki ekranlarda bu adla geçiyor.
+                    Text('Verilen teklif',
                         style: refText(
-                            size: 13, weight: RF.w600, color: RC.blue)),
+                            size: 13, weight: RF.w500, color: RC.blue)),
                     const SizedBox(height: 1),
-                    Text(tl(offer.amount),
+                    // ⚠ TUTAR ORTAK BİÇİMDEN (10 Eyl): `tl()` "₺5000"
+                    // yazıyordu; uygulamanın her yerinde binlik
+                    // ayracı ve "TL" `core/tutar_bicimi.dart`tan.
+                    Text(tutarMetni(offer.amount),
                         style: refText(
                             size: 24,
                             weight: RF.w800,
@@ -432,24 +447,37 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                           color: RC.greyLight)),
                 )
               else
-                Container(
-                  decoration: BoxDecoration(
-                    color: RC.white,
-                    border: Border.all(color: RC.border),
-                    borderRadius: BorderRadius.circular(RR.r14),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 13),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < revs.length; i++)
-                        _YorumSatiri(
+                // ── ⚠ ORTAK YORUM KARTI (kullanıcı isteği, 10 Eyl) ──
+                //
+                // "Hizmet alan yorum kartı tamamen teklif al
+                // ekranlarındaki gibi olmalı."
+                //
+                // Bu ekran kendi `_YorumSatiri`ni çiziyordu ve yeni
+                // kuralların HİÇBİRİNİ almamıştı: profil fotoğrafı
+                // vardı, ad TAM SOYADIYLA yazıyordu, yıldızların
+                // yanında "5 puan" duruyordu, uzun yorumda aç/kapa
+                // yoktu.
+                //
+                // ⚠ ARTIK `YorumKarti`: fotoğraf yok, "Gönül B.",
+                // sağ üstte tarih, adın altında hizmet, altında
+                // yıldızlar, altında yorum metni, uzun yorumda
+                // Göster/Küçült.
+                //
+                // ⚠ DIŞ ÇERÇEVE KALDIRILDI: kartların kendi çerçevesi
+                // var; ikisi üst üste binince çift kenarlık
+                // görünüyordu.
+                Column(
+                  children: [
+                    for (var i = 0; i < revs.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
+                        child: YorumKarti(
                           review: revs[i],
-                          yazar: auth.accountById(revs[i].authorId)?.name,
-                          acik: open,
-                          ustCizgi: i != 0,
+                          yazarAdi:
+                              auth.accountById(revs[i].authorId)?.name,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
 
               // ── CTA (.pr-cta + .pr-free) ──
@@ -919,11 +947,15 @@ class _PuanKarti extends StatelessWidget {
                     for (var i = 1; i <= 5; i++)
                       Padding(
                         padding: const EdgeInsets.only(right: 2), // gap:2px
+                        // ⚠ SARI YILDIZ (10 Eyl): dolu da boş da aynı
+                        // renkte; boş yıldız `ic_starempty` zaten
+                        // konturlu.
                         child: RefSvg(
                           (ortalama ?? 0) >= i - 0.5
-                              ? 'assets/svg/ic_starb.svg'
+                              ? 'assets/svg/ic_starfill.svg'
                               : 'assets/svg/ic_starempty.svg',
                           size: 17,
+                          color: const Color(0xFFF5A319),
                         ),
                       ),
                   ],
@@ -943,15 +975,25 @@ class _PuanKarti extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // ── ⚠ ORTAK DAĞILIM SATIRI (kullanıcı isteği,
+                // 10 Eyl) ──
+                //
+                // "% değil, kaç kişi kaç yıldız verdiyse karşısına
+                // yazılacak; teklif al ekranlarındaki aynı mantıkta
+                // olmalı."
+                //
+                // ⚠ YÜZDE YANILTICIYDI: tek yorumu olan için "%100"
+                // yazıyordu — sayı büyük görünüyor ama arkasında bir
+                // kişi var.
+                //
+                // ⚠ ÇUBUK DA DÜZELDİ: burada `heightFactor`
+                // verilmediği için dolgu HİÇ görünmüyordu; ortak
+                // bileşende düzeltildi.
                 for (var yildiz = 5; yildiz >= 1; yildiz--) ...[
-                  _DagilimSatiri(
+                  PuanDagilimSatiri(
                     yildiz: yildiz,
-                    yuzde: toplam == 0
-                        ? 0
-                        : (reviews.where((r) => r.stars == yildiz).length *
-                                100 /
-                                toplam)
-                            .round(),
+                    adet: reviews.where((r) => r.stars == yildiz).length,
+                    toplam: toplam,
                   ),
                   if (yildiz != 1) const SizedBox(height: 6), // gap:6px
                 ],
@@ -964,161 +1006,16 @@ class _PuanKarti extends StatelessWidget {
   }
 }
 
-/// `.pr-drow` — tek dağılım satırı.
-class _DagilimSatiri extends StatelessWidget {
-  const _DagilimSatiri({required this.yildiz, required this.yuzde});
+/// ⚠ `_DagilimSatiri` KALDIRILDI (10 Eyl): dağılım satırı artık
+/// `widgets/puan_dagilim_satiri.dart` içinde TEK yerde. Bu kopya
+/// yüzde yazıyor, mavi dolgu kullanıyor ve `heightFactor` vermediği
+/// için çubuğu hiç doldurmuyordu.
 
-  final int yildiz;
-  final int yuzde;
+/// ⚠ `_YorumSatiri` KALDIRILDI (10 Eyl): yorum kartı artık ortak
+/// `YorumKarti` bileşeni. Bu kopya profil fotoğrafı çiziyor, adı tam
+/// soyadıyla yazıyor, yıldızların yanına "N puan" koyuyor ve uzun
+/// yorumda aç/kapa sunmuyordu.
 
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          SizedBox(
-            width: 8, // .pr-dn{width:8px;text-align:right}
-            child: Text('$yildiz',
-                textAlign: TextAlign.right,
-                style: refText(
-                    size: RF.s115, weight: RF.w600, color: RC.text)),
-          ),
-          const SizedBox(width: 6),
-          const RefSvg('assets/svg/ic_starb.svg', size: 12),
-          const SizedBox(width: 6),
-          Expanded(
-            // .pr-dbar{height:7px;r4;#EDF0F4}
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                height: 7,
-                child: Stack(
-                  children: [
-                    const Positioned.fill(
-                        child: ColoredBox(color: Color(0xFFEDF0F4))),
-                    FractionallySizedBox(
-                      widthFactor: yuzde / 100,
-                      child: const ColoredBox(color: RC.blue), // .pr-dfill
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 30, // .pr-dp{width:30px;text-align:right}
-            child: Text('%$yuzde',
-                textAlign: TextAlign.right,
-                style:
-                    refText(size: 11, weight: RF.w600, color: RC.text)),
-          ),
-        ],
-      );
-}
-
-/// `.pr-rev` — tek yorum satırı.
-class _YorumSatiri extends StatelessWidget {
-  const _YorumSatiri({
-    required this.review,
-    required this.yazar,
-    required this.acik,
-    required this.ustCizgi,
-  });
-
-  final Review review;
-  final String? yazar;
-  final bool acik;
-  final bool ustCizgi;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          border: ustCizgi
-              // .pr-rev+.pr-rev{border-top:1px solid #F2F4F7}
-              ? const Border(top: BorderSide(color: Color(0xFFF2F4F7)))
-              : null,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // .pr-rav — 38px; iletişim açılmadan KİLİTLİ
-            SizedBox(
-              width: 38,
-              height: 38,
-              child: acik
-                  ? _AcikAvatar(harfler: _basHarfler(yazar), boyut: 38)
-                  : const RefSvg('assets/svg/ic_avlock.svg', size: 38),
-            ),
-            const SizedBox(width: 9), // gap:9px
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // .pr-rhead
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _yorumcuAdi(yazar, acik: acik),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: refText(
-                              size: RF.s14,
-                              weight: RF.w700,
-                              color: RC.text),
-                        ),
-                      ),
-                      const SizedBox(width: 7), // gap:7px
-                      for (var i = 1; i <= 5; i++)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 1),
-                          child: RefSvg(
-                            review.stars >= i
-                                ? 'assets/svg/ic_starb.svg'
-                                : 'assets/svg/ic_starempty.svg',
-                            size: 14,
-                          ),
-                        ),
-                      const SizedBox(width: 7),
-                      // ── ⚠ "5.0" DEĞİL "5 puan" ──
-                      //
-                      // Yorum puanı HER ZAMAN tam sayıdır (1-5);
-                      // ondalıklı yazmak ORTALAMA izlenimi veriyordu.
-                      // Üstelik ekranın başındaki hizmet veren puanı
-                      // (`★ 5.0`) da aynı biçimde yazıldığı için satır
-                      // "bu yorumu yapanın puanı 5.0" diye okunuyordu.
-                      //
-                      // ⚠ Yıldızlar bu yorumun VERDİĞİ puandır; hizmet
-                      // alanların puanı diye bir kavram YOKTUR, yalnız
-                      // hizmet verenler puanlanır.
-                      Text('${review.stars} puan',
-                          style: refText(
-                              size: RF.s125,
-                              weight: RF.w600,
-                              color: const Color(0xFF3A4658))),
-                      const Spacer(), // .pr-rtime{margin-left:auto}
-                      Text(_prGoreliZaman(review.createdAt),
-                          style: refText(
-                              size: RF.s115,
-                              weight: RF.w400,
-                              color: RC.greyLight)),
-                    ],
-                  ),
-                  // .pr-rtext{11.5px;1.45;#3A4658;margin-top:4px}
-                  const SizedBox(height: 4),
-                  Text(review.text,
-                      style: refText(
-                          size: RF.s115,
-                          weight: RF.w400,
-                          color: const Color(0xFF3A4658),
-                          height: RF.lh145)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-}
 
 /// `.pr-free` — yeşil bilgi şeridi (buton altı).
 class _UcretsizSerit extends StatelessWidget {

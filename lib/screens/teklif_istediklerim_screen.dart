@@ -179,9 +179,34 @@ class _TalepKarti extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(talep.hizmet,
-                style:
-                    refText(size: RF.s145, weight: RF.w700, color: RC.text)),
+            // ── ⚠ DURUM ROZETİ KARTIN SAĞ ÜST KÖŞESİNDE
+            // (kullanıcı isteği, 10 Eyl) ──
+            //
+            // ÖNCEDEN özet satırının sağındaydı, yani hizmet adının
+            // BİR SATIR ALTINDA başlıyordu. Artık başlıkla AYNI
+            // satırda; kartın sağ üst köşesine oturuyor.
+            //
+            // ⚠ BAŞLIK ESNER, ROZET ESNEMEZ: uzun hizmet adları
+            // rozeti ittirmesin diye başlık `Expanded` içinde
+            // kırpılır.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(talep.hizmet,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: refText(
+                          size: RF.s145, weight: RF.w700, color: RC.text)),
+                ),
+                const SizedBox(width: 8),
+                DurumRozeti(
+                  metin: metin,
+                  renk: renk,
+                  bekliyor: talep.durum == TeklifTalebiDurumu.beklemede,
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             // ── ⚠ DURUM VE TUTAR, ÖZETİN SAĞINDA ──
             //
@@ -199,27 +224,10 @@ class _TalepKarti extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── ⚠ DURUM ROZETİ ORTAK BİLEŞENE ALINDI
-                    // (kullanıcı isteği, 9 Eyl) ──
-                    //
-                    // "Teklif bekleniyor yazısı çok gelişi güzel
-                    // konulmuş, daha orantılı olmalı; teklif bekliyor
-                    // canlı hissi vermeli."
-                    //
-                    // ⚠ ÖLÇÜ KÜÇÜLDÜ: rozet kartın içinde adla aynı
-                    // ağırlıkta duruyordu; bilgi ikincil, ad birincil.
-                    //
-                    // ⚠ CANLILIK YALNIZ BEKLEYEN DURUMDA: karşı taraf
-                    // henüz yanıt vermediyse metnin sağında üç nokta
-                    // sırayla parlar. Sonuçlanmış durumlarda
-                    // ("Teklif geldi", "İş tamamlandı") nokta hiç
-                    // çizilmez — sürekli oynayan bir öğe, bitmiş işi
-                    // bitmemiş gibi gösterirdi.
-                    DurumRozeti(
-                      metin: metin,
-                      renk: renk,
-                      bekliyor: talep.durum == TeklifTalebiDurumu.beklemede,
-                    ),
+                    // ⚠ DURUM ROZETİ BURADAN KALKTI (10 Eyl): artık
+                    // kartın sağ ÜST köşesinde, başlıkla aynı
+                    // satırda. Bu sütunda yalnız yeni mesaj ve tutar
+                    // kaldı.
                     // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
                     //
                     // Kartta mesaj geldiğine dair hiçbir iz yoktu;

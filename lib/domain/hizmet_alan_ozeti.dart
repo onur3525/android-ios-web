@@ -46,13 +46,15 @@ typedef HizmetAlanOzeti = ({
 /// taleplerden oluşur. Yalnız biri sayılsaydı sayı olduğundan küçük
 /// görünürdü.
 int hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) {
+  // ⚠ `watch` (10 Eyl): iş tamamlandığında sayı ekranda anında
+  // değişmeli — bkz. `saglayici_ozeti.dart` notu.
   final ilanSayisi = c
-      .read<ListingController>()
+      .watch<ListingController>()
       .all
       .where((l) => l.ownerId == hizmetAlanId && l.isTamamlanmisIs)
       .length;
   final talepSayisi = c
-      .read<TeklifTalebiController>()
+      .watch<TeklifTalebiController>()
       .byHizmetAlan(hizmetAlanId)
       .where((t) => t.durum == TeklifTalebiDurumu.tamamlandi)
       .length;
@@ -80,7 +82,8 @@ HizmetAlanOzeti hizmetAlanOzeti(
   required String id,
   required String adGoster,
 }) {
-  final hesap = context.read<AuthController>().accountById(id);
+  // ⚠ `watch`: adres değişince kart da değişmeli.
+  final hesap = context.watch<AuthController>().accountById(id);
   final adres = hesap?.address;
   return (
     id: id,

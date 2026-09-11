@@ -60,21 +60,55 @@ void main() {
       expect(k.contains("Text('Verdiğiniz Teklif'"), isTrue);
     });
 
-    test('⚠ ALTTAKİ TUTAR/DURUM KARTI DURUYOR', () {
-      expect(k.contains('StatusChip(oLabel, oColor)'), isTrue);
+    test('⚠ ALTTAKİ TUTAR/DURUM KUTUSU KALDIRILDI (10 Eyl)', () {
+      // Telefon/mesaj kutularının hemen üstünde "5.000 TL · Aktif"
+      // yazan çerçeveli bir kutu vardı. Tutar zaten ÜSTÜNDEKİ mavi
+      // kartta büyük puntoyla yazıyordu; aynı sayı aynı ekranda iki
+      // kez görünüyordu.
+      expect(k.contains('StatusChip(oLabel, oColor)'), isFalse);
+      expect(k.contains('offerStatusUi(mine.status)'), isFalse);
+      // ⚠ Teklif notu da gitti: hizmet verenin KENDİ yazdığı metni
+      // kendisine geri okutmak bilgi taşımıyordu.
+      expect(k.contains('mine.note'), isFalse);
     });
 
-    test('ilan numarası ortak bileşenden, sağa yaslı', () {
-      // Bileşene dokunulmadı; hizalama zaten onun içinde sabit.
-      expect(k.contains('IlanNoEtiketi(l)'), isTrue);
+    test('⚠ TUTAR EKRANDA TEK KEZ', () {
+      expect(RegExp(r'tutarMetni\(mine\.amount\)').allMatches(k).length, 1);
+    });
+
+    test('⚠ İLAN NUMARASI KARTIN EN ÜSTÜNDE (10 Eyl)', () {
+      // Önceden kartın ORTASINDA, kategori ikonunun yanındaki
+      // sütunun içindeydi; o sütun `Expanded` olduğu için numara
+      // kartın gerçek sağ kenarına değil sütunun sağına yaslanıyor
+      // ve ikonun hizasını da bozuyordu.
+      expect(RegExp(r'IlanNoEtiketi\(l\)').allMatches(k).length, 1,
+          reason: 'numara birden fazla yerde çiziliyor');
+      expect(k.indexOf('IlanNoEtiketi(l)'), lessThan(k.indexOf('_SahipKarti(')),
+          reason: 'numara kartın en üstünde değil');
+    });
+
+    test('⚠ KATEGORİ İKONU METİNLE YAN YANA', () {
+      // Hiza `start` olduğu için ikon metnin ÜSTÜNDE kalıyordu.
+      expect(
+          k.contains(
+              'Row(crossAxisAlignment: CrossAxisAlignment.center, children: ['),
+          isTrue);
+    });
+
+    test('⚠ "Kategori" SATIRI KALKTI', () {
+      // Aynı bilgi kartın üstünde, kategori ikonunun yanında ZATEN
+      // yazıyor; alt tabloda ikinci kez tekrar ediyordu.
+      expect(k.contains("etiket: 'Kategori'"), isFalse);
+      expect(k.contains("etiket: 'İl / İlçe / Mahalle'"), isTrue,
+          reason: 'öteki bilgi satırları korunmalı');
+      expect(k.contains("etiket: 'İlan Tarihi'"), isTrue);
     });
   });
 
   group('3 — TUTAR BİÇİMİ', () {
-    test('⚠ AYNI EKRANDA İKİ TUTAR, TEK BİÇİM', () {
-      // İkisi de `tl()` ile "₺5000" yazıyordu; uygulamanın geri
-      // kalanı "5.000 TL" gösteriyor.
-      expect(RegExp(r'tutarMetni\(mine\.amount\)').allMatches(k).length, 2);
+    test('⚠ ESKİ BİÇİMLENDİRİCİ GERİ GELMEDİ', () {
+      // `tl()` "₺5000" yazıyordu; uygulamanın geri kalanı
+      // "5.000 TL" gösteriyor.
       expect(k.contains('tl(mine.amount)'), isFalse);
     });
   });

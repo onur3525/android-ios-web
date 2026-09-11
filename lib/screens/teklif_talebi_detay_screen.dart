@@ -30,6 +30,7 @@ import 'widgets/foto_goruntuleyici.dart';
 import 'widgets/durum_rozeti.dart';
 import 'widgets/is_zamani_secici.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
+import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/teklif_tutar_karti.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
@@ -110,10 +111,17 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
       sysToastKural(context, 'Geçerli bir fiyat girin.');
       return;
     }
-    if (_cevap.text.trim().isEmpty) {
-      sysToastKural(context, 'Teklifinizi açıklayan bir cevap yazın.');
-      return;
-    }
+    // ── ⚠ CEVAP ZORUNLU DEĞİL (kullanıcı kararı, 10 Eyl) ──
+    //
+    // "Hizmet veren teklif talebine cevap vermek zorunda değil;
+    // sadece fiyat verebilir."
+    //
+    // ÖNCEDEN boş cevapta gönderim REDDEDİLİYORDU. Oysa teklifin
+    // taşıdığı asıl bilgi FİYAT; açıklama yardımcı. Zorunlu tutmak,
+    // hizmet vereni anlamsız bir cümle yazmaya itiyordu.
+    //
+    // ⚠ FİYAT DOĞRULAMASI DURUYOR: fiyatsız teklif gönderilemez.
+    // Kalkan tek şey açıklamanın zorunluluğu.
     setState(() => _gonderiliyor = true);
     final err = await context.read<TeklifTalebiController>().teklifVer(t.id,
         fiyat: f, aciklama: _cevap.text.trim());
@@ -1079,12 +1087,18 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
           // `TeklifTutarKarti`. Hizmet alan tarafı da AYNI kartı
           // kullanır — biri değişince öteki de değişir.
           TeklifTutarKarti(talep.teklifFiyati!),
-          const SizedBox(height: 10),
-          Text('Açıklamanız',
-              style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          Text(talep.teklifAciklamasi ?? '',
-              style:
-                  refText(size: RF.s14, weight: RF.w400, color: RC.text)),
+          // ⚠ AÇIKLAMA BOŞSA BÖLÜM HİÇ ÇİZİLMEZ (10 Eyl): cevap
+          // artık zorunlu değil. Boşken başlık tek başına kalıp
+          // altında boşluk bırakıyordu — sahipsiz başlık.
+          if ((talep.teklifAciklamasi ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            // ⚠ ORTAK KART (10 Eyl): düz metin yerine çerçeveli kart,
+            // ortalanmış başlık. Hizmet alan tarafı AYNI kartı
+            // kullanır — biri değişince öteki de değişir.
+            TeklifAciklamaKarti(
+                baslik: 'Açıklamanız',
+                metin: talep.teklifAciklamasi!.trim()),
+          ],
           if (talep.durum == TeklifTalebiDurumu.secildi) ...[
             const SizedBox(height: 16),
             Container(
@@ -1145,8 +1159,20 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
           decoration: const InputDecoration(hintText: 'Örn. 1.500'),
         ),
         const SizedBox(height: 16),
-        Text('Cevabınız',
-            style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
+        // ⚠ İSTEĞE BAĞLI OLDUĞU YAZILIR: alan zorunlu olmaktan
+        // çıktı; kullanıcı boş bırakabileceğini bilmeli, yoksa
+        // gereksiz yere doldurmaya çalışır. "Fotoğraf (Opsiyonel)"
+        // ve "Hizmet Zamanı (Opsiyonel)" ile AYNI dil.
+        Row(
+          children: [
+            Text('Cevabınız',
+                style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
+            const SizedBox(width: 6),
+            Text('(Opsiyonel)',
+                style: refText(
+                    size: RF.s125, weight: RF.w500, color: RC.textSoft)),
+          ],
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: cevapController,
@@ -1209,13 +1235,18 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
             // ⚠ ORTAK KART (bkz. hizmet veren tarafı): iki taraf da
             // aynı tutarı aynı biçimde görür.
             TeklifTutarKarti(talep.teklifFiyati!),
-            const SizedBox(height: 10),
-            Text('Hizmet Verenin Açıklaması',
-                style:
-                    refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-            Text(talep.teklifAciklamasi ?? '',
-                style:
-                    refText(size: RF.s14, weight: RF.w400, color: RC.text)),
+            // ⚠ AÇIKLAMA BOŞSA BÖLÜM HİÇ ÇİZİLMEZ (10 Eyl): hizmet
+            // veren cevap yazmak zorunda değil. Boş başlık, karşı
+            // tarafa "açıklama var ama okunamıyor" izlenimi verirdi.
+            if ((talep.teklifAciklamasi ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              // ⚠ ORTAK KART: hizmet veren tarafıyla BİREBİR aynı
+              // görünüm; değişen yalnız başlık, çünkü iki taraf aynı
+              // metne kendi açısından bakıyor.
+              TeklifAciklamaKarti(
+                  baslik: 'Hizmet Verenin Açıklaması',
+                  metin: talep.teklifAciklamasi!.trim()),
+            ],
             const SizedBox(height: 10),
             if (kalan != null && kalan.inMinutes > 0)
               Text(
@@ -1387,29 +1418,33 @@ class _BeklemeGostergesi extends StatelessWidget {
         color: RC.blueSoft,
         borderRadius: BorderRadius.circular(RR.r13),
       ),
+      // ⚠ GÖNDERİ İKONU KALDIRILDI (kullanıcı isteği, 10 Eyl):
+      // kutunun solundaki mavi daire çıkarıldı. Kutu zaten mavi
+      // zeminli ve metin ne beklendiğini söylüyordu; ikon fazladan
+      // bir görsel ağırlıktı.
       child: Row(
+        // ⚠ NOKTALAR SATIRIN ALTINA HİZALANIR (kullanıcı isteği):
+        // ortada duruyorlardı, "Teklif bekleniyor..." gibi bir üç
+        // nokta izlenimi vermiyorlardı. `end` hizası noktaları metin
+        // kutusunun ALT kenarına indirir.
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: RC.blue,
-              shape: BoxShape.circle,
-            ),
-            child: const RefSvg('assets/svg/ic_send.svg',
-                size: 15, color: RC.white),
-          ),
-          const SizedBox(width: 11),
           Flexible(
             child: Text(kTeklifBekleniyorMetni,
                 style: refText(
                     size: RF.s135, weight: RF.w700, color: RC.text)),
           ),
-          const SizedBox(width: 6),
-          // ⚠ Kutu geniş olduğu için nokta çapı büyütüldü; kural ve
-          // zamanlama AYNI bileşenden geliyor.
-          const BekleyenNoktalar(renk: RC.blue, cap: 5),
+          const SizedBox(width: 4),
+          // ⚠ ALT DOLGU: `end` hizası noktaları metin kutusunun EN
+          // altına, yani alt uzantı (descender) hizasına indirir;
+          // 3 px yukarı alınca yazının TABAN çizgisine oturur ve
+          // gerçek bir üç nokta gibi görünür.
+          const Padding(
+            padding: EdgeInsets.only(bottom: 3),
+            // ⚠ Kutu geniş olduğu için nokta çapı büyütüldü; kural ve
+            // zamanlama AYNI bileşenden geliyor.
+            child: BekleyenNoktalar(renk: RC.blue, cap: 5),
+          ),
         ],
       ),
     );
