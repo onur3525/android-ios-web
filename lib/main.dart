@@ -187,7 +187,11 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   final offerRepo = OfferRepository();
   final contactRepo = ContactRepository();
 
-  final offerPort = MockOfferPort(offerRepo, listingRepo, notifs: notifRepo);
+  final offerPort = MockOfferPort(offerRepo, listingRepo,
+      notifs: notifRepo,
+      // ⚠ Teklif seçilince hizmet verenin tamamlanan iş sayacı
+      // artırılır; `authRepo` bunun için gerekli.
+      auth: authRepo);
   final listingPort =
       MockListingPort(listingRepo, offerRepo, contactRepo, chatRepo, offerPort,
           // Çıkar çatışması denetimi için hesap deposu.

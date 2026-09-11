@@ -4,8 +4,14 @@
 // çalışıyorsa, hizmet alan rolünde AYNI kategoride ilan açamaz.
 // Aksi hâlde rakiplerinden teklif toplayıp fiyat öğrenebilir.
 //
-// KAPSAM: denetim ANA KATEGORİ düzeyindedir — hizmet veren yalnız bir
-// alt hizmet seçmiş olsa bile o ana kategorinin hiçbir ilanını açamaz.
+// ⚠ KAPSAM DARALDI (kullanıcı kararı, 9 Eyl): denetim artık SEÇİLEN
+// HİZMET düzeyindedir. "Doğalgaz Kaçağı" sunan biri "Doğalgaz
+// Tesisatı" ilanı AÇABİLİR. Yalnız ANA KATEGORİYİ bütün olarak
+// seçmişse o kategorinin tamamı kapanır — kategoriyi bütün olarak
+// seçmek, o alandaki her işi yaptığını beyan etmektir.
+//
+// ⚠ ESKİ GEREKÇE GEÇERSİZ KALDI: "alt hizmetler aynı ustanın işidir"
+// varsayımı katalog büyüdükçe tutmuyor.
 //
 // ⚠ Kaynak metni denetleyen testlerde YORUM SATIRLARI ELENİR.
 
@@ -38,18 +44,41 @@ void main() {
           isFalse);
     });
 
-    test('ALT HİZMET seçse bile ANA KATEGORİNİN tamamı kapanır', () {
-      // "Kombi bakımı yapıyorum ama kombi tamiri ilanı veriyorum"
-      // ayrımı gerçekte yoktur; kuralı delmenin en kolay yolu olurdu.
+    test('⚠ ALT HİZMET SEÇİMİ YALNIZ O HİZMETİ KAPATIR', () {
+      // KULLANICI BULGUSU (9 Eyl): "Doğalgaz kaçağı ve tespiti
+      // hizmeti veren biri, doğalgazın DİĞER hizmetleri için hizmet
+      // alabilmeli."
       const secim = {'Kombi Bakımı'};
+      expect(
+          catisanKategori(
+              saglayiciSecimleri: secim, ilanBasligi: 'Kombi Bakımı'),
+          'Kombi Bakımı',
+          reason: 'kendi sunduğu hizmette hâlâ ilan açamaz');
+      expect(
+          ilanAcilabilir(
+              saglayiciSecimleri: secim, ilanBasligi: 'Kombi Tamiri'),
+          isTrue,
+          reason: 'aynı kategorideki BAŞKA hizmet için ilan açabilmeli');
+    });
+
+    test('⚠ ANA KATEGORİYİ SEÇEN TÜM KATEGORİYİ KAPATIR', () {
+      // Kategoriyi bütün olarak seçmek, o alandaki her işi yaptığını
+      // beyan etmektir.
+      const secim = {'Kombi Servis'};
       expect(
           catisanKategori(
               saglayiciSecimleri: secim, ilanBasligi: 'Kombi Tamiri'),
           'Kombi Servis');
+    });
+
+    test('⚠ KURAL TEK SATIRLA DELİNEMEZ', () {
+      // Alt hizmet sunan biri, ANA KATEGORİ başlığıyla ilan açarak
+      // kendi hizmetini de kapsayan bir talep oluşturabilirdi.
+      const secim = {'Kombi Bakımı'};
       expect(
-          catisanKategori(
+          ilanAcilabilir(
               saglayiciSecimleri: secim, ilanBasligi: 'Kombi Servis'),
-          'Kombi Servis');
+          isFalse);
     });
 
     test('BAŞKA kategoride ilan açabilir', () {
@@ -80,13 +109,9 @@ void main() {
           isNull);
     });
 
-    test('birden çok seçimde HEPSİ kapalıdır', () {
+    test('birden çok seçimde HER BİRİ kendi hizmetini kapatır', () {
       const secim = {'Su Tesisatı', 'Elektrik Tesisatı', 'Halı Yıkama'};
-      for (final b in const [
-        'Tıkanıklık Açma',
-        'Elektrik Arıza',
-        'Halı Yıkama',
-      ]) {
+      for (final b in secim) {
         expect(ilanAcilabilir(saglayiciSecimleri: secim, ilanBasligi: b),
             isFalse,
             reason: b);
@@ -98,6 +123,15 @@ void main() {
       expect(m.contains('Su Tesisatı'), isTrue);
       expect(m.contains('ilan açamazsınız'), isTrue);
       expect(m.contains('Hizmet Kategorilerim'), isTrue);
+    });
+
+    test('⚠ MESAJ KATEGORİ DEĞİL HİZMET DER', () {
+      // Kural daraldığına göre metin de daralmalı; yoksa kullanıcı
+      // öteki hizmetler için de açamayacağını sanır.
+      expect(catismaMesaji('Kombi Bakımı').contains('bu hizmet için'),
+          isTrue);
+      expect(catismaMesaji('Kombi Bakımı').contains('bu kategoride'),
+          isFalse);
     });
   });
 

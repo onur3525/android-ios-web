@@ -64,6 +64,23 @@ void main() {
           reason: 'ilan tamamlandığında sayaç yazılmıyor');
     });
 
+    test('⚠ SAYACI YAZAN SINIF HESAP DEPOSUNU TAŞIR', () {
+      // CI HATASI (10 Eyl): sayaç eklenirken `auth` alanının
+      // `MockListingPort`ta olduğu, seçim akışının ise
+      // `MockOfferPort`ta olduğu gözden kaçtı; derleme
+      // "The getter 'auth' isn't defined" ile düştü.
+      //
+      // ⚠ Alanın VARLIĞI aranır: `auth` kullanan sınıf onu kendi
+      // tanımlamalı, komşu sınıftan miras sanılmamalı.
+      final k = _kodu('lib/data/ports/mock_ports.dart');
+      final i = k.indexOf('class MockOfferPort');
+      final j = k.indexOf('\nclass ', i + 10);
+      final govde = k.substring(i, j > 0 ? j : k.length);
+      expect(govde.contains('final AuthRepository? auth;'), isTrue,
+          reason: 'MockOfferPort hesap deposunu taşımıyor');
+      expect(govde.contains('auth?.byId(chosen.providerId)'), isTrue);
+    });
+
     test('"Bul" akışı: talep tamamlanınca', () {
       final k = _kodu('lib/data/ports/teklif_talebi_port.dart');
       expect(k.contains('hesap.tamamlananIs += 1'), isTrue,

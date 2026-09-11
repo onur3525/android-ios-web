@@ -469,7 +469,23 @@ class MockOfferPort extends OfferPort {
   final OfferRepository offers;
   final ListingRepository listings;
   final NotificationRepository? notifs;
-  MockOfferPort(this.offers, this.listings, {this.notifs}) {
+
+  /// ── ⚠ HESAP DEPOSU (9 Eyl) ──
+  ///
+  /// Teklif seçildiğinde hizmet verenin `tamamlananIs` sayacı
+  /// artırılır; bu depo olmadan sayaç yazılamaz.
+  ///
+  /// ⚠ İSTEĞE BAĞLI: `null` verilirse sayaç GÜNCELLENMEZ ama akış
+  /// çalışır — `notifs` ile AYNI kural, eski çağrılar ve testler
+  /// kırılmaz.
+  ///
+  /// ⚠ CI HATASI (10 Eyl): sayaç eklenirken `auth` alanının
+  /// `MockListingPort`ta olduğu, `MockOfferPort`ta OLMADIĞI gözden
+  /// kaçmıştı; derleme "The getter 'auth' isn't defined" ile
+  /// düşmüştü. Seçim akışı burada olduğu için alan buraya eklendi.
+  final AuthRepository? auth;
+
+  MockOfferPort(this.offers, this.listings, {this.notifs, this.auth}) {
     offers.addListener(notifyListeners);
     listings.addListener(notifyListeners);
   }
