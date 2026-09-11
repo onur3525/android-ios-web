@@ -51,8 +51,14 @@ void main() {
     //
     // İki sorun FARKLI şeylerden geliyordu; ikisi ayrı ayrı
     // çözülmek zorundaydı.
-    expect(ham.contains('window.statusBarColor = Color.TRANSPARENT'), isTrue);
+    // ⚠ SAYDAM DEĞİL BEYAZ (10 Eyl): saydam atanan ilk deneme
+    // bantları çözmedi. Saydamlık ancak pencere sistem çubuklarının
+    // ALTINA çizdiğinde işe yarar; bu pencere öyle çizmiyor ve
+    // saydamın arkasında kalan şey siyah oluyordu.
+    expect(ham.contains('window.statusBarColor = Color.WHITE'), isTrue);
     expect(ham.contains('window.navigationBarColor = Color.WHITE'), isTrue);
+    expect(ham.contains('Color.TRANSPARENT'), isFalse,
+        reason: 'saydam geri gelmiş — bantlar yine siyah olur');
   });
 
   test('⚠ İKON PARLAKLIĞI DA AYARLANIR', () {
@@ -66,7 +72,9 @@ void main() {
     // çubuğu + beyaz gezinme çubuğu + koyu ikon. İki taraf ayrışırsa
     // açılışta renk zıplar.
     final dart = File('lib/core/theme.dart').readAsStringSync();
-    expect(dart.contains('statusBarColor: Colors.transparent'), isTrue);
+    expect(dart.contains('statusBarColor: Colors.white'), isTrue);
+    expect(dart.contains('Colors.transparent'), isFalse,
+        reason: 'Dart tarafı native ile ayrışmış');
     expect(dart.contains('systemNavigationBarColor: Colors.white'), isTrue);
     expect(dart.contains('statusBarIconBrightness: Brightness.dark'), isTrue);
   });

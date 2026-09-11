@@ -38,7 +38,11 @@ import 'klavye.dart';
 /// ⚠ UYGULAMANIN KOYU TEMASI YOK: tüm ekranların zemini beyaz, bu
 /// yüzden ikon parlaklığı cihazın açık/koyu temasına göre DEĞİŞMEZ.
 const SystemUiOverlayStyle kSistemCubuklari = SystemUiOverlayStyle(
-  statusBarColor: Colors.transparent,
+  // ⚠ SAYDAM DEĞİL BEYAZ (kullanıcı bulgusu, 10 Eyl): saydamlık
+  // ancak uygulama sistem çubuklarının ALTINA çizdiğinde işe yarar;
+  // bu pencere öyle çizmiyor ve saydamın arkasında kalan şey SİYAH
+  // oluyordu. Native taraftaki `MainActivity` ile AYNI değer.
+  statusBarColor: Colors.white,
   statusBarIconBrightness: Brightness.dark,
   statusBarBrightness: Brightness.light,
   systemNavigationBarColor: Colors.white,

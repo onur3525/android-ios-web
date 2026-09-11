@@ -201,7 +201,24 @@ class MainActivity : FlutterActivity() {
             //
             // ⚠ İKON PARLAKLIĞI DA AYARLANIR: zemin beyaz olduğu için
             // ikonlar KOYU olmalı, yoksa beyaz üstünde beyaz kalır.
-            window.statusBarColor = Color.TRANSPARENT
+            // ⚠ SAYDAM DEĞİL BEYAZ (kullanıcı bulgusu, 10 Eyl) ──
+            //
+            // ÖNCEKİ DENEME SAYDAM ATIYORDU ve bantlar siyah kaldı.
+            // Saydamlık ancak uygulama sistem çubuklarının ALTINA
+            // çizdiğinde işe yarar; bu pencere öyle çizmiyor.
+            // Çizmediği için sistem o alanı kendi dolduruyor ve
+            // saydamın arkasında kalan şey SİYAH oluyor — yani
+            // "renk ver" derken aslında "renk yok" demiş oluyorduk.
+            //
+            // ⚠ İKİSİ DE BEYAZ: uygulamanın her ekranının zemini
+            // beyaz; çubuklar da beyaz olunca ekran tam ekran
+            // görünür. İkonlar aşağıda KOYU yapıldığı için beyaz
+            // üstünde okunur kalır.
+            //
+            // ⚠ SPLASH DAVRANIŞINA DOKUNULMADI: `setTheme`,
+            // `yuzey.remove()`, süreler ve tutma koşulu aynen
+            // duruyor. Değişen YALNIZ iki renk ataması.
+            window.statusBarColor = Color.WHITE
             window.navigationBarColor = Color.WHITE
             WindowCompat.getInsetsController(window, window.decorView).apply {
                 isAppearanceLightStatusBars = true
