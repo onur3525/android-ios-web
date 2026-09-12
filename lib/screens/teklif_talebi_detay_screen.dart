@@ -10,6 +10,7 @@ import '../core/tutar_bicimi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/saglayici_ozeti.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
@@ -21,7 +22,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import 'job_detail_screen.dart' show maskeliAd, gecenSure;
+import 'job_detail_screen.dart' show maskeliAd;
 import 'provider_reviews_screen.dart';
 import 'teklif_talebi_sohbet_screen.dart';
 import 'teklif_talebi_yorum_screen.dart';
@@ -512,7 +513,19 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                             ikon: 'assets/svg/ic_nclock.svg',
                             // ⚠ "İlan Tarihi" DEĞİL: burada ilan yok.
                             etiket: 'Talep Tarihi',
-                            deger: gecenSure(t.createdAt)),
+                            // ── ⚠ GÖRELİ SÜRE DEĞİL, TARİH (12 Eyl,
+                            // kullanıcı isteği) ──
+                            //
+                            // "21 dk önce" bir SAAT bilgisiydi ve
+                            // kartın en üstündeki "21 dk önce" ile
+                            // aynı şeyi tekrar ediyordu. Etiket
+                            // "Talep Tarihi" diyorsa değer de tarih
+                            // olmalı.
+                            //
+                            // ⚠ BİÇİM TEK KAYNAKTAN: `kisaTarih`
+                            // gün/ayı iki haneye tamamlar, kart
+                            // hizası bozulmaz.
+                            deger: kisaTarih(t.createdAt)),
                       ]),
                     );
                   }),
@@ -1020,11 +1033,17 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
             const SizedBox(height: 12),
             RefPrimaryButton('İşi Tamamlandı Olarak İşaretle',
                 onPressed: onTamamla),
-          ] else if (talep.durum == TeklifTalebiDurumu.tamamlandi) ...[
-            const SizedBox(height: 16),
-            Text('İş tamamlandı.',
-                style:
-                    refText(size: RF.s135, weight: RF.w700, color: RC.text)),
+          // ── ⚠ "İş tamamlandı." SATIRI KALDIRILDI (12 Eyl,
+          // kullanıcı isteği) ──
+          //
+          // 9 Eyl'de aynı cümle HİZMET ALAN tarafından kaldırılmış,
+          // burada "düğme yok, bölüm bomboş kalır" gerekçesiyle
+          // BIRAKILMIŞTI. Kullanıcı kararı bu gerekçeyi geçersiz
+          // kıldı: ekranda zaten "Verilen teklif" kutusu ve "Notunuz"
+          // kartı var; boş kalan bir bölüm yok.
+          //
+          // ⚠ DAL TÜMÜYLE SİLİNDİ, boş bırakılmadı: içi boş bir
+          // `else if` okuyan kişiye "burada bir şey olmalıydı" dedirtir.
           ] else if (talep.durum == TeklifTalebiDurumu.reddedildi) ...[
             const SizedBox(height: 16),
             Text('Hizmet alan bu teklifi reddetti.',

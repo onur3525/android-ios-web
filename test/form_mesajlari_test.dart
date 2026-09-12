@@ -132,8 +132,18 @@ void main() {
       expect(j.contains('taraflardan biri açtığında'), isFalse);
       expect(j.contains("InfoBox(child: Text('Teklif verildi'))"), isFalse);
       // ⚠ KALDIRILMAYACAKLAR yerinde.
-      expect(j.contains('Verdiğiniz Teklif'), isTrue);
-      expect(j.contains('İletişim Bilgileri Açıldı'), isTrue);
+      // ⚠ AD DEĞİŞTİ (12 Eyl): kart ortak bileşene taşındı, başlık
+      // "Verilen teklif" oldu. Kilidin amacı kartın VARLIĞI.
+      expect(j.contains('TeklifTutarKarti(mine.amount)'), isTrue);
+      // ⚠ "İletişim Bilgileri Açıldı" İDDİASI KALDIRILDI (12 Eyl).
+      //
+      // Bu satır teklif kartının içinde duruyordu ve 9 Eyl'de
+      // KULLANICI İSTEĞİYLE kaldırıldı — iletişim durumunu alttaki
+      // telefon/mesaj kutuları zaten söylüyor. İddia o turda
+      // güncellenmemiş; dize `lib` içinde HİÇBİR YERDE yok, yani
+      // test o günden beri düşüyordu.
+      expect(j.contains('İletişim Bilgileri Açıldı'), isFalse,
+          reason: 'kaldırılan durum satırı geri gelmiş');
     });
   });
 

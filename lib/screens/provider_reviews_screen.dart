@@ -159,7 +159,7 @@ class YorumKarti extends StatelessWidget {
   Widget build(BuildContext context) => YorumKartiGovde(
         adTam: yazarAdi,
         hizmet: yorumHizmetAdi(context, review),
-        tarih: yorumTarihi(review.createdAt),
+        tarih: kisaTarih(review.createdAt),
         yildiz: review.stars,
         metin: review.text,
       );

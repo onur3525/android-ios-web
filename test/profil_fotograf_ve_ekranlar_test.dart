@@ -185,6 +185,61 @@ void main() {
           reason: 'bul akışında fotoğraf teklif kuralına bağlı değil');
     });
 
+    test('⚠ TEKLİF DETAYI DA FOTOĞRAF GÖSTERİR', () {
+      // ── ⚠ KULLANICI BULGUSU (12 Eyl) ──
+      //
+      // "İlan oluşturma ile gelen tekliflerin detayında hizmet
+      // verenin fotoğrafı görünmüyor."
+      //
+      // Fotoğraf desteği bir önceki turda iki yüzeye eklenmişti; bu
+      // ekran atlanmış, hâlâ yalnız baş harf çiziyordu.
+      final t = _kod('lib/screens/offer_detail_screen.dart');
+      expect(t.contains('ProfilAvatari('), isTrue);
+      expect(t.contains('fotografi(Role.provider)'), isTrue,
+          reason: 'hizmet veren rolünün fotoğrafı okunmuyor');
+    });
+
+    test('⚠ TEKLİF DETAYINDA KAPALIYKEN OKUNMAZ', () {
+      // Kapalıyken büyük kilitli avatar çizilir; fotoğraf yolu okunmaz.
+      final t = _kod('lib/screens/offer_detail_screen.dart');
+      expect(t.contains("if (!open) {"), isTrue);
+      expect(t.contains('ic_avbig_lock.svg'), isTrue);
+    });
+
+    test('⚠ FOTOĞRAF YOKSA BAŞ HARF DAİRESİ KALIR', () {
+      // Eski görünüm korunur; yeni bir boş kutu icat edilmez.
+      final t = _kod('lib/screens/offer_detail_screen.dart');
+      expect(t.contains('_AcikAvatar('), isTrue);
+    });
+
+    test('⚠ YORUM YAZMA EKRANLARI DA FOTOĞRAF GÖSTERİR', () {
+      // ── ⚠ KULLANICI BULGUSU (12 Eyl) ──
+      //
+      // "Yorum yazma ekranında da hizmet verenin profil fotoğrafı
+      // görünmeli." İki akışta iki ayrı yorum ekranı var; ikisi de
+      // yalnız baş harf çiziyordu.
+      //
+      // ⚠ MASKELEME SORUNU YOK: bu ekranlar iş tamamlandıktan sonra
+      // açılır, kimlik zaten açıktır — bu yüzden koşul aranmaz.
+      for (final yol in const [
+        'lib/screens/review_screen.dart',
+        'lib/screens/teklif_talebi_yorum_screen.dart',
+      ]) {
+        final y = _kod(yol);
+        expect(y.contains('ProfilAvatari('), isTrue, reason: yol);
+        expect(y.contains('fotografi(Role.provider)'), isTrue,
+            reason: '$yol: hizmet veren rolünün fotoğrafı okunmuyor');
+      }
+    });
+
+    test('⚠ FOTOĞRAFSIZ GÖRÜNÜM KORUNDU', () {
+      // Fotoğraf yoksa eski baş harfli daire kalır; yeni bir boş
+      // kutu icat edilmez.
+      final r = _kod('lib/screens/review_screen.dart');
+      expect(r.contains('Color(0xFF2E7BE0)'), isTrue,
+          reason: 'baş harf dairesi kaldırılmış');
+    });
+
     test('⚠ ROL BAZLI OKUNUR', () {
       // Çift rollü hesapta yanlış rolün fotoğrafı yanlış kimliği
       // gösterirdi: kişisel profil ile iş profili ayrı fotoğraflar.
@@ -208,7 +263,73 @@ void main() {
     test('sahip kartı fotoğrafı geçirir', () {
       final parca = _kod('lib/screens/widgets/detay_karti_parcalari.dart');
       expect(parca.contains('this.fotoYolu'), isTrue);
-      expect(parca.contains('RefBasHarfAvatar('), isTrue);
+      // ⚠ ARTIK `ProfilAvatari` ÜZERİNDEN: dokunma davranışı da
+      // gerektiği için ham avatar bileşeni doğrudan çağrılmaz.
+      expect(parca.contains('ProfilAvatari('), isTrue);
+    });
+  });
+
+  group('⚠ FOTOĞRAFA DOKUNUNCA BÜYÜR', () {
+    // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+    //
+    // "Kullanıcılar birbirlerinin profil fotoğraflarına dokunduğunda
+    // fotoğraflar büyümeli."
+
+    test('ortak bileşen tam ekranı açar', () {
+      final a = _kod('lib/screens/widgets/profil_avatari.dart');
+      expect(a.contains('class ProfilAvatari'), isTrue);
+      // ⚠ AYNI GÖRÜNTÜLEYİCİ: ilan fotoğraflarının kullandığı
+      // bileşen. Profil için ayrı bir tam ekran YAZILMADI.
+      expect(a.contains('FotoGoruntuleyici.ac('), isTrue);
+    });
+
+    test('⚠ FOTOĞRAF YOKSA DOKUNMA DA YOK', () {
+      // Baş harf rozetine dokunmak boş siyah bir sayfa açardı;
+      // tepkisiz bir dokunma alanı "bozuk" hissi verir.
+      final a = _kod('lib/screens/widgets/profil_avatari.dart');
+      expect(a.contains('if (yol.isEmpty || !File(yol).existsSync())'), isTrue);
+    });
+
+    test('⚠ EKRANLAR KENDİ AÇMA KODUNU YAZMAZ', () {
+      for (final yol in const [
+        'lib/screens/widgets/detay_karti_parcalari.dart',
+        'lib/screens/widgets/saglayici_ozet_satiri.dart',
+      ]) {
+        final k = _kod(yol);
+        expect(k.contains('ProfilAvatari('), isTrue, reason: yol);
+        expect(k.contains('FotoGoruntuleyici.ac('), isFalse,
+            reason: '$yol: açma kodu kopyalanmış');
+      }
+    });
+  });
+
+  group('⚠ AVATAR ROZETİ TÜMÜYLE KALDIRILDI', () {
+    // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+    //
+    // "Fotoğraf yanındaki kalkan ve tik ikonları tamamen
+    // kaldırılsın."
+    //
+    // Rozet "kimliği doğrulanmış" anlamı taşıyordu ama platformda
+    // resmî bir kimlik doğrulaması YOK ve her avatarda KOŞULSUZ
+    // görünüyordu — dayanaksızdı.
+
+    test('üç yüzeyde de çizilmez', () {
+      for (final yol in const [
+        'lib/screens/widgets/detay_karti_parcalari.dart',
+        'lib/screens/offer_detail_screen.dart',
+        'lib/screens/review_screen.dart',
+      ]) {
+        expect(_kod(yol).contains('ic_vbadge'), isFalse, reason: yol);
+      }
+    });
+
+    test('⚠ KAPSAM SINIRI: metin satırındaki kalkan DURUYOR', () {
+      // "Onaylı Hizmet Veren" satırındaki `ic_shieldok` kaldırılmadı:
+      // o bir etiketli bilgi satırıdır, avatarın köşesine yapıştırılmış
+      // dayanaksız bir rozet değil. Ayrıca koşula bağlıdır.
+      final k = _kod('lib/screens/listing_detail_screen.dart');
+      expect(k.contains('ic_shieldok.svg'), isTrue);
+      expect(k.contains('Onaylı Hizmet Veren'), isTrue);
     });
   });
 

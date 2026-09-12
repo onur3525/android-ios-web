@@ -54,10 +54,18 @@ void main() {
   });
 
   group('2 — KALANLAR', () {
-    test('⚠ TEKLİF KARTI DURUYOR', () {
+    test('⚠ TEKLİF KARTI DURUYOR — ARTIK ORTAK BİLEŞEN', () {
       // Kullanıcı yalnız kartın İÇİNDEKİ iki satırı kaldırmak
       // istedi; kartın kendisi kalmalı.
-      expect(k.contains("Text('Verdiğiniz Teklif'"), isTrue);
+      //
+      // ── ⚠ SÖZLEŞME DEĞİŞTİ (12 Eyl, kullanıcı isteği) ──
+      //
+      // Kart elle çiziliyordu ve Bul akışındaki ikizinden üç yerde
+      // ayrışıyordu: başlık metni, başlık ölçüsü ve tutarın punto/
+      // rengi. Artık `TeklifTutarKarti` — ölçü ve renk tek yerde.
+      expect(k.contains('TeklifTutarKarti(mine.amount)'), isTrue);
+      expect(k.contains("Text('Verdiğiniz Teklif'"), isFalse,
+          reason: 'kart yine elle çiziliyor');
     });
 
     test('⚠ ALTTAKİ TUTAR/DURUM KUTUSU KALDIRILDI (10 Eyl)', () {
@@ -67,9 +75,18 @@ void main() {
       // kez görünüyordu.
       expect(k.contains('StatusChip(oLabel, oColor)'), isFalse);
       expect(k.contains('offerStatusUi(mine.status)'), isFalse);
-      // ⚠ Teklif notu da gitti: hizmet verenin KENDİ yazdığı metni
-      // kendisine geri okutmak bilgi taşımıyordu.
-      expect(k.contains('mine.note'), isFalse);
+      // ── ⚠ TEKLİF NOTU GERİ GELDİ (12 Eyl, kullanıcı isteği) ──
+      //
+      // O turda not da kaldırılmıştı; gerekçe "kendi yazdığını
+      // kendine okutmak bilgi taşımıyor" idi. Bul akışının aynı
+      // ekranında "Notunuz" kartı hep duruyordu — iki akış birebir
+      // aynı olmalı.
+      //
+      // ⚠ KALDIRILAN ŞEY KUTUNUN KENDİSİYDİ: "5.000 TL · Aktif"
+      // satırı geri gelmedi (yukarıdaki iki iddia bunu kilitliyor).
+      expect(k.contains("baslik: 'Notunuz'"), isTrue);
+      expect(k.contains('if (mine.note.trim().isNotEmpty)'), isTrue,
+          reason: 'not boşken de çerçeve çiziliyor');
     });
 
     test('⚠ TUTAR EKRANDA TEK KEZ', () {

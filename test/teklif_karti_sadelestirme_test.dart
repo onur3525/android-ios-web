@@ -32,8 +32,22 @@ void main() {
   group('1 — ⚠ HİZMET VERENİN GEÇMİŞİ GÖRÜNÜR', () {
     test('puan ve yorum sayısı adın altında', () {
       expect(k.contains('ic_starb.svg'), isTrue, reason: 'puan yıldızı yok');
-      expect(k.contains(r"'(${liste.length})'"), isTrue,
-          reason: 'yorum sayısı yok');
+      // ⚠ "yorum" SÖZCÜĞÜ ZORUNLU (12 Eyl, kullanıcı isteği): tek
+      // başına "(1)" neyin sayısı olduğunu söylemiyordu.
+      expect(k.contains(r"'(${liste.length} yorum)'"), isTrue,
+          reason: 'yorum sayısı eksik ya da sözcüksüz');
+    });
+
+    test('⚠ BİÇİM ÖTEKİ EKRANLARLA AYNI', () {
+      // Aynı bilgi dört yüzeyde "(N yorum)" diye yazılır; biri
+      // ayrışırsa aynı kişi kartlar arasında farklı görünür.
+      for (final yol in const [
+        'lib/screens/offer_detail_screen.dart',
+        'lib/screens/review_screen.dart',
+        'lib/screens/widgets/saglayici_ozet_satiri.dart',
+      ]) {
+        expect(_kod(yol).contains(' yorum)'), isTrue, reason: yol);
+      }
     });
 
     test('⚠ TAMAMLANAN İŞ SAYISI EKLENDİ', () {
@@ -53,7 +67,33 @@ void main() {
     });
   });
 
-  group('2 — ⚠ BOŞ NOT KUTUSU ÇİZİLMEZ', () {
+  group('2 — ⚠ AVATAR ÇİZİLMEZ', () {
+    // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+    //
+    // "Gelen teklif kartlarında profil fotoğrafı kaldırılmalı."
+    //
+    // Kart bir karşılaştırma aracı: seçim fiyat, puan, yorum sayısı
+    // ve tamamlanan işe göre yapılıyor. Avatar bu ölçütlerin hiçbirini
+    // taşımıyordu ama satırın solunda 36 px yer kaplayıp adı ve puanı
+    // sağa itiyordu.
+    //
+    // ⚠ AYNI KARAR `HizmetAlanOzetSatiri` için 10 Eyl'de verilmişti;
+    // bu kart o turda atlanmıştı.
+
+    test('kilitli/açık avatar kaldırıldı', () {
+      expect(k.contains('ic_avlock'), isFalse);
+      expect(k.contains('_basHarfler'), isFalse,
+          reason: 'ölü yardımcı kalmış — avatar hâlâ çiziliyor izlenimi');
+    });
+
+    test('⚠ KİLİT KURALI DURUYOR', () {
+      // Kilitli avatar gitti, MASKELEME gitmedi: ad iletişim
+      // açılmadan önce hâlâ maskeli gösterilir.
+      expect(k.contains('_ad(acik)'), isTrue);
+    });
+  });
+
+  group('3 — ⚠ BOŞ NOT KUTUSU ÇİZİLMEZ', () {
     test('kutu koşula bağlı', () {
       // Not yazmak zorunlu değil; boş gri kutu, yazılmış ama
       // okunamayan bir mesaj izlenimi veriyordu.
@@ -74,7 +114,7 @@ void main() {
     });
   });
 
-  group('3 — ⚠ TUTAR BİÇİMİ TEK KAYNAKTAN', () {
+  group('4 — ⚠ TUTAR BİÇİMİ TEK KAYNAKTAN', () {
     test('kartta "6.000 TL" biçimi kullanılır', () {
       // ⚠ KULLANICI BULGUSU (12 Eyl): kartta "₺6000" yazıyordu —
       // para simgesi başta, binlik ayracı yok. Uygulamanın her
@@ -95,7 +135,7 @@ void main() {
     });
   });
 
-  group('4 — ⚠ KALDIRILAN ROZETLER', () {
+  group('5 — ⚠ KALDIRILAN ROZETLER', () {
     test('"İletişim Açıldı" kartta yazmaz', () {
       expect(k.contains("'İletişim Açıldı'"), isFalse);
     });

@@ -46,7 +46,13 @@ String kisaYazarAdi(String tamAd) {
 ///
 /// ⚠ Gün ve ay İKİ HANEYE tamamlanır; "1.9.2026" gibi düzensiz
 /// genişlikler kart hizasını bozuyordu.
-String yorumTarihi(DateTime t) =>
+///
+/// ⚠ ADI `yorumTarihi` İDİ, DEĞİŞTİRİLDİ (12 Eyl): işlev yoruma özel
+/// değil, genel bir tarih biçimlendiricisi. Talep tarihi de bu biçimi
+/// kullanınca ad yanıltıcı hâle geldi — "yorum" adını taşıyan bir
+/// fonksiyonu ilan/talep tarihinde görmek, ikinci bir biçimlendirici
+/// yazma isteği doğurur.
+String kisaTarih(DateTime t) =>
     '${t.day.toString().padLeft(2, '0')}.'
     '${t.month.toString().padLeft(2, '0')}.'
     '${t.year}';

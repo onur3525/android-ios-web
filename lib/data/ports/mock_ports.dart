@@ -3,6 +3,7 @@ import '../../domain/cikar_catismasi.dart';
 import '../../domain/config.dart';
 import '../../domain/failures.dart';
 import '../../domain/listing_state_machine.dart';
+import '../../domain/bildirim_metinleri.dart';
 import '../models/account.dart';
 import '../izmir_neighborhoods.dart';
 import '../izmir.dart';
@@ -655,8 +656,11 @@ class MockOfferPort extends OfferPort {
     offers.touch();
     notifs?.push(
         userId: chosen.providerId, type: NotifType.offerSelected, refId: listingId,
-        title: 'Teklifiniz seçildi 🎉',
-        body: '"${l.title}" işinde hizmet alan sizinle çalışmak istiyor.');
+        // ⚠ METİN ORTAK KAYNAKTAN (12 Eyl): aynı olay Bul
+        // akışında da bildirim üretiyor; iki port ayrı metin
+        // yazarsa kullanıcı iki farklı şey olmuş sanıyor.
+        title: kTeklifSecildiBaslik,
+        body: teklifSecildiGovde(l.title));
     return null;
   }
 

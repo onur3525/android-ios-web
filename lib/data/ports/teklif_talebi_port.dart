@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/bildirim_metinleri.dart';
 import '../../domain/failures.dart';
 // ⚠ `IsZamani` tip olarak `listing.dart`ta tanımlıdır; `show` ile
 // YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
@@ -162,13 +163,22 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
     _repo.secToVer(id);
     final t = _repo.byId(id);
     if (t != null && t.durum == TeklifTalebiDurumu.secildi) {
-      // ⚠ HİZMET VERENE — teklifi kabul edildi, iş aktif.
+      // ── ⚠ HİZMET VERENE — TEKLİFİ SEÇİLDİ ──
+      //
+      // ⚠ METİN İLAN AKIŞIYLA EŞİTLENDİ (12 Eyl, ürün kararı):
+      // burası "Teklifiniz kabul edildi" diyordu, ilan akışı ise
+      // "Teklifiniz seçildi 🎉". Hizmet veren için olay AYNI ve
+      // bildirim listesinde iki başlık alt alta düşüp iki farklı şey
+      // olmuş izlenimi veriyordu.
+      //
+      // ⚠ PORT KENDİ METNİNİ YAZMAZ: başlık ve gövde
+      // `domain/bildirim_metinleri.dart` içinde tek yerde.
       notifs?.push(
           userId: t.saglayiciId,
           type: NotifType.teklifSecildi,
           refId: t.id,
-          title: 'Teklifiniz kabul edildi',
-          body: '"${t.hizmet}" için teklifiniz seçildi — iş aktif.');
+          title: kTeklifSecildiBaslik,
+          body: teklifSecildiGovde(t.hizmet));
     }
     return null;
   }

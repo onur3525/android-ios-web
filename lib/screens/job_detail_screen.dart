@@ -38,6 +38,8 @@ import '../core/validators.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/telefon_bicimi.dart';
 import 'widgets/detay_karti_parcalari.dart';
+import 'widgets/teklif_tutar_karti.dart';
+import 'widgets/teklif_aciklama_karti.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not) → teklifle 50 TL bloke;
@@ -534,45 +536,45 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   busy: _busyOffer,
                   onPressed: _zorunlularDolu ? _placeOffer : null),
             ] else if (mine != null) ...[
-              // ── `Verdiğiniz Teklif` — MAVİ ÖZET KARTI ──
+              // ── ⚠ TEKLİF TUTARI ORTAK KARTTAN (12 Eyl, kullanıcı
+              // isteği) ──
               //
-              // ⚠ Referansta bu bölüm AÇIK MAVİ ZEMİNLİ bir karttır:
-              // ortalanmış başlık, büyük mavi tutar ve altında durum
-              // satırı. Önceki hâl düz metin + ayrı çerçeveli kutuydu;
-              // hizmet veren kendi teklifini bir bakışta göremiyordu.
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF1FB),
-                  borderRadius: BorderRadius.circular(RR.r15),
-                ),
-                child: Column(children: [
-                  Text('Verdiğiniz Teklif',
-                      style: refText(
-                          size: RF.s145, weight: RF.w800, color: RC.blue)),
-                  const SizedBox(height: 6),
-                  // ⚠ TUTAR ORTAK BİÇİMDEN (9 Eyl): `tl()` "₺5000"
-                  // yazıyordu; uygulamanın her yerinde binlik ayracı
-                  // ve "TL" `core/tutar_bicimi.dart`tan geliyor.
-                  Text(tutarMetni(mine.amount),
-                      style: refText(
-                          size: 30, weight: RF.w800, color: RC.blue)),
-                  // ── ⚠ DURUM VE ZAMAN SATIRLARI KALDIRILDI
-                  // (kullanıcı isteği, 9 Eyl) ──
-                  //
-                  // Kartta "İletişim Bilgileri Açıldı" ve
-                  // "33 dk önce teklif verildi" satırları vardı.
-                  //
-                  // İkisi de başka yerde zaten görünüyor: iletişim
-                  // durumunu hemen alttaki telefon/mesajlaşma kutuları
-                  // söylüyor (açıksa numara yazıyor, kapalıysa
-                  // "Kilitli"), teklifin ne zaman verildiği de
-                  // kararı etkilemiyor. Kart artık tek işi yapıyor:
-                  // verilen tutarı göstermek.
-                ]),
-              ),
+              // Bu kart burada ELLE çiziliyordu ve Bul akışındaki
+              // ikizinden üç yerde ayrışıyordu:
+              //   · başlık "Verdiğiniz Teklif" / "Verilen teklif"
+              //   · başlık ölçüsü 14.5 w800 / 12.5 w500
+              //   · tutar 30 punto MAVİ / 26 punto KOYU
+              //
+              // Aynı bilgi, aynı kullanıcıya, iki akışta iki farklı
+              // ağırlıkta görünüyordu. Kart artık `TeklifTutarKarti`;
+              // ölçü ve renk tek yerde.
+              //
+              // ⚠ DURUM VE ZAMAN SATIRLARI GERİ GELMEDİ (9 Eyl
+              // kararı): iletişim durumunu alttaki telefon/mesaj
+              // kutuları söylüyor, teklifin saati kararı etkilemiyor.
+              TeklifTutarKarti(mine.amount),
+
+              // ── ⚠ "Notunuz" BÖLÜMÜ EKLENDİ (12 Eyl, kullanıcı
+              // isteği) ──
+              //
+              // 10 Eyl'de buradan kaldırılmıştı; gerekçe "hizmet veren
+              // kendi yazdığı metni kendine geri okuyor, bilgi
+              // taşımıyor" idi. Kullanıcı kararı bu gerekçeyi
+              // geçersiz kıldı: Bul akışının aynı ekranında "Notunuz"
+              // kartı duruyor ve iki akış birebir aynı olmalı.
+              //
+              // ⚠ AYNI ORTAK KART, AYNI BAŞLIK: karşı tarafta
+              // "Hizmet Verenin Notu" yazan şey kendi tarafında
+              // "Notunuz"dur.
+              //
+              // ⚠ NOT BOŞSA KART HİÇ ÇİZİLMEZ: boş bir çerçeve,
+              // yazılmış ama okunamayan bir mesaj izlenimi verir.
+              if (mine.note.trim().isNotEmpty) ...[
+                const SizedBox(height: 10),
+                TeklifAciklamaKarti(
+                    baslik: 'Notunuz', metin: mine.note.trim()),
+              ],
+
               const SizedBox(height: 12),
 
               // ── ⚠ TUTAR/DURUM KUTUSU TAMAMEN KALDIRILDI
@@ -586,11 +588,14 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               // ekranda iki kez görünüyordu. Durum rozeti de tek
               // başına bir kutuyu hak etmiyordu.
               //
-              // ⚠ TEKLİF NOTU DA GİTTİ: kutunun altında `mine.note`
-              // gösteriliyordu. Notu hizmet verenin KENDİSİ yazmıştı;
-              // kendi yazdığı metni kendisine geri okutmak bilgi
-              // taşımıyordu. Hizmet ALAN tarafında not aynen
-              // görünmeye devam eder.
+              // ⚠ O TURDA TEKLİF NOTU DA GİTMİŞTİ, 12 Eyl'de GERİ
+              // GELDİ: artık yukarıda "Notunuz" başlıklı ortak kartla
+              // çiziliyor. Eski gerekçe ("kendi yazdığını kendine
+              // okutmak bilgi taşımıyor") Bul akışıyla çelişiyordu;
+              // orada aynı kart hep duruyordu.
+              //
+              // ⚠ KALDIRILAN ŞEY KUTUNUN KENDİSİ: "5.000 TL · Aktif"
+              // satırı geri gelmedi.
               //
               // ⚠ `offerStatusUi` KALDIRILMADI — öteki ekranlar
               // kullanıyor.

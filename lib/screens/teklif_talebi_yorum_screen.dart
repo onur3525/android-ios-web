@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../domain/config.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+import '../data/models/account.dart' show Role;
 import '../data/controllers/review_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import 'widgets/profil_avatari.dart';
 
 /// "BUL" AKIŞI — TAMAMLANAN İŞ İÇİN YORUM YAZ.
 ///
@@ -137,7 +140,27 @@ class _TeklifTalebiYorumScreenState extends State<TeklifTalebiYorumScreen> {
                 ),
                 child: Row(
                   children: [
-                    RefBasHarfAvatar(ad: widget.talep.saglayiciAdi),
+                    // ── ⚠ HİZMET VERENİN FOTOĞRAFI (12 Eyl,
+                    // kullanıcı bulgusu) ──
+                    //
+                    // İlan akışındaki yorum ekranıyla AYNI kural:
+                    // kullanıcı burada kime puan verdiğini teyit
+                    // ediyor. Yalnız baş harf çiziliyordu.
+                    //
+                    // ⚠ MASKELEME SORUNU YOK: bu ekran iş
+                    // tamamlandıktan sonra açılır, kimlik zaten açık.
+                    //
+                    // ⚠ HİZMET VEREN ROLÜNÜN fotoğrafı okunur.
+                    Builder(builder: (c) {
+                      final hesap = c
+                          .watch<AuthController>()
+                          .accountById(widget.talep.saglayiciId);
+                      return ProfilAvatari(
+                        ad: widget.talep.saglayiciAdi,
+                        fotoYolu: hesap?.fotografi(Role.provider) ?? '',
+                        cap: 44,
+                      );
+                    }),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(

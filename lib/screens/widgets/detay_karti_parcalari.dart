@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/hizmet_alan_ozeti.dart';
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
+import 'profil_avatari.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// DETAY KARTI PARÇALARI — İKİ AKIŞ İÇİN TEK KAYNAK
@@ -69,20 +70,27 @@ class SahipKarti extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // .pl-av — kapalıyken KİLİTLİ avatar, açıkken baş harfler.
+          // ── .pl-av — kapalıyken KİLİTLİ avatar, açıkken profil ──
+          //
+          // ⚠ DOĞRULAMA ROZETİ KALDIRILDI (12 Eyl, kullanıcı isteği):
+          // avatarın köşesindeki kalkan-tik (`ic_vbadge`) artık
+          // çizilmiyor. Rozet "kimliği doğrulanmış" anlamı taşıyordu
+          // ama platformda resmî bir kimlik doğrulaması YOK; her
+          // avatarda koşulsuz görünüyordu.
+          //
+          // ⚠ ROZET GİTTİ, `Stack` DE GİTTİ: üst üste bindirilecek
+          // başka bir öğe kalmadı.
+          //
+          // ⚠ FOTOĞRAFA DOKUNULUNCA TAM EKRAN AÇILIR — kural
+          // `ProfilAvatari` içinde tek yerde; bu kart kendi açma
+          // kodunu yazmaz.
           SizedBox(
             width: 46,
             height: 46,
             child: acik
-                ? Stack(clipBehavior: Clip.none, children: [
-                    // ⚠ FOTOĞRAF VARSA FOTOĞRAF, YOKSA BAŞ HARF.
-                    // Karar `RefBasHarfAvatar` içinde, tek yerde:
-                    // yol boşsa ya da dosya okunamıyorsa harfe düşer.
-                    if (fotoYolu.trim().isNotEmpty)
-                      RefBasHarfAvatar(
-                          ad: adSoyad, fotoYolu: fotoYolu, cap: 46)
-                    else
-                      Container(
+                ? (fotoYolu.trim().isNotEmpty
+                    ? ProfilAvatari(ad: adSoyad, fotoYolu: fotoYolu)
+                    : Container(
                         width: 46,
                         height: 46,
                         alignment: Alignment.center,
@@ -93,18 +101,7 @@ class SahipKarti extends StatelessWidget {
                           style: refText(
                               size: 16, weight: RF.w700, color: RC.white),
                         ),
-                      ),
-                    // ⚠ `IC_VBADGE` — referansın DOĞRULAMA ROZETİ.
-                    //
-                    // `ic_checkc` genel bir onay dairesidir; referans
-                    // burada özel rozeti (`ic_vbadge`) kullanır. Rozet
-                    // varlığı "kimliği doğrulanmış" anlamı taşır.
-                    const Positioned(
-                      right: -3,
-                      bottom: -2,
-                      child: RefSvg('assets/svg/ic_vbadge.svg', size: 18),
-                    ),
-                  ])
+                      ))
                 // ⚠ `IC_AVLOCK` — referansın KİLİTLİ AVATARI.
                 //
                 // Gri daire + kilit ikonu elle çiziliyordu; referansta

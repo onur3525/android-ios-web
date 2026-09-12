@@ -55,8 +55,8 @@ void main() {
 
   group('2 — TARİH BİÇİMİ', () {
     test('gün.ay.yıl, iki haneli', () {
-      expect(yorumTarihi(DateTime(2026, 9, 10)), '10.09.2026');
-      expect(yorumTarihi(DateTime(2026, 1, 3)), '03.01.2026');
+      expect(kisaTarih(DateTime(2026, 9, 10)), '10.09.2026');
+      expect(kisaTarih(DateTime(2026, 1, 3)), '03.01.2026');
     });
   });
 
@@ -81,7 +81,7 @@ void main() {
 
     test('ad, tarih, hizmet ve aç/kapa ortak kurallardan gelir', () {
       expect(k.contains('kisaYazarAdi('), isTrue);
-      expect(k.contains('yorumTarihi(r.createdAt)'), isTrue);
+      expect(k.contains('kisaTarih(r.createdAt)'), isTrue);
       expect(k.contains('yorumHizmetAdi(context, r)'), isTrue);
       expect(k.contains('uzunYorumMu(metin)'), isTrue);
     });

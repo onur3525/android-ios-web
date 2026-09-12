@@ -4,6 +4,7 @@ import '../../core/theme.dart';
 import '../../domain/saglayici_ozeti.dart';
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
+import 'profil_avatari.dart';
 import '../job_detail_screen.dart' show maskeliAd;
 
 /// ── ⚠ HİZMET VEREN BİLGİ SATIRI — TEK ÇİZİM ──
@@ -59,8 +60,10 @@ class SaglayiciOzetSatiri extends StatelessWidget {
           //
           // ⚠ Fotoğraf yoksa ya da dosya okunamıyorsa bileşen baş
           // harfe düşer; ayrı bir koşul yazılmaz.
-          RefBasHarfAvatar(
-              ad: ozet.adSoyad, fotoYolu: ozet.fotoYolu, cap: 46),
+          // ⚠ FOTOĞRAFA DOKUNULUNCA TAM EKRAN AÇILIR (12 Eyl,
+          // kullanıcı isteği) — kural `ProfilAvatari` içinde tek
+          // yerde; bu satır kendi açma kodunu yazmaz.
+          ProfilAvatari(ad: ozet.adSoyad, fotoYolu: ozet.fotoYolu),
         const SizedBox(width: 11),
         Expanded(
           child: Column(

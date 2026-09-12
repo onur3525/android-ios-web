@@ -794,19 +794,9 @@ class _TeklifKarti extends StatelessWidget {
   }
 
   /// Açık avatarda baş harfler (`avInitials`).
-  String _basHarfler() {
-    final tam = saglayici?.name.trim() ?? '';
-    if (tam.isEmpty) {
-      return '?';
-    }
-    return tam
-        .split(RegExp(r'\s+'))
-        .where((k) => k.isNotEmpty)
-        .map((k) => k[0])
-        .take(2)
-        .join()
-        .toUpperCase();
-  }
+  // ⚠ `_basHarfler` KALDIRILDI (12 Eyl): avatar çizilmediği için
+  // baş harflere de gerek kalmadı. Ölü bırakılsaydı, avatarın hâlâ
+  // bir yerde çizildiği izlenimi verirdi.
 
   @override
   Widget build(BuildContext context) {
@@ -839,32 +829,24 @@ class _TeklifKarti extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // .of-av — 36px; kilitli/açık
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: acik
-                      ? DecoratedBox(
-                          // `IC_AVOPEN` — mavi degrade daire + baş harfler.
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF2E7BE0), Color(0xFF1A4FC4)],
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(_basHarfler(),
-                                style: refText(
-                                    size: 13,
-                                    weight: RF.w700,
-                                    color: RC.white)),
-                          ),
-                        )
-                      : const RefSvg('assets/svg/ic_avlock.svg', size: 36),
-                ),
-                const SizedBox(width: 9), // gap:9px
+                // ── ⚠ AVATAR KALDIRILDI (12 Eyl, kullanıcı
+                // isteği) ──
+                //
+                // "Gelen teklif kartlarında profil fotoğrafı
+                // kaldırılmalı."
+                //
+                // Kart bir KARŞILAŞTIRMA aracı: hizmet alan burada
+                // fiyat, puan, yorum sayısı ve tamamlanan işe bakarak
+                // seçim yapıyor. Avatar bu ölçütlerin hiçbirini
+                // taşımıyordu ama satırın en solunda 36 px yer
+                // kaplıyor, adı ve puanı sağa itiyordu.
+                //
+                // ⚠ AYNI KARAR DAHA ÖNCE `HizmetAlanOzetSatiri` için
+                // verilmişti (10 Eyl). Bu kart o turda atlanmıştı.
+                //
+                // ⚠ `acik` DEĞİŞKENİ DURUYOR: ad maskeleme hâlâ ona
+                // bakıyor (`_ad(acik)`). Kilitli avatar gitti, kilit
+                // KURALI gitmedi.
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -914,7 +896,16 @@ class _TeklifKarti extends StatelessWidget {
                                 color: RC.blue),
                           ),
                           const SizedBox(width: 4),
-                          Text('(${liste.length})',
+                          // ⚠ "yorum" SÖZCÜĞÜ YAZILIR (12 Eyl,
+                          // kullanıcı isteği): tek başına "(1)"
+                          // neyin sayısı olduğunu söylemiyordu —
+                          // yorum mu, iş mi, teklif mi belirsizdi.
+                          //
+                          // ⚠ BİÇİM UYGULAMANIN GERİ KALANIYLA AYNI:
+                          // teklif detayı, değerlendirme ekranı ve
+                          // sağlayıcı özet satırı da "(N yorum)"
+                          // yazıyor.
+                          Text('(${liste.length} yorum)',
                               style: refText(
                                   size: 11,
                                   weight: RF.w400,

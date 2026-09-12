@@ -8,6 +8,8 @@ import '../core/telefon_bicimi.dart';
 import '../core/tutar_bicimi.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+import '../data/models/account.dart' show Role;
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -24,6 +26,7 @@ import '../domain/saglayici_ozeti.dart';
 // ⚠ Yorum kartı ORTAK — kopya çizim yok.
 import 'provider_reviews_screen.dart' show YorumKarti;
 import 'widgets/puan_dagilim_satiri.dart';
+import 'widgets/profil_avatari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -151,28 +154,47 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // .pr-av + .pr-vb (doğrulama rozeti)
+                  // ── .pr-av — HİZMET VERENİN FOTOĞRAFI ──
+                  //
+                  // ⚠ KULLANICI BULGUSU (12 Eyl): "İlan oluşturma ile
+                  // gelen tekliflerin detayında hizmet verenin
+                  // fotoğrafı görünmüyor."
+                  //
+                  // Fotoğraf desteği bir önceki turda `SahipKarti` ve
+                  // `SaglayiciOzetSatiri`ne eklenmişti; BU ekran
+                  // atlanmıştı ve hâlâ yalnız baş harf çiziyordu.
+                  //
+                  // ⚠ YALNIZ İLETİŞİM AÇIKKEN: fotoğraf maskelemenin
+                  // parçasıdır, ayrı bir kural değil. Kapalıyken
+                  // büyük kilitli avatar çizilir ve fotoğraf yolu
+                  // OKUNMAZ bile.
+                  //
+                  // ⚠ HİZMET VEREN ROLÜNÜN fotoğrafı: çift rollü
+                  // hesapta kişisel profil fotoğrafı burada yanlış
+                  // kimliği gösterirdi.
+                  //
+                  // ⚠ DOĞRULAMA ROZETİ KALDIRILDI (12 Eyl): avatarın
+                  // köşesindeki kalkan-tik artık çizilmiyor. Rozet
+                  // gidince üst üste bindirme de gereksiz kaldı.
                   SizedBox(
                     width: 84,
                     height: 84,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned.fill(
-                          child: open
-                              ? _AcikAvatar(
-                                  harfler: _basHarfler(prov?.name), boyut: 84)
-                              : const RefSvg('assets/svg/ic_avbig_lock.svg',
-                                  size: 84),
-                        ),
-                        const Positioned(
-                          right: -2,
-                          bottom: 2,
-                          child:
-                              RefSvg('assets/svg/ic_vbadge.svg', size: 30),
-                        ),
-                      ],
-                    ),
+                    child: Builder(builder: (context) {
+                      if (!open) {
+                        return const RefSvg('assets/svg/ic_avbig_lock.svg',
+                            size: 84);
+                      }
+                      final foto = prov?.fotografi(Role.provider) ?? '';
+                      // ⚠ FOTOĞRAFA DOKUNULUNCA TAM EKRAN AÇILIR —
+                      // kural `ProfilAvatari` içinde tek yerde.
+                      // Fotoğraf yoksa eski baş harfli daire kalır.
+                      if (foto.trim().isEmpty) {
+                        return _AcikAvatar(
+                            harfler: _basHarfler(prov?.name), boyut: 84);
+                      }
+                      return ProfilAvatari(
+                          ad: prov?.name ?? '', fotoYolu: foto, cap: 84);
+                    }),
                   ),
                   const SizedBox(width: 12), // gap:12px
                   Expanded(

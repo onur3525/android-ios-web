@@ -5,11 +5,14 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+import '../data/models/account.dart' show Role;
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import 'widgets/profil_avatari.dart';
 
 /// Müşteri — Değerlendirme (HTML vReview): yıldızlar + yorum;
 /// tek sefer, yalnız tamamlanmış işte (kurallar controller'da).
@@ -541,15 +544,26 @@ class _UstaKarti extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // .pr-av + .pr-vb
+          // ── .pr-av — HİZMET VERENİN FOTOĞRAFI ──
+          //
+          // ⚠ KULLANICI BULGUSU (12 Eyl): "Yorum yazma ekranında da
+          // hizmet verenin profil fotoğrafı görünmeli."
+          //
+          // Kart yalnız baş harf çiziyordu. Kullanıcı burada kime puan
+          // verdiğini teyit ediyor; yüz, addan daha hızlı tanıtır.
+          //
+          // ⚠ MASKELEME SORUNU YOK: bu ekran ancak iş tamamlandıktan
+          // sonra açılır, yani kimlik zaten açıktır.
+          //
+          // ⚠ FOTOĞRAF YOKSA eski baş harfli daire kalır.
+          //
+          // ⚠ DOĞRULAMA ROZETİ KALDIRILDI (12 Eyl) — rozet gidince
+          // üst üste bindirme de gereksiz kaldı.
           SizedBox(
             width: 92,
             height: 92,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: Container(
+            child: (prov?.fotografi(Role.provider) ?? '').trim().isEmpty
+                ? Container(
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
@@ -562,15 +576,13 @@ class _UstaKarti extends StatelessWidget {
                     child: Text(harfler,
                         style: refText(
                             size: 32, weight: RF.w700, color: RC.white)),
-                  ),
-                ),
-                const Positioned(
-                  right: -2,
-                  bottom: 2,
-                  child: RefSvg('assets/svg/ic_vbadge.svg', size: 26),
-                ),
-              ],
-            ),
+                  )
+                // ⚠ DOKUNULUNCA TAM EKRAN — kural `ProfilAvatari`
+                // içinde tek yerde.
+                : ProfilAvatari(
+                    ad: ad,
+                    fotoYolu: prov!.fotografi(Role.provider),
+                    cap: 92),
           ),
           const SizedBox(width: 15), // gap:15px
           Expanded(
