@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+// `auth_controller` bu enum'u YENİDEN DIŞA VERMEZ; içeriden kullanır.
+import '../data/models/account.dart' show Role;
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/controllers/review_controller.dart';
