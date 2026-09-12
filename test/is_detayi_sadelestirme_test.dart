@@ -83,7 +83,7 @@ void main() {
       // ve ikonun hizasını da bozuyordu.
       expect(RegExp(r'IlanNoEtiketi\(l\)').allMatches(k).length, 1,
           reason: 'numara birden fazla yerde çiziliyor');
-      expect(k.indexOf('IlanNoEtiketi(l)'), lessThan(k.indexOf('_SahipKarti(')),
+      expect(k.indexOf('IlanNoEtiketi('), lessThan(k.indexOf('_SahipKarti(')),
           reason: 'numara kartın en üstünde değil');
     });
 

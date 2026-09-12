@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models/listing.dart';
+import '../../data/repositories/ilan_no_uretici.dart';
 import '../../ui/ref_tokens.dart';
 
 /// ═══════════════════════════════════════════════════════════════
@@ -43,13 +43,24 @@ class IlanNoEtiketi extends StatelessWidget {
   /// Ürün kuralı gereği ilan numarası her kartın/ekranın EN ÜSTÜNDE,
   /// sağ köşede durur. Bu yüzden varsayılan davranış budur; çağıran
   /// ekranların ayrıca hizalama yazmasına gerek yoktur.
-  const IlanNoEtiketi(this.listing, {super.key});
+  /// ⚠ HAM NUMARA ALIR, MODEL ALMAZ (12 Eyl).
+  ///
+  /// Önceden yalnız `Listing` kabul ediyordu. Teklif talepleri de
+  /// numara aldığı için (ürün kararı: "ilan oluştur ya da bul
+  /// üzerinden istensin farketmez") bileşen tek bir modele
+  /// bağlı kalamazdı. İkinci bir etiket bileşeni yazmak biçimi
+  /// ayrıştırırdı.
+  ///
+  /// Çağıranlar `l.ilanNo` ya da `t.talepNo` verir; "#" ekleme
+  /// `IlanNoUretici.etiket` içinde, TEK YERDE.
+  const IlanNoEtiketi(this.no, {super.key});
 
-  final Listing listing;
+  /// Ham numara — "#" olmadan.
+  final String no;
 
   @override
   Widget build(BuildContext context) {
-    if (listing.ilanNo.trim().isEmpty) {
+    if (no.trim().isEmpty) {
       return const SizedBox.shrink();
     }
     // ⚠ SAĞA YASLI + ALTINDA BOŞLUK: başlıkla arasında sabit aralık,
@@ -64,7 +75,7 @@ class IlanNoEtiketi extends StatelessWidget {
       child: Align(
         alignment: Alignment.centerRight,
         child: Text(
-          listing.ilanNoEtiketi,
+          IlanNoUretici.etiket(no),
           style: refText(
             size: RF.s11,
             weight: RF.w400,

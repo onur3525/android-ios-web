@@ -36,6 +36,7 @@ TeklifMesaj _m(String gonderen, TeklifMesajDurumu d) => TeklifMesaj(
     );
 
 TeklifTalebi _talep(List<TeklifMesaj> mesajlar) => TeklifTalebi(
+      talepNo: '10458231',
       id: 't1',
       hizmetAlanId: 'alan',
       saglayiciId: 'veren',

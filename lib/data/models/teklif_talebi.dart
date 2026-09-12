@@ -93,6 +93,7 @@ class TeklifMesaj {
 class TeklifTalebi {
   TeklifTalebi({
     required this.id,
+    required this.talepNo,
     required this.hizmetAlanId,
     required this.saglayiciId,
     required this.saglayiciAdi,
@@ -112,6 +113,23 @@ class TeklifTalebi {
   }) : mesajlar = mesajlar ?? [];
 
   final String id;
+
+  /// ── ⚠ KULLANICIYA GÖSTERİLEN NUMARA ──
+  ///
+  /// ⚠ ÜRÜN KARARI (12 Eyl, kullanıcı): "Talep numarası her ilan
+  /// için konulacak. İlan oluştur veya bul üzerinden teklif talep
+  /// edilsin farketmez." Kullanıcı için ikisi aynı şeydir.
+  ///
+  /// ⚠ `id` İLE KARIŞTIRILMAZ: ilişkiler (teklif, mesaj, bildirim)
+  /// DAİMA `id` üzerinden kurulur. `talepNo` yalnız kullanıcının
+  /// gördüğü, telefonda söylediği, destekte aradığı referanstır.
+  ///
+  /// ⚠ İLAN NUMARALARIYLA AYNI DİZİDEN gelir (`IlanNoUretici`):
+  /// aynı numara bir ilanda ve bir talepte birden çıkamaz.
+  ///
+  /// ⚠ BOŞ OLABİLİR: API modunda sunucu alanı göndermezse boş kalır
+  /// ve gösterim tarafı hiçbir şey çizmez.
+  final String talepNo;
 
   /// İsteği gönderen hizmet alanın hesap id'si.
   final String hizmetAlanId;

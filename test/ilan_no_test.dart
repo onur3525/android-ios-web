@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/repositories/listing_repository.dart';
 import 'package:hizmetcep/data/repositories/offer_repository.dart';
+import 'package:hizmetcep/data/repositories/ilan_no_uretici.dart';
 
 String _kod(String yol) {
   final f = File(yol);
@@ -204,7 +205,10 @@ void main() {
     test('etiket biçimi TEK KAYNAKTAN gelir', () {
       final r = ListingRepository();
       final l = _ilan(r);
-      expect(l.ilanNoEtiketi, 'İlan No: ${l.ilanNo}');
+      // ⚠ BİÇİM MODELDEN ÇIKTI (12 Eyl): "#" ekleme bir sunum
+      // kararıdır ve `IlanNoUretici.etiket` içinde tek yerdedir —
+      // ilan ve talep aynı biçimi paylaşır.
+      expect(IlanNoUretici.etiket(l.ilanNo), '#${l.ilanNo}');
     });
 
     test('⚠ YALNIZ DETAY EKRANLARI ETİKETİ GÖSTERİR', () {
@@ -241,19 +245,37 @@ void main() {
       expect(w.contains('Alignment.centerLeft'), isFalse);
     });
 
-    test('⚠ NUMARA BAŞLIĞIN ÜSTÜNDE ÇİZİLİR', () {
-      // Etiket, kategori/başlık satırlarından ÖNCE gelmeli.
+    test('⚠ NUMARA BAŞLIK SATIRININ ÜSTÜNDE ÇİZİLİR', () {
+      // ── ⚠ SÖZLEŞME DEĞİŞTİ (12 Eyl) ──
+      //
+      // Kategori/başlık satırı artık ekranlarda elle yazılmıyor;
+      // ortak `IlanBaslikSatiri` bileşeni çiziyor. Bu yüzden sıra
+      // karşılaştırması `kategoriAdi(l.title) != null` metnine değil
+      // BİLEŞEN ÇAĞRISINA bakar.
+      //
+      // ⚠ SIRA NEDEN KİLİTLİ: numara bileşenin İÇİNE alınırsa
+      // kategori ve başlık aşağı itilir, 40 px'lik ikon yukarıda
+      // yalnız kalır. Bu arıza iki ayrı ekranda iki kez yaşandı.
       for (final f in const [
         'lib/screens/listing_detail_screen.dart',
         'lib/screens/job_detail_screen.dart',
       ]) {
         final k = _kod(f);
-        final numara = k.indexOf('IlanNoEtiketi(l)');
-        final baslik = k.indexOf('kategoriAdi(l.title) != null');
-        expect(numara, greaterThan(0), reason: f);
+        final numara = k.indexOf('IlanNoEtiketi(');
+        final baslik = k.indexOf('IlanBaslikSatiri(');
+        expect(numara, greaterThan(0), reason: '$f: numara çizilmiyor');
+        expect(baslik, greaterThan(0),
+            reason: '$f: ortak başlık bileşeni kullanılmıyor');
         expect(numara, lessThan(baslik),
-            reason: '$f: numara başlıktan SONRA çiziliyor');
+            reason: '$f: numara başlık satırından SONRA çiziliyor');
       }
+    });
+
+    test('⚠ NUMARA BAŞLIK BİLEŞENİNİN İÇİNE GİRMEZ', () {
+      final w = _kod('lib/screens/widgets/ilan_baslik_satiri.dart');
+      expect(w.contains('IlanNoEtiketi'), isFalse,
+          reason: 'numara sütunun içine geri alınmış — kategori ve '
+              'başlık yeniden aşağı iter');
     });
 
     test('ekranlar UUID GÖSTERMEZ', () {

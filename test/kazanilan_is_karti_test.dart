@@ -111,6 +111,39 @@ void main() {
       expect(jobs.contains('tl(o.amount)'), isFalse);
     });
 
+    test('⚠ TUTAR RENGİ VE ÖLÇÜSÜ İKİ KARTTA DA AYNI', () {
+      // ── ⚠ KULLANICI BULGUSU (12 Eyl) ──
+      //
+      // İki kart aynı bilgiyi (hizmet verenin KENDİ verdiği tutar)
+      // farklı renkte gösteriyordu: ilan tabanlı kart mavi, doğrudan
+      // teklif kartı koyu. Alt alta duran iki kart arasında olmayan
+      // bir anlam farkı sezdiriyordu.
+      //
+      // ⚠ KİLİT STİLİN KENDİSİNE DEĞİL, TEK KAYNAK OLMASINA: iki
+      // çağrı da aynı sabiti okumalı. Renk ileride değişirse tek
+      // yerde değişir.
+      expect(jobs.contains('const TextStyle _kKazanilanTutarStili'), isTrue,
+          reason: 'ortak tutar stili tanımlı değil');
+      expect(
+          RegExp(r'style:\s*_kKazanilanTutarStili').allMatches(jobs).length, 2,
+          reason: 'iki karttan biri ortak stili kullanmıyor');
+      // Kart içinde elle yazılmış tutar stili kalmamalı.
+      expect(
+          RegExp(r'tutarMetni\([^)]*\),\s*style:\s*const TextStyle\(')
+              .hasMatch(jobs),
+          isFalse,
+          reason: 'tutar stili yine kart içinde elle yazılmış');
+    });
+
+    test('⚠ "SEÇİLDİ" ROZETİ YOK (kullanıcı isteği, 12 Eyl)', () {
+      // Rozet bilgi taşımıyordu: bu sekme ZATEN "Kazandığım".
+      // Üstelik yalnız doğrudan teklif kartında vardı; iki kart aynı
+      // durumu farklı anlatıyordu. Aynı gerekçeyle "Aktif" rozeti de
+      // 10 Eyl'de kaldırılmıştı.
+      expect(jobs.contains("StatusChip('Seçildi'"), isFalse,
+          reason: 'Seçildi rozeti geri gelmiş');
+    });
+
     test('⚠ SAYAÇ KAZANILAN TALEPLERİ DE SAYAR', () {
       expect(jobs.contains('myOffers.length + secilenTalepler.length'), isTrue,
           reason: 'listede kart varken "0 ilan bulundu" yazılır');

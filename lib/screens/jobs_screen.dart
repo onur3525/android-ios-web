@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/ilan_baslik_satiri.dart';
 import '../domain/iletisim_maskesi.dart';
 import 'widgets/is_zamani_secici.dart';
 import '../domain/hata_mesajlari.dart';
@@ -29,13 +30,35 @@ import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import 'widgets/hizmet_alan_ozet_satiri.dart';
-import 'category_ui.dart';
 import 'nav_actions.dart';
 import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
 import 'teklif_istekleri_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
+
+// ── ⚠ KAZANILAN İŞ KARTINDA TEKLİF TUTARI — TEK STİL ──
+//
+// "Kazandığım" listesinde İKİ kart türü var: ilan üzerinden verilen
+// teklif (`Offer`) ve "Bul" akışından gelen doğrudan teklif isteği
+// (`TeklifTalebi`). İkisi de HİZMET VERENİN KENDİ verdiği tutarı
+// gösterir, yani aynı bilgidir.
+//
+// ⚠ AMA İKİ FARKLI RENKTE ÇİZİLİYORDU: ilan tabanlı kart mavi,
+// doğrudan teklif kartı koyu. Aynı ekranda, alt alta duran iki kart
+// aynı sayıyı farklı renkte gösterince kullanıcı ARADA BİR ANLAM
+// FARKI arıyordu — oysa yoktu.
+//
+// ⚠ MAVİ SEÇİLDİ, KOYU DEĞİL: iş detayındaki "Verdiğiniz Teklif"
+// kartı da maviyi kullanıyor. Referans orasıdır.
+//
+// ⚠ STİL TEK YERDE: iki çağrı da bu sabiti okur; biri değişip öteki
+// kalamaz. Kilit: test/kazanilan_is_karti_test.dart
+const TextStyle _kKazanilanTutarStili = TextStyle(
+  fontSize: 15,
+  fontWeight: FontWeight.w800,
+  color: HC.blue,
+);
 
 /// Hizmet veren — İŞLERİM / KAZANDIĞIM sekmeleri (HTML vCust provider).
 ///
@@ -642,10 +665,8 @@ class _JobsScreenState extends State<JobsScreen> {
                                       // (`tutarMetni`) — `tl()` "₺5000"
                                       // yazıyordu.
                                       Text(tutarMetni(o.amount),
-                                          style: const TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w800,
-                                              color: HC.blue)),
+                                          style:
+                                              _kKazanilanTutarStili),
                                     ]),
 
                                     // ── ⚠ HİZMET ALAN BİLGİLERİ
@@ -746,12 +767,22 @@ class _JobsScreenState extends State<JobsScreen> {
                       // ("₺5000"). Binlik ayracı ve "TL" artık
                       // `core/tutar_bicimi.dart`ta tek yerde —
                       // "5.000 TL".
+                      // ⚠ RENK VE ÖLÇÜ ORTAK SABİTTEN: yan yana
+                      // duran iki kart aynı sayıyı aynı biçimde
+                      // gösterir.
                       Text(tutarMetni(t.teklifFiyati ?? 0),
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: HC.dark)),
-                      const StatusChip('Seçildi', HC.blue),
+                          style: _kKazanilanTutarStili),
+                      // ── ⚠ "SEÇİLDİ" ROZETİ KALDIRILDI
+                      // (kullanıcı isteği, 12 Eyl) ──
+                      //
+                      // Rozet bilgi taşımıyordu: bu sekme ZATEN
+                      // "Kazandığım" — buradaki her kart seçilmiş
+                      // demektir. Üstelik yalnız doğrudan teklif
+                      // kartında vardı, ilan tabanlı kartta yoktu;
+                      // iki kart aynı durumu farklı anlatıyordu.
+                      //
+                      // ⚠ AYNI GEREKÇEYLE "Aktif" rozeti de 10
+                      // Eyl'de kaldırılmıştı.
                     ]),
               // ── ⚠ YENİ MESAJ (kullanıcı isteği, 9 Eyl) ──
               //
@@ -904,19 +935,22 @@ class _JobsScreenState extends State<JobsScreen> {
                 Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+              // ── ⚠ KATEGORİ İKONU — KARTTA (12 Eyl, kullanıcı
+              // isteği) ──
+              //
+              // Üst kategori ADI kaldırıldı; işin hangi alana ait
+              // olduğunu artık ikon taşıyor. Hizmet veren kartı
+              // açmadan ayırt edebilmeli.
+              //
+              // ⚠ ORTAK BİLEŞEN: daire, renk ve ikon çözümü
+              // `IlanKategoriIkonu` içinde. Ekran kendi dairesini
+              // çizmez, kendi ikonunu seçmez.
+              IlanKategoriIkonu(l.title, cap: 34),
+              const SizedBox(width: 9),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  // ⚠ KATEGORİ SATIRI — hizmet veren ilana GİRMEDEN
-                  // işin hangi alana ait olduğunu görmeli.
-                  if (kategoriAdi(l.title) != null)
-                    Text(kategoriAdi(l.title)!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s11,
-                            weight: RF.w500,
-                            color: RC.textSoft,
-                            letterSpacing: RF.lsM01)),
+                  // ⚠ ÜST KATEGORİ ADI YAZILMAZ (12 Eyl, ürün kararı):
+                  // kartta YALNIZ seçilen hizmet görünür.
                   Text(l.title,
                       style: TextStyle(
                           fontSize: 14.5,

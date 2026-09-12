@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 // YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
 import '../models/listing.dart' show IsZamani;
 import '../models/teklif_talebi.dart';
+import 'ilan_no_uretici.dart';
 
 /// ── ⚠ MOCK DEPO — GERÇEK BACKEND DEĞİL ──
 ///
@@ -63,6 +64,10 @@ class TeklifTalebiRepository extends ChangeNotifier {
   }) {
     final t = TeklifTalebi(
       id: _uuid.v4(),
+      // ⚠ İLANLARLA AYNI DİZİDEN (12 Eyl, ürün kararı): numara
+      // `IlanNoUretici`den gelir; aynı numara bir ilanda ve bir
+      // talepte birden çıkamaz. Ayrı bir sayaç AÇILMAZ.
+      talepNo: IlanNoUretici.uret(),
       hizmetAlanId: hizmetAlanId,
       saglayiciId: saglayiciId,
       saglayiciAdi: saglayiciAdi,

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'widgets/ilan_no_etiketi.dart';
+import 'widgets/ilan_baslik_satiri.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,12 +11,10 @@ import '../data/controllers/offer_controller.dart';
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/models/account.dart';
-import '../data/services/search_service.dart';
 import '../data/models/listing.dart';
 import '../data/models/offer.dart';
 import 'offer_detail_screen.dart';
 import 'review_screen.dart';
-import 'category_ui.dart';
 import 'status_ui.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../domain/iletisim_maskesi.dart';
@@ -374,107 +373,62 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // .ld-top{display:flex;gap:10px;align-items:flex-start}
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // .ld-ic{40x40;%50;#EAF1FB} + .ld-ic svg{22px}
-                      Container(
-                        width: 40,
-                        height: 40,
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: RC.blueSoft, // #EAF1FB
-                          shape: BoxShape.circle,
+                  // ── ⚠ İLAN NUMARASI — KARTIN EN ÜST SAĞI ──
+                  //
+                  // ⚠ SÜTUNUN İÇİNDEN ÇIKARILDI (12 Eyl, kullanıcı
+                  // bulgusu): numara kategori ikonunun yanındaki
+                  // sütunun ilk çocuğuydu ve kategori/başlığı AŞAĞI
+                  // itiyordu; ikon yukarıda yalnız kalıyordu. Ayrıca
+                  // o sütun `Expanded` olduğu için numara kartın
+                  // gerçek sağ kenarına değil, sütunun sağına
+                  // yaslanıyordu.
+                  //
+                  // ⚠ AYNI DÜZELTME `job_detail_screen`de 10 Eyl'de
+                  // yapılmış, BU EKRAN ATLANMIŞTI. Kural artık tek
+                  // bileşende: `IlanBaslikSatiri` numara ALMAZ.
+                  IlanNoEtiketi(l.ilanNo),
+                  // ── .ld-top — kategori ikonu + kategori + başlık ──
+                  //
+                  // ⚠ ORTAK BİLEŞEN: hiza, ikon çözümü ve tipografi
+                  // `IlanBaslikSatiri` içinde SABİT; ekran kendi
+                  // satırını yazmaz.
+                  IlanBaslikSatiri(
+                    baslik: l.title,
+                    // .ld-meta{gap:5px;#98A2B3;11.5px}
+                    meta: Row(
+                      children: [
+                        const RefSvg('assets/svg/ic_pin.svg',
+                            size: 13, color: RC.greyLight),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            // ⚠ GÜNCEL ADRES (9 Eyl): donmuş
+                            // `l.location` yerine ilan sahibinin
+                            // güncel adresi.
+                            kullaniciKonumu(context, l.ownerId,
+                                    mahalleDahil: true) ??
+                                l.location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: refText(
+                                size: RF.s115,
+                                weight: RF.w400,
+                                color: RC.greyLight),
+                          ),
                         ),
-                        child: RefSvg(_ldIkon(l.title),
-                            size: 22, color: RC.blue),
-                      ),
-                      const SizedBox(width: 10), // gap:10px
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── ⚠ KATEGORİ SATIRI ──
-                            //
-                            // Hizmet adı tek başına AYIRT ETMİYOR:
-                            // "Sözleşme İnceleme" başlığını gören
-                            // kullanıcı bunun hukuk işi mi tesisat mı
-                            // olduğunu anlayamıyordu.
-                            //
-                            // ⚠ Çatı DEĞİL kategori yazılır; bulunamazsa
-                            // satır HİÇ çizilmez (uydurma ad yok).
-                            // ── ⚠ İLAN NUMARASI — SAĞ ÜST KÖŞE ──
-                            //
-                            // Ürün kuralı: numara başlığın ÜSTÜNDE,
-                            // sağ köşede. Hizalama ve alt boşluk
-                            // `IlanNoEtiketi` içinde SABİT; ekran
-                            // kendi ölçüsünü yazmaz.
-                            IlanNoEtiketi(l),
-                            if (kategoriAdi(l.title) != null)
-                              Text(
-                                kategoriAdi(l.title)!,
-                                style: refText(
-                                  size: RF.s115,
-                                  weight: RF.w500,
-                                  color: RC.textSoft,
-                                  letterSpacing: RF.lsM01,
-                                ),
-                              ),
-                            // .ld-title{15.5px/700;-.2px;margin-top:1px}
-                            Padding(
-                              padding: const EdgeInsets.only(top: 1),
-                              child: Text(
-                                l.title,
-                                style: refText(
-                                  size: 15.5,
-                                  weight: RF.w700,
-                                  color: RC.text,
-                                  letterSpacing: RF.lsM02,
-                                ),
-                              ),
-                            ),
-                            // .ld-meta{gap:5px;#98A2B3;11.5px;margin-top:4px}
-                            // .ld-meta svg{13px}
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const RefSvg('assets/svg/ic_pin.svg',
-                                    size: 13, color: RC.greyLight),
-                                const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    // ⚠ GÜNCEL ADRES (9 Eyl): donmuş
-                                    // `l.location` yerine ilan
-                                    // sahibinin güncel adresi.
-                                    kullaniciKonumu(context, l.ownerId,
-                                            mahalleDahil: true) ??
-                                        l.location,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: refText(
-                                        size: RF.s115,
-                                        weight: RF.w400,
-                                        color: RC.greyLight),
-                                  ),
-                                ),
-                                _ayrac(),
-                                const RefSvg('assets/svg/ic_clock.svg',
-                                    size: 13, color: RC.greyLight),
-                                const SizedBox(width: 5),
-                                Text(
-                                  _goreliZaman(l.createdAt),
-                                  style: refText(
-                                      size: RF.s115,
-                                      weight: RF.w400,
-                                      color: RC.greyLight),
-                                ),
-                              ],
-                            ),
-                          ],
+                        _ayrac(),
+                        const RefSvg('assets/svg/ic_clock.svg',
+                            size: 13, color: RC.greyLight),
+                        const SizedBox(width: 5),
+                        Text(
+                          _goreliZaman(l.createdAt),
+                          style: refText(
+                              size: RF.s115,
+                              weight: RF.w400,
+                              color: RC.greyLight),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   // ── İLAN AÇIKLAMASI ──
                   //
@@ -633,39 +587,6 @@ String _goreliZaman(DateTime t) {
     return '${f.inHours} saat önce';
   }
   return '${f.inDays} gün önce';
-}
-
-/// Referans `ldIcon(title)` — başlıktan kategori ikonu bulur.
-///
-/// HTML önce hizmet kataloğunda tam/kısmi ad arar, bulamazsa anahtar
-/// kelime tablosuna düşer, o da tutmazsa genel alet ikonunu döner.
-String _ldIkon(String baslik) {
-  final hits = SearchService.services(baslik);
-  if (hits.isNotEmpty) {
-    return categoryIcon(hits.first.category);
-  }
-  const kelimeler = {
-    'elektrik': 'Elektrik',
-    'kombi': 'Doğalgaz',
-    'doğalgaz': 'Doğalgaz',
-    'petek': 'Doğalgaz',
-    'musluk': 'Tesisat',
-    'tesisat': 'Tesisat',
-    'temizl': 'Temizlik',
-    'boya': 'Boya',
-    'badana': 'Boya',
-    'fayans': 'Fayans ve Seramik',
-    'bahçe': 'Bahçe ve Peyzaj',
-    'duvar': 'Duvar Kağıdı ve Dekorasyon',
-  };
-  final t = baslik.toLowerCase();
-  for (final e in kelimeler.entries) {
-    if (t.contains(e.key)) {
-      return categoryIcon(e.value);
-    }
-  }
-  // HTML: `IC_TOOLB(24)`
-  return 'assets/svg/ic_toolb.svg';
 }
 
 /// `stChip(st)` — ilan durumu rozeti.

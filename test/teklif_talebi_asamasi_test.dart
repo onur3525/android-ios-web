@@ -71,6 +71,7 @@ void main() {
 
   group('2 — SÜZME YARDIMCILARI', () {
     TeklifTalebi t(TeklifTalebiDurumu d) => TeklifTalebi(
+          talepNo: '10458231',
           id: 't-${d.name}',
           hizmetAlanId: 'a1',
           saglayiciId: 'v1',

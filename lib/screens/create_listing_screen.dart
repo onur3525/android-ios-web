@@ -1032,13 +1032,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 const SizedBox(height: 4),
                 // ⚠ KARTTA YALNIZ SEÇİLEN HİZMET YAZAR.
                 //
-                if (kategoriAdi(_cat ?? '') != null)
-                  Text(kategoriAdi(_cat ?? '')!,
-                      style: refText(
-                          size: RF.s115,
-                          weight: RF.w500,
-                          color: RC.textSoft,
-                          letterSpacing: RF.lsM01)),
+                // ⚠ ÜST KATEGORİ ADI KALDIRILDI (12 Eyl, ürün kararı):
+                // bir tur hizmetin üstüne kategorisi de yazılıyordu.
+                // Kilit: test/ilan_kategori_satiri_test.dart
                 Text(kategoriEtiketi(_cat ?? ''),
                     style: refText(
                         size: 16.5, weight: RF.w700, color: RC.text)),
@@ -1351,15 +1347,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ⚠ KATEGORİ SATIRI — yayınlanacak ilan neye ait,
-                // önizlemede de görünür.
-                if (kategoriAdi(_cat ?? '') != null)
-                  Text(kategoriAdi(_cat ?? '')!,
-                      style: refText(
-                          size: RF.s115,
-                          weight: RF.w500,
-                          color: RC.textSoft,
-                          letterSpacing: RF.lsM01)),
+                // ⚠ ÜST KATEGORİ ADI YAZILMAZ (12 Eyl, ürün kararı):
+                // önizlemede de yalnız seçilen hizmet görünür —
+                // yayınlanan kartla birebir aynı.
                 Text(kategoriEtiketi(_cat ?? ''),
                     style: refText(
                         size: RF.s16, weight: RF.w700, color: RC.text)),

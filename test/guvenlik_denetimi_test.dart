@@ -80,9 +80,41 @@ void main() {
       expect(j.contains("endsWith('.svg')"), isFalse);
     });
 
-    test('tek ikon kaynağı `categoryIcon`', () {
-      expect(j.contains('String kategoriIkonu(String baslik) => '
-          'categoryIcon(baslik);'), isTrue);
+    test('⚠ TEK İKON ÇÖZÜCÜSÜ — EKRANDA DEĞİL, BİLEŞENDE', () {
+      // ── ⚠ SÖZLEŞME DEĞİŞTİ (12 Eyl) ──
+      //
+      // Önceki kilit `kategoriIkonu(baslik) => categoryIcon(baslik)`
+      // satırını zorunlu kılıyordu ve o satır HÂLÂ YANLIŞ İKON
+      // çiziyordu: `categoryIcon` KATEGORİ ADIYLA anahtarlı bir
+      // harita okur, ona hizmet adı verilince eşleşme olmaz ve genel
+      // yedek ikon döner. Yani arıza "düzeltildi" sayılmıştı ama
+      // yalnız yedek ikonun adı değişmişti.
+      //
+      // Doğru çözüm başlıktan KATEGORİYE geçmektir; tek çözücü
+      // `ilanIkonu`, tek çağıran `IlanBaslikSatiri`.
+      expect(j.contains('kategoriIkonu'), isFalse,
+          reason: 'ekran kendi ikon çözücüsünü geri almış');
+      expect(j.contains('IlanBaslikSatiri('), isTrue,
+          reason: 'iş detayı ortak başlık bileşenini kullanmalı');
+
+      final w = _kod('lib/screens/widgets/ilan_baslik_satiri.dart');
+      expect(w.contains('String ilanIkonu(String baslik)'), isTrue);
+      expect(w.contains('SearchService.services(baslik)'), isTrue,
+          reason: 'başlıktan kategoriye geçiş kalkmış');
+    });
+
+    test('⚠ İKON ÇÖZÜCÜSÜ TEK YERDE', () {
+      // İkinci bir çözücü doğarsa iki ekran yine ayrışır.
+      final yerler = <String>[];
+      for (final f in Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))) {
+        if (f.readAsStringSync().contains('String ilanIkonu(')) {
+          yerler.add(f.path);
+        }
+      }
+      expect(yerler, ['lib/screens/widgets/ilan_baslik_satiri.dart']);
     });
   });
 

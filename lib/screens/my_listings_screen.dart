@@ -19,7 +19,6 @@ import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
-import 'category_ui.dart';
 import 'teklif_talebi_detay_screen.dart';
 
 /// ═══════════════════════════════════════════════════════════════
@@ -445,21 +444,9 @@ class _IlanKarti extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ⚠ KATEGORİ SATIRI — kullanıcı ilana GİRMEDEN
-                      // hangi işle ilgili olduğunu anlamalı
-                      // (bkz. category_ui.kategoriAdi).
-                      if (kategoriAdi(listing.title) != null)
-                        Text(
-                          kategoriAdi(listing.title)!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: refText(
-                            size: RF.s11,
-                            weight: RF.w500,
-                            color: RC.textSoft,
-                            letterSpacing: RF.lsM01,
-                          ),
-                        ),
+                      // ⚠ ÜST KATEGORİ ADI YAZILMAZ (12 Eyl, ürün
+                      // kararı): kartta YALNIZ seçilen hizmet görünür.
+                      // Kilit: test/ilan_kategori_satiri_test.dart
                       Text(
                         listing.title,
                         style: refText(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'widgets/ilan_no_etiketi.dart';
+import 'widgets/ilan_baslik_satiri.dart';
 import '../domain/iletisim_maskesi.dart';
 import 'widgets/is_zamani_secici.dart';
 import '../domain/form_mesajlari.dart';
@@ -29,12 +30,12 @@ import 'widgets/foto_goruntuleyici.dart';
 import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
-import 'category_ui.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
 import 'chat_screen.dart';
 import '../core/validators.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/telefon_bicimi.dart';
+import 'widgets/detay_karti_parcalari.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not) → teklifle 50 TL bloke;
@@ -219,14 +220,14 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 // ⚠ ORTAK BİLEŞEN: `IlanNoEtiketi` kendi içinde sağa
                 // yaslı; kartın TAM genişliğinde ayrı bir satır
                 // olunca gerçek köşeye oturur.
-                IlanNoEtiketi(l),
+                IlanNoEtiketi(l.ilanNo),
 
                 // ── .pl-own — ilan sahibi kartı ──
                 //
                 // ⚠ MASKELEME: iletişim AÇILMADAN önce ad maskeli
                 // (`E*** K******`) ve avatar KİLİTLİ gösterilir.
                 // Açıldığında gerçek ad + doğrulama rozeti gelir.
-                _SahipKarti(
+                SahipKarti(
                   adSoyad: sahipAdi,
                   acik: iletisimAcik,
                   tamamlananIs: listingCtl
@@ -247,65 +248,28 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       height: 1, child: ColoredBox(color: Color(0xFFF2F4F7))),
                 ),
 
-                // ── .ld-top — kategori ikonu + başlık ──
+                // ── .ld-top — kategori ikonu + kategori + başlık ──
                 //
-                // ⚠ DİKEY ORTALI (kullanıcı bulgusu, 10 Eyl): hiza
-                // `start` olduğu için ikon metnin ÜSTÜNDE kalıyordu.
-                // İlan numarası bu sütundan çıkınca metin tek satıra
-                // indi; `center` ile ikon ve yazı yan yana oturuyor.
-                Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                  // .ld-ic{40×40;radius:50%;background:#EAF1FB}
-                  Container(
-                    width: 40,
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                        color: Color(0xFFEAF1FB), shape: BoxShape.circle),
-                    child: RefSvg(kategoriIkonu(l.title),
-                        size: 22, color: RC.blue),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ⚠ KATEGORİ SATIRI — hizmet adı tek başına
-                          // ayırt etmiyor (bkz. category_ui.kategoriAdi).
-                          //
-                          // ⚠ İLAN NUMARASI BURADAN KALKTI (10 Eyl):
-                          // kartın en üstüne taşındı. Burada
-                          // durduğunda ikonun yanındaki metni AŞAĞI
-                          // itiyor, ikon yukarıda kalıyordu.
-                          if (kategoriAdi(l.title) != null)
-                            Text(kategoriAdi(l.title)!,
-                                style: refText(
-                                    size: RF.s115,
-                                    weight: RF.w500,
-                                    color: RC.textSoft,
-                                    letterSpacing: -0.1)),
-                          // .ld-title{15.5px/700;ls -.2}
-                          Text(l.title,
-                              style: refText(
-                                  size: 15.5,
-                                  weight: RF.w700,
-                                  color: RC.text,
-                                  letterSpacing: -0.2)),
-                          // ⚠ KALDIRILDI — kullanıcı bulgusu: konum +
-                          // "az önce" satırı burada TEKRAR ediyordu;
-                          // aynı bilgi aşağıda "İlan Detayı" bölümünde
-                          // (İl/İlçe/Mahalle, İlan Tarihi) zaten var.
-                        ]),
-                  ),
-                  // ⚠ DURUM ROZETİ KALDIRILDI (kullanıcı isteği,
-                  // 9 Eyl): "Tamamlandı" yazısı bu ekranda gereksizdi
-                  // — aşağıdaki teklif kartı zaten işin durumunu
-                  // söylüyor ve rozet, ilan numarasını sağ köşeden
-                  // ittiriyordu.
-                  //
-                  // ⚠ `rozet` ARTIK KULLANILMIYOR; hesaplandığı yer
-                  // de kaldırıldı.
-                ]),
-
+                // ⚠ ORTAK BİLEŞENE TAŞINDI (12 Eyl): aynı satır
+                // `listing_detail_screen`de de vardı ve iki kopya üç
+                // ayrı yerde ayrışmıştı (hiza, ikon çözücü, dikey
+                // hizalama değeri). Kural artık `IlanBaslikSatiri`
+                // içinde tek yerde.
+                //
+                // ⚠ `meta` VERİLMEZ: konum + "az önce" satırı bu
+                // ekranda TEKRAR ediyordu; aynı bilgi aşağıdaki
+                // "İlan Detayı" bölümünde (İl/İlçe/Mahalle, İlan
+                // Tarihi) zaten var.
+                //
+                // ⚠ İLAN NUMARASI BURAYA GİRMEZ: kartın en üstünde
+                // ayrı satır olarak yukarıda çizildi.
+                //
+                // ⚠ DURUM ROZETİ KALDIRILDI (kullanıcı isteği,
+                // 9 Eyl): "Tamamlandı" yazısı bu ekranda gereksizdi
+                // — aşağıdaki teklif kartı zaten işin durumunu
+                // söylüyor ve rozet, ilan numarasını sağ köşeden
+                // ittiriyordu.
+                IlanBaslikSatiri(baslik: l.title),
                 // .pl-h2{15px/700;margin:14px 0 7px}
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 14, 0, 7),
@@ -372,7 +336,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     // kategori ikonunun yanında ZATEN yazıyor
                     // ("Doğalgaz"). Alt bilgi tablosunda ikinci kez
                     // tekrar ediyordu.
-                    _BilgiSatiri(
+                    BilgiSatiri(
                         ikon: 'assets/svg/ic_pin.svg',
                         etiket: 'İl / İlçe / Mahalle',
                         // ⚠ GÜNCEL ADRES (9 Eyl): donmuş kopya
@@ -380,7 +344,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                         deger: kullaniciKonumu(context, l.ownerId,
                                 mahalleDahil: true) ??
                             l.location),
-                    _BilgiSatiri(
+                    BilgiSatiri(
                         ikon: 'assets/svg/ic_nclock.svg',
                         etiket: 'İlan Tarihi',
                         deger: gecenSure(l.createdAt)),
@@ -655,7 +619,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                   Expanded(
-                    child: _IletisimKutusu(
+                    child: IletisimKutusu(
                       ikon: 'assets/svg/ic_phone_f.svg',
                       etiket: 'Telefon',
                       // ⚠ KİLİTLİYKEN ARTIK `null` — Mesajlaşma
@@ -686,7 +650,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   ),
                   const SizedBox(width: 11), // .pr-cgrid{gap:11px}
                   Expanded(
-                    child: _IletisimKutusu(
+                    child: IletisimKutusu(
                       ikon: 'assets/svg/ic_chat.svg',
                       etiket: 'Mesajlaşma',
                       // Referans: açıkken `Mesaj yaz`.
@@ -782,19 +746,23 @@ String maskeliAd(String ad) {
       .join(' ');
 }
 
-/// Kategoriye göre başlık ikonu (`ldIcon`).
-///
-/// ⚠ HATA DÜZELTİLDİ — HER İLANDA AYNI GENEL İKON ÇIKIYORDU.
-///
-/// Eski gövde FOTOĞRAF haritasını (`kCategoryImage`) okuyup yalnız
-/// `.svg` ile bitenleri kabul ediyordu. O haritadaki bütün değerler
-/// `.jpg`'dir; koşul HİÇBİR ZAMAN sağlanmıyor ve fonksiyon her
-/// çağrıda `ic_grid.svg` döndürüyordu. Sonuç: iş detayında kategori
-/// ikonu diye 54 kategorinin hepsinde aynı ızgara simgesi görünüyordu.
-///
-/// Doğru kaynak `categoryIcon`: 54/54 kategori için SVG tanımlıdır ve
-/// bilinmeyen adda güvenli yedeğe düşer.
-String kategoriIkonu(String baslik) => categoryIcon(baslik);
+// ── ⚠ BAŞLIK İKONU BU DOSYADAN KALKTI (12 Eyl) ──
+//
+// Buradaki `kategoriIkonu` iki kez düzeltilmiş, ikisinde de yanlış
+// ikon çizmeye devam etmişti:
+//
+//   1. İlk gövde FOTOĞRAF haritasını (`kCategoryImage`) okuyup yalnız
+//      `.svg` ile bitenleri kabul ediyordu. O haritadaki değerlerin
+//      hepsi `.jpg`'dir; koşul hiç sağlanmadı ve her ilanda
+//      `ic_grid.svg` çıktı.
+//   2. Sonraki gövde `categoryIcon(baslik)` çağırıyordu. O harita
+//      KATEGORİ ADIYLA anahtarlıdır; ona hizmet adı ("Doğalgaz Kaçak
+//      Kontrolü") verilince yine eşleşme olmaz ve genel yedek ikon
+//      çizilirdi. Yani arıza ad değiştirip sürdü.
+//
+// Doğru çözüm başlıktan KATEGORİYE geçmektir ve o çözücü artık tek
+// yerde: `widgets/ilan_baslik_satiri.dart` içindeki `ilanIkonu`.
+// Ekranlar ikon seçmez; `IlanBaslikSatiri` çağırır.
 
 /// "Az önce", "25 dk önce", "2 saat önce" (HTML `x.time`).
 String gecenSure(DateTime t) {
@@ -812,298 +780,6 @@ String gecenSure(DateTime t) {
 }
 
 /// `.pl-own` — ilan sahibi kartı.
-class _SahipKarti extends StatelessWidget {
-  const _SahipKarti({
-    required this.adSoyad,
-    required this.acik,
-    required this.tamamlananIs,
-    this.kayitTarihi,
-  });
-
-  final String adSoyad;
-  final bool acik;
-  final int tamamlananIs;
-  // ⚠ `teklifSayisi` KALDIRILDI (9 Eyl): teklif sayısı rozeti bu
-  // ekrandan çıkarıldı, alan da gereksiz kaldı.
-
-  /// ⚠ YENİ — hizmet alanın üyelik tarihi (tamamlanan iş sayısının
-  /// altında gösterilir). `null` ise (hesap bulunamazsa) satır hiç
-  /// çizilmez.
-  final DateTime? kayitTarihi;
-
-  @override
-  Widget build(BuildContext context) => Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // .pl-av — kapalıyken KİLİTLİ avatar, açıkken baş harfler.
-          SizedBox(
-            width: 46,
-            height: 46,
-            child: acik
-                ? Stack(clipBehavior: Clip.none, children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                          color: RC.blue, shape: BoxShape.circle),
-                      child: Text(
-                        _basHarfler(adSoyad),
-                        style: refText(
-                            size: 16, weight: RF.w700, color: RC.white),
-                      ),
-                    ),
-                    // ⚠ `IC_VBADGE` — referansın DOĞRULAMA ROZETİ.
-                    //
-                    // `ic_checkc` genel bir onay dairesidir; referans
-                    // burada özel rozeti (`ic_vbadge`) kullanır. Rozet
-                    // varlığı "kimliği doğrulanmış" anlamı taşır.
-                    const Positioned(
-                      right: -3,
-                      bottom: -2,
-                      child: RefSvg('assets/svg/ic_vbadge.svg', size: 18),
-                    ),
-                  ])
-                // ⚠ `IC_AVLOCK` — referansın KİLİTLİ AVATARI.
-                //
-                // Gri daire + kilit ikonu elle çiziliyordu; referansta
-                // hazır bir görsel var ve iki tarafta farklı
-                // görünmemesi için o kullanılır.
-                : const RefSvg('assets/svg/ic_avlock.svg', size: 46),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // .pl-oname{15.5px/800;ls .3}
-                  Text(adSoyad,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: refText(
-                          size: 15.5,
-                          weight: RF.w700,
-                          color: RC.text,
-                          letterSpacing: 0.3)),
-                  const SizedBox(height: 4),
-                  // .pl-osub{11.8px;#5B6472}
-                  Row(mainAxisSize: MainAxisSize.min, children: [
-                    // ⚠ `ic_briefcase` — ÇANTA (kullanıcı kararı, 9 Eyl).
-                    //
-                    // ÖNCEDEN `ic_shieldok` (onay işaretli kalkan)
-                    // kullanılıyordu. Kalkan "doğrulanmış / güvenli"
-                    // anlatır; buradaki sayı ise YAPILAN İŞ sayısıdır.
-                    // Çanta o anlamı doğrudan taşır.
-                    //
-                    // ⚠ KAPSAM: değişiklik YALNIZ "iş tamamladı"
-                    // satırlarını kapsar (7 yer). "Onaylı Hizmet
-                    // Veren", "İletişim Açıldı" ve bildirim türü
-                    // ikonları HÂLÂ `ic_shieldok`tur — onların anlamı
-                    // gerçekten doğrulama/onaydır.
-                    const RefSvg('assets/svg/ic_briefcase.svg',
-                        size: 15, color: Color(0xFF5B6472)),
-                    const SizedBox(width: 5),
-                    Text('$tamamlananIs iş tamamladı',
-                        style: refText(
-                            size: 11.8,
-                            weight: RF.w400,
-                            color: const Color(0xFF5B6472))),
-                  ]),
-                  // ⚠ YENİ — kullanıcı isteği: üyelik tarihi,
-                  // tamamlanan iş sayısının altında.
-                  if (kayitTarihi != null) ...[
-                    const SizedBox(height: 3),
-                    Text(_uyelikTarihiMetni(kayitTarihi!),
-                        style: refText(
-                            size: 11.8,
-                            weight: RF.w400,
-                            color: const Color(0xFF5B6472))),
-                  ],
-                ]),
-          ),
-          // ⚠ TEKLİF SAYISI ROZETİ KALDIRILDI (kullanıcı isteği,
-          // 9 Eyl): hizmet veren zaten KENDİ teklifini görüyor;
-          // ilanın kaç teklif aldığı onun kararını ilgilendirmiyor
-          // ve kartın üst satırını kalabalıklaştırıyordu.
-        ],
-      );
-
-  static String _basHarfler(String ad) {
-    final p = ad.trim().split(RegExp(r'\s+')).where((x) => x.isNotEmpty);
-    if (p.isEmpty) {
-      return '?';
-    }
-    return p.take(2).map((k) => k.characters.first.toUpperCase()).join();
-  }
-}
-
-/// `.pl-row` — etiket/değer satırı.
-class _BilgiSatiri extends StatelessWidget {
-  const _BilgiSatiri({
-    required this.ikon,
-    required this.etiket,
-    required this.deger,
-  });
-
-  final String ikon;
-  final String etiket;
-  final String deger;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 1),
-        decoration: const BoxDecoration(
-            border:
-                Border(bottom: BorderSide(color: Color(0xFFF2F4F7)))),
-        child: Row(children: [
-          // .pl-rl{12.8px;#3A4658;gap:8px}
-          RefSvg(ikon, size: 17, color: const Color(0xFF3A4658)),
-          const SizedBox(width: 8),
-          Text(etiket,
-              style: refText(
-                  size: 12.8,
-                  weight: RF.w400,
-                  color: const Color(0xFF3A4658))),
-          const SizedBox(width: 10),
-          // .pl-rv{12.8px/600;#16233D;text-align:right}
-          Expanded(
-            child: Text(deger,
-                textAlign: TextAlign.right,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: refText(
-                    size: 12.8, weight: RF.w600, color: RC.text)),
-          ),
-        ]),
-      );
-}
-
-/// `.pr-cbox` — iletişim kutusu (telefon / mesajlaşma).
-///
-/// ```css
-/// .pr-cbox{gap:8px;1px #ECEEF1;r11;padding:9px;#fff}
-/// .pr-cic{34px daire;#EAF1FB;ikon 17px #1D6BE3}
-/// .pr-cl{12px #5B6472}
-/// .pr-cv{14px/700;#16233D;tek satır, taşarsa …}
-/// .pr-cv2{11px/500;#16233D;1.35}
-/// .pr-clock{30px daire;#EEF0F4}
-/// ```
-///
-/// ⚠ Kutu KAPALIYKEN de çizilir: maskeli değer, açıklama ve kilit
-/// rozetiyle. Kullanıcı ücreti ödemeden önce neyin açılacağını görür.
-class _IletisimKutusu extends StatelessWidget {
-  const _IletisimKutusu({
-    required this.ikon,
-    required this.etiket,
-    required this.deger,
-    required this.not,
-    required this.kilitli,
-    required this.onTap,
-    this.altiCizili = false,
-  });
-
-  final String ikon;
-  final String etiket;
-
-  /// Açıkken gösterilen değer (telefon numarası / "Sohbeti aç").
-  final String? deger;
-
-  /// Kapalıyken gösterilen açıklama.
-  final String? not;
-
-  final bool kilitli;
-  final VoidCallback? onTap;
-
-  /// Değer bağlantı gibi altı çizili gösterilsin mi?
-  final bool altiCizili;
-
-  @override
-  Widget build(BuildContext context) => RefTap(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(RR.r11),
-        child: Container(
-          padding: const EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: RC.white,
-            border: Border.all(color: RC.border),
-            borderRadius: BorderRadius.circular(RR.r11),
-          ),
-          child: Row(children: [
-            // `.pr-cic`
-            Container(
-              width: 34,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEAF1FB),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: RefSvg(ikon, size: 17, color: RC.blue),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // `.pr-cl`
-                  Text(etiket,
-                      style: refText(
-                          size: RF.s12, weight: RF.w400, color: RC.textSoft)),
-                  if (deger != null) ...[
-                    const SizedBox(height: 2),
-                    // `.pr-cv`
-                    Text(deger!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s14,
-                            weight: RF.w700,
-                            color: RC.text,
-                            decoration: altiCizili
-                                ? TextDecoration.underline
-                                : null)),
-                  ],
-                  if (not != null) ...[
-                    const SizedBox(height: 2),
-                    // `.pr-cv2`
-                    //
-                    // ⚠ EK GÜVENLİK — metin artık kısa ("İletişim
-                    // açılınca görünür.") ama yine de `maxLines`/
-                    // `overflow` eklendi: çok dar bir ekranda taşarsa
-                    // "…" ile kesilir, kelime ORTASINDAN BÖLÜNMEZ.
-                    Text(not!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s11,
-                            weight: RF.w500,
-                            color: RC.text,
-                            height: RF.lh135)),
-                  ],
-                ],
-              ),
-            ),
-            if (kilitli) ...[
-              const SizedBox(width: 6),
-              // `.pr-clock`
-              Container(
-                width: 30,
-                height: 30,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEEF0F4),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: const RefSvg('assets/svg/ic_plock.svg',
-                    size: 14, color: RC.greyLight),
-              ),
-            ],
-          ]),
-        ),
-      );
-}
-
 /// `<a href="tel:...">` karşılığı — telefon uygulamasını açar.
 ///
 /// ⚠ `offer_detail_screen` içinde aynı adlı bir yardımcı vardır; ikisi
@@ -1124,15 +800,3 @@ Future<void> _telefonAra(BuildContext context, String? ham) async {
   }
 }
 
-/// ⚠ `teklif_talebi_detay_screen.dart`daki AYNI biçimlendirme —
-/// `intl` paketi projede kullanılmıyor, sabit Türkçe ay adları
-/// listesiyle basitçe formatlanıyor. O dosya bu dosyadan PRIVATE
-/// olduğu için (Dart dosyalar arası private import etmez) buraya
-/// AYNEN yeniden oluşturuldu.
-const _kAyAdlariSahip = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
-];
-
-String _uyelikTarihiMetni(DateTime tarih) =>
-    "${_kAyAdlariSahip[tarih.month - 1]} ${tarih.year}'ten beri üye";

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/listing.dart';
 import '../models/teklif_talebi.dart' show IletisimTercihi;
+import 'ilan_no_uretici.dart';
 
 class ListingRepository extends ChangeNotifier {
   final _uuid = const Uuid();
@@ -9,38 +10,14 @@ class ListingRepository extends ChangeNotifier {
 
   /// ── İLAN NUMARASI ÜRETİMİ ──
   ///
-  /// ⚠ ARTAN SAYAÇ, "EN BÜYÜK + 1" DEĞİL.
+  /// ⚠ SAYAÇ BU SINIFTAN ÇIKARILDI (12 Eyl). Numara artık
+  /// `IlanNoUretici` üzerinden, TEKLİF TALEPLERİYLE AYNI diziden
+  /// gelir: ürün kararına göre ilan ve talep kullanıcı için aynı
+  /// şeydir, aynı numara iki kayıtta çıkamaz.
   ///
-  /// Mevcut ilanlara bakıp en büyüğü bulmak, silinen/kapanan bir
-  /// ilanın numarasının YENİDEN VERİLMESİNE yol açar. Sayaç yalnız
-  /// ileri gider; listeden kayıt çıkması onu geri almaz.
-  ///
-  /// ⚠ BU İSTEMCİ TARAFI BİR SİMÜLASYONDUR. Gerçek benzersizlik
-  /// otoritesi veritabanıdır: `ilanNo` üzerinde UNIQUE kısıt ve
-  /// atomik üretim (sequence / identity) gerekir. "Önce kontrol et,
-  /// sonra yaz" yeterli değildir — iki paralel istek aynı anda
-  /// kontrolü geçebilir.
-  ///
-  /// Başlangıç değeri sabit: testler DETERMİNİSTİK olsun diye
-  /// rastgelelik kullanılmaz.
-  static const int _kIlanNoBaslangic = 10458231;
-  int _sonrakiIlanNo = _kIlanNoBaslangic;
-
-  /// Üretilmiş TÜM numaralar — kayıt silinse de burada kalır.
-  ///
-  /// ⚠ Yeniden kullanımı engellemenin ikinci savunması.
-  final Set<String> _verilmisIlanNolari = {};
-
-  /// Bir sonraki benzersiz numarayı üretir.
-  String _ilanNoUret() {
-    var no = (_sonrakiIlanNo++).toString();
-    // Dışarıdan verilmiş numaralarla çakışma ihtimaline karşı ilerle.
-    while (_verilmisIlanNolari.contains(no)) {
-      no = (_sonrakiIlanNo++).toString();
-    }
-    _verilmisIlanNolari.add(no);
-    return no;
-  }
+  /// Üretim kuralları (artan sayaç, verilmiş numaraların
+  /// unutulmaması, istemci simülasyonu uyarısı) o dosyada.
+  String _ilanNoUret() => IlanNoUretici.uret();
 
   /// Numaraya göre ilan — ARAMA için.
   ///
@@ -109,7 +86,7 @@ class ListingRepository extends ChangeNotifier {
   }
 
   void remove(String id) {
-    // ⚠ NUMARA SERBEST KALMAZ: `_verilmisIlanNolari` temizlenmez,
+    // ⚠ NUMARA SERBEST KALMAZ: `IlanNoUretici` kümesi temizlenmez,
     // sayaç geri alınmaz. Silinen ilanın numarası bir daha
     // verilmez — destek kayıtlarında eski referanslar yanlış ilana
     // düşmesin.

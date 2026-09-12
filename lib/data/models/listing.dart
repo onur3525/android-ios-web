@@ -169,7 +169,9 @@ class Listing {
   // ⚠ FORMAT DEĞİŞTİ — kullanıcı isteğiyle: "İlan No: X" yerine
   // "#X". Kartlarda göz önünde olmaması gereken, hafif/silik bir
   // referans numarası; "İlan No" etiketi olmadan da anlaşılır.
-  String get ilanNoEtiketi => '#$ilanNo';
+  /// ⚠ KALDIRILDI (12 Eyl): "#" ekleme bir SUNUM kararıdır ve
+  /// `IlanNoUretici.etiket` içinde tek yerde yapılır. İki modelde
+  /// (ilan ve talep) ayrı ayrı yazılsaydı biçim ayrışırdı.
 
   /// ── ⚠ TAMAMLANMIŞ İŞ — TEK KAYNAK ──
   ///

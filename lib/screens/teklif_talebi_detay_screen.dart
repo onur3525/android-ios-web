@@ -18,7 +18,7 @@ import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import 'job_detail_screen.dart' show maskeliAd;
+import 'job_detail_screen.dart' show maskeliAd, gecenSure;
 import 'provider_reviews_screen.dart';
 import 'teklif_talebi_sohbet_screen.dart';
 import 'teklif_talebi_yorum_screen.dart';
@@ -32,6 +32,9 @@ import 'widgets/is_zamani_secici.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
 import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/teklif_tutar_karti.dart';
+import 'widgets/detay_karti_parcalari.dart';
+import 'widgets/ilan_baslik_satiri.dart';
+import 'widgets/ilan_no_etiketi.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -355,14 +358,69 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(t.hizmet,
-                      style: refText(
-                          size: 16.5, weight: RF.w700, color: RC.text)),
-                  Text(t.kategori,
-                      style: refText(
-                          size: RF.s115,
-                          weight: RF.w500,
-                          color: RC.textSoft)),
+                  // ── ⚠ İLAN AKIŞIYLA AYNI DÜZEN (12 Eyl, ürün
+                  // kararı) ──
+                  //
+                  // "İlan oluştururken görülen ekran Bul ekranında da
+                  // aynı düzende olmalı. Aynı butonlar, aynı yerleşim,
+                  // aynı assetler."
+                  //
+                  // Sıra `job_detail_screen` ile BİREBİR aynıdır:
+                  // numara → karşı taraf → ayraç → ikon + hizmet →
+                  // "Talep Detayı" → zaman → işin detayı → bilgi
+                  // tablosu → fotoğraflar.
+                  //
+                  // ⚠ NUMARA SAĞ ÜSTTE: talepler de artık numara
+                  // alıyor ve ilanlarla AYNI diziden geliyor
+                  // (`IlanNoUretici`). Kullanıcı için ikisi aynı şey.
+                  IlanNoEtiketi(t.talepNo),
+
+                  // ── ⚠ KARŞI TARAF ÜSTTE ──
+                  //
+                  // Önceden ayrı bir ikinci kartta, EN ALTTA
+                  // duruyordu. İlan akışında ilk gördüğün şey işin
+                  // kimden geldiğidir; iki ekran aynı sırayı izler.
+                  //
+                  // ⚠ HİZMET ALAN GÖRÜNÜMÜNDE ÇİZİLMEZ: orada karşı
+                  // taraf hizmet verendir ve `SaglayiciOzetSatiri`
+                  // ile aşağıda gösterilir — o kartın kendi
+                  // maskeleme ve adres kuralları var.
+                  if (benSaglayiciMi) ...[
+                    Builder(builder: (c) {
+                      final hesap = auth.accountById(t.hizmetAlanId);
+                      final acik = t.teklifTarihi != null;
+                      final ham = hesap?.name ?? 'Hizmet Alan';
+                      return SahipKarti(
+                        adSoyad: acik ? ham : maskeliAd(ham),
+                        acik: acik,
+                        tamamlananIs:
+                            hizmetAlanTamamlananIs(c, t.hizmetAlanId),
+                        kayitTarihi: hesap?.kayitTarihi,
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1, color: Color(0xFFF1F3F6)),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // ── ⚠ ORTAK BAŞLIK SATIRI ──
+                  //
+                  // İkon + hizmet adı; üst kategori adı YAZILMAZ
+                  // (12 Eyl ürün kararı). İlan akışındaki bileşenin
+                  // TA KENDİSİ.
+                  IlanBaslikSatiri(baslik: t.hizmet),
+
+                  // ── ⚠ BAŞLIK "TALEP DETAYI" ──
+                  //
+                  // İlan akışında "İlan Detayı" yazar. Burada ortada
+                  // bir ilan YOK; olmayan bir nesneye atıfta bulunmak
+                  // yerine kaydın gerçek adı kullanılır.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 14, 0, 7),
+                    child: Text('Talep Detayı',
+                        style: refText(
+                            size: 15, weight: RF.w700, color: RC.text)),
+                  ),
                   // ── ⚠ BÖLÜM SIRASI (kullanıcı kararı, 9 Eyl) ──
                   //
                   //   Hizmet / Kategori
@@ -384,11 +442,11 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                   // ⚠ BOŞ BÖLÜM ÇİZİLMEZ: zaman seçilmemişse ya da
                   // fotoğraf yoksa o bölüm başlığıyla birlikte HİÇ
                   // görünmez — sahipsiz başlık bırakılmaz.
+                  // ⚠ ETİKET ADI İLAN AKIŞIYLA EŞİTLENDİ: orada
+                  // "Zaman tercihi" yazıyor. Aynı alan iki ekranda
+                  // iki ad taşımaz.
                   if (t.isZamani != null) ...[
-                    const SizedBox(height: 10),
-                    const Divider(height: 1, color: Color(0xFFF1F3F6)),
-                    const SizedBox(height: 10),
-                    Text('Hizmet Zamanı',
+                    Text('Zaman tercihi',
                         style: refText(
                             size: RF.s12, weight: RF.w400, color: RC.grey)),
                     const SizedBox(height: 6),
@@ -401,21 +459,48 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                     ),
                   ],
 
-                  const SizedBox(height: 10),
-                  const Divider(height: 1, color: Color(0xFFF1F3F6)),
-                  const SizedBox(height: 10),
-                  Text('Açıklama',
+                  // ⚠ "Açıklama" → "İşin detayı": ilan akışındaki ad.
+                  Text('İşin detayı',
                       style: refText(
                           size: RF.s12, weight: RF.w400, color: RC.grey)),
                   const SizedBox(height: 4),
                   Text(t.aciklama,
                       style: refText(
-                          size: RF.s14, weight: RF.w400, color: RC.text)),
+                          size: RF.s135,
+                          weight: RF.w500,
+                          color: RC.text,
+                          height: RF.lh155)),
+
+                  // ── ⚠ BİLGİ TABLOSU (ilan akışındaki `.pl-rows`) ──
+                  //
+                  // Bul akışında bu tablo HİÇ YOKTU: konum ayrı bir
+                  // kartta, tarih ise hiçbir yerde görünmüyordu.
+                  Builder(builder: (c) {
+                    final hesap = auth.accountById(t.hizmetAlanId);
+                    final adres = hesap?.address;
+                    return Container(
+                      margin: const EdgeInsets.only(top: 11),
+                      decoration: const BoxDecoration(
+                          border: Border(
+                              top: BorderSide(color: Color(0xFFF2F4F7)))),
+                      child: Column(children: [
+                        BilgiSatiri(
+                            ikon: 'assets/svg/ic_pin.svg',
+                            etiket: 'İl / İlçe / Mahalle',
+                            deger: adres == null
+                                ? 'Belirtilmemiş'
+                                : konumMetni(adres, mahalleDahil: true)),
+                        BilgiSatiri(
+                            ikon: 'assets/svg/ic_nclock.svg',
+                            // ⚠ "İlan Tarihi" DEĞİL: burada ilan yok.
+                            etiket: 'Talep Tarihi',
+                            deger: gecenSure(t.createdAt)),
+                      ]),
+                    );
+                  }),
 
                   if (t.fotograflar.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    const Divider(height: 1, color: Color(0xFFF1F3F6)),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Text('Fotoğraflar',
                         style: refText(
                             size: RF.s12, weight: RF.w400, color: RC.grey)),
@@ -533,104 +618,24 @@ class _KarsiTarafBilgisi extends StatelessWidget {
       // seçiliyse teklif verilse bile telefon HİÇ açılmaz.
       final telefonAcik =
           acik && talep.iletisimTercihi == IletisimTercihi.telefonGoster;
+      // ── ⚠ AD / KONUM / GEÇMİŞ BLOKLARI BU KARTTAN ÇIKTI
+      // (12 Eyl, ürün kararı) ──
+      //
+      // Aynı bilgiler artık ANA KARTIN ÜSTÜNDE, ilan akışındaki
+      // `SahipKarti` ve bilgi tablosuyla çiziliyor. Burada
+      // bırakılsalardı ekranda İKİ KEZ görünürlerdi.
+      //
+      // ⚠ GERİYE YALNIZ İLETİŞİM KUTULARI KALDI ve artık ilan
+      // akışının kullandığı ORTAK bileşenle çiziliyor.
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Hizmet Alan',
-              style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              acik
-                  ? RefBasHarfAvatar(ad: adGoster)
-                  : const RefSvg('assets/svg/ic_avlock.svg', size: 28),
-              const SizedBox(width: 8),
-              Text(adGoster,
-                  style: refText(
-                      size: RF.s145, weight: RF.w700, color: RC.text)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, color: Color(0xFFF1F3F6)),
-          const SizedBox(height: 10),
-          Text('Konum',
-              style: refText(size: RF.s12, weight: RF.w400, color: RC.grey)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const RefSvg('assets/svg/ic_pin.svg',
-                  size: 14, color: Color(0xFF98A2B3)),
-              const SizedBox(width: 5),
-              Text(
-                  hizmetAlan?.address != null
-                      ? '${hizmetAlan!.address!.district} / '
-                          '${hizmetAlan.address!.city}'
-                      : 'Belirtilmemiş',
-                  style: refText(
-                      size: RF.s13, weight: RF.w500, color: RC.text)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, color: Color(0xFFF1F3F6)),
-          const SizedBox(height: 10),
-          // ── ⚠ YENİ — HİZMET ALANIN TAMAMLANAN İŞ SAYISI + ÜYELİK
-          // TARİHİ ──
-          //
-          // Kullanıcı isteği: hizmet veren, teklif verirken karşı
-          // tarafın (hizmet alanın) GEÇMİŞİNİ de görebilmeli — kaç
-          // iş tamamlatmış, ne zamandır üye. İki akıştaki (normal
-          // İlan Ver + doğrudan Bul) tamamlanan işler TOPLANIR, tek
-          // bir sayı gösterilir.
-          Builder(builder: (context) {
-            final tamamlanan =
-                _hizmetAlanTamamlananIs(context, talep.hizmetAlanId);
-            final uyelikMetni = hizmetAlan == null
-                ? null
-                : _uyelikTarihiMetni(hizmetAlan.kayitTarihi);
-            return Row(
-              children: [
-                const RefSvg('assets/svg/ic_briefcase.svg',
-                    size: 14, color: Color(0xFF5B6472)),
-                const SizedBox(width: 5),
-                Text('$tamamlanan iş tamamladı',
-                    style: refText(
-                        size: RF.s13,
-                        weight: RF.w500,
-                        color: const Color(0xFF5B6472))),
-                if (uyelikMetni != null) ...[
-                  const SizedBox(width: 10),
-                  Text('•',
-                      style: refText(
-                          size: RF.s13, weight: RF.w500, color: RC.grey)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(uyelikMetni,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s13,
-                            weight: RF.w500,
-                            color: const Color(0xFF5B6472))),
-                  ),
-                ],
-              ],
-            );
-          }),
-          const SizedBox(height: 10),
-          const Divider(height: 1, color: Color(0xFFF1F3F6)),
-          const SizedBox(height: 10),
-          // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, `offer_detail_
-          // screen.dart`daki `_IletisimKutusu` İLE AYNI GÖRSEL DİL ──
-          //
-          // O sınıf dosyaya ÖZEL (private) olduğu için buraya AYNEN
-          // yeniden oluşturuldu (bkz. `_MiniIletisimKutusu` altta) —
-          // yeni bir tasarım İCAT EDİLMEDİ, var olan desen taşındı.
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: _MiniIletisimKutusu(
+                  child: IletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
                     // ⚠ KİLİTLİYKEN `deger: null` — Mesajlaşma
@@ -650,7 +655,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 ),
                 const SizedBox(width: 11),
                 Expanded(
-                  child: _MiniIletisimKutusu(
+                  child: IletisimKutusu(
                     ikon: 'assets/svg/ic_chat.svg',
                     etiket: 'Mesajlaşma',
                     deger: acik ? 'Mesaj yaz' : null,
@@ -734,11 +739,11 @@ class _KarsiTarafBilgisi extends StatelessWidget {
         // yorumlar, sonra "teklif verdiğinde açılacak" notu geliyordu.
         // Yeni sıra: özet → not → iletişim kutuları → yorumlar.
         //
-        // ⚠ KUTULARIN İÇİNE HİÇ DOKUNULMADI: aynı `_MiniIletisimKutusu`
+        // ⚠ KUTULARIN İÇİNE HİÇ DOKUNULMADI: aynı `IletisimKutusu`
         // çağrıları, aynı kilit kuralları, aynı ölçüler. Değişen tek
         // şey bloğun dosyadaki YERİ.
         // ── ⚠ TELEFON + MESAJLAŞMA — YAN YANA, PROVİDER TARAFINDAKİ
-        // `_MiniIletisimKutusu` İLE AYNI KUTULAR (sıfırdan YAPILMADI,
+        // `IletisimKutusu` İLE AYNI KUTULAR (sıfırdan YAPILMADI,
         // aynı bileşen yeniden kullanıldı) ──
         //
         // ⚠ TELEFON HER ZAMAN KİLİTLİ KALIR: hizmet verenin telefonu
@@ -774,7 +779,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     .read<AuthController>()
                     .accountById(talep.saglayiciId);
                 return Expanded(
-                  child: _MiniIletisimKutusu(
+                  child: IletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
                     deger:
@@ -789,7 +794,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
               }),
               const SizedBox(width: 11),
               Expanded(
-                child: _MiniIletisimKutusu(
+                child: IletisimKutusu(
                   ikon: 'assets/svg/ic_chat.svg',
                   etiket: 'Mesajlaşma',
                   deger: acik ? 'Mesaj yaz' : null,
@@ -888,136 +893,14 @@ class _KarsiTarafBilgisi extends StatelessWidget {
   }
 }
 
-/// ── ⚠ `offer_detail_screen.dart`'taki `_IletisimKutusu`nun AYNI
-/// GÖRSEL DİLDE, sadeleştirilmiş yerel kopyası ──
-///
-/// Orijinal sınıf dosyaya özel (private) olduğu için import
-/// EDİLEMEDİ; ikon dairesi, kilitli/açık durum ve tipografi BİREBİR
-/// aynı tutuldu.
-class _MiniIletisimKutusu extends StatelessWidget {
-  const _MiniIletisimKutusu({
-    required this.ikon,
-    required this.etiket,
-    required this.deger,
-    required this.kilitli,
-    this.not,
-    this.kucukDeger = false,
-    this.onTap,
-  });
+// ⚠ YEREL `IletisimKutusu` SINIFI SİLİNDİ (12 Eyl).
+//
+// Bul akışı, ilan akışındaki iletişim kutusunun daha küçük bir
+// kopyasını taşıyordu: farklı daire çapı, farklı punto, kilit
+// rozeti yok. Aynı iki düğme iki ekranda iki farklı boyda
+// duruyordu. Artık ikisi de `widgets/detay_karti_parcalari.dart`
+// içindeki ortak `IletisimKutusu`nu çağırır.
 
-  final String ikon;
-  final String etiket;
-
-  /// ⚠ ARTIK OPSİYONEL — job_detail_screen.dart'taki `_IletisimKutusu`
-  /// İLE AYNI ilke: kilitliyken `deger` YERİNE yalnız `not`
-  /// (açıklama) gösterilir. İkisi BİRDEN doluysa Telefon kutusu
-  /// Mesajlaşma'dan DAHA UZUN görünüyordu — iki kutu farklı
-  /// yükseklikte duruyordu (kullanıcı bulgusu, job_detail_screen.
-  /// dart'ta da AYNI hataydı, orada da düzeltildi).
-  final String? deger;
-  final bool kilitli;
-
-  /// Kilitliyken gösterilen açıklama — job_detail_screen.dart'taki
-  /// `_IletisimKutusu.not` İLE AYNI amaç, aynı metin.
-  final String? not;
-  final bool kucukDeger;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final kutu = Container(
-      padding: const EdgeInsets.all(9),
-      decoration: BoxDecoration(
-        color: RC.white,
-        border: Border.all(color: const Color(0xFFECEEF2)),
-        borderRadius: BorderRadius.circular(RR.r11),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: RC.blueSoft,
-              shape: BoxShape.circle,
-            ),
-            child: RefSvg(ikon, size: 17, color: RC.blue),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(etiket,
-                    style: refText(
-                        size: RF.s12, weight: RF.w400, color: RC.textSoft)),
-                if (deger != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    deger!,
-                    maxLines: kucukDeger ? 2 : 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: kucukDeger
-                        ? refText(
-                            size: 11,
-                            weight: RF.w500,
-                            color: RC.text,
-                            height: 1.35)
-                        : refText(
-                            size: RF.s14, weight: RF.w700, color: RC.text),
-                  ),
-                ],
-                if (not != null) ...[
-                  const SizedBox(height: 2),
-                  // ⚠ EK GÜVENLİK — bkz. job_detail_screen.dart'taki
-                  // AYNI not.
-                  Text(not!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: refText(
-                          size: RF.s11,
-                          weight: RF.w500,
-                          color: RC.text,
-                          height: RF.lh135)),
-                ],
-              ],
-            ),
-          ),
-          if (kilitli) ...[
-            const SizedBox(width: 6),
-            // ⚠ job_detail_screen.dart'taki kilit rozetiyle AYNI —
-            // önceden `Icons.lock_outline` (Material ikonu, daire
-            // arka planı YOK) kullanılıyordu, uygulama genelindeki
-            // diğer iletişim kutularıyla TUTARSIZDI.
-            Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEEF0F4),
-                shape: BoxShape.circle,
-              ),
-              child: const RefSvg('assets/svg/ic_plock.svg',
-                  size: 14, color: RC.greyLight),
-            ),
-          ],
-        ],
-      ),
-    );
-    return onTap == null
-        ? kutu
-        : RefTap(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(RR.r11),
-            child: kutu,
-          );
-  }
-}
-
-/// Hizmet veren aksiyonları: teklif ver / gönderildi / iş aktifse
-/// tamamla.
 class _SaglayiciAksiyonlari extends StatelessWidget {
   const _SaglayiciAksiyonlari({
     required this.talep,
@@ -1451,18 +1334,4 @@ class _BeklemeGostergesi extends StatelessWidget {
   }
 }
 
-/// ⚠ Hizmet ALANIN (müşterinin) TAMAMLANAN iş sayısı — hizmet
-/// verenin `_tamamlananIsGercek`sinin AYNADAKİ karşılığı. İki akıştaki
-/// tamamlanan işler toplanır:
-/// 1) Normal "İlan Ver" — bu kullanıcının SAHİBİ olduğu, tamamlanmış
-///    ilanlar (`Listing.isTamamlanmisIs`).
-/// 2) Doğrudan "Bul" — bu kullanıcının GÖNDERDİĞİ, `tamamlandi`
-///    durumuna ulaşmış teklif talepleri.
-/// ⚠ KOPYALAR KALDIRILDI (9 Eyl): hizmet alanın tamamlanan iş sayısı
-/// ve üyelik metni artık `domain/hizmet_alan_ozeti.dart` içinde TEK
-/// yerde. "Kazandığım" listesindeki kart da aynı kaynağı kullanıyor;
-/// iki yüzey ayrı hesaplasaydı sayılar sessizce ayrışırdı.
-int _hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) =>
-    hizmetAlanTamamlananIs(c, hizmetAlanId);
 
-String _uyelikTarihiMetni(DateTime tarih) => uyelikTarihiMetni(tarih);
