@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/tutar_bicimi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
+import '../domain/kullanici_konumu.dart';
 import '../domain/saglayici_ozeti.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
@@ -476,8 +477,14 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                   // Bul akışında bu tablo HİÇ YOKTU: konum ayrı bir
                   // kartta, tarih ise hiçbir yerde görünmüyordu.
                   Builder(builder: (c) {
-                    final hesap = auth.accountById(t.hizmetAlanId);
-                    final adres = hesap?.address;
+                    // ⚠ ADRES ORTAK KAYNAKTAN: `kullaniciKonumu`
+                    // hesabın GÜNCEL adresini biçimlenmiş döner —
+                    // ilan akışındaki satırın kullandığı AYNI
+                    // fonksiyon. Elle `district / city` kurmak beşinci
+                    // bir kopya olurdu.
+                    final konum =
+                        kullaniciKonumu(c, t.hizmetAlanId,
+                            mahalleDahil: true);
                     return Container(
                       margin: const EdgeInsets.only(top: 11),
                       decoration: const BoxDecoration(
@@ -487,9 +494,9 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         BilgiSatiri(
                             ikon: 'assets/svg/ic_pin.svg',
                             etiket: 'İl / İlçe / Mahalle',
-                            deger: adres == null
-                                ? 'Belirtilmemiş'
-                                : konumMetni(adres, mahalleDahil: true)),
+                            // ⚠ Adres girilmemişse yer tutucu —
+                            // `BilgiSatiri` boş değer kabul etmez.
+                            deger: konum ?? 'Belirtilmemiş'),
                         BilgiSatiri(
                             ikon: 'assets/svg/ic_nclock.svg',
                             // ⚠ "İlan Tarihi" DEĞİL: burada ilan yok.
