@@ -1687,46 +1687,75 @@ class RefSegmentTabs extends StatelessWidget {
                     // mavi, seçilmemişte beyaz — rozetin çevresinde
                     // net bir boşluk kalır.
                     child: Stack(
+                      // ── ⚠ `passthrough` ŞART (12 Eyl düzeltmesi) ──
+                      //
+                      // Rozet sekmenin köşesine taşınırken `Container`
+                      // bir `Stack` ile sarıldı ve `fit` verilmedi.
+                      // Varsayılan `StackFit.loose`, çocuğa GEVŞEK
+                      // kısıt geçirir: `Container` genişliğini
+                      // içeriğinden alıp `Expanded`ın verdiği yeri
+                      // DOLDURMAZ oldu. Sonuç: sekmeler daraldı,
+                      // seçili zemin etiketin dışına taşmadı, hizalar
+                      // kaydı — kullanıcının bildirdiği bozulma buydu.
+                      //
+                      // `passthrough` üst kısıtı olduğu gibi geçirir;
+                      // sekme yine `Expanded`ın tamamını kaplar.
+                      //
+                      // ⚠ ROZET KONUMLU ÇOCUKTUR, bu kısıttan
+                      // etkilenmez.
+                      fit: StackFit.passthrough,
                       clipBehavior: Clip.none,
                       children: [
                         Container(
-                      color: i == selected ? RC.blue : RC.white,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          RefSvg(
-                            items[i].asset,
-                            size: 20,
-                            color: i == selected ? RC.white : RC.text,
-                          ),
-                          const SizedBox(height: 5), // gap:5px
-                          // ⚠ ETİKET KESİLMEZ, KÜÇÜLÜR.
-                          //
-                          // `maxLines: 1` + `ellipsis` uzun etiketleri
-                          // "Tamamlanan ila…" diye kesiyordu; kullanıcı
-                          // hangi sekmede olduğunu okuyamıyordu.
-                          //
-                          // `FittedBox` metni sığdıracak kadar küçültür;
-                          // kısa etiketler tam boyutta kalır, uzunlar
-                          // okunur hâlde sığar.
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              items[i].label,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              style: refText(
-                                size: RF.s115,
-                                weight: RF.w600,
+                          color: i == selected ? RC.blue : RC.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 4),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              RefSvg(
+                                items[i].asset,
+                                size: 20,
                                 color: i == selected ? RC.white : RC.text,
                               ),
-                            ),
+                              const SizedBox(height: 5), // gap:5px
+                              // ⚠ ETİKET KESİLMEZ, KÜÇÜLÜR.
+                              //
+                              // `maxLines: 1` + `ellipsis` uzun
+                              // etiketleri "Tamamlanan ila…" diye
+                              // kesiyordu; kullanıcı hangi sekmede
+                              // olduğunu okuyamıyordu.
+                              //
+                              // `FittedBox` metni sığdıracak kadar
+                              // küçültür; kısa etiketler tam boyutta
+                              // kalır, uzunlar okunur hâlde sığar.
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  items[i].label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  style: refText(
+                                    size: RF.s115,
+                                    weight: RF.w600,
+                                    color:
+                                        i == selected ? RC.white : RC.text,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          ],
                         ),
-                        ),
+                        // ── ⚠ ROZET SEKMENİN SOL ÜST KÖŞESİNDE ──
+                        //
+                        // Konum İKONA değil SEKMEYE görelidir: hangi
+                        // ikon kullanılırsa kullanılsın rozet aynı
+                        // noktada durur. Önceden ikona teğetti ve
+                        // uçuş ikonuyla görsel olarak karışıyordu.
+                        //
+                        // ⚠ HALKA RENGİ SEKME ZEMİNİNE UYAR: seçilide
+                        // mavi, seçilmemişte beyaz — rozetin
+                        // çevresinde net bir boşluk kalır.
                         if (badges != null &&
                             i < badges!.length &&
                             badges![i] > 0)
@@ -2114,6 +2143,30 @@ class _NavOgesi extends StatelessWidget {
             //
             // ⚠ ÖLÇÜ DEĞİŞMEZ: nokta `Stack` içinde ikonun
             // ÜSTÜNE çizilir, yer kaplamaz.
+            //
+            // ── ⚠ RENK MAVİDEN KIRMIZIYA (12 Eyl, kullanıcı
+            // isteği) ──
+            //
+            // "Bildirim geldiğinde mavi nokta değil kırmızı olsun;
+            // bildirimler okununca normal rengine dönüşsün."
+            //
+            // Mavi, uygulamanın SEÇİLİ SEKME rengiydi: Bildirimler
+            // sekmesi aktifken ikon da nokta da maviydi ve nokta
+            // kayboluyordu. Kırmızı hem seçili hem seçilmemiş zeminde
+            // okunur.
+            //
+            // ⚠ RENK ORTAK KAYNAKTAN: `RC.danger` — "Bul"
+            // ikonundaki sayı rozeti de aynı kırmızıyı kullanır
+            // (`RefSayiRozeti`). İki gösterge aynı şeyi söylüyor:
+            // ilgi bekleyen bir şey var.
+            //
+            // ⚠ OKUNUNCA KENDİLİĞİNDEN KAYBOLUR: `it.rozet`
+            // okunmamış sayısından türer; ayrı bir "normale dön"
+            // adımı YOKTUR.
+            //
+            // ⚠ İKON BOZULMAZ: ne ölçü ne konum değişti, yalnız
+            // dolgu rengi. Beyaz halka duruyor — nokta ikonun
+            // konturuna yapışmaz.
             Stack(
               clipBehavior: Clip.none,
               children: [
@@ -2124,13 +2177,17 @@ class _NavOgesi extends StatelessWidget {
                 ),
                 if (it.rozet)
                   Positioned(
-                    right: -2,
-                    top: -1,
+                    // ⚠ KÖŞEYE TEĞET, İKONUN İÇİNE DEĞİL: `-2 / -1`
+                    // ile 9 px'lik nokta 22 px ikonun sağ üst
+                    // konturuna biniyordu. Dışarı alındı; ikon
+                    // bozulmadan görünür.
+                    right: -4,
+                    top: -4,
                     child: Container(
                       width: 9,
                       height: 9,
                       decoration: BoxDecoration(
-                        color: RC.blue,
+                        color: RC.danger,
                         shape: BoxShape.circle,
                         border: Border.all(color: RC.white, width: 1.5),
                       ),
@@ -2152,14 +2209,29 @@ class _NavOgesi extends StatelessWidget {
                 // (`RefSayiRozeti`) ve AYNI ölçü/konum kuralı:
                 // görülmemiş teklif SAYISI yazar.
                 //
-                // ⚠ İKİ ROZET DİLİ AYRI KALIR: "Bildirimler"deki
-                // küçük mavi nokta okunmamış bildirimi anlatır;
-                // buradaki kırmızı sayı ise gelen teklifi. Karışması
-                // istenmiyordu, karışmıyor.
+                // ⚠ İKİ GÖSTERGE AYNI RENKTE, AYRI DİLDE (12 Eyl):
+                // "Bildirimler"deki nokta yalnız "yeni var" der,
+                // buradaki rozet KAÇ TANE olduğunu söyler. İkisi de
+                // kırmızı — ikisi de ilgi bekliyor.
+                //
+                // ── ⚠ ROZET İKONU KAPATMAZ (12 Eyl, kullanıcı
+                // isteği) ──
+                //
+                // "Sayı kırmızı daire içinde yazılmalı ama Bul
+                // ikonunu kapatmamalı."
+                //
+                // Rozet en az 17 px; `-10 / -8` ile 22 px'lik ikonun
+                // sağ üst köşesine 7 px kadar BİNİYORDU. Dışarı
+                // alındı: artık köşeye teğet durur, ikonun gövdesi
+                // tümüyle görünür.
+                //
+                // ⚠ KIRPILMA RİSKİ YOK: `Stack` `Clip.none` ve
+                // öğenin üstünde 2 px dolgu var; alt bar kendi
+                // yüksekliğini içerikten alır.
                 if (it.belirginRozetSayisi > 0)
                   Positioned(
-                    right: -10,
-                    top: -8,
+                    right: -14,
+                    top: -11,
                     child: RefSayiRozeti(
                       sayi: it.belirginRozetSayisi,
                       // Alt bar zemini daima beyazdır.

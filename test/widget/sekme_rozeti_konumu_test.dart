@@ -80,6 +80,43 @@ void main() {
         reason: 'rozet ile ikon kesişiyor');
   });
 
+  testWidgets('⚠ SEKMELER EŞİT GENİŞLİKTE — YERLEŞİM BOZULMAZ', (t) async {
+    // ── ⚠ GERİLEME TESTİ (12 Eyl) ──
+    //
+    // Rozet sekmenin köşesine taşınırken `Container` bir `Stack` ile
+    // sarıldı ve `fit` verilmedi. Varsayılan `StackFit.loose` çocuğa
+    // GEVŞEK kısıt geçirir: `Container` genişliğini içeriğinden alıp
+    // `Expanded`ın verdiği yeri DOLDURMAZ oldu. Sekmeler daraldı,
+    // seçili zemin taştı, hizalar kaydı.
+    //
+    // ⚠ KAYNAK OKUMAK YETMEZDİ: `fit: StackFit.passthrough` yazdığını
+    // görmek yerleşimin doğru olduğunu kanıtlamaz. Bu test gerçek
+    // genişlikleri ÖLÇER.
+    await ciz(t, const [0, 0, 1]);
+    await t.pump();
+
+    final cubuk = t.getRect(find.byType(RefSegmentTabs));
+    final etiketler = ['Yeni işler', 'Teklif verdiklerim', 'Teklif istekleri'];
+    final kutular =
+        etiketler.map((e) => t.getRect(find.text(e))).toList();
+
+    // Üç sekme de çubuğun içinde ve soldan sağa sıralı olmalı.
+    for (final k in kutular) {
+      expect(k.left, greaterThanOrEqualTo(cubuk.left));
+      expect(k.right, lessThanOrEqualTo(cubuk.right));
+    }
+    expect(kutular[0].center.dx, lessThan(kutular[1].center.dx));
+    expect(kutular[1].center.dx, lessThan(kutular[2].center.dx));
+
+    // ⚠ ÜÇ SEKME DE AYNI YÜKSEKLİKTE: biri daralırsa etiketi
+    // `FittedBox` yüzünden küçülür ve dikey hiza kayar.
+    for (var i = 1; i < kutular.length; i++) {
+      expect((kutular[i].center.dy - kutular[0].center.dy).abs(),
+          lessThan(1.0),
+          reason: '$i. sekmenin etiketi dikeyde kaymış');
+    }
+  });
+
   testWidgets('rozet KIRPILMAZ — sekme çubuğunun içinde kalır', (t) async {
     // ⚠ Dışarı almanın riski budur: fazla taşarsa kök `ClipRRect`
     // rozeti keser. Ölçülerek kilitlenir.
