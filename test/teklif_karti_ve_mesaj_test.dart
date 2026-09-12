@@ -206,10 +206,25 @@ void main() {
 
     test('⚠ BAŞLIK DIŞARIDAN GELİR', () {
       // İki taraf aynı metne kendi açısından bakıyor. Başlığı
-      // sabitlemek, hizmet verene kendi yazdığı metni "Hizmet
-      // Verenin Açıklaması" diye okutmak olurdu.
-      expect(detay.contains("baslik: 'Açıklamanız'"), isTrue);
-      expect(detay.contains("baslik: 'Hizmet Verenin Açıklaması'"), isTrue);
+      // sabitlemek, hizmet verene kendi yazdığı metni karşı tarafın
+      // diliyle okutmak olurdu.
+      expect(detay.contains("baslik: 'Notunuz'"), isTrue);
+      expect(detay.contains("baslik: 'Hizmet Verenin Notu'"), isTrue);
+    });
+
+    test('⚠ AYNI ŞEYİN TEK ADI VAR (12 Eyl, kullanıcı kararı)', () {
+      // Bu kutudaki metin bir beyan değil, fiyatın yanına iliştirilen
+      // kısa bir nottur. "Açıklama" hem fazla resmî duruyordu hem de
+      // ilan açıklamasıyla karışıyordu.
+      //
+      // ⚠ ÜÇ AD VARDI: kartta "Açıklamanız", formda "Cevabınız",
+      // karşı tarafta "Hizmet Verenin Açıklaması".
+      expect(detay.contains("'Hizmet Verenin Açıklaması'"), isFalse);
+      expect(detay.contains("Text('Cevabınız'"), isFalse);
+      expect(detay.contains("baslik: 'Açıklamanız'"), isFalse);
+      // Yazarken ve okurken tek ad.
+      expect(detay.contains("Text('Notunuz'"), isTrue,
+          reason: 'form alanı etiketi eşitlenmemiş');
     });
 
     test('⚠ BOŞ AÇIKLAMADA KART ÇİZİLMEZ', () {

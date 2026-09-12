@@ -150,6 +150,68 @@ void main() {
     });
   });
 
+  group('⚠ KARŞI TARAFIN FOTOĞRAFI GÖRÜNÜR', () {
+    // ── ⚠ KULLANICI BULGUSU (12 Eyl) ──
+    //
+    // "Kullanıcılar birbirlerinin profil fotoğraflarını yüklemiş
+    // olsalar bile kurallara göre iletişim açıldığında veya teklif
+    // istenip teklif verildikten sonra görebilmeliler. Şu anda
+    // sadece kendi fotoğraflarını kendileri görebiliyorlar."
+    //
+    // KÖK NEDEN: fotoğraf çizen TEK yer profil ekranındaki `_Avatar`
+    // sınıfıydı ve o dosyaya ÖZELDİ. Ortak avatar bileşeni
+    // (`RefBasHarfAvatar`) yalnız baş harf çiziyordu. Veri vardı,
+    // gösterim yoktu.
+
+    test('ortak avatar fotoğraf çizebilir', () {
+      final w = _kod('lib/ui/ref_widgets.dart');
+      expect(w.contains('class RefBasHarfAvatar'), isTrue);
+      expect(w.contains('this.fotoYolu'), isTrue,
+          reason: 'ortak avatar yine yalnız baş harf çiziyor');
+      expect(w.contains('Image.file('), isTrue);
+      // ⚠ Dosya okunamazsa çökmez, baş harfe düşer.
+      expect(w.contains('errorBuilder: (_, __, ___) => basHarf'), isTrue);
+    });
+
+    test('⚠ MASKELİYKEN FOTOĞRAF OKUNMAZ', () {
+      // Fotoğraf maskelemenin parçasıdır, ayrı bir kural değildir:
+      // kimlik açılmadan önce karşı tarafın fotoğrafı GÖSTERİLMEZ.
+      final ilan = _kod('lib/screens/job_detail_screen.dart');
+      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(ilan.contains('fotoYolu: iletisimAcik'), isTrue,
+          reason: 'ilan akışında fotoğraf iletişim kuralına bağlı değil');
+      expect(bul.contains("acik ? (hesap?.fotografi(Role.customer) ?? '') : ''"),
+          isTrue,
+          reason: 'bul akışında fotoğraf teklif kuralına bağlı değil');
+    });
+
+    test('⚠ ROL BAZLI OKUNUR', () {
+      // Çift rollü hesapta yanlış rolün fotoğrafı yanlış kimliği
+      // gösterirdi: kişisel profil ile iş profili ayrı fotoğraflar.
+      final ilan = _kod('lib/screens/job_detail_screen.dart');
+      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      final ozet = _kod('lib/domain/saglayici_ozeti.dart');
+      // Karşı taraf ilan/talep sahibidir → hizmet alan rolü.
+      expect(ilan.contains('fotografi(Role.customer)'), isTrue);
+      expect(bul.contains('fotografi(Role.customer)'), isTrue);
+      // Sağlayıcı özetinde karşı taraf hizmet verendir.
+      expect(ozet.contains('fotografi(Role.provider)'), isTrue);
+    });
+
+    test('sağlayıcı özet satırı fotoğrafı geçirir', () {
+      final satir = _kod('lib/screens/widgets/saglayici_ozet_satiri.dart');
+      expect(satir.contains('fotoYolu: ozet.fotoYolu'), isTrue);
+      // Maskeliyken hâlâ kilitli avatar çizilmeli.
+      expect(satir.contains("ic_avlock"), isTrue);
+    });
+
+    test('sahip kartı fotoğrafı geçirir', () {
+      final parca = _kod('lib/screens/widgets/detay_karti_parcalari.dart');
+      expect(parca.contains('this.fotoYolu'), isTrue);
+      expect(parca.contains('RefBasHarfAvatar('), isTrue);
+    });
+  });
+
   group('FOTOĞRAF ROL BAZLIDIR', () {
     Account hesap({Role rol = Role.customer}) => Account(
           id: 'a1',

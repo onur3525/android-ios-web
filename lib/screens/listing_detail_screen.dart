@@ -15,13 +15,14 @@ import '../data/models/listing.dart';
 import '../data/models/offer.dart';
 import 'offer_detail_screen.dart';
 import 'review_screen.dart';
-import 'status_ui.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/kullanici_konumu.dart';
+import '../domain/saglayici_ozeti.dart' show tamamlananIsSayisi;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
+import '../core/tutar_bicimi.dart';
 
 /// Müşteri — İlan Detayı (HTML vListing): ilan bilgisi, durum,
 /// Gelen Teklifler listesi ve duruma göre aksiyonlar
@@ -612,19 +613,23 @@ class _DurumChipi extends StatelessWidget {
     // ⚠ KULLANICI İSTEĞİ — "Açık" durumu artık HİÇ gösterilmez (bir
     // ilanın normal/varsayılan hali, rozet gerektirmiyor). Diğer
     // durumlar (Tamamlandı, Süresi Doldu, Kapatıldı) DEĞİŞMEDİ.
-    if (!tamamlandi && status == ListingStatus.active) {
+    // ── ⚠ "Tamamlandı" ROZETİ KALDIRILDI (12 Eyl, kullanıcı
+    // isteği) ──
+    //
+    // İlan kartının altında duruyordu. Tamamlanmış bir ilanda zaten
+    // seçilen hizmet veren, teklifi ve değerlendirme durumu aşağıda
+    // görünüyor; rozet bunu üçüncü kez söylüyordu.
+    //
+    // ⚠ ÖTEKİ DURUMLAR DURUYOR: "Süresi Doldu" ve "Kapatıldı" hâlâ
+    // çizilir — onlar başka hiçbir yerde anlaşılmıyor. "Açık İlan"
+    // ise daha önce kaldırılmıştı (varsayılan hâl).
+    if (tamamlandi || status == ListingStatus.active) {
       return const SizedBox.shrink();
     }
-    // ⚠ SIRA ÖNEMLİ: tamamlanmışlık yaşam durumundan ÖNCE bakılır.
-    // Tamamlanmış bir iş sonradan silinse de "Tamamlandı" kalır.
-    final (bg, fg, nokta, metin) = tamamlandi
-        ? (
-            const Color(0xFFEAF1FB),
-            const Color(0xFF1D6BE3),
-            const Color(0xFF1D6BE3),
-            'Tamamlandı',
-          )
-        : switch (status) {
+    // ⚠ TAMAMLANMIŞ DALI YUKARIDA ELENDİ: buraya yalnız "süresi
+    // doldu" ve "kapatıldı" düşer. Ölü bir "Tamamlandı" dalı
+    // bırakmak, rozetin hâlâ çizildiği izlenimi verirdi.
+    final (bg, fg, nokta, metin) = switch (status) {
             ListingStatus.expired => (
                 const Color(0xFFF2F4F7),
                 const Color(0xFF6B7683),
@@ -638,13 +643,15 @@ class _DurumChipi extends StatelessWidget {
                 const Color(0xFF98A2B3),
                 'Kapatıldı',
               ),
-            ListingStatus.active => (
-                const Color(0xFFE9F9EF),
-                const Color(0xFF16A34A),
-                const Color(0xFF22C55E),
-                'Açık İlan',
-              ),
-          };
+      // ⚠ ULAŞILMAZ AMA ZORUNLU: `switch` tüm durumları kapsamalı.
+      // Aktif ilan yukarıda eleniyor.
+      ListingStatus.active => (
+          const Color(0xFFE9F9EF),
+          const Color(0xFF16A34A),
+          const Color(0xFF22C55E),
+          'Açık İlan',
+        ),
+    };
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -877,30 +884,18 @@ class _TeklifKarti extends StatelessWidget {
                                   letterSpacing: 0.2),
                             ),
                           ),
-                          if (acik) ...[
-                            const SizedBox(width: 6), // .of-unl{margin-left:6px}
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 2, horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE9F9EF),
-                                borderRadius: BorderRadius.circular(RR.r6),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const RefSvg('assets/svg/ic_shieldok.svg',
-                                      size: 12, color: Color(0xFF16A34A)),
-                                  const SizedBox(width: 3), // gap:3px
-                                  Text('İletişim Açıldı',
-                                      style: refText(
-                                          size: 9.5,
-                                          weight: RF.w700,
-                                          color: const Color(0xFF16A34A))),
-                                ],
-                              ),
-                            ),
-                          ],
+                          // ── ⚠ "İletişim Açıldı" ROZETİ KALDIRILDI
+                          // (12 Eyl, kullanıcı isteği) ──
+                          //
+                          // Rozet bir DURUM bildiriyordu ama kart bir
+                          // TEKLİF kartıdır: hizmet alan burada
+                          // teklifleri karşılaştırır. İletişimin açık
+                          // olup olmadığı o karşılaştırmaya girmez ve
+                          // adın hemen yanında en çok yer kaplayan
+                          // öğeydi.
+                          //
+                          // ⚠ `acik` DEĞİŞKENİ DURUYOR: ad maskeleme
+                          // hâlâ ona bakıyor (`_ad(acik)`).
                         ],
                       ),
                       // .of-sub — puan + yorum sayısı
@@ -934,7 +929,15 @@ class _TeklifKarti extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(tl(offer.amount),
+                    // ── ⚠ TUTAR ORTAK BİÇİMDEN (12 Eyl, kullanıcı
+                    // bulgusu) ──
+                    //
+                    // `tl()` "₺6000" yazıyordu: para simgesi başta,
+                    // binlik ayracı yok. Uygulamanın her yerinde tutar
+                    // `core/tutar_bicimi.dart`tan geliyor ve
+                    // "6.000 TL" biçiminde yazılıyor. Aynı sayı aynı
+                    // ekranda iki farklı biçimde görünüyordu.
+                    Text(tutarMetni(offer.amount),
                         style: refText(
                             size: 14.5,
                             weight: RF.w800,
@@ -949,7 +952,14 @@ class _TeklifKarti extends StatelessWidget {
               ],
             ),
 
-            // .of-quote — teklif notu
+            // ── ⚠ NOT KUTUSU YALNIZ NOT VARSA (12 Eyl, kullanıcı
+            // isteği) ──
+            //
+            // "Hizmet verenin notu yazılmamışsa gri kısım
+            // görünmemeli." Not yazmak zorunlu değil; boş bir gri
+            // kutu, yazılmış ama okunamayan bir mesaj izlenimi
+            // veriyordu.
+            if (maskele(offer.note).trim().isNotEmpty) ...[
             const SizedBox(height: 5),
             Container(
               width: double.infinity,
@@ -961,12 +971,10 @@ class _TeklifKarti extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    // .of-quote svg{margin-top:2px}
-                    padding: EdgeInsets.only(top: 2),
-                    child: RefSvg('assets/svg/ic_quote.svg', size: 15),
-                  ),
-                  const SizedBox(width: 6), // gap:6px
+                  // ⚠ TIRNAK SİMGESİ KALDIRILDI (12 Eyl, kullanıcı
+                  // isteği): metnin alıntı olduğunu zaten gri kutu
+                  // söylüyordu, simge yalnız satır başını içeri
+                  // itiyordu.
                   Expanded(
                     child: Text(
                       // ⚠ Teklif kartında iletişim DAİMA kapalıdır:
@@ -983,8 +991,9 @@ class _TeklifKarti extends StatelessWidget {
                 ],
               ),
             ),
+            ],
 
-            // .of-meta — zaman | kimlik | olumlu yorum
+            // .of-meta — zaman | kimlik | tamamlanan iş
             const SizedBox(height: 5),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -1027,6 +1036,28 @@ class _TeklifKarti extends StatelessWidget {
                       style: refText(
                           size: 10, weight: RF.w400, color: RC.textSoft)),
                 ],
+                // ── ⚠ TAMAMLANAN İŞ SAYISI (12 Eyl, kullanıcı
+                // isteği) ──
+                //
+                // "Hizmet verenin puanı, kaç yorumu olduğu, kaç iş
+                // bitirdiği görünmeli." Puan ve yorum sayısı adın
+                // altında zaten vardı; EKSİK olan iş sayısıydı.
+                //
+                // Hizmet alan burada teklifleri karşılaştırıyor:
+                // yüksek puanlı ama tek işi olan biriyle, orta puanlı
+                // ama yirmi işi olan biri aynı görünmemeli.
+                //
+                // ⚠ SAYIM TEK KAYNAKTAN: `tamamlananIsSayisi`. Ekran
+                // kendi sorgusunu yazarsa aynı kişi başka kartta
+                // başka sayı gösterir.
+                _ayrac(),
+                const RefSvg('assets/svg/ic_briefcase.svg',
+                    size: 13, color: RC.textSoft),
+                const SizedBox(width: 4),
+                Text('${tamamlananIsSayisi(context, offer.providerId)} '
+                    'iş tamamladı',
+                    style: refText(
+                        size: 10, weight: RF.w400, color: RC.textSoft)),
               ],
             ),
           ],

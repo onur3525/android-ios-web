@@ -263,6 +263,8 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                   tamamlananIs: widget.tamamlananIs,
                   ilce: widget.ilce,
                   il: widget.il,
+                  // ⚠ YEDEK KAYIT: hesap bulunamadı, fotoğraf da yok.
+                  fotoYolu: '',
                 );
             return Container(
               padding: const EdgeInsets.all(12),

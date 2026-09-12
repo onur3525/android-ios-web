@@ -70,7 +70,9 @@ void main() {
       expect(i, greaterThan(0));
       expect(j, greaterThan(i), reason: 'yorum dalı zincirin sonunda olmalı');
       expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
-      expect(teklifDetay.contains("'Yorum Yapıldı "), isTrue);
+      // ⚠ AD DEĞİŞTİ (12 Eyl): puan şeritten kalktı, eylem ikinci
+      // satıra indi — "Yorum yapıldı" + "Görüntüle".
+      expect(teklifDetay.contains("'Yorum yapıldı'"), isTrue);
       expect(teklifDetay.contains('Yorum yazmak ücretsizdir'), isFalse,
           reason: 'kaldırılan ücretsizlik yazısı geri gelmiş');
       expect(teklifDetay.contains('Teklif seçmek ücretsizdir.'), isFalse,

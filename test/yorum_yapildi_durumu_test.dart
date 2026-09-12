@@ -62,11 +62,31 @@ void main() {
           reason: '"Yorum Yaz" düğmesi kapının içinde değil');
     });
 
-    test('yorum varsa "Yorum Yapıldı" yazısı ve puan gösterilir', () {
+    test('⚠ YORUM VARSA DURUM YAZAR, PUAN YAZMAZ', () {
+      // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+      //
+      // "Kaç puan verdiği burada yazmamalı."
+      //
+      // Şerit önce "Yorum Yapıldı (5 puan) · Görüntüle" diyordu.
+      // Puan zaten dokunulunca açılan ekranda, kendi bağlamında
+      // duruyor; şeritte tekrar etmesi satırı bir durum bildirimi
+      // olmaktan çıkarıyordu.
       expect(k.contains('if (reviewed)'), isTrue);
-      expect(k.contains("'Yorum Yapıldı "), isTrue);
-      expect(k.contains('byOffer(offer.id)!.stars'), isTrue,
-          reason: 'puan bu teklifin yorumundan okunmuyor');
+      expect(k.contains("'Yorum yapıldı'"), isTrue);
+      expect(k.contains('byOffer(offer.id)!.stars'), isFalse,
+          reason: 'puan şeride geri gelmiş');
+    });
+
+    test('⚠ "Görüntüle" AYRI SATIRDA VE DÜĞME GİBİ GÖRÜNÜR', () {
+      // Eylem, durumun içine nokta ile iliştirilmişti; okuyan kişi
+      // bunun bilgi mi düğme mi olduğunu anlamıyordu. Artık ikinci
+      // satırda, altı çizili ve ok ikonuyla.
+      expect(k.contains("aksiyon: 'Görüntüle'"), isTrue);
+      final serit = _pencere(k, 'class _UcretsizSerit', 'String _telefonGoster');
+      expect(serit.contains('decoration: TextDecoration.underline'), isTrue,
+          reason: 'eylem satırı bağlantı gibi görünmüyor');
+      expect(serit.contains('ic_chev.svg'), isTrue,
+          reason: 'yön işareti yok');
     });
 
     test('yazı dokunulabilir ve YALNIZ bu teklifin yorumunu açar', () {

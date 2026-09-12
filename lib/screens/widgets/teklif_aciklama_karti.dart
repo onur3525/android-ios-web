@@ -11,15 +11,24 @@ import '../../ui/ref_tokens.dart';
 /// tarafta da aynı görünmeli."
 ///
 /// ⚠ ÖNCEDEN İKİ YERDE AYRI AYRI ÇİZİLİYORDU: hizmet verenin gördüğü
-/// "Açıklamanız" ve hizmet alanın gördüğü "Hizmet Verenin Açıklaması"
-/// — ikisi de küçük gri başlık + düz metindi, çerçevesizdi. Biri
-/// değişse öteki eskide kalırdı.
+/// kart ve hizmet alanın gördüğü kart — ikisi de küçük gri başlık +
+/// düz metindi, çerçevesizdi. Biri değişse öteki eskide kalırdı.
 ///
 /// ⚠ BAŞLIK METNİ DIŞARIDAN GELİR, GÖRÜNÜM BURADA: iki taraf aynı
-/// şeye kendi açısından bakıyor ("Açıklamanız" / "Hizmet Verenin
-/// Açıklaması"), ama KART aynı. Başlığı da sabitlemek, hizmet verene
-/// kendi yazdığı metni "Hizmet Verenin Açıklaması" diye
-/// okutmak olurdu.
+/// şeye kendi açısından bakıyor ("Notunuz" / "Hizmet Verenin Notu"),
+/// ama KART aynı. Başlığı da sabitlemek, hizmet verene kendi yazdığı
+/// metni karşı tarafın diliyle okutmak olurdu.
+///
+/// ── ⚠ AD DEĞİŞTİ: "AÇIKLAMA" → "NOT" (12 Eyl, kullanıcı kararı) ──
+///
+/// Bu kutudaki metin bir beyan değil, hizmet verenin fiyatının yanına
+/// iliştirdiği kısa bir nottur. "Açıklama" hem fazla resmî duruyordu
+/// hem de ilan açıklamasıyla karışıyordu — ekranda tek kelimelik bir
+/// "Merhaba" için "Hizmet Verenin Açıklaması" başlığı ağır kaçıyordu.
+///
+/// ⚠ AYNI ŞEYİN ÜÇ ADI VARDI: kartta "Açıklamanız", formda
+/// "Cevabınız", karşı tarafta "Hizmet Verenin Açıklaması". Üçü de tek
+/// ada indirildi.
 ///
 /// ⚠ BAŞLIK ORTALI, METİN SOLA YASLI: başlık kısa bir etikettir,
 /// ortalanınca kartın dengesini kurar. Açıklama ise birkaç cümle

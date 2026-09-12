@@ -39,4 +39,14 @@ import '../data/models/offer.dart';
       OfferStatus.closed => ('Kapandı', HC.lightGrey),
     };
 
-String tl(int v) => '₺$v';
+// ── ⚠ `tl()` KALDIRILDI (12 Eyl) ──
+//
+// "₺6000" üretiyordu: para simgesi başta ve binlik ayracı yok.
+// Uygulamanın geri kalanı `core/tutar_bicimi.dart` içindeki
+// `tutarMetni` ile "6.000 TL" yazıyordu; aynı sayı ekranlar arasında
+// iki farklı biçimde görünüyordu.
+//
+// ⚠ SON İKİ ÇAĞRI YERİ DE TAŞINDI (ilan detayındaki teklif kartı ve
+// değerlendirme ekranı). Fonksiyon DURSAYDI üçüncü bir çağrı yeri
+// doğardı — bu kusur zaten dört turda dört ayrı ekranda tek tek
+// düzeltilmişti.

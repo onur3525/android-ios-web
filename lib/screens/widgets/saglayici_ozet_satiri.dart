@@ -52,11 +52,15 @@ class SaglayiciOzetSatiri extends StatelessWidget {
         if (maskeli)
           const RefSvg('assets/svg/ic_avlock.svg', size: 46)
         else
-          SizedBox(
-            width: 46,
-            height: 46,
-            child: FittedBox(child: RefBasHarfAvatar(ad: ozet.adSoyad)),
-          ),
+          // ⚠ FOTOĞRAF KİMLİK AÇILINCA GÖRÜNÜR (12 Eyl, kullanıcı
+          // bulgusu): "birbirlerinin profil fotoğraflarını yüklemiş
+          // olsalar bile göremiyorlar". Maskeliyken bu dal HİÇ
+          // çalışmaz — yukarıdaki kilitli avatar çizilir.
+          //
+          // ⚠ Fotoğraf yoksa ya da dosya okunamıyorsa bileşen baş
+          // harfe düşer; ayrı bir koşul yazılmaz.
+          RefBasHarfAvatar(
+              ad: ozet.adSoyad, fotoYolu: ozet.fotoYolu, cap: 46),
         const SizedBox(width: 11),
         Expanded(
           child: Column(

@@ -54,6 +54,21 @@ typedef SaglayiciOzeti = ({
   /// gibi bir yer tutucu gösterilmez.
   String? ilce,
   String? il,
+
+  /// ── ⚠ PROFİL FOTOĞRAFI (12 Eyl, kullanıcı bulgusu) ──
+  ///
+  /// "Kullanıcılar birbirlerinin profil fotoğraflarını yüklemiş
+  /// olsalar bile göremiyorlar."
+  ///
+  /// ⚠ HİZMET VEREN ROLÜNÜN fotoğrafıdır: çift rollü hesapta kişisel
+  /// profil fotoğrafı burada yanlış kimliği gösterirdi (bkz.
+  /// `Account.fotografi`).
+  ///
+  /// ⚠ MASKELEME ÇAĞIRANDA: kimlik gizliyken satır zaten kilitli
+  /// avatar çizer ve bu alanı OKUMAZ.
+  ///
+  /// ⚠ Boş dize = fotoğraf yok; gösterim baş harfe düşer.
+  String fotoYolu,
 });
 
 /// TAMAMLANAN İŞ SAYISI — TEK TANIM.
@@ -191,5 +206,6 @@ SaglayiciOzeti? gercekSaglayiciOzeti(
     tamamlananIs: tamamlananIsSayisi(context, id),
     ilce: ilce,
     il: (il == null || il.isEmpty) ? ilYedegi : il,
+    fotoYolu: hesap.fotografi(Role.provider),
   );
 }

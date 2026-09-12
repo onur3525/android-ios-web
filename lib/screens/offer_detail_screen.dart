@@ -656,9 +656,17 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       ),
                     ),
                     borderRadius: BorderRadius.circular(RR.r9),
-                    child: _UcretsizSerit('Yorum Yapıldı '
-                        '(${reviewCtl.byOffer(offer.id)!.stars} puan) · '
-                        'Görüntüle'),
+                    // ── ⚠ PUAN ŞERİTTE YAZMAZ (12 Eyl, kullanıcı
+                    // isteği) ──
+                    //
+                    // "Kaç puan verdiği burada yazmamalı."
+                    //
+                    // Puan zaten dokunulunca açılan ekranda, kendi
+                    // bağlamında duruyor. Şeritte tekrar etmesi hem
+                    // gereksizdi hem de satırı bir durum bildirimi
+                    // olmaktan çıkarıp kalabalıklaştırıyordu.
+                    child: const _UcretsizSerit('Yorum yapıldı',
+                        aksiyon: 'Görüntüle'),
                   ),
               ],
             ],
@@ -1019,9 +1027,26 @@ class _PuanKarti extends StatelessWidget {
 
 /// `.pr-free` — yeşil bilgi şeridi (buton altı).
 class _UcretsizSerit extends StatelessWidget {
-  const _UcretsizSerit(this.metin);
+  const _UcretsizSerit(this.metin, {this.aksiyon});
 
   final String metin;
+
+  /// ── ⚠ İKİNCİ SATIR — DOKUNULABİLİRLİĞİ ANLATIR ──
+  ///
+  /// KULLANICI İSTEĞİ (12 Eyl): "Görüntüle altta kalacak ve dokunarak
+  /// ilgili ekrana gideceğini hissettiren bir görüntüle yazılmalı."
+  ///
+  /// ⚠ ÖNCEDEN TEK SATIRDI ve eylem, durumun içine nokta ile
+  /// iliştirilmişti: "Yorum Yapıldı (5 puan) · Görüntüle". Okuyan
+  /// kişi bunun bir bilgi mi yoksa düğme mi olduğunu anlamıyordu —
+  /// yeşil bir durum şeridi gibi duruyordu.
+  ///
+  /// Verilirse ikinci satır olarak, altı çizili ve ok ikonuyla
+  /// çizilir; artık düğme gibi görünür.
+  ///
+  /// ⚠ `null` ise şerit eskisi gibi tek satır kalır — "İletişimi
+  /// açmak ücretsizdir." satırı bundan etkilenmez.
+  final String? aksiyon;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -1039,11 +1064,38 @@ class _UcretsizSerit extends StatelessWidget {
                 const RefSvg('assets/svg/ic_okgreen.svg', size: 15),
                 const SizedBox(width: 7), // gap:7px
                 Flexible(
-                  child: Text(metin,
-                      style: refText(
-                          size: RF.s125,
-                          weight: RF.w600,
-                          color: const Color(0xFF16A34A))),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(metin,
+                          style: refText(
+                              size: RF.s125,
+                              weight: RF.w600,
+                              color: const Color(0xFF16A34A))),
+                      if (aksiyon != null) ...[
+                        const SizedBox(height: 3),
+                        // ⚠ ALTI ÇİZİLİ + OK: bağlantı olduğunu iki
+                        // işaretle birden söyler. Yalnız renk
+                        // değiştirmek yetmiyordu — şeridin tamamı
+                        // zaten yeşildi.
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(aksiyon!,
+                                style: refText(
+                                    size: RF.s125,
+                                    weight: RF.w700,
+                                    color: const Color(0xFF16A34A),
+                                    decoration: TextDecoration.underline)),
+                            const SizedBox(width: 4),
+                            const RefSvg('assets/svg/ic_chev.svg',
+                                size: 14, color: Color(0xFF16A34A)),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ],
             ),

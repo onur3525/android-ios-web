@@ -144,8 +144,39 @@ void main() {
           reason: 'Seçildi rozeti geri gelmiş');
     });
 
+    test('⚠ SIRALAMA İKİ TÜRÜ BİRLİKTE DİZER', () {
+      // ── ⚠ KULLANICI BULGUSU (12 Eyl): "sıralama çalışmıyor" ──
+      //
+      // Sıralama YALNIZ `myOffers`a uygulanıyordu; `secilenTalepler`
+      // hiç sıralanmıyor ve liste iki bölüm hâlinde çiziliyordu —
+      // önce bütün teklifler, sonra bütün talepler. "Düşük tutarlı
+      // üstte" seçiliyken 6.000 TL'lik teklif, 4.000 TL'lik talebin
+      // ÜSTÜNDE kalıyordu: ölçüt doğru uygulanıyordu ama TÜR SINIRINI
+      // geçemiyordu.
+      //
+      // ⚠ KİLİT TEK LİSTEYE: iki tür tek listede sıralanmalı.
+      expect(jobs.contains('final kazanilanlar ='), isTrue,
+          reason: 'birleşik liste kurulmamış');
+      expect(jobs.contains('kazanilanlar.sort('), isTrue);
+      expect(jobs.contains('myOffers.sort('), isFalse,
+          reason: 'sıralama yine yalnız tekliflere uygulanıyor');
+      expect(jobs.contains('itemCount: kazanilanlar.length'), isTrue,
+          reason: 'liste yine iki bölüm hâlinde çiziliyor');
+      // İndeks aritmetiğiyle bölümleme geri gelmemeli.
+      expect(jobs.contains('i - myOffers.length'), isFalse);
+    });
+
+    test('⚠ TARİH ÖLÇÜTÜ İKİ TÜRDE DE TEKLİF ANIDIR', () {
+      // Talepte `createdAt` TALEBİN açılma tarihidir, teklifin değil.
+      // İki türü farklı anlamda iki tarihle sıralamak listeyi sessizce
+      // yanlış dizerdi.
+      expect(jobs.contains('t.teklifTarihi ?? t.createdAt'), isTrue);
+    });
+
     test('⚠ SAYAÇ KAZANILAN TALEPLERİ DE SAYAR', () {
-      expect(jobs.contains('myOffers.length + secilenTalepler.length'), isTrue,
+      // ⚠ SAYAÇ ARTIK BİRLEŞİK LİSTEDEN OKUR: iki türü ayrı ayrı
+      // toplamak yerine tek kaynağın uzunluğu kullanılır.
+      expect(jobs.contains('kazanilanlar.length'), isTrue,
           reason: 'listede kart varken "0 ilan bulundu" yazılır');
     });
   });

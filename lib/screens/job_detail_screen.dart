@@ -12,6 +12,8 @@ import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+import '../data/models/account.dart' show Role;
 import '../data/controllers/contact_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -230,6 +232,18 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 SahipKarti(
                   adSoyad: sahipAdi,
                   acik: iletisimAcik,
+                  // ⚠ FOTOĞRAF YALNIZ İLETİŞİM AÇIKKEN: maskeleme
+                  // kuralının parçasıdır, ayrı bir kural değildir.
+                  //
+                  // ⚠ HİZMET ALAN ROLÜNÜN fotoğrafı: ilan sahibi bu
+                  // ekranda müşteri kimliğiyle görünür.
+                  fotoYolu: iletisimAcik
+                      ? (context
+                              .watch<AuthController>()
+                              .accountById(l.ownerId)
+                              ?.fotografi(Role.customer) ??
+                          '')
+                      : '',
                   tamamlananIs: listingCtl
                       .byOwner(l.ownerId)
                       // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).

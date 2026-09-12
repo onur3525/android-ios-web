@@ -3,11 +3,11 @@ import '../domain/form_mesajlari.dart';
 import '../domain/config.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
+import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/controllers/review_controller.dart';
-import 'status_ui.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 
@@ -626,7 +626,9 @@ class _UstaKarti extends StatelessWidget {
                     children: [
                       const RefSvg('assets/svg/ic_tag.svg', size: 19),
                       const SizedBox(width: 5),
-                      Text(tl(offer.amount),
+                      // ⚠ AYNI KUSUR BURADA DA VARDI: `tl()` "₺6000"
+                      // yazıyordu. Tutar biçimi tek kaynaktan.
+                      Text(tutarMetni(offer.amount),
                           style: refText(
                               size: RF.s14, weight: RF.w700, color: RC.text)),
                     ],

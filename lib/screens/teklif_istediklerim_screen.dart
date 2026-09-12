@@ -162,6 +162,8 @@ class _TalepKarti extends StatelessWidget {
           tamamlananIs: 0,
           ilce: null,
           il: null,
+          // ⚠ YEDEK KAYIT: hesap bulunamadı, fotoğraf da yok.
+          fotoYolu: '',
         );
     return RefTap(
       onTap: () => Navigator.push<void>(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
@@ -4935,9 +4936,36 @@ class RefSecimKarti extends StatelessWidget {
 /// üzerinden DETERMİNİSTİK seçilir — aynı kişi her açılışta aynı
 /// rengi alır, rastgelelik yoktur.
 class RefBasHarfAvatar extends StatelessWidget {
-  const RefBasHarfAvatar({required this.ad});
+  const RefBasHarfAvatar({
+    required this.ad,
+    this.fotoYolu = '',
+    this.cap = 44,
+    super.key,
+  });
 
   final String ad;
+
+  /// ── ⚠ KARŞI TARAFIN PROFİL FOTOĞRAFI (12 Eyl, kullanıcı bulgusu) ──
+  ///
+  /// BULGU: "Kullanıcılar birbirlerinin profil fotoğraflarını yüklemiş
+  /// olsalar bile göremiyorlar; şu anda sadece kendi fotoğraflarını
+  /// kendileri görebiliyor."
+  ///
+  /// KÖK NEDEN: bu bileşen YALNIZ baş harf çiziyordu. Fotoğrafı olan
+  /// tek yer profil ekranıydı (`_Avatar`) ve o dosyaya özeldi. Yani
+  /// karşı tarafın fotoğrafı hiçbir ekranda çizilmiyordu — veri
+  /// vardı, gösterim yoktu.
+  ///
+  /// ⚠ BOŞSA VEYA DOSYA YOKSA BAŞ HARFE DÜŞER: eski davranış aynen
+  /// korunur, hiçbir çağıran bozulmaz.
+  ///
+  /// ⚠ GÖSTERİM KURALI ÇAĞIRANDA: kimliğin açık olup olmadığına
+  /// (iletişim açıldı mı, teklif verildi mi) bu bileşen karar VERMEZ.
+  /// Maskeliyken çağıran zaten boş yol geçirir.
+  final String fotoYolu;
+
+  /// Dairenin çapı. Harf boyutu çapa oranla ölçeklenir.
+  final double cap;
 
   static const _paletler = <(Color, Color)>[
     (Color(0xFFEAF1FB), Color(0xFF1D6BE3)),
@@ -4952,13 +4980,35 @@ class RefBasHarfAvatar extends StatelessWidget {
     final t = ad.trim();
     final harf = t.isEmpty ? '?' : t[0].toUpperCase();
     final (zemin, yazi) = _paletler[t.hashCode.abs() % _paletler.length];
-    return Container(
-      width: 44,
-      height: 44,
+
+    final basHarf = Container(
+      width: cap,
+      height: cap,
       alignment: Alignment.center,
       decoration: BoxDecoration(color: zemin, shape: BoxShape.circle),
       child: Text(harf,
-          style: refText(size: 19, weight: RF.w700, color: yazi)),
+          style: refText(
+              size: cap * 19 / 44, weight: RF.w700, color: yazi)),
+    );
+
+    final yol = fotoYolu.trim();
+    if (yol.isEmpty) {
+      return basHarf;
+    }
+    // ⚠ DOSYA OKUNAMAZSA ÇÖKMEZ, BAŞ HARFE DÜŞER: yol eski bir
+    // önbellekten gelmiş ya da kullanıcı dosyayı silmiş olabilir.
+    return ClipOval(
+      child: SizedBox(
+        width: cap,
+        height: cap,
+        child: Image.file(
+          File(yol),
+          width: cap,
+          height: cap,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => basHarf,
+        ),
+      ),
     );
   }
 }

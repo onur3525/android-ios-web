@@ -14,6 +14,8 @@ import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
+// ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
+import '../data/models/account.dart' show Role;
 import '../data/controllers/review_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
@@ -396,6 +398,15 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         acik: acik,
                         tamamlananIs:
                             hizmetAlanTamamlananIs(c, t.hizmetAlanId),
+                        // ⚠ FOTOĞRAF YALNIZ KİMLİK AÇIKKEN: teklif
+                        // verilene kadar iki taraf birbirine maskeli,
+                        // fotoğraf da maskelemenin parçasıdır.
+                        //
+                        // ⚠ HİZMET ALAN ROLÜNÜN fotoğrafı okunur:
+                        // çift rollü hesapta iş profili fotoğrafı
+                        // burada yanlış kimliği gösterirdi.
+                        fotoYolu:
+                            acik ? (hesap?.fotografi(Role.customer) ?? '') : '',
                         kayitTarihi: hesap?.kayitTarihi,
                       );
                     }),
@@ -722,6 +733,8 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 tamamlananIs: 0,
                 ilce: null,
                 il: null,
+                // ⚠ YEDEK KAYIT: hesap bulunamadı, fotoğraf da yok.
+                fotoYolu: '',
               );
           return SaglayiciOzetSatiri(ozet, maskeli: !acik);
         }),
@@ -986,7 +999,10 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
             // ortalanmış başlık. Hizmet alan tarafı AYNI kartı
             // kullanır — biri değişince öteki de değişir.
             TeklifAciklamaKarti(
-                baslik: 'Açıklamanız',
+                // ⚠ KARŞI TARAFTA "Hizmet Verenin Notu" yazan şey
+                // kendi tarafında "Notunuz"dur — aynı metnin iki
+                // adı olmaz.
+                baslik: 'Notunuz',
                 metin: talep.teklifAciklamasi!.trim()),
           ],
           if (talep.durum == TeklifTalebiDurumu.secildi) ...[
@@ -1055,7 +1071,11 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
         // ve "Hizmet Zamanı (Opsiyonel)" ile AYNI dil.
         Row(
           children: [
-            Text('Cevabınız',
+            // ⚠ ÜÇÜNCÜ AD KALDIRILDI (12 Eyl): aynı metin kartta
+            // "Açıklamanız", formda "Cevabınız", karşı tarafta
+            // "Hizmet Verenin Açıklaması" diye geçiyordu. Yazarken
+            // ve okurken tek ad: "Notunuz" / "Hizmet Verenin Notu".
+            Text('Notunuz',
                 style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
             const SizedBox(width: 6),
             Text('(Opsiyonel)',
@@ -1134,7 +1154,12 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
               // görünüm; değişen yalnız başlık, çünkü iki taraf aynı
               // metne kendi açısından bakıyor.
               TeklifAciklamaKarti(
-                  baslik: 'Hizmet Verenin Açıklaması',
+                  // ⚠ "Hizmet Verenin Açıklaması" DEĞİL (12 Eyl,
+                  // kullanıcı kararı): oradaki metin bir beyan değil,
+                  // hizmet verenin fiyatının yanına iliştirdiği kısa
+                  // bir nottur. "Açıklama" hem fazla ağır kaçıyor hem
+                  // de ilan açıklamasıyla karışıyordu.
+                  baslik: 'Hizmet Verenin Notu',
                   metin: talep.teklifAciklamasi!.trim()),
             ],
             const SizedBox(height: 10),

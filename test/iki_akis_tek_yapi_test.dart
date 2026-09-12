@@ -108,11 +108,13 @@ void main() {
       expect(bul.contains("'Talep Tarihi'"), isTrue);
     });
 
-    test('⚠ AÇIKLAMA BÖLÜMÜ EN ALTTA KALDI (kullanıcı şartı)', () {
+    test('⚠ NOT BÖLÜMÜ EN ALTTA KALDI (kullanıcı şartı)', () {
+      // ⚠ AD DEĞİŞTİ (12 Eyl): "Açıklamanız" → "Notunuz". Şart
+      // bölümün ADI değil, VARLIĞI ve yeriydi.
       final ham = File('lib/screens/teklif_talebi_detay_screen.dart')
           .readAsStringSync();
-      expect(ham.contains('Açıklamanız'), isTrue,
-          reason: 'teklif formundaki açıklama alanı kaldırılmış');
+      expect(ham.contains("Text('Notunuz'"), isTrue,
+          reason: 'teklif formundaki not alanı kaldırılmış');
     });
   });
 

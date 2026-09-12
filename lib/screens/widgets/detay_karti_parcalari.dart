@@ -40,12 +40,23 @@ class SahipKarti extends StatelessWidget {
     required this.adSoyad,
     required this.acik,
     required this.tamamlananIs,
+    this.fotoYolu = '',
     this.kayitTarihi,
   });
 
   final String adSoyad;
   final bool acik;
   final int tamamlananIs;
+
+  /// ── ⚠ KARŞI TARAFIN PROFİL FOTOĞRAFI (12 Eyl, kullanıcı bulgusu) ──
+  ///
+  /// Kural: kimlik AÇILDIĞINDA (iletişim açıldı ya da teklif verildi)
+  /// taraflar birbirinin fotoğrafını görebilmeli. Önceden yalnız baş
+  /// harf çiziliyordu — fotoğraf yüklenmiş olsa bile.
+  ///
+  /// ⚠ [acik] FALSE İKEN HİÇ KULLANILMAZ: kilitli avatar çizilir,
+  /// fotoğraf yolu okunmaz bile. Maskeleme kararı tek yerde kalır.
+  final String fotoYolu;
   // ⚠ `teklifSayisi` KALDIRILDI (9 Eyl): teklif sayısı rozeti bu
   // ekrandan çıkarıldı, alan da gereksiz kaldı.
 
@@ -64,18 +75,25 @@ class SahipKarti extends StatelessWidget {
             height: 46,
             child: acik
                 ? Stack(clipBehavior: Clip.none, children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                          color: RC.blue, shape: BoxShape.circle),
-                      child: Text(
-                        _basHarfler(adSoyad),
-                        style: refText(
-                            size: 16, weight: RF.w700, color: RC.white),
+                    // ⚠ FOTOĞRAF VARSA FOTOĞRAF, YOKSA BAŞ HARF.
+                    // Karar `RefBasHarfAvatar` içinde, tek yerde:
+                    // yol boşsa ya da dosya okunamıyorsa harfe düşer.
+                    if (fotoYolu.trim().isNotEmpty)
+                      RefBasHarfAvatar(
+                          ad: adSoyad, fotoYolu: fotoYolu, cap: 46)
+                    else
+                      Container(
+                        width: 46,
+                        height: 46,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                            color: RC.blue, shape: BoxShape.circle),
+                        child: Text(
+                          _basHarfler(adSoyad),
+                          style: refText(
+                              size: 16, weight: RF.w700, color: RC.white),
+                        ),
                       ),
-                    ),
                     // ⚠ `IC_VBADGE` — referansın DOĞRULAMA ROZETİ.
                     //
                     // `ic_checkc` genel bir onay dairesidir; referans

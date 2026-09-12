@@ -378,11 +378,45 @@ class _JobsScreenState extends State<JobsScreen> {
     // ⚠ AYRI DURUM (`_kazSort`). Bu listenin ölçütleri "Yeni işler"
     // sekmesininkilerden farklıdır; tek değişkeni paylaşsalardı bir
     // sekmede yapılan seçim diğerini de bozardı.
-    myOffers.sort((a, b) => switch (_kazSort) {
-          'eski' => a.createdAt.compareTo(b.createdAt),
-          'yuksek' => b.amount.compareTo(a.amount),
-          'dusuk' => a.amount.compareTo(b.amount),
-          _ => b.createdAt.compareTo(a.createdAt),
+    // ── ⚠ İKİ LİSTE TEK LİSTEDE SIRALANIR (12 Eyl, kullanıcı
+    // bulgusu: "sıralama filtrelemeler çalışmıyor") ──
+    //
+    // KÖK NEDEN: sıralama YALNIZ `myOffers`a uygulanıyordu.
+    // `secilenTalepler` HİÇ sıralanmıyordu ve liste iki bölüm
+    // hâlinde çiziliyordu — önce bütün teklifler, sonra bütün
+    // talepler. Sonuç: "düşük tutarlı üstte" seçiliyken 6.000 TL'lik
+    // bir teklif 4.000 TL'lik bir talebin ÜSTÜNDE kalıyordu.
+    //
+    // Kullanıcı için bunlar tek bir liste ("2 ilan bulundu" sayacı
+    // da ikisini birden sayıyor), o yüzden sıralama da tek listede
+    // yapılır. Kartlar hâlâ türüne göre çizilir; değişen yalnız
+    // SIRALAMA ve öğe sırası.
+    //
+    // ⚠ TARİH ÖLÇÜTÜ İKİ TÜRDE DE "TEKLİFİN VERİLDİĞİ AN"dır:
+    // `Offer` için `createdAt` zaten teklifin tarihidir; talepte ise
+    // `createdAt` TALEBİN açılma tarihidir, teklifin değil — bu
+    // yüzden `teklifTarihi` önce gelir. İki türü farklı anlamda iki
+    // tarihle sıralamak listeyi sessizce yanlış dizerdi.
+    final kazanilanlar = <({DateTime tarih, int tutar, Offer? teklif,
+        TeklifTalebi? talep})>[
+      for (final o in myOffers)
+        (tarih: o.createdAt, tutar: o.amount, teklif: o, talep: null),
+      for (final t in secilenTalepler)
+        (
+          tarih: t.teklifTarihi ?? t.createdAt,
+          // ⚠ Fiyatsız kayıt listeden ATILMAZ: 0 kabul edilir ve
+          // tutar sıralamasında başa/sona düşer. Gizlemek, kazanılmış
+          // bir işi kaybettirirdi.
+          tutar: t.teklifFiyati ?? 0,
+          teklif: null,
+          talep: t,
+        ),
+    ];
+    kazanilanlar.sort((a, b) => switch (_kazSort) {
+          'eski' => a.tarih.compareTo(b.tarih),
+          'yuksek' => b.tutar.compareTo(a.tutar),
+          'dusuk' => a.tutar.compareTo(b.tutar),
+          _ => b.tarih.compareTo(a.tarih),
         });
 
     // ⚠ ALT NAVİGASYON EKLENDİ.
@@ -480,7 +514,7 @@ class _JobsScreenState extends State<JobsScreen> {
                     // bir bölüm olarak çizildiği için sayıma HİÇ
                     // girmiyordu.
                     child: RefListCount(
-                        '${_jobsTab ? jobs.length : myOffers.length + secilenTalepler.length}'
+                        '${_jobsTab ? jobs.length : kazanilanlar.length}'
                         ' ilan bulundu'),
                   ),
                   const SizedBox(width: 10),
@@ -558,7 +592,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                   ? const StatusChip('Teklif Verildi', HC.blue)
                                   : null);
                         }))
-                : ((myOffers.isEmpty && secilenTalepler.isEmpty)
+                : (kazanilanlar.isEmpty
                     // ⚠ BOŞ DURUM METNİ EKRANA GÖRE DEĞİŞİR.
                     //
                     // İki liste ayrı şeydir: `/provider/won` kazanılan
@@ -581,14 +615,20 @@ class _JobsScreenState extends State<JobsScreen> {
                         // İlan Ver akışı) + `secilenTalepler` ("Bul"
                         // akışından kazanılan, yalnız `kazandigim`
                         // ekranında dolu olur).
-                        itemCount: myOffers.length + secilenTalepler.length,
+                        // ⚠ TEK BİRLEŞİK LİSTE: iki tür karışık
+                        // sıralanır (bkz. `kazanilanlar`). Önceden
+                        // indeks aritmetiğiyle iki bölüm hâlinde
+                        // çiziliyordu ve bu, sıralamayı tür sınırında
+                        // kırıyordu.
+                        itemCount: kazanilanlar.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (_, i) {
-                          if (i >= myOffers.length) {
-                            final t = secilenTalepler[i - myOffers.length];
-                            return _kazanilanTalepKarti(context, t);
+                          final kayit = kazanilanlar[i];
+                          final talep = kayit.talep;
+                          if (talep != null) {
+                            return _kazanilanTalepKarti(context, talep);
                           }
-                          final o = myOffers[i];
+                          final o = kayit.teklif!;
                           final l = listingCtl.byId(o.listingId);
                           // ⚠ `offerStatusUi` ARTIK ÇAĞRILMIYOR
                           // (10 Eyl): "Aktif" rozeti kaldırıldı.

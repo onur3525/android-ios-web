@@ -331,6 +331,9 @@ class _SaglayiciKarti extends StatelessWidget {
                     tamamlananIs: saglayici.tamamlananIs,
                     ilce: saglayici.ilce,
                     il: il,
+                    // ⚠ YEDEK KAYIT (kurgusal sağlayıcı): hesap yok,
+                    // fotoğraf da yok — baş harfe düşer.
+                    fotoYolu: '',
                   ),
             ),
           ),
