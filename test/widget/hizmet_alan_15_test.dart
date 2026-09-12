@@ -128,7 +128,12 @@ void main() {
       expect(s.contains('windowSplashScreenBackground'), isTrue);
       expect(s.contains('windowSplashScreenAnimatedIcon'), isTrue);
       expect(s.contains('postSplashScreenTheme'), isTrue);
-      // İkonun arkasında ayrı beyaz kutu/daire çizilmemeli.
+      // ⚠ ÖZNİTELİK ZORUNLU AMA SAYDAM OLAMAZ: saydam verilirse
+      // Android "arka planı yok" dalını seçer ve ikon kutusu 288dp
+      // olur; `SplashView` 240dp çizdiği için native yüzey
+      // bırakıldığında logo küçülür. Değer splash zeminiyle AYNI
+      // renktir, bu yüzden görünür bir daire oluşmaz.
+      // Değerin kendisi `splash_cikis_animasyonu_test` ile kilitli.
       expect(s.contains('windowSplashScreenIconBackgroundColor'), isTrue);
     });
 

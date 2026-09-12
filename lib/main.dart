@@ -25,6 +25,7 @@ import 'core/deep_links.dart';
 import 'core/offline_banner.dart';
 import 'core/boot_log.dart';
 import 'core/theme.dart';
+import 'core/yonlendirme.dart';
 import 'data/controllers/auth_controller.dart';
 import 'data/controllers/chat_controller.dart';
 import 'data/controllers/contact_controller.dart';
@@ -281,6 +282,19 @@ Future<void> main() async {
   // sabit `AppBarTheme`e de verildi; o iki ekranda da ikonlar koyu
   // kalır.
   SystemChrome.setSystemUIOverlayStyle(kSistemCubuklari);
+
+  // ── ⚠ EKRAN YÖNLENDİRMESİ: TELEFON DİKEY, TABLET SERBEST ──
+  //
+  // Ürün kararı (12 Eyl). Kural ve gerekçesi TEK YERDE:
+  // `core/yonlendirme.dart`. Burada yalnız çağrılır.
+  //
+  // ⚠ EKRANLAR KENDİ YÖNLENDİRMESİNİ AYARLAMAZ. Tek tek ekranda
+  // kısıt değiştirmek, geri dönüşte eski hâli geri getirmeyi de
+  // gerektirir ve o adım unutulur.
+  //
+  // ⚠ MANIFEST'E `screenOrientation` YAZILMAZ: statiktir, cihaz
+  // ayrımı yapamaz ve tableti de kilitlerdi.
+  yonlendirmeyiUygula();
 
 
   // DERİN BAĞLANTI: uygulama açık/arka plandayken gelen bağlantılar için

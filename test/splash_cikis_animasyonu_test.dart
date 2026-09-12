@@ -1,28 +1,48 @@
-// SPLASH ÇIKIŞI — DEVRALINIR, TEMA ELLE UYGULANIR (KİLİT)
+// SPLASH ÇIKIŞI · İKON KUTUSU · SİSTEM ÇUBUKLARI (KİLİT)
 //
-// ⚠ KULLANICI BULGUSU: "Splash kapanmasına yakın logoda anlık bir
-// küçülme oluyor."
+// ⚠ BU DOSYA İKİ AYRI ARIZAYI KİLİTLER. İkisi de aylarca "renk /
+// tema" sanıldı ve her turda yanlış yere yazıldı.
 //
-// SEBEP: `setOnExitAnimationListener` tanımsızdı. Android 12+ splash'ı
-// bırakırken kimse devralmazsa SİSTEMİN varsayılan çıkış animasyonunu
-// oynatır — ikonu küçültüp soldurur.
+// ── 1. LOGO KÜÇÜLMESİ ──
 //
-// ⚠ 1. DENEME UYGULAMAYI BOZDU: yalnız `remove()` çağıran hâli,
-// uygulamanın altında ve üstünde SİYAH BANTLAR bıraktı ve tamamen
-// geri alındı. O turda Android tarafında değişen tek dosya bu dosya,
-// tek değişiklik de bu listener'dı (MD5'lerle doğrulandı).
+// Bulgu: "Splash kapanmasına yakın logoda anlık bir küçülme oluyor."
 //
-// EN GÜÇLÜ AÇIKLAMA: çıkış devralınınca `postSplashScreenTheme`
-// geçişi uygulanmıyor ve pencere `Theme.SplashScreen` üzerinde
-// kalıyor; o temanın sistem çubuğu renkleri koyu.
+// İlk önlem doğruydu: `setOnExitAnimationListener` tanımsızken sistem
+// kendi çıkış animasyonunu oynatıp ikonu küçültüyordu. Devralındı.
 //
-// ⚠ 2. DENEME BU YÜZDEN TEMAYI ELLE UYGULUYOR: `remove()`tan ÖNCE
-// `NormalTheme`e geçilir. `styles.xml`de `postSplashScreenTheme`
-// zaten bu temayı gösterir; yeni tema TANIMLANMADI.
+// ⚠ AMA KÜÇÜLME GEÇMEDİ ve o turda "tema geçişi çözdü" diye
+// kaydedildi. O KAYIT YANLIŞTI: manifest'teki
+// `io.flutter.embedding.android.NormalTheme` meta-data'sı yüzünden
+// `FlutterActivity` temayı pencere oluşmadan önce zaten değiştiriyor;
+// `setTheme(R.style.NormalTheme)` etkisiz bir satır.
 //
-// ⚠ HİPOTEZ, ÖLÇÜM DEĞİL: siyah bantlar yine çıkarsa açıklama
-// yanlıştır ve blok BÜTÜNÜYLE geri alınmalıdır. Küçülme kozmetiktir,
-// bozuk pencere değildir.
+// GERÇEK SEBEP (12 Eyl): `windowSplashScreenIconBackgroundColor`
+// SAYDAM verilmişti. Saydam olduğunda Android "arka planı yok" dalını
+// seçer ve ikon kutusu 288dp olur; `SplashView` ise 240dp çiziyordu.
+// Native yüzey bırakılıp altındaki Flutter yüzeyi göründüğü anda
+// marka bloğu %16,7 küçülüyordu.
+//
+// DÜZELTME: öznitelik splash zemininin rengine ayarlandı → kutu
+// 240dp, iki taraf aynı ölçü. Renk zeminle aynı olduğu için görünür
+// daire oluşmaz.
+//
+// ── 2. SİYAH BANTLAR ──
+//
+// Bulgu: "Ekranın altı ve üstü siyah, tam ekran değil."
+//
+// Renk atamak üç kez denendi (saydam, sonra beyaz, Dart tarafında
+// `SystemChrome`) ve hiçbiri tutmadı. Sebep renk değildi:
+// `NormalTheme` atası `@android:style/Theme.Light.NoTitleBar` olduğu
+// için pencerede `windowDrawsSystemBarBackgrounds` bayrağı kapalıydı.
+// O bayrak yokken `setStatusBarColor`/`setNavigationBarColor`
+// ETKİSİZDİR ve sistem çubukları opak siyah çizilir.
+//
+// DÜZELTME: bayrak + renkler TEMAYA yazıldı; tema pencere
+// oluşturulurken okunur, çalışma zamanı atamaları da artık etkilidir.
+//
+// ⚠ ÖLÇÜM SINIRI: cihazda ölçüm bu ortamda YAPILAMADI. Zincirin her
+// halkası koddan okunabilir, ama "APK'da düzeldi" doğrulaması
+// kullanıcının koşusuna bağlıdır.
 
 import 'dart:io';
 
@@ -96,9 +116,90 @@ void main() {
   });
 
   test('⚠ FLUTTER SPLASH ÖLÇÜSÜNE DOKUNULMADI', () {
-    // Elenen ikinci aday (native ikon kutusu ile `SplashView`in
-    // 240 dp'si arasındaki uyumsuzluk) hâlâ elenmiş durumda.
+    // 240 dp KORUNUR; artık Android tarafı da 240 dp kutuyu seçiyor.
     final s = File('lib/screens/splash_screen.dart').readAsStringSync();
     expect(s.contains('const double _kMarkaKutusu = 240;'), isTrue);
+  });
+
+  group('⚠ İKON KUTUSU 240dp — DÖRT VARYANTTA', () {
+    const res = 'android/app/src/main/res';
+    const varyantlar = [
+      'values',
+      'values-night',
+      'values-v31',
+      'values-night-v31',
+    ];
+
+    test('ikon arka planı SAYDAM DEĞİL (288dp dalına düşülmez)', () {
+      for (final d in varyantlar) {
+        final s = File('$res/$d/styles.xml').readAsStringSync();
+        expect(
+          s.contains('windowSplashScreenIconBackgroundColor">'
+              '@color/launch_background'),
+          isTrue,
+          reason: '$d: saydam ikon arka planı 288dp kutuya geçirir ve '
+              'SplashView ile 240dp uyuşmazlığı geri gelir',
+        );
+        expect(
+          s.contains('windowSplashScreenIconBackgroundColor">'
+              '@android:color/transparent'),
+          isFalse,
+          reason: '$d: saydam değer geri gelmiş',
+        );
+      }
+    });
+
+    test('ikon arka planı splash zemini ile AYNI resource', () {
+      // Farklı renk verilirse ikonun arkasında görünür bir daire oluşur.
+      for (final d in varyantlar) {
+        final s = File('$res/$d/styles.xml').readAsStringSync();
+        expect(s.contains('windowSplashScreenBackground">'
+            '@color/launch_background'), isTrue, reason: d);
+      }
+    });
+  });
+
+  group('⚠ SİYAH BANT — RENK DEĞİL, ÖNCE BAYRAK', () {
+    const res = 'android/app/src/main/res';
+    const varyantlar = [
+      'values',
+      'values-night',
+      'values-v31',
+      'values-night-v31',
+    ];
+
+    test('NormalTheme sistem çubuğu zeminlerini ÇİZER', () {
+      // Bu bayrak olmadan aşağıdaki renkler de, MainActivity ve
+      // SystemChrome atamaları da etkisiz kalır.
+      for (final d in varyantlar) {
+        final s = File('$res/$d/styles.xml').readAsStringSync();
+        expect(
+          s.contains('android:windowDrawsSystemBarBackgrounds">true'),
+          isTrue,
+          reason: '$d: bayrak kapalıyken çubuklar opak siyah çizilir',
+        );
+      }
+    });
+
+    test('çubuk renkleri temada tanımlı ve beyaz', () {
+      for (final d in varyantlar) {
+        final s = File('$res/$d/styles.xml').readAsStringSync();
+        expect(s.contains('android:statusBarColor">@android:color/white'),
+            isTrue, reason: d);
+        expect(s.contains('android:navigationBarColor">@android:color/white'),
+            isTrue, reason: d);
+      }
+    });
+
+    test('üç taraf AYNI rengi söyler', () {
+      // Tema · MainActivity · core/theme.dart ayrışırsa açılışta renk
+      // zıplar.
+      final tema = File('$res/values/styles.xml').readAsStringSync();
+      final native = File(_yol).readAsStringSync();
+      final dart = File('lib/core/theme.dart').readAsStringSync();
+      expect(tema.contains('@android:color/white'), isTrue);
+      expect(native.contains('window.statusBarColor = Color.WHITE'), isTrue);
+      expect(dart.contains('statusBarColor: Colors.white'), isTrue);
+    });
   });
 }

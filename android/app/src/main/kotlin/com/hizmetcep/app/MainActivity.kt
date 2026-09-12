@@ -153,71 +153,52 @@ class MainActivity : FlutterActivity() {
         basladi = SystemClock.uptimeMillis()
         bootLog("NATIVE_ON_CREATE")
 
-        // ── ⚠ ÇIKIŞ ANİMASYONU DEVRALINIR (2. deneme, 9 Eyl) ──
+        // ── ⚠ ÇIKIŞ ANİMASYONU DEVRALINIR ──
         //
-        // BULGU: "Splash kapanmasına yakın logoda anlık bir küçülme
-        // oluyor." Sebep, bu listener'ın TANIMSIZ olmasıydı: Android
-        // 12+ splash'ı bırakırken kimse devralmazsa SİSTEMİN varsayılan
-        // çıkış animasyonunu oynatır ve ikonu küçültüp soldurur.
+        // Android 12+ splash'ı bırakırken kimse devralmazsa SİSTEMİN
+        // varsayılan çıkış animasyonunu oynatır ve ikonu küçültüp
+        // soldurur. Listener tanımlı olduğu için o animasyon
+        // OYNATILMAZ; yüzey tek karede kaldırılır.
         //
-        // ⚠ 1. DENEME UYGULAMAYI BOZMUŞTU: yalnız `remove()` çağıran
-        // hâli, uygulamanın altında ve üstünde SİYAH BANTLAR bıraktı
-        // ve geri alındı. En güçlü açıklama, çıkış devralınınca
-        // `postSplashScreenTheme` geçişinin uygulanmaması ve pencerenin
-        // `Theme.SplashScreen` üzerinde kalmasıydı — o temanın sistem
-        // çubuğu renkleri koyudur.
+        // ── ⚠ DÜZELTİLMİŞ KAYIT (12 Eyl) ──
         //
-        // ⚠ BU YÜZDEN TEMA ELLE UYGULANIR: `remove()`tan ÖNCE
-        // `NormalTheme`e geçilir. `styles.xml`de `postSplashScreenTheme`
-        // zaten bu temayı gösteriyor; yeni bir tema TANIMLANMADI,
-        // yalnız var olanı biz uyguluyoruz.
+        // Aşağıdaki `setTheme` satırı bir tur "logo küçülmesini bu
+        // çözdü" diye kaydedilmişti. BU AÇIKLAMA YANLIŞTI ve kayıt
+        // düzeltildi: manifest'te `io.flutter.embedding.android.
+        // NormalTheme` meta-data'sı tanımlı olduğu için `FlutterActivity`
+        // temayı PENCERE OLUŞMADAN ÖNCE zaten `NormalTheme`e çeviriyor.
+        // Yani pencere hiçbir zaman splash teması üzerinde değil ve bu
+        // satır ETKİSİZ. Satır, davranışı değiştirmediği ve testle
+        // kilitli olduğu için DURUYOR; açıklaması artık gerçeği söyler.
         //
-        // ⚠ İKİ SATIRIN SIRASI ÖNEMLİ: tema önce, kaldırma sonra.
-        // Ters sırada pencere bir kare boyunca eski temada kalırdı.
-        //
-        // ⚠ SİYAH BANTLAR YİNE ÇIKARSA hipotez yanlıştır ve bu blok
-        // BÜTÜNÜYLE geri alınmalıdır; küçülme kozmetiktir, bozuk
-        // pencere değildir.
+        // Logo küçülmesinin gerçek kaynağı `styles.xml` içinde
+        // belgelendi: ikon kutusu 288dp iken Flutter yüzeyi 240dp
+        // çiziyordu. Düzeltme orada yapıldı.
         splash.setOnExitAnimationListener { yuzey ->
             setTheme(R.style.NormalTheme)
 
-            // ── ⚠ SİSTEM ÇUBUĞU RENKLERİ ELLE UYGULANIR
-            // (kullanıcı bulgusu, 10 Eyl) ──
+            // ── ⚠ SİSTEM ÇUBUĞU RENKLERİ — ARTIK ETKİLİ ──
             //
-            // BULGU: "Splash sorunsuz ama ekranın altı ve üstü siyah,
-            // tam ekran değil."
+            // Bu iki atama uzun süre HİÇBİR ŞEY YAPMIYORDU. Sebep
+            // renk değildi: `NormalTheme` atası
+            // `@android:style/Theme.Light.NoTitleBar` olduğu için
+            // pencerede `windowDrawsSystemBarBackgrounds` bayrağı
+            // KAPALIYDI ve o bayrak yokken `setStatusBarColor` /
+            // `setNavigationBarColor` etkisizdir. Sistem çubukları
+            // opak siyah çiziliyor, ikonlar beyaz kalıyordu.
             //
-            // SEBEP: `setTheme` PENCERE ÖZNİTELİKLERİNİ GERİ
-            // ALMAZ. Pencere zaten oluşturulmuş durumdadır; durum ve
-            // gezinme çubuğu renkleri `Theme.SplashScreen`den
-            // çözülmüş hâlde kalır ve o tema koyu çubuk kullanır.
-            // Tema geçişi logonun küçülmesini çözdü ama bantları
-            // çözmedi — çünkü ikisi FARKLI şeylerden geliyordu.
+            // Bayrak ve renkler 12 Eyl'de TEMAYA yazıldı (bkz.
+            // `res/values*/styles.xml`) — tema pencere oluşturulurken
+            // okunduğu için ilk kareden itibaren geçerlidir.
+            // Buradaki atamalar KALDIRILMADI: aynı değeri tekrarlar
+            // ve artık gerçekten uygulanır.
             //
-            // ⚠ RENKLER DART'TAKİ SABİTLE AYNI: `core/theme.dart`
-            // içindeki `kSistemCubuklari` saydam durum çubuğu + beyaz
-            // gezinme çubuğu + koyu ikon diyor. Burada AYNI değerler
-            // uygulanıyor; iki taraf ayrışırsa açılışta renk zıplar.
+            // ⚠ DEĞER ÜÇ YERDE AYNI: burada `Color.WHITE`, temada
+            // `@android:color/white`, `core/theme.dart` içinde
+            // `Colors.white`. Ayrışırsa açılışta renk zıplar.
             //
             // ⚠ İKON PARLAKLIĞI DA AYARLANIR: zemin beyaz olduğu için
             // ikonlar KOYU olmalı, yoksa beyaz üstünde beyaz kalır.
-            // ⚠ SAYDAM DEĞİL BEYAZ (kullanıcı bulgusu, 10 Eyl) ──
-            //
-            // ÖNCEKİ DENEME SAYDAM ATIYORDU ve bantlar siyah kaldı.
-            // Saydamlık ancak uygulama sistem çubuklarının ALTINA
-            // çizdiğinde işe yarar; bu pencere öyle çizmiyor.
-            // Çizmediği için sistem o alanı kendi dolduruyor ve
-            // saydamın arkasında kalan şey SİYAH oluyor — yani
-            // "renk ver" derken aslında "renk yok" demiş oluyorduk.
-            //
-            // ⚠ İKİSİ DE BEYAZ: uygulamanın her ekranının zemini
-            // beyaz; çubuklar da beyaz olunca ekran tam ekran
-            // görünür. İkonlar aşağıda KOYU yapıldığı için beyaz
-            // üstünde okunur kalır.
-            //
-            // ⚠ SPLASH DAVRANIŞINA DOKUNULMADI: `setTheme`,
-            // `yuzey.remove()`, süreler ve tutma koşulu aynen
-            // duruyor. Değişen YALNIZ iki renk ataması.
             window.statusBarColor = Color.WHITE
             window.navigationBarColor = Color.WHITE
             WindowCompat.getInsetsController(window, window.decorView).apply {
