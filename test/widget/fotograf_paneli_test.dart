@@ -113,6 +113,41 @@ void main() {
   });
 
   group('2 — TEK KAYNAK', () {
+    test('⚠ PROFİL FOTOĞRAFI PANELİ AYNI SATIRI KULLANIR', () {
+      // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+      //
+      // "İlan oluştururken fotoğraf yükle ve fotoğraf çek ikonları,
+      // assetleri, renkleri profil fotoğrafı yüklerken de aynı olmalı
+      // — iki rol için de."
+      //
+      // Profil ekranı kendi panelini `RefSecimKarti` ile çiziyordu:
+      // renkli daire rozet yok, gri düz ikon, chevron yerine RADYO
+      // dairesi, farklı metinler.
+      final k = _kodu('lib/screens/profile_screen.dart');
+      expect(k.contains('fotografSecenekSatiri('), isTrue,
+          reason: 'profil paneli ortak satırı kullanmıyor');
+      expect(k.contains("ikon: 'assets/svg/ic_camplus.svg'"), isFalse,
+          reason: 'ayrı kamera asseti geri gelmiş');
+      expect(k.contains('Galeriden Yükle'), isFalse,
+          reason: 'metin yine ayrışmış');
+      // ⚠ Rozet renkleri de aynı: kamera mavi, galeri yeşil.
+      expect(k.contains('rozetRengi: RC.blue'), isTrue);
+      expect(k.contains('rozetRengi: RC.success'), isTrue);
+    });
+
+    test('⚠ SEÇENEK KÜMESİ PAYLAŞILMAZ, GÖRÜNÜM PAYLAŞILIR', () {
+      // Profil panelinde üçüncü bir satır var ("Fotoğrafı Kaldır");
+      // ilan panelinde yok. Paneli tümüyle ortaklaştırmak, ilan
+      // akışına anlamsız bir "kaldır" seçeneği eklerdi.
+      final k = _kodu('lib/screens/profile_screen.dart');
+      final p = _kodu('lib/screens/widgets/fotograf_kaynak_paneli.dart');
+      expect(k.contains("baslik: 'Fotoğrafı Kaldır'"), isTrue);
+      expect(p.contains('Fotoğrafı Kaldır'), isFalse,
+          reason: 'ilan paneline kaldır seçeneği sızmış');
+      // ⚠ Yıkıcı eylem kırmızı rozetle ayrılır.
+      expect(k.contains('rozetRengi: RC.danger'), isTrue);
+    });
+
     test('ilan/teklif akışı ortak paneli çağırır, kopya çizmez', () {
       final k = _kodu('lib/screens/widgets/photo_picker.dart');
       expect(k.contains('fotografKaynagiSec(context)'), isTrue);

@@ -49,29 +49,43 @@ Future<ImageSource?> fotografKaynagiSec(BuildContext context) {
       //
       // `ic_cam` BEYAZ gövdelidir; yalnız renkli daire rozetin
       // İÇİNDE okunur, beyaz zemine doğrudan konulmaz.
-      _secenek(
+      fotografSecenekSatiri(
         context,
         rozetRengi: RC.blue,
         ikon: 'assets/svg/ic_cam.svg',
         baslik: 'Fotoğraf Çek',
         aciklama: 'Kamerayı açar',
-        kaynak: ImageSource.camera,
+        onTap: () => Navigator.of(context).pop(ImageSource.camera),
       ),
       const SizedBox(height: 2),
-      _secenek(
+      fotografSecenekSatiri(
         context,
         rozetRengi: RC.success,
         ikon: 'assets/svg/ic_gallery.svg',
         ikonRengi: RC.white,
         baslik: 'Galeriden Seç',
         aciklama: 'Kayıtlı fotoğraflarınız',
-        kaynak: ImageSource.gallery,
+        onTap: () => Navigator.of(context).pop(ImageSource.gallery),
       ),
     ]),
   );
 }
 
-/// Paneldeki tek seçenek satırı.
+/// Paneldeki tek seçenek satırı — ⚠ PROFİL FOTOĞRAFI PANELİ DE
+/// BUNU KULLANIR.
+///
+/// ⚠ KULLANICI İSTEĞİ (12 Eyl): "İlan oluştururken fotoğraf yükle ve
+/// fotoğraf çek ikonları, assetleri, renkleri profil fotoğrafı
+/// yüklerken de aynı olmalı — iki rol için de."
+///
+/// Profil ekranı kendi panelini `RefSecimKarti` ile çiziyordu: renkli
+/// daire rozet YOK, gri düz ikon, sağda chevron yerine RADYO DAİRESİ,
+/// farklı metinler ("Galeriden Yükle" / "Cihazınızdaki bir fotoğrafı
+/// seçin."). Aynı iş için iki farklı panel görünüyordu.
+///
+/// ⚠ SEÇENEK KÜMESİ ÇAĞIRANIN: profil panelinde üçüncü bir satır var
+/// ("Fotoğrafı Kaldır"), ilan panelinde yok. Bu yüzden satır
+/// PAYLAŞILIR, panelin tamamı değil — ortaklaştırılan şey GÖRÜNÜM.
 ///
 /// Her seçenek KENDİ RENGİNDE 38 px daire rozet taşır: kamera mavi,
 /// galeri yeşil. Başlığın altında ne yapacağını söyleyen kısa bir
@@ -80,21 +94,20 @@ Future<ImageSource?> fotografKaynagiSec(BuildContext context) {
 /// ⚠ ÖLÇÜLER SABİTTİR ve `alt_panel_fotograf_test` ile kilitlidir:
 /// rozet 38, ikon 20, chevron 18, başlık 14,5/w600, açıklama
 /// 12,5/w400, dikey dolgu 12.
-Widget _secenek(
+Widget fotografSecenekSatiri(
   BuildContext context, {
   required Color rozetRengi,
   required String ikon,
   required String baslik,
   required String aciklama,
-  required ImageSource kaynak,
+  required VoidCallback onTap,
   Color? ikonRengi,
 }) =>
     RefTap(
-      // ⚠ SEÇİM DEĞERLE DÖNER: panel kapanırken `kaynak` geri verilir,
-      // çağıran ne yapacağına kendi karar verir (ilan akışı fotoğrafı
-      // listeye ekler, sohbet akışı önizleme açar). Panel iş mantığı
-      // TAŞIMAZ.
-      onTap: () => Navigator.of(context).pop(kaynak),
+      // ⚠ SATIR İŞ MANTIĞI TAŞIMAZ: ne yapılacağına çağıran karar
+      // verir (ilan akışı kaynağı döndürür, profil paneli kendi
+      // etiketini döndürür).
+      onTap: onTap,
       borderRadius: BorderRadius.circular(RR.r12),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),

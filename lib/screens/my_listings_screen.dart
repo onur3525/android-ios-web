@@ -14,6 +14,7 @@ import '../data/models/listing.dart';
 import '../data/models/teklif_talebi.dart';
 import '../domain/teklif_talebi_asamasi.dart';
 import '../domain/kullanici_konumu.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
@@ -406,17 +407,18 @@ class _IlanKarti extends StatelessWidget {
   final int teklifSayisi;
   final VoidCallback onTap;
 
-  /// Referansta `x.time` biçimli göreli zamandır.
-  String get _zaman {
-    final f = DateTime.now().difference(listing.createdAt);
-    if (f.inMinutes < 60) {
-      return '${f.inMinutes} dk önce';
-    }
-    if (f.inHours < 24) {
-      return '${f.inHours} saat önce';
-    }
-    return '${f.inDays} gün önce';
-  }
+  // ── ⚠ `_zaman` KALDIRILDI (12 Eyl, kullanıcı isteği) ──
+  //
+  // "İlanın ne zaman oluşturulduğunu gösteren yerlerde saat/dakika
+  // değil ilan tarihi yazsın."
+  //
+  // Referanstaki `x.time` göreli biçimini üretiyordu. Yerine ortak
+  // `kisaTarih` geldi: aynı ilanın tarihi ilan detayında, iş
+  // kartında ve iş detayında da bu biçimde yazıyor.
+  //
+  // ⚠ ÖLÜ BIRAKILMADI: duran bir göreli-süre yardımcısı, sonraki
+  // turda birinin yine onu çağırmasına davetiye çıkarır — bu depoda
+  // `tl()` ile tam olarak bu yaşandı.
 
   @override
   Widget build(BuildContext context) {
@@ -519,7 +521,7 @@ class _IlanKarti extends StatelessWidget {
                     size: 13, color: RC.greyLight),
                 const SizedBox(width: 5),
                 Text(
-                  _zaman,
+                  kisaTarih(listing.createdAt),
                   style: refText(
                       size: RF.s115, weight: RF.w400, color: RC.greyLight),
                 ),
@@ -588,14 +590,18 @@ class _TeklifTalebiIsKarti extends StatelessWidget {
   final TeklifTalebi talep;
   final VoidCallback onTap;
 
-  String get _zaman {
-    final baz = talep.teklifTarihi;
-    if (baz == null) return '';
-    final f = DateTime.now().difference(baz);
-    if (f.inMinutes < 60) return '${f.inMinutes} dk önce';
-    if (f.inHours < 24) return '${f.inHours} saat önce';
-    return '${f.inDays} gün önce';
-  }
+  // ── ⚠ `_zaman` KALDIRILDI (12 Eyl, kullanıcı isteği) ──
+  //
+  // İki sorunu vardı:
+  //   1. GÖRELİ süre üretiyordu ("18 dk önce"); kardeş kart
+  //      `_IlanKarti` artık tarih gösteriyor. Yan yana duran iki kart
+  //      aynı bilgiyi iki biçimde yazıyordu.
+  //   2. `teklifTarihi`ne bakıyordu — TEKLİFİN verildiği an. Kardeş
+  //      kartta yazan ise kaydın OLUŞTURULMA tarihi. Aynı yerde iki
+  //      farklı olayın zamanı görünüyordu.
+  //
+  // İkisi de `kisaTarih(talep.createdAt)` ile çözüldü: aynı biçim,
+  // aynı anlam.
 
   @override
   Widget build(BuildContext context) {
@@ -669,21 +675,21 @@ class _TeklifTalebiIsKarti extends StatelessWidget {
                         size: RF.s115, weight: RF.w400, color: RC.greyLight),
                   ),
                 ),
-                if (_zaman.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text('|',
-                        style: refText(
-                            size: RF.s115,
-                            weight: RF.w400,
-                            color: const Color(0xFFD3D8E0))),
-                  ),
-                  Text(_zaman,
+                // ⚠ KOŞUL KALKTI: `createdAt` daima dolu, ayraç
+                // yalnız bazen çizilen bir öğe değil.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text('|',
                       style: refText(
                           size: RF.s115,
                           weight: RF.w400,
-                          color: RC.greyLight)),
-                ],
+                          color: const Color(0xFFD3D8E0))),
+                ),
+                Text(kisaTarih(talep.createdAt),
+                    style: refText(
+                        size: RF.s115,
+                        weight: RF.w400,
+                        color: RC.greyLight)),
               ],
             ),
             if (talep.teklifFiyati != null) ...[

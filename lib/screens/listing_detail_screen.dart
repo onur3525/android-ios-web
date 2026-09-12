@@ -18,6 +18,7 @@ import 'review_screen.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/kullanici_konumu.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../domain/saglayici_ozeti.dart' show tamamlananIsSayisi;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -422,7 +423,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             size: 13, color: RC.greyLight),
                         const SizedBox(width: 5),
                         Text(
-                          _goreliZaman(l.createdAt),
+                          // ── ⚠ GÖRELİ SÜRE DEĞİL, TARİH (12 Eyl,
+                          // kullanıcı isteği) ──
+                          //
+                          // "İlanın ne zaman oluşturulduğunu gösteren
+                          // yerlerde saat/dakika değil ilan tarihi
+                          // yazsın."
+                          //
+                          // ⚠ AYNI İLANIN TARİHİ üç yerde daha
+                          // yazıyor (ilan kartı, iş kartı, iş
+                          // detayındaki "İlan Tarihi"); hepsi
+                          // `kisaTarih` kullanıyor. Burası ayrı
+                          // kalsaydı aynı ilan iki farklı biçimde
+                          // görünürdü.
+                          kisaTarih(l.createdAt),
                           style: refText(
                               size: RF.s115,
                               weight: RF.w400,

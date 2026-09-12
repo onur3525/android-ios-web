@@ -33,7 +33,10 @@ import 'widgets/hizmet_alan_ozet_satiri.dart';
 import 'nav_actions.dart';
 import '../domain/config.dart';
 import '../domain/eslestirme.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../data/controllers/incelenen_ilan_controller.dart';
+import '../domain/sohbet_okunmamis.dart';
+import '../data/controllers/chat_controller.dart';
 import 'teklif_istekleri_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
 
@@ -1065,6 +1068,29 @@ class _JobsScreenState extends State<JobsScreen> {
                           height: RF.lh145)),
                 ]),
               ),
+              // ── ⚠ İLAN TARİHİ — KARTIN SAĞ ÜST KÖŞESİ (12 Eyl,
+              // kullanıcı isteği) ──
+              //
+              // "Yeni işlere düşen ilan kartlarında ilan tarihi sağ
+              // üst köşede yazılmalı." Hizmet veren kartı açmadan
+              // ilanın ne kadar bayat olduğunu görmeli.
+              //
+              // ⚠ GÖRELİ SÜRE DEĞİL TARİH: detay ekranlarındaki
+              // "İlan Tarihi" satırı da tarih gösteriyor; kart ile
+              // detay aynı şeyi söylemeli.
+              //
+              // ⚠ SATIR ÜSTTEN HİZALI olduğu için metin başlıkla
+              // AYNI hizada durur; `Row`un `crossAxisAlignment`ı
+              // zaten `start`.
+              //
+              // ⚠ OKUNMUŞ/OKUNMAMIŞ AYRIMI KORUNDU: kartın geri
+              // kalanı gibi okununca soluklaşır.
+              const SizedBox(width: 8),
+              Text(kisaTarih(l.createdAt),
+                  style: refText(
+                      size: RF.s11,
+                      weight: RF.w500,
+                      color: incelendi ? RC.grey : RC.textSoft)),
               // ⚠ Rozet buradan KALDIRILDI — kullanıcı isteğiyle
               // kartın gerçek ALT kısmına taşındı (aşağıda). Burada
               // yalnız `trailing` (durum rozeti) kalır.
@@ -1076,6 +1102,44 @@ class _JobsScreenState extends State<JobsScreen> {
                 trailing,
               ],
             ]),
+              // ── ⚠ YENİ MESAJ BALONU — İLAN AKIŞI (12 Eyl,
+              // kullanıcı isteği) ──
+              //
+              // "İki taraf birbirine mesaj gönderdiğinde sadece
+              // bildirim ile değil, mesaj kartları üzerinde de mesaj
+              // geldiğini gösteren bir şeyler konulmalı."
+              //
+              // Bul akışının kartlarında bu balon zaten vardı; ilan
+              // akışında HİÇ YOKTU — hizmet veren yalnız bildirimden
+              // haberdar oluyordu.
+              //
+              // ⚠ SAYIM TEK KAYNAKTAN: `okunmamisSohbetMesaji`.
+              // Ekran kendi süzgecini yazmaz.
+              //
+              // ⚠ SOHBET TEKLİF ÜZERİNDEN YÜRÜR: teklif yoksa sohbet
+              // de yoktur, balon hiç çizilmez.
+              Builder(builder: (c) {
+                final me = c.read<AuthController>().currentAccount;
+                final mine = me == null
+                    ? null
+                    : c.read<OfferController>().myOfferFor(l.id, me.id);
+                if (mine == null || me == null) {
+                  return const SizedBox.shrink();
+                }
+                final sayi = okunmamisSohbetMesaji(
+                    c.watch<ChatController>().threadFor(mine.id), me.id);
+                if (sayi == 0) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: YeniMesajSeridi(sayi),
+                  ),
+                );
+              }),
+
               // ── ⚠ TEKLİF DURUMU — ARTIK KARTIN GERÇEK SAĞ ALT
               // KÖŞESİNDE ──
               //

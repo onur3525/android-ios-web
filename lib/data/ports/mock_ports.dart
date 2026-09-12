@@ -564,8 +564,10 @@ class MockOfferPort extends OfferPort {
     offers.create(listingId: listingId, providerId: providerId, amount: amount, note: note);
     notifs?.push(
         userId: l.ownerId, type: NotifType.newOffer, refId: listingId,
-        title: 'Yeni teklif aldınız',
-        body: '"${l.title}" ilanınıza yeni bir teklif geldi.');
+        // ⚠ METİN ORTAK KAYNAKTAN (12 Eyl): aynı olay Bul akışında
+        // da bildirim üretiyor, başlık ikisinde de aynı olmalı.
+        title: kYeniTeklifBaslik,
+        body: yeniTeklifGovdeIlan(l.title));
     return null;
   }
 

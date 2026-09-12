@@ -1,15 +1,23 @@
-// SEKME SAYI ROZETİ — İKONU ÖRTMEZ (KİLİT)
+// SEKME SAYI ROZETİ — SEKMENİN SOL ÜST KÖŞESİ (KİLİT)
 //
-// ⚠ KULLANICI İSTEĞİ (9 Eyl): "Teklif istekleri butonu üzerinde
-// bulunan sayı, ikonun TAM ÜSTÜNDE kalmasın, daha kaliteli olsun."
+// ⚠ KULLANICI İSTEĞİ (12 Eyl): "Teklif istekleri butonunda yer alan
+// sayı ok üzerinde duruyor; butonun sol köşesinde kırmızı daire
+// içinde olsun."
 //
-// ÖNCEDEN rozet `right: -7, top: -5` ile 20 px ikonun sağ üst
-// köşesinin İÇİNE biniyordu; "Yeni işler" ikonu (kâğıt uçak) görsel
-// ağırlığını zaten sağ üstte taşıdığı için sayı ikonu örtüyordu.
+// ── ⚠ İKİ TURLUK GEÇMİŞ ──
 //
-// ⚠ KAYNAK OKUMAK YETMEZ: "kodda -10 yazıyor" demek rozetin ekranda
-// nereye düştüğünü kanıtlamaz. Bu test rozeti ve ikonu gerçekten
-// pump edip KUTULARINI ölçer.
+// 9 Eyl'de rozet `right: -7, top: -5` ile 20 px ikonun sağ üst
+// köşesinin İÇİNE biniyordu; dışarı alındı (`right: -10, top: -8`).
+// Ama konum hâlâ İKONA göreliydi: rozet ikona teğet duruyor ve uçuş
+// ikonuyla görsel olarak karışmayı sürdürüyordu.
+//
+// 12 Eyl'de rozet ikondan tamamen koparıldı: artık SEKMENİN kendi
+// sol üst köşesinde, sabit bir noktada. Hangi ikon kullanılırsa
+// kullanılsın rozet aynı yerde durur.
+//
+// ⚠ KAYNAK OKUMAK YETMEZ: "kodda left: 6 yazıyor" demek rozetin
+// ekranda nereye düştüğünü kanıtlamaz. Bu test rozeti, ikonu ve
+// sekme kutusunu gerçekten pump edip ÖLÇER.
 //
 // ⚠ ROZET ORTAK BİLEŞENDE (`RefSegmentTabs`): düzeltme, bu sekme
 // çubuğunu kullanan tüm ekranları birden kapsar.
@@ -41,33 +49,35 @@ void main() {
         ),
       ));
 
-  testWidgets('rozet ikonun DIŞINA taşar — gövdesini örtmez', (t) async {
+  testWidgets('⚠ ROZET SEKMENİN SOL ÜST KÖŞESİNDE', (t) async {
     await ciz(t, const [0, 0, 1]);
     await t.pump();
 
     expect(find.text('1'), findsOneWidget);
 
     final rozet = t.getRect(find.text('1'));
-    // Rozetin ait olduğu sekmenin ikonu: üçüncü sekmedeki `RefSvg`.
+    final cubuk = t.getRect(find.byType(RefSegmentTabs));
+    // Üçüncü sekmenin ikonu.
     final ikonlar = find.byType(RefSvg);
     expect(ikonlar, findsNWidgets(3));
     final ikon = t.getRect(ikonlar.at(2));
 
-    // ⚠ ASIL SÖZLEŞME — ÜÇ ÖLÇÜ:
+    // ── ⚠ SÖZLEŞME — ÜÇ ÖLÇÜ ──
     //
-    //   1. Rozetin MERKEZİ ikon kutusunun DIŞINDA olmalı. İçinde
-    //      olsaydı sayı ikonun üstünde otururdu — şikâyet buydu.
-    expect(ikon.contains(rozet.center), isFalse,
-        reason: 'rozetin merkezi ikonun içinde — sayı ikonu örtüyor');
+    //   1. Rozet İKONUN SOLUNDA. Eski hâlde sağ üst çeyrekteydi ve
+    //      ikona teğetti; şikâyet buydu.
+    expect(rozet.right, lessThan(ikon.left),
+        reason: 'rozet hâlâ ikonun üstünde/sağında');
 
-    //   2. Rozet SAĞ ÜST çeyrekte kalmalı: sol kenarı ikonun yatay
-    //      ortasından solda olamaz.
-    expect(rozet.left, greaterThanOrEqualTo(ikon.center.dx),
-        reason: 'rozet ikonun ortasına doğru kaymış');
+    //   2. Rozet SEKMENİN ÜST YARISINDA: köşe demek, orta demek
+    //      değil.
+    expect(rozet.center.dy, lessThan(cubuk.center.dy),
+        reason: 'rozet sekmenin alt yarısına kaymış');
 
-    //   3. Alt kenarı ikonun dikey ortasından aşağı inemez.
-    expect(rozet.bottom, lessThanOrEqualTo(ikon.center.dy),
-        reason: 'rozet ikonun gövdesine iniyor');
+    //   3. İkonla HİÇ KESİŞMEZ. Merkez testi yetmez: rozetin kenarı
+    //      ikona değiyorsa da örtüşme başlar.
+    expect(rozet.overlaps(ikon), isFalse,
+        reason: 'rozet ile ikon kesişiyor');
   });
 
   testWidgets('rozet KIRPILMAZ — sekme çubuğunun içinde kalır', (t) async {
@@ -80,8 +90,10 @@ void main() {
     final rozet = t.getRect(find.text('9'));
     expect(rozet.top, greaterThanOrEqualTo(cubuk.top),
         reason: 'rozet üstten kırpılıyor');
-    expect(rozet.right, lessThanOrEqualTo(cubuk.right),
-        reason: 'rozet sağdan kırpılıyor');
+    // ⚠ ARTIK SOL KENAR RİSKLİ: rozet sola taşındığı için kırpılma
+    // tehlikesi sağda değil SOLDA.
+    expect(rozet.left, greaterThanOrEqualTo(cubuk.left),
+        reason: 'rozet soldan kırpılıyor');
   });
 
   testWidgets('⚠ SAYI YOKKEN ROZET ÇİZİLMEZ', (t) async {

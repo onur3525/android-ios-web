@@ -118,6 +118,43 @@ void main() {
     });
   });
 
+  group('⚠ BÖLÜM AYRAÇLARI — İKİ EKRANDA DA', () {
+    // ── ⚠ KULLANICI BULGUSU (12 Eyl) ──
+    //
+    // "Talep detayı, zaman tercihi, işin detayı ve fotoğraflar iç
+    // içe geçmiş, ne olduğu anlaşılmıyor. İl/İlçe/Mahalle ve tarih
+    // satırlarındaki gri çizgilerle ayrılsın."
+    //
+    // Kartın ALT tablosunda (`BilgiSatiri`) satır aralarında çizgi
+    // vardı; ÜSTTEKİ bölümlerde yoktu. Etiket + değer çiftleri arka
+    // arkaya dizilince tek blok gibi görünüyordu.
+
+    test('ayraç ortak bileşen, ekranlar kendi çizgisini çizmez', () {
+      expect(ortak.contains('class BolumAyraci'), isTrue);
+      for (final e in {'ilan': ilan, 'bul': bul}.entries) {
+        expect(e.value.contains('const BolumAyraci()'), isTrue,
+            reason: e.key);
+      }
+    });
+
+    test('⚠ HER İKİ EKRANDA AYNI SAYIDA AYRAÇ', () {
+      // Başlık altı, zaman tercihi sonu, fotoğraflar öncesi.
+      // Sayı ayrışırsa bölümlerden biri çizgisiz kalmış demektir.
+      expect('const BolumAyraci()'.allMatches(ilan).length, 3);
+      expect('const BolumAyraci()'.allMatches(bul).length, 3);
+    });
+
+    test('⚠ ÇİZGİ RENGİ TEK KAYNAKTAN', () {
+      // Bölüm ayracı ile bilgi tablosunun çizgisi aynı kartta yan yana
+      // duruyor; farklı tonda olsalardı biri gölge gibi görünürdü.
+      expect(ortak.contains('const Color kDetayAyracRengi'), isTrue);
+      for (final e in {'ilan': ilan, 'bul': bul}.entries) {
+        expect(e.value.contains('BorderSide(color: kDetayAyracRengi)'), isTrue,
+            reason: '$e.key: tablo çizgisi ham renk kullanıyor');
+      }
+    });
+  });
+
   group('3 — ⚠ NUMARA: TEK DİZİ, TEK BİÇİM', () {
     setUp(IlanNoUretici.sifirlaTestIcin);
 

@@ -175,6 +175,36 @@ class SahipKarti extends StatelessWidget {
   }
 }
 
+/// ── ⚠ BÖLÜM AYRACI — DETAY KARTININ İÇ ÇİZGİSİ ──
+///
+/// ⚠ KULLANICI BULGUSU (12 Eyl): "Talep detayı, zaman tercihi, işin
+/// detayı ve fotoğraflar iç içe geçmiş, ne olduğu anlaşılmıyor.
+/// İl/İlçe/Mahalle ve tarih satırlarındaki gri çizgilerle ayrılsın."
+///
+/// Kartın ALT tablosunda (`BilgiSatiri`) zaten satır aralarında gri
+/// çizgi vardı; üstteki bölümlerde yoktu. Etiket + değer çiftleri
+/// arka arkaya dizilince "Zaman tercihi" ile "İşin detayı" tek bir
+/// blok gibi görünüyordu.
+///
+/// ⚠ RENK `BilgiSatiri` İLE AYNI KAYNAKTAN: iki çizgi aynı kartta
+/// yan yana duruyor; farklı tonda olsalardı biri gölge gibi
+/// görünürdü.
+///
+/// ⚠ BOŞLUK DA AYRACIN İŞİ: çağıran ekranlar çizginin üstüne/altına
+/// kendi `SizedBox`ını koymaz — aralık burada sabittir, yoksa iki
+/// ekran farklı nefes alır.
+const Color kDetayAyracRengi = Color(0xFFF2F4F7);
+
+class BolumAyraci extends StatelessWidget {
+  const BolumAyraci({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 10),
+        child: Divider(height: 1, thickness: 1, color: kDetayAyracRengi),
+      );
+}
+
 /// ── `.pl-row` — ETİKET / DEĞER SATIRI ──
 ///
 /// Alt bilgi tablosunun tek satırı: solda ikon + etiket, sağda değer.
@@ -197,7 +227,7 @@ class BilgiSatiri extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 1),
         decoration: const BoxDecoration(
             border:
-                Border(bottom: BorderSide(color: Color(0xFFF2F4F7)))),
+                Border(bottom: BorderSide(color: kDetayAyracRengi))),
         child: Row(children: [
           // .pl-rl{12.8px;#3A4658;gap:8px}
           RefSvg(ikon, size: 17, color: const Color(0xFF3A4658)),

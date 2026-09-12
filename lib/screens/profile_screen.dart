@@ -19,6 +19,7 @@ import 'package:image_picker/image_picker.dart';
 import '../data/controllers/profile_controller.dart';
 import 'role_switch_screen.dart';
 import '../data/repositories/oturum_tercihi.dart';
+import 'widgets/fotograf_kaynak_paneli.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// PROFİL — referans `vProfileCust()` / `vProfileProv()`
@@ -530,31 +531,62 @@ class _Avatar extends StatelessWidget {
     final secim = await RefBottomSheet.goster<String>(
       context,
       title: 'Profil Fotoğrafı',
+      // ── ⚠ İLAN AKIŞIYLA AYNI SATIRLAR (12 Eyl, kullanıcı isteği) ──
+      //
+      // "İlan oluştururken fotoğraf yükle ve fotoğraf çek ikonları,
+      // assetleri, renkleri profil fotoğrafı yüklerken de aynı
+      // olmalı — iki rol için de."
+      //
+      // ⚠ ÖNCEDEN `RefSecimKarti` KULLANILIYORDU: renkli daire rozet
+      // yok, gri düz ikon, sağda chevron yerine RADYO DAİRESİ ve
+      // farklı metinler ("Galeriden Yükle" / "Cihazınızdaki bir
+      // fotoğrafı seçin."). Aynı iş, iki farklı panel görünümü.
+      //
+      // ⚠ SATIR ORTAK, PANEL DEĞİL: burada üçüncü bir seçenek var
+      // ("Fotoğrafı Kaldır"), ilan panelinde yok. Paylaşılan şey
+      // GÖRÜNÜM; seçenek kümesi her panelin kendi işi.
+      //
+      // ⚠ METİNLER DE EŞİTLENDİ: ilan akışı referanstır.
+      //
+      // ⚠ ROL AYRIMI YOK: panel hesap rolüne bakmaz, iki rolde de
+      // aynı çizilir.
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          RefSecimKarti(
-            ikon: 'assets/svg/ic_camplus.svg',
+          fotografSecenekSatiri(
+            context,
+            rozetRengi: RC.blue,
+            ikon: 'assets/svg/ic_cam.svg',
             baslik: 'Fotoğraf Çek',
-            aciklama: 'Kamerayla yeni bir fotoğraf çekin.',
-            secili: false,
+            aciklama: 'Kamerayı açar',
             onTap: () => Navigator.of(context).pop('kamera'),
           ),
-          RefSecimKarti(
+          const SizedBox(height: 2),
+          fotografSecenekSatiri(
+            context,
+            rozetRengi: RC.success,
             ikon: 'assets/svg/ic_gallery.svg',
-            baslik: 'Galeriden Yükle',
-            aciklama: 'Cihazınızdaki bir fotoğrafı seçin.',
-            secili: false,
+            ikonRengi: RC.white,
+            baslik: 'Galeriden Seç',
+            aciklama: 'Kayıtlı fotoğraflarınız',
             onTap: () => Navigator.of(context).pop('galeri'),
           ),
-          if (fotoYolu.trim().isNotEmpty)
-            RefSecimKarti(
+          // ⚠ YALNIZ FOTOĞRAF VARKEN: silinecek bir şey yokken
+          // satırı göstermek kullanıcıyı yanıltır.
+          //
+          // ⚠ KIRMIZI ROZET: yıkıcı eylem, mavi/yeşilden ayrılır.
+          if (fotoYolu.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            fotografSecenekSatiri(
+              context,
+              rozetRengi: RC.danger,
               ikon: 'assets/svg/ic_trash.svg',
+              ikonRengi: RC.white,
               baslik: 'Fotoğrafı Kaldır',
-              aciklama: 'Yerine adınızın baş harfi gösterilir.',
-              secili: false,
+              aciklama: 'Yerine adınızın baş harfi gösterilir',
               onTap: () => Navigator.of(context).pop('sil'),
             ),
+          ],
         ],
       ),
     );

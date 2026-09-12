@@ -62,6 +62,29 @@ void main() {
           reason: '"Yorum Yaz" düğmesi kapının içinde değil');
     });
 
+    test('⚠ "Teklif seçildi" ŞERİDİ — DÜĞMENİN ALTINDA', () {
+      // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+      //
+      // "Teklif Seç düğmesine basıldığında düğmenin altında şık bir
+      // 'Teklif seçildi' yazısı yazılsın."
+      //
+      // Seçim yapıldığında yalnız bir anlık bildirim çıkıyordu;
+      // kapandıktan sonra ekranda seçimin yapıldığını söyleyen
+      // kalıcı hiçbir iz kalmıyordu.
+      expect(k.contains("const DurumSeridi('Teklif seçildi')"), isTrue);
+      // Düğmeden SONRA gelir.
+      expect(k.indexOf("'Yorum Yaz'"), lessThan(k.indexOf("'Teklif seçildi'")),
+          reason: 'şerit düğmenin üstünde çiziliyor');
+    });
+
+    test('⚠ İKİ YEŞİL ŞERİT ALT ALTA DURMAZ', () {
+      // Yorum yazıldıktan sonra "Teklif seçildi" yerini "Yorum
+      // yapıldı"ya bırakır; sonuncusu neredeyse hep geçerli olandır.
+      expect(k.contains("if (!reviewed) const DurumSeridi('Teklif seçildi')"),
+          isTrue,
+          reason: 'şerit yorum sonrası da çiziliyor');
+    });
+
     test('⚠ YORUM VARSA DURUM YAZAR, PUAN YAZMAZ', () {
       // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
       //
@@ -77,12 +100,51 @@ void main() {
           reason: 'puan şeride geri gelmiş');
     });
 
-    test('⚠ "Görüntüle" AYRI SATIRDA VE DÜĞME GİBİ GÖRÜNÜR', () {
-      // Eylem, durumun içine nokta ile iliştirilmişti; okuyan kişi
-      // bunun bilgi mi düğme mi olduğunu anlamıyordu. Artık ikinci
-      // satırda, altı çizili ve ok ikonuyla.
+    test('⚠ BUL AKIŞI AYNI ŞERİDİ ÇİZER', () {
+      // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+      //
+      // "Bul ile seçilen ilanlarda da teklif seçilince, ilan
+      // oluşturma ekranındaki yazının aynısı yazılsın. Yorum
+      // yapılınca da '✓ Yorum yapıldı Görüntüle' aynı şekilde."
+      //
+      // Şerit `offer_detail_screen` içinde PRIVATE duruyordu; Dart'ta
+      // başka dosya onu göremez. Bul akışı bu yüzden aynı bilgiyi
+      // kendi biçiminde yazıyordu: yeşil düz "Teklif Seçildi" metni,
+      // mavi "Yorum yapıldı" yazısı — zemin yok, tik yok, ok yok.
+      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(bul.contains("const DurumSeridi('Teklif seçildi')"), isTrue);
+      expect(bul.contains("DurumSeridi('Yorum yapıldı'"), isTrue);
+      expect(bul.contains("aksiyon: 'Görüntüle'"), isTrue);
+      // Eski, ayrışmış biçimler geri gelmemeli.
+      expect(bul.contains("Text('Teklif Seçildi'"), isFalse,
+          reason: 'yeşil düz metin geri gelmiş');
+    });
+
+    test('⚠ ŞERİT TEK YERDE TANIMLI', () {
+      // İki akış aynı şeridi çiziyor; ikinci bir kopya doğarsa
+      // yeniden ayrışırlar.
+      final o = _kod('lib/screens/offer_detail_screen.dart');
+      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(o.contains('class DurumSeridi'), isFalse);
+      expect(bul.contains('class DurumSeridi'), isFalse);
+      expect(_kod('lib/screens/widgets/durum_seridi.dart')
+          .contains('class DurumSeridi'), isTrue);
+    });
+
+    test('⚠ "Görüntüle" DURUMUN YANINDA VE DÜĞME GİBİ GÖRÜNÜR', () {
+      // ── ⚠ KONUM İKİ KEZ DEĞİŞTİ ──
+      //
+      // Önce durumun içine nokta ile iliştirilmişti
+      // ("Yorum Yapıldı (5 puan) · Görüntüle"); okuyan kişi bunun
+      // bilgi mi düğme mi olduğunu anlamıyordu. Alt satıra alındı,
+      // ama şerit iki satıra çıkınca gereğinden çok yer kapladı.
+      // 12 Eyl'de kullanıcı isteğiyle YAN YANA alındı.
+      //
+      // ⚠ KİLİT KONUMA DEĞİL, İŞARETLERE: düğme olduğunu altı çizgi,
+      // kalın ağırlık ve ok anlatır. Yan yana olması onu yeniden
+      // "durum metninin parçası" hâline getirmez.
       expect(k.contains("aksiyon: 'Görüntüle'"), isTrue);
-      final serit = _pencere(k, 'class _UcretsizSerit', 'String _telefonGoster');
+      final serit = _kod('lib/screens/widgets/durum_seridi.dart');
       expect(serit.contains('decoration: TextDecoration.underline'), isTrue,
           reason: 'eylem satırı bağlantı gibi görünmüyor');
       expect(serit.contains('ic_chev.svg'), isTrue,

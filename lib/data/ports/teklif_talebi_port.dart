@@ -152,8 +152,18 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
           userId: t.hizmetAlanId,
           type: NotifType.teklifVerildi,
           refId: t.id,
-          title: 'Teklifiniz geldi',
-          body: '"${t.hizmet}" talebiniz için $fiyat TL teklif aldınız.');
+          // ── ⚠ BAŞLIK İLAN AKIŞIYLA EŞİTLENDİ (12 Eyl, ürün
+          // kararı) ──
+          //
+          // Burası "Teklifiniz geldi" diyordu. İki sorunu vardı:
+          //   1. İlan akışı aynı olaya "Yeni teklif aldınız" diyordu;
+          //      bildirim listesinde iki başlık iki farklı şey olmuş
+          //      izlenimi veriyordu.
+          //   2. YANILTICIYDI: bildirimi alan hizmet ALANDIR, teklifi
+          //      o vermemiştir. "Teklifiniz" iyelik eki karşı tarafın
+          //      teklifini okuyana aitmiş gibi gösteriyordu.
+          title: kYeniTeklifBaslik,
+          body: yeniTeklifGovdeTalep(t.hizmet, fiyat));
     }
     return null;
   }
@@ -228,15 +238,23 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
       // `AuthRepository.tamamlananIsArtir` notu.
       auth?.tamamlananIsArtir(t.saglayiciId);
     }
-    if (t != null && t.durum == TeklifTalebiDurumu.tamamlandi) {
-      // ⚠ HİZMET ALANA — iş tamamlandı işaretlendi.
-      notifs?.push(
-          userId: t.hizmetAlanId,
-          type: NotifType.teklifIsiTamamlandi,
-          refId: t.id,
-          title: 'İş tamamlandı',
-          body: '"${t.hizmet}" işi tamamlandı olarak işaretlendi.');
-    }
+    // ── ⚠ "İş tamamlandı" BİLDİRİMİ KALDIRILDI (12 Eyl, kullanıcı
+    // isteği) ──
+    //
+    // "Hizmet alan bildirimlerde iş tamamlandı bildirimi gereksiz,
+    // gelmesin."
+    //
+    // Hizmet alan işin bittiğini zaten görüyor: talep detayında
+    // "Yorum Yaz" düğmesi beliriyor ve kart "Tamamlanan işler"e
+    // geçiyor. Bildirim üçüncü kez aynı şeyi söylüyordu.
+    //
+    // ⚠ TAMAMLAMA İŞLEMİNİN KENDİSİ DEĞİŞMEDİ: durum güncellemesi,
+    // sayaç artışı ve değerlendirme kapısı aynen çalışır — kalkan
+    // yalnız BİLDİRİM.
+    //
+    // ⚠ `NotifType.teklifIsiTamamlandi` SİLİNMEDİ: geçmişte
+    // gönderilmiş bildirimler hâlâ o türle kayıtlı; tür kalkarsa
+    // eski kayıtlar çözümlenemez.
     return null;
   }
 

@@ -56,10 +56,9 @@ void main() {
     });
 
     test('⚠ ELLE YAZILMIŞ SEÇİLDİ METNİ KALMADI', () {
-      // ⚠ KAPSAM DAR TUTULUR: `teklif_talebi_port` içinde
-      // "Teklifiniz geldi" adlı BAŞKA bir bildirim var (hizmet alana,
-      // teklif verildiğinde). Geniş bir "title: 'Teklifiniz" araması
-      // onu da yakalar ve ilgisiz bir kuralı kilitlerdi.
+      // ⚠ KAPSAM DAR TUTULUR: portlarda başka bildirim başlıkları da
+      // var. Geniş bir "title: '" araması onları da yakalar ve
+      // ilgisiz kuralları kilitlerdi.
       for (final yol in portlar) {
         final k = _kod(yol);
         expect(k.contains("title: 'Teklifiniz seçildi"), isFalse,
@@ -76,7 +75,82 @@ void main() {
     });
   });
 
-  group('3 — ⚠ İKİ AKIŞ AYNI OLAYI AYNI ANLATIR', () {
+  group('3 — ⚠ YENİ TEKLİF: TEK BAŞLIK', () {
+    // ── ⚠ ÜRÜN KARARI (12 Eyl, kullanıcı) ──
+    //
+    // "'Teklifiniz geldi' farklı bir dil, bunu kabul etmiyorum.
+    // 'Yeni teklif aldınız' olarak yazılmalı. Bul veya ilan
+    // oluşturmayla nereden gelirse gelsin."
+    //
+    // ⚠ ESKİ BAŞLIK AYRICA YANILTICIYDI: bildirimi alan hizmet
+    // ALANDIR, teklifi o vermemiştir. "Teklifiniz" iyelik eki karşı
+    // tarafın teklifini okuyana aitmiş gibi gösteriyordu.
+
+    test('başlık ortak sabitte', () {
+      expect(kYeniTeklifBaslik, 'Yeni teklif aldınız');
+    });
+
+    test('iki port da ortak başlığı kullanır', () {
+      for (final yol in const [
+        'lib/data/ports/mock_ports.dart',
+        'lib/data/ports/teklif_talebi_port.dart',
+      ]) {
+        final k = _kod(yol);
+        expect(k.contains('title: kYeniTeklifBaslik'), isTrue, reason: yol);
+        expect(k.contains("title: 'Teklifiniz geldi'"), isFalse, reason: yol);
+      }
+    });
+
+    test('⚠ GÖVDELER AYRI KALIR — BAŞLIK ORTAK', () {
+      // İlan akışında henüz fiyat okunmadan bildirim gider, Bul
+      // akışında teklif fiyatla birlikte gelir. Gövdeyi de zorla
+      // eşitlemek, Bul akışındaki fiyat bilgisini SİLMEK olurdu.
+      expect(yeniTeklifGovdeIlan('Doğalgaz Kaçak Onarımı'),
+          '"Doğalgaz Kaçak Onarımı" ilanınıza yeni bir teklif geldi.');
+      expect(yeniTeklifGovdeTalep('Doğalgaz Kaçak Kontrolü', 5500),
+          '"Doğalgaz Kaçak Kontrolü" talebiniz için 5500 TL teklif '
+          'aldınız.');
+    });
+  });
+
+  group('4 — ⚠ "İş tamamlandı" BİLDİRİMİ GÖNDERİLMEZ', () {
+    // ── ⚠ KULLANICI İSTEĞİ (12 Eyl) ──
+    //
+    // "Hizmet alan bildirimlerde iş tamamlandı bildirimi gereksiz,
+    // gelmesin."
+    //
+    // Hizmet alan işin bittiğini zaten görüyor: talep detayında
+    // "Yorum Yaz" düğmesi beliriyor ve kart "Tamamlanan işler"e
+    // geçiyor. Bildirim üçüncü kez aynı şeyi söylüyordu.
+
+    test('Bul akışı tamamlamada bildirim üretmez', () {
+      final k = _kod('lib/data/ports/teklif_talebi_port.dart');
+      expect(k.contains("title: 'İş tamamlandı'"), isFalse);
+      expect(k.contains('NotifType.teklifIsiTamamlandi'), isFalse,
+          reason: 'bildirim geri gelmiş');
+    });
+
+    test('⚠ TAMAMLAMA İŞLEMİNİN KENDİSİ DEĞİŞMEDİ', () {
+      // Kalkan yalnız bildirimdir; durum güncellemesi ve sayaç
+      // artışı yerinde.
+      final k = _kod('lib/data/ports/teklif_talebi_port.dart');
+      expect(k.contains('tamamlananIsArtir(t.saglayiciId)'), isTrue);
+    });
+
+    test('⚠ BİLDİRİM TÜRÜ SİLİNMEDİ', () {
+      // Geçmişte gönderilmiş bildirimler hâlâ o türle kayıtlı; tür
+      // kalkarsa eski kayıtlar çözümlenemez.
+      final m = _kod('lib/data/models/notification.dart');
+      expect(m.contains('teklifIsiTamamlandi'), isTrue);
+    });
+
+    test('⚠ İLAN AKIŞINDA ZATEN YOKTU — iki akış artık eşit', () {
+      final k = _kod('lib/data/ports/mock_ports.dart');
+      expect(k.contains("title: 'İş tamamlandı'"), isFalse);
+    });
+  });
+
+  group('5 — ⚠ İKİ AKIŞ AYNI OLAYI AYNI ANLATIR', () {
     test('ilan akışı ilan başlığını, Bul akışı hizmet adını geçirir', () {
       // İki alan farklı ama kullanıcı için ikisi de "iş"tir.
       final m = _kod('lib/data/ports/mock_ports.dart');

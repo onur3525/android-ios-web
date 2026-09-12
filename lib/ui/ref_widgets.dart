@@ -1669,61 +1669,37 @@ class RefSegmentTabs extends StatelessWidget {
                   ),
                   child: RefTap(
                     onTap: () => onChanged(i),
-                    child: Container(
+                    // ── ⚠ ROZET İKONUN DEĞİL, SEKMENİN KÖŞESİNDE
+                    // (12 Eyl, kullanıcı isteği) ──
+                    //
+                    // BULGU: "sayı ok üzerinde duruyor; butonun sol
+                    // köşesinde kırmızı daire içinde olsun."
+                    //
+                    // Rozet İKONA göre konumlanıyordu. 9 Eyl'de ikonun
+                    // içinden dışarı alınmıştı ama hâlâ ona teğetti ve
+                    // uçuş ikonuyla görsel olarak karışıyordu.
+                    //
+                    // Artık sekmenin KENDİ sol üst köşesinde: ikondan
+                    // bağımsız, sabit bir nokta. Hangi ikon olursa
+                    // olsun rozet aynı yerde durur.
+                    //
+                    // ⚠ HALKA RENGİ SEKME ZEMİNİNE UYAR: seçilide
+                    // mavi, seçilmemişte beyaz — rozetin çevresinde
+                    // net bir boşluk kalır.
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
                       color: i == selected ? RC.blue : RC.white,
                       padding: const EdgeInsets.symmetric(
                           vertical: 10, horizontal: 4),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // ⚠ ROZET — yalnız `badges` verildiyse ve
-                          // ilgili sekme için sayı > 0 ise çizilir.
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              RefSvg(
-                                items[i].asset,
-                                size: 20,
-                                color: i == selected ? RC.white : RC.text,
-                              ),
-                              if (badges != null &&
-                                  i < badges!.length &&
-                                  badges![i] > 0)
-                                // ── ⚠ ROZET KONUMU (kullanıcı isteği,
-                                // 9 Eyl) ──
-                                //
-                                // BULGU: "sayı, ikonun TAM ÜSTÜNDE
-                                // kalmasın, daha kaliteli olsun."
-                                //
-                                // ÖNCEDEN `right: -7, top: -5` idi:
-                                // 20 px ikonun sağ üst köşesinin
-                                // İÇİNE biniyordu. "Yeni işler"
-                                // ikonu (kâğıt uçak) görsel ağırlığını
-                                // zaten sağ üstte taşıdığı için rozet
-                                // ikonu örtüyordu.
-                                //
-                                // Rozet dışarı alındı: köşeye TEĞET
-                                // durur, ikonun gövdesini örtmez.
-                                //
-                                // ⚠ HALKA KALINLAŞTIRILDI (1,4 → 2):
-                                // kırmızı ile ikon arasında net bir
-                                // boşluk oluşur; seçili sekmede mavi,
-                                // seçilmemişte beyaz olarak zemine
-                                // uyum sağlamayı SÜRDÜRÜR.
-                                //
-                                // ⚠ TAŞMA GÜVENLİ: `Stack`
-                                // `Clip.none` ve üstteki dolgu 10 px;
-                                // rozet dışarı taşsa da kırpılmaz.
-                                Positioned(
-                                  right: -10,
-                                  top: -8,
-                                  child: RefSayiRozeti(
-                                    sayi: badges![i],
-                                    halkaRengi:
-                                        i == selected ? RC.blue : RC.white,
-                                  ),
-                                ),
-                            ],
+                          RefSvg(
+                            items[i].asset,
+                            size: 20,
+                            color: i == selected ? RC.white : RC.text,
                           ),
                           const SizedBox(height: 5), // gap:5px
                           // ⚠ ETİKET KESİLMEZ, KÜÇÜLÜR.
@@ -1748,8 +1724,21 @@ class RefSegmentTabs extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                          ],
+                        ),
+                        ),
+                        if (badges != null &&
+                            i < badges!.length &&
+                            badges![i] > 0)
+                          Positioned(
+                            left: 6,
+                            top: 6,
+                            child: RefSayiRozeti(
+                              sayi: badges![i],
+                              halkaRengi: i == selected ? RC.blue : RC.white,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

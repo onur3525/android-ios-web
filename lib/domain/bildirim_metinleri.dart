@@ -38,3 +38,32 @@ const String kTeklifSecildiBaslik = 'Teklifiniz seçildi 🎉';
 /// aynı ayrışmayı bir satır aşağı taşımak olurdu.
 String teklifSecildiGovde(String isAdi) =>
     '"$isAdi" işinde hizmet alan sizinle çalışmak istiyor.';
+
+/// ── ⚠ YENİ TEKLİF BİLDİRİMİ — TEK BAŞLIK ──
+///
+/// ⚠ ÜRÜN KARARI (12 Eyl, kullanıcı): "'Teklifiniz geldi' farklı bir
+/// dil, bunu kabul etmiyorum. 'Yeni teklif aldınız' olarak yazılmalı.
+/// Bul veya ilan oluşturmayla nereden gelirse gelsin."
+///
+/// İki port aynı olay için iki ayrı başlık yazıyordu:
+///   · `mock_ports`        → "Yeni teklif aldınız"
+///   · `teklif_talebi_port` → "Teklifiniz geldi"
+///
+/// ⚠ "Teklifiniz geldi" AYRICA YANILTICIYDI: bildirimi alan kişi
+/// hizmet ALANDIR, teklifi o vermemiştir. "Teklifiniz" iyelik eki
+/// karşı tarafın teklifini okuyana aitmiş gibi gösteriyordu.
+const String kYeniTeklifBaslik = 'Yeni teklif aldınız';
+
+/// İlan akışı gövdesi — ortada bir İLAN vardır.
+String yeniTeklifGovdeIlan(String ilanBasligi) =>
+    '"$ilanBasligi" ilanınıza yeni bir teklif geldi.';
+
+/// Bul akışı gövdesi — ortada bir TALEP vardır ve fiyat bellidir.
+///
+/// ⚠ GÖVDELER AYRI, BAŞLIK ORTAK: iki akışta olan şey aynı (yeni bir
+/// teklif geldi) ama ayrıntı farklı — ilan akışında henüz fiyat
+/// okunmadan bildirim gider, Bul akışında teklif fiyatla birlikte
+/// gelir. Gövdeyi de zorla eşitlemek, Bul akışında işe yarayan fiyat
+/// bilgisini SİLMEK olurdu.
+String yeniTeklifGovdeTalep(String hizmet, Object fiyat) =>
+    '"$hizmet" talebiniz için $fiyat TL teklif aldınız.';

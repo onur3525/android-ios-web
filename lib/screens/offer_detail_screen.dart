@@ -27,6 +27,7 @@ import '../domain/saglayici_ozeti.dart';
 import 'provider_reviews_screen.dart' show YorumKarti;
 import 'widgets/puan_dagilim_satiri.dart';
 import 'widgets/profil_avatari.dart';
+import 'widgets/durum_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -547,7 +548,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 ),
                 // ⚠ İŞ KURALI: müşteri ÖDEMEZ. İletişim bedeli hizmet
                 // verenin teklif blokesinden TEK SEFER tüketilir.
-                const _UcretsizSerit('İletişimi açmak ücretsizdir.'),
+                const DurumSeridi('İletişimi açmak ücretsizdir.'),
               // ⚠ SEÇİM YAPILMIŞ İLANDA "Teklifi Seç" ÇIKMAZ (§22).
               // İlan `active` kalsa bile seçilmiş teklifi varsa iş
               // tamamlanmıştır; ikinci seçim yapılamaz.
@@ -650,6 +651,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                     ),
                   ),
                 ),
+                // ── ⚠ "Teklif seçildi" ŞERİDİ (12 Eyl, kullanıcı
+                // isteği) ──
+                //
+                // "Teklif Seç düğmesine basıldığında düğmenin altında
+                // şık bir 'Teklif seçildi' yazısı yazılsın."
+                //
+                // Seçim yapıldığında yalnız BİR ANLIK bildirim
+                // çıkıyordu; kapandıktan sonra ekranda seçimin
+                // yapıldığını söyleyen hiçbir kalıcı iz kalmıyordu.
+                // Kullanıcı geri gelip "seçtim mi, seçmedim mi?" diye
+                // bakıyordu. Düğmenin "Teklifi Seç"ten "Yorum Yaz"a
+                // dönmesi bunu dolaylı anlatıyordu, doğrudan değil.
+                //
+                // ⚠ YALNIZ YORUM YAPILMADAN ÖNCE: yorum yazıldıktan
+                // sonra yerini "Yorum yapıldı" şeridi alır. İki yeşil
+                // şerit alt alta durmaz — sonuncusu neredeyse hep
+                // geçerli olandır.
+                //
+                // ⚠ AYNI ŞERİT BİLEŞENİ: renk, ikon ve ölçü
+                // `_UcretsizSerit` içinde tek yerde. "Yorum yapıldı"
+                // ile birebir aynı görünür.
+                //
+                // ⚠ EYLEM SATIRI YOK: bu bir DURUM bildirimi,
+                // gidilecek bir yer göstermiyor.
+                if (!reviewed) const DurumSeridi('Teklif seçildi'),
                 if (reviewed)
                   // ── ⚠ ŞERİT ARTIK DOKUNULABİLİR (kullanıcı isteği,
                   // 9 Eyl) ──
@@ -687,7 +713,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                     // bağlamında duruyor. Şeritte tekrar etmesi hem
                     // gereksizdi hem de satırı bir durum bildirimi
                     // olmaktan çıkarıp kalabalıklaştırıyordu.
-                    child: const _UcretsizSerit('Yorum yapıldı',
+                    child: const DurumSeridi('Yorum yapıldı',
                         aksiyon: 'Görüntüle'),
                   ),
               ],
@@ -1047,84 +1073,11 @@ class _PuanKarti extends StatelessWidget {
 /// yorumda aç/kapa sunmuyordu.
 
 
-/// `.pr-free` — yeşil bilgi şeridi (buton altı).
-class _UcretsizSerit extends StatelessWidget {
-  const _UcretsizSerit(this.metin, {this.aksiyon});
+// ⚠ `_UcretsizSerit` ORTAK BİLEŞENE TAŞINDI (12 Eyl):
+// `widgets/durum_seridi.dart` içindeki `DurumSeridi`. Bul akışının
+// detay ekranı da aynı şeridi çiziyor; private kaldığı sürece o
+// ekran onu göremiyor ve kendi kopyasını yazıyordu.
 
-  final String metin;
-
-  /// ── ⚠ İKİNCİ SATIR — DOKUNULABİLİRLİĞİ ANLATIR ──
-  ///
-  /// KULLANICI İSTEĞİ (12 Eyl): "Görüntüle altta kalacak ve dokunarak
-  /// ilgili ekrana gideceğini hissettiren bir görüntüle yazılmalı."
-  ///
-  /// ⚠ ÖNCEDEN TEK SATIRDI ve eylem, durumun içine nokta ile
-  /// iliştirilmişti: "Yorum Yapıldı (5 puan) · Görüntüle". Okuyan
-  /// kişi bunun bir bilgi mi yoksa düğme mi olduğunu anlamıyordu —
-  /// yeşil bir durum şeridi gibi duruyordu.
-  ///
-  /// Verilirse ikinci satır olarak, altı çizili ve ok ikonuyla
-  /// çizilir; artık düğme gibi görünür.
-  ///
-  /// ⚠ `null` ise şerit eskisi gibi tek satır kalır — "İletişimi
-  /// açmak ücretsizdir." satırı bundan etkilenmez.
-  final String? aksiyon;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Align(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE9F9EF),
-              borderRadius: BorderRadius.circular(RR.r9),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const RefSvg('assets/svg/ic_okgreen.svg', size: 15),
-                const SizedBox(width: 7), // gap:7px
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(metin,
-                          style: refText(
-                              size: RF.s125,
-                              weight: RF.w600,
-                              color: const Color(0xFF16A34A))),
-                      if (aksiyon != null) ...[
-                        const SizedBox(height: 3),
-                        // ⚠ ALTI ÇİZİLİ + OK: bağlantı olduğunu iki
-                        // işaretle birden söyler. Yalnız renk
-                        // değiştirmek yetmiyordu — şeridin tamamı
-                        // zaten yeşildi.
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(aksiyon!,
-                                style: refText(
-                                    size: RF.s125,
-                                    weight: RF.w700,
-                                    color: const Color(0xFF16A34A),
-                                    decoration: TextDecoration.underline)),
-                            const SizedBox(width: 4),
-                            const RefSvg('assets/svg/ic_chev.svg',
-                                size: 14, color: Color(0xFF16A34A)),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-}
 
 /// Referans `OFFER_PHONE.open` biçimi: `0532 123 45 67`.
 ///

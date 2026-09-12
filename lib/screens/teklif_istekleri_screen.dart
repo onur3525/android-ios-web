@@ -9,6 +9,7 @@ import '../data/models/teklif_talebi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/teklif_talebi_asamasi.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import 'widgets/durum_rozeti.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
@@ -229,6 +230,26 @@ class _TalepKarti extends StatelessWidget {
                 ],
               ),
             ),
+            // ── ⚠ TALEP TARİHİ — KARTIN SAĞ ÜST KÖŞESİ (12 Eyl,
+            // kullanıcı isteği) ──
+            //
+            // "Teklif talep kartlarında da sağ üst köşede ilan tarihi
+            // yazılsın."
+            //
+            // ⚠ "Yeni işler" KARTIYLA AYNI YER VE AYNI BİÇİM: iki
+            // liste yan yana sekmelerde duruyor; biri tarihi sağ üstte
+            // gösterip öteki hiç göstermezse kullanıcı aynı bilgiyi
+            // iki farklı yerde arar.
+            //
+            // ⚠ GÖRELİ SÜRE DEĞİL TARİH: detay ekranlarındaki "Talep
+            // Tarihi" satırı da tarih gösteriyor.
+            //
+            // ⚠ ÜSTTEN HİZALI: `Row`un `crossAxisAlignment`ı `start`,
+            // metin adla aynı hizada durur.
+            const SizedBox(width: 8),
+            Text(kisaTarih(talep.createdAt),
+                style: refText(
+                    size: RF.s11, weight: RF.w500, color: RC.textSoft)),
           ],
         ),
       ),

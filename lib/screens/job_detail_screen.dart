@@ -31,6 +31,7 @@ import 'widgets/hc_widgets.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
+import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
 import 'chat_screen.dart';
@@ -293,6 +294,18 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                       style: refText(
                           size: 15, weight: RF.w700, color: RC.text)),
                 ),
+                // ── ⚠ BÖLÜM AYRAÇLARI (12 Eyl, kullanıcı bulgusu) ──
+                //
+                // "Talep detayı, zaman tercihi, işin detayı ve
+                // fotoğraflar iç içe geçmiş, ne olduğu anlaşılmıyor."
+                //
+                // Kartın ALT tablosunda zaten gri çizgiler vardı;
+                // üstteki bölümlerde yoktu. Etiket + değer çiftleri
+                // arka arkaya dizilince tek blok gibi görünüyordu.
+                //
+                // ⚠ ÇİZGİ ORTAK BİLEŞENDEN: renk ve boşluk
+                // `BolumAyraci` içinde: iki detay ekranı ayrışamaz.
+                const BolumAyraci(),
                 // ── ⚠ İŞİN YAPILMASI İSTENEN ZAMAN ──
                 //
                 // Hizmet veren için işin ne zaman isteneceği teklif
@@ -309,7 +322,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           size: RF.s12, weight: RF.w400, color: RC.grey)),
                   const SizedBox(height: 4),
                   IsZamaniRozeti(l.isZamani),
-                  const SizedBox(height: 10),
+                  // ⚠ BOŞLUK YERİNE ÇİZGİ: 10 px'lik ara iki bölümü
+                  // ayırmaya yetmiyordu.
+                  const BolumAyraci(),
                 ],
 
                 // ── İLAN AÇIKLAMASI ──
@@ -345,7 +360,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                   margin: const EdgeInsets.only(top: 11),
                   decoration: const BoxDecoration(
                       border: Border(
-                          top: BorderSide(color: Color(0xFFF2F4F7)))),
+                          top: BorderSide(color: kDetayAyracRengi))),
                   child: Column(children: [
                     // ⚠ "Kategori" SATIRI KALDIRILDI (kullanıcı
                     // isteği, 10 Eyl): aynı bilgi kartın üstünde,
@@ -363,12 +378,25 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                     BilgiSatiri(
                         ikon: 'assets/svg/ic_nclock.svg',
                         etiket: 'İlan Tarihi',
-                        deger: gecenSure(l.createdAt)),
+                        // ── ⚠ GÖRELİ SÜRE DEĞİL, TARİH (12 Eyl,
+                        // kullanıcı isteği) ──
+                        //
+                        // "Az önce" / "21 dk önce" bir SAAT
+                        // bilgisiydi; etiket "İlan Tarihi" diyorsa
+                        // değer de tarih olmalı.
+                        //
+                        // ⚠ BUL AKIŞIYLA EŞİTLENDİ: orada "Talep
+                        // Tarihi" aynı biçimi kullanıyor. Aynı satır
+                        // iki akışta iki farklı şey gösteremez.
+                        deger: kisaTarih(l.createdAt)),
                   ]),
                 ),
                 // HTML vProvListing: ek fotoğraflar
                 if (l.photoPaths.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  // ⚠ TABLONUN ALT ÇİZGİSİ YOK: `BilgiSatiri` yalnız
+                  // satır ARALARINA çizgi koyar. Ayraç olmadan
+                  // fotoğraf başlığı tarih satırına yapışıyordu.
+                  const BolumAyraci(),
                   Text('Ek Fotoğraflar (${l.photoPaths.length})',
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w800, color: HC.dark)),
@@ -783,20 +811,17 @@ String maskeliAd(String ad) {
 // yerde: `widgets/ilan_baslik_satiri.dart` içindeki `ilanIkonu`.
 // Ekranlar ikon seçmez; `IlanBaslikSatiri` çağırır.
 
-/// "Az önce", "25 dk önce", "2 saat önce" (HTML `x.time`).
-String gecenSure(DateTime t) {
-  final d = DateTime.now().difference(t);
-  if (d.inMinutes < 2) {
-    return 'Az önce';
-  }
-  if (d.inMinutes < 60) {
-    return '${d.inMinutes} dk önce';
-  }
-  if (d.inHours < 24) {
-    return '${d.inHours} saat önce';
-  }
-  return '${d.inDays} gün önce';
-}
+// ── ⚠ `gecenSure` KALDIRILDI (12 Eyl) ──
+//
+// "Az önce", "25 dk önce" gibi GÖRELİ süre üretiyordu. İki detay
+// ekranındaki tarih satırları da, iş kartındaki yeni tarih de artık
+// `kisaTarih` ile gerçek tarih gösteriyor; fonksiyonun tek çağıranı
+// kalmamıştı.
+//
+// ⚠ ÖLÜ BIRAKILMADI: dosyada duran bir "göreli süre" yardımcısı,
+// sonraki turda birinin tarih yerine yine onu çağırmasına davetiye
+// çıkarırdı — bu depoda aynı şey `tl()` ile yaşandı ve kusur dört
+// tur boyunca ekran ekran dolaştı.
 
 /// `.pl-own` — ilan sahibi kartı.
 /// `<a href="tel:...">` karşılığı — telefon uygulamasını açar.

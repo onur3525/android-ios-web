@@ -131,6 +131,30 @@ class TeklifTalebi {
   /// ve gösterim tarafı hiçbir şey çizmez.
   final String talepNo;
 
+  /// ── ⚠ TALEP SİLİNEBİLİR Mİ — TEK KAYNAK ──
+  ///
+  /// ⚠ KULLANICI KARARI (12 Eyl): "Üç nokta menüsü sadece AÇIK
+  /// işlerde olacak; tamamlanan işlerde buna gerek yok."
+  ///
+  /// Menü tek bir şey yapar: talebi siler. İş bir kez ilerlediyse
+  /// silmek bir kaydı yok etmektir — tamamlanmış işin yorumu, puanı
+  /// ve karşı tarafın geçmişi ona bağlıdır.
+  ///
+  /// ⚠ AÇIK = HENÜZ KARARA BAĞLANMAMIŞ: hizmet veren yanıt
+  /// vermemiştir (`beklemede`) ya da teklifini göndermiş, hizmet alan
+  /// henüz seçmemiştir (`teklifGeldi`). Seçildikten sonra ortada bir
+  /// İŞ vardır.
+  ///
+  /// ⚠ `reddedildi` VE `suresiDoldu` DA KAPSAM DIŞI: ikisi de
+  /// sonuçlanmış kayıttır. "Açık" olan yalnız yukarıdaki ikisidir.
+  ///
+  /// ⚠ EKRANLAR KENDİ KOŞULUNU YAZMAZ — `Listing.isTamamlanmisIs`
+  /// ile aynı desen. İki ekran ayrı koşul yazsaydı biri güncellenip
+  /// öteki eskide kalırdı.
+  bool get silinebilir =>
+      durum == TeklifTalebiDurumu.beklemede ||
+      durum == TeklifTalebiDurumu.teklifGeldi;
+
   /// İsteği gönderen hizmet alanın hesap id'si.
   final String hizmetAlanId;
 

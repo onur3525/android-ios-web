@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'job_detail_screen.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
+import 'teklif_talebi_sohbet_screen.dart';
+import 'offer_detail_screen.dart';
+import 'chat_screen.dart';
 import 'listing_detail_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
 import 'widgets/hata_gosterimi.dart';
@@ -212,17 +215,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   builder: (_) => ListingDetailScreen(listingId: ilan)));
         }
 
-      // ── HİZMET VERENİN İŞ DETAYINA ──
+      // ── ⚠ MESAJ BİLDİRİMİ DOĞRUDAN SOHBETE GİDER (12 Eyl,
+      // kullanıcı isteği) ──
       //
-      // İletişim açıldı / yeni mesaj bildirimleri hizmet verene gider;
-      // iş detayında telefon ve mesajlaşma bulunur.
-      case NotifType.contactOpened:
+      // "Mesaj geldi bildirimine tıklandığında direkt ilgili
+      // mesajlaşma ekranına gidilmeli."
+      //
+      // ⚠ BURADA AYRICA BİR HATA VARDI: `newMessage` bildiriminin
+      // `refId`si TEKLİF id'sidir (bkz. `mock_ports`: `refId: offerId`),
+      // ilan id'si DEĞİL. Buradaki dal onu `JobDetailScreen`e
+      // `listingId` olarak geçiriyordu — yani var olmayan bir ilan
+      // aranıyordu. Bildirime dokunmak hiçbir yere götürmüyor ya da
+      // boş ekran açıyordu.
       case NotifType.newMessage:
         if (gecerli) {
           Navigator.push(
               context,
               MaterialPageRoute<void>(
-                  builder: (_) => JobDetailScreen(listingId: ilan)));
+                  builder: (_) => ChatScreen(offerId: ilan)));
+        }
+
+      // ── HİZMET VERENİN İŞ DETAYINA ──
+      //
+      // ⚠ `contactOpened` AYRI KALDI: orada haber "telefon numarası
+      // artık görünüyor"dur, sohbet değil. İş detayı hem numarayı hem
+      // mesaj düğmesini gösterir.
+      //
+      // ⚠ Bu bildirimin `refId`si de TEKLİF id'sidir; iş detayı ilan
+      // id'si ister. Teklif üzerinden ilana ulaşmak bu ekranın işi
+      // değil — bildirim teklif detayına gönderilir, orada iletişim
+      // kutuları zaten var.
+      case NotifType.contactOpened:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => OfferDetailScreen(offerId: ilan)));
         }
 
       // ── DOĞRUDAN TEKLİF TALEBİ DETAYINA ──
@@ -230,13 +258,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // Tüm "Doğrudan Teklif İste" bildirimleri AYNI detay ekranına
       // gider; ekran ROL FARKINDA (bkz. `TeklifTalebiDetayScreen`),
       // hangi tarafa gittiğine bakılmaksızın doğru görünümü çizer.
+      // ── ⚠ BUL AKIŞINDA MESAJ DA DOĞRUDAN SOHBETE (12 Eyl) ──
+      //
+      // Aynı kural: mesaj bildirimi mesajlaşma ekranını açar, detay
+      // ekranını değil.
+      //
+      // ⚠ BAŞLIK ÇAĞIRANDAN GELİR (`TeklifTalebiSohbetScreen` bu
+      // kararı vermez). Talep okunamazsa ekran açılmaz — uydurma bir
+      // başlıkla boş sohbet açmaktansa bildirim sessiz kalır.
+      case NotifType.teklifYeniMesaj:
+        if (gecerli) {
+          final talep =
+              context.read<TeklifTalebiController>().byId(ilan);
+          if (talep != null) {
+            Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => TeklifTalebiSohbetScreen(
+                        talepId: ilan, baslik: talep.hizmet)));
+          }
+        }
+
       case NotifType.teklifTalebiGeldi:
       case NotifType.teklifVerildi:
       case NotifType.teklifSecildi:
       case NotifType.teklifReddedildi:
       case NotifType.teklifSuresiDoldu:
       case NotifType.teklifIsiTamamlandi:
-      case NotifType.teklifYeniMesaj:
         if (gecerli) {
           Navigator.push(
               context,

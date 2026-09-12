@@ -39,6 +39,7 @@ import 'widgets/teklif_tutar_karti.dart';
 import 'widgets/detay_karti_parcalari.dart';
 import 'widgets/ilan_baslik_satiri.dart';
 import 'widgets/ilan_no_etiketi.dart';
+import 'widgets/durum_seridi.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -341,7 +342,21 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
               children: [
                 const RefBackButton(),
                 const Spacer(),
-                if (!benSaglayiciMi)
+                // ── ⚠ YALNIZ AÇIK TALEPTE (12 Eyl, kullanıcı
+                // isteği) ──
+                //
+                // "Üç nokta sadece açık işlerde olacak; tamamlanan
+                // işlerde buna gerek yok."
+                //
+                // Menü tek bir şey yapar: talebi siler. İş
+                // seçildikten ya da tamamlandıktan sonra silmek bir
+                // kaydı yok etmektir — yorum, puan ve karşı tarafın
+                // geçmişi ona bağlıdır.
+                //
+                // ⚠ KOŞUL MODELDE: `silinebilir`. Ekran kendi
+                // koşulunu yazmaz; `Listing.isTamamlanmisIs` ile aynı
+                // desen.
+                if (!benSaglayiciMi && t.silinebilir)
                   RefTap(
                     onTap: () => _talepMenusu(t),
                     borderRadius: BorderRadius.circular(RR.circle),
@@ -434,6 +449,17 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         style: refText(
                             size: 15, weight: RF.w700, color: RC.text)),
                   ),
+                  // ── ⚠ BÖLÜM AYRAÇLARI (12 Eyl, kullanıcı bulgusu) ──
+                  //
+                  // "Talep detayı, zaman tercihi, işin detayı ve
+                  // fotoğraflar iç içe geçmiş, ne olduğu anlaşılmıyor."
+                  //
+                  // Kartın ALT tablosunda zaten gri çizgiler vardı;
+                  // üstteki bölümlerde yoktu.
+                  //
+                  // ⚠ ÇİZGİ ORTAK BİLEŞENDEN (`BolumAyraci`): renk ve
+                  // boşluk orada sabit, iki detay ekranı ayrışamaz.
+                  const BolumAyraci(),
                   // ── ⚠ BÖLÜM SIRASI (kullanıcı kararı, 9 Eyl) ──
                   //
                   //   Hizmet / Kategori
@@ -470,6 +496,9 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                       // "Acil" burada da KIRMIZI çıkar.
                       child: IsZamaniRozeti(t.isZamani),
                     ),
+                    // ⚠ BOŞLUK YERİNE ÇİZGİ: iki bölüm arasında
+                    // yalnız boşluk bırakmak ayırmaya yetmiyordu.
+                    const BolumAyraci(),
                   ],
 
                   // ⚠ "Açıklama" → "İşin detayı": ilan akışındaki ad.
@@ -501,7 +530,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                       margin: const EdgeInsets.only(top: 11),
                       decoration: const BoxDecoration(
                           border: Border(
-                              top: BorderSide(color: Color(0xFFF2F4F7)))),
+                              top: BorderSide(color: kDetayAyracRengi))),
                       child: Column(children: [
                         BilgiSatiri(
                             ikon: 'assets/svg/ic_pin.svg',
@@ -531,7 +560,10 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                   }),
 
                   if (t.fotograflar.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    // ⚠ TABLONUN ALT ÇİZGİSİ YOK: `BilgiSatiri` yalnız
+                    // satır ARALARINA çizgi koyar. Ayraç olmadan
+                    // fotoğraf başlığı tarih satırına yapışıyordu.
+                    const BolumAyraci(),
                     Text('Fotoğraflar',
                         style: refText(
                             size: RF.s12, weight: RF.w400, color: RC.grey)),
@@ -1212,11 +1244,18 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         );
 
       case TeklifTalebiDurumu.secildi:
-        // ── ⚠ ÖNCEDEN YEŞİL KUTU İÇİNDEYDİ — artık kutu YOK,
-        // yalnız şık/sade bir metin (ürün kararı).
-        return Text('Teklif Seçildi',
-            style: refText(
-                size: RF.s16, weight: RF.w700, color: HC.green));
+        // ── ⚠ İLAN AKIŞIYLA AYNI ŞERİT (12 Eyl, kullanıcı isteği) ──
+        //
+        // "Bul ile seçilen ilanlarda da teklif seçilince, ilan
+        // oluşturma ekranındaki yazının aynısı yazılsın."
+        //
+        // Burada yeşil düz bir metin vardı ("Teklif Seçildi"); ilan
+        // akışında ise yeşil zeminli, tik ikonlu bir şerit. Aynı olay
+        // iki akışta iki farklı görünümdeydi.
+        //
+        // ⚠ ORTAK BİLEŞEN: `DurumSeridi`. Zemin, tik ve ölçü orada
+        // tek yerde; ekran kendi şeridini çizmez.
+        return const DurumSeridi('Teklif seçildi');
 
       case TeklifTalebiDurumu.reddedildi:
         return Text('Bu teklifi reddettin.',
@@ -1266,11 +1305,15 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (yorum == null)
+            if (yorum == null) ...[
               RefPrimaryButton('Yorum Yaz',
                   iconAsset: 'assets/svg/ic_starfill.svg',
-                  onPressed: onYorumYaz)
-            else
+                  onPressed: onYorumYaz),
+              // ⚠ İLAN AKIŞIYLA AYNI: orada da düğmenin ALTINDA
+              // "Teklif seçildi" şeridi duruyor. Seçimin yapıldığını
+              // söyleyen kalıcı iz, yorum yazılana kadar kalır.
+              const DurumSeridi('Teklif seçildi'),
+            ] else
               // ── ⚠ KART KALKTI, SADE YAZI KALDI (kullanıcı
               // isteği, 9 Eyl) ──
               //
@@ -1292,21 +1335,21 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
               // ⚠ MAVİ RENK BİLEREK: metin dokunulabilir olduğunu
               // kendisi söylemeli; kutu ya da çerçeve olmadığı için
               // tek ipucu renktir.
-              Center(
-                child: RefTap(
-                  onTap: onYorumYaz,
-                  borderRadius: BorderRadius.circular(RR.r8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 6, horizontal: 10),
-                    child: Text('Yorum yapıldı',
-                        textAlign: TextAlign.center,
-                        style: refText(
-                            size: RF.s135,
-                            weight: RF.w700,
-                            color: RC.blue)),
-                  ),
-                ),
+              // ── ⚠ İLAN AKIŞIYLA AYNI ŞERİT (12 Eyl, kullanıcı
+              // isteği) ──
+              //
+              // Burada mavi düz bir "Yorum yapıldı" yazısı vardı;
+              // dokunulabilir olduğunu yalnız RENK söylüyordu. İlan
+              // akışında ise yeşil zemin, tik ve altı çizili
+              // "Görüntüle" + ok vardı.
+              //
+              // ⚠ GÖRÜNTÜLEME YOLU AYNEN KORUNDU: dokununca yine
+              // salt okunur değerlendirme ekranı açılır.
+              RefTap(
+                onTap: onYorumYaz,
+                borderRadius: BorderRadius.circular(RR.r9),
+                child: const DurumSeridi('Yorum yapıldı',
+                    aksiyon: 'Görüntüle'),
               ),
           ],
         );
