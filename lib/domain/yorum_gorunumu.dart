@@ -12,7 +12,8 @@ import '../data/models/review.dart';
 ///   • Ad "Gönül B." biçiminde — SOYAD HİÇBİR ŞEKİLDE görünmeyecek.
 ///   • Kartın sağ üstünde gün.ay.yıl biçiminde yorum tarihi.
 ///   • Adın altında, alınan HİZMETİN adı.
-///   • Uzun yorumda "Göster" / "Küçült" ile kart açılıp kapanacak.
+///   • Uzun yorumda "Devamını oku" / "Daha az göster" ile kart
+///     açılıp kapanacak.
 
 /// "Gönül Bütün" → "Gönül B."
 ///

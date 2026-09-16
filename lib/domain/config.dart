@@ -24,12 +24,22 @@ abstract final class DomainConfig {
   static const int ilanBasinaMaxTeklif = 3;
 
 
-  // ── ⚠ YORUM KURALLARI (API sözleşmesi §14) ──
+  // ── ⚠ YORUM KURALLARI ──
   //
-  // Belge HTML prototipine ÜSTÜNDÜR (§31). Prototipte `maxlength=500`
-  // yazıyordu; sözleşme 1000 diyor. Asgari kelime kuralı prototipte
-  // HİÇ YOKTU.
-  static const int kYorumMaxKarakter = 1000;
+  // ⚠ SINIR 300 (kullanıcı kararı, 16 Eyl): "yorum yapma karakter
+  // sayısı şu an 1000 görünüyor, onu 300 yapalım; 300 karakterden
+  // fazla yazı yazılamasın."
+  //
+  // TARİHÇE: prototipte `maxlength=500`, API sözleşmesi §14'te 1000
+  // yazıyordu. Kullanıcı kararı ikisini de EZER.
+  //
+  // ⚠ SUNUCU DA AYNI SINIRI UYGULAMALIDIR: istemcideki `maxLength`
+  // yalnız yazmayı engeller; paketi değiştiren biri daha uzun metin
+  // gönderebilir.
+  //
+  // ⚠ TEK KAYNAK: iki yorum ekranı da (ilan akışı ve Bul akışı) bu
+  // sabiti okur; sayı ekranlara elle yazılmaz.
+  static const int kYorumMaxKarakter = 300;
 
   /// ⚠ DEĞERLENDİRME ANINDA YANSIR (kullanıcı kararı, 9 Eyl).
   ///

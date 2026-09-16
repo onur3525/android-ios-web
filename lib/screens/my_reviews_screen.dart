@@ -224,12 +224,21 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── ⚠ BAŞLIK EKLENDİ (16 Eyl, kullanıcı isteği) ──
+              //
+              // "Müşteri yorumları sayfasında hiç başlık yok, ekle."
+              //
+              // Ekranda yalnız geri oku vardı; kullanıcı hangi sayfada
+              // olduğunu anlamıyordu. Başlık, profil menüsündeki
+              // satırın adıyla AYNI tutuldu ("Müşteri Yorumları") —
+              // farklı olsaydı aynı yere iki ad verilmiş olurdu.
+              //
+              // ⚠ ORTAK BİLEŞEN: `RefDetailHeader` geri okunu da
+              // kendisi çizer, bu yüzden buradaki ayrı `RefBackButton`
+              // KALDIRILDI — iki ok üst üste görünürdü.
               const Padding(
                 padding: EdgeInsets.fromLTRB(14, 6, 14, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: RefBackButton(),
-                ),
+                child: RefDetailHeader(title: 'Müşteri Yorumları'),
               ),
               Expanded(child: _body()),
             ],
@@ -345,10 +354,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                 const SizedBox(height: 5),
                 _stars(avg ?? 0, size: 20),
                 const SizedBox(height: 5),
+                // ⚠ "Değerlendirme" DEĞİL "yorum" (16 Eyl, kullanıcı
+                // kararı). Sayı ne olursa olsun tekil yazılır —
+                // Türkçede sayıdan sonra çoğul eki gelmez:
+                // "1 yorum", "2 yorum", "3 yorum".
                 Text(
                     _count == 0
-                        ? '(Değerlendirme yok)'
-                        : '($_count Değerlendirme)',
+                        ? '(Yorum yok)'
+                        : '($_count yorum)',
                     style: refText(
                         size: RF.s115,
                         weight: RF.w400,

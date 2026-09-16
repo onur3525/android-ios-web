@@ -91,19 +91,30 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickPhoto() async {
-    // ⚠ ARTIK PAYLAŞIMLI AKIŞ — `sohbet_fotograf_akisi.dart`. Önceden
-    // doğrudan galeriye gidip SEÇİLİR SEÇİLMEZ gönderiyordu; artık
-    // kaynak seçimi (galeri/kamera) + gönderim öncesi ÖNİZLEME var.
-    final sonuc = await sohbetFotografiSecVeOnizle(context);
-    if (sonuc == null) {
-      return;
+    // ⚠ PAYLAŞIMLI AKIŞ — `sohbet_fotograf_akisi.dart`. İki sohbet
+    // ekranı da aynı fonksiyonu çağırır; rol ayrımı YOKTUR.
+    //
+    // ── ⚠ ÇOKLU SEÇİM (kullanıcı kararı) ──
+    //
+    // Önizleme ekranı kaldırıldı, galeriden çoklu seçim geldi.
+    // Gönderilen fotoğrafa dokununca zaten tam ekran açılıyor.
+    //
+    // ⚠ HER FOTOĞRAF AYRI MESAJDIR: sohbet modeli mesaj başına TEK
+    // görsel taşır. Liste sırayla gönderilir.
+    //
+    // ⚠ METİN YALNIZ İLK MESAJA GİDER: `_send` metni `_input`tan okur
+    // ve gönderdikten sonra temizler. Aynı açıklamayı her fotoğrafa
+    // tekrarlamak sohbeti kirletirdi.
+    //
+    // ⚠ SIRAYLA VE `await` İLE: paralel gönderim mesaj sırasını
+    // bozar; sohbette sıra anlamın parçasıdır.
+    final yollar = await sohbetFotograflariSec(context);
+    for (final yol in yollar) {
+      if (!mounted) {
+        return;
+      }
+      await _send(imagePath: yol);
     }
-    // ⚠ `_send()` metni `_input.text`ten OKUR — önizlemedeki
-    // (opsiyonel) açıklama buraya yazılıp aynı yoldan gönderilir.
-    if (sonuc.aciklama != null) {
-      _input.text = sonuc.aciklama!;
-    }
-    await _send(imagePath: sonuc.yol);
   }
 
   String _statusText(MessageStatus s) => switch (s) {
@@ -183,9 +194,24 @@ class _ChatScreenState extends State<ChatScreen>
                 // ⚠ GERİ OKU GERİ GELDİ — HER PLATFORMDA.
                 // iOS'ta donanım geri tuşu yok; platforma göre
                 const RefBackButton(),
+                // ── ⚠ AD SOYAD ORTALI (16 Eyl, kullanıcı isteği) ──
+                //
+                // "Mesajlarda en üstte yer alan isim soyisim ortalı
+                // olmalı."
+                //
+                // ⚠ GERİ OKU VE "Ara" DÜĞMESİ SOLDA/SAĞDA KALIR:
+                // ikisi de gezinme/eylem öğesidir, başlığın parçası
+                // değil. `Expanded` ortada kalan boşluğu kapladığı
+                // için `textAlign: center` adı O BOŞLUĞUN ortasına
+                // koyar — iki yan öğenin genişlikleri farklı olduğu
+                // sürece ad, EKRANIN tam ortasına düşmez. Kabul
+                // edilen davranış budur; adı ekran ortasına sabitlemek
+                // `Stack` gerektirir ve iki yan öğenin üstüne binme
+                // riski doğurur.
                 Expanded(
                   child: Text(
                     title,
+                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: refText(

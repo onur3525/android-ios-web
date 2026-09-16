@@ -203,8 +203,11 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
                 // ÇIKARILDI: alt kategori ekleme yetkisi yalnız
                 // admindedir, kullanıcıya olmayan bir işlem
                 // vaat edilmez.
+                // ⚠ BAŞLIKLA BİRLİKTE ORTALI (16 Eyl, kullanıcı
+                // isteği) — ayrı `Text` olduğu için burada verilir.
                 Text(
                   'Hizmet verdiğiniz hizmet kategorilerini seçin.',
+                  textAlign: TextAlign.center,
                   style: refText(
                       size: RF.s13, weight: RF.w400, color: RC.textSoft),
                 ),

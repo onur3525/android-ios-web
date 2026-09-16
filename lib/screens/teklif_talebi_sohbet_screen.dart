@@ -96,18 +96,15 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   }
 
   Future<void> _fotografSecVeGonder() async {
-    // ⚠ ARTIK PAYLAŞIMLI AKIŞ — `sohbet_fotograf_akisi.dart`. Önceden
-    // doğrudan galeriye gidip SEÇİLİR SEÇİLMEZ gönderiyordu; artık
-    // kaynak seçimi (galeri/kamera) + gönderim öncesi ÖNİZLEME var —
-    // `chat_screen.dart` ile AYNI akış.
-    final sonuc = await sohbetFotografiSecVeOnizle(context);
-    if (sonuc == null) {
-      return;
+    // ⚠ PAYLAŞIMLI AKIŞ — `chat_screen.dart` ile AYNI fonksiyon.
+    // Gerekçeler orada yazılı; iki ekran ayrışamaz.
+    final yollar = await sohbetFotograflariSec(context);
+    for (final yol in yollar) {
+      if (!mounted) {
+        return;
+      }
+      await _gonder(fotografYolu: yol);
     }
-    if (sonuc.aciklama != null) {
-      _metin.text = sonuc.aciklama!;
-    }
-    await _gonder(fotografYolu: sonuc.yol);
   }
 
   @override
@@ -128,8 +125,12 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
                 children: [
                   const RefBackButton(),
                   const SizedBox(width: 8),
+                  // ⚠ BAŞLIK ORTALI — `chat_screen.dart` ile AYNI
+                  // kural (16 Eyl, kullanıcı isteği). İki mesajlaşma
+                  // ekranı ayrışamaz.
                   Expanded(
                     child: Text(widget.baslik,
+                        textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: refText(

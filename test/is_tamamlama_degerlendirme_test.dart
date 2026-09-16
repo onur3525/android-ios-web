@@ -140,9 +140,16 @@ void main() {
           isTrue, reason: 'puansızken düğme pasif değil');
 
       // ⚠ ÜST SINIR DURUYOR — kaldırılan yalnız alt sınır.
-      expect(DomainConfig.kYorumMaxKarakter, 1000);
+      //
+      // ⚠ DEĞER 1000 → 300 (16 Eyl, kullanıcı kararı). Tarihçe:
+      // prototip 500, API sözleşmesi §14 1000, kullanıcı kararı 300 —
+      // sonuncusu ötekileri ezer.
+      expect(DomainConfig.kYorumMaxKarakter, 300);
+      // ⚠ EKRANLAR SAYIYI ELLE YAZMAZ: sabiti okur; yoksa iki yorum
+      // ekranı ayrışır.
       expect(degerlendirme.contains('DomainConfig.kYorumMaxKarakter'), isTrue);
       expect(degerlendirme.contains('maxLength: 500'), isFalse);
+      expect(degerlendirme.contains('maxLength: 1000'), isFalse);
     });
 
     test('⚠ SÖZLEŞME DE AYNI KURALI SÖYLER', () {

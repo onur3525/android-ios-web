@@ -1,10 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../ui/ref_tokens.dart';
-import '../../ui/ref_widgets.dart';
 import 'fotograf_kaynak_paneli.dart';
 
 /// ── ⚠ PAYLAŞIMLI SOHBET FOTOĞRAFI AKIŞI ──
@@ -15,144 +11,61 @@ import 'fotograf_kaynak_paneli.dart';
 /// import EDİLEMEDİĞİ için (Dart kısıtı), bu akış PUBLIC bir
 /// yardımcı olarak buraya çıkarıldı; kod tekrarı YOK, TEK kaynak.
 ///
-/// Akış: "+" ikonuna dokunulunca ORTAK fotoğraf paneli (Fotoğraf Çek
-/// / Galeriden Seç) açılır → seçilen kaynaktan fotoğraf alınır → TAM
-/// EKRAN bir ÖNİZLEME açılır (fotoğraf + opsiyonel açıklama +
-/// "Gönder") → kullanıcı onaylamadan HİÇBİR ŞEY gönderilmez.
+/// ⚠ ROL AYRIMI YOKTUR: hizmet veren de hizmet alan da AYNI akışı
+/// görür. Bu dosyada rolü sorgulayan tek bir satır bile olmamalıdır.
 ///
-/// Döner: kullanıcı gönderirse `(yol, aciklama)`, vazgeçerse `null`.
-Future<({String yol, String? aciklama})?> sohbetFotografiSecVeOnizle(
-    BuildContext context) async {
-  // ── ⚠ PANEL ARTIK ORTAK ──
+/// ── ⚠ ÖNİZLEME KALDIRILDI, ÇOKLU SEÇİM GELDİ (kullanıcı kararı) ──
+///
+/// "Önizleme olmasın, çoklu seçim yapılıp yüklensin; zaten gönderilen
+/// mesajlar tıklandığında büyük ekran oluyor."
+///
+/// ESKİ AKIŞ: galeriden TEK fotoğraf (`pickImage`) → tam ekran
+/// önizleme ekranı (fotoğraf + opsiyonel açıklama + "Gönder"). Bu,
+/// ilan oluşturma ekranındaki seçiciden (çoklu seçim, küçük kareler)
+/// farklıydı ve kullanıcı farkı fark etti.
+///
+/// YENİ AKIŞ: kaynak paneli → galeride ÇOKLU seçim
+/// (`pickMultiImage`) → seçilenler DOĞRUDAN gönderilir.
+///
+/// ⚠ KAMERA TEK FOTOĞRAF KALIR: `pickMultiImage` yalnız galeri
+/// içindir; kamera zaten tek kare çeker.
+///
+/// ⚠ AÇIKLAMA ALANI KALKTI: önizleme ekranıyla birlikte gitti.
+/// Kullanıcı açıklamayı sohbetin kendi metin kutusuna yazabilir —
+/// fotoğrafla aynı mesajda gider (bkz. çağıran ekranların `_send`
+/// metotları, metni `_input`tan okur).
+///
+/// ⚠ SIRA KORUNUR: seçim sırasıyla gönderilir; çağıran ekran listeyi
+/// sırayla işler.
+///
+/// Döner: seçilen dosya yolları. Vazgeçilirse BOŞ liste — `null`
+/// değil, çünkü çağıran taraf her hâlükârda üzerinde dönecek.
+Future<List<String>> sohbetFotograflariSec(BuildContext context) async {
+  // ── ⚠ PANEL ORTAK ──
   //
-  // Kullanıcı isteği (9 Eyl): "mesaj gönderirken fotoğraf yükleme
-  // ikonuna basınca da bu şekilde görünmeli" — yani ilan oluşturma
-  // ekranlarındaki panelin AYNISI.
-  //
-  // ⚠ BURADAKİ PANEL SAPMIŞTI: başlık "Fotoğraf Ekle" (büyük E),
-  // renkli daire rozet YOK, satır açıklamaları YOK, chevron YOK,
-  // iki ikon da MAVİ ve sıra TERSTİ (önce galeri). Hepsi silindi;
-  // çizim `widgets/fotograf_kaynak_paneli.dart`tan geliyor.
-  //
-  // ⚠ AKIŞIN GERİSİ DEĞİŞMEDİ: seçilen kaynaktan fotoğraf alınır,
-  // TAM EKRAN önizleme açılır, kullanıcı onaylamadan hiçbir şey
-  // gönderilmez.
+  // Kaynak seçimi (Fotoğraf Çek / Galeriden Seç) ilan oluşturma
+  // ekranlarındakiyle AYNI bileşenden gelir
+  // (`widgets/fotograf_kaynak_paneli.dart`); burada ayrı bir panel
+  // çizilmez.
   final kaynak = await fotografKaynagiSec(context);
   if (kaynak == null || !context.mounted) {
-    return null;
+    return const [];
   }
 
-  XFile? secilen;
   try {
-    secilen = await ImagePicker().pickImage(source: kaynak, maxWidth: 1280);
+    if (kaynak == ImageSource.camera) {
+      // ⚠ KAMERA: tek kare. `maxWidth` ilan seçicisiyle aynı mantıkta
+      // tutulur — büyük dosya hem yüklemeyi hem belleği zorlar.
+      final tek = await ImagePicker().pickImage(
+          source: ImageSource.camera, maxWidth: 1280, imageQuality: 85);
+      return tek == null ? const [] : [tek.path];
+    }
+    // ⚠ GALERİ: çoklu seçim. Kullanıcı tek tek seçer, sistem seçicisi
+    // sırayı korur.
+    final coklu = await ImagePicker().pickMultiImage(imageQuality: 85);
+    return coklu.map((x) => x.path).toList(growable: false);
   } catch (_) {
-    return null;
-  }
-  if (secilen == null || !context.mounted) {
-    return null;
-  }
-
-  return Navigator.of(context).push<({String yol, String? aciklama})?>(
-    MaterialPageRoute(
-      builder: (_) => _FotografOnizleEkrani(yol: secilen!.path),
-    ),
-  );
-}
-
-/// Gönderilmeden ÖNCE gösterilen tam ekran önizleme — kullanıcı
-/// isteği: "fotoğraf seçilir seçilmez gönderilmemeli".
-class _FotografOnizleEkrani extends StatefulWidget {
-  const _FotografOnizleEkrani({required this.yol});
-
-  final String yol;
-
-  @override
-  State<_FotografOnizleEkrani> createState() => _FotografOnizleEkraniState();
-}
-
-class _FotografOnizleEkraniState extends State<_FotografOnizleEkrani> {
-  final _aciklama = TextEditingController();
-
-  @override
-  void dispose() {
-    _aciklama.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Spacer(),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: InteractiveViewer(
-                  minScale: 1,
-                  maxScale: 4,
-                  child: Image.file(File(widget.yol)),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _aciklama,
-                      style: const TextStyle(color: Colors.white),
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Açıklama ekle (opsiyonel)',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white24)),
-                        focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white54)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Material(
-                    color: RC.blue,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () => Navigator.pop(
-                          context,
-                          (
-                            yol: widget.yol,
-                            aciklama: _aciklama.text.trim().isEmpty
-                                ? null
-                                : _aciklama.text.trim(),
-                          )),
-                      child: const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: RefSvg('assets/svg/ic_send.svg',
-                            size: 20, color: RC.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    // Seçici açılamadı ya da izin reddedildi — sessizce vazgeçilir.
+    return const [];
   }
 }

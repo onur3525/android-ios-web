@@ -134,7 +134,7 @@ class ProviderReviewsScreen extends StatelessWidget {
 ///   • ALINAN HİZMET adın altına eklendi; yorumun neye dair olduğu
 ///     kartta görünmüyordu.
 ///   • UZUN YORUM kartı büyütmesin diye kapalı açılır; "Göster" /
-///     "Küçült" ile açılıp kapanır.
+///     "Devamını oku" / "Daha az göster" ile açılıp kapanır.
 ///
 /// ⚠ KURALLAR BURADA DEĞİL `domain/yorum_gorunumu.dart`TA: ad
 /// kısaltma, tarih biçimi, hizmet adı çözümü ve uzunluk eşiği tek
@@ -260,8 +260,21 @@ class _YorumKartiState extends State<YorumKartiGovde> {
                     : TextOverflow.clip,
                 style: refText(
                     size: RF.s135, weight: RF.w400, color: RC.text)),
-            // ⚠ DÜĞME YALNIZ UZUN YORUMDA: kısa yorumda "Göster"
-            // göstermek anlamsız bir dokunma hedefi bırakırdı.
+            // ── ⚠ METİN DEĞİŞTİ (16 Eyl, kullanıcı kararı) ──
+            //
+            // Eskiden "Göster" / "Küçült" yazıyordu. İkisi de
+            // yanlıştı: yorum ZATEN ekranda, üç satırı okunuyor —
+            // "Göster" neyin gösterileceğini söylemiyordu. "Küçült"
+            // ise metnin puntosunun küçüleceğini düşündürüyordu;
+            // oysa metin KISALIYOR.
+            //
+            // ⚠ "Daha fazla göster" SEÇİLMEDİ: `my_reviews_screen`
+            // içinde aynı ifade SAYFALAMA düğmesidir (yeni yorumlar
+            // yükler). Aynı sözcüğün iki farklı işi anlatması
+            // karışıklık yaratırdı.
+            //
+            // ⚠ DÜĞME YALNIZ UZUN YORUMDA: kısa yorumda gösterilseydi
+            // hiçbir şey yapmayan bir dokunma hedefi kalırdı.
             if (uzun)
               Align(
                 alignment: Alignment.centerRight,
@@ -270,7 +283,7 @@ class _YorumKartiState extends State<YorumKartiGovde> {
                   borderRadius: BorderRadius.circular(RR.r8),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 6, left: 8),
-                    child: Text(_acik ? 'Küçült' : 'Göster',
+                    child: Text(_acik ? 'Daha az göster' : 'Devamını oku',
                         style: refText(
                             size: RF.s125,
                             weight: RF.w700,

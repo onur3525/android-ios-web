@@ -484,7 +484,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                 // ⚠ ARTIK `YorumKarti`: fotoğraf yok, "Gönül B.",
                 // sağ üstte tarih, adın altında hizmet, altında
                 // yıldızlar, altında yorum metni, uzun yorumda
-                // Göster/Küçült.
+                // Devamını oku / Daha az göster.
                 //
                 // ⚠ DIŞ ÇERÇEVE KALDIRILDI: kartların kendi çerçevesi
                 // var; ikisi üst üste binince çift kenarlık

@@ -334,11 +334,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     RefTextField(
                       controller: _text,
                       maxLines: 6,
-                      // ⚠ SINIR 500 → 1000 (API sözleşmesi §14).
-                      //
-                      // Referans HTML'de `maxlength="500"` yazıyordu;
-                      // nihai sözleşme "en fazla 1000 karakter" diyor.
-                      // Sözleşme HTML'e ÜSTÜNDÜR (belge §31).
+                      // ⚠ SINIR 300 (kullanıcı kararı, 16 Eyl) —
+                      // gerekçe ve tarihçe `DomainConfig` içinde.
+                      // Sayı BURAYA YAZILMAZ; sabit okunur.
                       maxLength: DomainConfig.kYorumMaxKarakter,
                       // Yerleşik sayaç gizlenir; referanstaki `.rv-cnt`
                       // kutunun İÇİNDE sağ altta durur.

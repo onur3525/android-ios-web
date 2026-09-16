@@ -243,7 +243,12 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
             padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: RefDetailHeader(title: 'Hizmet Bölgelerim'),
           ),
+                // ⚠ BAŞLIKLA BİRLİKTE ORTALI (16 Eyl, kullanıcı
+                // isteği). Bu açıklama `RefDetailHeader`ın `subtitle`
+                // alanından değil, ayrı bir `Text` olarak çizildiği
+                // için ortalama burada ayrıca verilir.
                 const Text('Hizmet vermek istediğiniz il ve ilçeleri seçin.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, height: 1.5, color: HC.grey)),
                 const SizedBox(height: 14),
           // ── `.ad-card` — İL SEÇİMİ ──

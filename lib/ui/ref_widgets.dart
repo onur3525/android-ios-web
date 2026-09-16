@@ -1393,8 +1393,14 @@ class RefPageTitle extends StatelessWidget {
     final okVar = RefDetailHeader.okGosterilirMi(geriDugmesi);
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
+      // ── ⚠ BAŞLIK SAYFAYA ORTALI (16 Eyl, kullanıcı isteği) ──
+      //
+      // Kural `RefDetailHeader` ile AYNIDIR: iki bileşen aynı işi
+      // yapıyor, biri ortalı öteki sola yaslı kalamaz.
+      //
+      // ⚠ GERİ OKU ORTALANMAZ: gezinme öğesidir, sol üstte kalır.
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (okVar) ...[
@@ -1406,6 +1412,7 @@ class RefPageTitle extends StatelessWidget {
           ],
           Text(
             text,
+            textAlign: TextAlign.center,
             style: refText(
               size: RF.s25,
               weight: RF.w700,
@@ -2355,11 +2362,19 @@ class RefSubtitle extends StatelessWidget {
 
   final String text;
 
+  // ── ⚠ BAŞLIKLA BİRLİKTE ORTALI (16 Eyl, kullanıcı isteği) ──
+  //
+  // "Alt açıklaması da varsa birlikte sayfaya ortala."
+  //
+  // Bu bileşen `RefPageTitle`/`RefDetailHeader`ın hemen ALTINDA
+  // çizilir; başlık ortalanıp açıklama sola yaslı kalsaydı ikisi
+  // birbirinden kopardı.
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
           text,
+          textAlign: TextAlign.center,
           style: refText(size: RF.s13, weight: RF.w400, color: RC.textSoft),
         ),
       );
@@ -2739,8 +2754,21 @@ class RefDetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final okVar = okGosterilirMi(geriDugmesi);
+    // ── ⚠ BAŞLIK VE ALT AÇIKLAMA SAYFAYA ORTALI (16 Eyl, kullanıcı
+    // isteği) ──
+    //
+    // "Bu ekranlarda başlıklar sola doğru kaymış; alt açıklaması da
+    // varsa birlikte sayfaya ortala."
+    //
+    // ⚠ GERİ OKU ORTALANMAZ: o bir gezinme öğesidir, başlığın parçası
+    // değil. Aşağıdaki `Align(centerLeft)` ile sol üstte kalır —
+    // ortalanırsa sayfanın ortasında asılı bir ok görünürdü.
+    //
+    // ⚠ `textAlign` DA GEREKLİ: `crossAxisAlignment` yalnız kutuyu
+    // ortalar; iki satıra taşan bir başlıkta satırlar kendi içinde
+    // sola yaslı kalırdı.
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (okVar)
@@ -2766,6 +2794,7 @@ class RefDetailHeader extends StatelessWidget {
             const SizedBox(height: 6), // style="margin-top:6px"
           Text(
             title,
+            textAlign: TextAlign.center,
             style: refText(
               size: RF.s25,
               weight: RF.w700,
@@ -2777,6 +2806,7 @@ class RefDetailHeader extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               subtitle!,
+              textAlign: TextAlign.center,
               style: refText(
                 size: RF.s135,
                 weight: RF.w400,

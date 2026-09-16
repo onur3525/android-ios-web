@@ -33,6 +33,7 @@ import '../data/controllers/profile_controller.dart';
 import 'widgets/ilan_kayit_adimi.dart';
 import 'widgets/is_zamani_secici.dart';
 import 'widgets/ilan_otp_adimi.dart';
+import 'widgets/foto_goruntuleyici.dart';
 import '../core/validators.dart';
 import '../core/teshis.dart';
 import 'category_ui.dart';
@@ -1393,6 +1394,76 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                       color: RC.text,
                       height: RF.lh155,
                     )),
+
+                // ── ⚠ FOTOĞRAFLAR ÖNİZLEMEDE DE GÖSTERİLİR
+                // (16 Eyl, kullanıcı bulgusu) ──
+                //
+                // "3. adımda fotoğraf eklenmesine rağmen fotoğraflar
+                // gösterilmiyor. Önizlemenin mantığına uygun olmalı."
+                //
+                // Önizleme kartı kategori, konum ve açıklamayı
+                // gösteriyor ama fotoğrafları atlıyordu. Oysa
+                // ÖNİZLEMENİN İŞİ, ilanın yayınlandığında nasıl
+                // görüneceğini göstermektir; eksik gösterim kullanıcıyı
+                // "fotoğraflarım kayboldu mu?" diye düşündürüyordu.
+                //
+                // ⚠ YAYINLANAN İLANLA AYNI BİÇİM: 76 px kare, 11 px
+                // köşe, yatay kaydırma, dokununca tam ekran. Detay
+                // ekranındaki şeritle birebir aynı ölçüler kullanıldı
+                // — önizleme ile gerçek ilan farklı görünmemeli.
+                //
+                // ⚠ YEREL YOL ÇİZİLİR: yükleme bitmiş olsa da
+                // `storageRef` bir sunucu referansıdır, ekranda
+                // çizilemez. Önizleme cihazdaki dosyayı gösterir.
+                //
+                // ⚠ FOTOĞRAF YOKSA BÖLÜM HİÇ ÇİZİLMEZ: boş bir
+                // "Fotoğraflar (0)" başlığı bilgi taşımaz.
+                if (_photos.isNotEmpty) ...[
+                  const Divider(height: 20, color: RC.border),
+                  Text('Fotoğraflar (${_photos.length})',
+                      style: refText(
+                          size: RF.s13, weight: RF.w800, color: RC.text)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 76,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _photos.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) => RefTap(
+                        onTap: () => FotoGoruntuleyici.ac(
+                          context,
+                          yollar: _photos
+                              .map((f) => f.localPath)
+                              .toList(growable: false),
+                          baslangic: i,
+                        ),
+                        borderRadius: BorderRadius.circular(11),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(11),
+                          child: SizedBox(
+                            width: 76,
+                            height: 76,
+                            child: Image.file(
+                              File(_photos[i].localPath),
+                              fit: BoxFit.cover,
+                              // ⚠ Dosya açılamazsa ÇÖKME YERİNE yer
+                              // tutucu — kullanıcı galeriden silmiş
+                              // olabilir.
+                              errorBuilder: (_, __, ___) => ColoredBox(
+                                color: RC.blueSoft,
+                                child: const Center(
+                                  child: RefSvg('assets/svg/ic_gallery.svg',
+                                      size: 24, color: RC.blue),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
