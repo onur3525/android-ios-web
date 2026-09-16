@@ -342,6 +342,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (ref == null || ref.isEmpty) {
           throw StateError('storageRef alınamadı');
         }
+        // ── ⚠ EKSİK ADIM TAMAMLANDI ──
+        //
+        // Referans alınıyor ama dosyanın baytları gönderilmiyordu.
+        // Aşağıdaki `catch` kısmi yüklemeyi zaten temizliyor; artık
+        // gerçekten yükleyemediğimizde de aynı temizlik çalışır.
+        final uploadUrl = res['uploadUrl'] as String?;
+        if (uploadUrl == null || uploadUrl.isEmpty) {
+          throw StateError('uploadUrl alınamadı');
+        }
+        await storage.uploadBytes(
+          uploadUrl: uploadUrl,
+          bytes: await File(yol).readAsBytes(),
+          contentType: tip,
+        );
         refs.add(ref);
       }
     } catch (_) {

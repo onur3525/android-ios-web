@@ -1,15 +1,18 @@
 // ALT BAR GÖSTERGELERİ — KIRMIZI NOKTA VE SAYI ROZETİ (KİLİT)
 //
 // ⚠ KULLANICI İSTEĞİ (12 Eyl):
-//   1. "Bildirim geldiğinde mavi nokta değil kırmızı olsun;
-//      bildirimler okununca normal rengine dönüşsün. Bildirimler
-//      ikonu bozulmadan, dikkatli bir şekilde yap."
+//   1. "Bildirim geldiğinde bildirimler ikonu bozulmadan, dikkatli
+//      bir şekilde yap; nokta MAVİ olsun, okununca normal rengine
+//      dönüşsün."
 //   2. "Bul ikonunda talep için bir teklif geldiğinde sayı yuvarlak
 //      kırmızı daire içinde yazılmalı ama Bul ikonunu kapatmamalı."
 //
-// ⚠ MAVİ NEDEN YANLIŞTI: mavi uygulamanın SEÇİLİ SEKME rengidir.
-// Bildirimler sekmesi aktifken ikon da nokta da mavi oluyor ve nokta
-// görünmez hâle geliyordu. Kırmızı her iki zeminde de okunur.
+// ⚠ RENK AYNI GÜN İKİ KEZ DEĞİŞTİ: önce maviden kırmızıya, sonra
+// kullanıcı kararıyla tekrar maviye. Karar kullanıcınındır.
+//
+// ⚠ BİLİNEN SINIR: mavi, uygulamanın SEÇİLİ SEKME rengidir.
+// Bildirimler sekmesi aktifken ikon da nokta da mavi olur ve nokta
+// yalnız BEYAZ HALKASIYLA ayrışır — bu yüzden halka kaldırılmamalı.
 //
 // ⚠ BU TEST KAYNAK OKUR, PİKSEL ÖLÇMEZ: renk ve konum sabitleri
 // burada kilitli. Gerçek yerleşim `sekme_rozeti_konumu_test` içinde
@@ -47,16 +50,17 @@ void main() {
   // Alt bar öğesinin çizim gövdesi.
   final altBar = _pencere(w, 'if (it.rozet)', 'const SizedBox(height: 4)');
 
-  group('1 — ⚠ BİLDİRİM NOKTASI KIRMIZI', () {
-    test('nokta `RC.danger` ile çizilir', () {
-      expect(altBar.contains('color: RC.danger'), isTrue);
-      expect(altBar.contains('color: RC.blue,'), isFalse,
-          reason: 'nokta yine mavi — seçili sekmede görünmez olur');
+  group('1 — ⚠ BİLDİRİM NOKTASI MAVİ', () {
+    test('nokta `RC.blue` ile çizilir', () {
+      expect(altBar.contains('color: RC.blue,'), isTrue);
+      expect(altBar.contains('color: RC.danger'), isFalse,
+          reason: 'nokta yine kırmızı');
     });
 
-    test('⚠ BEYAZ HALKA DURUYOR', () {
+    test('⚠ BEYAZ HALKA DURUYOR — MAVİDE ŞART', () {
       // Halka olmadan nokta ikonun konturuna yapışır ve ikon bozuk
-      // görünür.
+      // görünür. Mavi noktada ayrıca TEK ayrışma kaynağıdır: seçili
+      // sekmede ikon da mavidir.
       expect(altBar.contains('border: Border.all(color: RC.white, width: 1.5)'),
           isTrue);
     });
@@ -101,12 +105,12 @@ void main() {
       expect(altBar.contains('if (it.belirginRozetSayisi > 0)'), isTrue);
     });
 
-    test('⚠ İKİ GÖSTERGE AYNI KIRMIZIYI PAYLAŞIR', () {
-      // Nokta ve rozet aynı şeyi söyler: ilgi bekleyen bir şey var.
-      // Renk ayrışırsa kullanıcı iki farklı anlam arar.
+    test('⚠ RENK AYRIMI BİLİNÇLİDİR', () {
+      // Nokta MAVİ, "Bul" sayı rozeti KIRMIZI. Nokta "yeni var" der,
+      // rozet "kaç tane" der — farklı renk, farklı dil.
       final rozet =
           _pencere(w, 'class RefSayiRozeti', 'class RefSegmentTabs');
-      expect(altBar.contains('color: RC.danger'), isTrue);
+      expect(altBar.contains('color: RC.blue,'), isTrue);
       expect(rozet.contains('color: RC.danger'), isTrue);
     });
   });

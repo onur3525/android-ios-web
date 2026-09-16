@@ -329,7 +329,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'İş Yeri Personel Servisi', 'Öğrenci Servisi', 'Okul Servisi',
     'Servis Aracı Kiralama'
   ],
-  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — Armut'ta gerçek, aktif bir alan
+  // ⚠ PAZAR ARAŞTIRMASIYLA EKLENDİ — gerçek talep gören bir alan
   // (Kamyonet/Minibüs/Otobüs/Panelvan Kiralama) ama bizde şoförsüz
   // araç kiralama kavramı HİÇ yoktu; yalnız "Servis Aracı Kiralama"
   // (şoförlü) ve "Şoförlü Araç Hizmeti" (Turizm & Konaklama) vardı.
@@ -860,7 +860,7 @@ const Map<String, List<String>> kGomuluKatalog = {
     'Mezoterapi Uygulaması', 'Ozon Uygulaması', 'Proloterapi Uygulaması',
     'Kayropraktik Uygulaması'
   ],
-  // ── ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) — Armut.com
+  // ── ⚠ PAZAR ARAŞTIRMASIYLA EKLENDİ (kullanıcı onayıyla) — pazarda
   // karşılaştırmasında bu dört kategorinin TAMAMEN eksik olduğu
   // tespit edildi; "Sağlık Hizmetleri" çatısı zaten VARDI, yeni çatı
   // GEREKMEDİ.
@@ -1048,7 +1048,7 @@ const Map<String, List<String>> kGomuluKatalog = {
   ],
   // ── ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) ──
   //
-  // Armut'ta aktif ve talep gören ("İmam Nikahı Kıyma": yılda 2.463
+  // Pazarda aktif ve talep gören ("İmam Nikahı Kıyma": yılda 2.463
   // talep, 251 hizmet veren, 1.225 onaylı yorum; "Mevlüt Okuma":
   // yalnız İzmir'de 100 hizmet veren) ama katalogda hiç olmayan dini
   // hizmetler. Cenaze hizmetleri (gasil/kefen/defin) İNCELENDİ ama
@@ -1067,8 +1067,8 @@ const Map<String, List<String>> kGomuluKatalog = {
   'İlahi ve Dini Musiki': [
     'İlahi Okuma'
   ],
-  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — Armut'ta aktif, geleneksel bir
-  // zanaat (`armut.com/bicak-bileme`, `armut.com/makas-bileme`).
+  // ⚠ PAZAR ARAŞTIRMASIYLA EKLENDİ — aktif talep gören, geleneksel
+  // bir zanaat (bıçak bileme, makas bileme).
   // Hiçbir mevcut kategoriye doğal olarak oturmadığı için "Diğer
   // Hizmetler" çatısına eklendi.
   'Bileme ve Keskinleştirme Hizmetleri': [

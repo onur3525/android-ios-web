@@ -73,6 +73,7 @@ import 'screens/login_screen.dart';
 import 'screens/role_select_screen.dart';
 import 'data/controllers/region_controller.dart';
 import 'data/remote/api/region_api.dart';
+import 'data/remote/sertifika_sabitleme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/prelogin_listing_route.dart';
 import 'data/controllers/pending_listing_controller.dart';
@@ -150,6 +151,20 @@ class AppPorts {
 /// DATA_SOURCE=api → gerçek API portları; DATA_SOURCE=mock → bellek içi.
 AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
   final m = mode ?? ApiConfig.mode;
+  // ── ⚠ SERTİFİKA SABİTLEME SESSİZCE KAPALI KALAMAZ ──
+  //
+  // Pin verilmeden çıkılan bir RELEASE sürümünde sabitleme devre dışı
+  // kalır ve bunu hiçbir şey haber vermez. `API_BASE_URL` için zaten
+  // bir zorunluluk var (`ApiConfig.baseUrl` StateError fırlatır);
+  // aynı katılık pin için de gerekir.
+  //
+  // ⚠ YALNIZ GERÇEK API MODUNDA: mock derlemede sunucuya hiç
+  // bağlanılmaz, pin istemek anlamsız olurdu.
+  //
+  // ⚠ BURADA ÇAĞRILIR çünkü `buildPorts` hem uygulamanın hem
+  // testlerin tek giriş noktasıdır; başka bir yere konsa bir yol
+  // denetimi atlayabilirdi.
+  SertifikaSabitleme.pinDenetimi(gercekApi: m == DataSourceMode.api);
   final notifRepo = NotificationRepository();
   final chatRepo = ChatRepository();
   final reviewRepo = ReviewRepository();

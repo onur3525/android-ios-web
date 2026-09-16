@@ -16,6 +16,7 @@ import '../data/models/offer.dart';
 import 'offer_detail_screen.dart';
 import 'review_screen.dart';
 import 'widgets/foto_goruntuleyici.dart';
+import 'widgets/yanlis_taraf_kapisi.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
@@ -287,6 +288,27 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     // ⚠ Değerlendirme YAPILMIŞ MI — düğmenin görünürlüğü buna bağlı.
     final reviewCtl = context.watch<ReviewController>();
     final l = listingCtl.byId(widget.listingId);
+    // ── ⚠ YALNIZ İLAN SAHİBİ (12 Eyl, kullanıcı kuralı) ──
+    //
+    // "Kesinlikle kimse karşı tarafın ekranına yönlendirilmesin,
+    // erişemesin."
+    //
+    // Bu ekran hizmet ALANIN kendi ilan yönetim ekranıdır: gelen
+    // teklifler, "Teklifi Seç", silme menüsü, "Yorum Yaz". Sahiplik
+    // HİÇ denetlenmiyordu — "Teklifiniz seçildi" bildirimi hizmet
+    // vereni buraya düşürüyordu.
+    //
+    // ⚠ TEK SAVUNMA HATTI YÖNLENDİRME TABLOSU OLAMAZ: tablo
+    // düzeltildi ama yarın yeni bir `Navigator.push` aynı hatayı
+    // yapabilir. Kapı ekranın kendisinde.
+    //
+    // ⚠ SIRA ÖNEMLİ: önce "ilan var mı", sonra "benim mi". Ters
+    // sırada, silinmiş bir ilan için "size ait değil" denirdi.
+    if (l != null && l.ownerId != me.id) {
+      // ⚠ METİN GÖSTERİLMEZ (12 Eyl, kullanıcı kararı): sayfa
+      // sessizce kapanır, kullanıcı geldiği yerde kalır.
+      return const YanlisTarafKapisi();
+    }
     if (l == null) {
       return Scaffold(
         backgroundColor: RC.pageBg,

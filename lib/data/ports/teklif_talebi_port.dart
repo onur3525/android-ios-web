@@ -195,27 +195,29 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
 
   @override
   Future<DomainError?> reddet(String id, {String? gerekce}) async {
-    // ⚠ İŞLEM ÖNCESİ DURUM SAKLANIR — bildirim metni buna göre
-    // değişir. `beklemede` (teklif hiç verilmeden) iptal edilen bir
-    // talep için hizmet verene "Teklifiniz reddedildi" demek YANLIŞ
-    // olurdu — henüz hiç teklif vermemişti. Bkz. `_repo.reddet()`
-    // artık `beklemede` durumunu da kabul ediyor.
-    final oncekiDurum = _repo.byId(id)?.durum;
+    // ── ⚠ RED/İPTALDE BİLDİRİM GÖNDERİLMEZ (12 Eyl, kullanıcı
+    // isteği) ──
+    //
+    // Burada iki bildirim vardı ve ikisi de kaldırıldı:
+    //   · "Teklifiniz reddedildi" — hizmet veren sonucu zaten
+    //     görüyor; kart ve detay "Reddedildi" durumuna geçiyor.
+    //     Olumsuz haber ikinci kez, ansızın önüne çıkıyordu.
+    //   · "Talep iptal edildi" — teklif verilmeden iptal edilen
+    //     talepler için gidiyordu. Kullanıcı bunun da kalkmasını
+    //     istedi.
+    //
+    // ⚠ İŞLEM DEĞİŞMEDİ: `_repo.reddet` aynen çalışır, talep
+    // `reddedildi` durumuna geçer ve ekranlar bunu gösterir. Kalkan
+    // yalnız BİLDİRİMDİR.
+    //
+    // ⚠ İŞLEM ÖNCESİ DURUMU SAKLAMAYA ARTIK GEREK YOK: `oncekiDurum`
+    // ve `teklifVerilmisti` yalnız bildirim METNİNİ seçmek için
+    // vardı. Ölü bırakılsalardı, bildirim hâlâ gönderiliyormuş
+    // izlenimi verirlerdi.
+    //
+    // ⚠ `NotifType.teklifReddedildi` SİLİNMEDİ: geçmişte gönderilmiş
+    // bildirimler hâlâ o türle kayıtlı ve yönlendirmesi duruyor.
     _repo.reddet(id, gerekce: gerekce);
-    final t = _repo.byId(id);
-    if (t != null && t.durum == TeklifTalebiDurumu.reddedildi) {
-      final teklifVerilmisti = oncekiDurum == TeklifTalebiDurumu.teklifGeldi;
-      // ⚠ HİZMET VERENE — teklifi reddedildi / talebi iptal edildi.
-      notifs?.push(
-          userId: t.saglayiciId,
-          type: NotifType.teklifReddedildi,
-          refId: t.id,
-          title: teklifVerilmisti ? 'Teklifiniz reddedildi' : 'Talep iptal edildi',
-          body: teklifVerilmisti
-              ? '"${t.hizmet}" için verdiğiniz teklif reddedildi.'
-              : '"${t.hizmet}" için gönderdiğiniz talep, hizmet alan '
-                  'tarafından iptal edildi.');
-    }
     return null;
   }
 
@@ -274,8 +276,11 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
           userId: aliciId,
           type: NotifType.teklifYeniMesaj,
           refId: t.id,
-          title: 'Yeni mesaj',
-          body: metin ?? 'Fotoğraf gönderildi.');
+          // ⚠ METİN ORTAK KAYNAKTAN (12 Eyl): ilan akışı aynı olayı
+          // "Yeni mesajınız var" / "Sohbette yeni bir mesaj aldınız."
+          // diye anlatıyordu. Başlık ve gövde artık tek yerde.
+          title: kYeniMesajBaslik,
+          body: yeniMesajGovde(metin));
     }
     return null;
   }

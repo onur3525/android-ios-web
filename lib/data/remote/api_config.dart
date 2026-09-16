@@ -84,9 +84,32 @@ abstract final class ApiConfig {
 
   static bool get useRealApi => mode == DataSourceMode.api;
 
-  /// WebSocket kökü — mesajlaşma paketi bu adresi kullanacak.
-  static String get wsUrl =>
-      baseUrl.replaceFirst(RegExp(r'^http'), 'ws').replaceFirst(RegExp(r'/api/v1/?$'), '') + '/ws';
+  /// WebSocket kökü — mesajlaşma bağlantısı bu adresi kullanır.
+  ///
+  /// ── ⚠ RELEASE'TE `wss://` ZORUNLU ──
+  ///
+  /// Adres `baseUrl`den türetilir ve `baseUrl` release'te zaten
+  /// `https://` şartına bağlıdır. Ama türetme bir dize değiştirmesidir:
+  /// ileride `baseUrl` kuralı gevşerse ya da adres beklenmedik bir
+  /// biçimde gelirse sonuç sessizce `ws://` olabilirdi. Sohbet
+  /// trafiğinde access token ve kişisel veri taşınır; şifresiz
+  /// bağlantı kabul edilemez.
+  ///
+  /// ⚠ DEBUG'TA `ws://` SERBEST: geliştirme sunucusu (10.0.2.2) TLS
+  /// sunmaz.
+  static String get wsUrl {
+    final u = baseUrl
+            .replaceFirst(RegExp(r'^http'), 'ws')
+            .replaceFirst(RegExp(r'/api/v1/?$'), '') +
+        '/ws';
+    if (kReleaseMode && !u.startsWith('wss://')) {
+      throw StateError(
+        'RELEASE derlemede WebSocket adresi wss:// ile başlamalıdır. '
+        'Üretilen: $u',
+      );
+    }
+    return u;
+  }
 
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 20);

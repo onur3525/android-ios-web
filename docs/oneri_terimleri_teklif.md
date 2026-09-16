@@ -34,7 +34,7 @@
 
 ## KAYNAK
 
-- **Araştırma:** Armut, Sahibinden hizmet sayfaları ve saha firmalarının
+- **Araştırma:** Sektördeki hizmet sayfaları ve saha firmalarının
   hizmet listeleri (Doğalgaz turunda ayrıntılı tarandı).
 - **Bilgi:** kalan kategorilerde İzmir/Türkiye'de yaygın kullanılan
   halk dili ifadeleri.
@@ -64,7 +64,7 @@ bağlanacağı belirsiz, kapsam dışı olabilir ya da başka kategoriyle
 | Taşınma Temizliği | taşınma öncesi temizlik, taşınma sonrası temizlik, eve girmeden temizlik |
 | Cam Temizliği | cam silme, cam silici, dış cephe cam temizliği, vitrin temizliği, cephe cam silme |
 
-⚠ **Ütü / çamaşır** — Armut'ta ayrı hizmet. Bizde karşılığı yok;
+⚠ **Ütü / çamaşır** — sektörde ayrı bir hizmet. Bizde karşılığı yok;
 "Ev Temizliği"ne bağlansın mı?
 
 ---

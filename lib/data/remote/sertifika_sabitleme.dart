@@ -41,7 +41,19 @@ abstract final class SertifikaSabitleme {
   /// Sabitleme etkin mi?
   static bool get etkin => pinler.isNotEmpty;
 
-  /// Sertifikanın SHA-256 özeti (base64) — DER kodlu tam sertifika.
+  /// Sertifikanın SHA-256 özeti (base64) — DER kodlu TAM SERTİFİKA.
+  ///
+  /// ── ⚠ NİÇİN SPKI DEĞİL TAM SERTİFİKA ──
+  ///
+  /// Yaygın pratik, açık anahtarı (SPKI) pinlemektir: sertifika aynı
+  /// anahtarla yenilendiğinde pin kırılmaz. Ancak Dart'ın
+  /// `X509Certificate` sınıfı YALNIZ `der` alanını verir; SPKI'yi
+  /// çıkarmak için ASN.1 çözümleyicisi yazmak ya da yeni bir paket
+  /// eklemek gerekir. Doğrulanamayan bir ASN.1 çözümleyicisini
+  /// güvenlik yoluna koymak, kazandırdığından çok riski getirir.
+  ///
+  /// ⚠ BEDELİ: sertifika yenilendiğinde pin DEĞİŞİR. Bu yüzden
+  /// yedek pin zorunlu tutulur (`pinDenetimi`).
   static String ozet(X509Certificate sertifika) =>
       base64.encode(sha256.convert(sertifika.der).bytes);
 
@@ -51,51 +63,94 @@ abstract final class SertifikaSabitleme {
 
   /// Sabitlemeli `HttpClient` üretir.
   ///
-  /// ⚠ `badCertificateCallback` YALNIZ sistem doğrulaması BAŞARISIZ
-  /// olduğunda çağrılır. Bu yüzden sabitleme oraya konamaz — geçerli
-  /// ama sahte bir zincir hiç uğramadan geçerdi. Doğru yer
-  /// `connectionFactory` değil, bağlantı kurulduktan sonra sertifikayı
-  /// okumaktır; `HttpClient` bunu `badCertificateCallback` dışında
-  /// vermez.
+  /// ── ⚠ ÖNCEKİ UYGULAMA GERÇEK SABİTLEME YAPMIYORDU ──
   ///
-  /// ⚠ BU YÜZDEN: sabitleme, sistem doğrulamasını GEÇEN sertifikalar
-  /// için `dart:io` katmanında yapılamaz. Uygulanan yaklaşım, sistem
-  /// doğrulamasına ek olarak pin denetimini `badCertificateCallback`
-  /// ile birleştirmektir:
-  ///   • sistem doğrulaması geçti  → pin denetimi `dogrula` ile
-  ///     istek katmanında yapılır
-  ///   • sistem doğrulaması geçmedi → pin tutuyorsa kabul edilir
-  ///     (kendi CA'sını tanımayan cihazlar için)
+  /// `badCertificateCallback` YALNIZ sistem doğrulaması BAŞARISIZ
+  /// olduğunda çağrılır. Pin denetimi oraya konduğunda, cihaza kök
+  /// sertifika yükleyebilen saldırganın ürettiği zincir sistem
+  /// doğrulamasını GEÇİYOR, geri çağrı hiç tetiklenmiyor ve pin
+  /// listesine BAKILMADAN bağlantı kuruluyordu. Yani sabitleme, tam
+  /// da korumak için var olduğu tehdide karşı etkisizdi.
+  ///
+  /// ── ⚠ ÇÖZÜM: SİSTEM KÖK DEPOSU DEVRE DIŞI ──
+  ///
+  /// `SecurityContext(withTrustedRoots: false)` ile hiçbir kök
+  /// sertifika güvenilmez sayılır. Sonuç:
+  ///   • Her zincir doğrulamayı başarısız sayar,
+  ///   • `badCertificateCallback` HER BAĞLANTIDA çağrılır,
+  ///   • karar TEK BAŞINA pin listesine kalır.
+  ///
+  /// Cihaza yüklenen kök sertifika artık işe yaramaz: güven deposu
+  /// hiç okunmuyor. Bu, `dart:io` ile connection-level sabitlemenin
+  /// bilinen ve belgelenmiş yoludur.
+  ///
+  /// ⚠ BEDELİ BİLİNÇLİ: pin verilmiş bir sürümde SADECE pinlenen
+  /// sertifika çalışır. Sertifika yenilenmeden önce yeni pin
+  /// dağıtılmazsa uygulama tamamen bağlanamaz hâle gelir — bu yüzden
+  /// en az iki pin zorunludur (bkz. `pinDenetimi`).
+  ///
+  /// ⚠ HOSTNAME DOĞRULAMASI: pin TAM SERTİFİKANIN özetidir; belirli
+  /// bir sertifikayı kabul etmek, o sertifikanın ait olduğu alan adına
+  /// bağlanmak demektir. Ayrıca `host` denetlenmez çünkü sertifikanın
+  /// kendisi zaten tek ve sabittir.
+  ///
+  /// ⚠ PIN YOKSA DAVRANIŞ DEĞİŞMEZ: normal sistem doğrulaması
+  /// geçerlidir. Release'te bunun sessizce olmaması için
+  /// `pinDenetimi` ayrıca çağrılır.
   static HttpClient istemci() {
     final c = HttpClient();
     if (!etkin) {
       return c;
     }
-    c.badCertificateCallback = (sertifika, host, port) {
+    // ⚠ GÜVEN DEPOSU BOŞ: sistem CA'ları devre dışı.
+    final sabitli = HttpClient(context: SecurityContext(withTrustedRoots: false));
+    sabitli.badCertificateCallback = (sertifika, host, port) {
       final tamam = kabulEdilir(sertifika);
       if (!tamam && kDebugMode) {
         debugPrint('SERTIFIKA_PIN_TUTMADI host=$host');
       }
       return tamam;
     };
-    return c;
+    return sabitli;
   }
 
-  /// Kurulmuş bir bağlantının sertifikasını doğrular.
+  /// ── ⚠ RELEASE'TE SESSİZ FAIL-OPEN YASAK ──
   ///
-  /// ⚠ Sistem doğrulamasını geçen sertifikalar da bu kapıdan geçer;
-  /// aksi hâlde saldırganın cihaza yüklediği güvenilir kök işe yarardı.
+  /// Pin verilmeden çıkılan bir sürümde sabitleme kapalıdır ve bunu
+  /// hiçbir şey haber vermez. `API_BASE_URL` için zaten bir zorunluluk
+  /// var (`ApiConfig.baseUrl`); aynı katılık pin için de gerekir.
   ///
-  /// Sabitleme kapalıysa her zaman `true` döner.
-  static bool dogrula(X509Certificate? sertifika) {
-    if (!etkin) {
-      return true;
+  /// ⚠ YALNIZ GERÇEK API MODUNDA: mock derlemede sunucuya hiç
+  /// bağlanılmaz, pin istemek anlamsız olur.
+  ///
+  /// ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiği an
+  /// uygulamayı tamamen çalışmaz hâle getirir. Yedek pin (sonraki
+  /// sertifikanın anahtarı) zorunludur.
+  static void pinDenetimi({required bool gercekApi}) {
+    if (!kReleaseMode || !gercekApi) {
+      return;
     }
-    if (sertifika == null) {
-      // ⚠ Sertifika okunamıyorsa GÜVENME: sabitleme açıkken belirsizlik
-      // reddedilir.
-      return false;
+    if (pinler.isEmpty) {
+      throw StateError(
+        'RELEASE derlemede CERT_PINS zorunludur: '
+        '--dart-define=CERT_PINS=<mevcut>,<yedek>',
+      );
     }
-    return kabulEdilir(sertifika);
+    if (pinler.length < 2) {
+      throw StateError(
+        'CERT_PINS en az İKİ pin içermelidir (mevcut + yedek). '
+        'Tek pinli sürüm, sertifika yenilendiğinde uygulamayı '
+        'tamamen çalışmaz hâle getirir.',
+      );
+    }
   }
+
+  // ── ⚠ `dogrula()` KALDIRILDI ──
+  //
+  // Sistem doğrulamasını geçen sertifikalar için istek katmanında pin
+  // denetimi yapması amaçlanmıştı ama HİÇBİR YERDEN ÇAĞRILMIYORDU;
+  // ölü koddu ve "pinning var" izlenimi veriyordu. Denetim artık
+  // bağlantı kurulurken, `badCertificateCallback` üzerinden ve boş
+  // güven deposuyla yapılıyor — istek katmanında ek bir kapıya gerek
+  // kalmadı.
 }

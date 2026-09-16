@@ -774,11 +774,20 @@ class MockContactPort extends ContactPort {
       return null;
     }
 
-    final other = actorId == o.providerId ? l.ownerId : o.providerId;
-    notifs?.push(
-        userId: other, type: NotifType.contactOpened, refId: o.id,
-        title: 'İletişim açıldı',
-        body: '"${l.title}" için iletişim bilgileri iki taraf için de açıldı.');
+    // ── ⚠ "İletişim açıldı" BİLDİRİMİ KALDIRILDI (12 Eyl, kullanıcı
+    // isteği) ──
+    //
+    // Haber değeri düşüktü: iletişimi açan taraf zaten ne yaptığını
+    // biliyor, karşı taraf da ekranda telefon numarasını ve mesaj
+    // düğmesini görüyor. Üstelik karşılıklı yazışma başlayınca ilk
+    // mesaj bildirimi aynı şeyi zaten haber veriyordu.
+    //
+    // ⚠ İLETİŞİMİ AÇMA İŞLEMİ DEĞİŞMEDİ: `contacts.open` ve
+    // idempotentlik aynen çalışır — kalkan yalnız BİLDİRİM.
+    //
+    // ⚠ `NotifType.contactOpened` SİLİNMEDİ: geçmişte gönderilmiş
+    // bildirimler hâlâ o türle kayıtlı ve yönlendirmesi duruyor; tür
+    // kalkarsa eski kayıtlar çözümlenemez.
     return null;
   }
 }
@@ -828,7 +837,9 @@ class MockChatPort extends ChatPort {
     if (o == null) {
       return null;
     }
-    return chats.threadFor(offerId, firstNote: o.note, providerId: o.providerId);
+    // ⚠ NOT ARTIK MESAJ OLARAK EKLENMEZ (12 Eyl): sohbet boş başlar.
+    // Teklif notu kartta kendi başlığıyla duruyor.
+    return chats.threadFor(offerId);
   }
 
   @override
@@ -893,7 +904,9 @@ class MockChatPort extends ChatPort {
     chats.setStatus(offerId, m.id, MessageStatus.sent);
     notifs?.push(
         userId: a.otherId!, type: NotifType.newMessage, refId: offerId,
-        title: 'Yeni mesajınız var', body: 'Sohbette yeni bir mesaj aldınız.');
+        // ⚠ METİN ORTAK KAYNAKTAN (12 Eyl): Bul akışı aynı olayı
+        // farklı bir dille anlatıyordu.
+        title: kYeniMesajBaslik, body: yeniMesajGovde(text));
     return (message: m, error: null);
   }
 

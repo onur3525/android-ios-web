@@ -21,15 +21,43 @@
 	<!-- image_picker: seçilen fotoğrafın düzenlenmiş halini kaydetme -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Düzenlenen fotoğrafı galerinize kaydetmek için izin gerekir.</string>
-	<!-- flutter_secure_storage: Keychain erişimi biyometri ile korunabilir -->
-	<key>NSFaceIDUsageDescription</key>
-	<string>Oturum bilgilerinizi güvenle saklamak için Face ID kullanılır.</string>
-	<!-- connectivity_plus: yerel ağ durumu okuma (iOS 14+) -->
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Bağlantı durumunu denetlemek için yerel ağ bilgisi kullanılır.</string>
+	<!-- ⚠ NSFaceIDUsageDescription KALDIRILDI.
+	     Gerekçe olarak flutter_secure_storage yazılmıştı; ancak token
+	     deposu KeychainAccessibility.first_unlock ile açılır, biyometri
+	     KULLANMAZ ve projede local_auth paketi YOKTUR. Gerekçesiz izin
+	     açıklaması hem App Store incelemesinde sorulur hem kullanıcıya
+	     yanlış sinyal verir. -->
+	<!-- ⚠ NSLocalNetworkUsageDescription KALDIRILDI.
+	     Gerekçe olarak connectivity_plus yazılmıştı; o paket ağ yolu
+	     durumunu (NWPathMonitor) okur, Bonjour/multicast yapmaz ve bu
+	     izni istemez. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array><string>UIInterfaceOrientationPortrait</string></array>
 	<!-- Harici uygulama açma izinleri: mağaza ve ödeme sayfası. -->
+	<!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: URL ŞEMASI ──
+	     `hizmetcep://payment/return?session=<id>` adresinin iOS'ta
+	     uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır; kayıt
+	     yoktu, yani deep link iOS'ta hiç çalışmıyordu.
+
+	     ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı şemayı
+	     kaydedebilir ve geri dönüşü çalabilir. Kalıcı çözüm Universal
+	     Links'tir (Associated Domains + apple-app-site-association);
+	     o, doğrulanmış alan adı gerektirir ve web tarafı hazır
+	     olduğunda eklenmelidir.
+
+	     ⚠ GÜVENLİK BUNA DAYANMAZ: geri dönüş adresi yalnız `session`
+	     kimliği taşır. `success=true` gibi bir parametre gelse bile
+	     ödeme kanıtı SAYILMAZ; sonuç her zaman backend `confirmTopup`
+	     ile doğrulanır (bkz. `core/deep_links.dart`). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>CFBundleURLName</key><string>com.hizmetcep.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>hizmetcep</string></array>
+		</dict>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>

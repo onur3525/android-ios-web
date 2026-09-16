@@ -442,13 +442,49 @@ workflows:
     instance_type: linux_x2
     max_build_duration: 60
     environment:
-      flutter: stable
+      # ⚠ SÜRÜM SABİT: `stable` her koşuda farklı bir Flutter çözebilir.
+      # Yeniden üretilebilir derleme için sürüm çivilenir. Yükseltme
+      # BİLİNÇLİ bir adım olmalıdır.
+      flutter: 3.27.1
       java: 17
     triggering:
       events: []
     scripts:
+      - name: Sürüm öncesi zorunlu tanım denetimi
+        script: |
+          # ── ⚠ SESSİZ FAIL-OPEN YASAK ──
+          #
+          # `KEYSTORE_B64` için zaten bir kontrol vardı. Ama
+          # `CERT_PINS` ve `APK_SIGNATURE_SHA256` boş geçildiğinde
+          # derleme SESSİZCE devam ediyor, sabitleme ve imza denetimi
+          # kapalı bir sürüm üretiliyordu. Dart tarafı da bunları
+          # boşsa devre dışı bırakacak şekilde yazılmış (bilinçli
+          # fail-open) — dolayısıyla tek savunma hattı BURASI.
+          #
+          # ⚠ `API_BASE_URL` DART TARAFINDA DA ZORUNLU: orada
+          # StateError fırlıyor. Burada erken yakalamak, 40 dakikalık
+          # bir derlemeden sonra çökmeyi önler.
+          eksik=""
+          [ -z "$API_BASE_URL" ]         && eksik="$eksik API_BASE_URL"
+          [ -z "$CERT_PINS" ]            && eksik="$eksik CERT_PINS"
+          [ -z "$APK_SIGNATURE_SHA256" ] && eksik="$eksik APK_SIGNATURE_SHA256"
+          if [ -n "$eksik" ]; then
+            echo "Sürüm derlemesi için zorunlu tanımlar eksik:$eksik"
+            exit 1
+          fi
+          # ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiğinde
+          # uygulamayı tamamen çalışmaz hâle getirir.
+          case "$CERT_PINS" in
+            *,*) : ;;
+            *) echo "CERT_PINS en az iki pin içermelidir (mevcut,yedek)."; exit 1 ;;
+          esac
+          # ⚠ DEĞERLER LOGA BASILMAZ: yalnız varlık/biçim denetlenir.
+          echo "Zorunlu tanımlar tamam."
+
       - name: Bağımlılıklar
-        script: flutter pub get
+        # ⚠ KİLİT DOSYASINA UYULUR: lock'ta olmayan sürüm çözülemez.
+        # `pubspec.lock` depoda yoksa bu komut HATA verir — bilerek.
+        script: flutter pub get --enforce-lockfile
       - name: İmzalama anahtarı
         script: |
           # ⚠ ANAHTAR DEPODA DURMAZ. CI'da gizli değişkenlerden yazılır.

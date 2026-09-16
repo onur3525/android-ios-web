@@ -53,6 +53,40 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
+            <!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: DERİN BAĞLANTI ──
+                 `hizmetcep://payment/return?session=<id>` adresinin
+                 uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır.
+                 Kayıt yoktu: `MainActivity` deep link kodu, DeepLinks
+                 sınıfı ve platform kanalı hazır olmasına rağmen
+                 Android işletim sistemi bağlantıyı bu uygulamaya hiç
+                 yönlendirmiyordu.
+
+                 ⚠ `autoVerify` YOK, çünkü bu bir custom scheme'dir;
+                 doğrulama yalnız https App Links için geçerlidir.
+
+                 ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı
+                 şemayı kaydedip geri dönüşü yakalayabilir. Kalıcı
+                 çözüm https App Links'tir (autoVerify + assetlinks.json);
+                 doğrulanmış alan adı gerektirir ve web tarafı hazır
+                 olduğunda eklenmelidir.
+
+                 ⚠ GÜVENLİK BUNA DAYANMAZ: adres yalnız `session`
+                 kimliği taşır. `success=true` gibi bir parametre gelse
+                 bile ödeme kanıtı SAYILMAZ; sonuç her zaman backend
+                 `confirmTopup` ile doğrulanır (bkz.
+                 `core/deep_links.dart`). Bağlantı ayrıca idempotenttir
+                 (`markHandled`).
+
+                 ⚠ `exported` ZATEN true: Activity launcher olduğu için
+                 dışa açıktır; bu filtre yeni bir yüzey açmaz, var olan
+                 Activity'ye bir giriş yolu ekler. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="hizmetcep" android:host="payment"/>
+            </intent-filter>
+
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2"/>
     </application>

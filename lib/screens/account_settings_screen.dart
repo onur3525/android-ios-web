@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
+import '../core/oturum_temizligi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -158,9 +159,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       //
       // `OturumTercihi().temizle()` diskten okur; o sırada widget
       // ağaçtan kalkabilir ve `context.read` çöker.
-      final auth = context.read<AuthController>();
+      // ⚠ YEREL KULLANICI VERİSİ DE SİLİNİR — bkz.
+      // `core/oturum_temizligi.dart`.
+      final kapat = oturumuKapat(context);
       await OturumTercihi().temizle();
-      await auth.logout();
+      await kapat;
       if (!mounted) {
         return;
       }
@@ -223,9 +226,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // dolaşmaya devam etmez. Talebini iptal etmek isterse tekrar
       // giriş yapıp bu ekrandan iptal edebilir (hesap henüz
       // silinmediği için giriş çalışır).
-      final auth = context.read<AuthController>();
+      // ⚠ YEREL KULLANICI VERİSİ DE SİLİNİR — bkz.
+      // `core/oturum_temizligi.dart`.
+      final kapat = oturumuKapat(context);
       await OturumTercihi().temizle();
-      await auth.logout();
+      await kapat;
       if (!mounted) {
         return;
       }

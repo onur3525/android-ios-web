@@ -274,6 +274,25 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
       if (ref == null || ref.isEmpty) {
         throw StateError('storageRef alınamadı');
       }
+      // ── ⚠ EKSİK ADIM TAMAMLANDI: DOSYA GERÇEKTEN YÜKLENİR ──
+      //
+      // Önceden yalnız referans alınıyor, dosyanın baytları hiçbir
+      // yere gönderilmiyordu. Kullanıcı "yüklendi" görüyor, karşı
+      // taraf boş görüyordu.
+      //
+      // ⚠ BAŞARISIZLIKTA `storageRef` KAYDEDİLMEZ: `uploadBytes`
+      // istisna fırlatırsa aşağıdaki `catch` çalışır, fotoğraf
+      // "Yüklenemedi" olarak işaretlenir. Başarılı gibi davranmak,
+      // ilanın fotoğrafsız yayınlanmasına yol açardı.
+      final uploadUrl = res['uploadUrl'] as String?;
+      if (uploadUrl == null || uploadUrl.isEmpty) {
+        throw StateError('uploadUrl alınamadı');
+      }
+      await widget.storage.uploadBytes(
+        uploadUrl: uploadUrl,
+        bytes: await File(p.localPath).readAsBytes(),
+        contentType: p.contentType,
+      );
       if (!mounted) {
         return;
       }

@@ -411,11 +411,30 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           sizeBytes: await File(foto.localPath).length(),
         );
         final ref = res['storageRef'] as String? ?? res['ref'] as String?;
-        if (ref != null && ref.isNotEmpty) {
+        final uploadUrl = res['uploadUrl'] as String?;
+        // ── ⚠ EKSİK ADIM TAMAMLANDI ──
+        //
+        // Önceden yalnız referans alınıyor, dosyanın baytları hiçbir
+        // yere gönderilmiyordu; ilan "fotoğraflı" kaydediliyor ama
+        // dosya sunucuda hiç olmuyordu.
+        //
+        // ⚠ YÜKLEME BAŞARISIZSA REFERANS EKLENMEZ: aşağıdaki `catch`
+        // devreye girer ve o fotoğraf listeye girmez. Var olmayan bir
+        // dosyanın referansını kaydetmek, ekranlarda kırık görsel
+        // üretirdi.
+        if (ref != null && ref.isNotEmpty &&
+            uploadUrl != null && uploadUrl.isNotEmpty) {
+          await _storageApi.uploadBytes(
+            uploadUrl: uploadUrl,
+            bytes: await File(foto.localPath).readAsBytes(),
+            contentType: foto.contentType,
+          );
           refs.add(ref);
         }
       } catch (_) {
-        // Fotoğraf yüklenemezse ilan yine de yayınlanır.
+        // ⚠ Fotoğraf yüklenemezse ilan yine de yayınlanır — mevcut
+        // ürün davranışı KORUNDU. Değişen tek şey: artık gerçekten
+        // yüklenmeyen fotoğrafın referansı da kaydedilmiyor.
       }
     }
     final r = await listingCtl.publish(

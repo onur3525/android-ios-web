@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/validators.dart';
+import '../core/oturum_temizligi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../data/services/share_service.dart';
@@ -385,9 +386,12 @@ class ProfileScreen extends StatelessWidget {
     // daha otomatik giriş YAPMAMALIDIR; aksi hâlde çıkış
     // düğmesi hiçbir işe yaramaz.
     // ⚠ CONTROLLER `await`'TEN ÖNCE ALINIR — bkz. `account_settings`.
-    final auth = c.read<AuthController>();
+    // ⚠ YEREL KULLANICI VERİSİ DE SİLİNİR — bkz.
+    // `core/oturum_temizligi.dart`. Token dışındaki kutular (incelenen
+    // ilanlar, ilan taslağı) cihazda kalıp sonraki hesaba görünüyordu.
+    final kapat = oturumuKapat(c);
     await OturumTercihi().temizle();
-    await auth.logout();
+    await kapat;
     if (!c.mounted) {
       return;
     }

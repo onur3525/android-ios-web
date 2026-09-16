@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import 'teklif_talebi_sohbet_screen.dart';
-import 'offer_detail_screen.dart';
 import 'chat_screen.dart';
+import 'job_detail_screen.dart';
+import '../data/controllers/offer_controller.dart';
+import '../data/controllers/listing_controller.dart';
 import 'listing_detail_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
 import 'widgets/hata_gosterimi.dart';
@@ -204,15 +206,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       // ── HİZMET ALANIN İLANINA ──
       //
-      // "Yeni teklif aldınız" ve "teklifiniz seçildi" ilan sahibine
-      // gider; ilan detayında gelen teklifler listelenir.
+      // "Yeni teklif aldınız" ilan SAHİBİNE gider; ilan detayında
+      // gelen teklifler listelenir.
       case NotifType.newOffer:
-      case NotifType.offerSelected:
         if (gecerli) {
           Navigator.push(
               context,
               MaterialPageRoute<void>(
                   builder: (_) => ListingDetailScreen(listingId: ilan)));
+        }
+
+      // ── ⚠ HİZMET VERENİN İŞ EKRANINA (12 Eyl düzeltmesi) ──
+      //
+      // "Teklifiniz seçildi" bildirimi HİZMET VERENE gider
+      // (`mock_ports`: `userId: chosen.providerId`). Buradaki dal onu
+      // `newOffer` ile aynı kutuya koyup `ListingDetailScreen`e
+      // gönderiyordu — yani hizmet vereni, hizmet alanın kendi ilan
+      // YÖNETİM ekranına düşürüyordu: gelen teklifler, "Teklifi Seç",
+      // silme menüsü, "Yorum Yaz".
+      //
+      // ⚠ İKİ BİLDİRİM AYNI `refId`yi TAŞIR (ilan id'si) ama AYRI
+      // TARAFA gider. Aynı `case` kutusunda toplanmaları bu farkı
+      // gizliyordu.
+      case NotifType.offerSelected:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => JobDetailScreen(listingId: ilan)));
         }
 
       // ── ⚠ MESAJ BİLDİRİMİ DOĞRUDAN SOHBETE GİDER (12 Eyl,
@@ -235,22 +256,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   builder: (_) => ChatScreen(offerId: ilan)));
         }
 
-      // ── HİZMET VERENİN İŞ DETAYINA ──
+      // ── ⚠ `contactOpened` ALICIYA GÖRE DALLANIR (12 Eyl
+      // düzeltmesi) ──
       //
-      // ⚠ `contactOpened` AYRI KALDI: orada haber "telefon numarası
-      // artık görünüyor"dur, sohbet değil. İş detayı hem numarayı hem
-      // mesaj düğmesini gösterir.
+      // Bu bildirim KARŞI TARAFA gider ve karşı taraf HER İKİ ROL DE
+      // olabilir: iletişimi hizmet veren açtıysa ilan sahibine,
+      // hizmet alan açtıysa hizmet verene gider
+      // (`mock_ports`: `actorId == o.providerId ? l.ownerId : o.providerId`).
       //
-      // ⚠ Bu bildirimin `refId`si de TEKLİF id'sidir; iş detayı ilan
-      // id'si ister. Teklif üzerinden ilana ulaşmak bu ekranın işi
-      // değil — bildirim teklif detayına gönderilir, orada iletişim
-      // kutuları zaten var.
+      // Tek bir hedefe göndermek taraflardan birini daima yanlış
+      // ekrana düşürüyordu. Hedef, bildirimi AÇAN kişiye göre değil,
+      // OKUYAN kişiye göre seçilir.
+      //
+      // ⚠ `refId` TEKLİF id'sidir; ilan id'si teklif üzerinden
+      // bulunur. Teklif ya da ilan okunamazsa hiçbir yere gidilmez —
+      // yanlış ekran açmaktansa bildirim sessiz kalır.
       case NotifType.contactOpened:
         if (gecerli) {
-          Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (_) => OfferDetailScreen(offerId: ilan)));
+          final me = context.read<AuthController>().currentAccount;
+          final teklif = context.read<OfferController>().byId(ilan);
+          final l = teklif == null
+              ? null
+              : context.read<ListingController>().byId(teklif.listingId);
+          if (me != null && l != null) {
+            Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => l.ownerId == me.id
+                        // Okuyan ilan sahibi → kendi ilan ekranı.
+                        ? ListingDetailScreen(listingId: l.id)
+                        // Okuyan hizmet veren → kendi iş ekranı.
+                        : JobDetailScreen(listingId: l.id)));
+          }
         }
 
       // ── DOĞRUDAN TEKLİF TALEBİ DETAYINA ──

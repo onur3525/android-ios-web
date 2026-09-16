@@ -150,7 +150,100 @@ void main() {
     });
   });
 
-  group('5 — ⚠ İKİ AKIŞ AYNI OLAYI AYNI ANLATIR', () {
+  group('5 — ⚠ MESAJ BİLDİRİMİ: TEK DİL', () {
+    // ── ⚠ ÜRÜN KARARI (12 Eyl, kullanıcı) ──
+    //
+    // "Mesaj bildirimlerini aynı dille yap, birleştir."
+    //
+    // İki port aynı olayı iki ayrı biçimde anlatıyordu:
+    //   · ilan akışı → "Yeni mesajınız var" / "Sohbette yeni bir
+    //                   mesaj aldınız."
+    //   · Bul akışı  → "Yeni mesaj" / mesajın kendisi
+
+    test('başlık ve gövde ortak kaynakta', () {
+      expect(kYeniMesajBaslik, 'Yeni mesaj');
+      expect(yeniMesajGovde('yarın uygun musunuz'), 'yarın uygun musunuz');
+    });
+
+    test('⚠ GÖVDE MESAJIN İÇERİĞİDİR', () {
+      // "Sohbette yeni bir mesaj aldınız." hiçbir şey söylemiyordu;
+      // kullanıcı ne geldiğini görmek için sohbeti açmak zorundaydı.
+      expect(yeniMesajGovde(null), 'Fotoğraf gönderildi.');
+      expect(yeniMesajGovde('   '), 'Fotoğraf gönderildi.',
+          reason: 'boş metin fotoğraf sayılmalı');
+    });
+
+    test('iki port da ortak metni kullanır', () {
+      for (final yol in const [
+        'lib/data/ports/mock_ports.dart',
+        'lib/data/ports/teklif_talebi_port.dart',
+      ]) {
+        final k = _kod(yol);
+        expect(k.contains('title: kYeniMesajBaslik'), isTrue, reason: yol);
+        expect(k.contains('yeniMesajGovde('), isTrue, reason: yol);
+      }
+      final m = _kod('lib/data/ports/mock_ports.dart');
+      expect(m.contains('Yeni mesajınız var'), isFalse);
+      expect(m.contains('Sohbette yeni bir mesaj'), isFalse);
+    });
+  });
+
+  group('6 — ⚠ KALDIRILAN BİLDİRİMLER', () {
+    test('"İletişim açıldı" gönderilmez', () {
+      // Haber değeri düşüktü: açan taraf ne yaptığını biliyor, karşı
+      // taraf ekranda numarayı ve mesaj düğmesini görüyor.
+      final m = _kod('lib/data/ports/mock_ports.dart');
+      expect(m.contains("title: 'İletişim açıldı'"), isFalse);
+      expect(m.contains('NotifType.contactOpened'), isFalse);
+    });
+
+    test('⚠ İLETİŞİMİ AÇMA İŞLEMİ DEĞİŞMEDİ', () {
+      // Kalkan yalnız bildirimdir.
+      final m = _kod('lib/data/ports/mock_ports.dart');
+      expect(m.contains('contacts.open(offerId)'), isTrue);
+    });
+
+    test('⚠ RED/İPTALDE HİÇ BİLDİRİM GÖNDERİLMEZ', () {
+      // İki bildirim de kaldırıldı (12 Eyl, kullanıcı isteği):
+      //   · "Teklifiniz reddedildi" — hizmet veren sonucu zaten
+      //     görüyor; kart ve detay "Reddedildi" durumuna geçiyor.
+      //   · "Talep iptal edildi" — teklif verilmeden iptal edilen
+      //     talepler için gidiyordu.
+      final t = _kod('lib/data/ports/teklif_talebi_port.dart');
+      expect(t.contains("title: 'Teklifiniz reddedildi'"), isFalse);
+      expect(t.contains("title: 'Talep iptal edildi'"), isFalse);
+      // ⚠ Bu tür artık hiçbir yerde ÜRETİLMEZ.
+      expect(t.contains('NotifType.teklifReddedildi'), isFalse);
+    });
+
+    test('⚠ RED İŞLEMİNİN KENDİSİ DEĞİŞMEDİ', () {
+      // Kalkan yalnız bildirimdir; talep `reddedildi` durumuna
+      // geçmeye devam eder ve ekranlar bunu gösterir.
+      final t = _kod('lib/data/ports/teklif_talebi_port.dart');
+      expect(t.contains('_repo.reddet(id, gerekce: gerekce)'), isTrue);
+    });
+
+    test('⚠ ÖLÜ DEĞİŞKEN BIRAKILMADI', () {
+      // `oncekiDurum` ve `teklifVerilmisti` yalnız bildirim METNİNİ
+      // seçmek için vardı. Ölü kalsalardı bildirim hâlâ
+      // gönderiliyormuş izlenimi verirlerdi.
+      final t = _kod('lib/data/ports/teklif_talebi_port.dart');
+      expect(t.contains('teklifVerilmisti'), isFalse);
+    });
+
+    test('⚠ BİLDİRİM TÜRLERİ SİLİNMEDİ', () {
+      // Geçmiş kayıtlar hâlâ bu türlerle kayıtlı; tür kalkarsa eski
+      // bildirimler çözümlenemez ve yönlendirmeleri kırılır.
+      // ⚠ İKİSİ DE ARTIK ÜRETİLMİYOR ama TÜR olarak duruyor: geçmişte
+      // gönderilmiş bildirimler bu türlerle kayıtlı ve
+      // yönlendirmeleri çalışıyor.
+      final n = _kod('lib/data/models/notification.dart');
+      expect(n.contains('contactOpened'), isTrue);
+      expect(n.contains('teklifReddedildi'), isTrue);
+    });
+  });
+
+  group('7 — ⚠ İKİ AKIŞ AYNI OLAYI AYNI ANLATIR', () {
     test('ilan akışı ilan başlığını, Bul akışı hizmet adını geçirir', () {
       // İki alan farklı ama kullanıcı için ikisi de "iş"tir.
       final m = _kod('lib/data/ports/mock_ports.dart');

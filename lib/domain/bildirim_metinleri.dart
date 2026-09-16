@@ -67,3 +67,29 @@ String yeniTeklifGovdeIlan(String ilanBasligi) =>
 /// bilgisini SİLMEK olurdu.
 String yeniTeklifGovdeTalep(String hizmet, Object fiyat) =>
     '"$hizmet" talebiniz için $fiyat TL teklif aldınız.';
+
+/// ── ⚠ YENİ MESAJ BİLDİRİMİ — TEK DİL ──
+///
+/// ⚠ ÜRÜN KARARI (12 Eyl, kullanıcı): "Mesaj bildirimlerini aynı
+/// dille yap, birleştir."
+///
+/// İki port aynı olayı iki ayrı biçimde anlatıyordu:
+///   · `mock_ports`        → "Yeni mesajınız var" / "Sohbette yeni bir
+///                            mesaj aldınız."
+///   · `teklif_talebi_port` → "Yeni mesaj" / mesajın kendisi
+///
+/// ⚠ KISA BAŞLIK SEÇİLDİ: "Yeni mesajınız var" hem uzun hem de gövde
+/// ile birlikte aynı şeyi iki kez söylüyordu.
+const String kYeniMesajBaslik = 'Yeni mesaj';
+
+/// Bildirimin gövdesi — mesajın kendisi.
+///
+/// ⚠ GÖVDE MESAJIN İÇERİĞİDİR: "Sohbette yeni bir mesaj aldınız."
+/// hiçbir şey söylemiyordu; kullanıcı ne geldiğini görmek için
+/// sohbeti açmak zorundaydı. Bul akışı zaten içeriği gösteriyordu.
+///
+/// [metin] boşsa gönderilen şey fotoğraftır.
+String yeniMesajGovde(String? metin) {
+  final m = metin?.trim();
+  return (m == null || m.isEmpty) ? 'Fotoğraf gönderildi.' : m;
+}

@@ -28,17 +28,32 @@ void main() {
     contactCtl = w0.contactCtl;
   });
 
-  test('sohbet: geçmiş yazışma YOK; ilk mesaj yalnız teklif verenin notu', () async {
+  test('⚠ SOHBET BOŞ BAŞLAR — teklif notu mesaj DEĞİLDİR', () async {
+    // ── ⚠ SÖZLEŞME DEĞİŞTİ (12 Eyl, kullanıcı isteği) ──
+    //
+    // "Not kısmına yazılan yazı not kısmında kalsın, aynı zamanda
+    // mesaj olarak gönderilmesin."
+    //
+    // Eskiden sohbet ilk açıldığında teklif notu hizmet verenin ilk
+    // MESAJI olarak ekleniyordu. İki sorunu vardı:
+    //   1. Aynı metin iki yerde: not zaten teklif kartında "Hizmet
+    //      Verenin Notu" başlığıyla duruyor.
+    //   2. Kart üzerindeki "Yeni mesaj" balonu bu sahte mesajı
+    //      sayıyordu; kimse yazmamışken mesaj gelmiş gibi
+    //      görünüyordu.
     final l = (await listingCtl.publish(
         ownerId: cust, title: 'Boya', location: 'Konak, İzmir',
         desc: 'Boya işi var evet beş kelime')).listing!;
     await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 1400,
         note: 'Boya badana işini üç günde bitiririm söz.');
     final o = offerCtl.myOfferFor(l.id, p1)!;
+
+    // ⚠ BOŞ LİSTE, `null` DEĞİL: teklif var, sohbet var, mesaj yok.
     final t = chatCtl.threadFor(o.id)!;
-    expect(t.length, 1);
-    expect(t.first.text, contains('Boya badana'));
-    expect(t.first.senderId, p1);
+    expect(t, isEmpty);
+
+    // ⚠ NOT YERİNDE DURUYOR: kalkan yalnız mesaja kopyalanmasıydı.
+    expect(o.note, contains('Boya badana'));
   });
 
   test('yalnız TARAFLAR yazabilir; yabancı gönderemez (Y3)', () async {
@@ -51,7 +66,10 @@ void main() {
     final r1 = await chatCtl.sendDelivered(o.id, senderId: stranger, text: 'selam');
     expect(r1.error, isA<UnauthorizedError>());
     expect(r1.message, isNull);
-    expect(chatCtl.threadFor(o.id)!.length, 1); // mesaj EKLENMEDİ
+    // ⚠ SAYI 1 DEĞİL 0: sohbet artık boş başlıyor (teklif notu mesaj
+    // olarak eklenmiyor). Yabancının mesajı da eklenmediği için liste
+    // hâlâ boş.
+    expect(chatCtl.threadFor(o.id)!, isEmpty);
 
     // GÜNCEL SÖZLEŞME: mesajlaşma ancak iletişim AÇILDIKTAN sonra
     // mümkündür. İletişimi yetkili aktör (ilan sahibi) açar.
@@ -60,7 +78,9 @@ void main() {
     // Taraflar artık yazabilir.
     expect((await chatCtl.sendDelivered(o.id, senderId: cust, text: 'Yarın uygun musunuz?')).error, isNull);
     expect((await chatCtl.sendDelivered(o.id, senderId: p1, text: 'Uygunum.')).error, isNull);
-    expect(chatCtl.threadFor(o.id)!.length, 3);
+    // ⚠ 3 DEĞİL 2: teklif notu artık sohbete eklenmiyor, yalnız iki
+    // tarafın gerçekten yazdığı mesajlar var.
+    expect(chatCtl.threadFor(o.id)!.length, 2);
   });
 
   test('silinmiş/geçersiz offerId ile mesaj OLUŞTURULAMAZ (O5)', () async {

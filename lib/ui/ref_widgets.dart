@@ -2144,21 +2144,20 @@ class _NavOgesi extends StatelessWidget {
             // ⚠ ÖLÇÜ DEĞİŞMEZ: nokta `Stack` içinde ikonun
             // ÜSTÜNE çizilir, yer kaplamaz.
             //
-            // ── ⚠ RENK MAVİDEN KIRMIZIYA (12 Eyl, kullanıcı
-            // isteği) ──
+            // ── ⚠ RENK: MAVİ (12 Eyl, kullanıcı kararı) ──
             //
-            // "Bildirim geldiğinde mavi nokta değil kırmızı olsun;
-            // bildirimler okununca normal rengine dönüşsün."
+            // Aynı gün önce kırmızıya çevrildi, sonra kullanıcı maviye
+            // döndürdü. Karar kullanıcınındır; gerekçe kayda geçsin
+            // diye duruyor.
             //
-            // Mavi, uygulamanın SEÇİLİ SEKME rengiydi: Bildirimler
-            // sekmesi aktifken ikon da nokta da maviydi ve nokta
-            // kayboluyordu. Kırmızı hem seçili hem seçilmemiş zeminde
-            // okunur.
+            // ⚠ BİLİNEN SINIR: mavi, uygulamanın SEÇİLİ SEKME
+            // rengidir. Bildirimler sekmesi aktifken ikon da nokta da
+            // mavi olur ve nokta yalnız BEYAZ HALKASIYLA ayrışır —
+            // bu yüzden halka kaldırılmamalıdır.
             //
-            // ⚠ RENK ORTAK KAYNAKTAN: `RC.danger` — "Bul"
-            // ikonundaki sayı rozeti de aynı kırmızıyı kullanır
-            // (`RefSayiRozeti`). İki gösterge aynı şeyi söylüyor:
-            // ilgi bekleyen bir şey var.
+            // ⚠ "Bul" ROZETİYLE RENK AYRIMI BİLİNÇLİDİR: oradaki sayı
+            // rozeti kırmızı kalır. Nokta "yeni var" der, rozet "kaç
+            // tane" der; farklı renk, farklı dil.
             //
             // ⚠ OKUNUNCA KENDİLİĞİNDEN KAYBOLUR: `it.rozet`
             // okunmamış sayısından türer; ayrı bir "normale dön"
@@ -2187,7 +2186,7 @@ class _NavOgesi extends StatelessWidget {
                       width: 9,
                       height: 9,
                       decoration: BoxDecoration(
-                        color: RC.danger,
+                        color: RC.blue,
                         shape: BoxShape.circle,
                         border: Border.all(color: RC.white, width: 1.5),
                       ),

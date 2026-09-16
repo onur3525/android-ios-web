@@ -41,6 +41,7 @@ import '../core/telefon_bicimi.dart';
 import 'widgets/detay_karti_parcalari.dart';
 import 'widgets/teklif_tutar_karti.dart';
 import 'widgets/teklif_aciklama_karti.dart';
+import 'widgets/yanlis_taraf_kapisi.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not) → teklifle 50 TL bloke;
@@ -163,6 +164,20 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     final contactCtl = context.watch<ContactController>();
     final auth = context.watch<AuthController>();
     final l = listingCtl.byId(widget.listingId);
+    // ── ⚠ İLAN SAHİBİ BU EKRANI GÖREMEZ (12 Eyl, kullanıcı kuralı) ──
+    //
+    // Burası hizmet VERENİN iş ekranı: "Ücretsiz Teklif Ver",
+    // "Verdiğiniz Teklif", "Notunuz". İlan sahibi buraya düşerse
+    // kendi ilanına teklif veriyormuş gibi bir ekran görür.
+    //
+    // ⚠ SİMETRİK KURAL: `listing_detail` ekranı da sahibi olmayanı
+    // içeri almaz. İki kapı birlikte, "karşı tarafın ekranı"nı her
+    // iki yönde de kapatır.
+    if (l != null && l.ownerId == me.id) {
+      // ⚠ METİN GÖSTERİLMEZ (12 Eyl, kullanıcı kararı): sayfa
+      // sessizce kapanır, kullanıcı geldiği yerde kalır.
+      return const YanlisTarafKapisi();
+    }
     if (l == null) {
       return Scaffold(
         backgroundColor: RC.pageBg,

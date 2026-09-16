@@ -350,7 +350,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
       'Çiçekçilik', 'Asistanlık & Günlük Destek',
       'Dedektiflik & Araştırma', 'Araştırma & Saha Hizmetleri',
       'Günlük Eleman & Personel Desteği',
-      // ⚠ ARAŞTIRMA SONUCU EKLENDİ (kullanıcı onayıyla) — Armut'ta
+      // ⚠ PAZAR ARAŞTIRMASIYLA EKLENDİ (kullanıcı onayıyla) —
       // aktif ve talep gören ("İmam Nikahı Kıyma": yılda 2.463 talep,
       // "Mevlüt Okuma": yalnız İzmir'de 100 hizmet veren) ama
       // katalogda hiç olmayan dini hizmetler. Ayrı bir çatı AÇILMADI

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../api_client.dart';
 
 /// BEKLEYEN YÜKLEME İPTALİ — SUNUCU SÖZLEŞMESİ
@@ -39,6 +41,54 @@ class StorageApi {
 
   Future<Map<String, dynamic>> resolve(String storageRef) =>
       c.get('/storage/resolve', query: {'ref': storageRef});
+
+  /// ── ⚠ EKSİK OLAN ADIM: DOSYANIN KENDİSİNİ YÜKLE ──
+  ///
+  /// Sözleşme üç adımlıdır (bkz. sınıf notu): upload-ref al →
+  /// `uploadUrl`'e DOĞRUDAN yükle → `storageRef`'i kaydet.
+  ///
+  /// İKİNCİ ADIM HİÇBİR ÇAĞRI YERİNDE YOKTU. Üç ekran da
+  /// `createUploadRef` çağırıp dönen `storageRef`'i alıyor, dosya
+  /// baytlarını hiçbir yere göndermiyordu. Sonuç: kullanıcı
+  /// "yüklendi" görüyor, karşı taraf boş görüyor, sunucuda sahipsiz
+  /// PENDING kayıtlar birikiyordu.
+  ///
+  /// ⚠ `ApiClient` KULLANILMAZ: `uploadUrl` bizim API'mize değil,
+  /// depolama sağlayıcısına ait imzalı bir adrestir. Oraya
+  /// `Authorization` başlığı göndermek oturum jetonunu üçüncü tarafa
+  /// sızdırırdı. Ayrıca gövde JSON değil ham bayttır.
+  ///
+  /// ⚠ SERTİFİKA SABİTLEME BURADA UYGULANMAZ: pin kendi alan
+  /// adımızın sertifikasıdır; depolama sağlayıcısının sertifikası
+  /// farklıdır. Sistem TLS doğrulaması geçerlidir.
+  ///
+  /// ⚠ BAŞARISIZLIK SESSİZ GEÇMEZ: 2xx dışı her yanıtta istisna
+  /// fırlatılır. Çağıran taraf `storageRef`'i ancak bu metot
+  /// dönerse kaydeder.
+  ///
+  /// ⚠ İÇERİK TÜRÜ DOĞRULAMASI SUNUCUNUNDUR: istemci MIME'ı dosya
+  /// UZANTISINDAN türetir (`contentTypeOf`); `.jpg` uzantılı herhangi
+  /// bir dosya `image/jpeg` sayılır. Gerçek doğrulama, dosyanın
+  /// sihirli baytlarına bakarak SUNUCUDA yapılmalıdır.
+  Future<void> uploadBytes({
+    required String uploadUrl,
+    required List<int> bytes,
+    required String contentType,
+  }) async {
+    final istek = await HttpClient().putUrl(Uri.parse(uploadUrl));
+    istek.headers.set(HttpHeaders.contentTypeHeader, contentType);
+    istek.headers.set(HttpHeaders.contentLengthHeader, bytes.length);
+    istek.add(bytes);
+    final yanit = await istek.close().timeout(const Duration(seconds: 60));
+    // Gövde okunmazsa bağlantı açık kalır.
+    await yanit.drain<void>();
+    if (yanit.statusCode < 200 || yanit.statusCode >= 300) {
+      throw HttpException(
+        'Dosya yüklenemedi (HTTP ${yanit.statusCode})',
+        uri: Uri.parse(uploadUrl),
+      );
+    }
+  }
 
   /// BEKLEYEN yüklemeyi iptal eder (kullanıcı önizlemeden kaldırdı).
   /// İdempotenttir: aynı referans iki kez gönderilebilir.

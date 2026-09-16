@@ -45,6 +45,26 @@ class WsClient {
           .build(),
     );
 
+    // ── ⚠ YENİDEN BAĞLANMADA TAZE TOKEN ──
+    //
+    // `connect()` handshake'i BİR KEZ üretiyordu; `enableReconnection`
+    // ile yapılan tüm yeniden bağlanmalar ESKİ access token'ı
+    // kullanıyordu. Token yenilendikten (401 → refresh) sonraki ilk
+    // kopmada bağlantı süresiz reddedilirdi.
+    //
+    // ⚠ `onReconnectAttempt` HER DENEMEDEN ÖNCE çalışır: burada
+    // handshake haritası depodan yeniden okunur.
+    //
+    // ⚠ TOKEN QUERY STRING'E TAŞINMAZ: `handshake.auth` gövdesinde
+    // kalır; adres satırına giren token proxy ve sunucu loglarına
+    // düşerdi.
+    s.onReconnectAttempt((_) async {
+      final taze = await auth.handshakeAuth();
+      if (taze != null) {
+        s.auth = taze;
+      }
+    });
+
     s.onConnect((_) {
       _connection.add(true);
       for (final offerId in _joined) {
@@ -64,7 +84,18 @@ class WsClient {
     if (data is Map) c.add(Map<String, dynamic>.from(data));
   }
 
-  /// Konuşma odasına katıl — yetkiyi SUNUCU doğrular.
+  /// Konuşma odasına katıl.
+  ///
+  /// ── ⚠ YETKİ DENETİMİ SUNUCUDADIR, BURADA DEĞİL ──
+  ///
+  /// `offerId` istemciden serbestçe gönderilir ve DEĞİŞTİRİLEBİLİR.
+  /// Sunucu, `conversation.join` çağrısında oturum sahibinin O
+  /// TEKLİFİN TARAFI olduğunu doğrulamak ZORUNDADIR; aksi hâlde
+  /// herhangi bir kullanıcı kimlik tahmin ederek başkasının sohbetini
+  /// dinleyebilir.
+  ///
+  /// ⚠ İSTEMCİ TARAFINDA BU DOĞRULANAMAZ: burada yapılacak her
+  /// denetim, paketi değiştiren saldırgan tarafından kaldırılabilir.
   void join(String offerId) {
     _joined.add(offerId);
     _socket?.emit(WsAuth.actionJoin, {'offerId': offerId});

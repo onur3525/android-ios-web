@@ -79,6 +79,11 @@ void main() {
 
       expect(r.error, isNull);
       expect(r.message!.id, 'srv-1');
+      // ⚠ BU TEST API PORTUNU KULLANIR (`chatPort`), mock portu
+      // değil: teklif notunun sohbete eklenmesi MOCK tarafındaydı ve
+      // 12 Eyl'de kaldırıldı. Buradaki 1, az önce GÖNDERİLEN mesajın
+      // kendisidir; "çift satır yok" onun iki kez eklenmediğini
+      // söyler.
       expect(port.threadFor('o1')!.length, 1);          // çift satır yok
       expect(be.headers.last['Idempotency-Key'], isNotNull);
     });

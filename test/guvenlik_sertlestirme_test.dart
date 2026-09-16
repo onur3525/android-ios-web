@@ -111,10 +111,46 @@ void main() {
     test('PİN YOKKEN devre dışı — davranış değişmez', () {
       // ⚠ Yanlış pinle çıkılan sürüm uygulamayı tamamen kırar; bu
       // yüzden pin verilmedikçe sabitleme kapalıdır.
+      //
+      // ⚠ `dogrula()` İDDİASI KALDIRILDI: o metot hiçbir yerden
+      // çağrılmayan ölü koddu ve "pinning var" izlenimi veriyordu;
+      // denetim artık bağlantı kurulurken yapılıyor.
       expect(SertifikaSabitleme.etkin, isFalse);
       expect(SertifikaSabitleme.pinler, isEmpty);
-      expect(SertifikaSabitleme.dogrula(null), isTrue,
-          reason: 'kapalıyken her şey geçmeli');
+    });
+
+    test('⚠ PIN DENETİMİ SİSTEM GÜVEN DEPOSUNU DEVRE DIŞI BIRAKIR', () {
+      // ── ⚠ ESKİ UYGULAMA ETKİSİZDİ ──
+      //
+      // `badCertificateCallback` YALNIZ sistem doğrulaması BAŞARISIZ
+      // olduğunda çağrılır. Cihaza kök sertifika yükleyen saldırganın
+      // zinciri sistem doğrulamasını GEÇİYOR, geri çağrı hiç
+      // tetiklenmiyor ve pin listesine BAKILMADAN bağlantı
+      // kuruluyordu — yani sabitleme, korumak için var olduğu tehdide
+      // karşı işe yaramıyordu.
+      //
+      // Çözüm: `SecurityContext(withTrustedRoots: false)` ile güven
+      // deposu boşaltılır; her zincir başarısız sayılır, geri çağrı
+      // HER BAĞLANTIDA çalışır ve karar tek başına pine kalır.
+      final k = _kod('lib/data/remote/sertifika_sabitleme.dart');
+      expect(k.contains('SecurityContext(withTrustedRoots: false)'), isTrue,
+          reason: 'sistem CA deposu hâlâ okunuyor — pin bypass edilir');
+      // Ölü kod geri gelmemeli.
+      expect(k.contains('static bool dogrula('), isFalse);
+    });
+
+    test('⚠ RELEASE\'TE PIN EKSİKSE DERLEME DEĞİL, AÇILIŞ DURUR', () {
+      // `API_BASE_URL` için zaten bir zorunluluk vardı; pin için
+      // yoktu ve sabitleme sessizce kapalı kalabiliyordu.
+      final k = _kod('lib/data/remote/sertifika_sabitleme.dart');
+      expect(k.contains('static void pinDenetimi('), isTrue);
+      // ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiğinde
+      // uygulamayı tamamen çalışmaz hâle getirir.
+      expect(k.contains('pinler.length < 2'), isTrue);
+      // ⚠ TEK ÇAĞRI YERİ `buildPorts`: hem uygulamanın hem testlerin
+      // ortak giriş noktası.
+      final m = _kod('lib/main.dart');
+      expect(m.contains('SertifikaSabitleme.pinDenetimi(gercekApi:'), isTrue);
     });
 
     test('istemci pin yokken SADE döner', () {
