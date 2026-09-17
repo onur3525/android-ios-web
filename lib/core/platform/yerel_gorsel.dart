@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-
 // ⚠ KOŞULLU EXPORT: derleyici platforma göre BİRİNİ alır.
 //   • `dart.library.io` varsa (Android, iOS) → `_io` uygulaması
 //   • yoksa (Web)                            → `_web` uygulaması
@@ -8,7 +6,6 @@ import 'package:flutter/widgets.dart';
 // hiçbir ekranda geçmez. Web derlemesini kıran şey buydu: `dart:io`
 // içe aktaran bir dosya Flutter Web'de DERLENMEZ — çalışma anı hatası
 // değil, derleme hatası. Tek dosya bile kalsa web hiç derlenmez.
-export 'yerel_gorsel_io.dart' if (dart.library.html) 'yerel_gorsel_web.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// YEREL DOSYA / GÖRSEL KÖPRÜSÜ — ORTAK SÖZLEŞME
@@ -64,3 +61,5 @@ export 'yerel_gorsel_io.dart' if (dart.library.html) 'yerel_gorsel_web.dart';
 /// Future<int> yerelBoyut(String yol);
 /// ```
 library;
+
+export 'yerel_gorsel_io.dart' if (dart.library.html) 'yerel_gorsel_web.dart';

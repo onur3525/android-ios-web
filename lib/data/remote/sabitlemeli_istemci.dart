@@ -1,6 +1,3 @@
-export 'sabitlemeli_istemci_io.dart'
-    if (dart.library.html) 'sabitlemeli_istemci_web.dart';
-
 /// ═══════════════════════════════════════════════════════════════
 /// HTTP İSTEMCİSİ — PLATFORMA GÖRE
 ///
@@ -30,3 +27,6 @@ export 'sabitlemeli_istemci_io.dart'
 /// sabitlemeli istemci, verilmemişse düz istemci.
 /// ═══════════════════════════════════════════════════════════════
 library;
+
+export 'sabitlemeli_istemci_io.dart'
+    if (dart.library.html) 'sabitlemeli_istemci_web.dart';

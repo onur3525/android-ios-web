@@ -525,7 +525,7 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
             child: yerelGorsel(
               p.localPath,
               width: 84, height: 84, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              hataYedegi: (_) => Container(
                 width: 84, height: 84,
                 color: const Color(0xFFF1F4F9),
                 child: RefSvg('assets/svg/ic_camg.svg', size: 20, color: RC.greyLight),

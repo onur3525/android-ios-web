@@ -748,7 +748,7 @@ class _Fotograflar extends StatelessWidget {
                 child: yerelGorsel(
                   y,
                   fit: BoxFit.cover, // .plf img{object-fit:cover}
-                  errorBuilder: (_, __, ___) => const ColoredBox(
+                  hataYedegi: (_) => const ColoredBox(
                     color: Color(0xFFF1F4F9),
                     child: Center(
                       child: RefSvg('assets/svg/ic_camg.svg', size: 18),

@@ -1450,7 +1450,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               // ⚠ Dosya açılamazsa ÇÖKME YERİNE yer
                               // tutucu — kullanıcı galeriden silmiş
                               // olabilir.
-                              errorBuilder: (_, __, ___) => ColoredBox(
+                              hataYedegi: (_) => ColoredBox(
                                 color: RC.blueSoft,
                                 child: const Center(
                                   child: RefSvg('assets/svg/ic_gallery.svg',

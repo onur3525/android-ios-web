@@ -466,7 +466,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                               l.photoPaths[i],
                               fit: BoxFit.cover,
                               // Dosya açılamazsa çökme YERİNE yer tutucu.
-                              errorBuilder: (_, __, ___) => ColoredBox(
+                              hataYedegi: (_) => ColoredBox(
                                 color: HC.softBlue,
                                 child: const Center(
                                   child: RefSvg('assets/svg/ic_gallery.svg',
