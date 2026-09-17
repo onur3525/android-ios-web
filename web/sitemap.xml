@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  HİZMETCEP — SİTE HARİTASI
+
+  ⚠ YALNIZ KÖK ADRES VAR, BU BİLİNÇLİDİR.
+
+  Uygulamanın yönlendirmesi şu an hash (#) tabanlıdır
+  (`/#/profile` gibi) ve arama motorları `#` sonrasını ayrı bir sayfa
+  saymaz. Ayrıca 48 ekranın yalnız 19'unun adlandırılmış yolu var;
+  geri kalanına `Navigator.push` ile ulaşılıyor ve adresleri yok.
+
+  ⚠ VAR OLMAYAN YOL YAZILMAZ: sitemap'e çalışmayan adres koymak,
+  arama motoru nezdinde güven kaybettirir.
+
+  ⚠ TEMİZ YOL (path) YÖNLENDİRMESİNE GEÇİLDİĞİNDE bu dosya
+  genişletilmelidir — yalnız gerçekten var olan, herkese açık ve
+  kimlik doğrulaması gerektirmeyen adreslerle.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://hizmetcep.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

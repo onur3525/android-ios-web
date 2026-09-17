@@ -1,0 +1,32 @@
+allprojects {
+    repositories { google(); mavenCentral() }
+}
+rootProject.buildDir = "../build"
+subprojects { project.buildDir = "${rootProject.buildDir}/${project.name}" }
+subprojects { project.evaluationDependsOn(":app") }
+
+// ── ⚠ LINT BLOĞU KALDIRILDI ──
+//
+// Buraya `subprojects { afterEvaluate { ... lint { disable ... } } }`
+// eklenmişti; amaç `lintVitalAnalyzeRelease` çökmesini aşmaktı.
+//
+// İKİ SEBEPLE KALDIRILDI:
+//
+// 1. ÇÖZMEDİ. Gerçek sebep lint denetimleri değil, JAVA SÜRÜMÜYDÜ:
+//    `java.util.List.removeLast()` NoSuchMethodError — lint Java 21'e
+//    göre derlenmişken JDK 17 üzerinde koşuyordu. Gradle'ın hata
+//    çıktısındaki "disable EasterEgg, StopShip" önerisi çöken
+//    dedektörün adına bakarak otomatik üretiliyor ve gerçek nedeni
+//    BİLMİYOR. O öneriye güvenmek hataydı.
+//
+// 2. KENDİSİ DERLEMEYİ KIRDI:
+//      Cannot run Project.afterEvaluate(Closure) when the project is
+//      already evaluated.
+//    Bu dosyada `subprojects { project.evaluationDependsOn(":app") }`
+//    satırı var; alt projeler o noktada ZATEN değerlendirilmiş
+//    oluyor ve sonradan `afterEvaluate` eklenemiyor. Gradle/AGP
+//    sürümüne göre tetiklenen bir sıra sorunu.
+//
+// ⚠ Lint çökmesi yeniden görülürse çözüm JDK sürümüdür (setup-java
+// 21), bu blok değil.
+tasks.register("clean", Delete) { delete rootProject.buildDir }

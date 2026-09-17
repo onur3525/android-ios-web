@@ -1,0 +1,98 @@
+name: hizmetcep
+description: HizmetCep — İzmir hizmet pazaryeri (müşteri + hizmet veren)
+publish_to: 'none'
+# ── ⚠ MAĞAZA SÜRÜMÜ ──
+#
+# Biçim: <görünen sürüm>+<yükleme numarası>
+#
+# ⚠ Soldaki (1.0.0) kullanıcıya görünür, sağdaki (+1) Play Store'un
+# kimliğidir. Play AYNI yükleme numarasını İKİ KEZ KABUL ETMEZ:
+# her mağaza yüklemesinde sağdaki sayı MUTLAKA artırılır.
+#
+# ⚠ Sayı GERİ ALINAMAZ: 5 yüklendikten sonra 4 gönderilemez.
+version: 1.0.0+1
+
+environment:
+  # Color.withValues() Flutter 3.27 ile geldi (o sürümün Dart'ı 3.6);
+  # aynı sürümde withOpacity deprecated oldu. Alt sınır bu yüzden 3.6.0
+  # — Codemagic'in kullandığı Flutter stable bunu KARŞILAR.
+  # ⚠ 3.27 FLUTTER sürümüdür, Dart sürümü değildir.
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+  flutter_svg: ^2.0.10        # referans SVG ikonları (Material ikon kullanılmaz)
+  # ⚠ AGP 9 ZORUNLU KILDI — 9.0.0 derlemeyi KIRIYORDU.
+  #
+  # share_plus 9.0.0 kendi android/build.gradle dosyasında
+  # `kotlin-android` eklentisini uyguluyor; AGP 9 bunu açık hatayla
+  # reddediyor:
+  #   The 'org.jetbrains.kotlin.android' plugin is no longer required
+  #   for Kotlin support since AGP 9.0
+  # Ayrıca aynı dosyada `compileSdk` bildirilmemiş — AGP 9 bunu da
+  # istiyor. İkisi de yalnız paketin YENİ sürümünde düzeltilmiş.
+  #
+  # ⚠ API KIRILMASI VAR: `Share.share(...)` yerine
+  # `SharePlus.instance.share(ShareParams(...))`. Tek çağrı yerimiz
+  # `share_service.dart`; orada güncellendi.
+  share_plus: ^12.0.0
+  image_picker: ^1.1.2
+  # ⚠ AYNI RİSK: plus_plugins ailesinden ve eski sürüm. share_plus
+  # ile aynı nedenle AGP 9'da kırılması BEKLENİR (kendi
+  # build.gradle'ında kotlin-android). Şimdilik DOKUNULMADI —
+  # `checkConnectivity()` imzası 7.x'te değişmiş olabilir ve tek
+  # turda iki API göçü yapmak riski büyütür. Derleme burada da
+  # kırılırsa sıradaki adım budur.
+  connectivity_plus: ^6.0.3
+  url_launcher: ^6.3.0      # mağaza bağlantısı (Uygulamayı Puanla)
+  uuid: ^4.4.0              # değişmez string kimlikler
+  crypto: ^3.0.3            # şifre hash (düz metin şifre saklanmaz)
+  http: ^1.2.2              # backend API istemcisi
+  flutter_secure_storage: ^9.2.2  # token saklama (Keychain / EncryptedSharedPreferences)
+  # ⚠ `google_sign_in` KALDIRILDI — üçüncü taraf girişi yok.
+  socket_io_client: ^2.0.3  # gerçek zamanlı mesajlaşma (/ws namespace)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/svg/cat/
+    # Marka
+    - assets/logo/
+    # Kategori görselleri (slug.png) — eksik dosyada ikon fallback devreye girer
+    - assets/categories/
+    # Referans HTML'den çıkarılan SVG ikonlar
+    - assets/svg/
+    # 53 kategori ikonu — tek görsel kaynak (kKategoriIkonu)
+    #
+    # ⚠ Flutter alt klasörleri ÖZYİNELEMELİ almaz; bu satır olmazsa
+    # 53 SVG bundle'a girmez ve kategoriler boş görünür.
+    - assets/svg/categories/
+    # ⚠ ANA SAYFA ÇATI KATMANI (10 hizmet alanı) — kategori değil.
+    - assets/alanlar/
+    - assets/svg/alanlar/
+    # Referans HTML'den çıkarılan illüstrasyonlar (base64 → PNG)
+    - assets/art/
+
+  # ── POPPINS (yerel, TTF) ──
+  # Referans HTML'deki @font-face bloklarındaki WOFF verileri
+  # fontTools ile TTF'ye dönüştürülmüştür (glif ve metrikler birebir).
+  # Referansta YALNIZ 400/500/700 ağırlıkları gömülüdür;
+  # 600 ve 800 için dosya YOKTUR — üretilmemiştir.
+  # Flutter eksik ağırlıkları en yakın olandan sentezler.
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700

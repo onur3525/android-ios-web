@@ -1,0 +1,27 @@
+# HİZMETCEP — TARAYICI BOTLARI İÇİN KURALLAR
+#
+# ⚠ FLUTTER WEB'İN SEO SINIRI: uygulama içeriği CanvasKit/HTML
+# renderer ile JavaScript çalıştıktan SONRA oluşur. Arama motoru
+# botlarının çoğu bu içeriği okuyamaz. Bu dosya SEO'yu çözmez; yalnız
+# botlara ne yapmaları gerektiğini söyler.
+#
+# ⚠ UYGULAMA İÇİ ADRESLER LİSTELENMEZ: yönlendirme şu an hash (#)
+# tabanlıdır ve botlar `#` sonrasını ayrı sayfa saymaz. Var olmayan
+# yol uydurulmaz.
+
+User-agent: *
+Allow: /
+
+# ⚠ ÖNİZLEME BOTLARI AÇIKÇA SERBEST: WhatsApp, Facebook ve Twitter
+# bağlantı kartını çizebilmek için sayfayı okuyabilmelidir.
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+# ⚠ DERLEME ÇIKTILARI: kullanıcıya gösterilecek içerik değildir.
+Disallow: /assets/
+Disallow: /canvaskit/
+
+Sitemap: https://hizmetcep.com/sitemap.xml

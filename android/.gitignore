@@ -1,0 +1,7 @@
+
+# ── RELEASE İMZALAMA — ASLA DEPOYA EKLENMEZ ──
+key.properties
+# ⚠ Örnek dosya DEPODA KALIR (gerçek değer içermez).
+!key.properties.example
+*.jks
+*.keystore

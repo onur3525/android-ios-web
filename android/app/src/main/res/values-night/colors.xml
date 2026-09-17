@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ⚠ KARANLIK TEMADA DA BEYAZ AÇILIŞ.
+         Daha önce burada koyu lacivert bir değer vardı; cihaz karanlık
+         temadayken native açılış ekranı LACİVERT çiziliyor, ardından
+         Flutter'ın beyaz splash'ı geliyordu — kullanıcı İKİ AYRI
+         splash görüyordu.
+         Değer, Flutter SplashScreen zemini (#FEFEFE) ile AYNI. -->
+    <color name="launch_background">#FFFEFEFE</color>
+    <color name="ic_launcher_background">#FFFFFFFF</color>
+</resources>
