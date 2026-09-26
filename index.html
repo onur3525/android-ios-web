@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!--
+    HİZMETCEP — WEB GİRİŞ SAYFASI
+
+    ⚠ BU DOSYA YALNIZ WEB İÇİNDİR. Android ve iOS derlemeleri
+    `web/` klasörünü hiç okumaz; buradaki hiçbir değişiklik mobil
+    davranışı etkilemez.
+
+    ⚠ `<base href="/android-ios-web/">` DEĞİŞTİRİLMEMELİDİR.
+    `flutter build web --base-href` bu yer tutucuyu derleme anında
+    doldurur. Elle sabit bir değer yazılırsa uygulama alt dizinde
+    yayınlandığında varlıklar 404 döner.
+  -->
+  <base href="/android-ios-web/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="HizmetCep — İzmir hizmet pazaryeri. Ücretsiz ilan verin, ustalardan teklif alın.">
+
+  <!--
+    ⚠ `viewport-fit=cover` + `user-scalable=no` KULLANILMADI.
+    Kullanıcının yakınlaştırma hakkı elinden alınmaz; erişilebilirlik
+    açısından gereklidir ve masaüstünde zaten anlamsızdır.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS'ta ana ekrana eklendiğinde -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="HizmetCep">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Tarayıcı üst çubuğu rengi — marka mavisi (RC.blue) -->
+  <meta name="theme-color" content="#1D6BE3">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="manifest" href="manifest.json">
+
+  <title>HizmetCep</title>
+
+  <!--
+    BAĞLANTI ÖNİZLEME KARTI (Open Graph + Twitter)
+
+    ⚠ STATİK OLMAK ZORUNDA. WhatsApp, Facebook, Twitter ve benzeri
+    önizleme botları JavaScript ÇALIŞTIRMAZ; yalnız ham HTML'i okur.
+    Bu yüzden etiketler Flutter uygulamasının içinden değil, BU
+    DOSYANIN `<head>` bölümünden verilir. Uygulama içinde üretilseydi
+    bot hiçbirini göremezdi.
+
+    ⚠ GÖRSEL 1200x630: WhatsApp'ın büyük kart biçimi bu oranı ister.
+    Kare bir görsel verilirse kart küçülür ve logo solda ufak bir
+    kutuda görünür.
+
+    ⚠ GÖRSEL MEVCUT MARKA ASSETLERİNDEN ÜRETİLDİ
+    (`assets/logo/logo_mark.png` + `assets/logo/wordmark.png`); logo
+    yeniden çizilmedi, renk paleti değiştirilmedi.
+
+    ⚠ ADRESLER MUTLAK OLMALI: önizleme botu `og:image`'ı göreli yolla
+    çözemez.
+
+    ⚠ METİNLER `DomainConfig.shareText` İLE AYNI DİLİ KONUŞUR:
+    uygulama içindeki paylaşım mesajı ile kartın birbirini tutmaması,
+    bu depoda defalarca yaşanan ayrışmanın aynısı olurdu.
+  -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="HizmetCep">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:title" content="HizmetCep — İhtiyacın için doğru kişiler">
+  <meta property="og:description" content="İzmir hizmet pazaryeri. Ücretsiz ilan verin, ustalardan teklif alın.">
+  <meta property="og:url" content="https://hizmetcep.com/">
+  <meta property="og:image" content="https://hizmetcep.com/og-paylasim.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="HizmetCep">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HizmetCep — İhtiyacın için doğru kişiler">
+  <meta name="twitter:description" content="İzmir hizmet pazaryeri. Ücretsiz ilan verin, ustalardan teklif alın.">
+  <meta name="twitter:image" content="https://hizmetcep.com/og-paylasim.png">
+
+  <style>
+    /*
+      AÇILIŞ EKRANI
+
+      ⚠ Flutter Web'in ilk karesi gelene kadar geçen sürede beyaz
+      boş sayfa görünür. Native tarafta bu sorun `native_splash` ile
+      çözülmüştü; web'in karşılığı bu bloktur.
+
+      ⚠ Zemin rengi native açılış ekranıyla AYNI (#FFFFFF) tutuldu:
+      marka sürekliliği için renk sıçraması olmamalı.
+    */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #FFFFFF;
+      /* ⚠ YALNIZ `noscript` UYARISI İÇİN: uygulama kendi Poppins
+         asset'ini kullanır, bu satır ona karışmaz. */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    ⚠ JAVASCRIPT KAPALIYSA: Flutter Web tamamen JavaScript'e dayanır.
+    Bu blok olmadan kullanıcı sonsuza kadar "Yükleniyor…" yazısında
+    kalır ve neden olduğunu anlayamaz.
+
+    ⚠ `<noscript>` İÇERİĞİ TARAYICI TARAFINDAN GİZLENMEZ: JavaScript
+    açıkken hiç çizilmez, kapalıyken sayfanın üstünde görünür.
+  -->
+  <noscript>
+    <div style="position:fixed;inset:0;z-index:10;display:flex;
+                flex-direction:column;align-items:center;
+                justify-content:center;gap:14px;padding:24px;
+                background:#FFFFFF;text-align:center;color:#16233D">
+      <img src="icons/Icon-192.png" alt="HizmetCep" width="96" height="96">
+      <div style="font-size:18px;font-weight:700">JavaScript kapalı</div>
+      <div style="font-size:14px;color:#5B6472;max-width:420px;line-height:1.5">
+        HizmetCep&#39;i kullanabilmek için tarayıcınızda JavaScript&#39;i
+        etkinleştirmeniz gerekiyor.
+      </div>
+    </div>
+  </noscript>
+
+  <!-- ⚠ AÇILIŞ ÖRTÜSÜ TAMAMEN KALDIRILDI (18 Eyl, kullanıcı kararı).
+       Web'de açılış ekranı diye bir kalıp yok: sayfa yüklenir ve
+       içerik gelir. Örtü artık boş bir beyaz katmandan ibaretti ve
+       yalnız ilk kareyi geciktiriyordu. Tarayıcı zaten `body`
+       zeminini çiziyor; ayrı bir katman gerekmiyor. -->
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
