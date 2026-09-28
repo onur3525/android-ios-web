@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- ── ⚠ UNIVERSAL LINKS — ALTYAPI HAZIRLIĞI ──
+
+	     `https://hizmetcep.com/payment/...` adreslerinin Safari
+	     yerine doğrudan uygulamada açılması için.
+
+	     ⚠ HENÜZ ÇALIŞMAZ. Bu yetki tek başına yetmez: Apple,
+	     `https://hizmetcep.com/.well-known/apple-app-site-association`
+	     dosyasını indirir ve içindeki App ID ile eşleştirir. O dosya
+	     bu turda OLUŞTURULMADI (kapsam dışı). Ayrıca yetki, Apple
+	     Developer portalındaki App ID üzerinde "Associated Domains"
+	     yetkinliği açık olan bir provisioning profile ile
+	     imzalanmalıdır; aksi hâlde derleme imzalama aşamasında
+	     başarısız olur.
+
+	     ⚠ XCODE PROJESİNE BAĞLANMASI GEREKİR: bu dosya tek başına
+	     etkisizdir. Runner hedefinin Build Settings alanında
+	     `CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements`
+	     tanımlanmalıdır. `project.pbxproj` elle düzenlenmedi —
+	     bozulması hâlinde proje hiç açılmaz; bu adım Xcode'da
+	     yapılmalıdır.
+
+	     ⚠ ÖZEL ŞEMA KALDIRILMADI: `hizmetcep://payment/return`
+	     Info.plist'teki `CFBundleURLTypes` ile aynen çalışmaya devam
+	     eder. Universal Links onun yerine geçmez, yanına eklenir.
+
+	     ⚠ `applinks:` ÖNEKİ ZORUNLU: yalnız alan adı yazmak yetmez;
+	     önek, hangi servis için olduğunu söyler. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:hizmetcep.com</string>
+	</array>
+</dict>
+</plist>

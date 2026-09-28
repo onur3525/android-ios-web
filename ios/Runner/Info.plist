@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key><string>tr</string>
+	<key>CFBundleDisplayName</key><string>HizmetCep</string>
+	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+	<key>CFBundleName</key><string>hizmetcep</string>
+	<key>CFBundlePackageType</key><string>APPL</string>
+	<key>CFBundleShortVersionString</key><string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleVersion</key><string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key><true/>
+	<key>UILaunchStoryboardName</key><string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key><string>Main</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>İlan ve profil fotoğrafı eklemek için galeriye erişim gerekir.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>İlan ve profil fotoğrafı çekmek için kameraya erişim gerekir.</string>
+	<!-- image_picker: seçilen fotoğrafın düzenlenmiş halini kaydetme -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Düzenlenen fotoğrafı galerinize kaydetmek için izin gerekir.</string>
+	<!-- ⚠ NSFaceIDUsageDescription KALDIRILDI.
+	     Gerekçe olarak flutter_secure_storage yazılmıştı; ancak token
+	     deposu KeychainAccessibility.first_unlock ile açılır, biyometri
+	     KULLANMAZ ve projede local_auth paketi YOKTUR. Gerekçesiz izin
+	     açıklaması hem App Store incelemesinde sorulur hem kullanıcıya
+	     yanlış sinyal verir. -->
+	<!-- ⚠ NSLocalNetworkUsageDescription KALDIRILDI.
+	     Gerekçe olarak connectivity_plus yazılmıştı; o paket ağ yolu
+	     durumunu (NWPathMonitor) okur, Bonjour/multicast yapmaz ve bu
+	     izni istemez. -->
+	<!-- ── ⚠ YÖNLENDİRME: TELEFON DİKEY, iPad SERBEST ──
+	     Ürün kararı (12 Eyl): telefonda dikey kilit, tablette yatay
+	     serbest. Dart tarafı bunu `lib/core/yonlendirme.dart` içinde
+	     cihazın EN KISA KENARINA bakarak uyguluyor.
+
+	     ⚠ PLIST DART'I EZER: iOS'ta sistem, burada izin verilmeyen bir
+	     yöne HİÇ dönmez. Yalnız `Portrait` yazdığı için iPad'de yatay
+	     çalışmıyordu — Dart kısıtı kaldırsa bile.
+
+	     ⚠ iPhone DİKEY KALIR: `UISupportedInterfaceOrientations`
+	     telefonlar için geçerlidir ve değiştirilmedi.
+
+	     ⚠ `~ipad` ANAHTARI iPad'de ÖNCELİKLİDİR: yalnız orada dört yön
+	     açılır. Kilidin kendisi yine Dart'tadır; plist yalnız
+	     sistemin izin verdiği kümeyi genişletir. -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array><string>UIInterfaceOrientationPortrait</string></array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<!-- Harici uygulama açma izinleri: mağaza ve ödeme sayfası. -->
+	<!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: URL ŞEMASI ──
+	     `hizmetcep://payment/return?session=<id>` adresinin iOS'ta
+	     uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır; kayıt
+	     yoktu, yani deep link iOS'ta hiç çalışmıyordu.
+
+	     ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı şemayı
+	     kaydedebilir ve geri dönüşü çalabilir. Kalıcı çözüm Universal
+	     Links'tir (Associated Domains + apple-app-site-association);
+	     o, doğrulanmış alan adı gerektirir ve web tarafı hazır
+	     olduğunda eklenmelidir.
+
+	     ⚠ GÜVENLİK BUNA DAYANMAZ: geri dönüş adresi yalnız `session`
+	     kimliği taşır. `success=true` gibi bir parametre gelse bile
+	     ödeme kanıtı SAYILMAZ; sonuç her zaman backend `confirmTopup`
+	     ile doğrulanır (bkz. `core/deep_links.dart`). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>CFBundleURLName</key><string>com.hizmetcep.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>hizmetcep</string></array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>itms-apps</string>
+	</array>
+</dict>
+</plist>

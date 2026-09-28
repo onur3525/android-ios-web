@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TEK GÖRÜNÜR SPLASH + PENCERE ÇUBUKLARI
+
+  Kullanıcıya gösterilen TEK marka splash'ı budur. Flutter tarafında
+  ikinci bir splash ÇİZİLMEZ.
+
+  ⚠ DÖRT VARYANT BİREBİR AYNIDIR (values, values-night, values-v31,
+  values-night-v31). Kural TEK YERDE yazılır, dördüne aynen kopyalanır
+  ve `hizmet_alan_15_test` dosyaların birebir aynı olmasını zorunlu
+  kılar — biri değişip öteki kalamaz.
+
+  ── MARKA GÖRSELİ ──
+  `splash_brand.png` logo + wordmark'ı TEK kompozisyonda içerir
+  (drawable-nodpi, 1024x1024 şeffaf tuval). Sistem, görseli ikon
+  kutusuna ölçeklediği için TÜM EKRAN BOYUTLARINDA ve yoğunluklarda
+  aynı oranla, ortalanmış görünür; sabit dp konumlandırma YOKTUR.
+
+  Ölçülen içerik kutusu: 478x360 px / 1024 px tuval.
+  240dp ikon kutusunda 112.0 x 84.4 dp, köşegen 140.3 dp.
+
+  ══════════════════════════════════════════════════════════════════
+  ⚠ İKON KUTUSU 240dp'DİR — VE BUNU BU DOSYA BELİRLER
+  ══════════════════════════════════════════════════════════════════
+
+  Android 12+ splash'ında ikon kutusunun ölçüsü İKİ DEĞERDEN biridir
+  ve seçimi TEK BİR ÖZNİTELİK yapar:
+
+    · `windowSplashScreenIconBackgroundColor` SAYDAM ise
+        → "arka planı yok" dalı  → kutu 288dp, maske 192dp
+    · SAYDAM DEĞİLSE
+        → "arka planı var" dalı  → kutu 240dp, maske 160dp
+
+  ⚠ BULUNAN ÇELİŞKİ (12 Eyl): bu dosyanın kendi hesabı (140.3dp
+  köşegen, 160dp maskesine sığar) 240dp kutuya GÖRE yapılmıştı ve
+  `lib/screens/splash_screen.dart` içindeki `_kMarkaKutusu = 240`
+  de aynı varsayıma dayanıyordu. Ama öznitelik SAYDAM verilmişti —
+  yani sistem 288dp dalını kullanıyordu. Aynı PNG sistemde 288dp,
+  Flutter yüzeyinde 240dp genişlikte çiziliyordu: native yüzey
+  bırakılıp altındaki Flutter yüzeyi göründüğü anda marka bloğu
+  %16,7 KÜÇÜLÜYORDU. Kullanıcının "splash sonunda logo küçülüyor"
+  bulgusu budur.
+
+  DÜZELTME: öznitelik saydam yerine SPLASH ZEMİNİNİN KENDİ RENGİNE
+  ayarlandı. Böylece sistem 240dp dalını kullanır ve iki taraf aynı
+  ölçüde çizer.
+
+  ⚠ GÖRÜNÜR BİR DAİRE OLUŞMAZ: çizilen daire `launch_background`
+  (#FEFEFE) rengindedir ve splash zemini de AYNI renktir — beyaz
+  üstüne beyaz. "İkonun arkasında ayrı kutu görünmesin" kuralı
+  KORUNUR; değişen yalnız sistemin seçtiği kutu ölçüsüdür.
+
+  ⚠ 288dp dalında içerik köşegeni 168.3dp olur ve o dalın 192dp
+  maskesine sığar; yani eski değer kırpılmaya yol açmıyordu. Sorun
+  kırpılma değil, İKİ TARAFIN FARKLI ÖLÇÜ KULLANMASIYDI.
+
+  ══════════════════════════════════════════════════════════════════
+  ⚠ SİSTEM ÇUBUKLARI — RENK DEĞİL, ÖNCE BAYRAK
+  ══════════════════════════════════════════════════════════════════
+
+  BULGU: uygulamanın altında ve üstünde siyah bantlar; çubuk ikonları
+  beyaz.
+
+  KÖK NEDEN ZİNCİRİ (hepsi bu depodan okunabilir):
+
+    1. AndroidManifest'te `io.flutter.embedding.android.NormalTheme`
+       meta-data'sı tanımlıdır.
+    2. `FlutterActivity` bu meta-data'yı okur ve PENCERE
+       OLUŞMADAN ÖNCE temayı `NormalTheme`e çevirir. Yani pencere
+       `Theme.SplashScreen` üzerinde HİÇ olmaz.
+    3. `NormalTheme`in atası `@android:style/Theme.Light.NoTitleBar`
+       ve bu tema `windowDrawsSystemBarBackgrounds` bayrağını
+       AÇMAZ.
+    4. `Window.setStatusBarColor` / `setNavigationBarColor` bu bayrak
+       yokken ETKİSİZDİR. Bayrak pencere oluşturulurken temadan
+       okunur; sonradan `setTheme` çağırmak onu geri getirmez.
+
+  Bu yüzden bugüne kadarki denemelerin hepsi — Dart tarafındaki
+  `SystemChrome`, `MainActivity` içindeki saydam atama ve ardından
+  gelen beyaz atama — yazdığı değeri pencerenin HİÇ kullanamayacağı
+  bir yere yazıyordu. Renk değiştirmek çözmedi çünkü sorun renk
+  değildi.
+
+  DÜZELTME: bayrak ve renkler TEMAYA yazıldı; tema pencere
+  oluşturulurken okunduğu için ilk kareden itibaren geçerlidir.
+  `MainActivity` ve `core/theme.dart` içindeki çalışma zamanı
+  atamaları KALDIRILMADI — artık etkili olurlar ve aynı değeri
+  tekrarlarlar.
+
+  ⚠ RENK ÜÇ YERDE AYNI OLMALI: burada `@android:color/white`,
+  `MainActivity` içinde `Color.WHITE`, `core/theme.dart` içinde
+  `Colors.white`. Ayrışırsa açılışta renk zıplar.
+-->
+<resources>
+    <style name="LaunchTheme" parent="Theme.SplashScreen">
+        <!-- Tam ekran beyaz zemin (#FEFEFE) — kenarlarda bant yok. -->
+        <item name="windowSplashScreenBackground">@color/launch_background</item>
+        <!-- Logo + wordmark TEK kompozisyon; oranı korunur, ortalıdır. -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_brand</item>
+        <!-- ⚠ Süre verilmezse sistem ikon animasyonunu bir kez oynatıp
+             İKONU GİZLER; uzun tutulan splash'ta yalnız zemin kalır.
+             `SPLASH_MIN_MS` ile uyumlu tutulur. -->
+        <item name="android:windowSplashScreenAnimationDuration">2000</item>
+        <!-- ⚠ SAYDAM DEĞİL: ikon kutusunu 240dp'ye sabitler (yukarıdaki
+             açıklama). Renk splash zeminiyle aynı olduğu için görünür
+             bir daire oluşmaz. -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/launch_background</item>
+        <!-- Splash bittiğinde geçilecek tema. -->
+        <item name="postSplashScreenTheme">@style/NormalTheme</item>
+    </style>
+
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+        <!-- ⚠ ÖNCE BU BAYRAK: açık olmadan aşağıdaki iki renk de,
+             çalışma zamanındaki atamalar da ETKİSİZDİR ve sistem
+             çubukları opak siyah çizilir. -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">@android:color/white</item>
+    </style>
+</resources>

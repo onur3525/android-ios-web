@@ -1,0 +1,130 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- İlan fotoğrafı: kamera ile çekim (galeri için izin gerekmez,
+         image_picker sistem seçicisini kullanır). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <!-- Android 11+ paket görünürlüğü: harici tarayıcı (ödeme sayfası) ve
+         mağaza uygulaması (Uygulamayı Puanla) açılabilsin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="market"/>
+        </intent>
+    </queries>
+    <!-- ⚠ CİHAZ YEDEĞİNE KAPALI (`allowBackup=false`).
+         Varsayılan açıkken uygulama verisi `adb backup` ile dışarı
+         alınabilir; içinde oturum jetonu ve kişisel veri bulunur.
+         Kilitsiz veya rootlu cihazda bu doğrudan hesap ele geçirme
+         yoludur. Android 12+ için `dataExtractionRules` de verilir.
+
+         ⚠ DÜZ HTTP YASAK (`usesCleartextTraffic=false`).
+         Token ve kişisel veri şifresiz taşınamaz; yanlış yapılandırılmış
+         bir adres sessizce cleartext'e düşemez.
+
+         ⚠ XML NOTU: açıklamalar etiketin İÇİNE yazılamaz — öznitelik
+         listesinin arasına konulan yorum geçersiz XML üretir ve derleme
+         düşer. Bu yüzden hepsi etiketten ÖNCE durur. -->
+    <application
+        android:label="HizmetCep"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="false"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: DERİN BAĞLANTI ──
+                 `hizmetcep://payment/return?session=<id>` adresinin
+                 uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır.
+                 Kayıt yoktu: `MainActivity` deep link kodu, DeepLinks
+                 sınıfı ve platform kanalı hazır olmasına rağmen
+                 Android işletim sistemi bağlantıyı bu uygulamaya hiç
+                 yönlendirmiyordu.
+
+                 ⚠ `autoVerify` YOK, çünkü bu bir custom scheme'dir;
+                 doğrulama yalnız https App Links için geçerlidir.
+
+                 ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı
+                 şemayı kaydedip geri dönüşü yakalayabilir. Kalıcı
+                 çözüm https App Links'tir (autoVerify + assetlinks.json);
+                 doğrulanmış alan adı gerektirir ve web tarafı hazır
+                 olduğunda eklenmelidir.
+
+                 ⚠ GÜVENLİK BUNA DAYANMAZ: adres yalnız `session`
+                 kimliği taşır. `success=true` gibi bir parametre gelse
+                 bile ödeme kanıtı SAYILMAZ; sonuç her zaman backend
+                 `confirmTopup` ile doğrulanır (bkz.
+                 `core/deep_links.dart`). Bağlantı ayrıca idempotenttir
+                 (`markHandled`).
+
+                 ⚠ `exported` ZATEN true: Activity launcher olduğu için
+                 dışa açıktır; bu filtre yeni bir yüzey açmaz, var olan
+                 Activity'ye bir giriş yolu ekler. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="hizmetcep" android:host="payment"/>
+            </intent-filter>
+
+            <!-- ── ⚠ APP LINKS (HTTPS) — ALTYAPI HAZIRLIĞI ──
+                 `https://hizmetcep.com/payment/...` adreslerinin
+                 tarayıcı yerine doğrudan uygulamada açılması için.
+
+                 ⚠ HENÜZ DOĞRULANMIŞ DEĞİL. `autoVerify="true"` yazmak
+                 tek başına yetmez: sistem
+                 `https://hizmetcep.com/.well-known/assetlinks.json`
+                 dosyasını indirir ve içindeki SHA-256 imza parmak
+                 izini uygulamanınkiyle karşılaştırır. O dosya bu
+                 turda OLUŞTURULMADI (kapsam dışı). Yayınlanana kadar
+                 bağlantı doğrulanmaz ve Android kullanıcıya "hangi
+                 uygulamayla açılsın" diye sorar — bağlantı yine de
+                 uygulamaya gelebilir, yalnız otomatik açılmaz.
+
+                 ⚠ ÖZEL ŞEMA FİLTRESİ YUKARIDA DURUYOR: bu filtre onun
+                 yerine geçmez, YANINA eklenir. `hizmetcep://` yolu
+                 aynen çalışır ve ödeme geri dönüşü bozulmaz.
+
+                 ⚠ `pathPrefix` DAR TUTULDU: alan adının tamamı değil
+                 yalnız `/payment` altı yakalanır. Tüm site
+                 yakalansaydı, uygulamanın karşılığı olmayan her
+                 sayfa (tanıtım, yasal metinler) da uygulamada açılmaya
+                 çalışılırdı.
+
+                 ⚠ GÜVENLİK BUNA DAYANMAZ: adres yalnız `session`
+                 kimliği taşır; `success=true` gibi bir parametre gelse
+                 bile ödeme kanıtı SAYILMAZ. Sonuç her zaman backend
+                 `confirmTopup` ile doğrulanır. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                      android:host="hizmetcep.com"
+                      android:pathPrefix="/payment"/>
+            </intent-filter>
+
+        </activity>
+        <meta-data android:name="flutterEmbedding" android:value="2"/>
+    </application>
+</manifest>
