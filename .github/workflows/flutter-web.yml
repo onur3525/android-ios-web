@@ -23,7 +23,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --debug
+        run: flutter build web --debug --dart-define=ARAMA_IZ=true
 
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4
