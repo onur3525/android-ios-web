@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/arama_izi.dart';
 import '../../data/category_tree.dart';
 import '../../data/services/search_service.dart';
 import '../../ui/ref_tokens.dart';
@@ -100,13 +101,23 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
   /// sayılırdı.
   final Object _grup = Object();
 
+  /// Ölçüm: web panelinin genel dikdörtgeni (yalnız ARAMA_IZ açıkken
+  /// panele bağlanır).
+  final GlobalKey _izPanelAnahtari = GlobalKey();
+
   /// Kutunun genişliği — panel onunla aynı genişlikte olmalı.
   double _genislik = 0;
 
   @override
   void initState() {
     super.initState();
+    if (kAramaIzi) {
+      aramaIzi('SEARCH_WEB_BRANCH', '_web=$_web kIsWeb=$kIsWeb');
+    }
     _odak.addListener(() {
+      if (kAramaIzi && !_odak.hasFocus) {
+        aramaIzi('SEARCH_RESULT_FOCUS_LOST', '_acik=$_acik _web=$_web');
+      }
       // ── ⚠ WEB'DE ODAK KAYBI PANELİ KAPATMAZ ──
       //
       // Web'de metin alanının odağını tarayıcı/motor da düşürebiliyor
@@ -257,23 +268,28 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
   /// satırlar tarayıcı konsoluna basar; hangi adıma kadar
   /// gelindiği görülür.
   ///
-  /// ⚠ YALNIZ DEBUG: `kDebugMode` dışında hiç çalışmaz, üretim
-  /// paketine çıktı sızmaz.
+  /// ⚠ YALNIZ `--dart-define=ARAMA_IZ=true` İLE: bayrak yoksa hiçbir
+  /// şey yazmaz (bkz. `lib/core/arama_izi.dart`). Release derlemede de
+  /// ölçüm yapılabilsin diye `kDebugMode`a bağlı DEĞİL.
   ///
   /// ⚠ SORUN BULUNUNCA KALDIRILACAK.
-  void _iz(String adim, SearchHit h) {
-    if (kDebugMode) {
-      debugPrint('$adim → ${h.category} / ${h.subService ?? "-"}');
+  void _iz(String adim, SearchHit h, [String ek = '']) {
+    if (!kAramaIzi) {
+      return;
     }
+    final hedef = '→ ${h.category} / ${h.subService ?? "-"}';
+    aramaIzi(adim, ek.isEmpty ? hedef : '$hedef $ek');
   }
 
   void _sec(SearchHit h) {
-    _iz('SEARCH_RESULT_SEC', h);
+    if (kAramaIzi) {
+      _iz('SEARCH_RESULT_SEC', h, 'liste=${_oneriler.length}');
+    }
     // ⚠ TEK SEFER: `onPointerDown` ve `onTap` aynı dokunuşta
     // art arda gelebilir. İkinci çağrı yok sayılır.
     if (_oneriler.isEmpty) {
-      if (kDebugMode) {
-        debugPrint('SEARCH_RESULT_SEC_ATLANDI (liste boş)');
+      if (kAramaIzi) {
+        aramaIzi('SEARCH_RESULT_SEC', 'ATLANDI (liste boş — tek-sefer koruması)');
       }
       return;
     }
@@ -288,7 +304,9 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     if (_web) {
       _webListe.value = const [];
     }
-    _iz('SEARCH_RESULT_CALLBACK', h);
+    if (kAramaIzi) {
+      _iz('SEARCH_RESULT_CALLBACK', h);
+    }
     widget.onSecim(h.category, h.subService);
   }
 
@@ -350,8 +368,9 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     return Listener(
           behavior: HitTestBehavior.translucent,
           onPointerDown: (e) {
-            if (kDebugMode) {
-              debugPrint('SEARCH_PANEL_POINTER_DOWN → ${e.localPosition}');
+            if (kAramaIzi) {
+              aramaIzi('SEARCH_PANEL_POINTER_DOWN',
+                  'genel=${izNokta(e.position)} yerel=${izNokta(e.localPosition)}');
             }
           },
           child: Material(
@@ -437,13 +456,17 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                   onPointerDown: _web
                       ? null
                       : (_) {
-                          _iz('SEARCH_RESULT_POINTER_DOWN', h);
+                          if (kAramaIzi) {
+                            _iz('SEARCH_RESULT_POINTER_DOWN', h, 'yol=mobil');
+                          }
                           _sec(h);
                         },
                   child: RefTap(
                   // Her satır AYRI dokunma hedefidir.
                   onTap: () {
-                    _iz('SEARCH_RESULT_TAP', h);
+                    if (kAramaIzi) {
+                      _iz('SEARCH_RESULT_INKWELL_TAP', h);
+                    }
                     _sec(h);
                   },
                   child: Padding(
@@ -467,9 +490,13 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                 if (_web) {
                   return WebOneriDokunusu(
                     onSec: () {
-                      _iz('SEARCH_RESULT_WEB_UP', h);
+                      if (kAramaIzi) {
+                        _iz('SEARCH_RESULT_WEB_UP', h, 'WebOneriDokunusu→_sec');
+                      }
                       _sec(h);
                     },
+                    izEtiketi:
+                        kAramaIzi ? '${h.subService ?? h.category}' : null,
                     child: satir,
                   );
                 }
@@ -510,8 +537,19 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     );
   }
 
+  /// Ölçüm: kapalı kutunun altına şerit ekler (açık kutuda şerit
+  /// kutunun kendi sütununda). ⚠ Bayrak kapalıyken `_ciz`in sonucu
+  /// OLDUĞU GİBİ döner — ağaç değişmez.
   @override
   Widget build(BuildContext context) {
+    final govde = _ciz(context);
+    if (_acik) {
+      return govde;
+    }
+    return _izSeridiEkle(govde);
+  }
+
+  Widget _ciz(BuildContext context) {
     // ── KAPALI: referans görünümü korunur ──
     if (!_acik) {
       return RefSearchBox(
@@ -611,6 +649,9 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
           ),
         ),
 
+        // Ölçüm şeridi: kutunun HEMEN altında (bayrak kapalıyken yok).
+        if (kAramaIzi && _web) const AramaIziSeridi(),
+
         // ⚠ WEB'DE PANEL BURADA: sayfanın kendi ağacında, kutunun
         // hemen altında. Mobilde bu dal hiç çalışmaz (overlay
         // kullanılır) ve sayfa düzeni değişmez.
@@ -628,6 +669,9 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
             builder: (context, liste, _) => liste.isEmpty
                 ? const SizedBox.shrink()
                 : Padding(
+                    // Ölçüm: panelin genel dikdörtgeni için anahtar
+                    // (bayrak kapalıyken anahtar YOK — ağaç aynı).
+                    key: kAramaIzi ? _izPanelAnahtari : null,
                     padding: const EdgeInsets.only(top: 6),
                     child: _panelGovdesi(context),
                   ),
@@ -652,6 +696,19 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     );
   }
 
+  /// Ölçüm şeridi (kapalı kutu için). ⚠ Bayrak kapalıysa ya da mobilde
+  /// çocuk OLDUĞU GİBİ döner — ağaca düğüm eklenmez.
+  Widget _izSeridiEkle(Widget cocuk) {
+    if (!(kAramaIzi && _web)) {
+      return cocuk;
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [cocuk, const AramaIziSeridi()],
+    );
+  }
+
   /// ── ⚠ YALNIZ WEB: KAPANMA KURALI SARMALAYICISI ──
   ///
   /// Açık kutunun TAMAMI (metin alanı + X + panel + "sonuç yok")
@@ -668,11 +725,30 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     }
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.escape): _webKapat,
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (kAramaIzi) {
+            aramaIzi('SEARCH_PANEL_CLOSE_OUTSIDE', 'neden=Escape');
+          }
+          _webKapat();
+        },
       },
       child: TapRegion(
         groupId: _grup,
-        onTapOutside: (_) => _webKapat(),
+        onTapOutside: (e) {
+          if (kAramaIzi) {
+            final panel = izGenelRect(_izPanelAnahtari.currentContext);
+            final grup = izGenelRect(context);
+            aramaIzi(
+                'SEARCH_PANEL_CLOSE_OUTSIDE',
+                'neden=onTapOutside id=${e.pointer} tur=${e.kind.name} '
+                    'genel=${izNokta(e.position)} '
+                    'panel=${izRect(panel)} '
+                    'inside=${panel?.contains(e.position) ?? false} '
+                    'kutu+panel=${izRect(grup)} '
+                    'insideKutu=${grup?.contains(e.position) ?? false}');
+          }
+          _webKapat();
+        },
         child: cocuk,
       ),
     );
