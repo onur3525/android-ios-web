@@ -32,7 +32,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --debug --base-href /android-ios-web/ --dart-define=ARAMA_IZ=true
+        run: flutter build web --debug --base-href /android-ios-web/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

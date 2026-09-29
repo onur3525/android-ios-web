@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'core/arama_izi.dart';
 import 'core/route_guard.dart';
 import 'screens/account_settings_screen.dart';
 import 'screens/addresses_screen.dart';
@@ -851,12 +850,9 @@ class HizmetCepApp extends StatelessWidget {
         // `MaterialApp.builder` Navigator'ın üstünde çalıştığı için
         // rotayı başka türlü öğrenemez.
         navigatorObservers: [AktifRota()],
-        // Ölçüm: `aramaIziSayfaDinleyicisi` YALNIZ ARAMA_IZ açıkken
-        // geçirgen bir Listener ekler; kapalıyken çocuğu OLDUĞU GİBİ
-        // döndürür (bkz. lib/core/arama_izi.dart).
-        builder: (context, child) => aramaIziSayfaDinleyicisi(GlobalWebKabugu(
+        builder: (context, child) => GlobalWebKabugu(
           child: OfflineBanner(child: child ?? const SizedBox.shrink()),
-        )),
+        ),
         // ⚠ İKİSİ BİRDEN VERİLEMEZ: `home` ve `initialRoute` aynı anda
         // tanımlanırsa Flutter `home`u kullanır. Web'de `home` null
         // bırakılır ki `initialRoute` işlesin.

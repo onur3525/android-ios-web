@@ -1,4 +1,3 @@
-import '../core/arama_izi.dart';
 import '../data/services/search_service.dart';
 import '../domain/form_mesajlari.dart';
 import 'dart:async';
@@ -103,11 +102,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   @override
   void initState() {
     super.initState();
-    if (kAramaIzi) {
-      aramaIzi('SEARCH_LISTING_OPEN',
-          'preLogin=${widget.preLogin} kategori=${widget.initialCategory ?? "-"} '
-          'hizmet=${widget.initialSubService ?? "-"}');
-    }
     // Bölge verisi henüz yüklenmediyse yükle (lazy provider).
     WidgetsBinding.instance.addPostFrameCallback(
         (_) {

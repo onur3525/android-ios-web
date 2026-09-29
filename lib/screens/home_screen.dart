@@ -4,7 +4,6 @@ import '../ui/olcu.dart';
 import 'package:flutter/foundation.dart';
 // `context.read<T>()` bu paketin BuildContext eklentisidir.
 import 'package:provider/provider.dart';
-import '../core/arama_izi.dart';
 import '../core/sys_state.dart';
 import '../domain/cikar_catismasi.dart';
 import '../data/models/account.dart';
@@ -158,10 +157,6 @@ void hizmetSecildi(
         saglayiciSecimleri: me.categories,
         ilanBasligi: altHizmet ?? kategori);
     if (catisan != null) {
-      if (kAramaIzi) {
-        aramaIzi('SEARCH_RESULT_NAVIGATE',
-            'DAL=cikar_catismasi → yönlendirme YOK, hata bildirimi');
-      }
       sysToastErr(context, SysKind.genericError,
           extra: catismaMesaji(catisan));
       return;
@@ -184,12 +179,6 @@ void hizmetSecildi(
   final gezgin = gezginAnahtari.currentState;
 
   void publicForma() {
-    // ⚠ GEÇİCİ TEŞHİS (bkz. `inline_search_box._iz`).
-    if (kAramaIzi) {
-      aramaIzi('SEARCH_RESULT_NAVIGATE',
-          'DAL=oturumsuz rota=${PreLoginListingRoute.name} '
-          '→ $kategori / ${altHizmet ?? "-"} gezgin=${gezgin != null}');
-    }
     const ad = PreLoginListingRoute.name;
     final arg =
         PreLoginListingArgs(category: kategori, subService: altHizmet);
@@ -211,11 +200,6 @@ void hizmetSecildi(
       unawaited(auth.switchRole(Role.customer));
     }
     // ⚠ AYNI SEBEP: anahtar üzerinden.
-    if (kAramaIzi) {
-      aramaIzi('SEARCH_RESULT_NAVIGATE',
-          'DAL=hizmet_alan push(CreateListingScreen) '
-          '→ $kategori / ${altHizmet ?? "-"} gezgin=${gezgin != null}');
-    }
     final rota = MaterialPageRoute<void>(
         builder: (_) => CreateListingScreen(
               initialCategory: kategori,
