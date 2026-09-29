@@ -21,7 +21,8 @@ import 'package:flutter/widgets.dart';
 ///     tamamlanıp tamamlanmadığı belirsiz kalıyordu.
 ///
 /// Burada seçim `onPointerUp`ta yapılır ve yalnız parmak/fare
-/// basıldığı yerden `kTouchSlop`tan AZ kaydıysa geçerlidir.
+/// basıldığı yerden kayma eşiğinden AZ kaydıysa geçerlidir (eşik
+/// cihazın jest ayarından, yoksa `kTouchSlop`).
 /// Kaydırma hareketi seçim sayılmaz.
 ///
 /// ⚠ PANEL KALDIRILSA BİLE ÇALIŞIR: Flutter, bir işaretçinin
@@ -57,6 +58,18 @@ class _WebOneriDokunusuState extends State<WebOneriDokunusu> {
   /// ağaçtan kaldırılırsa `widget`a bir daha güvenilmez.
   VoidCallback? _bekleyen;
 
+  /// ⚠ Kayma eşiği basış anında CİHAZIN jest ayarından okunur
+  /// (`MediaQuery` jest ayarı; yoksa `kTouchSlop`). Sayfa kaydırıcısı da
+  /// aynı ayarı kullandığı için "kaydırma başladı" ile "seçim iptal"
+  /// her cihazda AYNI noktada olur: eşiği aşan hareket kaydırmadır ve
+  /// seçmez, aşmayan hareket seçimdir ve kaydırmaz.
+  double _esik = kTouchSlop;
+
+  double _esikOku() {
+    final ayar = MediaQuery.maybeGestureSettingsOf(context);
+    return ayar?.touchSlop ?? kTouchSlop;
+  }
+
   void _sifirla() {
     _bekleyen = null;
     _isaretci = null;
@@ -76,6 +89,7 @@ class _WebOneriDokunusuState extends State<WebOneriDokunusu> {
         }
         _isaretci = e.pointer;
         _bekleyen = widget.onSec;
+        _esik = _esikOku();
         _baslangic = e.position;
         _kaydi = false;
       },
@@ -83,7 +97,7 @@ class _WebOneriDokunusuState extends State<WebOneriDokunusu> {
         if (e.pointer != _isaretci || _baslangic == null) {
           return;
         }
-        if ((e.position - _baslangic!).distance > kTouchSlop) {
+        if ((e.position - _baslangic!).distance > _esik) {
           _kaydi = true;
         }
       },
@@ -92,7 +106,7 @@ class _WebOneriDokunusuState extends State<WebOneriDokunusu> {
           return;
         }
         final gecerli =
-            !_kaydi && (e.position - _baslangic!).distance <= kTouchSlop;
+            !_kaydi && (e.position - _baslangic!).distance <= _esik;
         final cagri = _bekleyen;
         _sifirla();
         if (gecerli && cagri != null) {

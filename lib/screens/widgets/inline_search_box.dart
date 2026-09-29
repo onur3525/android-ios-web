@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../../data/category_tree.dart';
 import '../../data/services/search_service.dart';
@@ -23,6 +24,7 @@ class InlineSearchBox extends StatefulWidget {
     required this.title,
     required this.subtitle,
     required this.onSecim,
+    this.webDavranisi = kIsWeb,
   });
 
   final String title;
@@ -30,6 +32,16 @@ class InlineSearchBox extends StatefulWidget {
 
   /// Kullanıcı bir öneriye dokundu: (ana kategori, alt hizmet?).
   final void Function(String category, String? subService) onSecim;
+
+  /// ── ⚠ WEB DAVRANIŞI ANAHTARI ──
+  ///
+  /// Varsayılanı `kIsWeb`: Android/iOS'ta `false`, web'de `true`.
+  /// Uygulamadaki çağrılar bu parametreyi VERMEZ; yani mobil
+  /// davranış hiçbir koşulda değişmez.
+  ///
+  /// Parametre yalnız TEST içindir: `kIsWeb` derleme sabiti olduğu
+  /// için web dalı VM testinde başka türlü açılamıyordu.
+  final bool webDavranisi;
 
   @override
   State<InlineSearchBox> createState() => _InlineSearchBoxState();
@@ -74,6 +86,20 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
   final ValueNotifier<List<SearchHit>> _webListe =
       ValueNotifier<List<SearchHit>>(const []);
 
+  /// Web dalı mı? (bkz. `InlineSearchBox.webDavranisi`)
+  bool get _web => widget.webDavranisi;
+
+  /// ── ⚠ YALNIZ WEB: KUTUYA ÖZGÜ DOKUNMA GRUBU ──
+  ///
+  /// Metin alanı, X düğmesi ve öneri paneli TEK grup. Grubun içine
+  /// (satır, satır arası boşluk, kutunun kendisi) dokunmak paneli
+  /// KAPATMAZ; yalnız grubun DIŞINA dokunmak kapatır.
+  ///
+  /// ⚠ Paylaşılan `EditableText` grubu kullanılmadı: o grup sayfadaki
+  /// TÜM metin alanlarını kapsar; başka bir alana dokunmak "içeride"
+  /// sayılırdı.
+  final Object _grup = Object();
+
   /// Kutunun genişliği — panel onunla aynı genişlikte olmalı.
   double _genislik = 0;
 
@@ -81,6 +107,19 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
   void initState() {
     super.initState();
     _odak.addListener(() {
+      // ── ⚠ WEB'DE ODAK KAYBI PANELİ KAPATMAZ ──
+      //
+      // Web'de metin alanının odağını tarayıcı/motor da düşürebiliyor
+      // (gizli giriş kutusunun odak kaybı). Panel odağa bağlı olduğu
+      // sürece bu, parmak satırdan kalkmadan paneli kaldırıp seçimi
+      // kaçırtabiliyordu. Web'de panel YALNIZ şu yollarla kapanır:
+      // seçim (`_sec`) · X · grup dışına dokunma · Escape
+      // (hepsi `_webKapat` ya da `_sec` üzerinden).
+      //
+      // ⚠ MOBİL DEĞİŞMEZ: aşağıdaki gövde Android/iOS'ta aynen çalışır.
+      if (_web) {
+        return;
+      }
       if (!_odak.hasFocus) {
         // ── ⚠ DIŞARI DOKUNMA = YALNIZCA PANELİ KAPAT ──
         //
@@ -144,7 +183,7 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
       //
       // ⚠ MOBİL DEĞİŞMEZ: orada overlay yolu aynen sürer; sayfa
       // itilmez, panel içeriğin üstünde durur.
-      if (kIsWeb) {
+      if (_web) {
         return;
       }
       _panel = OverlayEntry(builder: _panelYap);
@@ -196,8 +235,8 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     //
     // Bildirim YALNIZ web panelini yeniden çizer.
     //
-    // ⚠ MOBİL DEĞİŞMEZ: `kIsWeb` false iken bu satır hiç çalışmaz.
-    if (kIsWeb) {
+    // ⚠ MOBİL DEĞİŞMEZ: `_web` false iken bu satır hiç çalışmaz.
+    if (_web) {
       _webListe.value = _oneriler;
     }
 
@@ -246,11 +285,27 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
       _oneriler = const [];
       _sonucYok.value = false;
     });
-    if (kIsWeb) {
+    if (_web) {
       _webListe.value = const [];
     }
     _iz('SEARCH_RESULT_CALLBACK', h);
     widget.onSecim(h.category, h.subService);
+  }
+
+  /// ── ⚠ YALNIZ WEB: TEK KAPATMA YOLU ──
+  ///
+  /// Grup dışına dokunma ve Escape buradan geçer. Metin ve sonuçlar
+  /// SİLİNMEZ: kullanıcı kutuya tekrar dokunduğunda kaldığı yerden
+  /// devam eder (mobildeki odak kaybı davranışıyla aynı sözleşme).
+  /// Metni silen tek yol X'tir.
+  void _webKapat() {
+    if (!mounted) {
+      return;
+    }
+    _odak.unfocus();
+    if (_acik) {
+      setState(() => _acik = false);
+    }
   }
 
   /// Overlay'de çizilen öneri paneli.
@@ -302,7 +357,18 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
           child: Material(
           color: Colors.transparent,
           child: Container(
-            constraints: BoxConstraints(maxHeight: ekran * 0.55),
+            // ── ⚠ WEB: YÜKSEKLİK SINIRI YOK, TEK KAYDIRICI SAYFA ──
+            //
+            // %55 sınırı tarayıcıda (adres/alt çubuk ekranı kısaltıyor)
+            // yaklaşık 62 px'lik bir iç kaydırma bırakıyordu: sürüklemeyi
+            // iç liste kazanıyor, kısa mesafede durup dış sayfaya
+            // devretmiyordu; klavyenin altında kalan satırlara
+            // ulaşılamıyordu. Web'de sonuçlar sayfanın parçasıdır ve
+            // TÜM kaydırmayı `RefScroll` yapar.
+            //
+            // ⚠ MOBİL DEĞİŞMEZ: sınır Android/iOS'ta aynen durur.
+            constraints:
+                _web ? null : BoxConstraints(maxHeight: ekran * 0.55),
             decoration: BoxDecoration(
               color: RC.white,
               border: Border.all(color: const Color(0xFFECEEF2)),
@@ -311,6 +377,9 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
             ),
             child: ListView.separated(
               shrinkWrap: true,
+              // ⚠ WEB: iç liste kaydırmaz; sürükleme sayfaya kalır
+              // (arenada iç–dış yarışı olmaz). Mobilde varsayılan fizik.
+              physics: _web ? const NeverScrollableScrollPhysics() : null,
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: _oneriler.length,
               // ⚠ AYIRICI GÖRÜNMEZ.
@@ -360,12 +429,12 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                 // hareket `kTouchSlop` altında kaldıysa yapılır (bkz.
                 // `lib/ui/web_oneri_dokunusu.dart`).
                 //
-                // ⚠ MOBİL AĞAÇ BİREBİR AYNI: `kIsWeb` false iken
+                // ⚠ MOBİL AĞAÇ BİREBİR AYNI: `_web` false iken
                 // `Listener` aynı `onPointerDown` ile döner, sarmalayıcı
                 // eklenmez.
                 final satir = Listener(
                   behavior: HitTestBehavior.translucent,
-                  onPointerDown: kIsWeb
+                  onPointerDown: _web
                       ? null
                       : (_) {
                           _iz('SEARCH_RESULT_POINTER_DOWN', h);
@@ -395,7 +464,7 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                   ),
                   ),
                 );
-                if (kIsWeb) {
+                if (_web) {
                   return WebOneriDokunusu(
                     onSec: () {
                       _iz('SEARCH_RESULT_WEB_UP', h);
@@ -458,7 +527,7 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
     // taşır. Öneri paneli overlay'de; bu yüzden sayfa itilmiyor.
     return CompositedTransformTarget(
       link: _bag,
-      child: Column(
+      child: _webSarmala(Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -480,6 +549,10 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _odak,
+                  // ⚠ WEB: metin alanı kutuya özgü gruba girer; panele
+                  // ya da X'e dokunmak alanın "dışı" sayılmaz ve odağı
+                  // düşürmez. Mobilde varsayılan grup (`EditableText`).
+                  groupId: _web ? _grup : EditableText,
                   onChanged: _ara,
                   textInputAction: TextInputAction.search,
                   style: refText(
@@ -520,17 +593,16 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
               // yazıldığında belirmiyordu. Burada denetleyicinin kendisi
               // dinlenir; yalnız bu düğme yeniden çizilir.
               //
-              // ⚠ `TextFieldTapRegion`: X metin alanının dokunma bölgesine
-              // alınır; aksi hâlde web'de X'e basmak önce odağı düşürüp
-              // kutuyu kapatıyor, X'in dokunuşu tamamlanamıyordu.
+              // ⚠ X, `_webSarmala`daki kutu grubunun içinde: web'de X'e
+              // basmak "dışarı dokunma" sayılmaz, dokunuş tamamlanır.
               //
               // ⚠ MOBİL DEĞİŞMEZ: `else` dalı önceki koşulun ve düğmenin
               // BİREBİR aynısıdır.
-              if (kIsWeb)
+              if (_web)
                 ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _controller,
                   builder: (_, deger, __) => deger.text.isNotEmpty
-                      ? TextFieldTapRegion(child: _temizleDugmesi())
+                      ? _temizleDugmesi()
                       : const SizedBox.shrink(),
                 )
               else if (_controller.text.isNotEmpty)
@@ -543,25 +615,21 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
         // hemen altında. Mobilde bu dal hiç çalışmaz (overlay
         // kullanılır) ve sayfa düzeni değişmez.
         //
-        // ⚠ `TextFieldTapRegion`: panel, metin alanının dokunma
-        // bölgesine DAHİL edilir. Flutter web'de metin alanı dışına
-        // yapılan dokunuş (dokunmatik dahil) odağı düşürüyor; panel
-        // bölge dışında sayıldığı için satıra dokunmak odağı
-        // kaybettirip paneli kaldırıyordu. Artık satıra dokunmak
-        // "dışarı dokunma" sayılmaz.
+        // ⚠ Panel `_webSarmala`daki kutu grubunun içinde: satıra ya da
+        // satır arası boşluğa dokunmak "dışarı dokunma" sayılmaz ve
+        // paneli kapatmaz. Odak düşse bile panel kapanmaz (bkz. odak
+        // dinleyicisi); seçim parmak kalkınca tamamlanır.
         //
         // ⚠ `ValueListenableBuilder`: panel `_webListe` değiştikçe
         // yeniden çizilir (bkz. `_ara`); kutunun geri kalanı çizilmez.
-        if (kIsWeb)
+        if (_web)
           ValueListenableBuilder<List<SearchHit>>(
             valueListenable: _webListe,
             builder: (context, liste, _) => liste.isEmpty
                 ? const SizedBox.shrink()
-                : TextFieldTapRegion(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: _panelGovdesi(context),
-                    ),
+                : Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: _panelGovdesi(context),
                   ),
           ),
 
@@ -580,6 +648,32 @@ class _InlineSearchBoxState extends State<InlineSearchBox> {
               : const SizedBox.shrink(),
         ),
       ],
+      )),
+    );
+  }
+
+  /// ── ⚠ YALNIZ WEB: KAPANMA KURALI SARMALAYICISI ──
+  ///
+  /// Açık kutunun TAMAMI (metin alanı + X + panel + "sonuç yok")
+  /// `_grup` dokunma bölgesidir:
+  ///   · grubun İÇİNE dokunmak paneli kapatmaz,
+  ///   · grubun DIŞINA dokunmak `_webKapat` ile kapatır,
+  ///   · Escape `_webKapat` ile kapatır.
+  ///
+  /// ⚠ MOBİL DEĞİŞMEZ: `_web` false iken çocuk OLDUĞU GİBİ döner;
+  /// mobil ağaçta tek bir düğüm bile eklenmez.
+  Widget _webSarmala(Widget cocuk) {
+    if (!_web) {
+      return cocuk;
+    }
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): _webKapat,
+      },
+      child: TapRegion(
+        groupId: _grup,
+        onTapOutside: (_) => _webKapat(),
+        child: cocuk,
       ),
     );
   }

@@ -34,12 +34,16 @@ import 'web_oneri_dokunusu.dart';
 /// ## ⚠ KAPANMA YOLLARI
 ///
 ///   · Esc                → klavye
-///   · Dışarı tıklama     → katmanın altındaki saydam engel
+///   · Dışarı tıklama     → dokunma grubunun `onTapOutside`ı
 ///   · Öneri seçimi       → seçimden sonra
-///   · Odak kaybı         → başka alana geçince
+///   · Metin kısalınca    → `_yaz`
 ///
-/// Dördü de aynı `_kapat`a gider; ayrı yollar olsaydı biri
+/// Hepsi aynı `_kapat`a gider; ayrı yollar olsaydı biri
 /// düzeltilip öteki unutulurdu.
+///
+/// ⚠ ODAK KAYBI ARTIK KAPATMAZ: web'de odağı tarayıcı/motor da
+/// düşürebiliyor; panel odağa bağlıyken seçim tamamlanmadan kalkıyordu.
+/// Metin alanı ile panel kutuya özgü tek dokunma grubudur (`_grup`).
 ///
 /// ## ⚠ ENTER
 ///
@@ -63,16 +67,23 @@ class _HeaderAramaState extends State<HeaderArama> {
   final _baglanti = LayerLink();
 
   OverlayEntry? _katman;
+
+  /// Metin alanı + öneri paneli TEK dokunma grubu: panele dokunmak
+  /// "dışarı" sayılmaz; grubun dışına dokunmak paneli kapatır.
+  /// ⚠ Paylaşılan `EditableText` grubu değil — o sayfadaki bütün
+  /// metin alanlarını kapsar.
+  final Object _grup = Object();
   List<SearchHit> _oneriler = const [];
 
   @override
   void initState() {
     super.initState();
-    _odak.addListener(() {
-      if (!_odak.hasFocus) {
-        _kapat();
-      }
-    });
+    // ── ⚠ ODAK KAYBI PANELİ KAPATMAZ (ana sayfa kutusuyla TEK KURAL) ──
+    //
+    // Web'de metin alanının odağını tarayıcı/motor da düşürebiliyor;
+    // panel odağa bağlı olduğu sürece bu, seçim tamamlanmadan paneli
+    // kaldırabiliyordu. Panel yalnız şu yollarla kapanır: seçim ·
+    // grup dışına dokunma (`onTapOutside`) · Escape · metin kısalınca.
   }
 
   @override
@@ -134,17 +145,8 @@ class _HeaderAramaState extends State<HeaderArama> {
 
   Widget _katmanCiz(BuildContext _) => Stack(
         children: [
-          // ⚠ DIŞARI TIKLAMA ENGELİ: tüm sayfayı kaplar ama görünmez.
-          // Panelin kendisi bunun ÜSTÜNDE çizilir.
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                _kapat();
-                _odak.unfocus();
-              },
-            ),
-          ),
+          // ⚠ Eski tam ekran saydam engel KALDIRILDI: dışarı dokunma artık
+          // dokunma grubunun `onTapOutside`ıyla yakalanıyor (bkz. TextField).
           CompositedTransformFollower(
             link: _baglanti,
             showWhenUnlinked: false,
@@ -152,7 +154,9 @@ class _HeaderAramaState extends State<HeaderArama> {
             offset: const Offset(0, 46),
             child: Align(
               alignment: Alignment.topLeft,
-              child: Material(
+              child: TapRegion(
+                groupId: _grup,
+                child: Material(
                 color: RC.white,
                 elevation: 8,
                 shadowColor: const Color(0x1A16233D),
@@ -204,6 +208,7 @@ class _HeaderAramaState extends State<HeaderArama> {
                     ),
                   ),
                 ),
+                ),
               ),
             ),
           ),
@@ -230,6 +235,11 @@ class _HeaderAramaState extends State<HeaderArama> {
             child: TextField(
               controller: _kontrol,
               focusNode: _odak,
+              groupId: _grup,
+              onTapOutside: (_) {
+                _kapat();
+                _odak.unfocus();
+              },
               onChanged: _yaz,
               onSubmitted: (_) => _enter(),
               textInputAction: TextInputAction.search,
