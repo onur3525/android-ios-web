@@ -225,7 +225,7 @@ class GlobalWebKabugu extends StatelessWidget {
   static const Set<String> _formRotalari = {
     '/login', '/role',
     '/profile/info', '/profile/address', '/profile/password',
-    '/profile/account', '/profile/rate',
+    '/profile/account', '/profile/rate', '/profile/role',
     '/provider/categories', '/provider/areas',
     '/customer/new-listing',
     '/kayit', '/dogrulama', '/sifremi-unuttum',
@@ -354,6 +354,7 @@ class AktifRota extends NavigatorObserver {
       '/profile/password': 'Şifre Değiştir',
       '/profile/account': 'Hesap Ayarları',
       '/profile/rate': 'Uygulama Değerlendirmesi',
+      '/profile/role': 'Rol Değiştir',
       '/notifications': 'Bildirimler',
       '/customer/listings': 'İlanlarım',
       '/customer/new-listing': 'İlan Oluştur',

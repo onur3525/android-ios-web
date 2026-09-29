@@ -79,6 +79,10 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
+          // sekme olduğu için geri oku YOK. Mobilde bu satır hiç
+          // eklenmez; aşağıdaki rol etiketi düzeni aynen durur.
+          if (kIsWeb) const RefPageTitle('Profil', geriDugmesi: false),
           // ⚠ BÜYÜK BAŞLIK YERİNE ROL ETİKETİ.
           //
           // "Profil - Hizmet Veren" satırı iki iş yapıyordu: sayfayı

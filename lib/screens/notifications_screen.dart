@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import 'teklif_talebi_sohbet_screen.dart';
@@ -370,6 +371,45 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // listede hiçbiri görünmeyebilirdi.
     final okunmamis = liste.where((n) => !n.read).length;
 
+    // "Tümünü Okundu Yap" — TEK tanım; başlık satırı (mobil) ve web
+    // başlığının altı bu nesneyi kullanır.
+    final Widget? tumunuOkundu = okunmamis > 0
+        ? RefTap(
+          // ── ⚠ YALNIZ GÖRÜNENLER OKUNDU İŞARETLENİR ──
+          //
+          // `markAllRead(userId)` hesabın TÜM bildirimlerini
+          // okundu yapar — karşı rolünkileri de. Kullanıcı
+          // hizmet alan rolünde "Tümünü Okundu Yap"a
+          // bastığında, hiç görmediği hizmet veren
+          // bildirimleri de sessizce okunmuş sayılırdı; rol
+          // değiştirdiğinde onlardan haberi olmazdı.
+          //
+          // ⚠ BU YÜZDEN TEK TEK: ekranda görünen okunmamış
+          // bildirimler `markRead` ile işaretlenir. Liste
+          // zaten role göre süzülmüş durumda.
+          //
+          // ⚠ BACKEND İŞİ (yapılmadı): sunucuda role göre
+          // toplu işaretleyen bir uç yok. Uç eklenirse bu
+          // döngü tek çağrıya iner; davranış sözleşmesi
+          // aynı kalır.
+          onTap: () {
+            final ctl = context.read<NotificationController>();
+            for (final n in liste.where((n) => !n.read)) {
+              ctl.markRead(n.id);
+            }
+          },
+          borderRadius: BorderRadius.circular(RR.r8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              'Tümünü Okundu Yap',
+              style: refText(
+                  size: RF.s135, weight: RF.w700, color: RC.blue),
+            ),
+          ),
+        )
+        : null;
+
     return RefShell(
       nav: RefBottomNav(
         activeKey: 'bildirim',
@@ -382,66 +422,51 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // .nt-top{margin-bottom:14px}
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Bildirimler',
-                    // ⚠ ORTALI: öteki sayfa başlıkları (`RefPageTitle`)
-                    // ortalı çiziliyor; bu ekran kendi başlığını
-                    // çizdiği için kuralın dışında kalmıştı. Sağdaki
-                    // "Tümünü okundu say" düğmesi yerinde kalır.
-                    textAlign: TextAlign.center,
-                    style: refText(
-                      size: RF.s25,
-                      weight: RF.w700,
-                      color: RC.text,
-                      letterSpacing: RF.lsM03,
-                    ),
-                  ),
+          // ── ⚠ YALNIZ WEB: STANDART SAYFA BAŞLIĞI ──
+          //
+          // Başlık `RefPageTitle` ile çizilir (sağ alandaki bütün
+          // sayfalarla aynı ölçü/hiza); "Tümünü Okundu Yap" düğmesi
+          // başlığın altında sağa yaslı durur. Düğme TEK tanım
+          // (`tumunuOkundu`) — iki dal da aynı nesneyi kullanır.
+          //
+          // ⚠ MOBİL KİLİTLİ: `else` dalı önceki satırın BİREBİR aynısı.
+          if (kIsWeb) ...[
+            const RefPageTitle('Bildirimler', geriDugmesi: false),
+            if (tumunuOkundu != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: tumunuOkundu,
                 ),
-                const SizedBox(width: 10), // gap:10px
-                // .nt-readall — okunmamış varken anlamlıdır.
-                if (okunmamis > 0)
-                  RefTap(
-                    // ── ⚠ YALNIZ GÖRÜNENLER OKUNDU İŞARETLENİR ──
-                    //
-                    // `markAllRead(userId)` hesabın TÜM bildirimlerini
-                    // okundu yapar — karşı rolünkileri de. Kullanıcı
-                    // hizmet alan rolünde "Tümünü Okundu Yap"a
-                    // bastığında, hiç görmediği hizmet veren
-                    // bildirimleri de sessizce okunmuş sayılırdı; rol
-                    // değiştirdiğinde onlardan haberi olmazdı.
-                    //
-                    // ⚠ BU YÜZDEN TEK TEK: ekranda görünen okunmamış
-                    // bildirimler `markRead` ile işaretlenir. Liste
-                    // zaten role göre süzülmüş durumda.
-                    //
-                    // ⚠ BACKEND İŞİ (yapılmadı): sunucuda role göre
-                    // toplu işaretleyen bir uç yok. Uç eklenirse bu
-                    // döngü tek çağrıya iner; davranış sözleşmesi
-                    // aynı kalır.
-                    onTap: () {
-                      final ctl = context.read<NotificationController>();
-                      for (final n in liste.where((n) => !n.read)) {
-                        ctl.markRead(n.id);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(RR.r8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Tümünü Okundu Yap',
-                        style: refText(
-                            size: RF.s135, weight: RF.w700, color: RC.blue),
+              ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Bildirimler',
+                      // ⚠ ORTALI: öteki sayfa başlıkları (`RefPageTitle`)
+                      // ortalı çiziliyor; bu ekran kendi başlığını
+                      // çizdiği için kuralın dışında kalmıştı. Sağdaki
+                      // "Tümünü okundu say" düğmesi yerinde kalır.
+                      textAlign: TextAlign.center,
+                      style: refText(
+                        size: RF.s25,
+                        weight: RF.w700,
+                        color: RC.text,
+                        letterSpacing: RF.lsM03,
                       ),
                     ),
                   ),
-              ],
+                  const SizedBox(width: 10), // gap:10px
+                  // .nt-readall — okunmamış varken anlamlıdır.
+                  if (tumunuOkundu != null) tumunuOkundu,
+                ],
+              ),
             ),
-          ),
 
           // ── ⚠ HATA YALNIZ GERÇEKTEN OLUNCA ──
           //

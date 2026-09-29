@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -329,11 +330,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
                 children: [
                   // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: RefBackButton(),
-                  ),
-                  const SizedBox(height: 6),
+                  // ⚠ YALNIZ WEB: standart sayfa başlığı; geri oku kuralı
+                  // `RefPageTitle` içinde merkezî. Mobilde `else` dalı
+                  // önceki ağacın BİREBİR aynısı.
+                  if (kIsWeb)
+                    const RefPageTitle('Hesap Ayarları')
+                  else ...[
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: RefBackButton(),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   if (_error != null) ...[
                     Text(_error!,
                         style: const TextStyle(color: HC.red, fontSize: 13)),

@@ -118,7 +118,9 @@ const ProfilMenuOgesi cikisOgesi = ProfilMenuOgesi(
 // ── HİZMET ALAN ──
 const List<ProfilMenuOgesi> _musteri = [
   ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_ppin.svg',
+    // ⚠ ÇİZGİ İĞNE: kenar çubuğu ikonu tek renge boyar; dolgulu
+    // `ic_ppin` (Android profil karesi için) içi dolu leke oluyordu.
+    ikon: 'assets/svg/ic_pin.svg',
     ikonZemini: Color(0xFFE7EFFD),
     baslik: 'Adreslerim',
     altYazi: 'Kayıtlı adreslerinizi görüntüleyin ve yönetin.',
@@ -129,7 +131,11 @@ const List<ProfilMenuOgesi> _musteri = [
     ikonZemini: Color(0xFFE7F8EC),
     baslik: 'Rol Değiştir',
     altYazi: 'Hizmet alan veya hizmet veren rolünüze geçin.',
-    eylem: ProfilEylemi.rolDegistir,
+    // ⚠ SAĞ ALANDA AÇILIR (eskiden `/role` paneli): Android'deki
+    // `RoleSwitchScreen`'in AYNISI, diğer menü sayfaları gibi düz
+    // sayfa rotasıyla (bkz. main.dart `/profile/role`). Rota olduğu
+    // için çubukta seçili de görünür.
+    rota: '/profile/role',
   ),
 ];
 
@@ -143,7 +149,9 @@ const List<ProfilMenuOgesi> _saglayici = [
     rota: '/provider/categories',
   ),
   ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_ppin.svg',
+    // ⚠ ÇİZGİ İĞNE: kenar çubuğu ikonu tek renge boyar; dolgulu
+    // `ic_ppin` (Android profil karesi için) içi dolu leke oluyordu.
+    ikon: 'assets/svg/ic_pin.svg',
     ikonZemini: Color(0xFFE7EFFD),
     baslik: 'Hizmet Bölgelerim',
     altYazi: 'Hizmet verdiğiniz il ve ilçeleri yönetin.',
@@ -164,7 +172,11 @@ const List<ProfilMenuOgesi> _saglayici = [
     ikonZemini: Color(0xFFE7F8EC),
     baslik: 'Rol Değiştir',
     altYazi: 'Hizmet alan veya hizmet veren rolünüze geçin.',
-    eylem: ProfilEylemi.rolDegistir,
+    // ⚠ SAĞ ALANDA AÇILIR (eskiden `/role` paneli): Android'deki
+    // `RoleSwitchScreen`'in AYNISI, diğer menü sayfaları gibi düz
+    // sayfa rotasıyla (bkz. main.dart `/profile/role`). Rota olduğu
+    // için çubukta seçili de görünür.
+    rota: '/profile/role',
   ),
 ];
 
@@ -178,7 +190,9 @@ const List<ProfilMenuOgesi> _diger = [
     eylem: ProfilEylemi.destek,
   ),
   ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_pdoc.svg',
+    // ⚠ ÇİZGİ BELGE: dolgulu `ic_pdoc` (Android profil karesi için)
+    // tek renge boyanınca satırları kayboluyordu.
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
     ikonZemini: Color(0xFFE2F7FA),
     baslik: 'Kullanım Koşulları',
     altYazi: 'Uygulama kullanım koşullarını inceleyin.',

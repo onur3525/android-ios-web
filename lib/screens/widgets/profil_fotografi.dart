@@ -35,10 +35,23 @@ import 'fotograf_kaynak_paneli.dart';
 /// çevirme, yalnız aktif role yazma — hepsi aynen taşındı.
 /// ═══════════════════════════════════════════════════════════════
 class ProfilFotografi extends StatelessWidget {
-  const ProfilFotografi({required this.ad, required this.fotoYolu});
+  const ProfilFotografi({
+    required this.ad,
+    required this.fotoYolu,
+    this.kameraRozeti = true,
+  });
 
   final String ad;
   final String fotoYolu;
+
+  /// `.pf-cam` kamera rozeti çizilsin mi?
+  ///
+  /// ⚠ VARSAYILAN AÇIK: Profil ekranı ve Android/iOS'taki bütün
+  /// çağrılar bu parametreyi VERMEZ; mobil görünüm DEĞİŞMEZ.
+  /// Yalnız web'de Profil Bilgilerim ekranı kapatır (kullanıcı
+  /// kararı). Rozet kalksa da avatarın TAMAMI tıklanabilir; fotoğraf
+  /// menüsü avatara dokununca açılır.
+  final bool kameraRozeti;
 
   /// ⚠ SEÇENEK PANELİ — tek bir "galeriden seç" değil.
   ///
@@ -247,6 +260,7 @@ class ProfilFotografi extends StatelessWidget {
           ),
 
           // .pf-cam — kamera ikonu da tıklanabilir.
+          if (kameraRozeti)
           Positioned(
             right: 0,
             bottom: 4,

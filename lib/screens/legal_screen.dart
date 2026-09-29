@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -89,16 +90,8 @@ class _LegalScreenState extends State<LegalScreen> {
   @override
   Widget build(BuildContext context) {
     final d = _doc;
-    return Scaffold(
-      backgroundColor: HC.bg,
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => geriGit(context)),
-        title: Text(d?.title ?? widget.title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: _loading && d == null
+    // Gövde tek yerde kurulur; web yalnız üstüne başlık ekler.
+    final Widget govde = _loading && d == null
             ? const Center(child: CircularProgressIndicator())
             : (d == null
                 ? Center(
@@ -148,7 +141,35 @@ class _LegalScreenState extends State<LegalScreen> {
                         ..._render(d.body),
                       ],
                     ),
-                  )),
+                  ));
+    return Scaffold(
+      backgroundColor: HC.bg,
+      // ⚠ YALNIZ WEB: üst çubuk çizilmez (başlık gövdede, bkz. body).
+      appBar: kIsWeb
+          ? null
+          : AppBar(
+        leading: BackButton(onPressed: () => geriGit(context)),
+        title: Text(d?.title ?? widget.title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        // ⚠ YALNIZ WEB: `AppBar` yerine standart sayfa başlığı
+        // (`RefPageTitle`) — sağ alandaki bütün sayfalarla aynı ölçü.
+        // Başlık yükleme/hata sırasında da görünür. Mobilde gövde
+        // OLDUĞU GİBİ döner.
+        child: kIsWeb
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: RefPageTitle(d?.title ?? widget.title),
+                  ),
+                  Expanded(child: govde),
+                ],
+              )
+            : govde,
       ),
     );
   }

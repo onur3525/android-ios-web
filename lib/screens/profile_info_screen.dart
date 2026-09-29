@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../domain/form_mesajlari.dart';
 import 'package:provider/provider.dart';
@@ -452,12 +453,25 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               Consumer<AuthController>(
                 builder: (_, auth, __) {
                   final acc = auth.currentAccount;
+                  // ── ⚠ YALNIZ WEB: ORTALI AVATAR, KAMERA ROZETİ YOK ──
+                  //
+                  // Sütun `CrossAxisAlignment.stretch` olduğu için bileşen
+                  // satır genişliğine yayılıyor, avatar sola yaslanıyor ve
+                  // kamera rozeti (`Positioned(right: 0)`) satırın sağ
+                  // kenarına yapışıyordu. Web'de bileşen `Center` ile kendi
+                  // 96 px genişliğine döner ve rozet çizilmez (kullanıcı
+                  // kararı). Fotoğraf menüsü avatara dokununca açılır.
+                  //
+                  // ⚠ MOBİL KİLİTLİ: `kIsWeb` false iken ağaç BİREBİR
+                  // önceki hâlidir (sarmalayıcı yok, rozet açık).
+                  final foto = ProfilFotografi(
+                    ad: acc?.name ?? '',
+                    fotoYolu: acc?.photoPath ?? '',
+                    kameraRozeti: !kIsWeb,
+                  );
                   return Padding(
                     padding: const EdgeInsets.only(top: 6, bottom: 14),
-                    child: ProfilFotografi(
-                      ad: acc?.name ?? '',
-                      fotoYolu: acc?.photoPath ?? '',
-                    ),
+                    child: kIsWeb ? Center(child: foto) : foto,
                   );
                 },
               ),

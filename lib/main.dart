@@ -71,6 +71,7 @@ import 'data/services/listing_expiry_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/role_select_screen.dart';
+import 'screens/role_switch_screen.dart';
 import 'data/controllers/region_controller.dart';
 import 'data/remote/api/region_api.dart';
 import 'data/remote/sabitlemeli_istemci.dart';
@@ -972,6 +973,23 @@ class HizmetCepApp extends StatelessWidget {
             return panelRotasi<void>(
               settings: settings,
               builder: (_) => const RoleSelectScreen(),
+            );
+          }
+          // ── ⚠ YALNIZ WEB: ROL DEĞİŞTİR SAĞ ALANDA ──
+          //
+          // Web kenar çubuğundaki "Rol Değiştir" bu adı açar. Ekran
+          // Android'in profil ekranından açtığı `RoleSwitchScreen`'in
+          // KENDİSİ — kopya değil; düz sayfa rotası olduğu için diğer
+          // menü sayfaları gibi sağ alanda çizilir.
+          //
+          // ⚠ MOBİL KİLİTLİ: `kIsWeb` koşulu yüzünden Android/iOS'ta bu
+          // dal hiç eşleşmez; orada profil ekranı `RoleSwitchScreen`'i
+          // bugünkü gibi doğrudan açar.
+          if (kIsWeb && ad == '/profile/role') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) =>
+                  RoleGuard(builder: (_) => const RoleSwitchScreen()),
             );
           }
           if (ad == '/profile/info') {

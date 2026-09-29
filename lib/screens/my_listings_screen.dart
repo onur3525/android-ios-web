@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/tutar_bicimi.dart';
@@ -190,6 +191,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
+          // sekme olduğu için geri oku YOK. Mobil ağaç değişmez.
+          if (kIsWeb)
+            RefPageTitle(saglayici ? 'İşlerim' : 'İlanlarım',
+                geriDugmesi: false),
           // .cust-tabs — rol duyarlı
           RefSegmentTabs(
             selected: _tab,

@@ -10,6 +10,7 @@ import 'gezgin.dart';
 import '../core/oturum_temizligi.dart';
 import '../data/services/share_service.dart';
 import '../domain/profil_menusu.dart';
+import 'web_destek_paneli.dart';
 import 'web_kenar_cubugu.dart';
 import 'web_panel.dart';
 import 'web_header.dart';
@@ -2651,10 +2652,15 @@ class RefShell extends StatelessWidget {
           oturumuKapat(gezgin.context);
         }
       case ProfilEylemi.destek:
-        // ⚠ DESTEK PANELİ `profile_screen` İÇİNDE PRIVATE: buradan
-        // doğrudan açılamıyor, kullanıcı o ekrandaki satırdan açar.
-        // Panelin ortak yere taşınması ayrı bir iştir.
-        gezgin?.pushNamed('/profile');
+        // ── ⚠ PANEL DOĞRUDAN AÇILIR (eskiden `/profile`a gidiyordu) ──
+        //
+        // Kullanıcı alakasız Profil sayfasına düşüyordu. Panel artık
+        // bulunulan sayfanın üstünde açılır (`web_destek_paneli.dart`).
+        // ⚠ Bu işleyiciyi yalnız web kenar çubuğu çağırır; Android
+        // profil ekranı kendi panelini açmaya devam eder.
+        if (gezgin != null) {
+          unawaited(webDestekPaneliniAc(gezgin.context));
+        }
     }
   }
 }
