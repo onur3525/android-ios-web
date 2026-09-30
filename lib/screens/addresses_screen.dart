@@ -9,6 +9,7 @@ import '../ui/ref_widgets.dart';
 import 'nav_actions.dart';
 import 'widgets/region_picker.dart';
 import '../ui/alt_panel.dart';
+import '../core/geri.dart';
 
 /// ADRESİM (HTML vAddr)
 ///
@@ -170,7 +171,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adresiniz güncellendi')),
       );
-      Navigator.of(context).maybePop();
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => Navigator.of(context).maybePop());
     }
   }
 

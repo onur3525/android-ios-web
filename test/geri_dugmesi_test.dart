@@ -26,7 +26,6 @@ const _kokEkranlar = {
 const _yardimcilar = {
   'category_ui.dart',
   'nav_actions.dart',
-  'status_ui.dart',
   'prelogin_listing_route.dart',
 };
 

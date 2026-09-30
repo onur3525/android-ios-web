@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hizmetcep/core/test_modu.dart';
 import 'package:hizmetcep/core/sys_state.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/repositories/auth_repository.dart';
@@ -79,10 +79,13 @@ void main() {
 
     test('Mock OTP: debug derlemede doğru kod kabul, yanlış kod ret', () async {
       final svc = MockOtpService();
-      expect(await svc.verify(kTestPhone, kTestPass), kDebugMode);
+      // ⚠ 30 Eyl: bu satır OTP yerine ŞİFREYİ (kTestPass) deniyordu;
+      // şifre 16 Ağu'da değişince iddia sessizce yanlış hâle gelmişti.
+      // Doğru girdi test OTP'sidir; kapı artık `TestModu.etkin`.
+      expect(await svc.verify(kTestPhone, kTestOtp), TestModu.etkin);
       expect(await svc.verify('5321112233', '000000'), isFalse);
-      // Release güvenlik kuralı: verify kDebugMode && kod eşitliği ister;
-      // release derlemede kDebugMode=false olduğundan test kodu KABUL EDİLMEZ.
+      // Release güvenlik kuralı: verify TestModu.etkin && kod eşitliği ister;
+      // release'te ve varsayılan web derlemesinde test kodu KABUL EDİLMEZ.
     });
   });
 

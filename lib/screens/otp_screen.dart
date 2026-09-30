@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/sys_state.dart';
 import '../data/remote/api_config.dart';
@@ -7,6 +6,7 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
 import '../core/geri.dart';
+import '../core/test_modu.dart';
 
 /// OTP amacı — sunucu bu değere göre kod üretir ve doğrular.
 enum OtpPurpose {
@@ -401,7 +401,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
 
                     // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
-                    if (kDebugMode && !ApiConfig.useRealApi)
+                    if (TestModu.etkin && !ApiConfig.useRealApi)
                       RefInfoBox(
                         mavi: true,
                         margin: const EdgeInsets.only(top: 12),
@@ -535,7 +535,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
 
                     // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
-                    if (kDebugMode && !ApiConfig.useRealApi)
+                    if (TestModu.etkin && !ApiConfig.useRealApi)
                       RefInfoBox(
                         mavi: true,
                         margin: const EdgeInsets.only(top: 12),

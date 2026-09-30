@@ -209,6 +209,11 @@ class WebPanel extends StatelessWidget {
     }
     // ── ⚠ KATEGORİ → İLAN AKIŞINDA SABİT PANEL BOYU ──
     final ustSinir = MediaQuery.sizeOf(context).height * 0.85;
+    // ⚠ AKIŞTA EN KÜÇÜK BOY (kullanıcı kararı): az kategorili/hizmetli
+    // paneller çok küçük kalmasın. Akışın İLK paneli de bu tabandan
+    // başlar; ölçülen boy tabanı içerdiği için sonraki paneller de
+    // bunun altına düşmez. Akış dışındaki panellere uygulanmaz.
+    final altSinir = MediaQuery.sizeOf(context).height * 0.60;
     final rota = ModalRoute.of(context);
     final akisRota = akisRotasiMi(rota) ? rota : null;
     final akisBoyu =
@@ -268,9 +273,11 @@ class WebPanel extends StatelessWidget {
             maxWidth: enFazla,
             // ⚠ AKIŞTA SABİT BOY: kategori → hizmet → ilan akışının
             // bütün panelleri ilk panelin boyunda kalır (bkz. `_AkisBoyu`).
-            minHeight: akisBoyu == null
+            minHeight: akisRota == null
                 ? 0
-                : (akisBoyu < ustSinir ? akisBoyu : ustSinir),
+                : akisBoyu == null
+                    ? altSinir
+                    : (akisBoyu < ustSinir ? akisBoyu : ustSinir),
             // ⚠ ÜST SINIR: uzun formda kart ekranı taşırmasın. Sade
             // gövde verildiğinde kart bu sınıra KADAR içerik kadar
             // yüksek olur; verilmediğinde sınıra dayanır.

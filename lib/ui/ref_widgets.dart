@@ -2645,8 +2645,6 @@ class RefShell extends StatelessWidget {
     // Navigator'ın KENDİ context'ini kullanır.
     final gezgin = gezginAnahtari.currentState;
     switch (e) {
-      case ProfilEylemi.rolDegistir:
-        gezgin?.pushNamed('/role');
       case ProfilEylemi.paylas:
         // ⚠ Örnek her çağrıda kurulur: durum taşımaz, varsayılan
         // paylaşıcıyı kullanır.

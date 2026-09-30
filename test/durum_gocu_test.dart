@@ -149,20 +149,12 @@ void main() {
       expect(k.contains('ListingStatus.completed'), isFalse);
     });
 
-    test('rozet tek kaynaktan gelir', () {
-      final k = _kodu('lib/screens/status_ui.dart');
-      expect(k.contains('listingRozetiUi'), isTrue,
-          reason: 'ortak rozet yardımcısı yok');
-      expect(k.contains('isTamamlanmisIs'), isTrue);
-    });
-
     test('⚠ ekranlar kendi tamamlanmışlık koşulunu YAZMAZ', () {
       // `selectedOfferId != null` onlarca yerde tekrarlanırsa biri
       // güncellenip öteki unutulur.
       for (final yol in const [
         'lib/screens/my_listings_screen.dart',
         'lib/screens/jobs_screen.dart',
-        'lib/screens/status_ui.dart',
       ]) {
         expect(_kodu(yol).contains('selectedOfferId != null'), isFalse,
             reason: '$yol: koşul elle yazılmış');

@@ -239,12 +239,6 @@ void main() {
     });
   });
 
-  test('05 — arama sonucunda görsel/badge yok', () {
-    final s = read('lib/screens/search_screen.dart');
-    expect(s.contains('CategoryBadge'), isFalse,
-        reason: 'HTML .srow satırında görsel yoktur');
-  });
-
   test('06 — telefon yerel biçim ve uzunluk sınırı', () {
     // Kullanıcıya `0` ile gösterilir.
     expect(Validators.phoneLocal('5321112233'), '05321112233');

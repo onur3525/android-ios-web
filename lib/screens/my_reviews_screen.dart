@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -11,6 +12,7 @@ import '../data/models/review.dart';
 import '../data/remote/api/review_api.dart';
 import '../data/remote/api_client.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/kalan_alanda_ortala.dart';
 import 'widgets/puan_dagilim_satiri.dart';
 // ⚠ Yorum kartı ORTAK — kopya çizim yok.
 import 'provider_reviews_screen.dart' show YorumKartiGovde;
@@ -273,14 +275,16 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
             _summary(),
-            const Padding(
-              padding: EdgeInsets.only(top: 26),
-              child: SysState(SysKind.empty,
-                  title: 'Henüz değerlendirme yok',
-                  desc: 'Tamamladığınız işlerden sonra hizmet alanlar sizi '
-                      'değerlendirdiğinde burada görünecek ve yukarıdaki '
-                      'puan ortalamanıza yansıyacak.'),
-            ),
+            // ⚠ WEB: boş durum özet kartının altında kalan görünür alanın
+            // dikey ortasında (ortak `KalanAlandaOrtala`). Mobilde önceki
+            // `Padding(top: 26)` düzeni BİREBİR.
+            if (kIsWeb)
+              const KalanAlandaOrtala(altBosluk: 24, child: _bosDegerlendirme)
+            else
+              const Padding(
+                padding: EdgeInsets.only(top: 26),
+                child: _bosDegerlendirme,
+              ),
           ],
         ),
       );
@@ -531,3 +535,10 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
         '${l.month.toString().padLeft(2, '0')}.${l.year}';
   }
 }
+
+/// Boş değerlendirme durumu — TEK tanım (mobil ve web aynı).
+const Widget _bosDegerlendirme = SysState(SysKind.empty,
+    title: 'Henüz değerlendirme yok',
+    desc: 'Tamamladığınız işlerden sonra hizmet alanlar sizi '
+        'değerlendirdiğinde burada görünecek ve yukarıdaki '
+        'puan ortalamanıza yansıyacak.');

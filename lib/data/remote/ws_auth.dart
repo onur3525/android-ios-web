@@ -15,6 +15,8 @@ class WsAuth {
   Future<Map<String, String>?> handshakeAuth() async {
     final t = await tokens.accessToken();
     if (t == null) return null; // oturum yoksa bağlanılmaz
+    // ⚠ ÇEREZE GEÇİŞ NOKTASI (web · M-05): backend çerezli oturuma
+    // geçtiğinde web el sıkışması token değil çerezle doğrulanır.
     return {'token': t};
   }
 

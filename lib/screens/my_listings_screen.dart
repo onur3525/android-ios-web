@@ -19,6 +19,7 @@ import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/kalan_alanda_ortala.dart';
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
 import 'teklif_talebi_detay_screen.dart';
@@ -572,15 +573,22 @@ class _BosListe extends StatelessWidget {
   const _BosListe();
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Text(
-          'Bu sekmede gösterilecek ilan yok.',
-          textAlign: TextAlign.center,
-          style: refText(
-              size: RF.s14, weight: RF.w400, color: RC.greyLight),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final metin = Text(
+      'Bu sekmede gösterilecek ilan yok.',
+      textAlign: TextAlign.center,
+      style: refText(size: RF.s14, weight: RF.w400, color: RC.greyLight),
+    );
+    // ⚠ WEB: kalan görünür alanın dikey ortası (ortak `KalanAlandaOrtala`).
+    // Mobilde önceki `Padding(vertical: 40)` düzeni BİREBİR.
+    if (kIsWeb) {
+      return KalanAlandaOrtala(altBosluk: 24, child: metin);
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: metin,
+    );
+  }
 }
 
 /// ── ⚠ "BUL" ÜZERİNDEN KABUL EDİLEN TEKLİF — `_IlanKarti` İLE AYNI

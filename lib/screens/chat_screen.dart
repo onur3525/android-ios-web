@@ -40,6 +40,9 @@ class _ChatScreenState extends State<ChatScreen>
   final _input = TextEditingController();
   final _scroll = ScrollController();
   DomainError? _accessError;
+
+  /// Port erişimi onayladı mı? (taraf denetimi — bkz. build)
+  bool _erisimOnaylandi = false;
   bool _sending = false;
 
   @override
@@ -63,7 +66,12 @@ class _ChatScreenState extends State<ChatScreen>
       final r = await context
           .read<ChatController>()
           .openThread(widget.offerId, actorId: me.id);
-      if (mounted) setState(() => _accessError = r.error);
+      if (mounted) {
+        setState(() {
+          _accessError = r.error;
+          _erisimOnaylandi = r.error == null;
+        });
+      }
     });
   }
 
@@ -145,6 +153,18 @@ class _ChatScreenState extends State<ChatScreen>
     final chatCtl = context.watch<ChatController>();
     final listingCtl = context.watch<ListingController>();
 
+    // ── ⚠ TARAF OLMAYAN: VARLIK BİLE AÇIĞA ÇIKMAZ ──
+    //
+    // Sohbetin tarafı olmayan biri (ör. web'de `/mesaj/<id>` yazan)
+    // "yalnızca taraflar erişebilir" yerine, var olmayan kayıtla AYNI
+    // "Talep bulunamadı" ekranını görür — kimliğin geçerli olduğu
+    // bilgisi sızmaz. Talep detayıyla aynı metin ve düzen.
+    if (_accessError is UnauthorizedError || _accessError is NotFoundError) {
+      return const Scaffold(
+        backgroundColor: RC.white,
+        body: SafeArea(child: Center(child: Text('Talep bulunamadı'))),
+      );
+    }
     if (_accessError != null) {
       return Scaffold(
         backgroundColor: RC.pageBg,
@@ -162,7 +182,6 @@ class _ChatScreenState extends State<ChatScreen>
       );
     }
 
-    final msgs = chatCtl.threadFor(widget.offerId) ?? const <ChatMessage>[];
     String title = 'Sohbet';
     // ⚠ KARŞI TARAFIN NUMARASI — "Ara" düğmesi için.
     //
@@ -171,6 +190,13 @@ class _ChatScreenState extends State<ChatScreen>
     String telefon = '';
     final oList = chatCtl.conversationsFor(me.id)
         .where((x) => x.id == widget.offerId);
+    // ⚠ TARAF DENETİMİ: erişim sonucu gelmeden (ilk kareler) mesajlar
+    // YALNIZ kişinin kendi sohbet listesinde bulunan sohbet için
+    // çizilir; taraf olmayan hiçbir karede mesaj görmez. Taraf için
+    // görünüm aynen (sohbet zaten kendi listesinde).
+    final msgs = (oList.isNotEmpty || _erisimOnaylandi)
+        ? (chatCtl.threadFor(widget.offerId) ?? const <ChatMessage>[])
+        : const <ChatMessage>[];
     if (oList.isNotEmpty) {
       final o = oList.first;
       final l = listingCtl.byId(o.listingId);

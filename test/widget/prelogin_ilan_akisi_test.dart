@@ -16,7 +16,6 @@ import 'package:hizmetcep/screens/category_screen.dart';
 import 'package:hizmetcep/screens/create_listing_screen.dart';
 import 'package:hizmetcep/screens/prelogin_listing_route.dart';
 import 'package:hizmetcep/screens/role_select_screen.dart';
-import 'package:hizmetcep/screens/search_screen.dart';
 import '../support/test_config.dart';
 import 'package:hizmetcep/data/controllers/listing_controller.dart';
 import 'package:hizmetcep/data/ports/repository_ports.dart';
@@ -127,49 +126,6 @@ void main() {
       expect(form.preLogin, isTrue, reason: 'public taslak formu');
       expect(form.initialCategory, 'Su Tesisatı');
       expect(form.initialSubService, 'Su Tesisatçısı');
-    });
-
-    testWidgets('2/3. Hizmet Ara → public form, RoleSelectScreen YOK',
-        (t) async {
-      await t.pumpWidget(app(const SearchScreen()));
-      await t.pumpAndSettle();
-
-      final arama = find.byType(TextField);
-      expect(arama, findsOneWidget, reason: 'arama alanı tek olmalı');
-      // Tam ad: 'kombi' iki sonuç döndürür (Bakımı + Montajı).
-      await t.enterText(arama, 'Kombi Bakımı');
-      await t.pumpAndSettle();
-
-      // ⚠ Arama sonucu `ActionChip` DEĞİL; `_tile()` içindeki
-      // `InkWell` satırıdır.
-      //
-      // ⚠ 'Kombi Bakımı' İKİ bölümde birden çıkar:
-      //   1) "Hizmetler"    → `_hitRow`   (alt metin: kategori)
-      //   2) "Açık İlanlar" → `_listingRow` (mock seed'de aynı
-      //      başlıkla demo ilan vardır — bkz. main.dart `_seedDemo`)
-      // Bu yüzden yalnız metinle arama İKİ eşleşme döndürür.
-      //
-      // ⚠ AYRIM ARTIK ANAHTARLA. Kategori alt başlığı kaldırıldı
-      // (ürün kararı: hizmetin hangi kategoriye bağlı olduğu
-      // kullanıcıya gösterilmez), dolayısıyla iki satır metinden
-      // ayrılamıyor. Satırlar `ValueKey` taşıyor:
-      //   hizmet satırı → 'hizmet-<ad>'
-      //   ilan satırı   → 'ilan-<id>'
-      // Seçim yine DETERMİNİSTİK (fallback/.first YOK).
-      final hizmetSatiri = find.byKey(const ValueKey('hizmet-Kombi Bakımı'));
-      expect(hizmetSatiri, findsOneWidget,
-          reason: 'hizmet sonucu satırı tek olmalı');
-      await t.tap(hizmetSatiri);
-      await t.pumpAndSettle();
-
-      expect(find.byType(RoleSelectScreen), findsNothing);
-      final form = t.widget<CreateListingScreen>(
-          find.byType(CreateListingScreen));
-      expect(form.preLogin, isTrue);
-      // ⚠ `Kombi` ARTIK AYRI ANA KATEGORİ.
-      expect(form.initialCategory, 'Kombi Servis');
-      expect(form.initialSubService, 'Kombi Bakımı',
-          reason: 'seçilen alt hizmet forma TAŞINMALI');
     });
 
     testWidgets('oturumlu MÜŞTERİ korumalı forma gider (preLogin false)',

@@ -31,12 +31,13 @@
 /// ⚠ BU DOSYA YALNIZ DEBUG/GELİŞTİRME HESAPLARI İÇİNDİR.
 ///   • Gerçek kullanıcı kaydı bu yoldan GEÇMEZ; `register` normal
 ///     akışta yine rastgele tuz üretip PBKDF2 hesaplar.
-///   • Buradaki tuzlar ve özetler herkese açık test hesaplarına
-///     (532 111 22 33 / 550 765 43 21, şifre `123456`) aittir;
-///     gizli bir bilgi taşımazlar.
-///   • Release derlemede tohumlama zaten çalışmaz
-///     (`AuthRepository(seedTestAccount: kDebugMode)` ve
-///     `if (kDebugMode)` koşulları).
+///   • Buradaki tuzlar ve özetler test hesaplarına (532 111 22 33 /
+///     550 765 43 21) aittir. ⚠ DÜZ ŞİFRE KAYNAKTA TUTULMAZ; yalnız
+///     `test/support/test_config.dart` (`kTestPass`) içindedir ve
+///     kişisel/gerçek bir şifre DEĞİLDİR (30 Eyl güvenlik turu:
+///     eski demo şifre kişisel görünümlü olduğu için DEĞİŞTİRİLDİ).
+///   • Release derlemede tohumlama çalışmaz; web'de de varsayılan
+///     kapalıdır (`AuthRepository(seedTestAccount: TestModu.etkin)`).
 ///
 /// ## DOĞRULAMA
 ///
@@ -48,12 +49,12 @@
 /// ⚠ Tur sayısı (`PasswordHasher._turSayisi`) değişirse bu özetler
 library;
 
-/// Test MÜŞTERİSİ — 532 111 22 33 / `1986onur`
+/// Test MÜŞTERİSİ — 532 111 22 33 (şifre: `kTestPass`, yalnız testlerde)
 const String kDemoMusteriTuz = 'hc-demo-musteri-v1';
 const String kDemoMusteriOzet =
-    'pbkdf2\$20000\$0919fc3769c1d7a9aaed3da0f6fee4d616f7ff076e25ce015548fde9db13e7f5';
+    'pbkdf2\$20000\$fd814658c855411900c2ba7e6b0188235faa0123e38ceb45dc462e018610fbe0';
 
-/// Test HİZMET VERENİ — 550 765 43 21 / `1986onur`
+/// Test HİZMET VERENİ — 550 765 43 21 (şifre: `kTestPass`, yalnız testlerde)
 const String kDemoUstaTuz = 'hc-demo-usta-v1';
 const String kDemoUstaOzet =
-    'pbkdf2\$20000\$000dcfccaf91ab9b3f2660edc7630b141c96a8c3c0b03f6468a4f34740ff96b0';
+    'pbkdf2\$20000\$ce76b65253fd0cac83a3bbdfb7cbe9162801a6205f40d691c419b959fef3d6b7';

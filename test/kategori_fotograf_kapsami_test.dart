@@ -52,10 +52,11 @@ List<String> _libDosyalari() {
 
 void main() {
   group('FOTOĞRAF YALNIZ İLAN VERME EKRANINDA', () {
-    test('fotoğrafı ÇİZEN tek dosya KategoriKarti', () {
-      // `assets/categories/...` yolunu bir Image widget'ına veren tek
-      // yer burasıdır. Başka bir dosya `kCategoryImage`'ı çizim için
-      // okursa bu test kırılır — kırılması DOĞRUDUR.
+    test('kategori fotoğrafını HİÇBİR dosya çizmez', () {
+      // ⚠ ÖLÇÜLDÜ: fotoğrafı çizen tek bileşen olan `KategoriKarti`
+      // hiçbir ekranda kullanılmıyordu (ölü kod) ve SİLİNDİ. Artık
+      // `kCategoryImage`'ı bir Image widget'ına veren dosya YOK; biri
+      // çizmeye başlarsa bu test kırılır — kırılması DOĞRUDUR.
       final cizenler = <String>[];
       for (final yol in _libDosyalari()) {
         final k = _kod(yol);
@@ -65,16 +66,13 @@ void main() {
           cizenler.add(yol);
         }
       }
-      expect(cizenler, ['lib/screens/widgets/kategori_karti.dart'],
+      expect(cizenler, isEmpty,
           reason: 'fotoğrafı çizen beklenmeyen dosya: $cizenler');
     });
 
     test('KategoriKarti YALNIZ ilan verme ekranında kullanılır', () {
       final kullananlar = <String>[];
       for (final yol in _libDosyalari()) {
-        if (yol.endsWith('kategori_karti.dart')) {
-          continue;
-        }
         if (_kod(yol).contains('KategoriKarti(')) {
           kullananlar.add(yol);
         }
@@ -102,9 +100,7 @@ void main() {
     // fotoğraf göstermiş veya gösterme riski yüksek olan ekranlardır.
     const ekranlar = [
       'lib/screens/home_screen.dart',
-      'lib/screens/all_categories_screen.dart',
       'lib/screens/category_screen.dart',
-      'lib/screens/search_screen.dart',
       'lib/screens/my_categories_screen.dart',
       'lib/screens/register_screen.dart',
       'lib/screens/role_switch_screen.dart',

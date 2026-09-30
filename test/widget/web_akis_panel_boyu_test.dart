@@ -18,9 +18,11 @@ void main() {
         isTrue);
     expect(k.contains('_AkisBoyu.sabit(akisRota)'), isTrue);
     expect(
-        k.contains('minHeight: akisBoyu == null\n'
+        k.contains('minHeight: akisRota == null\n'
             '                ? 0\n'
-            '                : (akisBoyu < ustSinir ? akisBoyu : ustSinir),'),
+            '                : akisBoyu == null\n'
+            '                    ? altSinir\n'
+            '                    : (akisBoyu < ustSinir ? akisBoyu : ustSinir),'),
         isTrue);
     expect(
         k.contains('maxHeight: akisBoyu == null\n'
@@ -37,6 +39,11 @@ void main() {
     expect(govde.contains('!sahip.isActive'), isTrue);
     expect(govde.contains('_boy == null && boy > 0'), isTrue);
     expect(k.contains('? (h) => _AkisBoyu.olc(akisRota, h)'), isTrue);
+  });
+
+  test('akış panelleri ekranın %60\'ının altına düşmez', () {
+    expect(k.contains('final altSinir = MediaQuery.sizeOf(context).height * 0.60;'),
+        isTrue);
   });
 
   test('akış dışı paneller eski kurala bağlı (içerik kadar, en çok %85)',

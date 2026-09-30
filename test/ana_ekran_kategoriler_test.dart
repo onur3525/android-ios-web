@@ -181,7 +181,7 @@ void main() {
       // liste bağlantısı hem gereksiz hem de çatı ayrımını
       // zayıflatıyordu.
       //
-      // ⚠ Ekran dosyası (all_categories_screen.dart) silinmedi;
+      // ⚠ Ekran dosyası (all_categories_screen.dart) ölü koddu ve SİLİNDİ;
       final h = _oku('lib/screens/home_screen.dart');
       expect(h.contains('AllCategoriesScreen'), isFalse,
           reason: 'bağlantı geri gelmiş');
@@ -190,21 +190,9 @@ void main() {
   });
 
   group('TÜM KATEGORİLER EKRANI', () {
-    test('ALT HİZMET SAYACI YOK', () {
-      final k = _oku('lib/screens/all_categories_screen.dart');
-      expect(k.contains('altlar.length'), isFalse, reason: 'sayaç kalmış');
-    });
-
-    test('kart yapısı: SVG + ad + ok', () {
-      final k = _oku('lib/screens/all_categories_screen.dart');
-      expect(k.contains('categoryIcon(c)'), isTrue, reason: 'SVG yok');
-      expect(k.contains('ic_chev.svg'), isTrue, reason: 'sağ ok yok');
-    });
-
-    test('KATALOGDAKİ TÜM kategorileri okur', () {
-      final k = _oku('lib/screens/all_categories_screen.dart');
-      expect(k.contains('kTreeCategories'), isTrue);
-      expect(kTreeCategories.length, 63);
+    test('ölü ekran SİLİNDİ, bağlantı yok', () {
+      expect(File('lib/screens/all_categories_screen.dart').existsSync(),
+          isFalse);
     });
   });
 

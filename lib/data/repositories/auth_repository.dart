@@ -10,6 +10,7 @@ import '../../domain/failures.dart';
 import '../../domain/password_hasher.dart';
 import '../models/account.dart';
 import 'demo_hesap_ozetleri.dart';
+import '../../core/test_modu.dart';
 
 /// Hesap defteri + oturum. Backend geldiğinde API'si korunarak
 class AuthRepository extends ChangeNotifier {
@@ -67,7 +68,7 @@ class AuthRepository extends ChangeNotifier {
   final Map<String, ({String userId, DateTime bitis})> _kurtarmaYetkileri = {};
 
   AuthRepository({
-    bool seedTestAccount = kDebugMode,
+    bool seedTestAccount = TestModu.etkin,
     OtpService? otpService,
     Duration yetkiOmru = const Duration(minutes: 10),
     DateTime Function()? nowProvider,
@@ -86,11 +87,13 @@ class AuthRepository extends ChangeNotifier {
       //
       // Yeni değer 8 hane ve doğrulayıcının üç zayıflık denetiminden
       // de geçiyor (ardışık değil, tekrar değil, yaygın değil).
-      // Prototip test hesabı (532 111 22 33 / 1986onur)
+      // Prototip test hesabı (532 111 22 33). ⚠ ŞİFRE KAYNAKTA YOK:
+      // yalnız önceden hesaplanmış tuz+özet tutulur; düz şifre yalnız
+      // `test/support/test_config.dart`tadır.
       // ⚠ KURUCU `buildPorts` İÇİNDE, YANİ `runApp`'TEN ÖNCE ÇALIŞIR.
       // Burada PBKDF2 hesaplansaydı ilk Flutter karesi o kadar
       _seed(hazirTuz: kDemoMusteriTuz, hazirOzet: kDemoMusteriOzet,
-          phone: '5321112233', pass: '1986onur',
+          phone: '5321112233', pass: '',
           roles: {Role.customer}, name: 'Onur Bütün',
           // ⚠ Demo hesabın e-postası da doldurulur: profil ekranı
           // gerçek veriyle denenebilsin, boş alan yüzünden e-posta

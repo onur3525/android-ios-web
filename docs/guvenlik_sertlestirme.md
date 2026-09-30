@@ -38,6 +38,35 @@ Bilerek böyledir: yanlış pinle çıkılan sürüm uygulamayı tamamen
 ⚠ EN AZ İKİ PİN verilmelidir (mevcut + yedek). Tek pinli sürüm,
 sertifika yenilendiği gün kırılır.
 
+### Güvenlik turu 2 (30 Eyl) — SPKI, ad, süre, WebSocket, yükleme
+
+- **Pin biçimi:** `sha256/<base64>` = açık anahtar (SPKI) pini; ÖNERİLEN.
+  Aynı anahtarla yenilenen sertifikada kırılmaz. Değer:
+
+      openssl x509 -in sertifika.pem -pubkey -noout \
+        | openssl pkey -pubin -outform der \
+        | openssl dgst -sha256 -binary | base64
+
+  Öneksiz değerler eski biçimdir (tam sertifika özeti); geriye dönük
+  uyumluluk için kabul edilir, yeni sürümlerde kullanılmamalıdır.
+- **Hangi sertifikalar:** Sistem kökleri kapalıyken Dart, doğrulamanın
+  başarısız olduğu zincir halkasını geri çağrıya verir (yaprak ya da ara
+  sertifika olabilir). CERT_PINS hem yaprak hem ara sertifikanın SPKI
+  pinini ve bir YEDEK anahtar pinini içermelidir. Pinler ilk sürümden
+  önce gerçek sunucuya karşı bir test derlemesiyle DOĞRULANMALIDIR.
+- **Ad denetimi:** Sabitlemeli istemci yalnız `API_BASE_URL`'in ana
+  bilgisayar adına bağlanır; başka ad pin tutsa bile reddedilir.
+- **Süre denetimi:** Süresi dolmuş/başlamamış sertifika reddedilir.
+- **WebSocket:** REST ile aynı pin + ad + süre denetimi
+  (`sabitliBolgede`, `HttpOverrides.runZoned`). `HttpOverrides.global`
+  KULLANILMAZ.
+- **Dosya yükleme:** Depolama sağlayıcısının sertifikası farklı olduğu
+  için API pinleri uygulanmaz. Bunun yerine: yalnız https, izinli alan
+  adı (`--dart-define=STORAGE_HOSTS=...`, virgülle; `.` ile başlayan
+  değer sonek), SigV4 imzalı ve süresi geçerli adres. Release'te
+  `STORAGE_HOSTS` boşsa yükleme REDDEDİLİR.
+- **Web:** Sabitleme yapılamaz; tarayıcının TLS modeli geçerlidir.
+
 Pin üretimi (sunucu canlıya çıktıktan sonra):
 
     openssl s_client -connect api.hizmetcep.com:443 -showcerts </dev/null \

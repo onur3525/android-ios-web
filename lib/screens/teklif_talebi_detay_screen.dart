@@ -10,6 +10,7 @@ import '../domain/hizmet_alan_ozeti.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/saglayici_ozeti.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
+import '../core/route_guard.dart';
 import '../core/theme.dart';
 import '../core/sys_state.dart';
 import '../core/validators.dart';
@@ -312,7 +313,10 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     final auth = context.watch<AuthController>();
     final me = auth.currentAccount;
 
-    if (t == null || me == null) {
+    // ⚠ TARAF DENETİMİ: talebin tarafı olmayan biri (ör. web'de adres
+    // çubuğuna `/talep/<id>` yazan) talebi hiç görmez — mevcut "Talep
+    // bulunamadı" ekranı gösterilir. Taraflar için ekran AYNEN.
+    if (t == null || me == null || !t.tarafMi(me.id)) {
       return const Scaffold(
         backgroundColor: RC.white,
         body: SafeArea(child: Center(child: Text('Talep bulunamadı'))),
@@ -320,6 +324,20 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     }
 
     final benSaglayiciMi = me.id == t.saglayiciId;
+
+    // ── ⚠ AKTİF ROL DENETİMİ (mevcut rol sistemi) ──
+    //
+    // Talepteki yeri hizmet veren olan kişi hizmet veren rolünde,
+    // hizmet alan olan kişi hizmet alan rolünde görür. Aktif rol
+    // uyuşmuyorsa diğer rol ekranlarıyla AYNI "Bu ekrana erişiminiz
+    // yok" ekranı gösterilir (`RoleGuard`'ın kendisi — kopya değil).
+    // Normal akışta (İşlerim/İlanlarım/bildirimler) rol zaten uyar.
+    final gerekenRol = benSaglayiciMi ? Role.provider : Role.customer;
+    if (me.activeRole != gerekenRol) {
+      return gerekenRol == Role.provider
+          ? RoleGuard.provider(builder: (_) => const SizedBox.shrink())
+          : RoleGuard.customer(builder: (_) => const SizedBox.shrink());
+    }
 
     return Scaffold(
       backgroundColor: RC.white,

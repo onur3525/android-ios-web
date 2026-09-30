@@ -34,18 +34,8 @@ workflows:
       java: 17          # AGP 8.x zorunlu
 
     scripts:
-      - name: Gradle wrapper JAR (ikili dosya depoda olmayabilir)
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
-            SURUM=$(grep -oE 'gradle-[0-9.]+' gradle/wrapper/gradle-wrapper.properties \
-                    | head -1 | cut -d- -f2)
-            echo "Gradle ${SURUM} wrapper indiriliyor"
-            curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
-              "https://raw.githubusercontent.com/gradle/gradle/v${SURUM}.0/gradle/wrapper/gradle-wrapper.jar"
-          fi
-          ls -la gradle/wrapper/
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: DSL çakışması denetimi
         script: |
@@ -120,14 +110,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -189,14 +173,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -237,14 +215,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -302,14 +274,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -348,14 +314,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -395,14 +355,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Gradle wrapper JAR
-        script: |
-          cd android
-          mkdir -p gradle/wrapper
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            curl -sL -o gradle/wrapper/gradle-wrapper.jar \\
-              https://raw.githubusercontent.com/gradle/gradle/v8.14.0/gradle/wrapper/gradle-wrapper.jar
-          fi
+      - name: Gradle wrapper JAR (tek kaynak betik — bkz. android/gradle_wrapper_hazirla.sh)
+        script: bash android/gradle_wrapper_hazirla.sh
 
       - name: Bağımlılıklar
         script: flutter pub get
@@ -436,6 +390,9 @@ workflows:
   # ⚠ ÜÇ TANIM ZORUNLU:
   #   API_BASE_URL          — release'te https:// olmalı (kod zorluyor)
   #   CERT_PINS             — en az iki pin; boşsa sabitleme KAPALI
+  #                           (önerilen biçim: sha256/<SPKI base64>)
+  #   STORAGE_HOSTS         — izinli depolama alan adları; boşsa release'te
+  #                           dosya yükleme REDDEDİLİR (güvenlik turu 2)
   #   APK_SIGNATURE_SHA256  — boşsa imza denetimi KAPALI
   release-hardened:
     name: Sürüm APK (karartmalı)
@@ -481,6 +438,7 @@ workflows:
           eksik=""
           [ -z "$API_BASE_URL" ]         && eksik="$eksik API_BASE_URL"
           [ -z "$CERT_PINS" ]            && eksik="$eksik CERT_PINS"
+          [ -z "$STORAGE_HOSTS" ]        && eksik="$eksik STORAGE_HOSTS"
           [ -z "$APK_SIGNATURE_SHA256" ] && eksik="$eksik APK_SIGNATURE_SHA256"
           if [ -n "$eksik" ]; then
             echo "Sürüm derlemesi için zorunlu tanımlar eksik:$eksik"
@@ -531,6 +489,7 @@ workflows:
             --dart-define=DATA_SOURCE=api \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=CERT_PINS="$CERT_PINS" \
+            --dart-define=STORAGE_HOSTS="$STORAGE_HOSTS" \
             --dart-define=APK_SIGNATURE_SHA256="$APK_SIGNATURE_SHA256"
 
       - name: Mağaza paketi (AAB)
@@ -544,6 +503,7 @@ workflows:
             --dart-define=DATA_SOURCE=api \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=CERT_PINS="$CERT_PINS" \
+            --dart-define=STORAGE_HOSTS="$STORAGE_HOSTS" \
             --dart-define=APK_SIGNATURE_SHA256="$APK_SIGNATURE_SHA256"
     artifacts:
       # ⚠ MAĞAZAYA YÜKLENEN: .aab
@@ -641,7 +601,7 @@ workflows:
       cocoapods: default
       groups:
         - ios_signing        # APP_STORE_CONNECT_* değişkenleri
-        - api_config         # API_BASE_URL, CERT_PINS
+        - api_config         # API_BASE_URL, CERT_PINS, STORAGE_HOSTS
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.hizmetcep.app
@@ -689,6 +649,7 @@ workflows:
             --dart-define=DATA_SOURCE=api \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=CERT_PINS="$CERT_PINS" \
+            --dart-define=STORAGE_HOSTS="$STORAGE_HOSTS" \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:

@@ -184,12 +184,25 @@ void main() {
     final hepsi = _libDosyalari().map(_kod).join('\n');
 
     test('TLS doğrulaması gevşetilmemiş', () {
-      for (final k in [
-        'HttpOverrides',
-        'allowSelfSigned',
-      ]) {
-        expect(hepsi.contains(k), isFalse, reason: k);
-      }
+      expect(hepsi.contains('allowSelfSigned'), isFalse);
+
+      // ── ⚠ `HttpOverrides` TEK İSTİSNA: WEBSOCKET SABİTLEMESİ ──
+      //
+      // Güvenlik turu 2: `socket_io_client` dışarıdan `HttpClient`
+      // almadığı için WebSocket, sabitlemeli istemci üreten bir
+      // `HttpOverrides.runZoned` bölgesinde kurulur — TLS SIKILAŞIR.
+      // Yasak olan: `HttpOverrides.global` (bütün bağlantıları etkiler)
+      // ve sabitlemeli istemci dışında bir şey üretmek.
+      expect(hepsi.contains('HttpOverrides.global'), isFalse);
+      final overrideKullanan = _libDosyalari()
+          .where((y) => _kod(y).contains('HttpOverrides'))
+          .toList();
+      expect(overrideKullanan, ['lib/data/remote/sabitlemeli_istemci_io.dart'],
+          reason: 'beklenmeyen HttpOverrides: $overrideKullanan');
+      expect(
+          _kod('lib/data/remote/sabitlemeli_istemci_io.dart').contains(
+              'createHttpClient: (_) => SertifikaSabitleme.istemci(),'),
+          isTrue);
 
       // ── ⚠ `badCertificateCallback` TEK İSTİSNA: SABİTLEME ──
       //
@@ -225,14 +238,28 @@ void main() {
       expect(t.contains('encryptedSharedPreferences: true'), isTrue);
     });
 
-    test('test OTP kodu YALNIZ debug derlemede geçerli', () {
+    // ⚠ 30 Eyl (H-01): kapı `kDebugMode` DEĞİL `TestModu.etkin`.
+    // `TestModu` release'te hiçbir koşulda açılmaz VE web'de varsayılan
+    // kapalıdır (debug web yayını da sabit OTP/demo hesap taşımaz).
+    // Kural GÜÇLENDİ: eski kapı debug web yayınında açıktı.
+    test('test OTP kodu YALNIZ test modunda geçerli', () {
       final o = _kod('lib/data/services/otp_service.dart');
-      expect(o.contains('return kDebugMode && code == _debugCode;'), isTrue);
+      expect(o.contains('return TestModu.etkin && code == _debugCode;'),
+          isTrue);
     });
 
-    test('test hesabı YALNIZ debug derlemede seed edilir', () {
+    test('test hesabı YALNIZ test modunda seed edilir', () {
       final a = _kod('lib/data/repositories/auth_repository.dart');
-      expect(a.contains('bool seedTestAccount = kDebugMode'), isTrue);
+      expect(a.contains('bool seedTestAccount = TestModu.etkin'), isTrue);
+    });
+
+    test('test modu: release\'te imkânsız, web\'de varsayılan kapalı', () {
+      final k = _kod('lib/core/test_modu.dart');
+      expect(
+          k.contains(
+              'static const bool etkin = !kReleaseMode && (!kIsWeb || _webIstegi);'),
+          isTrue);
+      expect(k.contains("bool.fromEnvironment('HC_TEST_MODU')"), isTrue);
     });
 
     test('release derlemede mock veri kaynağı İMKÂNSIZ', () {

@@ -81,4 +81,77 @@ void main() {
     expect("'Tümünü Okundu Yap'".allMatches(k).length, 1);
     expect(k.contains('final Widget? tumunuOkundu'), isTrue);
   });
+
+  test('Bildirimler: boş durum web\'de kalan alanın ortasında, mobil aynen',
+      () {
+    final k = oku('lib/screens/notifications_screen.dart');
+    expect("'Henüz bildiriminiz yok.'".allMatches(k).length, 1,
+        reason: 'boş metin TEK tanım');
+    expect(k.contains('else if (liste.isEmpty && kIsWeb)\n'
+            '            KalanAlandaOrtala(child: bosMetin)'),
+        isTrue);
+    expect(k.contains('padding: const EdgeInsets.symmetric(vertical: 40),\n'
+            '              child: bosMetin,'),
+        isTrue,
+        reason: 'mobil düzen değişmiş');
+  });
+
+  test('Sonuçlar: bilgilendirme web\'de kalan alanın ortasında, mobil aynen',
+      () {
+    final k = oku('lib/screens/sonuclar_screen.dart');
+    expect("'hizmet veren bulunmuyor. İlan vererek '".allMatches(k).length, 1,
+        reason: 'açıklama TEK tanım');
+    expect(k.contains('if (_sonuclar.isEmpty && kIsWeb)\n'
+            '                    KalanAlandaOrtala(altBosluk: 20, child: bosAciklama)'),
+        isTrue);
+    expect(k.contains('padding: const EdgeInsets.symmetric(vertical: 32),\n'
+            '                      child: bosAciklama,'),
+        isTrue,
+        reason: 'mobil düzen değişmiş');
+  });
+
+  test('ortalama TEK kaynakta: ekranlar kendi kopyasını yazmaz', () {
+    for (final yol in [
+      'lib/screens/notifications_screen.dart',
+      'lib/screens/sonuclar_screen.dart',
+      'lib/screens/my_listings_screen.dart',
+      'lib/screens/my_reviews_screen.dart',
+    ]) {
+      final k = oku(yol);
+      expect(k.contains("import '../ui/kalan_alanda_ortala.dart';"), isTrue,
+          reason: yol);
+      expect(k.contains('class _KalanAlandaOrtala'), isFalse, reason: yol);
+    }
+  });
+
+  test('İlanlarım ve Müşteri Yorumları: boş durum web\'de ortada, mobil aynen',
+      () {
+    final l = oku('lib/screens/my_listings_screen.dart');
+    expect(l.contains('return KalanAlandaOrtala(altBosluk: 24, child: metin);'),
+        isTrue);
+    expect(l.contains('padding: const EdgeInsets.symmetric(vertical: 40),\n'
+            '      child: metin,'),
+        isTrue);
+    final r = oku('lib/screens/my_reviews_screen.dart');
+    expect(
+        r.contains(
+            'const KalanAlandaOrtala(altBosluk: 24, child: _bosDegerlendirme)'),
+        isTrue);
+    expect(r.contains('padding: EdgeInsets.only(top: 26),\n'
+            '                child: _bosDegerlendirme,'),
+        isTrue);
+  });
+
+  test('zaten ortalı olanlar ortalı kalır (İşlerim/Kazandığım, teklif listeleri)',
+      () {
+    final j = oku('lib/screens/jobs_screen.dart');
+    expect(j.contains('child: Center(child: child),'), isTrue,
+        reason: '_pullable boş durumu tam yükseklikte ortalar');
+    for (final yol in [
+      'lib/screens/teklif_istediklerim_screen.dart',
+      'lib/screens/teklif_istekleri_screen.dart',
+    ]) {
+      expect(oku(yol).contains('Center(\n'), isTrue, reason: yol);
+    }
+  });
 }

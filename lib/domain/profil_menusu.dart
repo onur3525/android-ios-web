@@ -35,7 +35,9 @@ import '../data/models/account.dart';
 /// Rota dışı eylemler.
 ///
 /// ⚠ Rota ile açılan öğelerde bu alan `null` kalır.
-enum ProfilEylemi { rolDegistir, destek, paylas, cikis }
+// ⚠ `rolDegistir` eylemi KALDIRILDI: "Rol Değiştir" artık rotayla
+// (`/profile/role`) açılıyor; eylem hiçbir öğede kullanılmıyordu.
+enum ProfilEylemi { destek, paylas, cikis }
 
 /// Menüdeki tek satır.
 @immutable

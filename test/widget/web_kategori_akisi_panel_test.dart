@@ -32,7 +32,6 @@ void main() {
       'lib/screens/home_screen.dart': 2, // çatı kartı + arama sonrası ilan
       'lib/screens/hizmet_alani_screen.dart': 2, // iki kategori girişi
       'lib/screens/category_screen.dart': 1, // oturumlu ilan
-      'lib/screens/search_screen.dart': 1, // kategori satırı
       'lib/main.dart': 2, // /customer/new-listing + /listing/new (web)
     };
     beklenen.forEach((yol, adet) {

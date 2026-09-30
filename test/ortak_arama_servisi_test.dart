@@ -37,8 +37,6 @@ String _kod(String yol) {
 /// ⚠ `home_screen` LİSTEDE DEĞİL: kendi araması yok, aramayı
 /// `InlineSearchBox` bileşenine devrediyor (o da listede).
 const _aramaEkranlari = [
-  'lib/screens/search_screen.dart',
-  'lib/screens/all_categories_screen.dart',
   'lib/screens/create_listing_screen.dart',
   'lib/screens/widgets/inline_search_box.dart',
   'lib/screens/widgets/kategori_secim_paneli.dart',
@@ -83,27 +81,6 @@ void main() {
       // ⚠ Kod içinde kırılım ÜRETEN bir ifade kalmamalı.
       expect(c.contains('kategori} > '), isFalse,
           reason: 'kırılım biçimi kalmış');
-    });
-
-    test('arama ekranında da kategori alt başlığı YOK', () {
-      // Satırın altında ana kategori adı yazıyordu ("Doğalgaz Kolon
-      // Hattı" → alt satır "Doğalgaz").
-      final k = _kod('lib/screens/search_screen.dart');
-      expect(k.contains('sub: h.subService == null ? null'), isFalse,
-          reason: 'kategori alt başlığı geri gelmiş');
-      expect(k.contains('_openService(h.category, subService: h.subService)'),
-          isTrue,
-          reason: 'kategori arka planda taşınmalı');
-    });
-
-    test('arama satırları ANAHTAR taşır', () {
-      // ⚠ Kategori alt başlığı kaldırılınca hizmet satırı ile ilan
-      // satırı metinden ayrılamaz oldu (aynı ad ikisinde de
-      // geçebiliyor). Ayrım anahtarla yapılır.
-      final k = _kod('lib/screens/search_screen.dart');
-      expect(k.contains("ValueKey('hizmet-\${h.label}')"), isTrue);
-      expect(k.contains("ValueKey('ilan-\$id')"), isTrue);
-      expect(k.contains('key: satirAnahtari,'), isTrue);
     });
 
     test('öneri satırı label gösterir', () {

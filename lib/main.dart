@@ -616,7 +616,8 @@ void _seedDemo(
       // ⚠ Kayıt sözleşmesinin geri kalanı DEĞİŞMEDİ: OTP, sözleşme
       // onayı ve tüm doğrulamalar aynen işler.
       hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet,
-      phone: '5507654321', pass: '1986onur', role: Role.provider,
+      // ⚠ Düz şifre kaynakta YOK: hazır özet kullanılır, `pass` yok sayılır.
+      phone: '5507654321', pass: '', role: Role.provider,
       otpVerified: true, name: 'Ali Usta', termsAccepted: true,
       // Demo hesabın e-postası da doldurulur — profil ekranı boş
       // alanla değil gerçek veriyle denenebilsin.
@@ -692,7 +693,9 @@ void _seedDemo(
   }
 
   final ikinciUsta = auth.register(
-      phone: '5559998877', pass: '1986onur', role: Role.provider,
+      // ⚠ Düz şifre kaynakta YOK: demo ustayla aynı hazır özet.
+      hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet,
+      phone: '5559998877', pass: '', role: Role.provider,
       otpVerified: true, name: 'Mehmet Yıldız', termsAccepted: true,
       email: 'mehmet.yildiz@example.com');
   if (ikinciUsta.account != null) {

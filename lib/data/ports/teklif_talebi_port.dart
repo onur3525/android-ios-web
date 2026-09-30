@@ -263,6 +263,15 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
   @override
   Future<DomainError?> mesajGonder(String id,
       {required String gonderenId, String? metin, String? fotografYolu}) async {
+    // ⚠ TARAF DENETİMİ (sunucunun yapması gerekeni mock da yapar):
+    // taraf olmayan biri başkasının talebine mesaj yazamaz.
+    final kayit = _repo.byId(id);
+    if (kayit == null) {
+      return const NotFoundError('Talep bulunamadı');
+    }
+    if (!kayit.tarafMi(gonderenId)) {
+      return const UnauthorizedError();
+    }
     final onceki = _repo.byId(id)?.mesajlar.length ?? 0;
     _repo.mesajGonder(id,
         gonderenId: gonderenId, metin: metin, fotografYolu: fotografYolu);
@@ -288,6 +297,10 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
   @override
   Future<void> mesajlariOkunduIsaretle(
       String talepId, String okuyanId) async {
+    // ⚠ TARAF DENETİMİ: taraf olmayan biri okundu işareti koyamaz.
+    if (_repo.byId(talepId)?.tarafMi(okuyanId) != true) {
+      return;
+    }
     _repo.mesajlariOkunduIsaretle(talepId, okuyanId);
   }
 }

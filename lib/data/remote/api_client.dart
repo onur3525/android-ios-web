@@ -137,6 +137,9 @@ class ApiClient {
     };
     final token = await tokens.accessToken();
     if (token != null) {
+      // ⚠ ÇEREZE GEÇİŞ NOKTASI (web · M-05): backend HttpOnly/Secure/
+      // SameSite çerez koyduğunda web'de bu başlık EKLENMEZ; kimlik
+      // tarayıcının çerezle gönderdiği oturumdan gelir. Mobil aynen.
       headers['Authorization'] = 'Bearer $token';
     }
 

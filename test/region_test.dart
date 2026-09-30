@@ -66,7 +66,6 @@ void main() {
       'lib/screens/register_screen.dart',
       'lib/screens/create_listing_screen.dart',
       'lib/screens/my_areas_screen.dart',
-      'lib/screens/search_screen.dart',
     ];
 
     String read(String p) => File(p).readAsStringSync();

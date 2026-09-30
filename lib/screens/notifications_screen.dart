@@ -20,6 +20,7 @@ import '../domain/bildirim_rolu.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'nav_actions.dart';
+import '../ui/kalan_alanda_ortala.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// BİLDİRİMLER — referans `vNotif()`
@@ -410,6 +411,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         )
         : null;
 
+    // Boş durum metni — TEK tanım (mobil ve web aynı metni çizer).
+    final bosMetin = Text(
+      'Henüz bildiriminiz yok.',
+      textAlign: TextAlign.center,
+      style: refText(size: RF.s14, weight: RF.w400, color: RC.greyLight),
+    );
+
     return RefShell(
       nav: RefBottomNav(
         activeKey: 'bildirim',
@@ -479,15 +487,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               veriVar: liste.isNotEmpty))
             HataTamEkran(hata: ctl.lastError!, onTekrar: _refresh)
           // .nt-list{gap:10px}
+          // ── ⚠ WEB: BOŞ DURUM KALAN ALANIN ORTASINDA ──
+          //
+          // Web'de metin başlığın hemen altında, üst kenarda kalıyordu.
+          // Başlığın altında kalan görünür alanın dikey ortasına alınır.
+          // Metin TEK tanım (`bosMetin`); mobilde `else` dalı önceki
+          // `Padding(vertical: 40)` düzeninin BİREBİR aynısı.
+          else if (liste.isEmpty && kIsWeb)
+            KalanAlandaOrtala(child: bosMetin)
           else if (liste.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Text(
-                'Henüz bildiriminiz yok.',
-                textAlign: TextAlign.center,
-                style: refText(
-                    size: RF.s14, weight: RF.w400, color: RC.greyLight),
-              ),
+              child: bosMetin,
             )
           else
             for (final n in liste) ...[
@@ -633,3 +644,4 @@ class _BildirimKarti extends StatelessWidget {
     );
   }
 }
+

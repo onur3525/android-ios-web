@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import '../api_client.dart';
+import '../yukleme_adresi.dart';
 
 /// BEKLEYEN YÜKLEME İPTALİ — SUNUCU SÖZLEŞMESİ
 ///
@@ -83,6 +84,14 @@ class StorageApi {
     // dışı yanıtta istisna. `Content-Length` başlığı elle
     // verilmez — `http` gövdeden hesaplar; elle verilirse bazı
     // sunucularda çift başlık hatası çıkar.
+    // ⚠ GÜVENLİK TURU 2 (M-03): yalnız https + izinli depolama alanı +
+    // süresi geçerli imzalı adres. Kural tutmazsa HİÇBİR bayt
+    // gönderilmez; çağıran ekranlar bugünkü yükleme hatası yolunu
+    // izler (akış değişmez).
+    final ret = YuklemeAdresi.denetle(uploadUrl);
+    if (ret != null) {
+      throw Exception('Dosya yüklenemedi (adres reddedildi: $ret)');
+    }
     final yanit = await http
         .put(
           Uri.parse(uploadUrl),

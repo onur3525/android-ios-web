@@ -153,10 +153,7 @@ void main() {
 
   group('ETİKET ÇİZİM YERLERİ', () {
     const ekranlar = {
-      'lib/screens/widgets/kategori_karti.dart': 'kategoriEtiketi(ad)',
-      'lib/screens/all_categories_screen.dart': 'kategoriEtiketi(h.label)',
       'lib/screens/widgets/inline_search_box.dart': 'kategoriEtiketi(h.label)',
-      'lib/screens/search_screen.dart': 'kategoriEtiketi(c)',
       'lib/screens/category_screen.dart': 'kategoriEtiketi(category)',
       'lib/screens/create_listing_screen.dart': "kategoriEtiketi(_cat ?? '')",
     };

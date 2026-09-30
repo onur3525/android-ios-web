@@ -62,9 +62,12 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
       if (me == null || !mounted) {
         return;
       }
-      context
-          .read<TeklifTalebiController>()
-          .mesajlariOkunduIsaretle(widget.talepId, me.id);
+      // ⚠ TARAF DENETİMİ: taraf olmayan biri okundu işareti koyamaz.
+      final ctl = context.read<TeklifTalebiController>();
+      if (ctl.byId(widget.talepId)?.tarafMi(me.id) != true) {
+        return;
+      }
+      ctl.mesajlariOkunduIsaretle(widget.talepId, me.id);
     });
   }
 
@@ -110,8 +113,16 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   @override
   Widget build(BuildContext context) {
     final me = context.watch<AuthController>().currentAccount;
-    final talep =
+    final talepKaydi =
         context.watch<TeklifTalebiController>().byId(widget.talepId);
+    // ⚠ TARAF DENETİMİ: taraf olmayan biri için talep YOK sayılır —
+    // mesajlar görünmez, gönderim reddedilir (port). Taraflar için
+    // ekran AYNEN.
+    final talep = (talepKaydi != null &&
+            me != null &&
+            talepKaydi.tarafMi(me.id))
+        ? talepKaydi
+        : null;
     final mesajlar = talep?.mesajlar ?? const <TeklifMesaj>[];
 
     return Scaffold(

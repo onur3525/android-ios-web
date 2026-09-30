@@ -153,13 +153,11 @@ void main() {
     /// Metin girişi olmayan / arama-sohbet gibi tek amaçlı alanlar.
     const kapsamDisi = {
       'chat_screen.dart',
-      'search_screen.dart',
       'inline_search_box.dart',
       'kategori_secim_paneli.dart',
       'region_picker.dart',
       'my_areas_screen.dart',
       'my_categories_screen.dart',
-      'all_categories_screen.dart',
       'account_settings_screen.dart',
       'job_detail_screen.dart',
       'ilan_otp_adimi.dart',

@@ -173,7 +173,8 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
     });
     if (err == null) {
       sysToastOk(context, 'Kategorileriniz güncellendi');
-      geriGit(context);
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => geriGit(context));
     }
   }
 

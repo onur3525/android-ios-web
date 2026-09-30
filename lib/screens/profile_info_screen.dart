@@ -385,7 +385,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               ? 'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. '
                   'Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.'
               : 'Profil bilgileriniz güncellendi');
-      geriGit(context);
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => geriGit(context));
     }
   }
 

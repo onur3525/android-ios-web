@@ -229,7 +229,8 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
     });
     if (err == null) {
       sysToastOk(context, 'Hizmet bölgeleriniz güncellendi');
-      geriGit(context);
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => geriGit(context));
     }
   }
 

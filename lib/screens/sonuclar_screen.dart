@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,6 +11,7 @@ import '../domain/saglayici_ozeti.dart';
 import '../domain/yakinlik_saglayici.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
 import '../ui/ref_tokens.dart';
+import '../ui/kalan_alanda_ortala.dart';
 import '../ui/ref_widgets.dart';
 import 'teklif_iste_screen.dart';
 
@@ -122,6 +124,14 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Boş durum açıklaması — TEK tanım (mobil ve web aynı metni çizer).
+    final bosAciklama = Text(
+        'Seçtiğiniz hizmeti bu bölgede sunan kayıtlı '
+        'hizmet veren bulunmuyor. İlan vererek '
+        'teklif toplayabilirsiniz.',
+        textAlign: TextAlign.center,
+        style: refText(size: RF.s135, weight: RF.w400, color: RC.textSoft));
+
     return Scaffold(
       backgroundColor: RC.white,
       body: SafeArea(
@@ -215,18 +225,18 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                   // ⚠ SAYI YA DA TAHMİN YAZILMAZ: "yakında eklenecek",
                   // "N kişi bekleniyor" gibi bilmediğimiz şeyler
                   // söylenmez. Yalnız durum ve tek bir öneri.
-                  if (_sonuclar.isEmpty)
+                  // ── ⚠ WEB: BİLGİLENDİRME KALAN ALANIN ORTASINDA ──
+                  //
+                  // Ortak `KalanAlandaOrtala` (Bildirimler ile aynı kural).
+                  // Metin TEK tanım (`bosAciklama`); mobilde `else` dalı
+                  // önceki `Padding(vertical: 32)` düzeninin BİREBİR aynısı.
+                  // `altBosluk: 20` = listenin alt dolgusu.
+                  if (_sonuclar.isEmpty && kIsWeb)
+                    KalanAlandaOrtala(altBosluk: 20, child: bosAciklama)
+                  else if (_sonuclar.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 32),
-                      child: Text(
-                          'Seçtiğiniz hizmeti bu bölgede sunan kayıtlı '
-                          'hizmet veren bulunmuyor. İlan vererek '
-                          'teklif toplayabilirsiniz.',
-                          textAlign: TextAlign.center,
-                          style: refText(
-                              size: RF.s135,
-                              weight: RF.w400,
-                              color: RC.textSoft)),
+                      child: bosAciklama,
                     ),
 
                   // ── TEK KESİNTİSİZ LİSTE — İLÇE BAŞLIĞI YOK ──
