@@ -20,6 +20,8 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'category_screen.dart';
 import 'category_ui.dart';
+import '../ui/panel_rotasi.dart';
+import '../ui/web_panel.dart';
 
 class HizmetAlaniScreen extends StatefulWidget {
   const HizmetAlaniScreen({super.key, required this.alan});
@@ -145,11 +147,16 @@ class _HizmetAlaniScreenState extends State<HizmetAlaniScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: RefBackButton(onTap: () => Navigator.of(context).pop()),
-          ),
-          const SizedBox(height: 6),
+          // ⚠ WEB PANELİNDE GERİ OKU YOK: kartın kendi X'i var
+          // (giriş ekranıyla aynı). Mobilde `panelMi` hep false; satırlar
+          // aynen çizilir.
+          if (!WebPanel.panelMi(context)) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: RefBackButton(onTap: () => Navigator.of(context).pop()),
+            ),
+            const SizedBox(height: 6),
+          ],
           RefPageTitle(widget.alan.ad, geriDugmesi: false),
           RefSubtitle(widget.alan.aciklama),
           const SizedBox(height: 14),
@@ -290,7 +297,8 @@ class _HizmetSonucSatiri extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        akisRotasi<void>(
+          // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
           // ⚠ ÇATI BAĞLAMI TAŞINIR (mevcut kural) ve hizmet SEÇİLİ
           // gelir.
           builder: (_) => CategoryScreen(
@@ -362,7 +370,8 @@ class _KategoriSatiri extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        akisRotasi<void>(
+          // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
           // ⚠ ÇATI BAĞLAMI TAŞINIR: kategori ekranı yalnız bu çatıya
           // ait hizmetleri gösterir.
           builder: (_) => CategoryScreen(category: kategori, alan: alan),

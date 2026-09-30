@@ -1488,7 +1488,16 @@ class RefBottomSheet extends StatelessWidget {
                     ),
                   ),
                   RefTap(
-                    onTap: () => Navigator.of(context).maybePop(),
+                    // ⚠ WEB: tek kaynak `webKapat` (eşzamanlı `pop`;
+                    // bkz. web_panel.dart). MOBİL DEĞİŞMEZ: Android/iOS'ta
+                    // `maybePop` aynen çağrılır.
+                    onTap: () {
+                      if (kIsWeb) {
+                        webKapat(context);
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
                     borderRadius: BorderRadius.circular(RR.circle),
                     child: const Padding(
                       padding: EdgeInsets.all(8),

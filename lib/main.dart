@@ -896,7 +896,11 @@ class HizmetCepApp extends StatelessWidget {
           // ⚠ PUBLIC (kayıt öncesi) — yalnız TASLAK üretir, yayın YAPMAZ.
           // `/customer/new-listing` korumalı KALIR; bu route onu
           // bypass etmez (bkz. prelogin_listing_route.dart).
-          PreLoginListingRoute.name: preLoginListingBuilder,
+          // ⚠ WEB'DE HARİTADA YOK: web'de bu ad `onGenerateRoute`ta
+          // panel rotasıyla kurulur (giriş ekranı gibi). Haritada
+          // kalsaydı Flutter `onGenerateRoute`u hiç çağırmazdı.
+          // Mobilde satır AYNEN durur.
+          if (!kIsWeb) PreLoginListingRoute.name: preLoginListingBuilder,
 
         },
         // ── ⚠ PARAMETRELİ ADRESLER (web için) ──
@@ -1034,10 +1038,22 @@ class HizmetCepApp extends StatelessWidget {
               builder: (_) => RoleGuard.provider(builder: (_) => const MyAreasScreen()),
             );
           }
+          // ── ⚠ İLAN OLUŞTURMA: WEB'DE PANEL (giriş ekranı gibi) ──
+          //
+          // Kullanıcı kararı: kategori kartlarıyla başlayan akış ve ilan
+          // oluşturma ekranları web'de tam ekran değil, panel olarak
+          // açılır. `akisRotasi` web değilse bugünkü `MaterialPageRoute`un
+          // KENDİSİNİ döndürür — mobil DEĞİŞMEZ.
           if (ad == '/customer/new-listing') {
-            return MaterialPageRoute<void>(
+            return akisRotasi<void>(
               settings: settings,
               builder: (_) => RoleGuard.customer(builder: (_) => const CreateListingScreen()),
+            );
+          }
+          if (kIsWeb && ad == PreLoginListingRoute.name) {
+            return akisRotasi<void>(
+              settings: settings,
+              builder: preLoginListingBuilder,
             );
           }
 

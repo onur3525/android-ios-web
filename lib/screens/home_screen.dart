@@ -17,6 +17,7 @@ import 'prelogin_listing_route.dart';
 import '../data/hizmet_alanlari.dart';
 import 'hizmet_alani_screen.dart';
 import '../ui/gezgin.dart';
+import '../ui/panel_rotasi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// ANA SAYFA — referans `vHome()` karşılığı
@@ -200,7 +201,8 @@ void hizmetSecildi(
       unawaited(auth.switchRole(Role.customer));
     }
     // ⚠ AYNI SEBEP: anahtar üzerinden.
-    final rota = MaterialPageRoute<void>(
+    // ⚠ WEB'DE PANEL (giriş ekranı gibi); mobilde aynı sayfa rotası.
+    final rota = akisRotasi<void>(
         builder: (_) => CreateListingScreen(
               initialCategory: kategori,
               initialSubService: altHizmet,
@@ -1066,7 +1068,8 @@ class _AlanKarti extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        // ⚠ WEB'DE PANEL (giriş ekranı gibi); mobilde aynı sayfa rotası.
+        akisRotasi<void>(
           builder: (_) => HizmetAlaniScreen(alan: alan),
         ),
       ),

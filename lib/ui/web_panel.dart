@@ -54,6 +54,34 @@ import 'ref_widgets.dart';
 /// Düğme kartın iç dolgusuyla hizalı kalır; masaüstünde ekran boyunca
 /// uzamaz. Mobilde bugünkü tam genişlik davranışı sürer.
 /// ═══════════════════════════════════════════════════════════════
+/// ═══════════════════════════════════════════════════════════════
+/// WEB — X / ESC İLE KAPATMA (TEK KAYNAK)
+///
+/// Web'deki bütün kapatma düğmeleri (panel X'i, Esc, alt panel X'i)
+/// buradan geçer; ayrı ayrı yazılsaydı biri düzeltilip öteki
+/// unutulurdu.
+///
+/// ⚠ NİÇİN `maybePop` DEĞİL:
+///   · `maybePop` yığındaki TEK rota ise (web'de adres çubuğundan ya da
+///     yenilemeyle doğrudan açılan panel) "bubble" döner ve SESSİZCE
+///     HİÇBİR ŞEY YAPMAZ — X ölü kalır.
+///   · `maybePop` önce eski `willPop` zincirini BEKLER (asenkron); X'e
+///     basışla kapanış arasında bir çerçeve boşluğu açar.
+/// Burada kapanış EŞZAMANLIDIR: geri dönülecek rota varsa `pop`,
+/// yoksa ana sayfa (`geriGit` ile aynı sözleşme).
+///
+/// ⚠ YALNIZ WEB DALLARINDAN ÇAĞRILIR: Android/iOS'taki kapatma
+/// davranışı değişmez.
+/// ═══════════════════════════════════════════════════════════════
+void webKapat(BuildContext context) {
+  final nav = Navigator.of(context);
+  if (nav.canPop()) {
+    nav.pop();
+    return;
+  }
+  nav.pushNamedAndRemoveUntil('/home', (_) => false);
+}
+
 class WebPanel extends StatelessWidget {
   const WebPanel({
     super.key,
@@ -177,7 +205,7 @@ class WebPanel extends StatelessWidget {
     // modal rotalar için sağladığı Esc davranışı buraya
     // ULAŞMIYORDU.
     //
-    // ⚠ X İLE AYNI YOL: ikisi de `maybePop` çağırır. Ayrı kapatma
+    // ⚠ X İLE AYNI YOL: ikisi de `webKapat` çağırır. Ayrı kapatma
     // mantıkları olsaydı biri düzeltilip öteki unutulurdu.
     //
     // ⚠ `autofocus` VERİLMEZ: panelin kendisi odağı çalarsa
@@ -190,7 +218,7 @@ class WebPanel extends StatelessWidget {
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
             event.logicalKey == LogicalKeyboardKey.escape) {
-          Navigator.of(context).maybePop();
+          webKapat(context);
           return KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
@@ -349,7 +377,7 @@ class _Baslik extends StatelessWidget {
               // Navigator'ın ALTINDA, ekranın gövdesinde. Kabuktaki
               // eski çözümde bu mümkün değildi.
               child: RefTap(
-                onTap: () => Navigator.of(context).maybePop(),
+                onTap: () => webKapat(context),
                 borderRadius: BorderRadius.circular(RR.circle),
                 // ⚠ YAZISIZ İKON: masaüstünde ne yaptığını söylemeli.
                 ipucu: 'Kapat',
@@ -377,7 +405,7 @@ class _SadeceKapat extends StatelessWidget {
         child: Align(
           alignment: Alignment.centerRight,
           child: RefTap(
-            onTap: () => Navigator.of(context).maybePop(),
+            onTap: () => webKapat(context),
             borderRadius: BorderRadius.circular(RR.circle),
             ipucu: 'Kapat',
             child: const Padding(

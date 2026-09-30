@@ -16,6 +16,7 @@ import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
 import '../ui/ref_tokens.dart';
 import 'prelogin_listing_route.dart';
+import '../ui/panel_rotasi.dart';
 
 /// Arama (HTML vSearch): kategori/alt hizmet + açık ilan başlık-açıklama.
 /// Boş sorguda varsayılan görünüm (tüm kategoriler); sonuç yoksa empty state.
@@ -247,8 +248,9 @@ class _SearchScreenState extends State<SearchScreen> {
       // ⚠ GÖRÜNEN ad — kart ızgarasıyla aynı kısaltma.
       title: kategoriEtiketi(c),
       sub: (kSubServices[c] ?? const []).take(3).join(' · '),
+      // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
       onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => CategoryScreen(category: c))));
+          akisRotasi<void>(builder: (_) => CategoryScreen(category: c))));
 
   /// ⚠ KATEGORİ ALT BAŞLIĞI GÖSTERİLMEZ.
   ///

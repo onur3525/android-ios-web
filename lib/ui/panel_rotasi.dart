@@ -96,3 +96,33 @@ Route<T> panelRotasi<T>({
 /// ⚠ ANDROID/iOS KİLİTLİ: `kIsWeb` değilse düpedüz
 /// `MaterialPageRoute` döner.
 bool _masaustuWeb() => kIsWeb;
+
+/// ═══════════════════════════════════════════════════════════════
+/// AKIŞ ROTASI — KATEGORİ → HİZMET → İLAN OLUŞTURMA (TEK KAYNAK)
+///
+/// Kullanıcı kararı: ana sayfadaki kategori (çatı) kartlarından
+/// başlayan akış ve ilan oluşturma ekranları web'de GİRİŞ EKRANI GİBİ
+/// panel olarak açılır — tam ekran değil. Bu akıştaki bütün
+/// geçişler buradan geçer; biri düz sayfa, öteki panel kalıp
+/// ayrışmasın.
+///
+/// ⚠ MOBİL KİLİTLİ: web değilse bugünkü `MaterialPageRoute`un
+/// KENDİSİ döner (aynı `settings`, aynı geçiş). Android/iOS'ta hiçbir
+/// şey değişmez.
+///
+/// Panelin görünümü ekranların kendi `WebPanel` / `RefPage`
+/// sarmalayıcısından gelir; `panelMi` saydam rotayı görünce kartı
+/// çizer.
+/// ═══════════════════════════════════════════════════════════════
+Route<T> akisRotasi<T>({
+  RouteSettings? settings,
+  required WidgetBuilder builder,
+}) {
+  if (!kIsWeb) {
+    return MaterialPageRoute<T>(settings: settings, builder: builder);
+  }
+  return panelRotasi<T>(
+    settings: settings ?? const RouteSettings(),
+    builder: builder,
+  );
+}

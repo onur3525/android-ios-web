@@ -792,7 +792,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         }
       },
       child: Scaffold(
-      backgroundColor: RC.pageBg,
+      // ⚠ WEB PANELİNDE ZEMİN SAYDAM (giriş ekranı gibi): akış artık
+      // saydam panel rotasıyla açılıyor; beyaz zemin arkadaki sayfayı
+      // örterdi. Mobilde `panelMi` hep false → `RC.pageBg` aynen.
+      backgroundColor:
+          WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
       body: WebPanel(
         // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
         // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi

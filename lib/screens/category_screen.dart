@@ -13,6 +13,8 @@ import 'create_listing_screen.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
 import 'prelogin_listing_route.dart';
+import '../ui/panel_rotasi.dart';
+import '../ui/web_panel.dart';
 
 /// Kategori detayı (HTML v66 düzeni): kategori başlığı + alt hizmet listesi
 /// + bu kategorideki UYGUN (açık) ilanlar.
@@ -101,9 +103,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
         if (auth.activeRole != Role.customer) {
           unawaited(auth.switchRole(Role.customer));
         }
+        // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
         Navigator.push(
             context,
-            MaterialPageRoute(
+            akisRotasi<void>(
                 builder: (_) => CreateListingScreen(
                       initialCategory: category,
                       initialSubService: sub,
@@ -128,86 +131,110 @@ class _CategoryScreenState extends State<CategoryScreen> {
     }
 
     // ⚠ Referansta AppBar YOKTUR; başlık sayfa içindedir.
-    return Scaffold(
-      backgroundColor: RC.pageBg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-          children: [
-            // ⚠ Başlık ve açıklamada GÖRÜNEN ad kullanılır; kimlik
-            // (`category`) aynen taşınır.
-            RefDetailHeader(title: kategoriEtiketi(category)),
-            const SizedBox(height: 8),
-            Row(children: [
-              CategoryBadge(category, size: 54),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                    '${kategoriEtiketi(category)} kategorisindeki hizmetler '
-                    've açık ilanlar',
-                    style: const TextStyle(
-                        fontSize: 13, height: 1.5, color: HC.grey)),
-              ),
-            ]),
-            const SizedBox(height: 14),
-            // ── ⚠ TEK SEÇİM KURALI ──
-            //
-            // Bir ilan TEK bir hizmete açılır; çoklu seçim ilanın
-            // hangi işe ait olduğunu belirsizleştirir ve hizmet
-            // verenle eşleştirmeyi bozar.
-            const Text('Hizmet seçin',
-                style: TextStyle(
-                    fontSize: 14.5, fontWeight: FontWeight.w800, color: HC.dark)),
-            const SizedBox(height: 3),
-            const Text('Her ilan için yalnızca bir hizmet seçebilirsiniz.',
-                style: TextStyle(fontSize: 12.5, color: HC.grey)),
-            const SizedBox(height: 10),
+    // ── ⚠ ÖĞELER TEK LİSTE: sayfa (mobil) ve web paneli aynı öğeleri
+    // çizer; kopya yok.
+    final panelde = WebPanel.panelMi(context);
+    final ogeler = <Widget>[
+        // ⚠ Başlık ve açıklamada GÖRÜNEN ad kullanılır; kimlik
+        // (`category`) aynen taşınır.
+        // ⚠ Web panelinde geri oku yok: kartın X'i var (giriş gibi).
+        // Mobilde `panelde` hep false → `null` = önceki davranış.
+        RefDetailHeader(
+            title: kategoriEtiketi(category),
+            geriDugmesi: panelde ? false : null),
+        const SizedBox(height: 8),
+        Row(children: [
+          CategoryBadge(category, size: 54),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+                '${kategoriEtiketi(category)} kategorisindeki hizmetler '
+                've açık ilanlar',
+                style: const TextStyle(
+                    fontSize: 13, height: 1.5, color: HC.grey)),
+          ),
+        ]),
+        const SizedBox(height: 14),
+        // ── ⚠ TEK SEÇİM KURALI ──
+        //
+        // Bir ilan TEK bir hizmete açılır; çoklu seçim ilanın
+        // hangi işe ait olduğunu belirsizleştirir ve hizmet
+        // verenle eşleştirmeyi bozar.
+        const Text('Hizmet seçin',
+            style: TextStyle(
+                fontSize: 14.5, fontWeight: FontWeight.w800, color: HC.dark)),
+        const SizedBox(height: 3),
+        const Text('Her ilan için yalnızca bir hizmet seçebilirsiniz.',
+            style: TextStyle(fontSize: 12.5, color: HC.grey)),
+        const SizedBox(height: 10),
 
-            // ── ⚠ TEK SÜTUN, EŞİT SATIR ──
-            //
-            // Eskiden `Wrap` ile yan yana diziliyordu: satır başına
-            // düşen kart sayısı ada göre değişiyor, ızgara düzensiz
-            // görünüyordu. Tek sütunda her satır aynı genişlikte.
-            for (var i = 0; i < subs.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              _HizmetSatiri(
-                ad: subs[i],
-                secili: _secili == subs[i],
-                // ⚠ Aynı satıra tekrar dokunmak seçimi KALDIRIR;
-                // kullanıcı vazgeçebilmeli.
-                onTap: () => setState(
-                    () => _secili = _secili == subs[i] ? null : subs[i]),
-              ),
-            ],
+        // ── ⚠ TEK SÜTUN, EŞİT SATIR ──
+        //
+        // Eskiden `Wrap` ile yan yana diziliyordu: satır başına
+        // düşen kart sayısı ada göre değişiyor, ızgara düzensiz
+        // görünüyordu. Tek sütunda her satır aynı genişlikte.
+        for (var i = 0; i < subs.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _HizmetSatiri(
+            ad: subs[i],
+            secili: _secili == subs[i],
+            // ⚠ Aynı satıra tekrar dokunmak seçimi KALDIRIR;
+            // kullanıcı vazgeçebilmeli.
+            onTap: () => setState(
+                () => _secili = _secili == subs[i] ? null : subs[i]),
+          ),
+        ],
 
-            // ── ⚠ DÜĞME HER ROLDE ÇİZİLİR ──
-            //
-            // Eskiden çipler doğrudan tıklanıyordu ve rol ne olursa
-            // olsun akış başlıyordu. Seçim düğmeye taşınınca düğmeyi
-            // yalnız müşteriye göstermek, hizmet veren rolündeki
-            // kullanıcıyı SESSİZ BİR ÖLÜ DALA sokuyordu: hizmeti
-            // seçiyor ama devam edemiyordu.
-            //
-            // ⚠ Rol kararı `startFlow` içinde verilir: sağlayıcı
-            // korumalı müşteri rotasına ZORLANMAZ, taslak formu açılır.
-            ...[
-              const SizedBox(height: 16),
-              // ⚠ SEÇİM YOKKEN DÜĞME PASİF: `onPressed: null` Flutter'da
-              // düğmeyi hem soluklaştırır hem dokunulamaz yapar.
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed:
-                      _secili == null ? null : () => startFlow(_secili),
-                  child: const Text('Devam Et',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ],
-        ),
+        // ── ⚠ DÜĞME HER ROLDE ÇİZİLİR ──
+        //
+        // Eskiden çipler doğrudan tıklanıyordu ve rol ne olursa
+        // olsun akış başlıyordu. Seçim düğmeye taşınınca düğmeyi
+        // yalnız müşteriye göstermek, hizmet veren rolündeki
+        // kullanıcıyı SESSİZ BİR ÖLÜ DALA sokuyordu: hizmeti
+        // seçiyor ama devam edemiyordu.
+        //
+        // ⚠ Rol kararı `startFlow` içinde verilir: sağlayıcı
+        // korumalı müşteri rotasına ZORLANMAZ, taslak formu açılır.
+        ...[
+          const SizedBox(height: 16),
+          // ⚠ SEÇİM YOKKEN DÜĞME PASİF: `onPressed: null` Flutter'da
+          // düğmeyi hem soluklaştırır hem dokunulamaz yapar.
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed:
+                  _secili == null ? null : () => startFlow(_secili),
+              child: const Text('Devam Et',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+    ];
+
+    // ── ⚠ WEB: GİRİŞ EKRANI GİBİ PANEL ──
+    //
+    // Akış (`akisRotasi`) web'de saydam panel rotasıyla açılır;
+    // `panelMi` bunu görünce kart çizilir, zemin saydam olur ve geri
+    // oku yerine kartın X'i kullanılır. Mobilde `panelMi` hep false:
+    // aşağıdaki `Scaffold > SafeArea > ListView` BİREBİR önceki ağaç.
+    final sayfa = SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        children: ogeler,
       ),
+    );
+    return Scaffold(
+      backgroundColor: panelde ? Colors.transparent : RC.pageBg,
+      body: panelde
+          ? WebPanel(
+              panelIcerik: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: ogeler,
+              ),
+              icerik: sayfa,
+            )
+          : sayfa,
     );
   }
 }
