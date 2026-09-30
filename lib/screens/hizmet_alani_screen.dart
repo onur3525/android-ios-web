@@ -147,16 +147,18 @@ class _HizmetAlaniScreenState extends State<HizmetAlaniScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ⚠ WEB PANELİNDE GERİ OKU YOK: kartın kendi X'i var
-          // (giriş ekranıyla aynı). Mobilde `panelMi` hep false; satırlar
-          // aynen çizilir.
-          if (!WebPanel.panelMi(context)) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: RefBackButton(onTap: () => Navigator.of(context).pop()),
-            ),
-            const SizedBox(height: 6),
-          ],
+          // ⚠ WEB PANELİNDE GERİ OKU GÖRÜNÜR (akış içi): X akışın
+          // tamamını kapatır, bir önceki ekrana dönmek bu okla. Sıradan
+          // `RefBackButton` panelde kendini gizlediği için `akisIci`
+          // kullanılır. Mobilde `panelMi` hep false → önceki düğme aynen.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: WebPanel.panelMi(context)
+                ? RefBackButton.akisIci(
+                    onTap: () => Navigator.of(context).pop())
+                : RefBackButton(onTap: () => Navigator.of(context).pop()),
+          ),
+          const SizedBox(height: 6),
           RefPageTitle(widget.alan.ad, geriDugmesi: false),
           RefSubtitle(widget.alan.aciklama),
           const SizedBox(height: 14),

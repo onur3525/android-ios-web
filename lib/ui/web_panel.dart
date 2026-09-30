@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'olcu.dart';
+import 'panel_rotasi.dart';
 import 'ref_tokens.dart';
 import 'ref_widgets.dart';
 
@@ -75,6 +77,13 @@ import 'ref_widgets.dart';
 /// ═══════════════════════════════════════════════════════════════
 void webKapat(BuildContext context) {
   final nav = Navigator.of(context);
+  // ⚠ KATEGORİ → İLAN AKIŞI: X bir seviye değil AKIŞIN TAMAMINI kapatır
+  // ve ana sayfaya döner (kullanıcı kararı). Önceki ekran için kartın
+  // geri oku var. Bkz. `akisiKapat` (panel_rotasi.dart).
+  if (akisRotasiMi(ModalRoute.of(context))) {
+    akisiKapat(nav);
+    return;
+  }
   if (nav.canPop()) {
     nav.pop();
     return;
@@ -198,6 +207,12 @@ class WebPanel extends StatelessWidget {
     if (!panelMi(context)) {
       return icerik;
     }
+    // ── ⚠ KATEGORİ → İLAN AKIŞINDA SABİT PANEL BOYU ──
+    final ustSinir = MediaQuery.sizeOf(context).height * 0.85;
+    final rota = ModalRoute.of(context);
+    final akisRota = akisRotasiMi(rota) ? rota : null;
+    final akisBoyu =
+        akisRota == null ? null : _AkisBoyu.sabit(akisRota);
     // ── ⚠ ESC İLE KAPANIR ──
     //
     // Web'de bir pencere açıkken Esc'e basmak refleks davranıştır.
@@ -251,12 +266,25 @@ class WebPanel extends StatelessWidget {
           // görünür kalır — modal davranışının gereği.
           constraints: BoxConstraints(
             maxWidth: enFazla,
+            // ⚠ AKIŞTA SABİT BOY: kategori → hizmet → ilan akışının
+            // bütün panelleri ilk panelin boyunda kalır (bkz. `_AkisBoyu`).
+            minHeight: akisBoyu == null
+                ? 0
+                : (akisBoyu < ustSinir ? akisBoyu : ustSinir),
             // ⚠ ÜST SINIR: uzun formda kart ekranı taşırmasın. Sade
             // gövde verildiğinde kart bu sınıra KADAR içerik kadar
             // yüksek olur; verilmediğinde sınıra dayanır.
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+            maxHeight: akisBoyu == null
+                ? ustSinir
+                : (akisBoyu < ustSinir ? akisBoyu : ustSinir),
           ),
-          child: Material(
+          child: _BoyOlcer(
+            // Akışın ilk paneli doğal boyunu bir kez bildirir; sonraki
+            // paneller o boyu kullanır. Akış dışında ölçüm yapılmaz.
+            onBoy: akisRota != null && akisBoyu == null
+                ? (h) => _AkisBoyu.olc(akisRota, h)
+                : null,
+            child: Material(
             color: RC.white,
             elevation: 8,
             shadowColor: const Color(0x1A16233D),
@@ -313,7 +341,7 @@ class WebPanel extends StatelessWidget {
               ],
             ),
             ),
-          ),
+          )),
         ),
       ),
       ),
@@ -327,6 +355,73 @@ class WebPanel extends StatelessWidget {
 /// bileşenler "bir panelin içinde miyim" sorusunu buradan sorar.
 /// Alternatifi her ekrana "panelde miyim" bayrağı geçirmekti; on üç
 /// ekranda on üç ayrı unutma fırsatı demekti.
+/// ═══════════════════════════════════════════════════════════════
+/// AKIŞ PANEL BOYU — kategori → hizmet → ilan akışında TEK BOY
+///
+/// Kullanıcı kararı: kategori kartına basınca açılan panel ne
+/// boyuttaysa, içindeki kategoriye/hizmete basınca açılan paneller de
+/// AYNI boyda kalır; hizmet çoksa kart büyümez, içerik kayar.
+///
+/// Akışın İLK paneli (sahip) ilk çiziminde doğal boyunu bildirir; bu
+/// boy saklanır ve hem sahibin sonraki çizimlerinde (arama yazınca
+/// kart küçülmesin) hem akışın sonraki panellerinde kullanılır. Sahip
+/// rota kapanınca (`isActive` false) boy unutulur; yeni akış yeni boy
+/// ölçer.
+///
+/// ⚠ YALNIZ WEB PANELİ: bu kod `panelMi` kapısının arkasında; mobilde
+/// hiç çalışmaz.
+/// ═══════════════════════════════════════════════════════════════
+class _AkisBoyu {
+  static Route<dynamic>? _sahip;
+  static double? _boy;
+
+  /// Bu akış paneli sabit boy almalı mı? `null` → doğal boy (ölçülecek).
+  static double? sabit(Route<dynamic> rota) {
+    final sahip = _sahip;
+    if (sahip == null || !sahip.isActive) {
+      _sahip = rota;
+      _boy = null;
+      return null;
+    }
+    return _boy;
+  }
+
+  static void olc(Route<dynamic> rota, double boy) {
+    if (identical(rota, _sahip) && _boy == null && boy > 0) {
+      _boy = boy;
+    }
+  }
+}
+
+/// Çocuğunun yerleşim sonrası yüksekliğini bildirir (yalnız ölçüm;
+/// çizimi ve isabeti değiştirmez).
+class _BoyOlcer extends SingleChildRenderObjectWidget {
+  const _BoyOlcer({required this.onBoy, required super.child});
+
+  final void Function(double)? onBoy;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderBoyOlcer(onBoy);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderBoyOlcer r) {
+    r.onBoy = onBoy;
+  }
+}
+
+class _RenderBoyOlcer extends RenderProxyBox {
+  _RenderBoyOlcer(this.onBoy);
+
+  void Function(double)? onBoy;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    onBoy?.call(size.height);
+  }
+}
+
 class _PanelKapsami extends InheritedWidget {
   const _PanelKapsami({required super.child});
 

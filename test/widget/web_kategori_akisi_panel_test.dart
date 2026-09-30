@@ -53,7 +53,7 @@ void main() {
         isTrue);
   });
 
-  test('panelde zemin saydam, geri oku yerine kartın X\'i', () {
+  test('panelde zemin saydam, akış içi geri oku var', () {
     final c = oku('lib/screens/category_screen.dart');
     expect(c.contains('backgroundColor: panelde ? Colors.transparent : RC.pageBg'),
         isTrue);
@@ -61,8 +61,15 @@ void main() {
     expect(c.contains(': sayfa,'), isTrue,
         reason: 'mobilde gövde önceki SafeArea > ListView olmalı');
 
+    // Panelde akış içi geri oku (bir önceki ekran); X akışı kapatır.
+    expect(c.contains('if (panelde)\n          Align('), isTrue);
+    expect(c.contains('RefBackButton.akisIci('), isTrue);
+
     final h = oku('lib/screens/hizmet_alani_screen.dart');
-    expect(h.contains('if (!WebPanel.panelMi(context)) ...['), isTrue);
+    expect(
+        h.contains('child: WebPanel.panelMi(context)\n'
+            '                ? RefBackButton.akisIci('),
+        isTrue);
 
     final l = oku('lib/screens/create_listing_screen.dart');
     expect(

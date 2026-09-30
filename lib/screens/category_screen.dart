@@ -137,8 +137,16 @@ class _CategoryScreenState extends State<CategoryScreen> {
     final ogeler = <Widget>[
         // ⚠ Başlık ve açıklamada GÖRÜNEN ad kullanılır; kimlik
         // (`category`) aynen taşınır.
-        // ⚠ Web panelinde geri oku yok: kartın X'i var (giriş gibi).
-        // Mobilde `panelde` hep false → `null` = önceki davranış.
+        // ⚠ WEB PANELİNDE AKIŞ İÇİ GERİ OKU: X akışın tamamını kapatır,
+        // bir önceki ekrana dönmek bu okla. Başlığın kendi oku panelde
+        // gizlendiği için ayrı `akisIci` düğmesi çizilir. Mobilde
+        // `panelde` hep false → bu satır eklenmez, başlık aynen.
+        if (panelde)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: RefBackButton.akisIci(
+                onTap: () => Navigator.of(context).pop()),
+          ),
         RefDetailHeader(
             title: kategoriEtiketi(category),
             geriDugmesi: panelde ? false : null),

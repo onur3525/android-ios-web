@@ -121,8 +121,47 @@ Route<T> akisRotasi<T>({
   if (!kIsWeb) {
     return MaterialPageRoute<T>(settings: settings, builder: builder);
   }
-  return panelRotasi<T>(
+  final rota = panelRotasi<T>(
     settings: settings ?? const RouteSettings(),
     builder: builder,
   );
+  _akisRotalari[rota] = true;
+  return rota;
+}
+
+/// Akış rotalarının işareti. `Expando`: rota nesnesine ek alan
+/// eklemeden işaret tutar; rota yok olunca işaret de gider.
+final Expando<bool> _akisRotalari = Expando<bool>('akisRotasi');
+
+/// Bu rota kategori → ilan akışının bir paneli mi?
+bool akisRotasiMi(Route<dynamic>? rota) =>
+    rota != null && _akisRotalari[rota] == true;
+
+/// YALNIZ TEST: `kIsWeb` derleme sabiti olduğu için VM testinde
+/// `akisRotasi` panel üretmez; test bir rotayı elle işaretler.
+@visibleForTesting
+void akisRotasiIsaretle(Route<dynamic> rota) => _akisRotalari[rota] = true;
+
+/// ── AKIŞI TOPTAN KAPAT ──
+///
+/// Kullanıcı kararı: kategori kartıyla başlayan akışta HANGİ adımda
+/// olursa olsun X, akışın BÜTÜN panellerini kapatır ve akışın
+/// başladığı sayfaya (ana sayfa) döner. Bir önceki ekrana dönmek
+/// isteyen kartın geri okunu kullanır.
+///
+/// Akış rotası olmayan ilk rotaya kadar kapatılır. Yığının dibi de
+/// akış rotasıysa (adres çubuğundan doğrudan açılan ilan sayfası)
+/// ekran boş kalmasın diye ana sayfaya gidilir.
+void akisiKapat(NavigatorState nav) {
+  Route<dynamic>? kalan;
+  nav.popUntil((r) {
+    if (!akisRotasiMi(r) || r.isFirst) {
+      kalan = r;
+      return true;
+    }
+    return false;
+  });
+  if (akisRotasiMi(kalan)) {
+    nav.pushNamedAndRemoveUntil('/home', (_) => false);
+  }
 }
