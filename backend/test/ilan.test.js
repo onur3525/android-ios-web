@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
 const { veritabaniAc, simdi } = await import('../src/db.js');
+const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
@@ -43,9 +44,7 @@ async function kullaniciOlustur(tel, rol) {
 }
 
 before(async () => {
-  db = process.env.HC_TEST_DB === 'postgres'
-    ? await veritabaniAc({ surucu: 'postgres', url: process.env.HC_DATABASE_URL, ssl: false })
-    : await veritabaniAc({ surucu: 'sqlite', yol: ':memory:' });
+  db = await testDb();
   await tohumla(db);
   const sir = base32Uret();
   await db.prepare(`INSERT INTO admins (id, email, name, role, password_hash, totp_secret_enc, created_at) VALUES (?, ?, ?, 'super_admin', ?, ?, ?)`)
@@ -62,8 +61,8 @@ before(async () => {
   usta2 = await kullaniciOlustur('5300000003', 'PROVIDER');
 });
 after(async () => {
-  sunucu.close();
-  await db.close();
+  sunucu?.close();
+  await db?.close();
 });
 
 let ilan, teklif;

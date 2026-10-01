@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
 const { veritabaniAc, simdi } = await import('../src/db.js');
+const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { silmeTalepleriniIsle, talepSureleriniIsle } = await import('../src/routes/sohbet_talep.js');
@@ -32,9 +33,7 @@ async function kisi(tel, rol) {
 }
 
 before(async () => {
-  db = process.env.HC_TEST_DB === 'postgres'
-    ? await veritabaniAc({ surucu: 'postgres', url: process.env.HC_DATABASE_URL, ssl: false })
-    : await veritabaniAc({ surucu: 'sqlite', yol: ':memory:' });
+  db = await testDb();
   await tohumla(db);
   sunucu = createServer(uygulamaKur(db));
   await new Promise((ok) => sunucu.listen(0, ok));
@@ -47,8 +46,8 @@ before(async () => {
   yabanci = await kisi('5310000003', 'CUSTOMER');
 });
 after(async () => {
-  sunucu.close();
-  await db.close();
+  sunucu?.close();
+  await db?.close();
 });
 
 test('ilan sohbeti: iletişim açılmadan mesaj yok; taraf olmayan göremez; olay yayınlanır', async () => {

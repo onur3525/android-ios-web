@@ -85,7 +85,7 @@ void main() {
       expect(await svc.verify(kTestPhone, kTestOtp), TestModu.etkin);
       expect(await svc.verify('5321112233', '000000'), isFalse);
       // Release güvenlik kuralı: verify TestModu.etkin && kod eşitliği ister;
-      // release'te ve varsayılan web derlemesinde test kodu KABUL EDİLMEZ.
+      // release derlemede (mobil ve web) test kodu KABUL EDİLMEZ.
     });
   });
 

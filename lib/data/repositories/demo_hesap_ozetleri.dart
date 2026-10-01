@@ -54,8 +54,8 @@ library;
 /// Giriş ekranındaki "Demo hesap" kutusu bu değerleri gösterir. Kutu ve
 /// demo hesabın kendisi YALNIZ `TestModu.etkin` + mock modda vardır:
 /// release derlemede hiçbir koşulda yoktur (`kReleaseMode` derleme
-/// sabiti; dal derleyicide atılır), web'de yalnız
-/// `--dart-define=HC_TEST_MODU=true` ile açılır.
+/// sabiti; dal derleyicide atılır). Web DEBUG derlemesinde (Pages demo
+/// sitesi) de görünür; `--dart-define=HC_TEST_MODU=false` ile kapatılır.
 /// ⚠ Kişisel/gerçek bir şifre DEĞİLDİR; yalnız yerel demo hesabı açar
 /// (sunucu yok, veri cihazda). Testlerdeki `kTestPass` ile AYNI.
 const String kDemoEposta = 'test@hizmetcep.com';

@@ -239,9 +239,9 @@ void main() {
     });
 
     // ⚠ 30 Eyl (H-01): kapı `kDebugMode` DEĞİL `TestModu.etkin`.
-    // `TestModu` release'te hiçbir koşulda açılmaz VE web'de varsayılan
-    // kapalıdır (debug web yayını da sabit OTP/demo hesap taşımaz).
-    // Kural GÜÇLENDİ: eski kapı debug web yayınında açıktı.
+    // `TestModu` release'te hiçbir koşulda açılmaz (mobil ve web).
+    // Web DEBUG derlemesinde (Pages demo sitesi) kullanıcı kararıyla
+    // açıktır; `HC_TEST_MODU=false` ile kapatılabilir.
     test('test OTP kodu YALNIZ test modunda geçerli', () {
       final o = _kod('lib/data/services/otp_service.dart');
       expect(o.contains('return TestModu.etkin && code == _debugCode;'),
@@ -253,13 +253,15 @@ void main() {
       expect(a.contains('bool seedTestAccount = TestModu.etkin'), isTrue);
     });
 
-    test('test modu: release\'te imkânsız, web\'de varsayılan kapalı', () {
+    // ⚠ 1 Eki (kullanıcı kararı): web DEBUG derlemesinde de varsayılan
+    // açık (Pages demo sitesi). Release'te İMKÂNSIZ kuralı değişmedi.
+    test('test modu: release\'te imkânsız; web debug\'da varsayılan açık', () {
       final k = _kod('lib/core/test_modu.dart');
       expect(
           k.contains(
               'static const bool etkin = !kReleaseMode && (!kIsWeb || _webIstegi);'),
           isTrue);
-      expect(k.contains("bool.fromEnvironment('HC_TEST_MODU')"), isTrue);
+      expect(k.contains("bool.fromEnvironment('HC_TEST_MODU', defaultValue: true)"), isTrue);
     });
 
     test('release derlemede mock veri kaynağı İMKÂNSIZ', () {

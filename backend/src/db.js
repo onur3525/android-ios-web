@@ -131,6 +131,8 @@ class PostgresDb {
     pg.types.setTypeParser(20, (v) => Number(v)); // bigint (sayaç/COUNT)
     this.havuz = new pg.Pool({
       connectionString: url,
+      // İsteğe bağlı yalıtılmış şema (testler; çok kiracılı kurulum değil).
+      ...(ayar.sema ? { options: `-c search_path=${ayar.sema}` } : {}),
       max: ayar.havuz,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
@@ -214,7 +216,9 @@ export async function veritabaniAc(ayar) {
     // `pg` yalnız PostgreSQL seçildiğinde yüklenir (geliştirme/test
     // ortamında kurulu olması gerekmez).
     const { default: pg } = await import('pg');
-    db = new PostgresDb(pg, ayar.url, { ssl: ayar.ssl !== false, ca: ayar.ca, havuz: ayar.havuz || 10 });
+    if (ayar.sema !== undefined && !/^[a-z_][a-z0-9_]{0,40}$/.test(ayar.sema)) throw new Error('Geçersiz şema adı');
+    db = new PostgresDb(pg, ayar.url, { ssl: ayar.ssl !== false, ca: ayar.ca, havuz: ayar.havuz || 10, sema: ayar.sema });
+    if (ayar.sema) await db.exec(`CREATE SCHEMA IF NOT EXISTS ${ayar.sema}`);
   } else {
     const { DatabaseSync } = await import('node:sqlite');
     db = new SqliteDb(DatabaseSync, ayar.yol || ':memory:');

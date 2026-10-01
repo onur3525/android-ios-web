@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { veritabaniAc, simdi } from '../src/db.js';
+import { testDb } from './destek.js';
 import { uygulamaKur } from '../src/server.js';
 import { tohumla, flutterVerisiniOku } from '../scripts/seed_from_flutter.js';
 import { base32Uret, sifreOzetle, sirSifrele, totpUret } from '../src/auth.js';
@@ -45,9 +46,7 @@ async function girisYap(email) {
 before(async () => {
   // CI'da aynı testler gerçek PostgreSQL'e karşı da koşar:
   //   HC_TEST_DB=postgres HC_DATABASE_URL=postgres://... npm test
-  db = process.env.HC_TEST_DB === 'postgres'
-    ? await veritabaniAc({ surucu: 'postgres', url: process.env.HC_DATABASE_URL, ssl: false })
-    : await veritabaniAc({ surucu: 'sqlite', yol: ':memory:' });
+  db = await testDb();
   await tohumla(db);
   await adminEkle('super@hc.test', 'super_admin');
   await adminEkle('icerik@hc.test', 'content');
@@ -57,8 +56,8 @@ before(async () => {
   taban = `http://127.0.0.1:${sunucu.address().port}`;
 });
 after(async () => {
-  sunucu.close();
-  await db.close();
+  sunucu?.close();
+  await db?.close();
 });
 
 test('başlangıç verisi Flutter kaynağıyla birebir (demo değil)', async () => {

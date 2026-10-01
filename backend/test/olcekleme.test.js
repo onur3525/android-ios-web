@@ -18,6 +18,7 @@ process.env.HC_S3_ACCESS_KEY_ID = 'TESTANAHTAR123';
 process.env.HC_S3_SECRET_ACCESS_KEY = 'testgizlianahtar-yalnizca-test';
 
 const { veritabaniAc, simdi } = await import('../src/db.js');
+const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { gercekZamanliKur } = await import('../src/gercek_zamanli.js');
 const { olaylar } = await import('../src/olaylar.js');
@@ -73,9 +74,7 @@ function sio(taban, token) {
 }
 
 before(async () => {
-  db = process.env.HC_TEST_DB === 'postgres'
-    ? await veritabaniAc({ surucu: 'postgres', url: process.env.HC_DATABASE_URL, ssl: false })
-    : await veritabaniAc({ surucu: 'sqlite', yol: ':memory:' });
+  db = await testDb();
   await olaylar.kur(db);
   await tohumla(db);
   ornek.push(await ornekBaslat(), await ornekBaslat());
@@ -83,7 +82,7 @@ before(async () => {
 after(async () => {
   for (const o of ornek) { o.s.closeAllConnections?.(); o.s.close(); }
   await olaylar.kapat();
-  await db.close();
+  await db?.close();
 });
 
 test('farklı örneklere bağlı iki kullanıcı gerçek zamanlı mesajlaşır', async () => {

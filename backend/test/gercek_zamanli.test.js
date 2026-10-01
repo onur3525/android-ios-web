@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
 const { veritabaniAc } = await import('../src/db.js');
+const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { gercekZamanliKur } = await import('../src/gercek_zamanli.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
@@ -52,7 +53,7 @@ function sio(token) {
 }
 
 before(async () => {
-  db = await veritabaniAc({ surucu: 'sqlite', yol: ':memory:' });
+  db = await testDb();
   await tohumla(db);
   sunucu = createServer(uygulamaKur(db));
   gercekZamanliKur(sunucu, db);
@@ -67,9 +68,9 @@ before(async () => {
   await istek(`/api/v1/offers/${offerId}/communication`, { yontem: 'POST', token: alan.token });
 });
 after(async () => {
-  sunucu.closeAllConnections?.();
-  sunucu.close();
-  await db.close();
+  sunucu?.closeAllConnections?.();
+  sunucu?.close();
+  await db?.close();
 });
 
 test('geçersiz token: bağlantı reddedilir', async () => {
