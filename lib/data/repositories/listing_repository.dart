@@ -8,6 +8,15 @@ class ListingRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final List<Listing> _items = [];
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<Listing> get sekmeKayitlari => List.unmodifiable(_items);
+  void sekmeKayitlariniYukle(Iterable<Listing> kayitlar) {
+    _items
+      ..clear()
+      ..addAll(kayitlar);
+    notifyListeners();
+  }
+
   /// ── İLAN NUMARASI ÜRETİMİ ──
   ///
   /// ⚠ SAYAÇ BU SINIFTAN ÇIKARILDI (12 Eyl). Numara artık

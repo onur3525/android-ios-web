@@ -7,6 +7,15 @@ class ReviewRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final Map<String, Review> _items = {}; // reviewId → Review
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<Review> get sekmeKayitlari => List.unmodifiable(_items.values);
+  void sekmeKayitlariniYukle(Iterable<Review> kayitlar) {
+    _items
+      ..clear()
+      ..addEntries(kayitlar.map((r) => MapEntry(r.id, r)));
+    notifyListeners();
+  }
+
   Review? byOffer(String offerId) {
     for (final r in _items.values) {
       if (r.offerId == offerId) {

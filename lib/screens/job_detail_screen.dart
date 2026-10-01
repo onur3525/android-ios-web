@@ -753,6 +753,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           ? () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
+                                    // ⚠ Ad: web'de yenilemede AYNI ekrana dönülsün
+                                    // (main.dart `/mesaj/<id>` ile aynı ekran).
+                                    settings: RouteSettings(name: '/mesaj/${mine.id}'),
                                     builder: (_) =>
                                         ChatScreen(offerId: mine.id)),
                               )

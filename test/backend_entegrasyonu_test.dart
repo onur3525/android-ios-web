@@ -75,13 +75,17 @@ void main() {
     });
   });
 
-  group('DEMO GİRİŞ KUTUSU', () {
-    test('gösterilen şifre demo hesabın özetiyle eşleşir', () {
-      expect(kDemoSifre, kTestPass);
-      expect(PasswordHasher.verify(kDemoSifre, kDemoMusteriTuz, kDemoMusteriOzet), isTrue);
+  group('GİRİŞ EKRANI', () {
+    test('demo hesap bilgisi GÖSTERİLMEZ; lib/ altında düz demo şifresi yok', () {
+      final l = _kod('lib/screens/login_screen.dart');
+      expect(l.contains('Demo hesap'), isFalse);
+      expect(l.contains('kTestPass'), isFalse);
+      for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+        expect(f.readAsStringSync().contains(kTestPass), isFalse, reason: f.path);
+      }
     });
-    test('yalnız test modu + mock modda gösterilir', () {
-      expect(_kod('lib/screens/login_screen.dart').contains('if (TestModu.etkin && !ApiConfig.useRealApi)'), isTrue);
+    test('demo hesabın özeti test şifresiyle eşleşir (OTP/kayıt akışı için)', () {
+      expect(PasswordHasher.verify(kTestPass, kDemoMusteriTuz, kDemoMusteriOzet), isTrue);
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import '../data/controllers/auth_controller.dart';
 import 'package:provider/provider.dart';
 import 'web_header.dart';
 import 'web_kabuk.dart';
+import '../core/sekme_durumu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// GLOBAL WEB KABUĞU — TEK YERDEN, TÜM EKRANLARA
@@ -297,6 +299,10 @@ class GlobalWebKabugu extends StatelessWidget {
 /// ile korunduğu için değer okunmaz. Gözlemciyi platforma göre
 /// ayırmak, gezinme davranışını platforma bağımlı kılardı — istenmez.
 /// ═══════════════════════════════════════════════════════════════
+/// Sekme deposunda açık ekranın anahtarı (yalnız web).
+const String kSekmeRota = 'hc.sekme.rota';
+const String kSekmeRotaArg = 'hc.sekme.rota.arg';
+
 class AktifRota extends NavigatorObserver {
   /// Ekranda duran rotanın adı.
   static final ValueNotifier<String?> ad = ValueNotifier<String?>(null);
@@ -314,6 +320,28 @@ class AktifRota extends NavigatorObserver {
     final yeni = rota?.settings.name;
     ad.value = yeni;
     _sekmeBasligi(yeni);
+    // ⚠ YENİLEMEDE AYNI EKRAN (yalnız web): adı olan son rota sekme
+    // deposuna yazılır; "Masaüstü sitesi" geçişi/yenileme sonrası açılış
+    // buraya döner (bkz. main.dart `kSekmeRota`). Adsız rotada (diyalog,
+    // alt panel) son adlı rota korunur.
+    if (kIsWeb && yeni != null && yeni.startsWith('/') && yeni != '/') {
+      // Argüman (ör. yasal metnin slug/başlığı) JSON'a çevrilebiliyorsa
+      // birlikte saklanır; çevrilemiyorsa (nesne argüman) rota YAZILMAZ —
+      // argümansız açılınca yanlış ekran çizmektense son güvenli rota kalır.
+      final arg = rota?.settings.arguments;
+      String? argJson;
+      try {
+        argJson = arg == null ? null : jsonEncode(arg);
+      } catch (_) {
+        return;
+      }
+      sekmeYaz(kSekmeRota, yeni);
+      if (argJson == null) {
+        sekmeSil(kSekmeRotaArg);
+      } else {
+        sekmeYaz(kSekmeRotaArg, argJson);
+      }
+    }
   }
 
   /// ── ⚠ TARAYICI SEKMESİ BAŞLIĞI ──

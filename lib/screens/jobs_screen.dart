@@ -703,6 +703,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                   : () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
+                                          settings: RouteSettings(name: '/is/${l.id}'),
                                           builder: (_) => JobDetailScreen(
                                               listingId: l.id))),
                               child: Container(
@@ -832,6 +833,7 @@ class _JobsScreenState extends State<JobsScreen> {
         onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
+                settings: RouteSettings(name: '/talep/${t.id}'),
                 builder: (_) => TeklifTalebiDetayScreen(talepId: t.id))),
         child: Container(
           padding: const EdgeInsets.all(13),
@@ -994,7 +996,9 @@ class _JobsScreenState extends State<JobsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => JobDetailScreen(listingId: l.id))),
+              MaterialPageRoute(
+                  settings: RouteSettings(name: '/is/${l.id}'),
+                  builder: (_) => JobDetailScreen(listingId: l.id))),
           child: Container(
             padding: const EdgeInsets.all(13),
             // ── OKUNMAMIŞ İLAN YEŞİL VE KALIN ──

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -67,6 +68,8 @@ import 'data/models/offer.dart';
 import 'data/repositories/notification_repository.dart';
 import 'data/repositories/offer_repository.dart';
 import 'data/repositories/review_repository.dart';
+import 'data/repositories/ilan_no_uretici.dart';
+import 'data/models/notification.dart';
 import 'domain/config.dart';
 import 'data/services/listing_expiry_service.dart';
 import 'screens/home_screen.dart';
@@ -87,6 +90,8 @@ import 'ui/panel_rotasi.dart';
 import 'ui/gezgin.dart';
 import 'ui/yasal_kabul_kapisi.dart';
 import 'ui/push_kapisi.dart';
+import 'core/sekme_durumu.dart';
+import 'data/repositories/sekme_anligi.dart';
 import 'screens/bulunamadi_screen.dart';
 import 'screens/listing_detail_screen.dart';
 import 'screens/job_detail_screen.dart';
@@ -144,6 +149,9 @@ class AppPorts {
   /// Yalnız mock modda kurulur (API modunda süre kuralı sunucudadır).
   final ListingExpiryService? expiry;
 
+  /// Yalnız mock modda: web'de yenilemede veriyi korumak için (sekme anlığı).
+  final MockDepolar? mockDepolar;
+
   const AppPorts({
     required this.auth,
     required this.listings,
@@ -155,6 +163,7 @@ class AppPorts {
     required this.regions,
     required this.apiClient,
     this.expiry,
+    this.mockDepolar,
     this.notifRepo,
     this.teklifTalebiRepo,
     this.authRepo,
@@ -260,6 +269,8 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     notifRepo: notifRepo,
     teklifTalebiRepo: teklifTalebiRepo,
     authRepo: authRepo,
+    mockDepolar: MockDepolar(listingRepo, offerRepo, chatRepo, contactRepo,
+        reviewRepo, notifRepo, teklifTalebiRepo),
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
@@ -455,6 +466,68 @@ Future<void> main() async {
   // hızlıdır, bloke durumları ilk API çağrısında zaten ortaya çıkar
   // (`onSessionExpired` ve hata eşlemesi devrede). Bunu RAPORLUYORUM,
   // gizlemiyorum.
+  // ── ⚠ WEB: YENİLEMEDE AYNI EKRAN ("Masaüstü sitesi" geçişi dahil) ──
+  //
+  // Mobil tarayıcıda masaüstü/mobil görünüm değiştirilince sayfa BAŞTAN
+  // yüklenir. Mock modda bütün veri bellekte olduğundan kayıtlı hesaplar
+  // ve açık oturum kayboluyor, açılış ana sayfaya düşüyordu. Çözüm, SEKMEYE
+  // ÖZEL depo (sessionStorage — sekme kapanınca silinir):
+  //   · mock hesaplar ve sekmenin açık oturumu (yalnız MOCK modda),
+  //   · açık ekranın rotası (AktifRota yazar, aşağıda okunur).
+  // ⚠ MOBİL DEĞİŞMEZ (kIsWeb). API modunda jeton buraya YAZILMAZ.
+  if (kIsWeb && ports.auth is MockAuthPort) {
+    final repo = (ports.auth as MockAuthPort).repo;
+    // Demo hesaplar KALICI depodan (mobildeki gibi; kullanıcı kararı 1 Eki).
+    void hesaplariYukle() {
+      final ham = kaliciOku(_kSekmeHesaplar);
+      final liste = ham == null ? const [] : jsonDecode(ham);
+      if (liste is List) {
+        for (final j in liste.whereType<Map<String, dynamic>>()) {
+          final h = Account.fromJson(j);
+          repo.accounts.removeWhere((a) => a.id == h.id);
+          repo.accounts.add(h);
+        }
+      }
+    }
+
+    try {
+      hesaplariYukle();
+      final tel = sekmeOku(_kSekmeOturum);
+      final acc = tel == null ? null : repo.findByPhone(tel);
+      if (acc != null) {
+        repo.oturumuGeriYukle(acc);
+      }
+    } catch (_) {
+      // Bozuk kayıt açılışı kilitlemez; sekme sıfırdan başlar.
+    }
+    final depolar = ports.mockDepolar;
+    if (depolar != null) {
+      depolar.sekmedenYukle();
+      depolar.sekmeyeKaydetmeyiBaslat();
+    }
+    // İKİ SEKMEDE İKİ ROL: başka sekme hesap/veri yazınca bu sekme eşitlenir.
+    kaliciDegisince((anahtar) {
+      try {
+        if (anahtar == _kSekmeHesaplar) {
+          // Bildirim YOK: geri yazım tetiklenmez (sekmeler arası döngü olmaz);
+          // giriş anında hesap listesi zaten okunur.
+          hesaplariYukle();
+        } else if (anahtar == MockDepolar.anahtar) {
+          depolar?.sekmedenYukle();
+        }
+      } catch (_) {}
+    });
+    repo.addListener(() {
+      kaliciYaz(_kSekmeHesaplar, jsonEncode(repo.accounts.map((a) => a.toJson()).toList()));
+      final aktif = repo.currentAccount;
+      if (aktif == null) {
+        sekmeSil(_kSekmeOturum);
+      } else {
+        sekmeYaz(_kSekmeOturum, aktif.phone);
+      }
+    });
+  }
+
   String? ilkRota;
   if (kIsWeb) {
     try {
@@ -477,6 +550,28 @@ Future<void> main() async {
             : '/customer/listings';
       } else {
         ilkRota = '/home';
+      }
+      // ⚠ Yenileme öncesi AÇIK EKRAN varsa oraya dönülür. Oturumluysa her
+      // ekran; oturumsuzsa yalnız oturum gerektirmeyen ekranlar. Rota
+      // yine onGenerateRoute + RoleGuard'dan geçer (yetki atlanamaz).
+      final kayitli = sekmeOku(kSekmeRota);
+      if (kayitli != null &&
+          (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
+        final argHam = sekmeOku(kSekmeRotaArg);
+        if (argHam == null) {
+          ilkRota = kayitli;
+        } else {
+          // Argümanlı ekran: ana ekran üzerine, ilk kareden sonra AYNI
+          // argümanla açılır (geri tuşu da doğal çalışır).
+          Object? arg;
+          try {
+            arg = jsonDecode(argHam);
+          } catch (_) {}
+          if (arg != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) =>
+                gezginAnahtari.currentState?.pushNamed(kayitli, arguments: arg));
+          }
+        }
       }
     } catch (e) {
       // ⚠ HATA AÇILIŞI KİLİTLEMEZ: oturum çözülemezse anonim açılış.
@@ -1179,5 +1274,107 @@ class HizmetCepApp extends StatelessWidget {
       return null;
     }
     return kalan;
+  }
+}
+
+/// Sekme deposu anahtarları (yalnız web + mock; bkz. main()).
+const String _kSekmeHesaplar = 'hc.demo.hesaplar'; // KALICI (localStorage)
+const String _kSekmeOturum = 'hc.sekme.oturum';
+
+/// Oturum gerektirmeyen ve yenilemede geri dönülebilen ekranlar.
+const List<String> _kOturumsuzAcilabilir = [
+  '/home', '/login', '/register', '/listing/new', '/legal', '/kategori', '/hizmet-alani', '/search',
+];
+
+/// ═══════════════════════════════════════════════════════════════
+/// MOCK DEPOLAR — web'de yenilemede (masaüstü görünümü geçişi dahil)
+/// ilan, teklif, sohbet, iletişim, yorum, bildirim ve teklif talebi
+/// verisi SEKMEYE ÖZEL depoya yazılır ve açılışta geri yüklenir.
+/// Yalnız web + mock modda kullanılır (bkz. main()); mobil değişmez.
+/// ═══════════════════════════════════════════════════════════════
+class MockDepolar {
+  MockDepolar(this.ilan, this.teklif, this.sohbet, this.iletisim, this.yorum,
+      this.bildirim, this.talep);
+
+  final ListingRepository ilan;
+  final OfferRepository teklif;
+  final ChatRepository sohbet;
+  final ContactRepository iletisim;
+  final ReviewRepository yorum;
+  final NotificationRepository bildirim;
+  final TeklifTalebiRepository talep;
+
+  static const String anahtar = 'hc.demo.veri';
+  bool _yukleniyor = false;
+  bool _kayitBekliyor = false;
+
+  void sekmedenYukle() {
+    final ham = kaliciOku(anahtar);
+    if (ham == null) {
+      return;
+    }
+    _yukleniyor = true;
+    try {
+      final j = jsonDecode(ham) as Map<String, dynamic>;
+      List<Map<String, dynamic>> liste(String k) =>
+          ((j[k] as List?) ?? const []).whereType<Map<String, dynamic>>().toList();
+      final ilanlar = liste('ilan').map(ilanCoz).toList();
+      for (final l in ilanlar) {
+        IlanNoUretici.rezerveEt(l.ilanNo);
+      }
+      ilan.sekmeKayitlariniYukle(ilanlar);
+      teklif.sekmeKayitlariniYukle(liste('teklif').map(teklifCoz));
+      sohbet.sekmeKayitlariniYukle({
+        for (final e in ((j['sohbet'] as Map?) ?? const {}).entries)
+          '${e.key}': ((e.value as List?) ?? const [])
+              .whereType<Map<String, dynamic>>()
+              .map(mesajCoz)
+              .toList(),
+      });
+      iletisim.sekmeKayitlariniYukle(((j['iletisim'] as List?) ?? const []).map((e) => '$e'));
+      yorum.sekmeKayitlariniYukle(liste('yorum').map(yorumCoz));
+      bildirim.sekmeKayitlariniYukle(liste('bildirim').map(bildirimCoz).whereType<AppNotification>());
+      final talepler = liste('talep').map(talepCoz).toList();
+      for (final t in talepler) {
+        IlanNoUretici.rezerveEt(t.talepNo);
+      }
+      talep.sekmeKayitlariniYukle(talepler);
+    } catch (_) {
+      // Bozuk anlık açılışı kilitlemez; sekme boş veriyle sürer.
+    } finally {
+      _yukleniyor = false;
+    }
+  }
+
+  void sekmeyeKaydetmeyiBaslat() {
+    for (final d in <ChangeNotifier>[ilan, teklif, sohbet, iletisim, yorum, bildirim, talep]) {
+      d.addListener(_kaydetIste);
+    }
+  }
+
+  // Aynı karede gelen çok sayıda değişiklik TEK yazıma toplanır.
+  void _kaydetIste() {
+    if (_yukleniyor || _kayitBekliyor) {
+      return;
+    }
+    _kayitBekliyor = true;
+    scheduleMicrotask(() {
+      _kayitBekliyor = false;
+      try {
+        kaliciYaz(anahtar, jsonEncode({
+          'ilan': ilan.sekmeKayitlari.map(ilanJson).toList(),
+          'teklif': teklif.sekmeKayitlari.map(teklifJson).toList(),
+          'sohbet': {
+            for (final e in sohbet.sekmeKayitlari.entries) e.key: e.value.map(mesajJson).toList(),
+          },
+          'iletisim': iletisim.sekmeKayitlari,
+          'yorum': yorum.sekmeKayitlari.map(yorumJson).toList(),
+          'bildirim': bildirim.sekmeKayitlari.map(bildirimJson).toList(),
+          'talep': talep.sekmeKayitlari.map(talepJson).toList(),
+        }));
+      } catch (_) {
+        // Depo dolu/kapalı: bellekteki veri etkilenmez.
+      }
+    });
   }
 }

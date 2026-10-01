@@ -13,8 +13,6 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
 import '../data/remote/api_config.dart';
-import '../core/test_modu.dart';
-import '../data/repositories/demo_hesap_ozetleri.dart' show kDemoEposta, kDemoSifre;
 import '../core/teshis.dart';
 import '../data/repositories/oturum_tercihi.dart';
 import '../ui/panel_rotasi.dart';
@@ -633,27 +631,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? null
                               : _submit,
                         ),
-
-                        // ⚠ DEMO GİRİŞ BİLGİSİ — YALNIZ TEST MODU + MOCK.
-                        // Release derlemede hiçbir koşulda görünmez
-                        // (TestModu; OTP ekranındaki test kodu kutusuyla
-                        // AYNI kapı ve AYNI görünüm). API modunda yok.
-                        if (TestModu.etkin && !ApiConfig.useRealApi)
-                          RefInfoBox(
-                            mavi: true,
-                            margin: const EdgeInsets.only(top: 12),
-                            child: Text(
-                              'Demo hesap (geliştirme sürümü)\n'
-                              'E-posta: $kDemoEposta\n'
-                              'Şifre: $kDemoSifre',
-                              style: refText(
-                                size: RF.s135,
-                                weight: RF.w400,
-                                color: RC.textDark,
-                                height: RF.lh150,
-                              ),
-                            ),
-                          ),
 
                         // .rg-or + .rg-google
                         //

@@ -87,9 +87,8 @@ class AuthRepository extends ChangeNotifier {
       //
       // Yeni değer 8 hane ve doğrulayıcının üç zayıflık denetiminden
       // de geçiyor (ardışık değil, tekrar değil, yaygın değil).
-      // Prototip test hesabı (532 111 22 33). Özet önceden hesaplı
-      // (açılış hızlı); şifre `kDemoSifre`, yalnız test modunda
-      // giriş ekranında gösterilir.
+      // Prototip test hesabı (532 111 22 33). ⚠ ŞİFRE KAYNAKTA YOK:
+      // yalnız önceden hesaplanmış tuz+özet tutulur.
       // ⚠ KURUCU `buildPorts` İÇİNDE, YANİ `runApp`'TEN ÖNCE ÇALIŞIR.
       // Burada PBKDF2 hesaplansaydı ilk Flutter karesi o kadar
       _seed(hazirTuz: kDemoMusteriTuz, hazirOzet: kDemoMusteriOzet,
