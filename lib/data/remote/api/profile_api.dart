@@ -30,8 +30,12 @@ class ProfileApi {
           body: {'newEmail': newEmail},
           idempotencyKey: ApiClient.newIdempotencyKey());
 
-  Future<Map<String, dynamic>> changePhone({required String newPhone, required String otpCode}) =>
-      c.post('/profiles/me/phone/change', body: {'newPhone': newPhone, 'otpCode': otpCode});
+  Future<Map<String, dynamic>> changePhone(
+          {required String newPhone, required String otpCode, String? firebaseIdToken}) =>
+      c.post('/profiles/me/phone/change', body: {
+        'newPhone': newPhone, 'otpCode': otpCode,
+        if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
+      });
 
   /// TEK adres: kayıt yoksa sunucu null döner.
   Future<Map<String, dynamic>?> address() => c.getOrNull('/profiles/me/address');

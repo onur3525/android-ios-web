@@ -87,6 +87,12 @@ export const config = {
   jwtSirri: jwtSirri(),
   erisimSuresi: 15 * 60 * 1000, // erişim token'ı 15 dk
   yenilemeSuresi: 30 * 24 * 60 * 60 * 1000, // yenileme token'ı 30 gün
+  // Firebase Authentication: kimlik doğrulaması Firebase'de; hesap,
+  // rol ve iş verisi burada. Doğrulama AÇIK sertifikalarla (gizli yok).
+  firebaseProjeId: (env.HC_FIREBASE_PROJECT_ID || 'hizmetcep-fe036').trim(),
+  // Açık web API anahtarı (gizli değil); telefon+şifre girişinde şifreyi
+  // Firebase'e doğrulatmak için. Boşsa yerel şifre özeti kullanılır.
+  firebaseWebApiKey: (env.HC_FIREBASE_WEB_API_KEY || '').trim(),
   sms: saglayici('SMS'),
   eposta: saglayici('EMAIL'),
   veritabani: veritabaniAyari(),

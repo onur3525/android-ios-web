@@ -22,6 +22,8 @@ Kullanıcı API'si (`/api/v1`) + Admin API'si (`/admin/v1`) + Admin paneli (`/ad
 | `HC_DB_POOL` | hayır | havuz boyutu (varsayılan 10) |
 | `HC_MASTER_KEY` | canlıda | 32 bayt base64; TOTP ve entegrasyon sırlarını şifreler. `openssl rand -base64 32` |
 | `PORT` | hayır | varsayılan 8080 |
+| `HC_FIREBASE_PROJECT_ID` | hayır | varsayılan `hizmetcep-fe036`; Firebase ID token'ının `aud`/`iss` denetimi |
+| `HC_FIREBASE_WEB_API_KEY` | önerilir | AÇIK web API anahtarı; Firebase'e bağlı hesapta telefon+şifre girişini Firebase'e doğrulatır |
 | `HC_JWT_SECRET` | canlıda | ≥32 karakter; kullanıcı erişim token'larını imzalar |
 | `HC_SMS_PROVIDER` / `HC_EMAIL_PROVIDER` | canlıda | `webhook` (canlı) · `log` yalnız geliştirme, canlıda reddedilir |
 | `HC_SMS_WEBHOOK_URL` / `HC_EMAIL_WEBHOOK_URL` | webhook ise | https; gerçek SMS/e-posta sağlayıcısına köprü |
@@ -44,6 +46,17 @@ Kullanıcı API'si (`/api/v1`) + Admin API'si (`/admin/v1`) + Admin paneli (`/ad
   eski token tekrar kullanılırsa kullanıcının bütün oturumları kapanır).
 - Hesap durumu (ACTIVE / SUSPENDED / BANNED) HER istekte veritabanından okunur;
   askı ve ban anında bütün oturumlar iptal edilir.
+
+## Firebase Authentication
+
+Firebase kimliği DOĞRULAR (SMS OTP, e-posta/şifre, e-posta bağlantıları);
+backend ID token'ı Google'ın AÇIK sertifikalarıyla doğrular
+(`src/firebase_token.js`, servis hesabı/Admin SDK gerekmez), Firebase UID'yi
+`users.firebase_uid` ile hesaba bağlar ve KENDİ oturumunu verir. Hesap, rol,
+askı/ban ve bütün iş verisi backend'de kalır. Uçlar: `POST /auth/firebase/session`;
+kayıt/şifre sıfırlama/rol ekleme/telefon değişiminde `otpCode` yerine
+`firebaseIdToken` kabul edilir (telefon numarası token'daki doğrulanmış
+numarayla eşleşmek zorunda).
 
 ## Güvenlik
 

@@ -1,0 +1,78 @@
+# ═══════════════════════════════════════════════════════════════
+# HizmetCep Flutter — derleme doğrulaması (analyze · test · Android debug · Web debug)
+#
+# Yalnız DOĞRULAMA yapar; GitHub Pages yayınına DOKUNMAZ (mevcut yayın
+# iş akışınız aynen çalışır). Amaç: Firebase Auth/FCM paketlerinin ve
+# Android Gradle Plugin 9 araç zincirinin GERÇEK derlemede doğrulanması.
+# ═══════════════════════════════════════════════════════════════
+name: flutter-ci
+on:
+  push:
+    paths-ignore: ['backend/**', 'admin/**', 'docs/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+      # Bağımlılık çözümü raporu: firebase_core / firebase_messaging / firebase_auth sürümleri
+      - run: flutter pub deps --style=compact | grep -E "firebase_(core|auth|messaging)" || true
+      - name: flutter analyze
+        run: flutter analyze --no-fatal-infos
+      - name: flutter test
+        run: flutter test --reporter expanded
+
+  android-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Gradle wrapper (tek kaynak betik)
+        run: bash android/gradle_wrapper_hazirla.sh
+      - name: Android debug APK (mock)
+        run: flutter build apk --debug --dart-define=DATA_SOURCE=mock
+      - name: Paket adı ve imza raporu
+        run: |
+          APK=$(find build/app/outputs -name '*.apk' | head -1)
+          echo "APK: $APK"
+          "$ANDROID_HOME"/build-tools/*/aapt dump badging "$APK" 2>/dev/null | head -1 || true
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | tail -1)"/apksigner verify --print-certs "$APK" | grep -E "SHA-1|SHA-256|DN" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: build/app/outputs/**/*.apk
+          retention-days: 7
+
+  web-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Web debug (GitHub Pages ile aynı base-href)
+        run: flutter build web --debug --base-href /android-ios-web/
+      - name: Web push dosyaları çıktıda
+        run: ls -la build/web/firebase-messaging-sw.js build/web/fcm_web.js build/web/fcm_yapilandirma.js

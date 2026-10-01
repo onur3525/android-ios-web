@@ -76,10 +76,12 @@ class ApiAuthRepository extends ChangeNotifier {
   Future<DomainError?> register({
     required String phone, required String password, required String name,
     required String email, required Role role, required String otpCode,
+    String? firebaseIdToken,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
           email: email, role: Mappers.roleApi(role), otpCode: otpCode,
+          firebaseIdToken: firebaseIdToken,
         ));
     if (err != null) {
       return err;
@@ -90,6 +92,35 @@ class ApiAuthRepository extends ChangeNotifier {
       await _client.tokens.save(access: at, refresh: rt);
       return loadMe();
     }
+    return null;
+  }
+
+  /// Firebase ID token → HizmetCep oturumu (sunucu doğrular ve eşleştirir).
+  Future<DomainError?> firebaseOturum(String idToken) async {
+    final (res, err) = await _guard(() => _auth.firebaseSession(idToken));
+    if (err != null) {
+      return err;
+    }
+    await _client.tokens.save(
+      access: res!['accessToken'] as String,
+      refresh: res['refreshToken'] as String,
+    );
+    return loadMe();
+  }
+
+  Future<DomainError?> forgotCompleteFirebase(String phone, String idToken, String newPass) async =>
+      (await _guard(() => _auth.forgotComplete(
+              phone: phone, otpCode: '', newPassword: newPass, firebaseIdToken: idToken)))
+          .$2;
+
+  Future<DomainError?> changePhoneFirebase(String newPhone, String idToken) async {
+    final (res, err) = await _guard(
+        () => _profile.changePhone(newPhone: newPhone, otpCode: '', firebaseIdToken: idToken));
+    if (err != null) {
+      return err;
+    }
+    currentAccount = Mappers.account(res!);
+    notifyListeners();
     return null;
   }
 

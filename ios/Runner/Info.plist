@@ -79,6 +79,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array><string>hizmetcep</string></array>
 		</dict>
+		<!-- Firebase Phone Auth: APNs (sessiz bildirim) yokken iOS doğrulaması
+		     reCAPTCHA ile yapılır; dönüş bu şemayla olur. Değer, iOS uygulama
+		     kimliğinin (GOOGLE_APP_ID) kodlanmış biçimidir. -->
+		<dict>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>app-1-262578778971-ios-c86fad4c01cbcf890b207e</string></array>
+		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>

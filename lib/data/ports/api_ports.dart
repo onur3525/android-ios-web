@@ -1,5 +1,6 @@
 import '../../domain/failures.dart';
 import '../remote/api_client.dart';
+import '../remote/firebase_kimlik.dart';
 import '../models/account.dart';
 import '../remote/api/region_api.dart';
 import '../models/region.dart';
@@ -85,66 +86,109 @@ class ApiAuthPort extends AuthPort {
   /// sözleşmede tanımlı ama sunucuda yazılmadı. SAHTE BAŞARI
   /// ÜRETİLMEZ: uçlar gelene kadar API modunda bu yollar açık bir
   /// hata döndürür (bkz. docs/hesap_modeli_denetim_ve_sozlesme.md).
-  @override
-  Future<DomainError?> girisEposta(String email, String pass) async =>
-      const ValidationError(_kUcYok);
+  // ═══ FIREBASE AUTHENTICATION (kalıcı üretim yolu) ═══
+  // Firebase kimliği doğrular; backend ID token'ı doğrulayıp KENDİ
+  // oturumunu verir (hesap/rol/iş verisi backend'de). Mock mod aynen.
 
   @override
-  Future<DomainError?> girisTelefonSifre(String phone, String pass) async =>
-      const ValidationError(_kUcYok);
+  Future<DomainError?> girisEposta(String email, String pass) async {
+    final r = await FirebaseKimlik.i.epostaSifreGiris(email, pass);
+    if (r.error != null) {
+      return r.error;
+    }
+    return repo.firebaseOturum(r.idToken!);
+  }
+
+  /// Telefon + şifre: backend doğrular (Firebase'e bağlı hesapta şifreyi
+  /// sunucu Firebase'e doğrulatır).
+  @override
+  Future<DomainError?> girisTelefonSifre(String phone, String pass) =>
+      repo.login(phone, pass);
 
   @override
   Future<({String? challengeId, DomainError? error})> girisTelefonKodGonder(
-          String phone) async =>
-      (challengeId: null, error: const ValidationError(_kUcYok));
+      String phone) async {
+    final r = await FirebaseKimlik.i.kodGonder(phone);
+    return (challengeId: r.id, error: r.error);
+  }
 
   @override
-  Future<DomainError?> girisTelefonDogrula(
-          String challengeId, String kod) async =>
-      const ValidationError(_kUcYok);
+  Future<DomainError?> girisTelefonDogrula(String challengeId, String kod) async {
+    final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod);
+    if (r.error != null) {
+      return r.error;
+    }
+    return repo.firebaseOturum(r.idToken!);
+  }
 
   // ⚠ SUNUCU UÇLARI HENÜZ YOK — SAHTE BAŞARI ÜRETİLMEZ.
   //
   // Challenge/yetki akışlarının sunucu karşılığı sözleşmede tanımlı
   // ama yazılmadı. API modunda bu yollar açık hata döndürür.
+  /// Kayıt: SMS kodu Firebase'den. Gönderim hatası doğrulama adımında
+  /// gösterilir (imza değişmez: ekran aynı akışı izler).
   @override
   Future<({String challengeId})> kayitKodGonder(String phone,
-          {required String taslakKimligi}) async =>
-      // ⚠ Boş kimlik: doğrulama adımı zaten hata döndürür.
-      (challengeId: '');
+      {required String taslakKimligi}) async {
+    final r = await FirebaseKimlik.i.kodGonder(phone);
+    return (challengeId: r.id ?? '');
+  }
 
+  /// Doğrulanan kodun kanıtı (Firebase ID token) "yetki" olarak döner ve
+  /// `register(kayitYetkisi: ...)` ile sunucuya gider.
   @override
   Future<({String? yetki, DomainError? error})> kayitDogrula(
-          String challengeId, String kod) async =>
-      (yetki: null, error: const ValidationError(_kUcYok));
+      String challengeId, String kod) async {
+    final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod);
+    return (yetki: r.idToken, error: r.error);
+  }
 
   @override
-  Future<({String? challengeId, DomainError? error})>
-      telefonDegisimiKodGonder(String yeniTelefon) async =>
-          (challengeId: null, error: const ValidationError(_kUcYok));
+  Future<({String? challengeId, DomainError? error})> telefonDegisimiKodGonder(
+      String yeniTelefon) async {
+    final r = await FirebaseKimlik.i.kodGonder(yeniTelefon);
+    return (challengeId: r.id, error: r.error);
+  }
 
   @override
-  Future<DomainError?> telefonDegisimiDogrula(
-          String challengeId, String kod) async =>
-      const ValidationError(_kUcYok);
+  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod) async {
+    final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod, mevcutKullanici: true);
+    final tel = r.idToken == null ? null : FirebaseKimlik.i.tokenTelefonu(r.idToken!);
+    if (r.error != null || tel == null) {
+      return r.error ?? const ValidationError('Doğrulama tamamlanamadı');
+    }
+    return repo.changePhoneFirebase(tel, r.idToken!);
+  }
 
   @override
-  Future<({String challengeId})> hesapKurtarmaKodGonder(String phone) async =>
-      (challengeId: '');
+  Future<({String challengeId})> hesapKurtarmaKodGonder(String phone) async {
+    final r = await FirebaseKimlik.i.kodGonder(phone);
+    return (challengeId: r.id ?? '');
+  }
 
   @override
   Future<({String? yetki, DomainError? error})> hesapKurtarmaDogrula(
-          String challengeId, String kod) async =>
-      (yetki: null, error: const ValidationError(_kUcYok));
+      String challengeId, String kod) async {
+    final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod);
+    return (yetki: r.idToken, error: r.error);
+  }
 
+  /// Telefonla kurtarma: sunucudaki şifre ve (varsa) Firebase şifresi
+  /// birlikte güncellenir; iki kaynak ayrışmaz.
   @override
-  Future<DomainError?> kurtarmaSifreBelirle(
-          String yetki, String yeniSifre) async =>
-      const ValidationError(_kUcYok);
+  Future<DomainError?> kurtarmaSifreBelirle(String yetki, String yeniSifre) async {
+    final tel = FirebaseKimlik.i.tokenTelefonu(yetki);
+    if (tel == null) {
+      return const ValidationError('Doğrulamanın süresi doldu. Yeni kod isteyin.');
+    }
+    final err = await repo.forgotCompleteFirebase(tel, yetki, yeniSifre);
+    if (err == null) {
+      await FirebaseKimlik.i.sifreGuncelle(yeniSifre);
+    }
+    return err;
+  }
 
-  static const _kUcYok =
-      'Bu giriş yöntemi henüz sunucuda etkin değil. Lütfen daha sonra '
-      'tekrar deneyin.';
+  // (Eski "uç yok" metni kaldırıldı: uçlar Firebase Authentication ile tamamlandı.)
 
   /// ⚠ API MODUNDA KİLİT SUNUCUDADIR.
   ///
@@ -187,9 +231,16 @@ class ApiAuthPort extends AuthPort {
     // otpVerified mock akışının kalıntısıdır; sunucu OTP kodunu kendi doğrular.
     final err = await repo.register(
         phone: phone, password: pass, name: name,
-        email: email, role: role, otpCode: otpCode);
+        email: email, role: role, otpCode: otpCode,
+        // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
+        firebaseIdToken: kayitYetkisi);
     if (err != null) {
       return (account: null, error: err);
+    }
+    // E-posta/şifre Firebase kullanıcısına bağlanır ve DOĞRULAMA E-POSTASI
+    // gider. Başarısızlık kaydı geri almaz (doğrulama sonradan yapılabilir).
+    if (kayitYetkisi != null && email.isNotEmpty) {
+      await FirebaseKimlik.i.epostaBaglaVeDogrulamaGonder(email, pass);
     }
     if (categories.isNotEmpty || serviceDistricts.isNotEmpty) {
       await repo.saveProviderProfile(categories, serviceDistricts);
@@ -231,9 +282,9 @@ class ApiAuthPort extends AuthPort {
 
   /// Sunucuda ayrı bir "başlat" ucu yoktur: OTP isteği bu akışı başlatır.
   @override
-  Future<DomainError?> sifreSifirlamaIste(String email) async =>
-      // ⚠ SUNUCU UCU YOK — SAHTE BAŞARI ÜRETİLMEZ.
-      const ValidationError(_kUcYok);
+  /// E-postayla şifre sıfırlama: Firebase'in sıfırlama şablonu.
+  Future<DomainError?> sifreSifirlamaIste(String email) =>
+      FirebaseKimlik.i.sifreSifirlamaEpostasi(email);
 
   Future<DomainError?> forgotStart(String phone) => repo.requestOtp(phone, 'FORGOT');
   @override
@@ -246,8 +297,10 @@ class ApiAuthPort extends AuthPort {
       repo.updateProfile(name: name, photoRef: photoPath);
 
   @override
+  /// Yeni adrese Firebase doğrulama bağlantısı; adres bağlantı tıklanınca
+  /// değişir ve sonraki girişte sunucu hesabına işlenir.
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) =>
-      repo.changeEmail(yeniEposta);
+      FirebaseKimlik.i.epostaDegistir(yeniEposta);
 
   @override
   Future<ProviderApprovalState> providerApproval() => repo.providerApproval();
@@ -270,7 +323,10 @@ class ApiAuthPort extends AuthPort {
       );
 
   @override
-  Future<void> logout() => repo.logout();
+  Future<void> logout() async {
+    await repo.logout();
+    await FirebaseKimlik.i.cikis();
+  }
   @override
   Future<void> restoreSession() => repo.restoreSession();
 }

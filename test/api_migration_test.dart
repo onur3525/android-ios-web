@@ -73,7 +73,9 @@ void main() {
   });
 
   group('Giriş', () {
-    // ⚠ E-POSTA GİRİŞ UCU SUNUCUDA HENÜZ YOK.
+    // ⚠ (Güncel) E-posta girişi Firebase Authentication ile yapılır;
+    // aşağıdaki testler Firebase'e ULAŞILAMADIĞINDA da sahte başarı
+    // üretilmediğini kilitler.
     //
     // Hesap modeli kararıyla şifreli giriş e-postaya geçti; sunucu
     // sözleşmesi (`POST /auth/login/email`) yazıldı ama uç
@@ -94,9 +96,10 @@ void main() {
       final ctl = AuthController(authPort(be.client(store: store)));
       final msg = await ctl.girisEposta(kTestEmail, kTestPass);
 
-      // Açık hata döner…
+      // Açık hata döner… (Firebase Auth eklendi: e-posta girişi Firebase'de
+      // doğrulanır; test ortamında Firebase yoktur → hizmete ulaşılamaz.
+      // Kilitlenen DEĞİŞMEZ: sahte başarı ve sahte oturum YOK.)
       expect(msg, isNotNull);
-      expect(msg!.contains('sunucuda etkin değil'), isTrue);
       // …ve HİÇBİR oturum/jeton oluşmaz.
       expect(ctl.loggedIn, isFalse);
       expect(store.access, isNull);

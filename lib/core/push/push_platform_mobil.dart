@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../firebase/firebase_baslatici.dart';
 import 'firebase_secenekleri.dart';
 
 /// ── ARKA PLAN / UYGULAMA KAPALI ──
@@ -43,8 +44,9 @@ Future<bool> pushBaslat({
     return false;
   }
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: secenek);
+    // ⚠ Ortak başlatıcı (kimlik doğrulamayla AYNI uygulama).
+    if (await firebaseHazirla() == null) {
+      return false;
     }
     FirebaseMessaging.onBackgroundMessage(pushArkaPlanMesaji);
     final fm = FirebaseMessaging.instance;

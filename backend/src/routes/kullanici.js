@@ -17,6 +17,7 @@ import { simdi } from '../db.js';
 import { ApiHatasi, HizSiniri, hata } from '../http.js';
 import { jwtDogrula, jwtImzala } from '../jwt.js';
 import { olaylar } from '../olaylar.js';
+import { firebaseSifreDogrula, firebaseTokenDogrula } from '../firebase_token.js';
 
 const OTP_SURESI = 3 * 60 * 1000;
 const OTP_DENEME = 5;
@@ -146,6 +147,41 @@ async function saglayiciProfili(db, kullaniciId) {
   return p ? { categories: JSON.parse(p.categories_json), districts: JSON.parse(p.districts_json) } : null;
 }
 
+/** Firebase ID token → yük; geçersizse 401. */
+async function firebaseKimlikIste(token) {
+  const yuk = await firebaseTokenDogrula(token).catch(() => null);
+  if (!yuk) throw new ApiHatasi(401, 'AUTH_FAILED', 'Doğrulama geçersiz ya da süresi dolmuş');
+  return yuk;
+}
+
+/** Token'daki doğrulanmış telefon, beklenen numarayla AYNI olmalı. */
+function firebaseTelefonu(yuk, beklenen) {
+  let tel = null;
+  try {
+    tel = yuk.phone_number ? telefon(yuk.phone_number) : null;
+  } catch {
+    tel = null;
+  }
+  if (!tel || (beklenen && tel !== beklenen)) {
+    throw new ApiHatasi(400, 'OTP_INVALID', 'Doğrulanan telefon numarası eşleşmiyor');
+  }
+  return tel;
+}
+
+/**
+ * Telefon doğrulama kanıtı: Firebase ID token (canlı yol) YA DA sunucunun
+ * kendi OTP'si (eski/yedek yol). Firebase yolunda dönen `uid` hesaba bağlanır.
+ */
+async function telefonKaniti(db, body, tel, amaclar) {
+  if (body.firebaseIdToken) {
+    const yuk = await firebaseKimlikIste(body.firebaseIdToken);
+    firebaseTelefonu(yuk, tel);
+    return { uid: yuk.sub, yuk };
+  }
+  await otpTuket(db, tel, amaclar, body.otpCode);
+  return { uid: null, yuk: null };
+}
+
 export function kullaniciRotalar(r, db) {
   const korumali = (f) => async (ctx) => {
     const { u, oturum } = await kullaniciCoz(db, ctx.req);
@@ -176,16 +212,21 @@ export function kullaniciRotalar(r, db) {
     const isim = adSoyad(ctx.body.name);
     const mail = eposta(ctx.body.email);
     const rol = rolDogrula(ctx.body.role);
-    await otpTuket(db, tel, ['REGISTER'], ctx.body.otpCode);
+    const kanit = await telefonKaniti(db, ctx.body, tel, ['REGISTER']);
+    if (kanit.uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(kanit.uid)) {
+      throw hata.cakisma('Bu doğrulama başka bir hesaba bağlı');
+    }
     if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel)) throw hata.cakisma('Bu telefon numarası kayıtlı');
     if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(mail)) throw hata.cakisma('Bu e-posta adresi kayıtlı');
     const id = randomUUID();
     const z = simdi();
     await db.prepare(
       `INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role,
-                          status, terms_accepted, failed_logins, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, TRUE, FALSE, ?, ?, 'ACTIVE', TRUE, 0, ?, ?)`,
-    ).run(id, tel, mail, isim, sifreOzetle(sifre), rol, rol, z, z);
+                          status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid)
+       VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?)`,
+    ).run(id, tel, mail, isim, sifreOzetle(sifre),
+      kanit.yuk?.email_verified === true && String(kanit.yuk.email || '').toLowerCase() === mail ? 1 : 0,
+      rol, rol, z, z, kanit.uid);
     return oturumVer(db, id, ctx.req);
   });
 
@@ -200,7 +241,11 @@ export function kullaniciRotalar(r, db) {
       throw genel();
     }
     if (u.locked_until && Date.parse(u.locked_until) > Date.now()) throw hata.hiz('Çok fazla hatalı deneme. Lütfen 15 dakika sonra tekrar deneyin.');
-    if (!sifreDogrula(String(ctx.body.password ?? ''), u.password_hash)) {
+    const sifre = String(ctx.body.password ?? '');
+    // Firebase'e bağlı hesapta şifrenin kaynağı Firebase'dir (e-postayla
+    // sıfırlama sonrası da geçerli); yapılandırılmamışsa yerel özet.
+    const fb = u.firebase_uid && u.email ? await firebaseSifreDogrula(u.email, sifre).catch(() => null) : null;
+    if (fb === null ? !sifreDogrula(sifre, u.password_hash) : !fb) {
       const n = u.failed_logins + 1;
       await db.prepare('UPDATE users SET failed_logins = ?, locked_until = ? WHERE id = ?').run(
         n >= GIRIS_KILIT_ESIGI ? 0 : n,
@@ -240,6 +285,42 @@ export function kullaniciRotalar(r, db) {
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
   });
 
+  // ── FIREBASE İLE OTURUM ──
+  // Firebase kimliği doğrular (telefon OTP ya da e-posta/şifre); HizmetCep
+  // hesabı, rolü ve durumu buradadır. Eşleştirme sırası:
+  //   1) firebase_uid  2) doğrulanmış telefon  3) doğrulanmış e-posta
+  // (2/3'te hesap ilk kez bu Firebase kullanıcısına BAĞLANIR; başka bir
+  // uid'ye bağlı hesap asla devralınmaz).
+  r.post('/api/v1/auth/firebase/session', async (ctx) => {
+    await girisIpSiniri.denetle(db, ctx.ip);
+    const yuk = await firebaseKimlikIste(ctx.body.idToken);
+    let u = await db.prepare('SELECT * FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(yuk.sub);
+    if (!u && yuk.phone_number) {
+      const tel = firebaseTelefonu(yuk);
+      u = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+    }
+    if (!u && yuk.email && yuk.email_verified === true) {
+      u = await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(String(yuk.email).toLowerCase());
+    }
+    if (!u) throw hata.bulunamadi('Bu bilgilerle kayıtlı hesap bulunamadı');
+    if (u.firebase_uid && u.firebase_uid !== yuk.sub) throw new ApiHatasi(401, 'AUTH_FAILED', 'Hesap başka bir doğrulamaya bağlı');
+    durumKapisi(u);
+    // E-posta değişikliği Firebase'de doğrulama bağlantısıyla yapılır
+    // (verifyBeforeUpdateEmail); doğrulanmış yeni adres burada hesaba
+    // işlenir — başka hesapta kayıtlıysa DEĞİŞTİRİLMEZ.
+    const fbEposta = String(yuk.email || '').toLowerCase();
+    if (yuk.email_verified === true && fbEposta && fbEposta !== String(u.email || '').toLowerCase()
+        && !(await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id))) {
+      await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
+      u = { ...u, email: fbEposta };
+    }
+    const epostaDogru = yuk.email_verified === true && u.email && fbEposta === u.email.toLowerCase();
+    await db.prepare(`UPDATE users SET firebase_uid = ?, email_verified = CASE WHEN ? THEN TRUE ELSE email_verified END,
+                        failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?`)
+      .run(yuk.sub, epostaDogru ? 1 : 0, simdi(), u.id);
+    return oturumVer(db, u.id, ctx.req);
+  });
+
   r.post('/api/v1/auth/logout', korumali(async (ctx) => {
     await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'LOGOUT' WHERE id = ?`).run(simdi(), ctx.kOturum.id);
     return undefined;
@@ -256,7 +337,7 @@ export function kullaniciRotalar(r, db) {
   r.post('/api/v1/auth/forgot/complete', async (ctx) => {
     const tel = telefon(ctx.body.phone);
     const yeni = sifreKurali(ctx.body.newPassword);
-    await otpTuket(db, tel, ['FORGOT'], ctx.body.otpCode);
+    await telefonKaniti(db, ctx.body, tel, ['FORGOT']);
     const u = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
     if (!u) throw new ApiHatasi(400, 'OTP_INVALID', 'Doğrulama kodu hatalı');
     await db.prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?').run(sifreOzetle(yeni), simdi(), u.id);
@@ -272,7 +353,7 @@ export function kullaniciRotalar(r, db) {
   r.post('/api/v1/auth/roles/add', korumali(async (ctx) => {
     const rol = rolDogrula(ctx.body.role);
     if (!sifreDogrula(String(ctx.body.password ?? ''), ctx.kullanici.password_hash)) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
-    await otpTuket(db, ctx.kullanici.phone, ['ROLE_ADD', 'LOGIN'], ctx.body.otpCode);
+    await telefonKaniti(db, ctx.body, ctx.kullanici.phone, ['ROLE_ADD', 'LOGIN']);
     const mevcut = roller(ctx.kullanici);
     if (mevcut.includes(rol)) throw hata.cakisma('Bu rol hesabınızda zaten var');
     await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?').run([...mevcut, rol].join(','), rol, simdi(), ctx.kullanici.id);
@@ -324,7 +405,7 @@ export function kullaniciRotalar(r, db) {
 
   r.post('/api/v1/profiles/me/phone/change', korumali(async (ctx) => {
     const yeni = telefon(ctx.body.newPhone);
-    await otpTuket(db, yeni, ['PHONE_CHANGE'], ctx.body.otpCode);
+    await telefonKaniti(db, ctx.body, yeni, ['PHONE_CHANGE']);
     if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND deleted_at IS NULL').get(yeni)) throw hata.cakisma('Bu telefon numarası kayıtlı');
     await db.prepare('UPDATE users SET phone = ?, phone_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), ctx.kullanici.id);
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
