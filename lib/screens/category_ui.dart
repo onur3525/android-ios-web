@@ -346,7 +346,23 @@ const Map<String, String> kKategoriIkonu = {
 /// hiçbiri buraya düşmez. Yalnız silinmiş/yeniden adlandırılmış bir ad
 /// elde kalırsa UI çökmesin diye durur.
 String categoryIcon(String c) =>
-    kKategoriIkonu[c] ?? 'assets/svg/ic_build.svg';
+    _sunucuIkonu[c] ?? kKategoriIkonu[c] ?? 'assets/svg/ic_build.svg';
+
+/// ── ⚠ ADMİN PANELİNDEN İKON (yalnız API modu) ──
+///
+/// Sunucu kataloğu (`GET /categories`) kategori başına `icon` taşıyabilir.
+/// YALNIZ uygulama paketinde ZATEN bulunan ikonlar kabul edilir (gömülü
+/// eşlemedeki dosyalar); bilinmeyen yol yok sayılır → uygulama hiçbir
+/// zaman olmayan bir dosyayı çizmeye çalışmaz. Böylece admin'in eklediği
+/// YENİ kategoriye de mevcut ikonlardan biri atanabilir.
+final Map<String, String> _sunucuIkonu = {};
+
+void sunucuIkonlariniAyarla(Map<String, String> ikonlar) {
+  final paketteki = kKategoriIkonu.values.toSet();
+  _sunucuIkonu
+    ..clear()
+    ..addEntries(ikonlar.entries.where((e) => paketteki.contains(e.value)));
+}
 
 /// Küçük kare kategori rozeti (liste/başlık kullanımı).
 ///

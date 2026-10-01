@@ -13,6 +13,7 @@ import '../data/remote/api_client.dart';
 import '../data/remote/api/config_api.dart';
 import '../data/category_tree.dart';
 import '../data/remote/api/category_api.dart';
+import 'category_ui.dart' show sunucuIkonlariniAyarla;
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
@@ -623,6 +624,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final j = await CategoryApi(client!).tree().timeout(_kConfigButce);
         final agac = CategoryApi.parse(j);
         KatalogKaynagi.i.guncelle(agac);
+        sunucuIkonlariniAyarla(CategoryApi.ikonlar(j));
         BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
       } catch (e) {
         // ⚠ Gömülü katalog devrede kalır — kategorisiz uygulama olmaz.

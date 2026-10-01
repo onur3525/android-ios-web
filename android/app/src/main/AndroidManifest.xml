@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Push bildirim izni (Android 13+): kullanıcıya YALNIZ oturum açınca
+         sorulur (PushKapisi). Daha eski sürümlerde izin otomatik. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- İlan fotoğrafı: kamera ile çekim (galeri için izin gerekmez,
          image_picker sistem seçicisini kullanır). -->
     <uses-permission android:name="android.permission.CAMERA"/>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "262578778971",
+    "project_id": "hizmetcep-fe036",
+    "storage_bucket": "hizmetcep-fe036.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:262578778971:android:bba810a8706baec30b207e",
+        "android_client_info": {
+          "package_name": "com.hizmetcep.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJw5diwZbumEpM7SOFexa9ysFl6_oBbXo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

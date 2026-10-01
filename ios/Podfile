@@ -2,7 +2,7 @@
 #
 # Minimum iOS sürümü 12.0: google_sign_in ve flutter_secure_storage
 # bu tabanı gerektirir.
-platform :ios, '12.0'
+platform :ios, '13.0' # Firebase iOS SDK 11+ en az iOS 13 ister
 
 # CocoaPods analytics kapalı — build süresini uzatır.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

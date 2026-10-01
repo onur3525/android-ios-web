@@ -85,5 +85,15 @@
 		<string>https</string>
 		<string>itms-apps</string>
 	</array>
+	<!-- Push bildirim (FCM/APNs): arka planda/kapalıyken gelen
+	     bildirimlerin uygulamaya iletilmesi için. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- Firebase yöntem değiştirme (swizzling) AÇIK: APNs jetonu FCM'e
+	     otomatik iletilir; AppDelegate'te ek kod gerekmez. -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 </dict>
 </plist>

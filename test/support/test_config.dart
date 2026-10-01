@@ -5,8 +5,8 @@ const String kTestPhone = '5321112233';
 // hesabın kurala uymaması kuralı kâğıt üstünde bırakıyordu.
 // Depodaki tohum değer ve `demo_hesap_ozetleri.dart` içindeki
 // ⚠ 30 Eyl: eski demo şifre kişisel görünümlü olduğu için DEĞİŞTİRİLDİ
-// (güvenlik denetimi M-01). Bu değer YALNIZ testlerde durur; `lib/`
-// altında düz hâli YOKTUR, orada yalnız PBKDF2 özeti vardır.
+// (güvenlik denetimi M-01). Uygulamadaki `kDemoSifre` ile AYNI
+// (giriş ekranındaki demo kutusu yalnız test modunda görünür).
 const String kTestPass = 'hc-Demo-7Kq2xVw9';
 
 /// ⚠ ŞİFRELİ GİRİŞ ARTIK E-POSTA İLEDİR.

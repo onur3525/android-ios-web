@@ -132,6 +132,10 @@
        yalnız ilk kareyi geciktiriyordu. Tarayıcı zaten `body`
        zeminini çiziyor; ayrı bir katman gerekmiyor. -->
 
+  <!-- Web push (FCM): yalnız genel yapılandırma + köprü; base-href'e göreli.
+       Web uygulaması appId'si girilmedikçe köprü kapalı kalır. -->
+  <script src="fcm_yapilandirma.js"></script>
+  <script type="module" src="fcm_web.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -35,6 +35,18 @@ class CategoryApi {
   /// ⚠ İSTEMCİ KİMLİK ÜRETMEZ: kategori ve hizmet, sunucunun verdiği
   /// ADLARIYLA taşınır. Addan kimlik türetme, index'i kimlik sayma
   /// ya da rastgele kimlik üretme YAPILMAZ.
+  /// Kategori → ikon dosyası (sunucu `icon` alanı; yoksa boş).
+  static Map<String, String> ikonlar(Map<String, dynamic> j) {
+    final ham = j['items'];
+    if (ham is! List) {
+      return const {};
+    }
+    return {
+      for (final e in ham.whereType<Map<String, dynamic>>())
+        if (e['category'] is String && e['icon'] is String) e['category'] as String: e['icon'] as String,
+    };
+  }
+
   static Map<String, List<String>> parse(Map<String, dynamic> j) {
     final ham = j['items'];
     if (ham is! List) {

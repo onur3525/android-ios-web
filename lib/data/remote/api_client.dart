@@ -223,6 +223,15 @@ class ApiClient {
     }
 
     final map = decoded is Map<String, dynamic> ? decoded : null;
+    final kod = (map?['error'] as Map<String, dynamic>?)?['code'] as String?;
+    // ⚠ HESAP ASKIDA / BANLI (admin kararı, backend her istekte denetler):
+    // oturum MEVCUT oturum-düşme yoluyla kapatılır (jetonlar silinir, ana
+    // sayfaya dönülür). Sunucunun gerekçeli mesajı aşağıdaki hata olarak
+    // çağıran ekranın bugünkü hata gösterimine gider; YENİ ekran yok.
+    if (res.statusCode == 403 &&
+        (kod == 'ACCOUNT_SUSPENDED' || kod == 'ACCOUNT_BANNED')) {
+      await _forceLogout();
+    }
     throw ApiFailure(
       mapErrorBody(res.statusCode, map),
       res.statusCode,

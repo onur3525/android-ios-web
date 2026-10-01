@@ -33,5 +33,10 @@
 	<array>
 		<string>applinks:hizmetcep.com</string>
 	</array>
+	<!-- Push bildirim (APNs). ⚠ Bu dosya Xcode'da hedefe bağlanınca
+	     (Signing & Capabilities → "Push Notifications") etkin olur;
+	     App Store dağıtımında imzalama bunu otomatik "production" yapar. -->
+	<key>aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

@@ -44,6 +44,7 @@ import 'data/repositories/account_test_store.dart';
 import 'data/ports/repository_ports.dart';
 import 'data/remote/api_client.dart';
 import 'data/remote/api_config.dart';
+import 'data/remote/api_teklif_talebi_port.dart';
 import 'data/remote/api/auth_api.dart';
 import 'data/remote/api/chat_api.dart';
 import 'data/remote/api/notification_api.dart';
@@ -84,6 +85,8 @@ import 'data/repositories/incelenen_ilan_store.dart';
 import 'ui/global_web_kabugu.dart';
 import 'ui/panel_rotasi.dart';
 import 'ui/gezgin.dart';
+import 'ui/yasal_kabul_kapisi.dart';
+import 'ui/push_kapisi.dart';
 import 'screens/bulunamadi_screen.dart';
 import 'screens/listing_detail_screen.dart';
 import 'screens/job_detail_screen.dart';
@@ -363,11 +366,15 @@ Future<void> main() async {
   // EKLENDİ (bkz. sınıf tanımındaki not) — bildirimler mevcut
   // `NotificationController`ın GÖRDÜĞÜ AYNI depoya yazılsın diye;
   // başka hiçbir port/repository DEĞİŞMEDİ.
-  final teklifTalebiPort = MockTeklifTalebiPort(
-      ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
-      notifs: ports.notifRepo,
-      // ⚠ Tamamlanan iş sayacı hizmet verenin hesabına yazılır.
-      auth: ports.authRepo);
+  // ⚠ API MODUNDA gerçek sunucu portu; mock modda (web demosu, testler)
+  // bugünkü mock port AYNEN. Ekranlar ve denetleyici aynı arayüzü görür.
+  final TeklifTalebiPort teklifTalebiPort = ApiConfig.useRealApi
+      ? ApiTeklifTalebiPort(ports.apiClient)
+      : MockTeklifTalebiPort(
+          ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
+          notifs: ports.notifRepo,
+          // ⚠ Tamamlanan iş sayacı hizmet verenin hesabına yazılır.
+          auth: ports.authRepo);
   BootLog.olay('BUILD_PORTS_END');
 
   // ═══════════════════════════════════════════════════════════════
@@ -854,8 +861,15 @@ class HizmetCepApp extends StatelessWidget {
         // `MaterialApp.builder` Navigator'ın üstünde çalıştığı için
         // rotayı başka türlü öğrenemez.
         navigatorObservers: [AktifRota()],
-        builder: (context, child) => GlobalWebKabugu(
-          child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+        // ⚠ PushKapisi (FCM yaşam döngüsü; izin yalnız girişte) ve
+        // YasalKabulKapisi (yalnız API modu) ekran DIŞINDAN sarar; mevcut
+        // builder yapısı (GlobalWebKabugu → OfflineBanner) AYNEN korunur.
+        builder: (context, child) => PushKapisi(
+          child: YasalKabulKapisi(
+            child: GlobalWebKabugu(
+              child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+            ),
+          ),
         ),
         // ⚠ İKİSİ BİRDEN VERİLEMEZ: `home` ve `initialRoute` aynı anda
         // tanımlanırsa Flutter `home`u kullanır. Web'de `home` null
