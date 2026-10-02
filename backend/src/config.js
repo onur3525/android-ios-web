@@ -70,10 +70,13 @@ function jwtSirri() {
  */
 function saglayici(tur) {
   const ad = (env[`HC_${tur}_PROVIDER`] || (uretim ? '' : 'log')).trim();
+  if (!ad) return { ad: null };
   if (!['log', 'webhook'].includes(ad)) {
-    throw new Error(`HC_${tur}_PROVIDER log ya da webhook olmalıdır.`);
+    throw new Error(`HC_${tur}_PROVIDER boş, log ya da webhook olmalıdır.`);
   }
-  if (uretim && ad === 'log') throw new Error(`Üretimde HC_${tur}_PROVIDER=log kullanılamaz.`);
+  if (uretim && ad === 'log') {
+    throw new Error(`Üretimde HC_${tur}_PROVIDER=log kullanılamaz.`);
+  }
   if (ad === 'webhook') {
     const url = zorunlu(`HC_${tur}_WEBHOOK_URL`);
     if (!url.startsWith('https://')) throw new Error(`HC_${tur}_WEBHOOK_URL https olmalıdır.`);

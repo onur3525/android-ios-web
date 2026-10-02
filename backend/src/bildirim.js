@@ -84,6 +84,12 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
       .run('doğrulanmış kanal yok', id);
     return { id, status: 'FAILED' };
   }
+  const kanalAyar = kanal === 'SMS' ? config.sms : config.eposta;
+  if (!kanalAyar || !kanalAyar.ad) {
+    await db.prepare(`UPDATE outbound_messages SET status = 'FAILED', provider_response = ?, attempts = 1 WHERE id = ?`)
+      .run('kanal sağlayıcısı yapılandırılmamış', id);
+    return { id, status: 'FAILED' };
+  }
   try {
     const r = await saglayiciyaGonder(db, kanal, hedef, s.konu, govde);
     await db.prepare(`UPDATE outbound_messages SET status = 'SENT', provider = ?, provider_response = ?, attempts = 1, sent_at = ? WHERE id = ?`)
