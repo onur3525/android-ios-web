@@ -370,7 +370,8 @@ void main() {
         createdAt: DateTime(2026),
       ));
 
-      // Google kaydı: doğrulanmış e-posta ile gelir.
+      // Doğrulanmış e-postayla kayıt (eski Google kaydının yerini alan akış;
+      // `googleSub` parametresi Google girişi kaldırılınca API'den çıktı).
       final r = repo.register(
         phone: '5401112233',
         pass: 'g-oauth',
@@ -380,7 +381,6 @@ void main() {
         name: 'Ayşe Yılmaz',
         email: 'ayse@gmail.com',
         emailVerified: true,
-        googleSub: 'google-sub-001',
       );
       expect(r.error, isNull);
       expect(pending.hasDraft, isTrue, reason: 'kayıt taslağı silmez');

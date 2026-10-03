@@ -22,7 +22,7 @@ TeklifTalebi _talep() => TeklifTalebi(
       kategori: 'Doğalgaz',
       hizmet: 'Doğalgaz Kaçak Kontrolü',
       aciklama: 'acil',
-      iletisimTercihi: IletisimTercihi.telefon,
+      iletisimTercihi: IletisimTercihi.telefonGoster,
       createdAt: DateTime(2026, 9, 12),
     );
 
