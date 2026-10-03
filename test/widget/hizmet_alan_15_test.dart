@@ -561,6 +561,8 @@ void main() {
     });
 
     test('beyaz şekilli hediye ikonu MAVİ zemin üzerinde', () {
+      // Hediye ikonu ilan verme ekranındadır (tek kullanım yeri).
+      final wl = read('lib/screens/create_listing_screen.dart');
       final i = wl.indexOf('ic_gift.svg');
       expect(i, greaterThan(0));
       // Zemin mavi, ikon beyaz olmalı.

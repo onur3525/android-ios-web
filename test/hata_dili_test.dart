@@ -180,18 +180,9 @@ void main() {
   });
 
 
-  group('RET METNİ KISA', () {
-
-    test('genel ret için TEK başlık', () {
-      expect(t.contains("'Kart geçersiz'"), isTrue);
-      expect(t.contains("'Ödeme alınamadı'"), isFalse,
-          reason: 'eski uzun metin geri gelmiş');
-      expect(t.contains('Bankanız işlemi onaylamadı'), isFalse);
-      expect(t.contains('Bakiyeniz değişmedi. '), isFalse,
-          reason: 'gereksiz cümle geri gelmiş');
-    });
-
-  });
+  // (Kaldırıldı, 3 Eki: 'RET METNİ KISA' grubu kart ödeme ekranının ret
+  // metnini denetliyordu; ekran HizmetCep ücretsiz olduğu için kaldırılmış,
+  // değişken tanımı da onunla gitmişti — derlenmeyen yetim test.)
 
 
   group('HATA DİLİ EKRANLARA YAYILDI', () {
