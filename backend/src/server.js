@@ -22,6 +22,7 @@ import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
 import { olaylar } from './olaylar.js';
+import { fotoGonder, varlikGonder } from './katalog_foto.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
 import { kullaniciRotalar } from './routes/kullanici.js';
 import { ilanRotalar, suresiDolanlariIsle } from './routes/ilan.js';
@@ -73,6 +74,14 @@ export function uygulamaKur(db) {
     const yol = url.pathname;
     const cerezler = [];
     try {
+      // Katalog görselleri (ham yanıt): yüklenen fotoğraf (depodan, özel) ve
+      // uygulama paketindeki katalog görselleri (beyaz listeli, salt okunur).
+      if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
+        return fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
+      }
+      if (req.method === 'GET' && yol.startsWith('/katalog-varlik/')) {
+        return varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res);
+      }
       if (req.method === 'GET' && (yol === '/admin' || (yol.startsWith('/admin/') && !yol.startsWith('/admin/v1/')))) {
         return await panelDosyasi(res, yol);
       }
@@ -97,7 +106,11 @@ export function uygulamaKur(db) {
           ctx.oturum = c.oturum;
         }
       }
-      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) ctx.body = await govdeOku(req);
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+        // Kategori fotoğrafı (base64, en fazla 5 MB) için daha geniş sınır; yalnız bu yol ve oturum doğrulandıktan sonra.
+        const fotoYolu = req.method === 'POST' && /^\/admin\/v1\/catalog\/categories\/[^/]+\/photo$/.test(yol);
+        ctx.body = await govdeOku(req, fotoYolu ? 8 * 1024 * 1024 : undefined);
+      }
 
       const sonuc = await bulunan.isleyici(ctx);
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};

@@ -117,15 +117,24 @@ void main() {
       });
     }
 
-    test('CategoryBadge SVG rozetidir — fotoğraf çizmez', () {
+    // ⚠ GÜNCELLENDİ (3 Eki, kullanıcı onayı — Seçenek 1): CategoryBadge
+    // YALNIZ sunucu fotoğrafını gösterebilir; yoksa/yüklenirken/hata
+    // olursa SVG. Paket fotoğrafı (`categoryAsset`) yine KULLANILMAZ.
+    test('CategoryBadge: sunucu fotoğrafı varsa fotoğraf, yoksa/yüklenirken/hatada SVG', () {
       final k = _kod('lib/screens/category_ui.dart');
       final bas = k.indexOf('class CategoryBadge');
       expect(bas, greaterThan(-1));
-      final govde = k.substring(bas);
+      final govde = k.substring(bas, k.indexOf('\n}', bas));
       expect(govde.contains('Image.asset('), isFalse,
-          reason: 'CategoryBadge fotoğrafa dönmüş');
+          reason: 'CategoryBadge paket fotoğrafına dönmüş');
+      expect(govde.contains('categoryAsset('), isFalse);
       expect(govde.contains('categoryIcon('), isTrue,
           reason: 'CategoryBadge SVG çizmiyor');
+      expect(govde.contains('final foto = categoryPhotoUrl(category);'), isTrue);
+      expect(govde.contains('child: foto == null'), isTrue, reason: 'fotoğraf yoksa SVG');
+      expect(govde.contains('esZamanli || kare != null ? child : svg'), isTrue, reason: 'yüklenirken SVG');
+      expect(govde.contains('errorBuilder: (_, __, ___) => svg'), isTrue, reason: 'hatada SVG');
+      expect(govde.contains('width: size,'), isTrue, reason: 'kutu ölçüsü korunur');
     });
 
     test('ölü fotoğraf bileşeni CategoryCover kalmadı', () {

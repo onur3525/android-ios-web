@@ -137,7 +137,7 @@ class PostgresDb {
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
       statement_timeout: 15_000,
-      ssl: ayar.ssl ? { rejectUnauthorized: false, ...(ayar.ca ? { ca: ayar.ca } : {}) } : false,
+      ssl: ayar.ssl ? { rejectUnauthorized: true, ...(ayar.ca ? { ca: ayar.ca } : {}) } : false,
     });
     this.als = new AsyncLocalStorage();
   }

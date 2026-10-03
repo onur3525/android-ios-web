@@ -13,7 +13,7 @@ import { hata } from '../http.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
-    `SELECT id, name, active, icon FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
+    `SELECT id, name, active, icon, photo_ref FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
   ).all();
   const hiz = await db.prepare(
     `SELECT category_id, name FROM services
@@ -26,7 +26,9 @@ export async function katalogYaniti(db) {
   }
   return {
     items: kat
-      .map((k) => ({ category: k.name, active: k.active === 1, ...(k.icon ? { icon: k.icon } : {}), services: gruplu.get(k.id) || [] }))
+      .map((k) => ({ category: k.name, active: k.active === 1, ...(k.icon ? { icon: k.icon } : {}),
+        // Admin'den yüklenen fotoğraf (göreli yol; yoksa uygulama paket fotoğrafına düşer)
+        ...(k.photo_ref ? { photoUrl: `/api/v1/categories/photo/${k.photo_ref}` } : {}), services: gruplu.get(k.id) || [] }))
       // İstemci hizmetsiz kategoriyi zaten atlıyor; pasif HİZMETLER
       // listeye hiç girmez (istemcide hizmet düzeyinde aktif alanı yok).
       .filter((k) => k.services.length > 0),

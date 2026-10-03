@@ -11,6 +11,9 @@ COPY backend/migrations ./migrations
 COPY backend/scripts ./scripts
 # Yönetim paneli (statik) aynı imajda, /admin altında sunulur.
 COPY admin /app/admin
+# Admin önizlemesi için uygulama paketindeki katalog görselleri (salt okunur).
+COPY assets/categories /app/assets/categories
+COPY assets/svg/categories /app/assets/svg/categories
 # Başlangıç verisi aktarımı (npm run seed) Flutter veri dosyalarını okur.
 COPY lib/data /app/lib/data
 COPY lib/screens/category_ui.dart /app/lib/screens/category_ui.dart

@@ -47,6 +47,18 @@ class CategoryApi {
     };
   }
 
+  /// Kategori → admin'den yüklenen fotoğrafın GÖRELİ yolu (sunucu `photoUrl`).
+  static Map<String, String> fotograflar(Map<String, dynamic> j) {
+    final ham = j['items'];
+    if (ham is! List) {
+      return const {};
+    }
+    return {
+      for (final e in ham.whereType<Map<String, dynamic>>())
+        if (e['category'] is String && e['photoUrl'] is String) e['category'] as String: e['photoUrl'] as String,
+    };
+  }
+
   static Map<String, List<String>> parse(Map<String, dynamic> j) {
     final ham = j['items'];
     if (ham is! List) {

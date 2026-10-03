@@ -6,6 +6,14 @@ import {
   ApiHata, alanlarListesi, api, bildir, bilgiPenceresi, form, gerekceIle, guvenli, h,
   oturumDusunce, rozet, tablo, tarih,
 } from './cekirdek.js';
+import { ozetSayfasi } from './ozet.js';
+import { kullanicilarSayfasi } from './kullanicilar.js';
+import { kullaniciDetaySayfasi } from './kullanici_detay.js';
+import { ilanlarSayfasi } from './ilanlar.js';
+import { tekliflerSayfasi } from './teklifler.js';
+import { teklifTalepleriSayfasi } from './teklif_talepleri.js';
+import { degerlendirmelerSayfasi } from './degerlendirmeler.js';
+import { katalogSayfasi } from './katalog.js';
 
 const kok = document.getElementById('kok');
 let ben = null;
@@ -24,7 +32,7 @@ const MENU = [
   ['duyurular', 'Duyurular', ['super_admin', 'content']],
   ['ayarlar', 'Uygulama Ayarları', ['super_admin', 'operations', 'readonly']],
   ['gonderimler', 'SMS / E-posta Kayıtları', ['super_admin', 'moderator', 'operations']],
-  ['hesaptalepleri', 'Hesap Talepleri', ['super_admin', 'moderator', 'readonly']],
+  ['hesaptalepleri', 'Gelen Talepler', ['super_admin', 'moderator', 'readonly']],
   ['geribildirim', 'Uygulama Geri Bildirimleri', ['super_admin', 'moderator', 'readonly']],
   ['entegrasyonlar', 'Entegrasyonlar', ['super_admin', 'operations']],
   ['yoneticiler', 'Yöneticiler', ['super_admin']],
@@ -65,7 +73,9 @@ function girisEkrani() {
   };
   dugme.addEventListener('click', gonder);
   for (const g of [email, sifre, kod]) g.addEventListener('keydown', (e) => e.key === 'Enter' && gonder());
-  kok.replaceChildren(h('div', { class: 'giris' }, h('h1', {}, 'HizmetCep Yönetim'), email, h('br'), h('br'), sifre, adim2, hata, h('br'), dugme));
+  // Giriş ekranında marka adı GÖSTERİLMEZ (kullanıcı kararı): nötr başlık.
+  document.title = 'Yönetim Girişi';
+  kok.replaceChildren(h('div', { class: 'giris' }, h('h1', {}, 'Yönetim Girişi'), email, h('br'), h('br'), sifre, adim2, hata, h('br'), dugme));
   email.focus();
 }
 
@@ -89,6 +99,7 @@ async function cikis() {
 const SAYFALAR = {};
 async function cizim() {
   if (!ben) return girisEkrani();
+  document.title = 'HizmetCep Yönetim';
   const [, sayfa = 'ozet', ...param] = location.hash.replace(/^#/, '').split('/');
   const f = SAYFALAR[sayfa] ?? SAYFALAR.ozet;
   const yer = h('div', {}, h('p', { class: 'not' }, 'Yükleniyor…'));
@@ -104,129 +115,19 @@ window.addEventListener('hashchange', cizim);
 oturumDusunce(() => { ben = null; girisEkrani(); });
 
 // ── Özet ──────────────────────────────────────────────────────
-SAYFALAR.ozet = async () => {
-  const s = await api('/stats');
-  const k = (ad, v) => h('div', { class: 'kart' }, h('div', { class: 'sayi' }, v), h('div', { class: 'etiket' }, ad));
-  return h('div', {}, h('h2', {}, 'Özet'), h('div', { class: 'ozet' },
-    k('Kullanıcı', s.users), k('Askıda', s.suspended), k('Banlı', s.banned), k('Açık ilan', s.activeListings),
-    k('Son 24 saatte teklif', s.offersToday), k('Süren teklif talebi', s.openTalepler),
-    k('Bekleyen hesap silme', s.pendingDeletions), k('Başarısız bildirim (7 gün)', s.failedNotifications)),
-  h('p', { class: 'not' }, 'HizmetCep ücretsizdir: ödeme, komisyon ya da abonelik verisi yoktur.'));
-};
+// Tasarım ve veri kaynakları: ozet.js (yalnız mevcut admin API'leri).
+SAYFALAR.ozet = () => ozetSayfasi();
 
 // ── Kullanıcılar ──────────────────────────────────────────────
-SAYFALAR.kullanicilar = async () => {
-  const q = h('input', { placeholder: 'Ad, telefon ya da e-posta' });
-  const d = h('select', {}, h('option', { value: '' }, 'Tüm durumlar'), Object.entries(DURUM_TR).map(([v, e]) => h('option', { value: v }, e)));
-  const sonuc = h('div');
-  const yukle = async () => {
-    const p = new URLSearchParams({ limit: '100', ...(q.value ? { q: q.value } : {}), ...(d.value ? { status: d.value } : {}) });
-    const r = await api(`/users?${p}`);
-    sonuc.replaceChildren(h('p', { class: 'not' }, `${r.total} kullanıcı`), tablo([
-      { baslik: 'Ad', deger: (u) => u.name },
-      { baslik: 'Telefon', deger: (u) => u.phone },
-      { baslik: 'E-posta', deger: (u) => u.email || '—' },
-      { baslik: 'Rol', deger: (u) => u.roles.join(', ') },
-      { baslik: 'Durum', deger: (u) => rozet(DURUM_TR[u.status], u.status) },
-      { baslik: 'Kayıt', deger: (u) => tarih(u.createdAt) },
-    ], r.items, (u) => (location.hash = `#/kullanici/${u.id}`)));
-  };
-  q.addEventListener('keydown', (e) => e.key === 'Enter' && guvenli(yukle));
-  d.addEventListener('change', () => guvenli(yukle));
-  await yukle();
-  return h('div', {}, h('h2', {}, 'Kullanıcılar'), h('div', { class: 'arac' }, q, d, h('button', { class: 'btn', onclick: () => guvenli(yukle) }, 'Ara')), sonuc);
-};
+// Tasarım ve veri kaynakları: kullanicilar.js (yalnız mevcut admin API'leri).
+SAYFALAR.kullanicilar = () => kullanicilarSayfasi();
 
-SAYFALAR.kullanici = async (id) => {
-  const u = await api(`/users/${id}`);
-  const islem = async (eylem, baslik, aciklama) => {
-    const neden = await gerekceIle(baslik, baslik, aciklama);
-    if (!neden) return;
-    const r = await guvenli(() => api(`/users/${id}/${eylem}`, { yontem: 'POST', govde: { reason: neden } }));
-    if (r) {
-      bildir(`İşlem tamam. Bildirim: ${r.notifications.map((n) => n.status).join(', ') || 'gönderilmedi'}`);
-      yenile();
-    }
-  };
-  const tuslar = [];
-  if (u.status === 'ACTIVE') {
-    tuslar.push(h('button', { class: 'btn tehlike', onclick: () => islem('suspend', 'Askıya al', 'Kullanıcının bütün oturumları kapanır; doğrulanmış telefon/e-postasına gerekçeyle bildirim gider.') }, 'Askıya al'));
-  }
-  if (u.status === 'SUSPENDED') tuslar.push(h('button', { class: 'btn', onclick: () => islem('unsuspend', 'Askıyı kaldır') }, 'Askıyı kaldır'));
-  if (u.status !== 'BANNED') tuslar.push(h('button', { class: 'btn tehlike', onclick: () => islem('ban', 'Banla', 'Hesap kalıcı olarak kapatılır; giriş yapılamaz.') }, 'Banla'));
-  else tuslar.push(h('button', { class: 'btn', onclick: () => islem('unban', 'Banı kaldır') }, 'Banı kaldır'));
-
-  const sekmeAlani = h('div');
-  const sekmeler = {
-    Profil: async () => alanlarListesi([
-      ['Ad', u.name], ['Telefon', `${u.phone} ${u.phoneVerified ? '(doğrulanmış)' : '(doğrulanmamış)'}`],
-      ['E-posta', `${u.email || '—'} ${u.email ? (u.emailVerified ? '(doğrulanmış)' : '(doğrulanmamış)') : ''}`],
-      ['Roller', u.roles.join(', ')], ['Aktif rol', u.activeRole], ['Durum', rozet(DURUM_TR[u.status], u.status)],
-      ['Durum gerekçesi', u.statusReason], ['Kayıt', tarih(u.createdAt)], ['Sözleşme onayı (kayıt)', u.termsAccepted ? 'Evet' : 'Hayır'],
-      ['Adres', u.address ? `${u.address.neighborhood}, ${u.address.district}, ${u.address.city}` : null],
-      ['Hizmet kategorileri', u.providerProfile?.categories?.join(', ')], ['Hizmet ilçeleri', u.providerProfile?.districts?.join(', ')],
-    ]),
-    İlanlar: async () => tablo([
-      { baslik: 'No', deger: (l) => l.ilanNo }, { baslik: 'Hizmet', deger: (l) => l.title },
-      { baslik: 'Durum', deger: (l) => rozet(l.status) }, { baslik: 'Tarih', deger: (l) => tarih(l.createdAt) },
-    ], (await api(`/listings?ownerId=${id}&limit=200`)).items, (l) => (location.hash = `#/ilan/${l.id}`)),
-    Teklifler: async () => tablo([
-      { baslik: 'Tutar (TL)', deger: (o) => o.amountTl }, { baslik: 'Durum', deger: (o) => rozet(o.status) },
-      { baslik: 'Tarih', deger: (o) => tarih(o.createdAt) },
-    ], await api(`/offers?providerId=${id}`), (o) => (location.hash = `#/ilan/${o.listingId}`)),
-    Talepler: async () => {
-      const a = await api(`/teklif-talepleri?hizmetAlanId=${id}`);
-      const b = await api(`/teklif-talepleri?saglayiciId=${id}`);
-      return tablo([
-        { baslik: 'No', deger: (t) => t.talepNo }, { baslik: 'Hizmet', deger: (t) => t.hizmet },
-        { baslik: 'Rolü', deger: (t) => (t.hizmetAlanId === id ? 'Talep eden' : 'Hizmet veren') },
-        { baslik: 'Durum', deger: (t) => rozet(t.durum) }, { baslik: 'Tarih', deger: (t) => tarih(t.createdAt) },
-      ], [...a, ...b], (t) => (location.hash = `#/talep/${t.id}`));
-    },
-    Değerlendirmeler: async () => {
-      const a = await api(`/reviews?providerId=${id}`);
-      const b = await api(`/reviews?authorId=${id}`);
-      return tablo([{ baslik: 'Puan', deger: (y) => y.stars }, { baslik: 'Yorum', deger: (y) => y.text },
-        { baslik: 'Kim', deger: (y) => (y.authorId === id ? 'Yazdığı' : 'Aldığı') }, { baslik: 'Durum', deger: (y) => rozet(y.status) }], [...a, ...b]);
-    },
-    'Durum geçmişi': async () => tablo([{ baslik: 'Önce', deger: (x) => x.from }, { baslik: 'Sonra', deger: (x) => x.to },
-      { baslik: 'Gerekçe', deger: (x) => x.reason }, { baslik: 'Admin', deger: (x) => x.admin }, { baslik: 'Tarih', deger: (x) => tarih(x.at) }], u.statusHistory),
-    Bildirimler: async () => tablo([{ baslik: 'Kanal', deger: (x) => x.channel }, { baslik: 'Şablon', deger: (x) => x.template },
-      { baslik: 'Durum', deger: (x) => rozet(x.status) }, { baslik: 'Sağlayıcı yanıtı', deger: (x) => x.providerResponse }, { baslik: 'Tarih', deger: (x) => tarih(x.createdAt) }], u.notifications),
-    Oturumlar: async () => tablo([{ baslik: 'Açılış', deger: (x) => tarih(x.createdAt) }, { baslik: 'Son kullanım', deger: (x) => tarih(x.lastUsedAt) },
-      { baslik: 'Cihaz', deger: (x) => x.userAgent }, { baslik: 'Kapanış', deger: (x) => (x.revokedAt ? `${tarih(x.revokedAt)} · ${x.revokeReason}` : 'açık') }], u.sessions),
-    'Yasal kabuller': async () => tablo([{ baslik: 'Belge', deger: (x) => x.slug }, { baslik: 'Sürüm', deger: (x) => x.version },
-      { baslik: 'Platform', deger: (x) => x.platform }, { baslik: 'Tarih', deger: (x) => tarih(x.acceptedAt) }], await api(`/users/${id}/legal-acceptances`)),
-  };
-  const dugmeler = Object.keys(sekmeler).map((ad) => h('button', { onclick: () => ac(ad) }, ad));
-  const ac = async (ad) => {
-    dugmeler.forEach((b) => b.classList.toggle('secili', b.textContent === ad));
-    sekmeAlani.replaceChildren(h('p', { class: 'not' }, 'Yükleniyor…'));
-    sekmeAlani.replaceChildren((await guvenli(sekmeler[ad])) ?? h('p', { class: 'hata' }, 'Yüklenemedi'));
-  };
-  setTimeout(() => ac('Profil'));
-  return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, u.name), h('div', { class: 'arac' }, tuslar)),
-    h('div', { class: 'kart' }, h('div', { class: 'sekmeler' }, dugmeler), sekmeAlani));
-};
+// Tasarım ve veri kaynakları: kullanici_detay.js (yalnız mevcut admin API'leri).
+SAYFALAR.kullanici = (id) => kullaniciDetaySayfasi(id, yenile);
 
 // ── İlanlar / teklifler / talepler / yorumlar ─────────────────
-SAYFALAR.ilanlar = async () => {
-  const q = h('input', { placeholder: 'Hizmet, ilan no, açıklama' });
-  const d = h('select', {}, ['', 'ACTIVE', 'EXPIRED', 'USER_DELETED', 'ADMIN_REMOVED'].map((v) => h('option', { value: v }, v || 'Tüm durumlar')));
-  const sonuc = h('div');
-  const yukle = async () => {
-    const p = new URLSearchParams({ limit: '100', ...(q.value ? { q: q.value } : {}), ...(d.value ? { status: d.value } : {}) });
-    const r = await api(`/listings?${p}`);
-    sonuc.replaceChildren(h('p', { class: 'not' }, `${r.total} ilan`), tablo([
-      { baslik: 'No', deger: (l) => l.ilanNo }, { baslik: 'Hizmet', deger: (l) => l.title }, { baslik: 'Konum', deger: (l) => l.location },
-      { baslik: 'Durum', deger: (l) => rozet(l.status) }, { baslik: 'Tarih', deger: (l) => tarih(l.createdAt) },
-    ], r.items, (l) => (location.hash = `#/ilan/${l.id}`)));
-  };
-  q.addEventListener('keydown', (e) => e.key === 'Enter' && guvenli(yukle));
-  d.addEventListener('change', () => guvenli(yukle));
-  await yukle();
-  return h('div', {}, h('h2', {}, 'İlanlar'), h('div', { class: 'arac' }, q, d, h('button', { class: 'btn', onclick: () => guvenli(yukle) }, 'Ara')), sonuc);
-};
+// Tasarım ve veri kaynakları: ilanlar.js (yalnız mevcut admin API'leri).
+SAYFALAR.ilanlar = () => ilanlarSayfasi(ben.role);
 
 SAYFALAR.ilan = async (id) => {
   const l = await api(`/listings/${id}`);
@@ -258,16 +159,11 @@ SAYFALAR.sohbet = async (offerId) => {
     m.length ? m.map((x) => h('div', { class: 'mesaj' }, h('div', { class: 'ust' }, h('span', {}, x.senderId), h('span', {}, tarih(x.createdAt))), x.text ?? '[görsel]')) : h('p', { class: 'not' }, 'Mesaj yok.'));
 };
 
-SAYFALAR.teklifler = async () => h('div', {}, h('h2', {}, 'Teklifler'), tablo([
-  { baslik: 'Tutar (TL)', deger: (o) => o.amountTl }, { baslik: 'Not', deger: (o) => o.note }, { baslik: 'Durum', deger: (o) => rozet(o.status) },
-  { baslik: 'Tarih', deger: (o) => tarih(o.createdAt) },
-], await api('/offers'), (o) => (location.hash = `#/ilan/${o.listingId}`)));
+// Tasarım ve veri kaynakları: teklifler.js (yalnız mevcut admin API'leri).
+SAYFALAR.teklifler = () => tekliflerSayfasi(ben.role);
 
-SAYFALAR.talepler = async () => h('div', {}, h('h2', {}, 'Teklif Talepleri'), tablo([
-  { baslik: 'No', deger: (t) => t.talepNo }, { baslik: 'Hizmet', deger: (t) => `${t.kategori} / ${t.hizmet}` },
-  { baslik: 'Hizmet veren', deger: (t) => t.saglayiciAdi }, { baslik: 'Durum', deger: (t) => rozet(t.durum) },
-  { baslik: 'Teklif (TL)', deger: (t) => t.teklifFiyati ?? '—' }, { baslik: 'Tarih', deger: (t) => tarih(t.createdAt) },
-], await api('/teklif-talepleri'), (t) => (location.hash = `#/talep/${t.id}`)));
+// Tasarım ve veri kaynakları: teklif_talepleri.js (yalnız mevcut admin API'leri).
+SAYFALAR.talepler = () => teklifTalepleriSayfasi(ben.role);
 
 SAYFALAR.talep = async (id) => {
   const t = await api(`/teklif-talepleri/${id}`);
@@ -282,38 +178,12 @@ SAYFALAR.talep = async (id) => {
     t.mesajlar.length ? t.mesajlar.map((m) => h('div', { class: 'mesaj' }, h('div', { class: 'ust' }, h('span', {}, m.gonderenId === t.hizmetAlanId ? 'Talep eden' : 'Hizmet veren'), h('span', {}, tarih(m.createdAt))), m.metin ?? '[görsel]')) : h('p', { class: 'not' }, 'Mesaj yok.'));
 };
 
-SAYFALAR.yorumlar = async () => h('div', {}, h('h2', {}, 'Değerlendirmeler'), tablo([
-  { baslik: 'Puan', deger: (y) => y.stars }, { baslik: 'Yorum', deger: (y) => y.text }, { baslik: 'Durum', deger: (y) => rozet(y.status) },
-  { baslik: 'Kaldırma gerekçesi', deger: (y) => y.removedReason ?? '—' }, { baslik: 'Tarih', deger: (y) => tarih(y.createdAt) },
-  { baslik: '', deger: (y) => (y.status === 'PUBLISHED' ? h('button', { class: 'btn tehlike', onclick: async (e) => {
-    e.stopPropagation();
-    const n = await gerekceIle('Değerlendirmeyi kaldır', 'Kaldır');
-    if (n && await guvenli(() => api(`/reviews/${y.id}/remove`, { yontem: 'POST', govde: { reason: n } }))) { bildir('Kaldırıldı'); yenile(); }
-  } }, 'Kaldır') : '') },
-], await api('/reviews')));
+// Tasarım ve veri kaynakları: degerlendirmeler.js (yalnız mevcut admin API'leri).
+SAYFALAR.yorumlar = () => degerlendirmelerSayfasi(ben.role);
 
 // ── Katalog ───────────────────────────────────────────────────
-SAYFALAR.katalog = async () => {
-  const yazabilir = ['super_admin', 'content'].includes(ben.role);
-  const liste = await api('/catalog/categories');
-  const ara = h('input', { placeholder: 'Kategori ara' });
-  const alan = h('div');
-  const ciz = () => alan.replaceChildren(tablo([
-    { baslik: 'Sıra', deger: (k) => k.sort }, { baslik: 'Kategori', deger: (k) => k.name }, { baslik: 'Hizmet', deger: (k) => k.serviceCount },
-    { baslik: 'İkon', deger: (k) => k.icon ?? '—' }, { baslik: 'Durum', deger: (k) => rozet(k.active ? 'aktif' : 'pasif') },
-  ], liste.filter((k) => k.name.toLocaleLowerCase('tr').includes(ara.value.toLocaleLowerCase('tr'))), (k) => (location.hash = `#/kategori/${k.id}`)));
-  ara.addEventListener('input', ciz);
-  ciz();
-  const ekle = async () => {
-    const ikonlar = await api('/catalog/icons');
-    const d = await form('Kategori ekle', [{ ad: 'name', etiket: 'Kategori adı', zorunlu: true },
-      { ad: 'icon', etiket: 'İkon (uygulamada bulunan ikonlar)', tur: 'select', deger: '', secenekler: [['', '— genel ikon —'], ...ikonlar.map((i) => [i, i.split('/').pop()])] }]);
-    if (d && await guvenli(() => api('/catalog/categories', { yontem: 'POST', govde: { name: d.name, ...(d.icon ? { icon: d.icon } : {}) } }))) { bildir('Eklendi'); yenile(); }
-  };
-  return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, `Kategori ve Hizmetler (${liste.length})`), yazabilir ? h('button', { class: 'btn', onclick: ekle }, 'Kategori ekle') : null),
-    h('p', { class: 'not' }, 'Başlangıç verisi canlı uygulamanın kendi kataloğudur. Pasif kategori/hizmet uygulamada görünmez; silme kalıcı değildir, geçmiş ilanlar adı korur.'),
-    h('div', { class: 'arac' }, ara), alan);
-};
+// Tasarım ve veri kaynakları: katalog.js (yalnız mevcut admin katalog API'leri).
+SAYFALAR.katalog = () => katalogSayfasi(ben.role);
 
 SAYFALAR.kategori = async (id) => {
   const yazabilir = ['super_admin', 'content'].includes(ben.role);
@@ -505,7 +375,7 @@ SAYFALAR.gonderimler = async () => h('div', {}, h('h2', {}, 'SMS / E-posta Kayı
     { baslik: 'Durum', deger: (m) => rozet(m.status) }, { baslik: 'Sağlayıcı yanıtı', deger: (m) => m.providerResponse ?? '—' }, { baslik: 'Tarih', deger: (m) => tarih(m.createdAt) }],
   await api('/notifications/outbound'), (m) => m.userId && (location.hash = `#/kullanici/${m.userId}`)));
 
-SAYFALAR.hesaptalepleri = async () => h('div', {}, h('h2', {}, 'Hesap Talepleri'), h('p', { class: 'not' }, 'Silme talepleri 30 gün sonra otomatik uygulanır: kişisel veri anonimleştirilir.'),
+SAYFALAR.hesaptalepleri = async () => h('div', {}, h('h2', {}, 'Gelen Talepler'), h('p', { class: 'not' }, 'Silme talepleri 30 gün sonra otomatik uygulanır: kişisel veri anonimleştirilir.'),
   tablo([{ baslik: 'Kullanıcı', deger: (a) => a.name }, { baslik: 'Tür', deger: (a) => (a.type === 'FREEZE' ? 'Dondurma' : 'Silme') },
     { baslik: 'Durum', deger: (a) => rozet(a.status) }, { baslik: 'Talep', deger: (a) => tarih(a.createdAt) }, { baslik: 'Planlanan', deger: (a) => tarih(a.scheduledFor) }],
   await api('/account-requests'), (a) => (location.hash = `#/kullanici/${a.userId}`)));

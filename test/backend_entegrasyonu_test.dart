@@ -88,4 +88,23 @@ void main() {
       expect(PasswordHasher.verify(kTestPass, kDemoMusteriTuz, kDemoMusteriOzet), isTrue);
     });
   });
+
+  group('ADMİN KATEGORİ FOTOĞRAFI', () {
+    test('yalnız sunucu fotoğraf kalıbı kabul edilir; yoksa paket fotoğrafına düşülür', () {
+      final j = {
+        'items': [
+          {'category': 'K1', 'photoUrl': '/api/v1/categories/photo/katalog/kategori/0a1b2c3d-0000-4000-8000-000000000001.jpg', 'services': ['A']},
+          {'category': 'K2', 'photoUrl': 'https://kotu.com/x.jpg', 'services': ['B']},
+          {'category': 'K3', 'photoUrl': '/api/v1/categories/photo/../../etc/passwd', 'services': ['C']},
+        ],
+      };
+      sunucuFotograflariniAyarla(CategoryApi.fotograflar(j), apiKoku: 'https://api.ornek.com');
+      expect(categoryPhotoUrl('K1'),
+          'https://api.ornek.com/api/v1/categories/photo/katalog/kategori/0a1b2c3d-0000-4000-8000-000000000001.jpg');
+      expect(categoryPhotoUrl('K2'), isNull);
+      expect(categoryPhotoUrl('K3'), isNull);
+      sunucuFotograflariniAyarla(const {}, apiKoku: 'https://api.ornek.com');
+      expect(categoryPhotoUrl('K1'), isNull);
+    });
+  });
 }

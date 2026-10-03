@@ -14,6 +14,7 @@
 import { createHash, createHmac } from 'node:crypto';
 import { sirCoz } from './auth.js';
 import { olaylar } from './olaylar.js';
+import { uretim } from './config.js';
 
 const ONBELLEK_MS = 30_000;
 const onbellek = new Map();
@@ -37,10 +38,10 @@ export async function etkinEntegrasyon(db, tur) {
 /** Depolama yapılandırması: entegrasyon → ortam değişkeni → yok. */
 export async function depolamaAyari(db) {
   const e = await etkinEntegrasyon(db, 'STORAGE');
-  if (e) return { endpoint: e.config.endpoint, region: e.config.region, bucket: e.config.bucket, accessKeyId: e.secret.accessKeyId, secretAccessKey: e.secret.secretAccessKey };
+  if (e) return { endpoint: e.config.endpoint, region: e.config.region, bucket: e.config.bucket, pathStyle: e.config.pathStyle === true, accessKeyId: e.secret.accessKeyId, secretAccessKey: e.secret.secretAccessKey };
   const env = process.env;
   if (env.HC_S3_ENDPOINT && env.HC_S3_BUCKET && env.HC_S3_ACCESS_KEY_ID && env.HC_S3_SECRET_ACCESS_KEY) {
-    return { endpoint: env.HC_S3_ENDPOINT, region: env.HC_S3_REGION || 'auto', bucket: env.HC_S3_BUCKET, accessKeyId: env.HC_S3_ACCESS_KEY_ID, secretAccessKey: env.HC_S3_SECRET_ACCESS_KEY };
+    return { endpoint: env.HC_S3_ENDPOINT, region: env.HC_S3_REGION || 'auto', bucket: env.HC_S3_BUCKET, pathStyle: env.HC_S3_PATH_STYLE === 'true', accessKeyId: env.HC_S3_ACCESS_KEY_ID, secretAccessKey: env.HC_S3_SECRET_ACCESS_KEY };
   }
   return null;
 }
@@ -53,12 +54,14 @@ const hmac = (k, v) => createHmac('sha256', k).update(v).digest();
 
 export function s3ImzaliAdres(ayar, { yontem, anahtar, sureSn = 900, icerikTuru, simdi = new Date() }) {
   const u = new URL(ayar.endpoint);
-  if (u.protocol !== 'https:') throw new Error('Depolama adresi https olmalıdır');
-  const host = `${ayar.bucket}.${u.host}`; // sanal-host biçimi
+  // Canlıda yalnız https; http yalnız geliştirme/test (yerel MinIO vb.).
+  if (u.protocol !== 'https:' && !(u.protocol === 'http:' && !uretim)) throw new Error('Depolama adresi https olmalıdır');
+  // Sanal-host (S3/R2) ya da yol biçimi (MinIO: HC_S3_PATH_STYLE=true).
+  const host = ayar.pathStyle ? u.host : `${ayar.bucket}.${u.host}`;
   const tarih = simdi.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); // yyyyMMddTHHmmssZ
   const gun = tarih.slice(0, 8);
   const kapsam = `${gun}/${ayar.region}/s3/aws4_request`;
-  const yol = '/' + anahtar.split('/').map(kodla).join('/');
+  const yol = (ayar.pathStyle ? `/${kodla(ayar.bucket)}` : '') + '/' + anahtar.split('/').map(kodla).join('/');
   const imzaliBasliklar = icerikTuru ? 'content-type;host' : 'host';
   const sorgu = {
     'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
@@ -73,5 +76,5 @@ export function s3ImzaliAdres(ayar, { yontem, anahtar, sureSn = 900, icerikTuru,
   const imzalanacak = ['AWS4-HMAC-SHA256', tarih, kapsam, createHash('sha256').update(kanonik).digest('hex')].join('\n');
   const kImza = hmac(hmac(hmac(hmac(`AWS4${ayar.secretAccessKey}`, gun), ayar.region), 's3'), 'aws4_request');
   const imza = createHmac('sha256', kImza).update(imzalanacak).digest('hex');
-  return `https://${host}${yol}?${kanonikSorgu}&X-Amz-Signature=${imza}`;
+  return `${u.protocol}//${host}${yol}?${kanonikSorgu}&X-Amz-Signature=${imza}`;
 }
