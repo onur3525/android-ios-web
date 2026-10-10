@@ -6,6 +6,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'ref_tokens.dart';
 import 'package:flutter/foundation.dart';
 import 'olcu.dart';
+import 'gezgin.dart';
+import '../core/oturum_temizligi.dart';
+import '../data/services/share_service.dart';
+import '../domain/profil_menusu.dart';
+import 'web_destek_paneli.dart';
+import 'web_panel.dart';
 import 'web_header.dart';
 import '../core/turkce_arama.dart';
 import '../core/geri.dart';
@@ -34,11 +40,26 @@ class RefTap extends StatelessWidget {
     required this.child,
     this.onTap,
     this.borderRadius,
+    this.ipucu,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final BorderRadius? borderRadius;
+
+  /// Fareyle üzerinde beklenince çıkan açıklama.
+  ///
+  /// ── ⚠ YALNIZ WEB, YALNIZ VERİLDİĞİNDE ──
+  ///
+  /// Masaüstünde yazısız bir ikon düğmesi (üç nokta, göz, paylaş) ne
+  /// yaptığını söylemez; kullanıcı denemek zorunda kalır. Dokunmatikte
+  /// ise ipucu balonu hiç çıkmaz ve uzun basma davranışını gölgeler —
+  /// bu yüzden `kIsWeb` ile korunur.
+  ///
+  /// ⚠ METİNLİ DÜĞMELERE VERİLMEZ: üstünde "Kaydet" yazan bir düğmeye
+  /// "Kaydet" ipucu koymak gürültüdür. Çağıran taraf karar verir;
+  /// varsayılan `null`, yani ipucu YOK.
+  final String? ipucu;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +112,11 @@ class RefTap extends StatelessWidget {
         // baseline değişmesin.
         focusColor:
             kIsWeb ? RC.blue.withValues(alpha: 0.12) : Colors.transparent,
-        child: child,
+        // ⚠ İPUCU YALNIZ WEB'DE VE YALNIZ VERİLDİĞİNDE sarmalanır;
+        // gereksiz katman eklenmez.
+        child: (kIsWeb && ipucu != null)
+            ? Tooltip(message: ipucu!, child: child)
+            : child,
       ),
     );
   }
@@ -447,13 +472,90 @@ class RefSvgFlexible extends StatelessWidget {
 /// `.rg-back` — sol üst geri düğmesi.
 ///
 /// Referansta `<button class="rg-back tap" onclick="history.back()">`.
+/// Onay işareti — TEK KAYNAK.
+///
+/// ── ⚠ NİÇİN AYRI BİR BİLEŞEN ──
+///
+/// `ic_checksm.svg` yalnız `stroke` ile çizilmiş (`fill="none"`) ve
+/// web'de HİÇ GÖRÜNMÜYOR: tamamlanmış adım boş mavi daire, işaretli
+/// onay kutusu boş mavi kare olarak çıkıyordu.
+///
+/// Altı ayrı yerde `RefSvg('ic_checksm.svg')` yazılıydı. Her birini
+/// tek tek `Icon`a çevirmek altı kopya demekti; biri düzeltilip
+/// ötekiler unutulurdu. Tik artık burada.
+///
+/// ⚠ ASSET'E BAĞIMLILIK YOK: motorun kendi ikonu.
+///
+/// ⚠ MOBİLDE DE İYİLEŞTİRME: SVG orada çiziliyordu ama artık iki
+/// platform aynı şekli kullanıyor.
+class RefTik extends StatelessWidget {
+  const RefTik({super.key, this.size = 13, this.color = RC.white});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) =>
+      Icon(Icons.check_rounded, size: size, color: color);
+}
+
 class RefBackButton extends StatelessWidget {
-  const RefBackButton({super.key, this.onTap});
+  const RefBackButton({super.key, this.onTap}) : akisIci = false;
+
+  /// Akış içinde BİR ADIM geri alan ok.
+  ///
+  /// ── ⚠ NİÇİN AYRI ──
+  ///
+  /// Okların çoğu rotadan çıkar — panelde ve kenar çubuğunda X ile
+  /// AYNI işi yapar, o yüzden gizlenir. Ama çok adımlı akışlarda
+  /// (ilan oluşturma) ok rotadan çıkmaz, önceki ADIMA döner. Onu
+  /// gizlemek kullanıcıyı adımda kilitler.
+  ///
+  /// Önceki kural "özel `onTap` varsa gizleme" idi ve kabaydı: rotadan
+  /// çıkan okların çoğu da özel `onTap` taşıyordu (`geriGit`,
+  /// `Navigator.pop`), dolayısıyla X'in yanında ikinci bir ok olarak
+  /// kalıyorlardı.
+  const RefBackButton.akisIci({super.key, required this.onTap})
+      : akisIci = true;
 
   final VoidCallback? onTap;
 
+  /// `true` ise web'de de çizilir (bkz. [RefBackButton.akisIci]).
+  final bool akisIci;
+
   @override
   Widget build(BuildContext context) {
+    // ── ⚠ WEB PANELİNDE SAYFADAN ÇIKIŞ OKU ÇİZİLMEZ ──
+    //
+    // Panelde kapatma işini kartın sağ üstündeki X yapar; ikisi
+    // birlikte görünürse kullanıcı hangisinin ne yaptığını bilemez.
+    //
+    // ⚠ YALNIZ VARSAYILAN OK GİZLENİR (`onTap == null`). Özel `onTap`
+    // verilmiş oklar rotadan çıkmaz, AKIŞ İÇİNDE bir adım geri alır —
+    // çok adımlı kayıt ve ilan oluşturma bunlara dayanır. Onları
+    // gizlemek kullanıcıyı adımda kilitlerdi.
+    //
+    // ⚠ `panelMi` DEĞİL `icerdeMi`: `panelMi` yalnız "masaüstü web
+    // mi" der. Onunla gizleseydik liste ve detay SAYFALARININ geri
+    // okları da kaybolurdu. `icerdeMi` gerçekten panel ağacının
+    // içinde olup olmadığımızı söyler.
+    //
+    // ⚠ MOBİL VE TABLET DEĞİŞMEZ: panel zaten yalnız masaüstü web'de
+    // kurulur, orada `icerdeMi` hep `false`.
+    // ⚠ KENAR ÇUBUĞU VARKEN DE ÇİZİLMEZ: bölümler arasında gezinme
+    // soldaki çubuktan yapılır; sayfa içi geri oku ne yapacağı
+    // belirsiz ikinci bir kontrol olurdu. Tarayıcının kendi geri
+    // tuşu zaten çalışıyor.
+    //
+    // ⚠ YALNIZ VARSAYILAN OK: özel `onTap` verilenler akış içinde
+    // adım geri alır (çok adımlı kayıt, ilan oluşturma) ve kalır.
+    // ⚠ AKIŞ İÇİ OK HER ZAMAN ÇİZİLİR: rotadan çıkmaz, adım geri
+    // alır. Ötekiler panelde ve kenar çubuğunda gizlenir — orada
+    // kapatmayı X, gezinmeyi sol çubuk yapar.
+    if (!akisIci &&
+        (WebPanel.icerdeMi(context) || masaustuNav(context))) {
+      return const SizedBox.shrink();
+    }
     return RefTap(
       // ⚠ Varsayılan geri: yığın boşsa ana ekrana gider
       // (bkz. core/geri.dart) — buton ölü kalmaz.
@@ -1385,7 +1487,16 @@ class RefBottomSheet extends StatelessWidget {
                     ),
                   ),
                   RefTap(
-                    onTap: () => Navigator.of(context).maybePop(),
+                    // ⚠ WEB: tek kaynak `webKapat` (eşzamanlı `pop`;
+                    // bkz. web_panel.dart). MOBİL DEĞİŞMEZ: Android/iOS'ta
+                    // `maybePop` aynen çağrılır.
+                    onTap: () {
+                      if (kIsWeb) {
+                        webKapat(context);
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
                     borderRadius: BorderRadius.circular(RR.circle),
                     child: const Padding(
                       padding: EdgeInsets.all(8),
@@ -1452,12 +1563,30 @@ class RefPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.paddingOf(context).top;
+    // ── ⚠ PANEL ROTASINDA MODAL OLARAK ÇİZİLİR ──
+    //
+    // `RefPage` kullanan ekranlardan bazıları panel rotasıdır (rol
+    // seçimi gibi). Panel sarmalayıcısı olmadan tam sayfa açılıyor,
+    // modalın içinden "Kayıt Ol"a basınca ekran birden büyüyordu.
+    //
+    // ⚠ İÇERİK ZATEN KENDİ KAYDIRMASINI TAŞIMAZ: `RefPage`in çocuğu
+    // düz bir `Column`dur, `Expanded` içermez. Bu yüzden `panelIcerik`
+    // olarak verilebilir ve kart içerik kadar yüksek olur.
+    //
+    // ⚠ ZEMİN SAYDAM: altındaki sayfa görünsün.
+    final panelde = WebPanel.panelMi(context);
     return Scaffold(
-      backgroundColor: RC.pageBg,
-      body: RefScroll(
-        padding: EdgeInsets.fromLTRB(
-            horizontal, topExtra + safeTop, horizontal, bottom),
-        child: child,
+      backgroundColor: panelde ? Colors.transparent : RC.pageBg,
+      body: WebPanel(
+        // ⚠ `bottom` (84) PANELDE VERİLMEZ: o değer alt navigasyon
+        // çubuğunun altında kalmasın diye sayfa için var. Panelde alt
+        // bar yok; kartın kendi dolgusu yeterli.
+        panelIcerik: child,
+        icerik: RefScroll(
+          padding: EdgeInsets.fromLTRB(
+              horizontal, topExtra + safeTop, horizontal, bottom),
+          child: child,
+        ),
       ),
     );
   }
@@ -1488,7 +1617,7 @@ class RefPageTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final okVar = RefDetailHeader.okGosterilirMi(geriDugmesi);
+    final okVar = RefDetailHeader.okGosterilirMi(geriDugmesi, context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       // ── ⚠ BAŞLIK SAYFAYA ORTALI (16 Eyl, kullanıcı isteği) ──
@@ -2450,10 +2579,29 @@ class RefShell extends StatelessWidget {
     // bırakmanın anlamı kalmaz).
     final ustMenu = masaustuNav(context);
     return Scaffold(
-      backgroundColor: RC.pageBg,
-      body: Column(
+      // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için şeffaf
+      // rotanın altındaki sayfa ÖRTÜLÜYOR, modalın arkası boş beyaz
+      // görünüyordu. `RefShell` kullanan panel ekranları (Şifre
+      // Değiştir, Profil Bilgilerim) bu satırla düzelir.
+      backgroundColor:
+          WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+      // ⚠ KENAR ÇUBUĞU BURADA DEĞİL: `GlobalWebKabugu` çiziyor.
+      // Burada da çizilirse EKRANDA İKİ ÇUBUK olurdu. Bu yapı
+      // yalnız içerik sütununu ve alt barı yönetir.
+      body: ustMenu
+          ? RefScroll(
+              padding:
+                  EdgeInsets.fromLTRB(horizontal, topExtra, horizontal, 14),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxWidth: IcerikGenisligi.izgara),
+                  child: child,
+                ),
+              ),
+            )
+          : Column(
         children: [
-          if (ustMenu) WebHeader(items: nav.items, activeKey: nav.activeKey),
           Expanded(
             child: RefScroll(
               padding: EdgeInsets.fromLTRB(
@@ -2465,10 +2613,61 @@ class RefShell extends StatelessWidget {
               child: child,
             ),
           ),
-          if (!ustMenu) nav,
+          nav,
         ],
       ),
     );
+  }
+
+  /// Kenar çubuğundaki rota dışı eylemler.
+  ///
+  /// ── ⚠ GEÇİCİ EŞLEME — BİLEREK VE RAPORLANMIŞ ──
+  ///
+  /// Rol değiştirme, paylaşma ve çıkış merkezî karşılıklara sahip;
+  /// burada doğrudan çağrılır.
+  ///
+  /// ⚠ DESTEK MERKEZİ PROFİL EKRANINA GÖTÜRÜR: o panel bugün
+  /// `profile_screen` içinde private bir yöntemle açılıyor ve dışarı
+  /// çıkarılmadı. Paneli burada YENİDEN YAZMAK ikinci bir kopya
+  /// demekti; kullanıcı profil ekranındaki aynı satırdan açar.
+  /// Panelin ortak bir yere taşınması ayrı bir iştir.
+  static void menuEylemi(BuildContext context, ProfilEylemi e) {
+    // ── ⚠ `Navigator.of(context)` BURADA ÇALIŞMAZ ──
+    //
+    // Bu yöntem kenar çubuğundan çağrılıyor ve çubuk
+    // `GlobalWebKabugu` içinde, yani Navigator'ın ÜSTÜNDE. Verilen
+    // context ile `Navigator.pushNamed` hiçbir şey yapmıyordu:
+    // "Rol Değiştir" ve "Destek Merkezi" tıklanıyor ama ekran
+    // açılmıyordu.
+    //
+    // Gezinme ortak anahtar üzerinden (`ui/gezgin.dart`). Çıkış da
+    // Navigator'ın KENDİ context'ini kullanır.
+    final gezgin = gezginAnahtari.currentState;
+    switch (e) {
+      case ProfilEylemi.paylas:
+        // ⚠ Örnek her çağrıda kurulur: durum taşımaz, varsayılan
+        // paylaşıcıyı kullanır.
+        ShareService().shareApp();
+      case ProfilEylemi.cikis:
+        // ⚠ ORTAK ÇIKIŞ: token ve yerel kullanıcı verisi birlikte
+        // temizlenir (`core/oturum_temizligi.dart`).
+        //
+        // ⚠ NAVIGATOR'IN CONTEXT'İ: `oturumuKapat` içeride
+        // yönlendirme yapıyor; kabuk context'i ile çalışmaz.
+        if (gezgin != null) {
+          oturumuKapat(gezgin.context);
+        }
+      case ProfilEylemi.destek:
+        // ── ⚠ PANEL DOĞRUDAN AÇILIR (eskiden `/profile`a gidiyordu) ──
+        //
+        // Kullanıcı alakasız Profil sayfasına düşüyordu. Panel artık
+        // bulunulan sayfanın üstünde açılır (`web_destek_paneli.dart`).
+        // ⚠ Bu işleyiciyi yalnız web kenar çubuğu çağırır; Android
+        // profil ekranı kendi panelini açmaya devam eder.
+        if (gezgin != null) {
+          unawaited(webDestekPaneliniAc(gezgin.context));
+        }
+    }
   }
 }
 
@@ -2623,8 +2822,19 @@ class RefStars extends StatelessWidget {
       children: [
         for (var k = 1; k <= 5; k++) ...[
           if (k > 1) const SizedBox(width: 10), // gap:10px
-          GestureDetector(
+          // ⚠ `GestureDetector` YERİNE `RefTap`: yıldızlar gerçek bir
+          // kontroldür ama `GestureDetector` KLAVYEYLE ODAKLANMAZ —
+          // Tab ile üzerine gelinemiyor, Enter/Space çalışmıyordu.
+          // Ekran okuyucu kullanan biri puan veremezdi.
+          //
+          // ⚠ `RefTap` AYNI ZAMANDA imleç, hover ve odak göstergesini
+          // merkezî olarak getirir; burada ayrıca yazmaya gerek yok.
+          //
+          // ⚠ DOKUNMA DAVRANIŞI AYNI: mobilde değişen bir şey yok.
+          RefTap(
             onTap: onChanged == null ? null : () => onChanged!(k),
+            borderRadius: BorderRadius.circular(RR.circle),
+            ipucu: onChanged == null ? null : '$k yıldız',
             child: RefSvg(
               k <= value
                   ? 'assets/svg/ic_star_full.svg'
@@ -2880,11 +3090,45 @@ class RefDetailHeader extends StatelessWidget {
   final bool? geriDugmesi;
 
   /// Varsayılan AÇIK — bkz. [geriDugmesi].
-  static bool okGosterilirMi(bool? istek) => istek ?? true;
+  /// ── ⚠ WEB PANELİNDE GERİ OKU ÇİZİLMEZ ──
+  ///
+  /// Masaüstü panelinde kapatma işini kartın sağ üstündeki X yapar;
+  /// geri oku ikinci bir kontrol olur ve kartın içinde sol üstte
+  /// asılı kalırdı.
+  ///
+  /// ⚠ MERKEZÎ KARAR: her ekranda "panelde miyim" koşulu yazmak
+  /// yerine kural burada. Panele bağlanan ekran fazladan hiçbir şey
+  /// yapmaz.
+  ///
+  /// ⚠ MOBİL VE TABLET DEĞİŞMEZ: `WebPanel.panelMi` `kIsWeb` VE
+  /// ≥1024 px ister; sağlanmazsa çağıranın isteği aynen geçerlidir.
+  static bool okGosterilirMi(bool? istek, [BuildContext? context]) {
+    if (context == null) {
+      return istek ?? true;
+    }
+    // ⚠ PANELDE ÇİZİLMEZ: kapatma işini kartın X'i yapar.
+    if (WebPanel.panelMi(context)) {
+      return false;
+    }
+    // ── ⚠ KENAR ÇUBUĞU VARKEN DE ÇİZİLMEZ ──
+    //
+    // Bölümler arası gezinme soldaki çubuktan yapılıyor; sayfa içi
+    // geri oku ne yapacağı belirsiz ikinci bir kontrol oluyordu.
+    // Tarayıcının kendi geri tuşu zaten çalışıyor.
+    //
+    // ⚠ `RefBackButton`TA AYNI KURAL VAR ama bu ekranlar oku
+    // `RefDetailHeader` / `RefPageTitle` üzerinden çiziyor; kural
+    // burada da olmalı, yoksa Hizmet Kategorilerim ve Hizmet
+    // Bölgelerim'de ok kalıyordu.
+    if (masaustuNav(context)) {
+      return false;
+    }
+    return istek ?? true;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final okVar = okGosterilirMi(geriDugmesi);
+    final okVar = okGosterilirMi(geriDugmesi, context);
     // ── ⚠ BAŞLIK VE ALT AÇIKLAMA SAYFAYA ORTALI (16 Eyl, kullanıcı
     // isteği) ──
     //
@@ -3465,9 +3709,15 @@ class RefStepper extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: etkin ? RS.blueButton : null,
         ),
+        // ⚠ SVG YERİNE FLUTTER İKONU: `ic_checksm.svg` yalnız
+        // `stroke` ile çizilmiş (`fill="none"`) ve web'de hiç
+        // görünmüyordu — tamamlanmış adım BOŞ MAVİ DAİRE olarak
+        // çıkıyor, kullanıcı "1" rakamının silindiğini sanıyordu.
+        //
+        // ⚠ ASSET'E BAĞIMLILIK KALKTI: onay işareti artık motorun
+        // kendi ikonu; yeni dosya eklenmedi, ölçü ve renk aynı.
         child: tamam
-            ? const RefSvg('assets/svg/ic_checksm.svg',
-                size: 18, color: RC.white)
+            ? const RefTik(size: 18)
             : Text(
                 '$i',
                 style: refText(
@@ -4061,10 +4311,10 @@ class RefCheckBox extends StatelessWidget {
               color: value ? RC.blue : const Color(0xFFC7CEDA), width: 2),
           borderRadius: BorderRadius.circular(RR.r6),
         ),
-        child: value
-            ? const RefSvg('assets/svg/ic_checksm.svg',
-                size: 13, color: RC.white)
-            : null,
+        // ⚠ AYNI SEBEP: `ic_checksm.svg` yalnız `stroke` ile
+        // çizilmiş ve web'de görünmüyor — onay kutusu işaretliyken
+        // BOŞ MAVİ KARE kalıyordu. Motorun kendi ikonu kullanılır.
+        child: value ? const RefTik() : null,
       );
 }
 
@@ -4275,10 +4525,8 @@ class RefAgreeRow extends StatelessWidget {
                     width: 2),
                 borderRadius: BorderRadius.circular(RR.r6),
               ),
-              child: value
-                  ? const RefSvg('assets/svg/ic_checksm.svg',
-                      size: 13, color: RC.white)
-                  : null,
+              // ⚠ AYNI SEBEP (bkz. yukarıdaki onay kutusu).
+              child: value ? const RefTik() : null,
             ),
           ),
           const SizedBox(width: 11), // gap:11px
@@ -4464,6 +4712,9 @@ class _RefMultiSelectSheetState extends State<RefMultiSelectSheet> {
                   RefTap(
                     onTap: () => Navigator.of(context).pop(),
                     borderRadius: BorderRadius.circular(RR.circle),
+                    // ⚠ YAZISIZ İKON: masaüstünde ne yaptığını
+                    // söylemeli. Mobilde ipucu çıkmaz (`kIsWeb`).
+                    ipucu: 'Kapat',
                     // ⚠ `ic_x.svg` KENDİ renklerini taşır (gri daire +
                     // beyaz çarpı). Renk verilirse tüm çizim tek renge
                     // boyanır ve DOLU DAİRE görünür — cihazdaki hata
@@ -4987,8 +5238,15 @@ class RefSifreGozu extends StatelessWidget {
   final double boyut;
   final Color renk;
 
+  // ⚠ `MouseRegion` SARMALAYICI: bu kontrol jest arenası gerekçesiyle
+  // `GestureDetector` KALMAK ZORUNDA (aşağıdaki nota bakın), ama
+  // masaüstünde imleç el işaretine dönmeliydi. `MouseRegion` yalnız
+  // imleci değiştirir; jest davranışına KARIŞMAZ, dolayısıyla
+  // düzeltilen "Paste / Select all" menüsü sorunu geri gelmez.
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) => MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
         // ── ⚠ JEST ARENASI: METİN MENÜSÜ AÇILMASIN ──
         //
         // `Listener` ham işaretçi olaylarını dinler ama jest
@@ -5043,6 +5301,7 @@ class RefSifreGozu extends StatelessWidget {
           ),
         ),
         ),
+      ),
       );
 }
 
@@ -5134,10 +5393,8 @@ class RefSecimKarti extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: secili
-                    ? const RefSvg('assets/svg/ic_checksm.svg',
-                        size: 12, color: RC.white)
-                    : null,
+                // ⚠ AYNI SEBEP (bkz. `RefTik`).
+                child: secili ? const RefTik(size: 12) : null,
               ),
             ],
           ),

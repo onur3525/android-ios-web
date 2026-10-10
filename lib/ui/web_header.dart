@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'olcu.dart';
+import 'header_arama.dart';
 import 'ref_tokens.dart';
 import 'ref_widgets.dart';
 
@@ -114,7 +115,29 @@ class WebHeader extends StatelessWidget implements PreferredSizeWidget {
                     // ⚠ MEVCUT MARKA ASSET'İ: wordmark yeniden
                     // çizilmedi, renkleri değiştirilmedi.
                     Image.asset('assets/logo/wordmark.png', height: 26),
-                    const SizedBox(width: 28),
+                    const SizedBox(width: 20),
+                    // ── ⚠ ARAMA ALANI (`ui/header_arama.dart`) ──
+                    //
+                    // Web'de arama header'ın parçasıdır; kullanıcı
+                    // hangi sayfada olursa olsun oradan aramayı
+                    // bekler. Ana sayfadaki `InlineSearchBox`a
+                    // DOKUNULMADI — o bir sayfa bileşeni, bu ise
+                    // header'a sığan dar kardeşi. İkisi de aynı arama
+                    // motorunu ve aynı yönlendirmeyi kullanır.
+                    //
+                    // ⚠ GENİŞLİK KADEMELİ: laptopta sekmeler ve "İlan
+                    // Ver" düğmesiyle birlikte sığması için daralır.
+                    // ⚠ GENİŞLİK KADEMELİ: eşik 900'e indiği için
+                    // laptop kipi artık 900–1439 arasını kapsıyor.
+                    // 900'de 260 px arama + sekmeler + "İlan Ver"
+                    // sıkışıyordu; alt uçta 200'e iner.
+                    HeaderArama(
+                      genislik: switch (ekranSinifi(context)) {
+                        EkranSinifi.masaustu => 420,
+                        _ => MediaQuery.sizeOf(context).width < 1024 ? 200 : 260,
+                      },
+                    ),
+                    const SizedBox(width: 20),
                     for (final it in sekmeler)
                       _Sekme(oge: it, aktif: it.key == activeKey),
                     const Spacer(),

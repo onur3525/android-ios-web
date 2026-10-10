@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
-import '../core/platform_kapilari.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/validators.dart';
@@ -11,9 +10,9 @@ import 'forgot_password_screen.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import '../data/remote/api_config.dart';
-import '../core/teshis.dart';
+import '../ui/web_panel.dart';
 import '../data/repositories/oturum_tercihi.dart';
+import '../ui/panel_rotasi.dart';
 
 /// Giriş — HTML davranışlarının birebir karşılığı:
 /// alan-altı hatalar, buton loading + çift tıklama kilidi,
@@ -338,8 +337,6 @@ class _LoginScreenState extends State<LoginScreen> {
   //   .rg-infobox.blue  test girişi bilgisi, margin:2px 0 4px
   //   .lg-forgot 13px/700 #1D6BE3, sağa yaslı, margin:2px 2px 14px auto
   //   .rg-primary "Giriş Yap"
-  //   .rg-or     "veya"
-  //   .rg-google "Google ile Devam Et"
   //   .lg-reg    "Hesabınız yok mu? Kayıt Olun"
   // ═════════════════════════════════════════════════════════════
   @override
@@ -354,30 +351,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        // `.page{background:#fff}` — referansta AppBar YOKTUR.
-        backgroundColor: RC.pageBg,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // .rg-back — sol üstte, başlık çubuğu olmadan
-              //
-              // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-              // Giriş ekranı ana sayfadan açılır; kullanıcının vazgeçip
-              // dönebilmesi gerekir. Android'de donanım tuşu vardı ama
-              const Padding(
-                padding: EdgeInsets.fromLTRB(14, 4, 14, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: RefBackButton(),
-                ),
-              ),
-              Expanded(
-                child: RefScroll(
-                  // .rg-wrap{padding:2px 20px 36px} + .lg-wrap{padding-top:6px}
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
-                  child: Form(
+  /// Giriş formu — TEK KAYNAK.
+  ///
+  /// ⚠ Tam gövde (mobil) ve panel (web) AYNI widget'ı kullanır.
+  Widget _formu(BuildContext context) => Form(
                     // ⚠ ORTAK UYARI ZAMANI KURALI (tüm formlarda aynı).
                     //
                     //   · alan odaktayken       → uyarı YOK
@@ -594,7 +571,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? null
                                   : () => Navigator.push(
                                         context,
-                                        MaterialPageRoute<void>(
+                                        panelRotasi<void>(
+                                          // ⚠ AD YALNIZ ÖLÇÜ İÇİN:
+                                          // web kabuğu içerik
+                                          // genişliğini rota adından
+                                          // seçer. Gezinme davranışı
+                                          // DEĞİŞMEZ.
+                                          settings: const RouteSettings(
+                                              name: '/sifremi-unuttum'),
                                           builder: (_) =>
                                               // ── ⚠ HER ZAMAN E-POSTA
                                               // YOLUYLA AÇILIR ──
@@ -643,26 +627,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               : _submit,
                         ),
 
-                        // .rg-or + .rg-google
-                        //
-                        // ⚠ iOS'TA GÖSTERİLMEZ (App Store kuralı 4.8 —
-                        // bkz. lib/core/platform_kapilari.dart).
-                        // Ayırıcı ile düğme BİRLİKTE gizlenir; yalnız
-                        // düğme kaldırılsaydı ekranda sahipsiz bir
-                        // "veya" çizgisi kalırdı.
-                        //
-                        // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ: düğme,
-                        // ikonu, ölçüsü, sırası ve davranışı aynen
-                        // buradadır.
-
                         // .lg-reg{margin-top:16px}
                         const SizedBox(height: 16),
                         Center(
                           child: RefTap(
                             onTap: _busy
                                 ? null
-                                : () => Navigator.pushReplacementNamed(
-                                    context, '/role'),
+                                // ⚠ `pushReplacement` DEĞİL `push`:
+                                // önceki hâlde giriş ekranı yığından
+                                // SİLİNİYORDU, bu yüzden rol
+                                // seçimindeki geri oku giriş yerine
+                                // ana sayfaya düşüyordu. Kullanıcı
+                                // "hesabım varmış" deyip geri
+                                // dönebilmeli.
+                                : () =>
+                                    Navigator.pushNamed(context, '/role'),
                             borderRadius: BorderRadius.circular(RR.r8),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -692,12 +671,67 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  );
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        // `.page{background:#fff}` — referansta AppBar YOKTUR.
+                // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+        body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        // ── ⚠ PANELDE SADECE FORM ÇİZİLİR ──
+        //
+        // Tam gövde `SafeArea > Column > Expanded > RefScroll`
+        // biçiminde ve `Expanded` ALANI DOLDURUR; panel onu sardığında
+        // kart içeriğe göre büzülemiyor, altta kocaman boşluk
+        // kalıyordu. Oysa modal, içeriği kadar kısa olmalıdır.
+        //
+        // `panelIcerik` ile panele `Expanded` İÇERMEYEN sade form
+        // verilir: kart içerik kadar yüksek olur, uzun formda yalnız
+        // bu bölüm kayar.
+        //
+        // ⚠ AYNI WIDGET İKİ KEZ KURULMAZ: `_formu(context)` tek
+        // kaynaktır; tam gövde de panel de onu çağırır. Kopyalasaydım
+        // biri düzeltilip öteki unutulurdu.
+        panelIcerik: _formu(context),
+        icerik: SafeArea(
+          child: Column(
+            children: [
+              // .rg-back — sol üstte, başlık çubuğu olmadan
+              //
+              // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
+              // Giriş ekranı ana sayfadan açılır; kullanıcının vazgeçip
+              // dönebilmesi gerekir. Android'de donanım tuşu vardı ama
+              const Padding(
+                padding: EdgeInsets.fromLTRB(14, 4, 14, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: RefBackButton(),
+                ),
+              ),
+              Expanded(
+                child: RefScroll(
+                  // .rg-wrap{padding:2px 20px 36px} + .lg-wrap{padding-top:6px}
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
+                  child: _formu(context),
                 ),
               ),
             ],
           ),
-        ),
+        )),
       );
 }
 

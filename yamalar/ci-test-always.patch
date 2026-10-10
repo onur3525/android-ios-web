@@ -1,0 +1,15 @@
+diff -ru a/.github/workflows/flutter-ci.yml b/.github/workflows/flutter-ci.yml
+--- a/.github/workflows/flutter-ci.yml	2026-10-03 18:52:51.603092663 +0000
++++ b/.github/workflows/flutter-ci.yml	2026-10-03 18:52:51.604523725 +0000
+@@ -31,7 +31,11 @@
+       - run: flutter pub deps --style=compact | grep -E "firebase_(core|auth|messaging)" || true
+       - name: flutter analyze
+         run: flutter analyze --no-fatal-infos
++      # Analyze başarısız olsa da testler ÇALIŞIR (kullanıcı kararı, 3 Eki):
++      # analyze kuralı (--no-fatal-infos) AYNEN geçerli ve iş yine kırmızı
++      # olur; yalnız test paketinin gerçek durumu görülebilsin diye.
+       - name: flutter test
++        if: always()
+         run: flutter test --reporter expanded
+ 
+   android-debug:

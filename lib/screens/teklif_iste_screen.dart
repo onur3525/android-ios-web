@@ -9,7 +9,6 @@ import '../data/controllers/teklif_talebi_controller.dart';
 // ⚠ `IsZamani` enum'u burada tanımlı — `_isZamani` alanı için gerekli
 // (`create_listing_screen.dart`taki AYNI import notu).
 import '../data/models/listing.dart';
-import '../data/models/review.dart';
 import '../data/models/teklif_talebi.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api/storage_api.dart';
@@ -48,6 +47,7 @@ class TeklifIsteScreen extends StatefulWidget {
     this.tamamlananIs = 0,
     this.ilce,
     this.il,
+    this.fotoUrl = '',
   });
 
   final String kategori;
@@ -57,6 +57,10 @@ class TeklifIsteScreen extends StatefulWidget {
   /// `SaglayiciOzetSatiri` içinde, tek yerde yapılır): teklif henüz
   /// verilmedi, hizmet veren burada hâlâ maskelidir.
   final String saglayiciAdi;
+
+  /// Sunucu kaydında hizmet veren profil fotoğrafı (imzalı adres); boşsa
+  /// baş harf çizilir.
+  final String fotoUrl;
 
   // ── ⚠ YALNIZ KURGUSAL (MOCK) KAYITLAR İÇİN YEDEK DEĞERLER ──
   //
@@ -263,8 +267,9 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
                   tamamlananIs: widget.tamamlananIs,
                   ilce: widget.ilce,
                   il: widget.il,
-                  // ⚠ YEDEK KAYIT: hesap bulunamadı, fotoğraf da yok.
-                  fotoYolu: '',
+                  // ⚠ YEDEK KAYIT: hesap yerelde yok (API modu) —
+                  // listeden taşınan fotoğraf adresi; yoksa baş harf.
+                  fotoYolu: widget.fotoUrl,
                 );
             return Container(
               padding: const EdgeInsets.all(12),

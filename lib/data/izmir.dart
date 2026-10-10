@@ -16,7 +16,7 @@ const List<String> kIzmirDistricts = [
 // KATEGORİ VERİSİ — TEK KAYNAK: `category_tree.dart`
 //
 
-/// Ana kategoriler — referans ağacın tamamı.
+/// Ana kategoriler — referans ağacın tamamı (166 kategori, 1587 alt hizmet).
 List<String> get kHomeCategories => kTreeCategories;
 
 /// Ana kategori → alt hizmetler.

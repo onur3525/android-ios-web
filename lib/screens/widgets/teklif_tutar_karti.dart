@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme.dart';
 import '../../core/tutar_bicimi.dart';
 import '../../ui/ref_tokens.dart';
 

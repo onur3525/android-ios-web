@@ -12,6 +12,7 @@
 // tarayıcı penceresinde masaüstü düzeni çizerdi. Kullanıcının
 // gördüğü şey platform değil, ekranın genişliğidir.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Ekran genişlik sınıfı.
@@ -44,8 +45,34 @@ abstract final class Kirilma {
   /// Tablet bu genişlikten itibaren başlar.
   static const double tablet = 600;
 
-  /// Dizüstü bu genişlikten itibaren başlar.
-  static const double laptop = 1024;
+  /// Geniş web düzeninin (üst menü, çok kolon) başladığı genişlik.
+  ///
+  /// ── ⚠ NİÇİN 1024 DEĞİL 900 ──
+  ///
+  /// Değer 1024'tü ve masaüstü düzeni telefonda "Masaüstü sitesi"
+  /// seçiliyken de çıkmıyordu. Sebep tahmin değil, ölçü:
+  ///
+  ///   · Telefon tarayıcısı normalde `width=device-width` ile
+  ///     ~400 CSS piksel bildirir → mobil düzen, doğru.
+  ///   · "Masaüstü sitesi" seçilince Chrome bu meta'yı YOK SAYAR ve
+  ///     yerleşim genişliğini **980 CSS piksele** sabitler. Bu,
+  ///     Chrome'un onlarca yıldır kullandığı klasik değerdir.
+  ///
+  /// 980 < 1024 olduğu için ekran "tablet" sayılıyor, alt bar kalıyor
+  /// ve üst menü hiç çizilmiyordu. Eşik 900'e çekilince masaüstü
+  /// modu gerçekten masaüstü düzeni alır.
+  ///
+  /// ⚠ CİHAZ TÜRÜ TAHMİN EDİLMEZ: karar hâlâ GERÇEK yerleşim
+  /// genişliğine bakar (`MediaQuery.sizeOf().width`). Değişen yalnız
+  /// sınırın nereye konduğu.
+  ///
+  /// ⚠ TELEFON VE KÜÇÜK TABLET ETKİLENMEZ: 400–768 px aralığı hâlâ
+  /// 900'ün altında, mobil düzen aynen sürer.
+  ///
+  /// ⚠ 900'DE ÜST MENÜ SIĞAR: logo + arama (260 px) + sekmeler +
+  /// "İlan Ver" düğmesi laptop kipinde zaten daraltılmış ölçülerle
+  /// çiziliyor.
+  static const double laptop = 900;
 
   /// Geniş masaüstü bu genişlikten itibaren başlar.
   static const double masaustu = 1440;
@@ -131,3 +158,22 @@ double metinOlcegi(EkranSinifi sinif) => switch (sinif) {
 /// Bu yüzden değer düşürülmez, yalnız gerekirse bir tık artırılır.
 double dugmeYuksekligi(EkranSinifi sinif) =>
     sinif.masaustuMu ? 54 : 52;
+
+/// Bu ortamda kamera ile fotoğraf çekilebilir mi?
+///
+/// ── ⚠ NİÇİN GENİŞLİĞE BAKILIYOR ──
+///
+/// Flutter "kamera var mı" diye doğrudan soramaz. Ama pratikte:
+///
+///   · Mobil uygulama ve telefon tarayıcısı → kamera VARDIR ve
+///     `ImageSource.camera` gerçekten çalışır.
+///   · Masaüstü tarayıcı → ya web kamerası açılır (ilan fotoğrafı
+///     için anlamsız) ya da hiçbir şey olmaz. Kullanıcıya ÇALIŞMAYAN
+///     bir seçenek gösterilmiş olur.
+///
+/// ⚠ KURAL "WEB'DE KALDIR" DEĞİL: mobil web'de kamera işe yarar ve
+/// orada seçenek DURUR. Yalnız masaüstü web'de gizlenir.
+///
+/// ⚠ ANDROID/iOS DEĞİŞMEZ: `kIsWeb` olmadığı için daima `true`.
+bool kameraVarMi(BuildContext context) =>
+    !(kIsWeb && ekranSinifi(context).masaustuMu);

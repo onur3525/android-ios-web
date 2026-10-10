@@ -1,0 +1,45 @@
+diff -ru a/test/teklif_talebi_taraf_test.dart b/test/teklif_talebi_taraf_test.dart
+--- a/test/teklif_talebi_taraf_test.dart	2026-10-03 18:37:43.621640158 +0000
++++ b/test/teklif_talebi_taraf_test.dart	2026-10-03 18:37:43.624273260 +0000
+@@ -22,7 +22,7 @@
+       kategori: 'Doğalgaz',
+       hizmet: 'Doğalgaz Kaçak Kontrolü',
+       aciklama: 'acil',
+-      iletisimTercihi: IletisimTercihi.telefon,
++      iletisimTercihi: IletisimTercihi.telefonGoster,
+       createdAt: DateTime(2026, 9, 12),
+     );
+ 
+diff -ru a/test/uc_nokta_kapsami_test.dart b/test/uc_nokta_kapsami_test.dart
+--- a/test/uc_nokta_kapsami_test.dart	2026-10-03 18:37:43.621583718 +0000
++++ b/test/uc_nokta_kapsami_test.dart	2026-10-03 18:37:43.624250998 +0000
+@@ -36,7 +36,7 @@
+       kategori: 'Doğalgaz',
+       hizmet: 'Doğalgaz Kaçak Kontrolü',
+       aciklama: 'acil',
+-      iletisimTercihi: IletisimTercihi.telefon,
++      iletisimTercihi: IletisimTercihi.telefonGoster,
+       durum: d,
+       createdAt: DateTime(2026, 9, 12),
+     );
+diff -ru a/test/widget/prelogin_ilan_akisi_test.dart b/test/widget/prelogin_ilan_akisi_test.dart
+--- a/test/widget/prelogin_ilan_akisi_test.dart	2026-10-03 18:37:43.622966176 +0000
++++ b/test/widget/prelogin_ilan_akisi_test.dart	2026-10-03 18:37:43.625666249 +0000
+@@ -370,7 +370,8 @@
+         createdAt: DateTime(2026),
+       ));
+ 
+-      // Google kaydı: doğrulanmış e-posta ile gelir.
++      // Doğrulanmış e-postayla kayıt (eski Google kaydının yerini alan akış;
++      // `googleSub` parametresi Google girişi kaldırılınca API'den çıktı).
+       final r = repo.register(
+         phone: '5401112233',
+         pass: 'g-oauth',
+@@ -380,7 +381,6 @@
+         name: 'Ayşe Yılmaz',
+         email: 'ayse@gmail.com',
+         emailVerified: true,
+-        googleSub: 'google-sub-001',
+       );
+       expect(r.error, isNull);
+       expect(pending.hasDraft, isTrue, reason: 'kayıt taslağı silmez');

@@ -120,6 +120,25 @@ abstract final class Mappers {
           ? DateTime.tryParse(j['createdAt'] as String)
           : null,
     );
+    // Doğrulama durumları sunucudan (önceden okunmuyordu: API modunda her
+    // hesap "doğrulanmamış" görünüyordu).
+    a.phoneVerified = j['phoneVerified'] == true;
+    a.emailVerified = j['emailVerified'] == true;
+    // Profil fotoğrafları (rol bazlı) sunucudan imzalı adres olarak gelir.
+    final foto = j['photos'];
+    if (foto is Map) {
+      a.fotografAta(Role.customer, foto['customer'] is String ? foto['customer'] as String : '');
+      a.fotografAta(Role.provider, foto['provider'] is String ? foto['provider'] as String : '');
+    }
+    // Bildirim tercihleri sunucuda tutulur; alan yoksa (eski sunucu)
+    // varsayılan AÇIK kalır.
+    final tercih = j['notificationPrefs'];
+    if (tercih is Map) {
+      a.bildirimTeklif = tercih['offer'] != false;
+      a.bildirimMesaj = tercih['message'] != false;
+      a.bildirimDuyuru = tercih['announcement'] != false;
+      a.bildirimEposta = tercih['email'] != false;
+    }
     final p = j['providerProfile'] as Map<String, dynamic>?;
     if (p != null) {
       a.categories.addAll(((p['categories'] ?? const []) as List).cast<String>());

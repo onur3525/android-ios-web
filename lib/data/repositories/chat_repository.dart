@@ -27,6 +27,15 @@ class ChatRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final Map<String, List<ChatMessage>> _threads = {};
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  Map<String, List<ChatMessage>> get sekmeKayitlari => Map.unmodifiable(_threads);
+  void sekmeKayitlariniYukle(Map<String, List<ChatMessage>> kayitlar) {
+    _threads
+      ..clear()
+      ..addAll(kayitlar);
+    notifyListeners();
+  }
+
   /// ⚠ BOŞ LİSTE DÖNER, `null` DEĞİL: çağıranlar "sohbet var ama
   /// henüz mesaj yok" ile "böyle bir teklif yok" arasındaki farkı
   /// `null` üzerinden ayırıyor.

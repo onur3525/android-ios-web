@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../data/controllers/profile_controller.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import '../core/geri.dart';
 
 /// HİZMET VEREN — HİZMET KATEGORİLERİM (HTML vMyCats)
@@ -172,7 +173,8 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
     });
     if (err == null) {
       sysToastOk(context, 'Kategorileriniz güncellendi');
-      geriGit(context);
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => geriGit(context));
     }
   }
 
@@ -181,8 +183,23 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
 
     // ⚠ Referansta AppBar YOKTUR; başlık sayfa içindedir.
     return Scaffold(
-      backgroundColor: RC.pageBg,
-      body: SafeArea(
+              // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+      body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: SafeArea(
         child: Column(children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -417,7 +434,7 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
             ),
           ),
         ]),
-      ),
+      )),
     );
   }
 

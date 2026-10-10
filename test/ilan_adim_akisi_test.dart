@@ -176,7 +176,7 @@ void main() {
       expect(cre.contains('GridView.count'), isFalse);
       expect(cre.contains('SearchService.services('), isTrue);
       // Katalog sayısı yine kilitli.
-      expect(kHomeCategories.length, 63);
+      expect(kHomeCategories.length, 166);
     });
 
     // ⚠ Gösterge SÜTUN DÜZENİNE geçti: nokta ve etiket aynı sütunda

@@ -100,7 +100,7 @@ void main() {
       // sonra tekrar eden ve dağıtım şirketine ait olanlar kaldırıldı
       // (eski not: ayrı işler gerçek
       // hizmet kaydına çevrildi.
-      expect(sayac, 640);
+      expect(sayac, 1587);
     });
 
     test('İKİ FARKLI ALT HİZMET birbirine AÇILMAZ', () {

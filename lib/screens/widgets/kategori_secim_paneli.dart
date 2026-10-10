@@ -235,8 +235,17 @@ class _KategoriSecimPaneliState extends State<KategoriSecimPaneli> {
             // Arama sonuçları + seçili çipler değişken yükseklikte.
             // Sabit bırakılırsa klavye açıkken taşar ve "Tamam"
             // düğmesi ekran dışında kalır.
-            Expanded(
+            // ⚠ `Expanded` DEĞİL `Flexible` + `shrinkWrap`:
+            // `Expanded` kalan alanı DOLDURMAK zorundadır; arama
+            // kutusu boşken ve tek kategori seçiliyken bile panel
+            // %88'e uzuyor, altta kocaman boş alan kalıyordu.
+            //
+            // `Flexible` listeye "gerektiği kadar, en fazla sınıra
+            // kadar" der: kategori eklendikçe panel dengeli şekilde
+            // uzar, liste sınırı aşınca kendi içinde kayar.
+            Flexible(
               child: ListView(
+                shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 children: [
             // ── `.po-row` — arama sonuçları ──

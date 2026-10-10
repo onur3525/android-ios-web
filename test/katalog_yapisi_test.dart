@@ -28,7 +28,7 @@ void main() {
       // Öncesinde üç kategori kaldırılmıştı — "Oto Bakım & Servis",
       // "Depolama & Lojistik", "Dijital Pazarlama & Reklam".
       expect(kCategoryTree.length, 166);
-      expect(kTreeCategories.length, 63);
+      expect(kTreeCategories.length, 166);
     });
 
     test('517 ALT HİZMET', () {
@@ -42,7 +42,7 @@ void main() {
       // hizmet kaydına çevrildi.
       // ⚠ 1448 → 1493 → 1511: dini hizmetler kategorileriyle birlikte
       // 18 yeni hizmet daha eklendi.
-      expect(toplam, 640);
+      expect(toplam, 1587);
       // ⚠ 1541 → 1569 → 1592: ilk turda 28 hizmet, ikinci turda
       // "muhtemelen zaten var" (6) ve "mantıklı kategori bulunan"
       // (17, Ev Tamiri hariç) toplam 23 hizmet daha eklendi.

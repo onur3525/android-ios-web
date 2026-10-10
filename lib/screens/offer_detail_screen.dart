@@ -19,7 +19,6 @@ import '../data/models/offer.dart';
 import '../data/models/review.dart';
 // ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
 // `tl` kullanılmıyor, tutar `core/tutar_bicimi.dart`tan biçimleniyor.
-import 'widgets/hc_widgets.dart';
 import 'chat_screen.dart';
 import 'review_screen.dart';
 import '../domain/saglayici_ozeti.dart';
@@ -30,7 +29,7 @@ import 'widgets/profil_avatari.dart';
 import 'widgets/durum_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import '../core/geri.dart';
+import '../core/baglanti_modu.dart';
 
 /// Müşteri — Teklif / Teklif Veren Profili (HTML vOffer):
 /// usta kartı (ad, doğrulanmış rozeti, puan), teklif tutarı+notu,
@@ -789,21 +788,6 @@ String _saglayiciAdi(String? tamAd, {required bool acik}) {
       .join(' ');
 }
 
-/// Yorum sahibi maskesi: `A*** Y.` — ad maskeli, soyadın baş harfi.
-String _yorumcuAdi(String? tamAd, {required bool acik}) {
-  final t = (tamAd ?? '').trim();
-  if (t.isEmpty) {
-    return 'Hizmet Alan';
-  }
-  final p = t.split(RegExp(r'\s+')).where((k) => k.isNotEmpty).toList();
-  if (acik) {
-    return t;
-  }
-  final ad = p.first;
-  final maskeli = '${ad[0]}${'*' * (ad.length - 1)}';
-  return p.length > 1 ? '$maskeli ${p[1][0]}.' : maskeli;
-}
-
 /// `%N olumlu yorum` — 4 ve 5 yıldızlı yorumların oranı.
 /// Yorum yoksa `null` döner ve satır HİÇ çizilmez (uydurma yüzde yok).
 /// Hizmet verenin TAMAMLANAN İŞ sayısı (API sözleşmesi §11).
@@ -1099,7 +1083,7 @@ Future<void> _telefonAra(BuildContext context, String? ham) async {
     return;
   }
   final uri = Uri.parse('tel:$d');
-  final acildi = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  final acildi = await launchUrl(uri, mode: acilisModu());
   // ⚠ Sahte başarı YOK: arama uygulaması açılamazsa kullanıcı uyarılır.
   if (!acildi && context.mounted) {
     sysToastErr(context, SysKind.genericError,

@@ -6,7 +6,7 @@ import 'category_tree.dart';
 /// ## BU DOSYA KATALOG DEĞİLDİR
 ///
 /// ⚠ Buradaki hiçbir ad yeni ana kategori ya da yeni alt hizmet
-/// DEĞİLDİR. `kCategoryTree` 63 ana kategori / 640 alt hizmet olarak
+/// DEĞİLDİR. `kCategoryTree` 166 ana kategori / 1587 alt hizmet olarak
 /// AYNEN kalır; alias sayısı hiçbir sayaca, ızgaraya, ikon listesine
 /// veya kart sayısına girmez.
 ///
@@ -98,11 +98,8 @@ String aliasNormalize(String s) {
 const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Ofis ve İşyeri Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),
   ServiceAlias('İşyeri Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),
-  ServiceAlias('Dükkan Temizliği', 'Temizlik Hizmetleri', 'Ofis Temizliği'),
-  ServiceAlias('Taşınma Öncesi Temizlik', 'Temizlik Hizmetleri', 'Taşınma Temizliği'),
   ServiceAlias('Taşınma Sonrası Temizlik', 'Temizlik Hizmetleri', 'Taşınma Temizliği'),
   ServiceAlias('Tadilat Sonrası Temizlik', 'Temizlik Hizmetleri', 'İnşaat Sonrası Temizlik'),
-  ServiceAlias('Buharlı Ev Temizliği', 'Temizlik Hizmetleri', 'Ev Temizliği'),
   ServiceAlias('Günlük Ev Temizliği', 'Temizlik Hizmetleri', 'Ev Temizliği'),
   ServiceAlias('Ev Cam Silme', 'Temizlik Hizmetleri', 'Cam Temizliği'),
   ServiceAlias('Dış Cephe Cam Temizliği', 'Temizlik Hizmetleri', 'Cam Temizliği'),
@@ -113,7 +110,6 @@ const List<ServiceAlias> kServiceAliases = [
   // ── Halı Yıkama ──
   ServiceAlias('Halı Yıkama Temizleme', 'Halı Yıkama', 'Yerinde Halı Yıkama'),
   ServiceAlias('Evde Halı Yıkama', 'Halı Yıkama', 'Yerinde Halı Yıkama'),
-  ServiceAlias('Ofis Halı Yıkama', 'Halı Yıkama', 'Yerinde Halı Yıkama'),
 
   // ── Koltuk ve Döşeme Yıkama ──
   ServiceAlias('Koltuk Yıkama Temizleme', 'Koltuk ve Döşeme Yıkama', 'Koltuk Yıkama'),
@@ -121,10 +117,10 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Koltuk Temizleme', 'Koltuk ve Döşeme Yıkama', 'Koltuk Yıkama'),
   ServiceAlias('Yatak Temizliği', 'Koltuk ve Döşeme Yıkama', 'Yatak Yıkama'),
   ServiceAlias('Yatak Yıkama Temizleme', 'Koltuk ve Döşeme Yıkama', 'Yatak Yıkama'),
-  ServiceAlias('Tül Perde Yıkama', 'Koltuk ve Döşeme Yıkama', 'Perde Yıkama'),
-  ServiceAlias('Zebra Perde Yıkama', 'Koltuk ve Döşeme Yıkama', 'Stor Perde Temizliği'),
-  ServiceAlias('Stor Perde Yıkama Temizleme', 'Koltuk ve Döşeme Yıkama', 'Stor Perde Temizliği'),
-  ServiceAlias('Yerinde Stor Perde Yıkama', 'Koltuk ve Döşeme Yıkama', 'Stor Perde Temizliği'),
+  ServiceAlias('Tül Perde Yıkama', 'Kuru Temizleme', 'Perde Yıkama'),
+  ServiceAlias('Zebra Perde Yıkama', 'Kuru Temizleme', 'Stor Perde Temizliği'),
+  ServiceAlias('Stor Perde Yıkama Temizleme', 'Kuru Temizleme', 'Stor Perde Temizliği'),
+  ServiceAlias('Yerinde Stor Perde Yıkama', 'Kuru Temizleme', 'Stor Perde Temizliği'),
 
   // ── İlaçlama ve Haşere Kontrolü ──
   ServiceAlias('Hamam Böceği İlaçlama', 'İlaçlama ve Haşere Kontrolü', 'Böcek İlaçlama'),
@@ -147,15 +143,11 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Tuvalet Tıkanıklığı Açma', 'Su Tesisatı', 'Tıkanıklık Açma'),
   ServiceAlias('Lavabo Tıkanıklığı Açma', 'Su Tesisatı', 'Tıkanıklık Açma'),
   ServiceAlias('Mutfak Gideri Açma', 'Su Tesisatı', 'Gider Açma'),
-  ServiceAlias('Batarya Montajı', 'Su Tesisatı', 'Musluk Montajı'),
   ServiceAlias('Musluk Batarya Değişimi', 'Su Tesisatı', 'Musluk Montajı'),
   ServiceAlias('Su Deposu Yıkama', 'Su Tesisatı', 'Su Deposu Temizliği'),
   ServiceAlias('Musluk Tamiri', 'Su Tesisatı', 'Tesisat Tamiri'),
   ServiceAlias('Batarya Tamiri', 'Su Tesisatı', 'Tesisat Tamiri'),
-  ServiceAlias('Klozet Tamiri', 'Su Tesisatı', 'Tesisat Tamiri'),
-  ServiceAlias('Gömme Rezervuar Tamiri', 'Su Tesisatı', 'Tesisat Tamiri'),
-  ServiceAlias('Kalorifer Tesisatı', 'Su Tesisatı', 'Petek Borusu Tesisatı'),
-  ServiceAlias('Radyatör Tesisatı', 'Su Tesisatı', 'Petek Borusu Tesisatı'),
+  ServiceAlias('Radyatör Tesisatı', 'Isıtma Sistemleri', 'Petek Borusu Tesisatı'),
   ServiceAlias('Su Arıtma Cihazı Servisi', 'Su Tesisatı', 'Su Arıtma Servisi'),
 
   // ── Doğalgaz ──
@@ -169,7 +161,6 @@ const List<ServiceAlias> kServiceAliases = [
   // ⚠ Tespit artık AYRI hizmet; alias oraya bağlanır.
   ServiceAlias('Gaz Kaçak Tespiti', 'Doğalgaz', 'Doğalgaz Kaçak Tespiti'),
   ServiceAlias('Doğalgaz Boru Değişimi', 'Doğalgaz', 'Doğalgaz Boru Hattı Tadilatı'),
-  ServiceAlias('Doğalgaz Hat Tadilatı', 'Doğalgaz', 'Doğalgaz Boru Hattı Tadilatı'),
 
   // ── Kombi (Montaj + Servis) ──
   ServiceAlias('Kombi Arıza', 'Kombi Servis', 'Kombi Tamiri'),
@@ -177,17 +168,15 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Kombi Servis Tamiri', 'Kombi Servis', 'Kombi Tamiri'),
   ServiceAlias('Kombi Temizleme', 'Kombi Servis', 'Kombi Bakımı'),
   ServiceAlias('Periyodik Kombi Bakımı', 'Kombi Servis', 'Kombi Bakımı'),
-  ServiceAlias('Kombi Sökme Takma', 'Kombi Montaj', 'Kombi Montajı'),
-  ServiceAlias('Kombi Yeri Değiştirme', 'Kombi Montaj', 'Kombi Montajı'),
-  ServiceAlias('Kombi Yenileme', 'Kombi Montaj', 'Kombi Değişimi'),
+  ServiceAlias('Kombi Sökme Takma', 'Doğalgaz', 'Kombi Montajı'),
+  ServiceAlias('Kombi Yeri Değiştirme', 'Doğalgaz', 'Kombi Montajı'),
+  ServiceAlias('Kombi Yenileme', 'Doğalgaz', 'Kombi Değişimi'),
 
   // ── Isıtma Sistemleri ──
   ServiceAlias('Radyatör Petek Temizliği', 'Isıtma Sistemleri', 'Petek Temizliği'),
   ServiceAlias('Radyatör Petek Montajı', 'Isıtma Sistemleri', 'Petek Montajı'),
   ServiceAlias('Panel Radyatör Montajı', 'Isıtma Sistemleri', 'Petek Montajı'),
   ServiceAlias('Yerden Isıtma Sistemi', 'Isıtma Sistemleri', 'Yerden Isıtma'),
-  ServiceAlias('Yerden Isıtma Tamiri', 'Isıtma Sistemleri', 'Yerden Isıtma'),
-  ServiceAlias('Yerden Isıtma Bakımı', 'Isıtma Sistemleri', 'Yerden Isıtma'),
   ServiceAlias('Yerden Isıtma Temizliği', 'Isıtma Sistemleri', 'Yerden Isıtma'),
   ServiceAlias('Tüplü Şofben Tamiri', 'Isıtma Sistemleri', 'Şofben Tamiri'),
   ServiceAlias('Elektrikli Şofben Tamiri', 'Isıtma Sistemleri', 'Şofben Tamiri'),
@@ -200,13 +189,9 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Elektrik Hattı Çekme', 'Elektrik', 'Elektrik Tesisatı'),
   ServiceAlias('Kablo Hattı Çekme', 'Elektrik', 'Elektrik Tesisatı'),
   ServiceAlias('Daire Elektrik Tesisatı', 'Elektrik', 'Elektrik Tesisatı'),
-  ServiceAlias('Elektrik Tesisatı Yenileme', 'Elektrik', 'Elektrik Tesisatı'),
-  ServiceAlias('Priz Değişimi', 'Elektrik', 'Priz Montajı'),
   ServiceAlias('Işık Anahtarı Montajı', 'Elektrik', 'Anahtar Montajı'),
-  ServiceAlias('Anahtar Değişimi', 'Elektrik', 'Anahtar Montajı'),
   ServiceAlias('Avize Takma', 'Elektrik', 'Avize Montajı'),
   ServiceAlias('Lamba Montajı', 'Elektrik', 'Aydınlatma Sistemleri'),
-  ServiceAlias('LED Aydınlatma Montajı', 'Elektrik', 'Aydınlatma Sistemleri'),
   ServiceAlias('Elektrik Panosu Montajı', 'Elektrik', 'Sigorta Panosu Montajı'),
   ServiceAlias('Pano Revizyonu', 'Elektrik', 'Elektrik Panosu Yenileme'),
   ServiceAlias.kategoriNiyeti('Topraklama Ölçümü', 'Elektrik'),
@@ -214,26 +199,22 @@ const List<ServiceAlias> kServiceAliases = [
   // ── Güvenlik Sistemleri ──
   ServiceAlias('Güvenlik Kamerası Kurulumu', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
   ServiceAlias('Güvenlik Kamera Montajı', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
-  ServiceAlias('Kamera Montajı', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
   ServiceAlias('Kamera Sistemleri', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
   ServiceAlias('CCTV Sistemleri', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
   ServiceAlias('Kablosuz Alarm Sistemi', 'Güvenlik Sistemleri', 'Alarm Sistemi Kurulumu'),
   ServiceAlias('Ev Alarm Sistemleri', 'Güvenlik Sistemleri', 'Alarm Sistemi Kurulumu'),
   ServiceAlias('Alarm Güvenlik Sistemi', 'Güvenlik Sistemleri', 'Alarm Sistemi Kurulumu'),
-  ServiceAlias('Görüntülü Diafon', 'Güvenlik Sistemleri', 'Görüntülü Diafon Montajı'),
-  ServiceAlias('Diafon Sistemleri', 'Güvenlik Sistemleri', 'Görüntülü Diafon Montajı'),
-  ServiceAlias('Akıllı Kapı Kilidi', 'Güvenlik Sistemleri', 'Akıllı Kilit'),
-  ServiceAlias('Yangın Alarm Sistemi', 'Güvenlik Sistemleri', 'Yangın Algılama'),
+  ServiceAlias('Diafon Sistemleri', 'Güvenlik Sistemleri', 'Görüntülü Diafon'),
+  ServiceAlias('Akıllı Kapı Kilidi', 'Çilingir ve Kilit', 'Akıllı Kilit'),
 
   // ── Klima Montaj ve Servis ──
-  ServiceAlias('Klima Sökme', 'Klima Montaj ve Servis', 'Klima Montajı'),
   ServiceAlias('Klima Yeri Değiştirme', 'Klima Montaj ve Servis', 'Klima Montajı'),
   ServiceAlias('Klima Soğutmuyor', 'Klima Montaj ve Servis', 'Klima Tamiri'),
   ServiceAlias('Klima Periyodik Bakım', 'Klima Montaj ve Servis', 'Klima Bakımı'),
   ServiceAlias('Klima Yıkama', 'Klima Montaj ve Servis', 'Klima Temizliği'),
-  ServiceAlias('Merkezi Klima', 'Klima Montaj ve Servis', 'VRF Sistemleri'),
-  ServiceAlias('VRV Klima Servisi', 'Klima Montaj ve Servis', 'VRF Sistemleri'),
-  ServiceAlias('VRF Klima Servisi', 'Klima Montaj ve Servis', 'VRF Sistemleri'),
+  ServiceAlias('Merkezi Klima', 'Klima Montaj ve Servis', 'VRF Klima Sistemi Bakımı'),
+  ServiceAlias('VRV Klima Servisi', 'Klima Montaj ve Servis', 'VRF Klima Sistemi Bakımı'),
+  ServiceAlias('VRF Klima Servisi', 'Klima Montaj ve Servis', 'VRF Klima Sistemi Bakımı'),
   ServiceAlias.kategoriNiyeti('Klima Servisi', 'Klima Montaj ve Servis'),
 
   // ── Beyaz Eşya Servisi ──
@@ -253,34 +234,26 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Cep Telefonu Tamiri', 'Elektronik Cihaz Tamiri', 'Telefon Tamiri'),
   ServiceAlias('iPad Tablet Tamiri', 'Elektronik Cihaz Tamiri', 'Tablet Tamiri'),
   ServiceAlias('Playstation Tamiri', 'Elektronik Cihaz Tamiri', 'Oyun Konsolu Tamiri'),
-  ServiceAlias('Xbox Tamiri', 'Elektronik Cihaz Tamiri', 'Oyun Konsolu Tamiri'),
 
   // ── Uydu ve Anten Sistemleri ──
-  ServiceAlias('Çanak Anten Montajı', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Kurulumu'),
-  ServiceAlias('Uydu Montajı', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Kurulumu'),
-  ServiceAlias('Uydu Kurulumu', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Kurulumu'),
-  ServiceAlias('Uydu Ayarlama', 'Uydu ve Anten Sistemleri', 'Çanak Anten Ayarı'),
-  ServiceAlias('Kanal Ayarlama', 'Uydu ve Anten Sistemleri', 'Çanak Anten Ayarı'),
-  ServiceAlias('Çanak Ayarı', 'Uydu ve Anten Sistemleri', 'Çanak Anten Ayarı'),
+  ServiceAlias('Çanak Anten Montajı', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Montajı'),
+  ServiceAlias('Uydu Montajı', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Montajı'),
+  ServiceAlias('Uydu Ayarlama', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Ayarı'),
+  ServiceAlias('Kanal Ayarlama', 'Uydu ve Anten Sistemleri', 'Uydu Kanal Ayarlama'),
+  ServiceAlias('Çanak Ayarı', 'Uydu ve Anten Sistemleri', 'Uydu Anteni Ayarı'),
   ServiceAlias('Merkezi Sistem Uydu', 'Uydu ve Anten Sistemleri', 'Merkezi Uydu Sistemi'),
   ServiceAlias('Merkezi Uydu Kurulumu', 'Uydu ve Anten Sistemleri', 'Merkezi Uydu Sistemi'),
-  ServiceAlias('TV Kurulumu', 'Uydu ve Anten Sistemleri', 'Televizyon Duvar Montajı'),
-  ServiceAlias('Televizyon Duvara Montaj', 'Uydu ve Anten Sistemleri', 'Televizyon Duvar Montajı'),
-  ServiceAlias('TV Duvar Askı Montajı', 'Uydu ve Anten Sistemleri', 'Televizyon Duvar Montajı'),
 
   // ── İnternet ve Ağ Kurulumu ──
   ServiceAlias('İnternet Kurulum', 'İnternet ve Ağ Kurulumu', 'Modem Kurulumu'),
   ServiceAlias('Modem Kurulum', 'İnternet ve Ağ Kurulumu', 'Modem Kurulumu'),
-  ServiceAlias('Router Kurulumu', 'İnternet ve Ağ Kurulumu', 'Modem Kurulumu'),
-  ServiceAlias('İnternet Kablosu Çekme', 'İnternet ve Ağ Kurulumu', 'Ağ Kablolama'),
-  ServiceAlias('İnternet Hattı Çekme', 'İnternet ve Ağ Kurulumu', 'Ağ Kablolama'),
-  ServiceAlias('İnternet Tesisatı', 'İnternet ve Ağ Kurulumu', 'Ağ Kablolama'),
-  ServiceAlias('Network Kablolama', 'İnternet ve Ağ Kurulumu', 'Ağ Kablolama'),
-  ServiceAlias('Data Kablolama', 'İnternet ve Ağ Kurulumu', 'Ağ Kablolama'),
-  ServiceAlias('WiFi Destek', 'İnternet ve Ağ Kurulumu', 'Wifi Güçlendirme'),
-  ServiceAlias('WiFi Sinyal Güçlendirme', 'İnternet ve Ağ Kurulumu', 'Wifi Güçlendirme'),
-  ServiceAlias('Modem Çekim Alanı Güçlendirme', 'İnternet ve Ağ Kurulumu', 'Wifi Güçlendirme'),
-  ServiceAlias('Akıllı Ev Otomasyonu', 'İnternet ve Ağ Kurulumu', 'Akıllı Ev Sistemleri'),
+  ServiceAlias('İnternet Hattı Çekme', 'İnternet ve Ağ Kurulumu', 'İnternet Kablosu Çekme'),
+  ServiceAlias('İnternet Tesisatı', 'İnternet ve Ağ Kurulumu', 'İnternet Kablosu Çekme'),
+  ServiceAlias('Network Kablolama', 'İnternet ve Ağ Kurulumu', 'İnternet Kablosu Çekme'),
+  ServiceAlias('Data Kablolama', 'İnternet ve Ağ Kurulumu', 'İnternet Kablosu Çekme'),
+  ServiceAlias('WiFi Destek', 'İnternet ve Ağ Kurulumu', 'Wi-Fi Sinyal Güçlendirme'),
+  ServiceAlias('WiFi Sinyal Güçlendirme', 'İnternet ve Ağ Kurulumu', 'Wi-Fi Sinyal Güçlendirme'),
+  ServiceAlias('Modem Çekim Alanı Güçlendirme', 'İnternet ve Ağ Kurulumu', 'Wi-Fi Sinyal Güçlendirme'),
 
   // ── Boya ve Badana ──
   ServiceAlias('Boyacı', 'Boya ve Badana', 'Boya Badana'),
@@ -325,7 +298,7 @@ const List<ServiceAlias> kServiceAliases = [
   // ── Banyo Tadilat ve Montaj ──
   ServiceAlias('Duşa Kabin', 'Banyo Tadilat ve Montaj', 'Duşakabin Montajı'),
   ServiceAlias('Duşa Kabin Montajı', 'Banyo Tadilat ve Montaj', 'Duşakabin Montajı'),
-  ServiceAlias('Lavabo Kurulumu', 'Banyo Tadilat ve Montaj', 'Lavabo Montajı'),
+  ServiceAlias('Lavabo Kurulumu', 'Su Tesisatı', 'Lavabo Montajı'),
   ServiceAlias('Banyo Dolabı Kurulumu', 'Banyo Tadilat ve Montaj', 'Banyo Dolabı Montajı'),
   ServiceAlias('Komple Banyo Yenileme', 'Banyo Tadilat ve Montaj', 'Banyo Tadilatı'),
   ServiceAlias.kategoriNiyeti('Jakuzi Montajı', 'Banyo Tadilat ve Montaj'),
@@ -348,7 +321,6 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Temel Atma', 'İnşaat ve Kaba Yapı', 'Kaba İnşaat'),
   ServiceAlias('Beton Dökme', 'İnşaat ve Kaba Yapı', 'Şap Atma'),
   ServiceAlias('Şap Dökümü', 'İnşaat ve Kaba Yapı', 'Şap Atma'),
-  ServiceAlias('Duvar Ustası', 'İnşaat ve Kaba Yapı', 'Duvar Örme'),
   ServiceAlias('Ytong Duvar', 'İnşaat ve Kaba Yapı', 'Duvar Örme'),
   ServiceAlias('Yıkım', 'İnşaat ve Kaba Yapı', 'Yıkım İşleri'),
   ServiceAlias('Bina Yıkımı', 'İnşaat ve Kaba Yapı', 'Yıkım İşleri'),
@@ -382,7 +354,6 @@ const List<ServiceAlias> kServiceAliases = [
   // ── Yalıtım ve Mantolama ──
   ServiceAlias('Dış Cephe Mantolama', 'Yalıtım ve Mantolama', 'Mantolama'),
   ServiceAlias('İç Cephe Mantolama', 'Yalıtım ve Mantolama', 'Mantolama'),
-  ServiceAlias('Teras Su Yalıtımı', 'Yalıtım ve Mantolama', 'Teras İzolasyonu'),
   ServiceAlias('Bodrum Su Yalıtımı', 'Yalıtım ve Mantolama', 'Su Yalıtımı'),
   ServiceAlias('Zemin Su Yalıtımı', 'Yalıtım ve Mantolama', 'Su Yalıtımı'),
   ServiceAlias('Membran Döşeme', 'Yalıtım ve Mantolama', 'Su Yalıtımı'),
@@ -430,24 +401,24 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias.kategoriNiyeti('Ahşap Dekorasyon', 'Marangozluk ve Ahşap İşleri'),
 
   // ── Kapı Montaj ve Tamir ──
-  ServiceAlias('Amerikan Kapı Montajı', 'Kapı Montaj ve Tamir', 'İç Kapı Montajı'),
-  ServiceAlias('Lake Kapı Montajı', 'Kapı Montaj ve Tamir', 'İç Kapı Montajı'),
-  ServiceAlias('Melamin Kapı Montajı', 'Kapı Montaj ve Tamir', 'İç Kapı Montajı'),
-  ServiceAlias('Ahşap Kapı Montajı', 'Kapı Montaj ve Tamir', 'İç Kapı Montajı'),
-  ServiceAlias('Amerikan Panel Kapı Yapımı', 'Kapı Montaj ve Tamir', 'İç Kapı İmalatı'),
-  ServiceAlias('Ahşap Kapı Tamiri', 'Kapı Montaj ve Tamir', 'Kapı Tamiri'),
-  ServiceAlias('İç Kapı Tamiri', 'Kapı Montaj ve Tamir', 'Kapı Tamiri'),
-  ServiceAlias('Çelik Kapı Kurulumu', 'Kapı Montaj ve Tamir', 'Çelik Kapı Montajı'),
-  ServiceAlias('Çelik Kapı Onarımı', 'Kapı Montaj ve Tamir', 'Çelik Kapı Tamiri'),
+  ServiceAlias('Amerikan Kapı Montajı', 'Mobilya Yapım ve Montaj', 'İç Kapı Montajı'),
+  ServiceAlias('Lake Kapı Montajı', 'Mobilya Yapım ve Montaj', 'İç Kapı Montajı'),
+  ServiceAlias('Melamin Kapı Montajı', 'Mobilya Yapım ve Montaj', 'İç Kapı Montajı'),
+  ServiceAlias('Ahşap Kapı Montajı', 'Mobilya Yapım ve Montaj', 'İç Kapı Montajı'),
+  ServiceAlias('Amerikan Panel Kapı Yapımı', 'Mobilya Yapım ve Montaj', 'İç Kapı İmalatı'),
+  ServiceAlias('Ahşap Kapı Tamiri', 'Mobilya Yapım ve Montaj', 'Kapı Tamiri'),
+  ServiceAlias('İç Kapı Tamiri', 'Mobilya Yapım ve Montaj', 'Kapı Tamiri'),
+  ServiceAlias('Çelik Kapı Kurulumu', 'Kapı Sistemleri', 'Çelik Kapı Montajı'),
+  ServiceAlias('Çelik Kapı Onarımı', 'Kapı Sistemleri', 'Çelik Kapı Tamiri'),
 
   // ── Cam Balkon ──
-  ServiceAlias('Katlanır Cam Balkon', 'Cam Balkon Sistemleri', 'Cam Balkon'),
-  ServiceAlias('Sürgülü Cam Balkon', 'Cam Balkon Sistemleri', 'Cam Balkon'),
-  ServiceAlias('Balkon Camla Kapatma', 'Cam Balkon Sistemleri', 'Cam Balkon'),
-  ServiceAlias('Cam Balkon Cam Değişimi', 'Cam Balkon Sistemleri', 'Cam Değişimi'),
-  ServiceAlias('Kırık Cam Tamiri', 'Cam Balkon Sistemleri', 'Cam Değişimi'),
-  ServiceAlias('Çift Cam Tamiri', 'Cam Balkon Sistemleri', 'Cam Değişimi'),
-  ServiceAlias('Ayna Asma', 'Cam Balkon Sistemleri', 'Ayna Montajı'),
+  ServiceAlias('Katlanır Cam Balkon', 'Cam ve Ayna Hizmetleri', 'Cam Balkon'),
+  ServiceAlias('Sürgülü Cam Balkon', 'Cam ve Ayna Hizmetleri', 'Cam Balkon'),
+  ServiceAlias('Balkon Camla Kapatma', 'Cam ve Ayna Hizmetleri', 'Cam Balkon'),
+  ServiceAlias('Cam Balkon Cam Değişimi', 'Cam ve Ayna Hizmetleri', 'Cam Değişimi'),
+  ServiceAlias('Kırık Cam Tamiri', 'Cam ve Ayna Hizmetleri', 'Cam Değişimi'),
+  ServiceAlias('Çift Cam Tamiri', 'Cam ve Ayna Hizmetleri', 'Cam Değişimi'),
+  ServiceAlias('Ayna Asma', 'Cam ve Ayna Hizmetleri', 'Ayna Montajı'),
   ServiceAlias.kategoriNiyeti('Duşakabin Cam Değişimi', 'Cam Balkon Sistemleri'),
   ServiceAlias.kategoriNiyeti('Duşakabin Cam Tamiri', 'Cam Balkon Sistemleri'),
   ServiceAlias.kategoriNiyeti('Vitrin Camı', 'Cam Balkon Sistemleri'),
@@ -482,14 +453,9 @@ const List<ServiceAlias> kServiceAliases = [
   // ── Çilingir ve Kilit ──
   ServiceAlias('Kilit Açma', 'Çilingir ve Kilit', 'Kapı Açma'),
   ServiceAlias('Kapı Kilidi Açma', 'Çilingir ve Kilit', 'Kapı Açma'),
-  ServiceAlias('Çelik Kapı Açma', 'Çilingir ve Kilit', 'Kapı Açma'),
   ServiceAlias('Kilit Değiştirme', 'Çilingir ve Kilit', 'Kilit Değişimi'),
   ServiceAlias('Çelik Kapı Kilit Değiştirme', 'Çilingir ve Kilit', 'Kilit Değişimi'),
   ServiceAlias('Barel Değiştirme', 'Çilingir ve Kilit', 'Barel Değişimi'),
-  ServiceAlias('Silindir Değişimi', 'Çilingir ve Kilit', 'Barel Değişimi'),
-  ServiceAlias('Oto Anahtar', 'Çilingir ve Kilit', 'Oto Anahtarcı'),
-  ServiceAlias('Oto Çilingir', 'Çilingir ve Kilit', 'Oto Anahtarcı'),
-  ServiceAlias('Araç Anahtarı', 'Çilingir ve Kilit', 'Oto Anahtarcı'),
   ServiceAlias.kategoriNiyeti('Çilingir', 'Çilingir ve Kilit'),
   ServiceAlias.kategoriNiyeti('Anahtarcı', 'Çilingir ve Kilit'),
 
@@ -521,14 +487,11 @@ const List<ServiceAlias> kServiceAliases = [
 
   // ── Nakliyat ve Taşımacılık ──
   ServiceAlias('Eşya Taşıma', 'Nakliyat ve Taşımacılık', 'Parça Eşya Taşıma'),
-  ServiceAlias('Koltuk Taşıma', 'Nakliyat ve Taşımacılık', 'Parça Eşya Taşıma'),
-  ServiceAlias('Yük Taşıma', 'Nakliyat ve Taşımacılık', 'Parça Eşya Taşıma'),
-  ServiceAlias('Buzdolabı Taşıma', 'Nakliyat ve Taşımacılık', 'Parça Eşya Taşıma'),
   ServiceAlias('Çamaşır Makinesi Taşıma', 'Nakliyat ve Taşımacılık', 'Parça Eşya Taşıma'),
   ServiceAlias('Ev Taşıma', 'Nakliyat ve Taşımacılık', 'Evden Eve Nakliyat'),
   ServiceAlias('Ofis Nakliyesi', 'Nakliyat ve Taşımacılık', 'Ofis Taşıma'),
   ServiceAlias('Asansörlü Ev Taşıma', 'Nakliyat ve Taşımacılık', 'Asansörlü Nakliyat'),
-  ServiceAlias('Depolama', 'Nakliyat ve Taşımacılık', 'Eşya Depolama'),
+  ServiceAlias('Depolama', 'Depolama Hizmetleri', 'Eşya Depolama'),
   ServiceAlias.kategoriNiyeti('Nakliye', 'Nakliyat ve Taşımacılık'),
   ServiceAlias.kategoriNiyeti('Şehirler Arası Parça Eşya Taşıma', 'Nakliyat ve Taşımacılık'),
   ServiceAlias.kategoriNiyeti('Şehir İçi Nakliyat', 'Nakliyat ve Taşımacılık'),
@@ -538,9 +501,7 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Motosiklet Kargo', 'Kurye ve Küçük Taşıma', 'Moto Kurye'),
   ServiceAlias('MotoKurye', 'Kurye ve Küçük Taşıma', 'Moto Kurye'),
   ServiceAlias('Aynı Gün Paket Teslimi', 'Kurye ve Küçük Taşıma', 'Paket Taşıma'),
-  ServiceAlias('Koli Taşıma', 'Kurye ve Küçük Taşıma', 'Paket Taşıma'),
   ServiceAlias('Paket Teslimatı', 'Kurye ve Küçük Taşıma', 'Paket Taşıma'),
-  ServiceAlias('Minivan Nakliye', 'Kurye ve Küçük Taşıma', 'Küçük Nakliye'),
   ServiceAlias('Kamyonet Nakliye', 'Kurye ve Küçük Taşıma', 'Küçük Nakliye'),
   ServiceAlias('Panelvan Nakliye', 'Kurye ve Küçük Taşıma', 'Küçük Nakliye'),
   ServiceAlias('Doblo Nakliye', 'Kurye ve Küçük Taşıma', 'Küçük Nakliye'),
@@ -557,14 +518,13 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias.kategoriNiyeti('Asansör Servisi', 'Asansör Montaj ve Bakım'),
 
   // ── Mühendislik ve Proje ──
-  ServiceAlias('Statik Proje Çizimi', 'Mühendislik ve Proje', 'Statik Proje'),
-  ServiceAlias('Mimari Proje Çizimi', 'Mühendislik ve Proje', 'Mimari Proje'),
-  ServiceAlias('Elektrik Tesisat Projesi', 'Mühendislik ve Proje', 'Elektrik Projesi'),
-  ServiceAlias('Elektrik Proje Çizimi', 'Mühendislik ve Proje', 'Elektrik Projesi'),
-  ServiceAlias('Mekanik Proje', 'Mühendislik ve Proje', 'Mekanik Tesisat Projesi'),
-  ServiceAlias('Mekanik Proje Çizimi', 'Mühendislik ve Proje', 'Mekanik Tesisat Projesi'),
-  ServiceAlias('Zemin Etüdü Raporu', 'Mühendislik ve Proje', 'Zemin Etüdü'),
-  ServiceAlias('Enerji Kimlik Belgesi Raporu', 'Mühendislik ve Proje', 'Enerji Kimlik Belgesi'),
+  ServiceAlias('Statik Proje Çizimi', 'Statik ve Yapı Projeleri', 'Statik Proje'),
+  ServiceAlias('Mimari Proje Çizimi', 'Mimari Proje', 'Mimari Proje'),
+  ServiceAlias('Elektrik Proje Çizimi', 'Elektrik Projeleri', 'Elektrik Projesi'),
+  ServiceAlias('Mekanik Proje', 'Mekanik Projeler', 'Mekanik Tesisat Projesi'),
+  ServiceAlias('Mekanik Proje Çizimi', 'Mekanik Projeler', 'Mekanik Tesisat Projesi'),
+  ServiceAlias('Zemin Etüdü Raporu', 'Zemin ve Jeoteknik', 'Zemin Etüdü'),
+  ServiceAlias('Enerji Kimlik Belgesi Raporu', 'Enerji ve Yapı Belgelendirme', 'Enerji Kimlik Belgesi'),
   ServiceAlias.kategoriNiyeti('İnşaat Proje Çizimi', 'Mühendislik ve Proje'),
 
   // ── Oto Çekici ve Yol Yardım ──
@@ -638,18 +598,17 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias.kategoriNiyeti('Motosiklet Eğitimi', 'Sürücü Eğitimi'),
 
   // ── Spor ve Kişisel Antrenör ──
-  ServiceAlias('Personal Trainer', 'Spor ve Kişisel Antrenör', 'Fitness Özel Ders'),
-  ServiceAlias('Spor Koçu', 'Spor ve Kişisel Antrenör', 'Fitness Özel Ders'),
-  ServiceAlias('Online Personal Trainer', 'Spor ve Kişisel Antrenör', 'Fitness Özel Ders'),
-  ServiceAlias('Online Fitness Dersi', 'Spor ve Kişisel Antrenör', 'Fitness Özel Ders'),
-  ServiceAlias('Reformer Pilates', 'Spor ve Kişisel Antrenör', 'Pilates Dersi'),
-  ServiceAlias('Grup Reformer Pilates', 'Spor ve Kişisel Antrenör', 'Pilates Dersi'),
-  ServiceAlias('Online Pilates', 'Spor ve Kişisel Antrenör', 'Pilates Dersi'),
-  ServiceAlias('Mat Pilates', 'Spor ve Kişisel Antrenör', 'Pilates Dersi'),
-  ServiceAlias('Yetişkin Yüzme Dersi', 'Spor ve Kişisel Antrenör', 'Yüzme Dersi'),
-  ServiceAlias('Çocuk Yüzme Dersi', 'Spor ve Kişisel Antrenör', 'Yüzme Dersi'),
-  ServiceAlias('Tenis Kursu', 'Spor ve Kişisel Antrenör', 'Tenis Dersi'),
-  ServiceAlias('Tenis Grup Dersi', 'Spor ve Kişisel Antrenör', 'Tenis Dersi'),
+  ServiceAlias('Spor Koçu', 'Spor', 'Fitness Özel Ders'),
+  ServiceAlias('Online Personal Trainer', 'Spor', 'Fitness Özel Ders'),
+  ServiceAlias('Online Fitness Dersi', 'Spor', 'Fitness Özel Ders'),
+  ServiceAlias('Reformer Pilates', 'Spor', 'Pilates'),
+  ServiceAlias('Grup Reformer Pilates', 'Spor', 'Pilates'),
+  ServiceAlias('Online Pilates', 'Spor', 'Pilates'),
+  ServiceAlias('Mat Pilates', 'Spor', 'Pilates'),
+  ServiceAlias('Yetişkin Yüzme Dersi', 'Spor', 'Yüzme Dersi'),
+  ServiceAlias('Çocuk Yüzme Dersi', 'Spor', 'Yüzme Dersi'),
+  ServiceAlias('Tenis Kursu', 'Spor', 'Tenis Dersi'),
+  ServiceAlias('Tenis Grup Dersi', 'Spor', 'Tenis Dersi'),
 
   // ── Müzik Dersleri ──
   ServiceAlias('Çocuk Piyano Dersi', 'Müzik Dersleri', 'Piyano Dersi'),
@@ -723,7 +682,6 @@ const List<ServiceAlias> kServiceAliases = [
 
   // ── Evcil Hayvan Hizmetleri ──
   ServiceAlias('Evde Köpek Bakımı', 'Evcil Hayvan Hizmetleri', 'Evcil Hayvan Bakımı'),
-  ServiceAlias('Kedi Bakımı', 'Evcil Hayvan Hizmetleri', 'Evcil Hayvan Bakımı'),
   ServiceAlias('Evde Kedi Bakımı', 'Evcil Hayvan Hizmetleri', 'Evcil Hayvan Bakımı'),
   ServiceAlias('Köpek Oteli', 'Evcil Hayvan Hizmetleri', 'Evcil Hayvan Bakımı'),
   ServiceAlias('Kedi Oteli', 'Evcil Hayvan Hizmetleri', 'Evcil Hayvan Bakımı'),

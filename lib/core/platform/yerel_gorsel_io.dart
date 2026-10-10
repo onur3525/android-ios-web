@@ -23,15 +23,29 @@ Widget yerelGorsel(
   BoxFit? fit,
   WidgetBuilder? hataYedegi,
 }) =>
-    Image.file(
-      File(yol),
-      width: width,
-      height: height,
-      fit: fit,
-      errorBuilder: hataYedegi == null
-          ? null
-          : (context, _, __) => hataYedegi(context),
-    );
+    // ⚠ SUNUCU FOTOĞRAFI (imzalı https adresi): ağdan çizilir. Yerel
+    // dosya yolları `https://` ile başlamaz; onların davranışı AYNEN.
+    _uzakMi(yol)
+        ? Image.network(
+            yol,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: hataYedegi == null
+                ? null
+                : (context, _, __) => hataYedegi(context),
+          )
+        : Image.file(
+            File(yol),
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: hataYedegi == null
+                ? null
+                : (context, _, __) => hataYedegi(context),
+          );
+
+bool _uzakMi(String yol) => yol.startsWith('https://');
 
 /// Dosyanın baytları — yükleme akışı için.
 Future<Uint8List> yerelBaytlar(String yol) => File(yol).readAsBytes();
@@ -40,7 +54,7 @@ Future<Uint8List> yerelBaytlar(String yol) => File(yol).readAsBytes();
 ///
 /// ⚠ EŞ ZAMANLI (`existsSync`): çağrıldığı yerler `build` içinde ve
 /// bugünkü davranış budur.
-bool yerelVarMi(String yol) => File(yol).existsSync();
+bool yerelVarMi(String yol) => _uzakMi(yol) || File(yol).existsSync();
 
 /// Dosyanın bayt boyutu — yükleme öncesi `sizeBytes` için.
 Future<int> yerelBoyut(String yol) => File(yol).length();

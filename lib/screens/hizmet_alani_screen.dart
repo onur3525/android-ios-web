@@ -16,10 +16,13 @@ import '../data/category_tree.dart';
 import '../data/izmir.dart';
 import '../data/hizmet_alanlari.dart';
 import '../data/services/search_service.dart';
+import '../ui/header_arama.dart' show kHizmetAramaIpucu;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'category_screen.dart';
 import 'category_ui.dart';
+import '../ui/panel_rotasi.dart';
+import '../ui/web_panel.dart';
 
 class HizmetAlaniScreen extends StatefulWidget {
   const HizmetAlaniScreen({super.key, required this.alan});
@@ -145,9 +148,16 @@ class _HizmetAlaniScreenState extends State<HizmetAlaniScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠ WEB PANELİNDE GERİ OKU GÖRÜNÜR (akış içi): X akışın
+          // tamamını kapatır, bir önceki ekrana dönmek bu okla. Sıradan
+          // `RefBackButton` panelde kendini gizlediği için `akisIci`
+          // kullanılır. Mobilde `panelMi` hep false → önceki düğme aynen.
           Align(
             alignment: Alignment.centerLeft,
-            child: RefBackButton(onTap: () => Navigator.of(context).pop()),
+            child: WebPanel.panelMi(context)
+                ? RefBackButton.akisIci(
+                    onTap: () => Navigator.of(context).pop())
+                : RefBackButton(onTap: () => Navigator.of(context).pop()),
           ),
           const SizedBox(height: 6),
           RefPageTitle(widget.alan.ad, geriDugmesi: false),
@@ -198,7 +208,7 @@ class _HizmetAlaniScreenState extends State<HizmetAlaniScreen> {
                       errorBorder: InputBorder.none,
                       focusedErrorBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
-                      hintText: 'Hangi hizmete ihtiyacınız var?',
+                      hintText: kHizmetAramaIpucu,
                       hintStyle: refText(
                           size: 14.5,
                           weight: RF.w400,
@@ -290,7 +300,8 @@ class _HizmetSonucSatiri extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        akisRotasi<void>(
+          // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
           // ⚠ ÇATI BAĞLAMI TAŞINIR (mevcut kural) ve hizmet SEÇİLİ
           // gelir.
           builder: (_) => CategoryScreen(
@@ -362,7 +373,8 @@ class _KategoriSatiri extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        akisRotasi<void>(
+          // ⚠ WEB'DE PANEL; mobilde aynı sayfa rotası.
           // ⚠ ÇATI BAĞLAMI TAŞINIR: kategori ekranı yalnız bu çatıya
           // ait hizmetleri gösterir.
           builder: (_) => CategoryScreen(category: kategori, alan: alan),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -143,6 +144,17 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── ⚠ WEB: STANDART SAYFA BAŞLIĞI (kullanıcı kararı) ──
+          //
+          // Sağ alandaki bütün sayfalar web'de başlığı TEK bileşenle
+          // (`RefPageTitle`) çizer; ölçü/ağırlık/hiza her yerde aynı.
+          // İki satırlı vitrin başlığı ve karakter görseli web'de
+          // çizilmez. Geri oku kuralı `RefPageTitle` içinde merkezî.
+          //
+          // ⚠ MOBİL KİLİTLİ: `else` dalı önceki ağacın BİREBİR aynısı.
+          if (kIsWeb)
+            const RefPageTitle('Hizmet Veren Bul')
+          else ...[
           // ── ÜST SATIR: YALNIZ GERİ ──
           //
           // ⚠ SAĞ ÜSTTEKİ X KALDIRILDI (kullanıcı isteği, 9 Eyl).
@@ -193,6 +205,7 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          ],
           RefSubtitle('Aradığın hizmeti yaz, en uygun hizmet verenleri '
               'bulalım.'),
           const SizedBox(height: 18),

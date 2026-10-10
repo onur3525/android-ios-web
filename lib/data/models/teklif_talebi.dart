@@ -161,6 +161,18 @@ class TeklifTalebi {
   /// Talebin gönderildiği TEK hizmet veren.
   final String saglayiciId;
 
+  /// ── TARAF DENETİMİ — TEK KAYNAK ──
+  ///
+  /// Bu talebi yalnız iki taraf görebilir ve üzerinde işlem yapabilir:
+  /// talebi açan hizmet alan ve talebin gönderildiği hizmet veren.
+  /// Detay ekranı, sohbet ekranı ve mock port bu yöntemi kullanır;
+  /// ayrı ayrı kural yazılmaz.
+  ///
+  /// ⚠ Asıl koruma SUNUCUDA olmalı (backend'de yazılmadı); istemci
+  /// taraf olmayan birine talebi hiç göstermez.
+  bool tarafMi(String kullaniciId) =>
+      kullaniciId == hizmetAlanId || kullaniciId == saglayiciId;
+
   /// ⚠ HAM AD — maskeleme burada DEĞİL, gösterim anında uygulanır
   /// (bkz. sınıf başındaki not). `teklifTarihi` doluysa ekran bu
   /// adı OLDUĞU GİBİ gösterir; değilse `maskeliAd()` ile sarmalar.

@@ -84,10 +84,52 @@ String? contentTypeOf(String path) {
   return null;
 }
 
+/// Seçilen dosyanın MIME türü — WEB DAHİL.
+///
+/// ── ⚠ WEB'DE `path` BİR BLOB ADRESİDİR ──
+///
+/// `image_picker` web'de `XFile.path` olarak `blob:https://…/uuid`
+/// döndürür; bu adreste UZANTI YOKTUR. Tür yalnız uzantıdan
+/// türetildiği için `contentTypeOf` `null` dönüyor ve seçilen HER
+/// fotoğraf "Yalnızca JPG, PNG ve WEBP dosyaları yüklenebilir"
+/// diyerek reddediliyordu — web'de ilan fotoğrafı hiç eklenemiyordu.
+///
+/// ⚠ SIRA ÖNEMLİ:
+///   1. `mimeType` — tarayıcı dosyanın gerçek türünü bildirir;
+///      en güvenilir kaynak budur.
+///   2. `name` — özgün dosya adı, uzantısıyla birlikte gelir
+///      (web'de de doludur).
+///   3. `path` — mobildeki bugünkü davranış, aynen korunur.
+///
+/// ⚠ ALLOWLIST DEĞİŞMEDİ: `mimeType` tarayıcıdan gelse bile
+/// `kAllowedPhotoTypes` dışındaki tür reddedilir.
+///
+/// ⚠ GERÇEK DOĞRULAMA SUNUCUNUNDUR: hem uzantı hem tarayıcının
+/// bildirdiği tür istemci verisidir ve değiştirilebilir. Sunucu
+/// dosyanın sihirli baytlarına bakmalıdır.
+String? fotografTuru(XFile x) {
+  final bildirilen = x.mimeType?.toLowerCase().trim();
+  if (bildirilen != null && kAllowedPhotoTypes.contains(bildirilen)) {
+    return bildirilen;
+  }
+  return contentTypeOf(x.name) ?? contentTypeOf(x.path);
+}
+
 /// Seçilen dosyayı politikaya göre doğrular. Uygunsa null döner.
 String? validatePhoto({required String path, required int sizeBytes}) {
   final type = contentTypeOf(path);
   if (type == null || !kAllowedPhotoTypes.contains(type)) {
+    return 'Yalnızca JPG, PNG ve WEBP dosyaları yüklenebilir';
+  }
+  return validatePhotoTur(tur: type, sizeBytes: sizeBytes);
+}
+
+/// Türü ZATEN çözülmüş dosya için boyut denetimi.
+///
+/// ⚠ `validatePhoto` İLE AYNI KURALLAR: iki ayrı eşik tutmamak için
+/// boyut denetimi tek yerde. `validatePhoto` de buraya devreder.
+String? validatePhotoTur({required String? tur, required int sizeBytes}) {
+  if (tur == null || !kAllowedPhotoTypes.contains(tur)) {
     return 'Yalnızca JPG, PNG ve WEBP dosyaları yüklenebilir';
   }
   if (sizeBytes <= 0) {
@@ -184,7 +226,22 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
       final added = <PhotoItem>[];
       for (final x in picked) {
         final size = await x.length();
-        final err = validatePhoto(path: x.path, sizeBytes: size);
+        // ⚠ TÜR ÖNCE ÇÖZÜLÜR: web'de `path` uzantısızdır, bu yüzden
+        // doğrulama da bu türle yapılır (bkz. `fotografTuru`).
+        final tur = fotografTuru(x);
+        // ⚠ NULL DENETİMİ AYRI DALDA: üçlü ifadeyle yazıldığında
+        // Dart, `tur`u aşağıda non-null'a YÜKSELTEMİYOR ve
+        // `contentType: tur` "String? → String" hatası veriyordu.
+        // Erken dönüş, hem derleyiciyi hem okuyanı ikna eder.
+        if (tur == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content:
+                    Text('Yalnızca JPG, PNG ve WEBP dosyaları yüklenebilir')));
+          }
+          continue;
+        }
+        final err = validatePhotoTur(tur: tur, sizeBytes: size);
         if (err != null) {
           if (mounted) {
             ScaffoldMessenger.of(context)
@@ -195,7 +252,9 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
         added.add(PhotoItem(
           localPath: x.path,
           sizeBytes: size,
-          contentType: contentTypeOf(x.path)!,
+          // ⚠ `!` KALDIRILDI: `tur` yukarıda zaten denetlendi;
+          // `contentTypeOf(x.path)!` web'de null olup ÇÖKERTİYORDU.
+          contentType: tur,
         ));
       }
       if (added.isEmpty || !mounted) {
@@ -550,8 +609,12 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
             ),
           if (p.error != null)
             Positioned.fill(
-              child: GestureDetector(
+              // ⚠ `GestureDetector` YERİNE `RefTap`: başarısız
+              // yüklemeyi yeniden deneyen gerçek bir kontrol; klavye
+              // erişimi ve imleç eksikti.
+              child: RefTap(
                 onTap: () => _upload(p),
+                ipucu: 'Yeniden dene',
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: .5),

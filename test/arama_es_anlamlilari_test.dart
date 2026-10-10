@@ -217,7 +217,7 @@ void main() {
       // (iç tesisat, kolon hattı, kaçak tespiti, kaçak onarımı).
       // ⚠ 8 → 13: sonraki turda ocak bağlantısı, ocak dönüşümü, soba
       // montajı, abonelik ve sayaç taşıma da gerçek hizmet oldu.
-      expect(kCategoryTree['Doğalgaz']!.length, 11);
+      expect(kCategoryTree['Doğalgaz']!.length, 20);
     });
   });
 
@@ -328,9 +328,9 @@ void main() {
     });
 
     test('KATALOG BÜYÜMEDİ', () {
-      expect(kCategoryTree.length, 158);
-      expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 640);
-      expect(kAramaEsAnlamlilari.length, 640);
+      expect(kCategoryTree.length, 166);
+      expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 1587);
+      expect(kAramaEsAnlamlilari.length, 1587);
     });
   });
 
@@ -351,7 +351,7 @@ void main() {
       for (final y in yeni) {
         expect(altlar, contains(y), reason: y);
       }
-      expect(altlar.length, 11);
+      expect(altlar.length, 20);
     });
 
     test('birleşik kategori adı KALDIRILDI', () {
@@ -406,10 +406,10 @@ void main() {
     // olarak kaldı.
 
     test('58 kategori · 517 hizmet · tekrar yok', () {
-      expect(kCategoryTree.length, 158);
+      expect(kCategoryTree.length, 166);
       final tum = [for (final v in kCategoryTree.values) ...v];
-      expect(tum.length, 640);
-      expect(tum.toSet().length, 640, reason: 'aynı hizmet iki kez');
+      expect(tum.length, 1587);
+      expect(tum.toSet().length, 1587, reason: 'aynı hizmet iki kez');
     });
 
     test('her hizmetin sözlük karşılığı var', () {

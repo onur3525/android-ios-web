@@ -2,7 +2,7 @@
 #
 # Minimum iOS sürümü 12.0: google_sign_in ve flutter_secure_storage
 # bu tabanı gerektirir.
-platform :ios, '12.0'
+platform :ios, '13.0' # Firebase iOS SDK 11+ en az iOS 13 ister
 
 # CocoaPods analytics kapalı — build süresini uzatır.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -50,7 +50,10 @@ post_install do |installer|
         'PERMISSION_PHOTOS=1',
         'PERMISSION_CAMERA=1',
       ]
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      # Tek hedef: 13.0 (Firebase iOS SDK 11+ şartı; üstteki platform ve
+      # Xcode proje ayarıyla AYNI). Önceden burada 12.0 yazıyordu: pod'lar
+      # uygulamadan düşük hedefle derlenip uyarı/uyumsuzluk üretiyordu.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
     end
   end
 end

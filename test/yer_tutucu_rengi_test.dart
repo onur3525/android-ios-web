@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,25 +37,6 @@ void main() {
     });
   });
 
-  group('2 — Kart formu temaya bağlı kalır', () {
-    String kod(String p) => File(p)
-        .readAsStringSync()
-        .split('\n')
-        .where((l) =>
-            !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
-        .join('\n');
-
-    test('dört alan da yer tutucusunu temadan alır', () {
-      for (final h in const [
-        "hintText: 'Ad Soyad'",
-        "hintText: '0000 0000 0000 0000'",
-        "hintText: 'AA/YY'",
-      ]) {
-        expect(s.contains(h), isTrue, reason: h);
-      }
-      // ⚠ Ekran kendi rengini VERMEZ: tek kaynak temadır. Buraya elle
-      expect(s.contains('hintStyle:'), isFalse,
-          reason: 'kart formu temayı eziyor');
-    });
-  });
+  // (Kaldırıldı, 3 Eki: '2 — Kart formu temaya bağlı kalır' grubu kaldırılmış
+  // kart ödeme ekranını denetliyordu; derlenmeyen yetim test.)
 }

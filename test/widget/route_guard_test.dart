@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:hizmetcep/core/route_guard.dart';
 import 'package:hizmetcep/core/theme.dart';
@@ -27,6 +28,13 @@ import 'package:hizmetcep/screens/splash_screen.dart';
 /// çizilmesini sağlar. Deep link ile doğrudan route'a gelinse bile aynı
 /// kontrol uygulanır (guard route'un içindedir, çağıranın değil).
 void main() {
+  // ⚠ KÖK NEDEN (3 Eki, CI #4'te 3×10 dk zaman aşımı): `MockAuthPort.logout`
+  // → `OturumTercihi().temizle()` güvenli depo eklentisinin platform
+  // kanalını çağırır. Widget testinde bu kanalı yanıtlayan bir platform
+  // yoktur; çağrı HİÇ tamamlanmaz ve `await auth.logout()` test süresi
+  // dolana kadar bekler. Eklentinin kendi test altyapısı bellek içi
+  // depo kurar — uygulama davranışı değişmez.
+  setUpAll(() => FlutterSecureStorage.setMockInitialValues({}));
 
   // Gerçek uygulama route tablosu üzerinden doğrulama.
   _realRouteTableTests();

@@ -128,17 +128,9 @@ void main() {
       expect(src.contains("'slug': 'privacy'"), isTrue);
     });
 
-    test('veya ayırıcı + Google ile Kaydol', () {
-      expect(src.contains('RefOrDivider'), isTrue);
-      // ⚠ KAYIT ekranında metin "Kaydol"dur; "Devam Et" GİRİŞ
-      // ekranına aittir. Kullanıcı burada hesap AÇIYOR.
-      expect(src.contains('Google ile Kaydol'), isTrue);
-      expect(src.contains('Google ile Devam Et'), isFalse,
-          reason: 'kayıt ekranında giriş metni kalmış');
-      // Yalnız görsel buton DEĞİL: gerçek akış bağlı.
-      expect(src.contains('GoogleAuthService().signInIdToken()'), isTrue);
-      expect(src.contains('googleLogin('), isTrue);
-    });
+    // ⚠ "veya" ayırıcısı + Google düğmesi KALDIRILDI (ürün kararı:
+    // üçüncü taraf girişi yok). Yokluğu test/ucuncu_taraf_giris_test.dart
+    // kilitler; burada eski varlık iddiası tutulmaz.
 
     test('sözleşme kabul zorunluluğu korunur', () {
       expect(src.contains('if (!_agree)'), isTrue);
@@ -156,8 +148,7 @@ void main() {
       expect(w.contains('this.iconColor = RC.blue'), isTrue);
     });
 
-    test('Google butonu ve şifremi unuttum var', () {
-      expect(src.contains('Google ile Devam Et'), isTrue);
+    test('şifremi unuttum var (Google girişi yok)', () {
       expect(src.contains('Şifremi Unuttum'), isTrue);
     });
 

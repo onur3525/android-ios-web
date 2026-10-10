@@ -38,6 +38,35 @@ Bilerek böyledir: yanlış pinle çıkılan sürüm uygulamayı tamamen
 ⚠ EN AZ İKİ PİN verilmelidir (mevcut + yedek). Tek pinli sürüm,
 sertifika yenilendiği gün kırılır.
 
+### Güvenlik turu 2 (30 Eyl) — SPKI, ad, süre, WebSocket, yükleme
+
+- **Pin biçimi:** `sha256/<base64>` = açık anahtar (SPKI) pini; ÖNERİLEN.
+  Aynı anahtarla yenilenen sertifikada kırılmaz. Değer:
+
+      openssl x509 -in sertifika.pem -pubkey -noout \
+        | openssl pkey -pubin -outform der \
+        | openssl dgst -sha256 -binary | base64
+
+  Öneksiz değerler eski biçimdir (tam sertifika özeti); geriye dönük
+  uyumluluk için kabul edilir, yeni sürümlerde kullanılmamalıdır.
+- **Hangi sertifikalar:** Sistem kökleri kapalıyken Dart, doğrulamanın
+  başarısız olduğu zincir halkasını geri çağrıya verir (yaprak ya da ara
+  sertifika olabilir). CERT_PINS hem yaprak hem ara sertifikanın SPKI
+  pinini ve bir YEDEK anahtar pinini içermelidir. Pinler ilk sürümden
+  önce gerçek sunucuya karşı bir test derlemesiyle DOĞRULANMALIDIR.
+- **Ad denetimi:** Sabitlemeli istemci yalnız `API_BASE_URL`'in ana
+  bilgisayar adına bağlanır; başka ad pin tutsa bile reddedilir.
+- **Süre denetimi:** Süresi dolmuş/başlamamış sertifika reddedilir.
+- **WebSocket:** REST ile aynı pin + ad + süre denetimi
+  (`sabitliBolgede`, `HttpOverrides.runZoned`). `HttpOverrides.global`
+  KULLANILMAZ.
+- **Dosya yükleme:** Depolama sağlayıcısının sertifikası farklı olduğu
+  için API pinleri uygulanmaz. Bunun yerine: yalnız https, izinli alan
+  adı (`--dart-define=STORAGE_HOSTS=...`, virgülle; `.` ile başlayan
+  değer sonek), SigV4 imzalı ve süresi geçerli adres. Release'te
+  `STORAGE_HOSTS` boşsa yükleme REDDEDİLİR.
+- **Web:** Sabitleme yapılamaz; tarayıcının TLS modeli geçerlidir.
+
 Pin üretimi (sunucu canlıya çıktıktan sonra):
 
     openssl s_client -connect api.hizmetcep.com:443 -showcerts </dev/null \
@@ -54,22 +83,13 @@ Pin üretimi (sunucu canlıya çıktıktan sonra):
 kuralları yine de tersine mühendislikle çıkarılabilir. Sunucu
 tarafı doğrulama bunun yerine geçmez.
 
-## 6. Ödeme dönüş bağlantısı — KISMEN
+## 6. Ödeme dönüş bağlantısı — KALDIRILDI
 
-Bugün `hizmetcep://payment/return` özel şeması kullanılır. Başka bir
-uygulama aynı şemayı kaydedip dönüşü yakalayabilir.
-
-⚠ Para riski YOKTUR: sonuç yalnız sunucudan doğrulanır ve oturum
-kimliği uygulamanın kendi belleğinden okunur; bağlantıdan gelen
-değer kullanılmaz.
-
-Kalıcı çözüm doğrulanmış App Links'tir ve ALTYAPI GEREKTİRİR:
-
-- `https://hizmetcep.com/.well-known/assetlinks.json` yayınlanmalı
-- imza parmak izi (SHA-256) bu dosyada yer almalı
-- manifest'e `autoVerify="true"` ile https intent-filter eklenmeli
-
-Alan adı ve imzalama anahtarı kesinleşmeden yapılamaz.
+Ödeme ürünü kaldırıldığı için `hizmetcep://payment/return` özel şeması,
+Dart dinleyicisi (`lib/core/deep_links.dart`), Android `MainActivity` ve iOS
+`AppDelegate` içindeki `hizmetcep/deeplinks` köprüsü ve kullanılmayan
+`ios/Runner/Runner.entitlements` (applinks) silindi. Uygulama artık hiçbir
+dış bağlantıyı yakalamaz; bu yüzden bu başlıkta açık risk kalmadı.
 
 ## 7. İstemci-only kurallar — SUNUCU BEKLİYOR
 

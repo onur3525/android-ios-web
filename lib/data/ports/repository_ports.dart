@@ -82,8 +82,7 @@ abstract class AuthPort extends ChangeNotifier {
   /// BİLGİ ÜRETİLMEZ.
   bool? telefonKayitliMi(String phone);
 
-  /// GOOGLE İLE GİRİŞ — `idToken` sunucuda doğrulanır.
-  /// İstemci e-posta/ad göndermez; sunucu Google'dan okur.
+  /// KAYIT — telefon doğrulaması (OTP/kayıt yetkisi) ile.
   Future<({Account? account, DomainError? error})> register({
     required String phone,
     required String pass,
@@ -100,16 +99,11 @@ abstract class AuthPort extends ChangeNotifier {
     // Bu üç alan HizmetCep'in kayıt kurallarının parçasıdır ve
     // domain → port → controller → UI zincirinin TAMAMINDA taşınır.
 
-    /// Kullanım Sözleşmesi + Gizlilik Politikası onayı.
-    /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
+    /// Kullanım Sözleşmesi + Gizlilik Politikası onayı (ZORUNLU).
     bool termsAccepted,
 
-    /// Google akışında doğrulanmış e-posta ile gelinir; normal kayıtta
-    /// yalnız gerçek doğrulama tamamlanınca true olur.
+    /// Yalnız gerçek doğrulama tamamlanınca true olur.
     bool emailVerified,
-
-    /// Google hesabının benzersiz kimliği (`sub`).
-    /// Hesap eşleştirmesi e-posta metniyle DEĞİL bu kimlikle yapılır.
 
     /// ⚠ OTP DOĞRULAMASINDAN ÜRETİLEN KAYIT YETKİSİ (Y1).
     /// Telefona VE kayıt taslağına bağlıdır; verildiğinde

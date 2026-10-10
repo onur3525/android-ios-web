@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../ui/header_arama.dart' show kHizmetAramaIpucu;
+import '../ui/olcu.dart';
+import 'package:flutter/foundation.dart';
 // `context.read<T>()` bu paketin BuildContext eklentisidir.
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -14,6 +17,8 @@ import 'create_listing_screen.dart';
 import 'prelogin_listing_route.dart';
 import '../data/hizmet_alanlari.dart';
 import 'hizmet_alani_screen.dart';
+import '../ui/gezgin.dart';
+import '../ui/panel_rotasi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// ANA SAYFA — referans `vHome()` karşılığı
@@ -64,7 +69,7 @@ import 'hizmet_alani_screen.dart';
 /// ile aramadan erişilebilir.
 ///
 /// ⚠ `label` alanı KATALOGDAKİ ANA KATEGORİ ADIYLA BİREBİR aynı
-/// olmalıdır; `_hizmetSecildi` bu adla kategori arar. Eşleşmezse kart
+/// olmalıdır; `hizmetSecildi` bu adla kategori arar. Eşleşmezse kart
 /// boş sonuç açar. Test bunu denetler.
 /// HIZLI ERİŞİM KATEGORİLERİ — 12 kart, sade ikon.
 ///
@@ -127,9 +132,15 @@ const List<({String asset, Color? color, String title, String desc})> _kTrust = 
 /// öteki unutulurdu.
 void hizmetSecildiDisaridan(
         BuildContext context, String kategori, String? altHizmet) =>
-    _hizmetSecildi(context, kategori, altHizmet);
+    hizmetSecildi(context, kategori, altHizmet);
 
-void _hizmetSecildi(
+/// ⚠ ADI DIŞA AÇILDI (`_` kaldırıldı): masaüstü web header'ındaki
+/// arama kutusu da AYNI yolu kullanacak. İkinci bir yönlendirme
+/// mantığı yazmak, çıkar çatışması kuralının bir kopyada unutulmasına
+/// yol açardı.
+///
+/// ⚠ DAVRANIŞ DEĞİŞMEDİ: gövde aynen duruyor.
+void hizmetSecildi(
     BuildContext context, String kategori, String? altHizmet) {
   final auth = context.read<AuthController>();
 
@@ -154,12 +165,31 @@ void _hizmetSecildi(
     }
   }
 
-  void publicForma() => Navigator.pushNamed(
-        context,
-        PreLoginListingRoute.name,
-        arguments: PreLoginListingArgs(
-            category: kategori, subService: altHizmet),
-      );
+  // ── ⚠ GEZİNME ORTAK ANAHTAR ÜZERİNDEN ──
+  //
+  // Bu fonksiyon arama önerisinden, kategori kartından ve Tüm
+  // Kategoriler ekranından çağrılıyor. Arama önerileri bir `Overlay`
+  // katmanında çiziliyor; oradan gelen `context` ile
+  // `Navigator.of(context)` her zaman doğru Navigator'ı bulamıyor ve
+  // öneriye dokunulduğunda HİÇBİR ŞEY OLMUYORDU.
+  //
+  // `gezginAnahtari` `MaterialApp`e bağlı tek Navigator'ı verir;
+  // hangi katmandan çağrılırsa çağrılsın çalışır.
+  //
+  // ⚠ YEDEK OLARAK `context`: anahtar henüz bağlanmamışsa (çok erken
+  // çağrı) eski yol denenir; sessiz başarısızlık olmaz.
+  final gezgin = gezginAnahtari.currentState;
+
+  void publicForma() {
+    const ad = PreLoginListingRoute.name;
+    final arg =
+        PreLoginListingArgs(category: kategori, subService: altHizmet);
+    if (gezgin != null) {
+      gezgin.pushNamed(ad, arguments: arg);
+    } else {
+      Navigator.pushNamed(context, ad, arguments: arg);
+    }
+  }
 
   if (!auth.loggedIn) {
     publicForma();
@@ -171,13 +201,18 @@ void _hizmetSecildi(
     if (auth.activeRole != Role.customer) {
       unawaited(auth.switchRole(Role.customer));
     }
-    Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-            builder: (_) => CreateListingScreen(
-                  initialCategory: kategori,
-                  initialSubService: altHizmet,
-                )));
+    // ⚠ AYNI SEBEP: anahtar üzerinden.
+    // ⚠ WEB'DE PANEL (giriş ekranı gibi); mobilde aynı sayfa rotası.
+    final rota = akisRotasi<void>(
+        builder: (_) => CreateListingScreen(
+              initialCategory: kategori,
+              initialSubService: altHizmet,
+            ));
+    if (gezgin != null) {
+      gezgin.push(rota);
+    } else {
+      Navigator.push(context, rota);
+    }
     return;
   }
 
@@ -238,11 +273,11 @@ class HomeScreen extends StatelessWidget {
               // `kSubServices`'ten gelir; admin yeni kategori eklerse
               // liste kendiliğinden genişler.
               InlineSearchBox(
-                title: 'Hangi hizmete ihtiyacınız var?',
+                title: kHizmetAramaIpucu,
                 subtitle:
                     'Örnek: Kombi Bakımı, Elektrik Arızası, Boya Badana, Klima Montajı',
                 onSecim: (kategori, altHizmet) =>
-                    _hizmetSecildi(context, kategori, altHizmet),
+                    hizmetSecildi(context, kategori, altHizmet),
               ),
 
               // ── Rol kartları ──
@@ -650,8 +685,45 @@ class HizmetAlanlariPaneli extends StatefulWidget {
   //   + 3 satır açıklama + alt dolgu
   // Sütun genişliği `LayoutBuilder` ile ÖLÇÜLÜR, tahmin edilmez.
 
-  /// Sütun sayısı — 3×3 düzeni.
+  /// Sütun sayısı — MOBİLDE 3×3 düzeni.
+  ///
+  /// ⚠ MOBİL VE ANDROID/iOS DEĞİŞMEZ: bu sabit onların düzenidir.
   static const int kSutun = 3;
+
+  /// Masaüstü web'de sütun sayısı — ekran sınıfına göre kademeli.
+  ///
+  /// ── ⚠ NİÇİN SABİT 3 YETMİYOR ──
+  ///
+  /// Ana sayfa 1920 px'lik bir ekranda da üç sütun çiziyordu; kartlar
+  /// ve içindeki fotoğraflar gereksiz büyüyor, sayfa mobil düzenin
+  /// büyütülmüş hâli gibi duruyordu.
+  ///
+  /// ⚠ KADEMELİ, İKİ KOVA DEĞİL: laptop 3, masaüstü 4, ultra geniş 5.
+  /// "1024 üstü" diye tek eşik kullanmak 1280 ile 2560'ı aynı sayar.
+  ///
+  /// ⚠ ÜST SINIR 5: daha fazlası kartları kartvizit boyutuna indirir
+  /// ve başlık + üç satır açıklama okunmaz hâle gelir.
+  ///
+  /// ⚠ MOBİL VE TABLET 3'TE KALIR: `kIsWeb` değilse ya da ekran dar
+  /// ise bugünkü düzen aynen sürer.
+  static int sutunSayisi(BuildContext context) {
+    if (!kIsWeb) {
+      return kSutun;
+    }
+    final sinif = ekranSinifi(context);
+    if (!sinif.masaustuMu) {
+      return kSutun;
+    }
+    // ⚠ `EkranSinifi`de ULTRA GENİŞ DEĞERİ YOK (mobil/tablet/laptop/
+    // masaustu). Enum'a yeni değer eklemek `olcu.dart`ı ve onu okuyan
+    // her yeri etkilerdi; bu tur yalnız ana sayfa içindir. Beşinci
+    // kademe genişlikten okunur.
+    final genislik = MediaQuery.sizeOf(context).width;
+    if (genislik >= 1920) {
+      return 5;
+    }
+    return sinif == EkranSinifi.masaustu ? 4 : 3;
+  }
 
   /// ── ⚠ PANEL KAYMAZ, HEPSİ GÖRÜNÜR (ürün kararı) ──
   ///
@@ -873,7 +945,9 @@ class _HizmetAlanlariPaneliState extends State<HizmetAlanlariPaneli> {
   final ScrollController _kaydirici = ScrollController();
 
   // ⚠ KISA TAKMA ADLAR — tek kaynak yine sınıf sabitleri.
-  static const int _kSutun = HizmetAlanlariPaneli.kSutun;
+  // ⚠ SÜTUN SAYISI ARTIK SABİT DEĞİL: masaüstü web'de ekran sınıfına
+  // göre kademeli (bkz. `HizmetAlanlariPaneli.sutunSayisi`). Mobilde
+  // ve Android/iOS'ta 3 olarak kalır.
   static const double _kSutunAraligi = HizmetAlanlariPaneli.kSutunAraligi;
   static const double _kSatirAraligi = HizmetAlanlariPaneli.kSatirAraligi;
 
@@ -886,8 +960,8 @@ class _HizmetAlanlariPaneliState extends State<HizmetAlanlariPaneli> {
   @override
   Widget build(BuildContext context) {
     final olcek = MediaQuery.textScalerOf(context);
-    final satirSayisi =
-        (kHizmetAlanlari.length + _kSutun - 1) ~/ _kSutun;
+    final sutun = HizmetAlanlariPaneli.sutunSayisi(context);
+    final satirSayisi = (kHizmetAlanlari.length + sutun - 1) ~/ sutun;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
@@ -907,12 +981,22 @@ class _HizmetAlanlariPaneliState extends State<HizmetAlanlariPaneli> {
           LayoutBuilder(
             builder: (context, kisit) {
               final sutunGenisligi =
-                  (kisit.maxWidth - _kSutunAraligi * (_kSutun - 1)) / _kSutun;
+                  (kisit.maxWidth - _kSutunAraligi * (sutun - 1)) / sutun;
               final kartY = HizmetAlanlariPaneli.kartYuksekligi(
                   sutunGenisligi, olcek);
               return SizedBox(
-                height: HizmetAlanlariPaneli.panelYuksekligi(
-                    sutunGenisligi, olcek),
+                // ⚠ YÜKSEKLİK GERÇEK SATIR SAYISINDAN (masaüstü web).
+                //
+                // `panelYuksekligi` sabit 3 satır varsayar; mobilde
+                // doğrudur. Masaüstünde sütun sayısı arttıkça satır
+                // sayısı DÜŞER (12 kart / 5 sütun = 3 satır, ama
+                // 4 sütunda da 3) ve sabit yükseklik altta boşluk
+                // bırakırdı. Mobil yol AYNEN korunur.
+                height: kIsWeb && ekranSinifi(context).masaustuMu
+                    ? kartY * satirSayisi +
+                        _kSatirAraligi * (satirSayisi - 1)
+                    : HizmetAlanlariPaneli.panelYuksekligi(
+                        sutunGenisligi, olcek),
                 // ── ⚠ PANEL KAYMAZ, GÖRÜNÜR ÇUBUK YOK ──
                 //
                 // Liste kendi içinde kaydırılamaz: 12 kart dört satır
@@ -938,15 +1022,15 @@ class _HizmetAlanlariPaneliState extends State<HizmetAlanlariPaneli> {
                         height: kartY,
                         child: Row(
                           children: [
-                            for (var s = 0; s < _kSutun; s++) ...[
+                            for (var s = 0; s < sutun; s++) ...[
                               if (s > 0)
                                 const SizedBox(width: _kSutunAraligi),
                               Expanded(
-                                child: satir * _kSutun + s <
+                                child: satir * sutun + s <
                                         kHizmetAlanlari.length
                                     ? _AlanKarti(
                                         alan: kHizmetAlanlari[
-                                            satir * _kSutun + s])
+                                            satir * sutun + s])
                                     // ⚠ Son satır eksik kalırsa hizalama
                                     // bozulmasın diye boş yer tutucu.
                                     : const SizedBox.shrink(),
@@ -985,7 +1069,8 @@ class _AlanKarti extends StatelessWidget {
     return RefTap(
       onTap: () => Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
+        // ⚠ WEB'DE PANEL (giriş ekranı gibi); mobilde aynı sayfa rotası.
+        akisRotasi<void>(
           builder: (_) => HizmetAlaniScreen(alan: alan),
         ),
       ),

@@ -106,9 +106,20 @@ class RegionPickerSheetState extends State<RegionPickerSheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * .75,
-        child: Column(children: [
+      // ── ⚠ YÜKSEKLİK İÇERİĞE GÖRE, ÜST SINIRLA ──
+      //
+      // Burada SABİT `height: ekran * .75` vardı: listede tek bir il
+      // ("İzmir") olsa bile panel ekranın dörtte üçünü kaplıyor,
+      // altında kocaman boş beyaz alan kalıyordu.
+      //
+      // `ConstrainedBox` + `mainAxisSize.min`: panel içeriği kadar
+      // yüksek olur, liste uzunsa %75'te durur ve KENDİ İÇİNDE kayar.
+      // Kısa listede kısa, uzun listede sınırlı.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .75,
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
           const SizedBox(height: 10),
           Container(
             width: 42,
@@ -162,7 +173,11 @@ class RegionPickerSheetState extends State<RegionPickerSheet> {
               ),
             ),
           const SizedBox(height: 8),
-          Expanded(
+          // ⚠ `Expanded` DEĞİL `Flexible`: `Expanded` kalan alanı
+          // DOLDURMAK zorundadır ve büzülen bir `Column` içinde
+          // çalışmaz. `Flexible` listeye "gerektiği kadar, en fazla
+          // şu kadar" der.
+          Flexible(
             child: list.isEmpty
                 ? const Center(
                     child: SysState(SysKind.empty,
@@ -170,6 +185,10 @@ class RegionPickerSheetState extends State<RegionPickerSheet> {
                         desc: 'Farklı bir arama deneyin.'),
                   )
                 : ListView.separated(
+                    // ⚠ `shrinkWrap`: liste kısa olduğunda kendi
+                    // yüksekliğini içeriğine göre hesaplar; olmazsa
+                    // `Flexible` içinde yine ekranı doldururdu.
+                    shrinkWrap: true,
                     itemCount: list.length,
                     separatorBuilder: (_, __) =>
                         const Divider(height: 1, color: HC.border),
@@ -184,7 +203,8 @@ class RegionPickerSheetState extends State<RegionPickerSheet> {
                                     sel ? FontWeight.w700 : FontWeight.w400,
                                 color: sel ? HC.blue : HC.dark)),
                         trailing: sel
-                            ? RefSvg('assets/svg/ic_checksm.svg', size: 20, color: RC.blue)
+                            // ⚠ AYNI SEBEP (bkz. `RefTik`).
+                            ? const RefTik(size: 20, color: RC.blue)
                             : null,
                         onTap: () => Navigator.of(context).pop(o),
                       );

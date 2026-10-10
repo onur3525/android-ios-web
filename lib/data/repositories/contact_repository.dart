@@ -5,6 +5,15 @@ import 'package:flutter/foundation.dart';
 class ContactRepository extends ChangeNotifier {
   final Set<String> _openOfferIds = {};
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<String> get sekmeKayitlari => List.unmodifiable(_openOfferIds);
+  void sekmeKayitlariniYukle(Iterable<String> kayitlar) {
+    _openOfferIds
+      ..clear()
+      ..addAll(kayitlar);
+    notifyListeners();
+  }
+
   bool isOpen(String offerId) => _openOfferIds.contains(offerId);
 
   /// true: ilk açılış (tüketim yapılmalı); false: zaten açıktı (no-op).

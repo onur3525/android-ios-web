@@ -14,6 +14,7 @@ import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'nav_actions.dart';
+import '../core/baglanti_modu.dart';
 
 /// HİZMETCEP'İ PUANLA (HTML vAppRate)
 ///
@@ -168,7 +169,10 @@ class _AppRateScreenState extends State<AppRateScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const RefPageTitle('Uygulama Değerlendirmesi'),
+          // ⚠ BAŞLIK MENÜ ADIYLA AYNI: kenar çubuğunda "Uygulamayı
+          // Puanla" yazarken sayfa "Uygulama Değerlendirmesi" diyordu.
+          // Kullanıcı tıkladığı yere geldiğini başlıktan anlamalı.
+          const RefPageTitle('Uygulamayı Puanla'),
 
           if (_loading)
             const Padding(
@@ -383,7 +387,7 @@ class _MagazaKarti extends StatelessWidget {
     final adres = storeUrlForPlatform();
     try {
       final ok = await launchUrl(Uri.parse(adres),
-          mode: LaunchMode.externalApplication);
+          mode: acilisModu());
       if (!ok && c.mounted) {
         sysToastErr(c, SysKind.genericError,
             extra: 'Mağaza uygulaması açılamadı');

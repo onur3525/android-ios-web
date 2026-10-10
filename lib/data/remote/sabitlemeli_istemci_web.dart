@@ -17,3 +17,7 @@ http.Client sabitlemeliIstemci() => http.Client();
 /// pin zorunluluğu da anlamsızdır. Boş gövde BİLİNÇLİDİR — burada
 /// hata fırlatmak, web sürümünü hiç açılmaz hâle getirirdi.
 void pinDenetimi({required bool gercekApi}) {}
+
+/// ⚠ WEB: tarayıcı WebSocket'i kendi TLS modeliyle kurar; sabitleme
+/// yapılamaz ve yapılıyormuş gibi gösterilmez. [f] olduğu gibi çalışır.
+T sabitliBolgede<T>(T Function() f) => f();

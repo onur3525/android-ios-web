@@ -15,6 +15,7 @@
 // `pageTransitionsTheme` içindedir ve o satır DEĞİŞMEDİ.
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'klavye.dart';
 
@@ -102,6 +103,31 @@ class HC {
             elevation: 0,
             // ⚠ AppBar açılıştaki ayarı ezer — aynı değer buraya da.
             systemOverlayStyle: kSistemCubuklari),
+        // ── ⚠ WEB'DE TOAST ŞERİDİ EKRAN BOYUNCA UZAMAZ ──
+        //
+        // Varsayılan `SnackBar` ekranın altına YAPIŞIK ve TAM
+        // GENİŞLİKTE çizilir. 1920 px'lik bir monitörde alt kenar
+        // boyunca uzanan bir şerit, masaüstünde yanlış durur ve
+        // mesajın kendisi kaybolur.
+        //
+        // ⚠ TEK YERDEN: beş ekrandaki `SnackBar` çağrılarının hiçbiri
+        // değişmedi; kural temada. Yeni bir toast bileşeni
+        // üretilmedi.
+        //
+        // ⚠ MOBİL VE ANDROID/iOS DEĞİŞMEZ: `kIsWeb` değilse tema
+        // alanı `null` kalır ve Flutter'ın bugünkü davranışı sürer.
+        //
+        // ⚠ `floating` + `width` BİRLİKTE OLMALI: `width`,
+        // `SnackBarBehavior.floating` olmadan yok sayılır.
+        //
+        // ⚠ 560 px TASARIM SİSTEMİNDEN: form genişliğiyle aynı; yeni
+        // bir ölçü uydurulmadı.
+        snackBarTheme: kIsWeb
+            ? const SnackBarThemeData(
+                behavior: SnackBarBehavior.floating,
+                width: 560,
+              )
+            : null,
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: blue,

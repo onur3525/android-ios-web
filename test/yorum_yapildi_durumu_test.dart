@@ -111,7 +111,7 @@ void main() {
       // başka dosya onu göremez. Bul akışı bu yüzden aynı bilgiyi
       // kendi biçiminde yazıyordu: yeşil düz "Teklif Seçildi" metni,
       // mavi "Yorum yapıldı" yazısı — zemin yok, tik yok, ok yok.
-      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      final bul = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
       expect(bul.contains("const DurumSeridi('Teklif seçildi')"), isTrue);
       expect(bul.contains("DurumSeridi('Yorum yapıldı'"), isTrue);
       expect(bul.contains("aksiyon: 'Görüntüle'"), isTrue);
@@ -123,11 +123,11 @@ void main() {
     test('⚠ ŞERİT TEK YERDE TANIMLI', () {
       // İki akış aynı şeridi çiziyor; ikinci bir kopya doğarsa
       // yeniden ayrışırlar.
-      final o = _kod('lib/screens/offer_detail_screen.dart');
-      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      final o = _kodu('lib/screens/offer_detail_screen.dart');
+      final bul = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
       expect(o.contains('class DurumSeridi'), isFalse);
       expect(bul.contains('class DurumSeridi'), isFalse);
-      expect(_kod('lib/screens/widgets/durum_seridi.dart')
+      expect(_kodu('lib/screens/widgets/durum_seridi.dart')
           .contains('class DurumSeridi'), isTrue);
     });
 
@@ -144,7 +144,7 @@ void main() {
       // kalın ağırlık ve ok anlatır. Yan yana olması onu yeniden
       // "durum metninin parçası" hâline getirmez.
       expect(k.contains("aksiyon: 'Görüntüle'"), isTrue);
-      final serit = _kod('lib/screens/widgets/durum_seridi.dart');
+      final serit = _kodu('lib/screens/widgets/durum_seridi.dart');
       expect(serit.contains('decoration: TextDecoration.underline'), isTrue,
           reason: 'eylem satırı bağlantı gibi görünmüyor');
       expect(serit.contains('ic_chev.svg'), isTrue,

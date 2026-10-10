@@ -1,0 +1,107 @@
+diff -ru a/test/business_rules_test.dart b/test/business_rules_test.dart
+--- a/test/business_rules_test.dart	2026-10-03 18:50:44.302726125 +0000
++++ b/test/business_rules_test.dart	2026-10-03 18:50:44.303997962 +0000
+@@ -152,7 +152,7 @@
+       final o = offerCtl.myOfferFor(l.id, p1)!;
+       expect(await contactCtl.openShared(o.id, actorId: cust), isNull);
+       expect(contactCtl.isOpen(o.id), isTrue);
+-      expect(w.avail, a1);
++      // (Kaldırıldı, 3 Eki: cüzdan bakiyesi denetimi — HizmetCep ücretsiz, cüzdan yok.)
+     });
+ 
+     test('YETKİSİZ aktör açamaz; başka usta başkasının teklifini açamaz (Y3)', () async {
+diff -ru a/test/di_and_guard_test.dart b/test/di_and_guard_test.dart
+--- a/test/di_and_guard_test.dart	2026-10-03 18:50:44.305286502 +0000
++++ b/test/di_and_guard_test.dart	2026-10-03 18:50:44.306525712 +0000
+@@ -13,8 +13,6 @@
+   group('DI seçimi', () {
+     test('DATA_SOURCE=mock → bellek içi portlar kurulur', () {
+       final ports = buildPorts(mode: DataSourceMode.mock);
+-      expect(ports.freeRights, isA<MockFreeRightPort>(),
+-          reason: 'mock modda ücretsiz hak portu da mock olmalı');
+       expect(ports.auth, isA<MockAuthPort>());
+       expect(ports.listings, isA<MockListingPort>());
+       expect(ports.offers, isA<MockOfferPort>());
+@@ -24,8 +22,6 @@
+ 
+     test('DATA_SOURCE=api → gerçek API portları kurulur', () {
+       final ports = buildPorts(mode: DataSourceMode.api);
+-      expect(ports.freeRights, isA<ApiFreeRightPort>(),
+-          reason: 'api modda ücretsiz hak portu gerçek API olmalı');
+       expect(ports.auth, isA<ApiAuthPort>());
+       expect(ports.listings, isA<ApiListingPort>());
+       expect(ports.offers, isA<ApiOfferPort>());
+diff -ru a/test/form_ileri_tusu_test.dart b/test/form_ileri_tusu_test.dart
+--- a/test/form_ileri_tusu_test.dart	2026-10-03 18:50:44.307782863 +0000
++++ b/test/form_ileri_tusu_test.dart	2026-10-03 18:50:44.309134924 +0000
+@@ -72,32 +72,8 @@
+     });
+   });
+ 
+-  group('KART FORMU — ZİNCİR EKLENDİ', () {
+-
+-    test('dört alanın da ileri tuşu tanımlı', () {
+-      expect('textInputAction:'.allMatches(k).length, 4);
+-      expect('TextInputAction.next'.allMatches(k).length, 3);
+-      expect('TextInputAction.done'.allMatches(k).length, 1);
+-    });
+-
+-    test('odak düğümleri tanımlı ve BIRAKILIYOR', () {
+-      for (final f in const ['_fAd', '_fNumara', '_fSonKullanma', '_fCvv']) {
+-        expect(k.contains('final $f = FocusNode();'), isTrue, reason: f);
+-      }
+-      expect(k.contains('for (final f in [_fAd, _fNumara, _fSonKullanma, _fCvv])'),
+-          isTrue,
+-          reason: 'odak düğümleri dispose edilmiyor');
+-    });
+-
+-    test('geçiş sırası: Ad → Numara → Son Kullanma → CVV', () {
+-      final i1 = k.indexOf('onEditingComplete: _fNumara.requestFocus');
+-      final i2 = k.indexOf('onEditingComplete: _fSonKullanma.requestFocus');
+-      final i3 = k.indexOf('onEditingComplete: _fCvv.requestFocus');
+-      expect(i1, greaterThan(0));
+-      expect(i2, greaterThan(i1));
+-      expect(i3, greaterThan(i2));
+-    });
+-  });
++  // (Kaldırıldı, 3 Eki: 'KART FORMU — ZİNCİR EKLENDİ' grubu kaldırılmış kart
++  // ödeme formunu denetliyordu; değişkeni de onunla gitmişti — derlenmeyen yetim test.)
+ 
+   group('ZATEN DOĞRU OLAN FORMLAR — BOZULMADI', () {
+     test('kayıt formu altı alanda da zinciri korur', () {
+diff -ru a/test/guvenlik_sertlestirme_test.dart b/test/guvenlik_sertlestirme_test.dart
+--- a/test/guvenlik_sertlestirme_test.dart	2026-10-03 18:50:44.310511654 +0000
++++ b/test/guvenlik_sertlestirme_test.dart	2026-10-03 18:50:44.311821232 +0000
+@@ -97,15 +97,8 @@
+     });
+   });
+ 
+-  group('KART ALANLARINDA PANO KAPALI', () {
+-
+-    test('numara ve CVV kopyalanamaz', () {
+-      expect('enableInteractiveSelection: false'.allMatches(k).length,
+-          greaterThanOrEqualTo(2));
+-      expect('contextMenuBuilder: null'.allMatches(k).length,
+-          greaterThanOrEqualTo(2));
+-    });
+-  });
++  // (Kaldırıldı, 3 Eki: 'KART ALANLARINDA PANO KAPALI' grubu kaldırılmış kart
++  // ödeme formunu denetliyordu; derlenmeyen yetim test.)
+ 
+   group('SERTİFİKA SABİTLEME', () {
+     test('PİN YOKKEN devre dışı — davranış değişmez', () {
+@@ -242,12 +235,8 @@
+       expect(k.contains('isDebuggerConnected'), isTrue);
+     });
+ 
+-    test('UYARI ŞERİDİ yalnız riskliyken çizilir', () {
+-      expect(t.contains('_cihaz?.paraIcinRiskli ?? false'), isTrue);
+-      // ⚠ İşlem ENGELLENMEZ: düğme yalnız tutar kuralına bakar.
+-      expect(t.contains('paraIcinRiskli ? null :'), isFalse,
+-          reason: 'riskli ortamda işlem engellenmiş — yanlış pozitif riski');
+-    });
++    // (Kaldırıldı, 3 Eki: 'UYARI ŞERİDİ…' testi kaldırılmış ödeme ekranındaki
++    // şeridi denetliyordu; derlenmeyen yetim test.)
+   });
+ 
+   group('SÜRÜM DERLEMESİ KARARTMALI', () {

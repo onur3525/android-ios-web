@@ -28,13 +28,15 @@ info:
     - Yalnızca Hizmet Alan, Hizmet Veren'i 1-5 yıldız ve yorumla değerlendirir.
     - Her ilan için yalnızca 1 değerlendirme; kullanıcı silemez/değiştiremez.
     - İlan aktif süresi 30 saattir.
-    - Para iadesi yoktur.
+    - Platform iki taraf için de ücretsizdir; ödeme/bakiye yoktur.
 
 servers:
-  - url: https://api.hizmetcep.com/v1
+  - url: https://api.hizmetcep.com/api/v1
     description: Üretim
-  - url: https://staging-api.hizmetcep.com/v1
+  - url: https://staging-api.hizmetcep.com/api/v1
     description: Hazırlık
+  # ⚠ Admin API'si (/admin/v1) bu sözleşmede YOKTUR: ayrı, çerez + MFA
+  # korumalı yüzeydir; yalnız panelden kullanılır.
 
 security:
   - bearerAuth: []
@@ -52,7 +54,10 @@ tags:
   - name: Messages
   - name: Notifications
   - name: Support
-  - name: Admin
+  - name: TeklifTalepleri
+  - name: Providers
+  - name: Devices
+  - name: Legal
 
 # ═══════════════════════════════════════════════════════════════════
 #  BİLEŞENLER
@@ -439,6 +444,21 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /auth/firebase/session:
+    post:
+      tags: [Auth]
+      summary: Firebase ID token ile HizmetCep oturumu
+      description: |
+        Firebase Authentication ile giriş yapan istemci, aldığı ID token'ı
+        gönderir; sunucu token'ı Google'ın açık sertifikalarıyla doğrular,
+        doğrulanmış telefon/e-postayla hesabı eşleştirir ve HizmetCep
+        oturumu açar. Hesap yoksa 404; askı/ban/dondurma kuralları aynen.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Eşleşen hesap yok }
+
   /auth/otp/request:
     post:
       tags: [Auth]
@@ -567,6 +587,18 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
+
+  /profiles/me/notifications:
+    patch:
+      tags: [Profile]
+      summary: Bildirim tercihleri (yalnız push'u etkiler)
+      description: |
+        Gövde { offer?, message?, announcement?, email? } (boolean). Yalnız gönderilen alan değişir.
+        Yanıt güncel dört değer. GET /users/me yanıtında notificationPrefs olarak da döner.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /profiles/me/address:
     get:
@@ -1313,85 +1345,265 @@ paths:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-
-  /support/settings:
+  /support/tickets:
+    post:
+      tags: [Other]
+      summary: Destek talebi gönder (Destek Merkezi › Talep Gönder)
+      description: |
+        Oturum gerekir. Gövde { subject (3-120), message (10-4000), platform?, appVersion? }.
+        Idempotency-Key aynı anahtarla tekrarlanırsa ikinci kayıt AÇILMAZ, ilk talep döner.
+        Kayıt Admin › Gelen Talepler › Destek Talepleri'ne düşer; hesap dondurma/silme
+        talepleriyle karışmaz. Kullanıcı başına saatte 5 talep.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: 'Oluşturulan talep { id, ticketNo, subject, message, status, createdAt, replies }' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
     get:
       tags: [Other]
-      summary: Destek e-posta adresi
+      summary: Kullanıcının kendi destek talepleri (yanıtlarıyla)
       responses:
         '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
-  /admin/listings/{listingId}/remove:
+  /support/tickets/{ticketId}:
     parameters:
-      - { name: listingId, in: path, required: true, schema: { type: string } }
-    post:
-      tags: [Admin]
-      summary: İlanı kaldır (neden zorunlu)
-      description: |
-        ⚠ Teklifler sıfırlanır, AÇIK normal blokeler iade edilir; ücretsiz hak geri verilmez (§13).
-        ⚠ FLUTTER KULLANMIYOR — admin paneli ayrı bir istemcidir.
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses:
-        '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessRule' }
-
-  /admin/listings/{listingId}/reactivate:
-    parameters:
-      - { name: listingId, in: path, required: true, schema: { type: string } }
-    post:
-      tags: [Admin]
-      summary: İlanı yeniden aç
-      description: |
-        ⚠ Eski teklifler GELMEZ ve 30 saat YENİDEN başlar (§13). ⚠ Flutter kullanmıyor.
-      responses:
-        '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessRule' }
-
-  /admin/reviews/{reviewId}:
-    parameters:
-      - { name: reviewId, in: path, required: true, schema: { type: string } }
-    delete:
-      tags: [Admin]
-      summary: Değerlendirmeyi sil
-      description: |
-        ⚠ Silince ortalama ve sayı YENİDEN HESAPLANIR (§14). ⚠ Flutter kullanmıyor.
-      responses:
-        '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessRule' }
-
-  /admin/benefits/grant:
-    post:
-      tags: [Admin]
-      summary: Ücretsiz hak tanımla
-      description: |
-        ⚠ Flutter kullanmıyor.
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses:
-        '200': { description: Başarılı }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/BusinessRule' }
-
-  /admin/audit-logs:
+      - { name: ticketId, in: path, required: true, schema: { type: string, format: uuid } }
     get:
-      tags: [Admin]
-      summary: Denetim kayıtları
+      tags: [Other]
+      summary: Kendi destek talebinin ayrıntısı (başkasının talebi 404)
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Erişim jetonunu yenile (yenileme jetonu tek kullanımlık, döndürülür)
+      security: []
       description: |
-        ⚠ Kritik admin işlemleri DEĞİŞTİRİLEMEZ loga yazılır (§1). ⚠ Flutter kullanmıyor.
-      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        Gövde { refreshToken }. Aynı yenileme jetonu ikinci kez kullanılırsa
+        kullanıcının BÜTÜN oturumları kapanır. Dondurulmuş hesap yenileyemez.
+      responses:
+        '200': { description: '{ accessToken, refreshToken }' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /devices/push-token:
+    post:
+      tags: [Devices]
+      summary: FCM cihaz jetonunu kaydet (aynı jeton başka hesaptaysa yeni sahibine taşınır)
+      description: |
+        Gövde { token, platform: android|ios|web }.
+      responses:
+        '204': { description: Kaydedildi }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Devices]
+      summary: Cihaz jetonunu sil (yalnız kendi jetonu)
+      responses:
+        '204': { description: Silindi }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /storage/uploads/pending:
+    delete:
+      tags: [Storage]
+      summary: Kayda bağlanmamış (bekleyen) kendi yüklemesini at; silme kuyruğuna girer
+      description: |
+        Gövde { storageRef }. Başkasının ya da bağlanmış dosya için { ok: false }.
+      responses:
+        '200': { description: '{ ok, retryScheduled }' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /legal/pending-acceptances:
+    get:
+      tags: [Legal]
+      summary: Kullanıcının kabul etmesi gereken güncel yasal belge sürümleri
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /legal/{slug}/accept:
+    parameters:
+      - { name: slug, in: path, required: true, schema: { type: string } }
+    post:
+      tags: [Legal]
+      summary: Yasal belgenin yayımdaki sürümünü kabul et
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /providers/search:
+    get:
+      tags: [Providers]
+      summary: '"Bul" — seçilen hizmeti sunan kayıtlı hizmet verenler'
+      description: |
+        Eşleşme: hizmet verenin kendi seçtiği kategoriler kümesinde kategori ya da
+        hizmet adı. Kendisi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar dönmez.
+        GİZLİLİK: telefon, e-posta, mahalle ve açık adres DÖNMEZ. En çok 50 kayıt;
+        müşterinin ilçesine hizmet verenler önde. Kullanıcı başına dakikada 60 istek.
+        Kayıt: { id, name, address{city,district}|null, serviceDistricts[],
+        rating|null, reviewCount, completedJobs, photoUrl|null }.
+      parameters:
+        - { name: category, in: query, required: false, schema: { type: string } }
+        - { name: service, in: query, required: false, schema: { type: string } }
+        - { name: district, in: query, required: false, schema: { type: string } }
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /teklif-talepleri:
+    get:
+      tags: [TeklifTalepleri]
+      summary: Kullanıcının iki rolündeki teklif talepleri (mesajlar ve değerlendirmeyle)
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet verene doğrudan teklif talebi gönder (hizmet alan rolü)
+      description: |
+        Gövde { saglayiciId, kategori, hizmet, aciklama (≥3 kelime), iletisimTercihi:
+        telefonGoster|yalnizMesaj, fotograflar?: storageRef[], isZamani?: NOW|THIS_WEEK|FLEXIBLE }.
+        Aynı Idempotency-Key ile tekrar → ilk talep döner; farklı gövdeyle → 409.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Oluşturulan talep }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /teklif-talepleri/{talepId}:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [TeklifTalepleri]
+      summary: Talep ayrıntısı — yalnız iki taraf (taraf olmayana 404)
+      responses:
+        '200': { description: Başarılı }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /teklif-talepleri/{talepId}/teklif:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet veren teklif fiyatı verir (yalnız BEKLEMEDE)
+      description: |
+        Gövde { fiyat, aciklama? }. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/sec:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet alan teklifi kabul eder (yalnız TEKLIF_GELDI)
+      description: |
+        Gövde —. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/reddet:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Taraflardan biri talebi reddeder
+      description: |
+        Gövde { gerekce? }. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/tamamla:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet alan işi tamamlandı işaretler (yalnız SECILDI)
+      description: |
+        Gövde —. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/mesajlar:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Talep sohbetine mesaj (teklif verildikten sonra)
+      description: |
+        Gövde { metin?, fotografRef? }. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/okundu:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Karşı tarafın mesajlarını okundu işaretle
+      description: |
+        Gövde —. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /teklif-talepleri/{talepId}/review:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet alan tamamlanmış işi değerlendirir (talep başına tek)
+      description: |
+        Gövde { stars 1-5, text ≤1000 }. Taraf olmayana 404; geçersiz durumda 409 INVALID_STATE.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }

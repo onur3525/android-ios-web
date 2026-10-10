@@ -225,6 +225,16 @@ class ApiReviewRepository extends ChangeNotifier {
   final Map<String, List<Review>> _byProvider = {};
   final Map<String, double?> _average = {};
 
+  /// Bu oturumda gönderilen teklif talebi değerlendirmeleri.
+  final Map<String, Review> _byTalep = {};
+
+  /// Sunucudaki talep görünümünden değerlendirme okur (main.dart'ta
+  /// `ApiTeklifTalebiPort.degerlendirme` bağlanır): yeniden girişten
+  /// sonra da "Değerlendirme Yapıldı" doğru görünür.
+  Review? Function(String talepId)? talepCozucu;
+
+  Review? byTalep(String talepId) => _byTalep[talepId] ?? talepCozucu?.call(talepId);
+
   List<Review> byProvider(String providerId) => _byProvider[providerId] ?? const [];
 
   /// Müşterinin YAZDIĞI değerlendirmeler.
@@ -286,6 +296,39 @@ class ApiReviewRepository extends ChangeNotifier {
       return err;
     }
     return loadForProvider(providerId); // ortalama sunucudan tazelenir
+  }
+
+  /// "Bul" teklif talebi değerlendirmesi — kural denetimi SUNUCUDA.
+  Future<DomainError?> submitTalep({
+    required String talepId,
+    required int stars,
+    required String text,
+  }) async {
+    final (res, err) = await _guard(() => _api.talepIcin(
+          talepId: talepId,
+          stars: stars,
+          text: text,
+          idempotencyKey: ApiClient.newIdempotencyKey(),
+        ));
+    if (err != null) {
+      return err;
+    }
+    final providerId = '${res!['providerId'] ?? ''}';
+    _byTalep[talepId] = Review(
+      id: '${res['id']}',
+      talepId: talepId,
+      providerId: providerId,
+      authorId: '${res['authorId'] ?? ''}',
+      stars: (res['stars'] as num?)?.toInt() ?? stars,
+      text: '${res['text'] ?? text}',
+      status: ReviewStatus.published,
+      createdAt: DateTime.tryParse('${res['createdAt']}'),
+    );
+    notifyListeners();
+    if (providerId.isNotEmpty) {
+      await loadForProvider(providerId); // ortalama sunucudan tazelenir
+    }
+    return null;
   }
 }
 

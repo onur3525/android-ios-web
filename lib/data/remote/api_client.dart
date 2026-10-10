@@ -137,6 +137,9 @@ class ApiClient {
     };
     final token = await tokens.accessToken();
     if (token != null) {
+      // ⚠ ÇEREZE GEÇİŞ NOKTASI (web · M-05): backend HttpOnly/Secure/
+      // SameSite çerez koyduğunda web'de bu başlık EKLENMEZ; kimlik
+      // tarayıcının çerezle gönderdiği oturumdan gelir. Mobil aynen.
       headers['Authorization'] = 'Bearer $token';
     }
 
@@ -167,8 +170,6 @@ class ApiClient {
             body: body, query: query, idempotencyKey: idempotencyKey,
             expectList: expectList, attempt: attempt + 1);
       }
-      throw ApiFailure(networkError(), 0, 'NETWORK', null);
-    } on http.ClientException {
       throw ApiFailure(networkError(), 0, 'NETWORK', null);
     }
 
@@ -220,6 +221,15 @@ class ApiClient {
     }
 
     final map = decoded is Map<String, dynamic> ? decoded : null;
+    final kod = (map?['error'] as Map<String, dynamic>?)?['code'] as String?;
+    // ⚠ HESAP ASKIDA / BANLI (admin kararı, backend her istekte denetler):
+    // oturum MEVCUT oturum-düşme yoluyla kapatılır (jetonlar silinir, ana
+    // sayfaya dönülür). Sunucunun gerekçeli mesajı aşağıdaki hata olarak
+    // çağıran ekranın bugünkü hata gösterimine gider; YENİ ekran yok.
+    if (res.statusCode == 403 &&
+        (kod == 'ACCOUNT_SUSPENDED' || kod == 'ACCOUNT_BANNED')) {
+      await _forceLogout();
+    }
     throw ApiFailure(
       mapErrorBody(res.statusCode, map),
       res.statusCode,

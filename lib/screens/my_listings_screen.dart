@@ -1,9 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/tutar_bicimi.dart';
 import '../domain/hata_mesajlari.dart';
 import 'widgets/hata_gosterimi.dart';
-import 'widgets/ilan_no_etiketi.dart';
 import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/listing_controller.dart';
@@ -18,6 +18,7 @@ import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/kalan_alanda_ortala.dart';
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
 import 'teklif_talebi_detay_screen.dart';
@@ -190,6 +191,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
+          // sekme olduğu için geri oku YOK. Mobil ağaç değişmez.
+          if (kIsWeb)
+            RefPageTitle(saglayici ? 'İşlerim' : 'İlanlarım',
+                geriDugmesi: false),
           // .cust-tabs — rol duyarlı
           RefSegmentTabs(
             selected: _tab,
@@ -566,15 +572,22 @@ class _BosListe extends StatelessWidget {
   const _BosListe();
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Text(
-          'Bu sekmede gösterilecek ilan yok.',
-          textAlign: TextAlign.center,
-          style: refText(
-              size: RF.s14, weight: RF.w400, color: RC.greyLight),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final metin = Text(
+      'Bu sekmede gösterilecek ilan yok.',
+      textAlign: TextAlign.center,
+      style: refText(size: RF.s14, weight: RF.w400, color: RC.greyLight),
+    );
+    // ⚠ WEB: kalan görünür alanın dikey ortası (ortak `KalanAlandaOrtala`).
+    // Mobilde önceki `Padding(vertical: 40)` düzeni BİREBİR.
+    if (kIsWeb) {
+      return KalanAlandaOrtala(altBosluk: 24, child: metin);
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: metin,
+    );
+  }
 }
 
 /// ── ⚠ "BUL" ÜZERİNDEN KABUL EDİLEN TEKLİF — `_IlanKarti` İLE AYNI

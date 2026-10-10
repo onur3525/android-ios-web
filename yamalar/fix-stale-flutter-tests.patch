@@ -1,0 +1,129 @@
+diff -ru a/test/bos_alan_uyari_test.dart b/test/bos_alan_uyari_test.dart
+--- a/test/bos_alan_uyari_test.dart	2026-10-03 18:26:03.873461439 +0000
++++ b/test/bos_alan_uyari_test.dart	2026-10-03 18:26:03.874716248 +0000
+@@ -128,14 +128,8 @@
+           reason: 'alan başına tek onChanged olmalı (tutar + açıklama)');
+     });
+ 
+-    test('kart formunda düğme TÜM alanlar geçerliyken aktif', () {
+-      // ⚠ Bu ekran alan-altı `errorText` KULLANMIYOR: dört alan da
+-      // geçerli olmadan düğme pasif kalıyor, dolayısıyla kullanıcı
+-      // hiç hata metniyle karşılaşmıyor. Kural aynı, uygulaması
+-      // farklı.
+-      expect(s.contains('bool get _formGecerli'), isTrue);
+-      expect(s.contains('_formGecerli'), isTrue);
+-    });
++    // (Kaldırıldı, 3 Eki: 'kart formunda düğme…' testi kaldırılmış kart
++    // ödeme ekranını denetliyordu; derlenmeyen yetim test.)
+ 
+     test('şifre tekrar alanı yalnız EŞLEŞME sorar', () {
+       // Aynı kuralı iki satırda birden söylemek hangi alanın sorunlu
+diff -ru a/test/hata_dili_test.dart b/test/hata_dili_test.dart
+--- a/test/hata_dili_test.dart	2026-10-03 18:26:03.870808700 +0000
++++ b/test/hata_dili_test.dart	2026-10-03 18:26:03.872082853 +0000
+@@ -180,18 +180,9 @@
+   });
+ 
+ 
+-  group('RET METNİ KISA', () {
+-
+-    test('genel ret için TEK başlık', () {
+-      expect(t.contains("'Kart geçersiz'"), isTrue);
+-      expect(t.contains("'Ödeme alınamadı'"), isFalse,
+-          reason: 'eski uzun metin geri gelmiş');
+-      expect(t.contains('Bankanız işlemi onaylamadı'), isFalse);
+-      expect(t.contains('Bakiyeniz değişmedi. '), isFalse,
+-          reason: 'gereksiz cümle geri gelmiş');
+-    });
+-
+-  });
++  // (Kaldırıldı, 3 Eki: 'RET METNİ KISA' grubu kart ödeme ekranının ret
++  // metnini denetliyordu; ekran HizmetCep ücretsiz olduğu için kaldırılmış,
++  // değişken tanımı da onunla gitmişti — derlenmeyen yetim test.)
+ 
+ 
+   group('HATA DİLİ EKRANLARA YAYILDI', () {
+diff -ru a/test/widget/hizmet_alan_15_test.dart b/test/widget/hizmet_alan_15_test.dart
+--- a/test/widget/hizmet_alan_15_test.dart	2026-10-03 18:26:03.866704454 +0000
++++ b/test/widget/hizmet_alan_15_test.dart	2026-10-03 18:26:03.879329286 +0000
+@@ -561,6 +561,8 @@
+     });
+ 
+     test('beyaz şekilli hediye ikonu MAVİ zemin üzerinde', () {
++      // Hediye ikonu ilan verme ekranındadır (tek kullanım yeri).
++      final wl = read('lib/screens/create_listing_screen.dart');
+       final i = wl.indexOf('ic_gift.svg');
+       expect(i, greaterThan(0));
+       // Zemin mavi, ikon beyaz olmalı.
+diff -ru a/test/yer_tutucu_rengi_test.dart b/test/yer_tutucu_rengi_test.dart
+--- a/test/yer_tutucu_rengi_test.dart	2026-10-03 18:26:03.876135020 +0000
++++ b/test/yer_tutucu_rengi_test.dart	2026-10-03 18:26:03.877757153 +0000
+@@ -1,4 +1,3 @@
+-import 'dart:io';
+ 
+ import 'package:flutter/material.dart';
+ import 'package:flutter_test/flutter_test.dart';
+@@ -38,25 +37,6 @@
+     });
+   });
+ 
+-  group('2 — Kart formu temaya bağlı kalır', () {
+-    String kod(String p) => File(p)
+-        .readAsStringSync()
+-        .split('\n')
+-        .where((l) =>
+-            !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
+-        .join('\n');
+-
+-    test('dört alan da yer tutucusunu temadan alır', () {
+-      for (final h in const [
+-        "hintText: 'Ad Soyad'",
+-        "hintText: '0000 0000 0000 0000'",
+-        "hintText: 'AA/YY'",
+-      ]) {
+-        expect(s.contains(h), isTrue, reason: h);
+-      }
+-      // ⚠ Ekran kendi rengini VERMEZ: tek kaynak temadır. Buraya elle
+-      expect(s.contains('hintStyle:'), isFalse,
+-          reason: 'kart formu temayı eziyor');
+-    });
+-  });
++  // (Kaldırıldı, 3 Eki: '2 — Kart formu temaya bağlı kalır' grubu kaldırılmış
++  // kart ödeme ekranını denetliyordu; derlenmeyen yetim test.)
+ }
+diff -ru a/test/yorum_yapildi_durumu_test.dart b/test/yorum_yapildi_durumu_test.dart
+--- a/test/yorum_yapildi_durumu_test.dart	2026-10-03 18:26:03.868072093 +0000
++++ b/test/yorum_yapildi_durumu_test.dart	2026-10-03 18:26:03.869525448 +0000
+@@ -111,7 +111,7 @@
+       // başka dosya onu göremez. Bul akışı bu yüzden aynı bilgiyi
+       // kendi biçiminde yazıyordu: yeşil düz "Teklif Seçildi" metni,
+       // mavi "Yorum yapıldı" yazısı — zemin yok, tik yok, ok yok.
+-      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
++      final bul = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+       expect(bul.contains("const DurumSeridi('Teklif seçildi')"), isTrue);
+       expect(bul.contains("DurumSeridi('Yorum yapıldı'"), isTrue);
+       expect(bul.contains("aksiyon: 'Görüntüle'"), isTrue);
+@@ -123,11 +123,11 @@
+     test('⚠ ŞERİT TEK YERDE TANIMLI', () {
+       // İki akış aynı şeridi çiziyor; ikinci bir kopya doğarsa
+       // yeniden ayrışırlar.
+-      final o = _kod('lib/screens/offer_detail_screen.dart');
+-      final bul = _kod('lib/screens/teklif_talebi_detay_screen.dart');
++      final o = _kodu('lib/screens/offer_detail_screen.dart');
++      final bul = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+       expect(o.contains('class DurumSeridi'), isFalse);
+       expect(bul.contains('class DurumSeridi'), isFalse);
+-      expect(_kod('lib/screens/widgets/durum_seridi.dart')
++      expect(_kodu('lib/screens/widgets/durum_seridi.dart')
+           .contains('class DurumSeridi'), isTrue);
+     });
+ 
+@@ -144,7 +144,7 @@
+       // kalın ağırlık ve ok anlatır. Yan yana olması onu yeniden
+       // "durum metninin parçası" hâline getirmez.
+       expect(k.contains("aksiyon: 'Görüntüle'"), isTrue);
+-      final serit = _kod('lib/screens/widgets/durum_seridi.dart');
++      final serit = _kodu('lib/screens/widgets/durum_seridi.dart');
+       expect(serit.contains('decoration: TextDecoration.underline'), isTrue,
+           reason: 'eylem satırı bağlantı gibi görünmüyor');
+       expect(serit.contains('ic_chev.svg'), isTrue,

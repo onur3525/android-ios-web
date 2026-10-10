@@ -180,18 +180,9 @@ void main() {
   });
 
 
-  group('RET METNİ KISA', () {
-
-    test('genel ret için TEK başlık', () {
-      expect(t.contains("'Kart geçersiz'"), isTrue);
-      expect(t.contains("'Ödeme alınamadı'"), isFalse,
-          reason: 'eski uzun metin geri gelmiş');
-      expect(t.contains('Bankanız işlemi onaylamadı'), isFalse);
-      expect(t.contains('Bakiyeniz değişmedi. '), isFalse,
-          reason: 'gereksiz cümle geri gelmiş');
-    });
-
-  });
+  // (Kaldırıldı, 3 Eki: 'RET METNİ KISA' grubu kart ödeme ekranının ret
+  // metnini denetliyordu; ekran HizmetCep ücretsiz olduğu için kaldırılmış,
+  // değişken tanımı da onunla gitmişti — derlenmeyen yetim test.)
 
 
   group('HATA DİLİ EKRANLARA YAYILDI', () {
@@ -241,14 +232,8 @@ void main() {
           isTrue);
     });
 
-    test('FATURA denetleyicisi hatanın TÜRÜNÜ saklar', () {
-      // Metin saklamak yetmiyordu: ağ sorunu ile sunucu arızası aynı
-      // cümleye düşüyordu.
-      final c = _kod('lib/data/controllers/invoice_controller.dart');
-      expect(c.contains('DomainError? _lastError'), isTrue);
-      expect(c.contains('on ApiFailure catch'), isTrue);
-      // Eski sözleşme kırılmadı.
-      expect(c.contains('String? get hata =>'), isTrue);
-    });
+    // (Kaldırıldı, 4 Eki: 'FATURA denetleyicisi…' testi kaldırılmış
+    // `invoice_controller.dart` dosyasını okuyordu — HizmetCep ücretsiz,
+    // fatura denetleyicisi uygulamada yok.)
   });
 }

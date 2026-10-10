@@ -10,6 +10,7 @@ import '../../domain/failures.dart';
 import '../../domain/password_hasher.dart';
 import '../models/account.dart';
 import 'demo_hesap_ozetleri.dart';
+import '../../core/test_modu.dart';
 
 /// Hesap defteri + oturum. Backend geldiğinde API'si korunarak
 class AuthRepository extends ChangeNotifier {
@@ -67,7 +68,7 @@ class AuthRepository extends ChangeNotifier {
   final Map<String, ({String userId, DateTime bitis})> _kurtarmaYetkileri = {};
 
   AuthRepository({
-    bool seedTestAccount = kDebugMode,
+    bool seedTestAccount = TestModu.etkin,
     OtpService? otpService,
     Duration yetkiOmru = const Duration(minutes: 10),
     DateTime Function()? nowProvider,
@@ -86,11 +87,12 @@ class AuthRepository extends ChangeNotifier {
       //
       // Yeni değer 8 hane ve doğrulayıcının üç zayıflık denetiminden
       // de geçiyor (ardışık değil, tekrar değil, yaygın değil).
-      // Prototip test hesabı (532 111 22 33 / 1986onur)
+      // Prototip test hesabı (532 111 22 33). ⚠ ŞİFRE KAYNAKTA YOK:
+      // yalnız önceden hesaplanmış tuz+özet tutulur.
       // ⚠ KURUCU `buildPorts` İÇİNDE, YANİ `runApp`'TEN ÖNCE ÇALIŞIR.
       // Burada PBKDF2 hesaplansaydı ilk Flutter karesi o kadar
       _seed(hazirTuz: kDemoMusteriTuz, hazirOzet: kDemoMusteriOzet,
-          phone: '5321112233', pass: '1986onur',
+          phone: '5321112233', pass: '',
           roles: {Role.customer}, name: 'Onur Bütün',
           // ⚠ Demo hesabın e-postası da doldurulur: profil ekranı
           // gerçek veriyle denenebilsin, boş alan yüzünden e-posta
@@ -789,12 +791,10 @@ class AuthRepository extends ChangeNotifier {
     String email = '',
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
-    /// Kullanım Sözleşmesi + Gizlilik Politikası onayı.
-    /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
+    /// Kullanım Sözleşmesi + Gizlilik Politikası onayı (ZORUNLU).
     bool termsAccepted = false,
-    /// Google akışında doğrulanmış e-posta ile gelinir.
+    /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
-    /// Google `sub` — hesap eşleştirmesi bu kimlikle yapılır.
 
     /// ⚠ YALNIZ DEBUG TOHUMLAMASI İÇİN — önceden hesaplanmış tuz+özet.
     ///
@@ -913,8 +913,7 @@ class AuthRepository extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════
   // E-POSTA DOĞRULAMA
   //
-  // Normal kayıtta ZORUNLUDUR. Google akışında Google'ın doğrulanmış
-  // e-postası kullanılır ve ikinci doğrulama İSTENMEZ.
+  // Kayıtta ZORUNLUDUR.
   // ═══════════════════════════════════════════════════════════════
 
   /// Doğrulama kodu/bağlantısı gönderimini başlatır.
@@ -951,11 +950,6 @@ class AuthRepository extends ChangeNotifier {
     notifyListeners();
     return null;
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // GOOGLE HESAP EŞLEŞTİRME
-  // ═══════════════════════════════════════════════════════════════
-
 
   DomainError? switchRole(Role role) {
     final acc = currentAccount;

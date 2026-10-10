@@ -1,0 +1,658 @@
+// ═══════════════════════════════════════════════════════════════
+// İLAN · TEKLİF · İLETİŞİM · DEĞERLENDİRME · BİLDİRİM (+ admin moderasyonu)
+//
+// İş kuralları Flutter mock katmanıyla (mock_ports.dart) aynıdır ve
+// burada SUNUCUDA zorlanır (istemci değiştirilse de atlanamaz):
+//   · İlan yalnız hizmet alan rolüyle; ömür 30 saat; numara 10458231'den artar.
+//   · Teklif yalnız hizmet veren rolüyle; kendi ilanına teklif yok;
+//     ilan başına hizmet veren tek teklif; yalnız açık ve süresi dolmamış ilana.
+//   · Seçimi yalnız ilan sahibi yapar; seçilince diğer teklifler kapanır.
+//   · İletişim ÜCRETSİZ; yalnız teklifin iki tarafı açar/görür.
+//   · Değerlendirme yalnız ilan sahibi, seçilmiş teklif için, teklif başına bir.
+// HizmetCep ücretsizdir: ödeme/bakiye/komisyon YOK; teklif tutarı yalnız
+// hizmet verenin müşteriye sunduğu bedeldir.
+// ═══════════════════════════════════════════════════════════════
+import { randomUUID } from 'node:crypto';
+import { yenidenDogrulamaIste, yetkiIste } from '../auth.js';
+import { denetimYaz } from '../audit.js';
+import { kullaniciyaBildir } from '../bildirim.js';
+import { simdi, tekilIhlaliMi } from '../db.js';
+import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
+import { depolamaAyari } from '../entegrasyon.js';
+import { govdeOzeti, idemAnahtari, idemOlustur, oncekiKayit } from '../idempotency.js';
+import { ApiHatasi, HizSiniri, hata } from '../http.js';
+
+// Kötüye kullanım sınırları (kullanıcı başına; çok örnekte ORTAK — DB'de tutulur).
+// Gerçek kullanımın çok üstünde seçildi: yalnız otomatik/sel saldırısını keser.
+const ilanSiniri = new HizSiniri('ilan_olustur', 30, 60 * 60 * 1000);
+const teklifSiniri = new HizSiniri('teklif_ver', 120, 60 * 60 * 1000);
+// Hizmet veren dizini toplu kazınmasın diye (kullanıcı başına).
+const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
+import { kullaniciCoz } from './kullanici.js';
+import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
+import { fcmEtkin, pushKuyrugunuIsle } from '../fcm.js';
+import { dosyalariBagla } from './depolama_entegrasyon.js';
+
+export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
+const kural = (kod, mesaj) => new ApiHatasi(409, kod, mesaj);
+
+// ── Görünümler (Flutter mappers.dart ile birebir alan adları) ──
+export const ilanGorunumu = (l) => ({
+  id: l.id, ilanNo: l.ilan_no, ownerId: l.owner_id, title: l.title, location: l.location,
+  description: l.description, status: l.status, photoPaths: JSON.parse(l.photo_refs_json),
+  workTiming: l.work_timing, createdAt: l.created_at, expiresAt: l.expires_at,
+  selectedOfferId: l.selected_offer_id,
+});
+export const teklifGorunumu = (o) => ({
+  id: o.id, listingId: o.listing_id, providerId: o.provider_id, amountTl: o.amount_tl,
+  note: o.note, status: o.status, createdAt: o.created_at,
+});
+const yorumGorunumu = (y) => ({
+  id: y.id, listingId: y.listing_id ?? '', offerId: y.offer_id ?? '', talepId: y.talep_id,
+  providerId: y.provider_id, authorId: y.author_id, stars: y.stars, text: y.text,
+  status: y.status, createdAt: y.created_at, publishedAt: y.published_at,
+});
+
+/** Uygulama içi bildirim (Bildirimler sekmesi). */
+/**
+ * `pushHedef`: telefona giden bildirimin açacağı ekran (Flutter
+ * `kPushHedefleri`: ilan/is/teklif/talep/mesaj). Verilmezse Bildirimler açılır.
+ * Push gönderimi ayrı yürür (fcm.js); hatası bu işlemi etkilemez.
+ */
+export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, refId, pushHedef = null) {
+  await db.prepare(
+    `INSERT INTO notifications (id, user_id, type, title, body, ref_id, push_target, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(randomUUID(), kullaniciId, tur, baslik, govde, refId ?? null, pushHedef, simdi());
+  // Push işi isteğin işlemi COMMIT edildikten SONRA ve işlem bağlamının
+  // DIŞINDA tetiklenir (bkz. db.commitSonrasi). Böylece yeni satır görünür
+  // olur ve iş isteğin bağlantısını kullanmaz.
+  if (fcmEtkin()) db.commitSonrasi(() => { pushKuyrugunuIsle(db, { sureMs: 5_000 }).catch(() => {}); });
+}
+
+/** Süresi dolan açık ilanları kapatır; sahibine bir kez bildirir (idempotent). */
+export async function suresiDolanlariIsle(db) {
+  const z = simdi();
+  const dolan = await db.prepare(
+    `SELECT * FROM listings WHERE status = 'ACTIVE' AND selected_offer_id IS NULL AND expires_at < ?`,
+  ).all(z);
+  for (const l of dolan) {
+    await db.tx(async () => {
+      const n = await db.prepare(`UPDATE listings SET status = 'EXPIRED', updated_at = ? WHERE id = ? AND status = 'ACTIVE'`).run(z, l.id);
+      if (!n.changes) return;
+      await db.prepare(`UPDATE offers SET status = 'EXPIRED', updated_at = ? WHERE listing_id = ? AND status = 'ACTIVE'`).run(z, l.id);
+      if (l.expiry_notified !== 1) {
+        await uygulamaIciBildir(db, l.owner_id, 'LISTING_EXPIRED', 'İlanınızın süresi doldu', `"${l.title}" ilanınızın yayın süresi sona erdi.`, l.id, 'ilan');
+        await db.prepare('UPDATE listings SET expiry_notified = TRUE WHERE id = ?').run(l.id);
+      }
+    });
+  }
+  return dolan.length;
+}
+
+function kelimeSayisi(s) {
+  return String(s).trim().split(/\s+/).filter(Boolean).length;
+}
+
+export function ilanRotalar(r, db) {
+  const korumali = (f) => async (ctx) => {
+    const { u, oturum } = await kullaniciCoz(db, ctx.req);
+    ctx.kullanici = u;
+    ctx.kOturum = oturum;
+    return f(ctx);
+  };
+  const rolIste = (u, rol, mesaj) => {
+    if (u.active_role !== rol || !u.roles.split(',').includes(rol)) throw hata.yetki(mesaj);
+  };
+  const ilanGetir = async (id) => {
+    await suresiDolanlariIsle(db);
+    const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
+    if (!l) throw hata.bulunamadi('İlan bulunamadı');
+    return l;
+  };
+
+  // ── İLAN ──
+  r.post('/api/v1/listings', korumali(async (ctx) => {
+    rolIste(ctx.kullanici, 'CUSTOMER', 'İlanı yalnız hizmet alan rolüyle verebilirsiniz');
+    const baslik = String(ctx.body.title ?? '').trim();
+    const konum = String(ctx.body.location ?? '').trim();
+    const aciklama = String(ctx.body.description ?? '').trim();
+    const foto = ctx.body.photoRefs ?? [];
+    const zaman = ctx.body.workTiming ?? null;
+    // Idempotency: aynı anahtarla yeniden deneme ilk ilanı döndürür (sınır harcanmaz).
+    const ILAN_IDEM = { tablo: 'listings', sahipSutun: 'owner_id' };
+    const anahtar = idemAnahtari(ctx);
+    const ozet = govdeOzeti({ baslik, konum, aciklama, foto, zaman });
+    const onceki = await oncekiKayit(db, ILAN_IDEM, ctx.kullanici.id, anahtar, ozet);
+    if (onceki) return ilanGorunumu(onceki);
+    await ilanSiniri.denetle(db, ctx.kullanici.id);
+    // Başlık = katalogda AKTİF bir hizmet ya da kategori adı.
+    const katalogda = await db.prepare(
+      `SELECT 1 FROM services s JOIN categories c ON c.id = s.category_id
+        WHERE s.name = ? AND s.active = TRUE AND s.deleted_at IS NULL AND c.active = TRUE AND c.deleted_at IS NULL
+       UNION SELECT 1 FROM categories WHERE name = ? AND active = TRUE AND deleted_at IS NULL`,
+    ).get(baslik, baslik);
+    if (!katalogda) throw hata.dogrulama('Geçerli bir hizmet seçiniz');
+    if (konum.length < 2 || konum.length > 200) throw hata.dogrulama('Konum zorunludur');
+    if (kelimeSayisi(aciklama) < 3) throw hata.dogrulama('Açıklamanız en az 3 kelime olmalıdır');
+    if (aciklama.length > 2000) throw hata.dogrulama('Açıklama en fazla 2000 karakter olabilir');
+    if (!Array.isArray(foto) || foto.length > 10 || foto.some((f) => typeof f !== 'string' || !/^[A-Za-z0-9/_.-]{1,200}$/.test(f))) throw hata.dogrulama('Geçersiz fotoğraf listesi');
+    if (zaman !== null && !['NOW', 'THIS_WEEK', 'FLEXIBLE'].includes(zaman)) throw hata.dogrulama('Geçersiz iş zamanı');
+    // Dosyalar İŞLEM DIŞINDA doğrulanır (depo okuması uzun işlem açmasın).
+    await dosyalariDogrula(db, foto, ctx.kullanici.id, 'listing-photo');
+    const id = randomUUID();
+    const z = new Date();
+    const { kayit } = await idemOlustur(db, ILAN_IDEM, ctx.kullanici.id, anahtar, ozet, () => db.tx(async () => {
+      await dosyalariBagla(db, foto, ctx.kullanici.id);
+      const no = await db.prepare(`UPDATE counters SET value = value + 1 WHERE name = 'ilan_no' RETURNING value`).get();
+      await db.prepare(
+        `INSERT INTO listings (id, ilan_no, owner_id, title, location, description, photo_refs_json, work_timing,
+                               status, expiry_notified, created_at, expires_at, updated_at, idempotency_key, idem_hash)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', FALSE, ?, ?, ?, ?, ?)`,
+      ).run(id, String(no.value), ctx.kullanici.id, baslik, konum, aciklama, JSON.stringify(foto), zaman,
+        z.toISOString(), new Date(z.getTime() + ILAN_OMRU_MS).toISOString(), z.toISOString(), anahtar, anahtar ? ozet : null);
+      return db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
+    }));
+    return ilanGorunumu(kayit);
+  }));
+
+  r.get('/api/v1/listings/my', korumali(async (ctx) => {
+    await suresiDolanlariIsle(db);
+    return (await db.prepare(`SELECT * FROM listings WHERE owner_id = ? ORDER BY created_at DESC`).all(ctx.kullanici.id)).map(ilanGorunumu);
+  }));
+
+  r.get('/api/v1/listings/available', korumali(async (ctx) => {
+    rolIste(ctx.kullanici, 'PROVIDER', 'Bu liste hizmet veren rolüne aittir');
+    await suresiDolanlariIsle(db);
+    const kosul = [`status = 'ACTIVE'`, 'selected_offer_id IS NULL', 'expires_at > ?', 'owner_id <> ?'];
+    const p = [simdi(), ctx.kullanici.id];
+    const kat = ctx.query.get('category');
+    const ilce = ctx.query.get('district');
+    if (kat) { kosul.push('title = ?'); p.push(kat); }
+    if (ilce) { kosul.push(`location LIKE ? ESCAPE '!'`); p.push(`%${String(ilce).replace(/[!%_]/g, (c) => `!${c}`)}%`); }
+    // Sıralama/öncelik (kendi kategorisi önce, aile sonra) istemcide
+    // `eslestirme.dart` ile yapılır.
+    //
+    // ⚠ KESME SORUNU GİDERİLDİ: önceden yalnız EN YENİ 500 açık ilan
+    // dönüyordu; açık ilan 500'ü aşınca hizmet verenin KENDİ hizmetindeki
+    // ilanlar listeye hiç girmeyebiliyordu. Artık önce hizmet verenin
+    // doğrudan eşleşen ilanları (kendi seçtiği kategori/hizmetler, bu
+    // kategorilerin hizmetleri ve seçtiği hizmetlerin kategorisi — Flutter
+    // `dogrudanEslesir` ile aynı kural) en çok 2000, ardından geri kalan en
+    // yeni ilanlar en çok 500 döner. Yanıt biçimi AYNI (tek dizi).
+    const prof = await db.prepare('SELECT categories_json FROM provider_profiles WHERE user_id = ?').get(ctx.kullanici.id);
+    let secilen = [];
+    try { secilen = prof ? JSON.parse(prof.categories_json) : []; } catch { secilen = []; }
+    secilen = Array.isArray(secilen) ? secilen.filter((x) => typeof x === 'string').slice(0, 200) : [];
+    let eslesen = [];
+    if (secilen.length) {
+      const yerS = secilen.map(() => '?').join(', ');
+      const adlar = new Set(secilen);
+      for (const r of await db.prepare(
+        `SELECT s.name hizmet, c.name kategori FROM services s JOIN categories c ON c.id = s.category_id
+          WHERE s.deleted_at IS NULL AND (c.name IN (${yerS}) OR s.name IN (${yerS}))`,
+      ).all(...secilen, ...secilen)) {
+        if (adlar.has(r.kategori)) adlar.add(r.hizmet); // kategorisini seçmiş → bütün hizmetleri
+        if (adlar.has(r.hizmet)) adlar.add(r.kategori); // hizmetini seçmiş → kategori başlıklı ilan
+      }
+      const liste = [...adlar];
+      eslesen = await db.prepare(
+        `SELECT * FROM listings WHERE ${kosul.join(' AND ')} AND title IN (${liste.map(() => '?').join(', ')})
+          ORDER BY created_at DESC LIMIT 2000`,
+      ).all(...p, ...liste);
+    }
+    const goruldu = new Set(eslesen.map((l) => l.id));
+    const diger = (await db.prepare(`SELECT * FROM listings WHERE ${kosul.join(' AND ')} ORDER BY created_at DESC LIMIT 500`).all(...p))
+      .filter((l) => !goruldu.has(l.id));
+    return [...eslesen, ...diger].map(ilanGorunumu);
+  }));
+
+  r.get('/api/v1/listings/:id', korumali(async (ctx) => {
+    const l = await ilanGetir(ctx.params.id);
+    const u = ctx.kullanici;
+    if (l.owner_id === u.id) return ilanGorunumu(l);
+    // Hizmet veren: açık ilanı görür; teklif verdiği ilanı her durumda görür.
+    if (u.roles.split(',').includes('PROVIDER')) {
+      const teklifi = await db.prepare('SELECT 1 FROM offers WHERE listing_id = ? AND provider_id = ?').get(l.id, u.id);
+      if (teklifi || (l.status === 'ACTIVE' && !l.selected_offer_id)) return ilanGorunumu(l);
+    }
+    throw hata.bulunamadi('İlan bulunamadı');
+  }));
+
+  r.patch('/api/v1/listings/:id', korumali(async (ctx) => {
+    const l = await ilanGetir(ctx.params.id);
+    if (l.owner_id !== ctx.kullanici.id) throw hata.bulunamadi('İlan bulunamadı');
+    if (l.status !== 'ACTIVE' || l.selected_offer_id) throw kural('INVALID_STATE', 'Bu ilan artık düzenlenemez');
+    const d = {};
+    if (ctx.body.description !== undefined) {
+      const a = String(ctx.body.description).trim();
+      if (kelimeSayisi(a) < 3 || a.length > 2000) throw hata.dogrulama('Açıklamanız en az 3 kelime olmalıdır');
+      d.description = a;
+    }
+    if (ctx.body.title !== undefined) throw hata.dogrulama('Hizmet ilan verildikten sonra değiştirilemez');
+    if (Object.keys(d).length) {
+      await db.prepare('UPDATE listings SET description = ?, updated_at = ? WHERE id = ?').run(d.description, simdi(), l.id);
+    }
+    return ilanGorunumu(await db.prepare('SELECT * FROM listings WHERE id = ?').get(l.id));
+  }));
+
+  r.delete('/api/v1/listings/:id', korumali(async (ctx) => {
+    const l = await ilanGetir(ctx.params.id);
+    if (l.owner_id !== ctx.kullanici.id) throw hata.bulunamadi('İlan bulunamadı');
+    if (l.status !== 'ACTIVE') throw kural('INVALID_STATE', 'Bu ilan zaten kapalı');
+    const neden = ctx.body.reason ? String(ctx.body.reason).trim().slice(0, 500) : null;
+    const z = simdi();
+    await db.tx(async () => {
+      await db.prepare(`UPDATE listings SET status = 'USER_DELETED', delete_reason = ?, updated_at = ? WHERE id = ?`).run(neden, z, l.id);
+      await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND status = 'ACTIVE'`).run(z, l.id);
+      // İlanın fotoğrafları fiziksel silme kuyruğuna (yalnız ilan sahibinin dosyaları;
+      // başka canlı kayıtta kullanılıyorsa iş silmeden geri alır).
+      await silinmekUzereIsaretle(db, JSON.parse(l.photo_refs_json || '[]'), l.owner_id);
+    });
+    return undefined;
+  }));
+
+  // ── TEKLİF ──
+  r.post('/api/v1/offers', korumali(async (ctx) => {
+    rolIste(ctx.kullanici, 'PROVIDER', 'Teklifi yalnız hizmet veren rolüyle verebilirsiniz');
+    const TEKLIF_IDEM = { tablo: 'offers', sahipSutun: 'provider_id' };
+    const anahtar = idemAnahtari(ctx);
+    const teklifOzeti = govdeOzeti({ listingId: String(ctx.body.listingId ?? ''), amountTl: ctx.body.amountTl, note: String(ctx.body.note ?? '').trim() });
+    const once = await oncekiKayit(db, TEKLIF_IDEM, ctx.kullanici.id, anahtar, teklifOzeti);
+    if (once) return teklifGorunumu(once);
+    await teklifSiniri.denetle(db, ctx.kullanici.id); // idempotent tekrar sayılmaz
+    const l = await ilanGetir(String(ctx.body.listingId ?? ''));
+    const tutar = ctx.body.amountTl;
+    const not = String(ctx.body.note ?? '').trim();
+    if (!Number.isInteger(tutar) || tutar < 1 || tutar > 10_000_000) throw hata.dogrulama('Geçerli bir tutar giriniz');
+    if (not.length > 1000) throw hata.dogrulama('Not en fazla 1000 karakter olabilir');
+    if (l.owner_id === ctx.kullanici.id) throw kural('OWN_LISTING_OFFER', 'Kendi ilanınıza teklif veremezsiniz');
+    if (l.status === 'EXPIRED' || Date.parse(l.expires_at) < Date.now()) throw kural('LISTING_EXPIRED', 'İlanın süresi doldu');
+    if (l.status !== 'ACTIVE' || l.selected_offer_id) throw kural('LISTING_CLOSED', 'Bu ilan teklife kapalı');
+    if (await db.prepare('SELECT 1 FROM offers WHERE listing_id = ? AND provider_id = ?').get(l.id, ctx.kullanici.id)) {
+      throw kural('DUPLICATE_OFFER', 'Bu ilana zaten teklif verdiniz');
+    }
+    const id = randomUUID();
+    const z = simdi();
+    try {
+      await db.tx(async () => {
+        await db.prepare(
+          `INSERT INTO offers (id, listing_id, provider_id, amount_tl, note, status, idempotency_key, idem_hash, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)`,
+        ).run(id, l.id, ctx.kullanici.id, tutar, not, anahtar, anahtar ? teklifOzeti : null, z, z);
+        await uygulamaIciBildir(db, l.owner_id, 'NEW_OFFER', 'Yeni teklif', `"${l.title}" ilanınıza yeni bir teklif geldi.`, l.id, 'ilan');
+      });
+    } catch (e) {
+      // Eşzamanlı çift gönderim: (ilan, hizmet veren) tekil kısıtı → 500 değil, anlamlı yanıt.
+      if (tekilIhlaliMi(e)) {
+        // Aynı anahtarlı eşzamanlı tekrar: ilk teklif döner.
+        const ilk = await oncekiKayit(db, TEKLIF_IDEM, ctx.kullanici.id, anahtar, teklifOzeti);
+        if (ilk) return teklifGorunumu(ilk);
+        throw kural('DUPLICATE_OFFER', 'Bu ilana zaten teklif verdiniz');
+      }
+      throw e;
+    }
+    return teklifGorunumu(await db.prepare('SELECT * FROM offers WHERE id = ?').get(id));
+  }));
+
+  r.get('/api/v1/offers/my', korumali(async (ctx) =>
+    (await db.prepare('SELECT * FROM offers WHERE provider_id = ? ORDER BY created_at DESC').all(ctx.kullanici.id)).map(teklifGorunumu),
+  ));
+
+  r.put('/api/v1/listings/:id/selected-offer', korumali(async (ctx) => {
+    const l = await ilanGetir(ctx.params.id);
+    const o = await db.prepare('SELECT * FROM offers WHERE id = ? AND listing_id = ?').get(String(ctx.body.offerId ?? ''), l.id);
+    if (!o) throw hata.bulunamadi('Teklif bulunamadı');
+    if (l.owner_id !== ctx.kullanici.id) throw hata.yetki('Teklifi yalnızca ilan sahibi seçebilir');
+    if (l.selected_offer_id === o.id) return ilanGorunumu(l); // idempotent tekrar
+    if (l.status !== 'ACTIVE') throw kural('INVALID_STATE', 'Bu ilan için seçim yapılamaz');
+    if (l.selected_offer_id) throw kural('INVALID_STATE', 'Bu ilan için teklif zaten seçilmiş');
+    if (o.status !== 'ACTIVE') throw kural('INVALID_STATE', 'Bu teklif artık geçerli değil');
+    const z = simdi();
+    await db.tx(async () => {
+      // ⚠ KOŞULLU GÜNCELLEME: iki cihazdan eşzamanlı iki farklı teklif
+      // seçilirse yalnız İLKİ geçer; aksi hâlde iki teklif birden SELECTED
+      // kalabiliyordu (önceki denetim tx dışındaydı).
+      const sec = await db.prepare(
+        `UPDATE listings SET selected_offer_id = ?, updated_at = ? WHERE id = ? AND selected_offer_id IS NULL AND status = 'ACTIVE'`,
+      ).run(o.id, z, l.id);
+      if (sec.changes !== 1) throw kural('INVALID_STATE', 'Bu ilan için teklif zaten seçilmiş');
+      const t = await db.prepare(`UPDATE offers SET status = 'SELECTED', updated_at = ? WHERE id = ? AND status = 'ACTIVE'`).run(z, o.id);
+      if (t.changes !== 1) throw kural('INVALID_STATE', 'Bu teklif artık geçerli değil');
+      await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND id <> ? AND status = 'ACTIVE'`).run(z, l.id, o.id);
+      await uygulamaIciBildir(db, o.provider_id, 'OFFER_SELECTED', 'Teklifiniz seçildi', `"${l.title}" ilanında teklifiniz seçildi.`, l.id, 'is');
+    });
+    return ilanGorunumu(await db.prepare('SELECT * FROM listings WHERE id = ?').get(l.id));
+  }));
+
+  // ── İLETİŞİM (ücretsiz; yalnız teklifin iki tarafı) ──
+  const tarafKontrol = async (offerId, u) => {
+    const o = await db.prepare('SELECT * FROM offers WHERE id = ?').get(offerId);
+    if (!o) throw hata.bulunamadi('Teklif bulunamadı');
+    const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(o.listing_id);
+    if (u.id !== o.provider_id && u.id !== l.owner_id) throw hata.bulunamadi('Teklif bulunamadı');
+    return { o, l };
+  };
+
+  r.get('/api/v1/contact/:offerId', korumali(async (ctx) => {
+    const { o, l } = await tarafKontrol(ctx.params.offerId, ctx.kullanici);
+    const c = await db.prepare('SELECT * FROM contacts WHERE offer_id = ?').get(o.id);
+    if (!c) return { contactOpenAt: null };
+    const karsiId = ctx.kullanici.id === o.provider_id ? l.owner_id : o.provider_id;
+    const k = await db.prepare('SELECT name, phone FROM users WHERE id = ?').get(karsiId);
+    return { open: true, contactOpenAt: c.opened_at, counterpart: { name: k.name, phone: k.phone } };
+  }));
+
+  r.post('/api/v1/offers/:offerId/communication', korumali(async (ctx) => {
+    const { o, l } = await tarafKontrol(ctx.params.offerId, ctx.kullanici);
+    if (l.status === 'ADMIN_REMOVED' || l.status === 'USER_DELETED') throw kural('LISTING_REMOVED', 'İlan yayından kaldırılmış');
+    const var_ = await db.prepare('SELECT * FROM contacts WHERE offer_id = ?').get(o.id);
+    if (var_) return { open: true, contactOpenAt: var_.opened_at };
+    const z = simdi();
+    let eklendi = false;
+    await db.tx(async () => {
+      // Eşzamanlı iki açma isteği: ikincisi hata (500) vermez, idempotent döner;
+      // karşı tarafa bildirim YALNIZ BİR KEZ gider.
+      const ek = await db.prepare('INSERT INTO contacts (offer_id, opened_by, opened_at) VALUES (?, ?, ?) ON CONFLICT (offer_id) DO NOTHING').run(o.id, ctx.kullanici.id, z);
+      eklendi = ek.changes === 1;
+      if (!eklendi) return;
+      const karsi = ctx.kullanici.id === o.provider_id ? l.owner_id : o.provider_id;
+      await uygulamaIciBildir(db, karsi, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
+    });
+    if (!eklendi) {
+      const c = await db.prepare('SELECT opened_at FROM contacts WHERE offer_id = ?').get(o.id);
+      return { open: true, contactOpenAt: c?.opened_at ?? z };
+    }
+    return { open: true, contactOpenAt: z };
+  }));
+
+  // ── DEĞERLENDİRME ──
+  r.post('/api/v1/listings/:id/review', korumali(async (ctx) => {
+    const l = await ilanGetir(ctx.params.id);
+    if (l.owner_id !== ctx.kullanici.id) throw hata.yetki('Değerlendirmeyi yalnızca ilan sahibi yapabilir');
+    if (!l.selected_offer_id) throw kural('INVALID_STATE', 'Değerlendirme için seçilmiş bir teklif gerekir');
+    const yildiz = ctx.body.stars;
+    const metin = String(ctx.body.text ?? '').trim();
+    if (!Number.isInteger(yildiz) || yildiz < 1 || yildiz > 5) throw hata.dogrulama('Lütfen 1-5 arası bir puan seçin');
+    if (metin.length > 1000) throw hata.dogrulama('Yorum en fazla 1000 karakter olabilir');
+    const o = await db.prepare('SELECT * FROM offers WHERE id = ?').get(l.selected_offer_id);
+    if (await db.prepare('SELECT 1 FROM reviews WHERE offer_id = ?').get(o.id)) throw kural('INVALID_STATE', 'Bu iş için değerlendirme zaten yapıldı');
+    const id = randomUUID();
+    const z = simdi();
+    try {
+      await db.prepare(
+        `INSERT INTO reviews (id, listing_id, offer_id, provider_id, author_id, stars, text, status, created_at, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'PUBLISHED', ?, ?)`,
+      ).run(id, l.id, o.id, o.provider_id, ctx.kullanici.id, yildiz, metin, z, z);
+    } catch (e) {
+      // Eşzamanlı çift değerlendirme: teklif başına tekil → 500 değil, anlamlı yanıt.
+      if (tekilIhlaliMi(e)) throw kural('INVALID_STATE', 'Bu iş için değerlendirme zaten yapıldı');
+      throw e;
+    }
+    return yorumGorunumu(await db.prepare('SELECT * FROM reviews WHERE id = ?').get(id));
+  }));
+
+  // ── "BUL" — HİZMET VEREN ARAMA ──
+  // Hizmet alan, seçtiği hizmet/kategori için kayıtlı hizmet verenleri görür.
+  // Eşleşme kuralı Flutter ile AYNI (AuthRepository.saglayicilarKimSunuyor):
+  // hizmet verenin KENDİ seçtiği kategoriler kümesinde kategori ya da hizmet
+  // adı varsa eşleşir. Kendisi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar
+  // dönmez. GİZLİLİK: telefon, e-posta, mahalle ve açık adres DÖNMEZ;
+  // yalnız ad, il/ilçe, hizmet bölgeleri, puan, yorum ve tamamlanan iş sayısı.
+  // Nihai sıralama istemcide (mevcut yakınlık + ölçüt mantığı); sunucu
+  // müşterinin ilçesine hizmet verenleri öne alıp en çok 50 kayıt döndürür.
+  r.get('/api/v1/providers/search', korumali(async (ctx) => {
+    await saglayiciAramaSiniri.denetle(db, ctx.kullanici.id);
+    const kategori = String(ctx.query.get('category') ?? '').trim();
+    const hizmet = String(ctx.query.get('service') ?? '').trim();
+    const ilce = String(ctx.query.get('district') ?? '').trim();
+    if (!kategori && !hizmet) throw hata.dogrulama('Hizmet seçiniz');
+    if (kategori.length > 120 || hizmet.length > 120 || ilce.length > 80) throw hata.dogrulama('Geçersiz arama');
+    const adaylar = [kategori, hizmet].filter(Boolean);
+    // LIKE yalnız ön elemedir (joker karakterler '!' ile kaçırılır); kesin eşleşme JSON ile.
+    const kacir = (v) => v.replace(/[!%_]/g, (c) => `!${c}`);
+    const kosul = adaylar.map(() => `p.categories_json LIKE ? ESCAPE '!'`).join(' OR ');
+    const satir = await db.prepare(
+      `SELECT u.id, u.name, u.roles, u.photo_provider_ref, a.city, a.district, p.categories_json, p.districts_json
+         FROM users u JOIN provider_profiles p ON p.user_id = u.id LEFT JOIN addresses a ON a.user_id = u.id
+        WHERE u.deleted_at IS NULL AND u.status = 'ACTIVE' AND u.frozen_at IS NULL AND u.id <> ? AND (${kosul})
+        LIMIT 500`,
+    ).all(ctx.kullanici.id, ...adaylar.map((x) => `%${kacir(JSON.stringify(x))}%`));
+    const uygun = satir.filter((x) => {
+      if (!x.roles.split(',').includes('PROVIDER')) return false;
+      let k = [];
+      try { k = JSON.parse(x.categories_json); } catch { return false; }
+      return Array.isArray(k) && adaylar.some((a) => k.includes(a));
+    });
+    if (!uygun.length) return [];
+    const kimlik = uygun.map((x) => x.id);
+    const yer = kimlik.map(() => '?').join(', ');
+    // Toplu sayımlar (N+1 yok).
+    const puanlar = new Map((await db.prepare(
+      `SELECT provider_id, AVG(stars) a, COUNT(*) n FROM reviews WHERE status = 'PUBLISHED' AND provider_id IN (${yer}) GROUP BY provider_id`,
+    ).all(...kimlik)).map((r) => [r.provider_id, r]));
+    const isler = new Map((await db.prepare(
+      `SELECT provider_id, COUNT(*) n FROM offers WHERE status = 'SELECTED' AND provider_id IN (${yer}) GROUP BY provider_id`,
+    ).all(...kimlik)).map((r) => [r.provider_id, r.n]));
+    const talepIsleri = new Map((await db.prepare(
+      `SELECT saglayici_id, COUNT(*) n FROM teklif_talepleri WHERE durum = 'TAMAMLANDI' AND saglayici_id IN (${yer}) GROUP BY saglayici_id`,
+    ).all(...kimlik)).map((r) => [r.saglayici_id, r.n]));
+    const ayar = await depolamaAyari(db);
+    const liste = uygun.map((x) => {
+      let bolgeler = [];
+      try { bolgeler = JSON.parse(x.districts_json); } catch { /* boş */ }
+      const p = puanlar.get(x.id);
+      return {
+        id: x.id, name: x.name,
+        address: x.city || x.district ? { city: x.city ?? '', district: x.district ?? '' } : null,
+        serviceDistricts: Array.isArray(bolgeler) ? bolgeler : [],
+        rating: p?.n ? Number(Number(p.a).toFixed(2)) : null,
+        reviewCount: p?.n ?? 0,
+        completedJobs: (isler.get(x.id) ?? 0) + (talepIsleri.get(x.id) ?? 0),
+        photoRef: x.photo_provider_ref ?? null,
+      };
+    });
+    liste.sort((a, b) => (Number(b.serviceDistricts.includes(ilce)) - Number(a.serviceDistricts.includes(ilce)))
+      || ((b.rating ?? 0) - (a.rating ?? 0)) || (b.reviewCount - a.reviewCount) || (b.completedJobs - a.completedJobs)
+      || a.id.localeCompare(b.id));
+    const ilk = liste.slice(0, 50);
+    for (const x of ilk) {
+      x.photoUrl = await imzaliGorselAdresi(db, x.photoRef, ayar);
+      delete x.photoRef;
+    }
+    return ilk;
+  }));
+
+  r.get('/api/v1/providers/:id/reviews', korumali(async (ctx) => {
+    const liste = await db.prepare(
+      `SELECT * FROM reviews WHERE provider_id = ? AND status = 'PUBLISHED' ORDER BY created_at DESC LIMIT ?`,
+    ).all(ctx.params.id, Math.min(Number(ctx.query.get('limit') ?? 100), 200));
+    const ort = await db.prepare(`SELECT AVG(stars) a, COUNT(*) n FROM reviews WHERE provider_id = ? AND status = 'PUBLISHED'`).get(ctx.params.id);
+    return { average: ort.n ? Number(Number(ort.a).toFixed(2)) : null, count: ort.n, reviews: liste.map(yorumGorunumu) };
+  }));
+
+  // ── BİLDİRİMLER ──
+  r.get('/api/v1/notifications', korumali(async (ctx) =>
+    (await db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 200').all(ctx.kullanici.id))
+      .map((n) => ({ id: n.id, userId: n.user_id, type: n.type, title: n.title, body: n.body, refId: n.ref_id, createdAt: n.created_at, readAt: n.read_at })),
+  ));
+  r.get('/api/v1/notifications/unread-count', korumali(async (ctx) => ({
+    count: (await db.prepare('SELECT COUNT(*) n FROM notifications WHERE user_id = ? AND read_at IS NULL').get(ctx.kullanici.id)).n,
+  })));
+  r.post('/api/v1/notifications/:id/read', korumali(async (ctx) => {
+    const n = await db.prepare('UPDATE notifications SET read_at = ? WHERE id = ? AND user_id = ? AND read_at IS NULL').run(simdi(), ctx.params.id, ctx.kullanici.id);
+    return { ok: true, changed: n.changes };
+  }));
+  r.post('/api/v1/notifications/read-all', korumali(async (ctx) => {
+    const n = await db.prepare('UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL').run(simdi(), ctx.kullanici.id);
+    return { ok: true, changed: n.changes };
+  }));
+
+  // ── UYGULAMA GERİ BİLDİRİMİ ──
+  r.get('/api/v1/profiles/me/app-feedback', korumali(async (ctx) => {
+    const f = await db.prepare('SELECT * FROM app_feedback WHERE user_id = ?').get(ctx.kullanici.id);
+    return f ? { stars: f.stars, comment: f.comment, platform: f.platform, appVersion: f.app_version, updatedAt: f.updated_at } : undefined;
+  }));
+  r.post('/api/v1/profiles/me/app-feedback', korumali(async (ctx) => {
+    const y = ctx.body.stars;
+    if (!Number.isInteger(y) || y < 1 || y > 5) throw hata.dogrulama('Lütfen 1-5 arası bir puan seçin');
+    const yorum = ctx.body.comment ? String(ctx.body.comment).trim().slice(0, 1000) : null;
+    const pl = String(ctx.body.platform ?? '');
+    if (!['android', 'ios', 'web'].includes(pl)) throw hata.dogrulama('Geçersiz platform');
+    const sur = String(ctx.body.appVersion ?? '').slice(0, 30);
+    const z = simdi();
+    await db.prepare(
+      `INSERT INTO app_feedback (user_id, stars, comment, platform, app_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET stars = excluded.stars, comment = excluded.comment, platform = excluded.platform,
+         app_version = excluded.app_version, updated_at = excluded.updated_at`,
+    ).run(ctx.kullanici.id, y, yorum, pl, sur, z, z);
+    return { stars: y, comment: yorum, platform: pl, appVersion: sur, updatedAt: z };
+  }));
+
+  // ═════════════════ ADMİN ═════════════════
+  r.get('/admin/v1/stats', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    await suresiDolanlariIsle(db);
+    const say = async (sql, ...p) => (await db.prepare(sql).get(...p)).n;
+    return {
+      users: await say('SELECT COUNT(*) n FROM users WHERE deleted_at IS NULL'),
+      suspended: await say(`SELECT COUNT(*) n FROM users WHERE status = 'SUSPENDED' AND deleted_at IS NULL`),
+      banned: await say(`SELECT COUNT(*) n FROM users WHERE status = 'BANNED' AND deleted_at IS NULL`),
+      activeListings: await say(`SELECT COUNT(*) n FROM listings WHERE status = 'ACTIVE'`),
+      offersToday: await say('SELECT COUNT(*) n FROM offers WHERE created_at > ?', new Date(Date.now() - 86_400_000).toISOString()),
+      openTalepler: await say(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum IN ('BEKLEMEDE','TEKLIF_GELDI','SECILDI')`),
+      pendingDeletions: await say(`SELECT COUNT(*) n FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING'`),
+      failedNotifications: await say(`SELECT COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND template <> 'OTP' AND created_at > ?`, new Date(Date.now() - 7 * 86_400_000).toISOString()),
+    };
+  });
+
+  r.get('/admin/v1/listings', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    await suresiDolanlariIsle(db);
+    const kosul = ['1 = 1'];
+    const p = [];
+    const durum = ctx.query.get('status');
+    if (durum) { kosul.push('status = ?'); p.push(durum); }
+    const ara = String(ctx.query.get('q') ?? '').trim().toLowerCase();
+    if (ara) { kosul.push('(lower(title) LIKE ? OR ilan_no = ? OR lower(description) LIKE ?)'); p.push(`%${ara}%`, ara, `%${ara}%`); }
+    const sahip = ctx.query.get('ownerId');
+    if (sahip) { kosul.push('owner_id = ?'); p.push(sahip); }
+    const limit = Math.min(Number(ctx.query.get('limit') ?? 50), 200);
+    const ofset = Math.max(Number(ctx.query.get('offset') ?? 0), 0);
+    const toplam = (await db.prepare(`SELECT COUNT(*) n FROM listings WHERE ${kosul.join(' AND ')}`).get(...p)).n;
+    const liste = await db.prepare(`SELECT * FROM listings WHERE ${kosul.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...p, limit, ofset);
+    return { total: toplam, items: liste.map((l) => ({ ...ilanGorunumu(l), removedReason: l.removed_reason, deleteReason: l.delete_reason })) };
+  });
+
+  r.get('/admin/v1/listings/:id', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(ctx.params.id);
+    if (!l) throw hata.bulunamadi('İlan bulunamadı');
+    const sahip = await db.prepare('SELECT id, name, status FROM users WHERE id = ?').get(l.owner_id);
+    const teklifler = await db.prepare(
+      `SELECT o.*, u.name provider_name FROM offers o JOIN users u ON u.id = o.provider_id WHERE o.listing_id = ? ORDER BY o.created_at`,
+    ).all(l.id);
+    const yorum = await db.prepare('SELECT * FROM reviews WHERE listing_id = ?').get(l.id);
+    return {
+      ...ilanGorunumu(l), removedReason: l.removed_reason, removedAt: l.removed_at, deleteReason: l.delete_reason,
+      owner: sahip, offers: teklifler.map((o) => ({ ...teklifGorunumu(o), providerName: o.provider_name })),
+      review: yorum ? yorumGorunumu(yorum) : null,
+    };
+  });
+
+  r.post('/admin/v1/listings/:id/remove', async (ctx) => {
+    yetkiIste(ctx.admin, 'listings.remove');
+    yenidenDogrulamaIste(ctx.oturum);
+    const neden = String(ctx.body.reason ?? '').trim();
+    if (neden.length < 5 || neden.length > 1000) throw hata.dogrulama('İşlem nedeni 5-1000 karakter olmalıdır');
+    const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(ctx.params.id);
+    if (!l) throw hata.bulunamadi('İlan bulunamadı');
+    if (l.status === 'ADMIN_REMOVED') throw hata.durum('İlan zaten kaldırılmış');
+    const z = simdi();
+    const ref = randomUUID();
+    await db.tx(async () => {
+      await db.prepare(`UPDATE listings SET status = 'ADMIN_REMOVED', removed_reason = ?, removed_by = ?, removed_at = ?, updated_at = ? WHERE id = ?`)
+        .run(neden, ctx.admin.id, z, z, l.id);
+      await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND status IN ('ACTIVE','SELECTED')`).run(z, l.id);
+      await denetimYaz(db, {
+        adminId: ctx.admin.id, ip: ctx.ip, islem: 'listing.remove', hedefTur: 'listing', hedefId: l.id,
+        once: { status: l.status, ilanNo: l.ilan_no, ownerId: l.owner_id }, sonra: { status: 'ADMIN_REMOVED', ref }, gerekce: neden,
+      });
+    });
+    const sahip = await db.prepare('SELECT * FROM users WHERE id = ?').get(l.owner_id);
+    const bildirim = ctx.body.notify === false ? [] : await kullaniciyaBildir(db, sahip, 'ILAN_KALDIRILDI', { ILAN: `${l.title} (No: ${l.ilan_no})`, NEDEN: neden }, ref);
+    return { id: l.id, status: 'ADMIN_REMOVED', notifications: bildirim };
+  });
+
+  r.get('/admin/v1/offers', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const p = [];
+    const kosul = ['1 = 1'];
+    for (const [q, s] of [['providerId', 'provider_id'], ['listingId', 'listing_id'], ['status', 'status']]) {
+      const v = ctx.query.get(q);
+      if (v) { kosul.push(`${s} = ?`); p.push(v); }
+    }
+    return (await db.prepare(`SELECT * FROM offers WHERE ${kosul.join(' AND ')} ORDER BY created_at DESC LIMIT 200`).all(...p)).map(teklifGorunumu);
+  });
+
+  r.get('/admin/v1/reviews', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const p = [];
+    const kosul = ['1 = 1'];
+    for (const [q, s] of [['providerId', 'provider_id'], ['authorId', 'author_id'], ['status', 'status']]) {
+      const v = ctx.query.get(q);
+      if (v) { kosul.push(`${s} = ?`); p.push(v); }
+    }
+    return (await db.prepare(`SELECT * FROM reviews WHERE ${kosul.join(' AND ')} ORDER BY created_at DESC LIMIT 200`).all(...p))
+      .map((y) => ({ ...yorumGorunumu(y), removedReason: y.removed_reason, removedAt: y.removed_at }));
+  });
+
+  r.post('/admin/v1/reviews/:id/remove', async (ctx) => {
+    yetkiIste(ctx.admin, 'reviews.remove');
+    yenidenDogrulamaIste(ctx.oturum);
+    const neden = String(ctx.body.reason ?? '').trim();
+    if (neden.length < 5 || neden.length > 1000) throw hata.dogrulama('İşlem nedeni 5-1000 karakter olmalıdır');
+    const y = await db.prepare('SELECT * FROM reviews WHERE id = ?').get(ctx.params.id);
+    if (!y) throw hata.bulunamadi('Değerlendirme bulunamadı');
+    if (y.status === 'ADMIN_DELETED') throw hata.durum('Değerlendirme zaten kaldırılmış');
+    const z = simdi();
+    await db.tx(async () => {
+      await db.prepare(`UPDATE reviews SET status = 'ADMIN_DELETED', removed_reason = ?, removed_by = ?, removed_at = ? WHERE id = ?`).run(neden, ctx.admin.id, z, y.id);
+      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'review.remove', hedefTur: 'review', hedefId: y.id, once: { status: y.status, stars: y.stars, text: y.text }, sonra: { status: 'ADMIN_DELETED' }, gerekce: neden });
+    });
+    return { id: y.id, status: 'ADMIN_DELETED' };
+  });
+
+  r.post('/admin/v1/announcements', async (ctx) => {
+    yetkiIste(ctx.admin, 'announcements.write');
+    yenidenDogrulamaIste(ctx.oturum);
+    const baslik = String(ctx.body.title ?? '').trim();
+    const govde = String(ctx.body.body ?? '').trim();
+    const hedef = ctx.body.target ?? 'ALL';
+    if (baslik.length < 3 || baslik.length > 120) throw hata.dogrulama('Başlık 3-120 karakter olmalıdır');
+    if (govde.length < 5 || govde.length > 1000) throw hata.dogrulama('Metin 5-1000 karakter olmalıdır');
+    if (!['ALL', 'CUSTOMER', 'PROVIDER'].includes(hedef)) throw hata.dogrulama('Geçersiz hedef');
+    const alicilar = await db.prepare(
+      `SELECT id FROM users WHERE deleted_at IS NULL AND status = 'ACTIVE' ${hedef === 'ALL' ? '' : 'AND roles LIKE ?'}`,
+    ).all(...(hedef === 'ALL' ? [] : [`%${hedef}%`]));
+    const id = randomUUID();
+    await db.tx(async () => {
+      for (const a of alicilar) await uygulamaIciBildir(db, a.id, 'ANNOUNCEMENT', baslik, govde, id);
+      await db.prepare('INSERT INTO announcements (id, title, body, target, recipient_count, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(id, baslik, govde, hedef, alicilar.length, ctx.admin.id, simdi());
+      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'announcement.send', hedefTur: 'announcement', hedefId: id, sonra: { title: baslik, target: hedef, recipients: alicilar.length } });
+    });
+    return { id, recipients: alicilar.length };
+  });
+
+  r.get('/admin/v1/announcements', async (ctx) => {
+    yetkiIste(ctx.admin, 'announcements.write');
+    return (await db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 100').all())
+      .map((a) => ({ id: a.id, title: a.title, body: a.body, target: a.target, recipients: a.recipient_count, createdAt: a.created_at }));
+  });
+
+  r.get('/admin/v1/feedback', async (ctx) => {
+    yetkiIste(ctx.admin, 'feedback.read');
+    return (await db.prepare(`SELECT f.*, u.name FROM app_feedback f JOIN users u ON u.id = f.user_id ORDER BY f.updated_at DESC LIMIT 500`).all())
+      .map((f) => ({ userId: f.user_id, name: f.name, stars: f.stars, comment: f.comment, platform: f.platform, appVersion: f.app_version, updatedAt: f.updated_at }));
+  });
+}

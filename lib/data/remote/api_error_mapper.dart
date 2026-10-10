@@ -28,6 +28,10 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return NotFoundError(text);
     case 'UNAUTHORIZED':
     case 'FORBIDDEN':
+    // Hesap askıda/banlı: sunucunun mesajı ("Hesabınız askıya
+    // alınmıştır.") olduğu gibi gösterilir; oturum ApiClient'ta kapanır.
+    case 'ACCOUNT_SUSPENDED':
+    case 'ACCOUNT_BANNED':
       return UnauthorizedError(text);
     case 'INVALID_STATE':
       return InvalidStateError(text);

@@ -46,12 +46,12 @@ Set<String> _sozlesmeUclari() {
   final sonuc = <String>{};
   String? yol;
   for (final l in satirlar) {
-    final y = RegExp(r"^  (/[^:]*):\s*\$").firstMatch(l);
+    final y = RegExp(r"^  (/[^:]*):\s*$").firstMatch(l);
     if (y != null) {
       yol = _normalize(y.group(1)!);
       continue;
     }
-    final m = RegExp(r'^    (get|post|put|patch|delete):\s*\$').firstMatch(l);
+    final m = RegExp(r'^    (get|post|put|patch|delete):\s*$').firstMatch(l);
     if (m != null && yol != null) {
       sonuc.add('${m.group(1)!.toUpperCase()} $yol');
     }

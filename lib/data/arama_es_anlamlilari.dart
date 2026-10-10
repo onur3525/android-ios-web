@@ -355,7 +355,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'güvenlik alarmı',
     'alarm montajı', 'ev alarm sistemi'
   ],
-  'Görüntülü Diafon Montajı': ['diafon', 'interkom', 'görüntülü kapı',
+  'Görüntülü Diafon': ['diafon', 'interkom', 'görüntülü kapı',
     'kapı zili montajı',
     'diafon montajı', 'interkom montajı', 'kapı zili sistemi',
     'görüntülü kapı zili'
@@ -363,7 +363,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Akıllı Kilit': ['akıllı kilit', 'parmak izi kilit', 'şifreli kilit',
     'parmak izli kilit', 'akıllı kapı kilidi'
   ],
-  'Yangın Algılama': ['yangın alarmı', 'duman dedektörü',
+  'Yangın Algılama Sistemi': ['yangın alarmı', 'duman dedektörü',
     'yangın sistemi',
     'yangın sensörü'
   ],
@@ -390,7 +390,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'havalandırma sistemi', 'aspiratör sistemi', 'menfez montajı',
     'baca havalandırma'
   ],
-  'VRF Sistemleri': ['vrf', 'merkezi klima', 'multi split',
+  'VRF Klima Sistemi Bakımı': ['vrf', 'merkezi klima', 'multi split',
     'ticari klima',
     'vrf klima', 'merkezi klima sistemi', 'kanallı klima'
   ],
@@ -448,11 +448,11 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   ],
 
   // ── Uydu ve Görüntü Sistemleri ──
-  'Uydu Anteni Kurulumu': ['uydu anteni', 'çanak kurulumu',
+  'Uydu Anteni Montajı': ['uydu anteni', 'çanak kurulumu',
     'anten takma',
     'çanak anten kurulumu', 'uydu montajı', 'digitürk montajı'
   ],
-  'Çanak Anten Ayarı': ['çanak ayarı', 'uydu ayarı', 'sinyal yok',
+  'Uydu Anteni Ayarı': ['çanak ayarı', 'uydu ayarı', 'sinyal yok',
     'kanal gelmiyor',
     'sinyal ayarı', 'kanal ayarı'
   ],
@@ -460,27 +460,19 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'apartman anten',
     'merkezi sistem anten', 'apartman anten sistemi'
   ],
-  'Televizyon Duvar Montajı': ['tv askı aparatı', 'televizyon asma',
-    'tv duvara montaj',
-    'televizyon askısı montajı', 'duvara tv asma'
-  ],
 
   // ── İnternet ve Ağ ──
   'Modem Kurulumu': ['modem kurulum', 'internet bağlantısı',
     'modem ayarı', 'internet gelmiyor',
     'modem kurulumu', 'internet kurulumu'
   ],
-  'Ağ Kablolama': ['ağ kablosu', 'network kurulumu', 'ethernet çekimi',
+  'İnternet Kablosu Çekme': ['ağ kablosu', 'network kurulumu', 'ethernet çekimi',
     'kablolama',
     'network kablolama', 'kablo tesisatı'
   ],
-  'Wifi Güçlendirme': ['wifi çekmiyor', 'internet yavaş',
+  'Wi-Fi Sinyal Güçlendirme': ['wifi çekmiyor', 'internet yavaş',
     'sinyal güçlendirici', 'mesh sistem',
     'access point'
-  ],
-  'Akıllı Ev Sistemleri': ['akıllı ev', 'otomasyon', 'akıllı priz',
-    'sesli asistan',
-    'smart home', 'google home kurulumu'
   ],
 
   // ── Boya ──
@@ -840,15 +832,10 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Kilit Değişimi': ['kilit bozuldu', 'kilit takma', 'barel değişimi',
     'göbek değişimi', 'kilit yenileme',
     'kilit değiştirme', 'kapı kilidi montajı'
-  ],
+  , 'çelik kapı kilidi', 'çoklu kilit değişimi'],
   'Barel Değişimi': ['barel değişimi', 'kilit göbeği',
     'silindir değişimi',
     'barel değiştirme'
-  ],
-  'Oto Anahtarcı': ['araba anahtarı', 'oto kumanda', 'immobilizer',
-    'araç anahtar kopyalama', 'araba kilitlendi',
-    'araba anahtarı kopyalama', 'oto anahtar kopyalama',
-    'immobilizer anahtar'
   ],
 
   // ── Bahçe ──
@@ -1062,7 +1049,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
     'spor hocası',
     'kişisel antrenör'
   ],
-  'Pilates Dersi': ['pilates', 'pilates dersi', 'reformer pilates',
+  'Pilates': ['pilates', 'pilates dersi', 'reformer pilates',
     'pilates eğitmeni'
   ],
   'Tenis Dersi': ['tenis dersi', 'tenis hocası', 'tenis kursu',
@@ -1186,7 +1173,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Merdiven Temizliği': [
     'apartman temizliği', 'bina merdiven temizliği', 'site temizliği'
   ],
-  'Buhar Makinesiyle Temizlik': [
+  'Buharlı Ev Temizliği': [
     'buharlı temizlik', 'buhar makinesi', 'dezenfekte temizlik'
   ],
 
@@ -1315,10 +1302,10 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Kamera Bakım ve Onarımı': [
     'kamera tamiri', 'kamera arızası', 'kayıt cihazı arızası'
   ],
-  'Parmak İzli Geçiş Sistemi': [
+  'Parmak İzi Geçiş Sistemi': [
     'parmak izi okuyucu', 'personel geçiş sistemi', 'kartlı geçiş'
   ],
-  'Bariyer ve Otopark Sistemi': [
+  'Otopark Bariyer Sistemi': [
     'otopark bariyeri', 'kollu bariyer montajı'
   ],
 
@@ -1326,14 +1313,8 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Klima Gaz Dolumu': [
     'klima gaz dolumu', 'klima gazı bitti', 'soğutucu gaz dolumu'
   ],
-  'Klima Sökme Takma': [
+  'Klima Sökme-Takma': [
     'klima taşıma', 'klima yeri değişimi', 'klima sökümü'
-  ],
-  'Kanallı Klima Montajı': [
-    'kanallı klima', 'gizli tavan klima montajı'
-  ],
-  'Salon Tipi Klima Montajı': [
-    'salon tipi klima', 'dikey klima montajı'
   ],
 
   // ── Beyaz Eşya Servisi — yeni hizmetler ──
@@ -1346,9 +1327,6 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   ],
   'Su Sebili Tamiri': [
     'su sebili tamiri', 'sebil bakımı'
-  ],
-  'Beyaz Eşya Nakli': [
-    'beyaz eşya taşıma', 'buzdolabı taşıma'
   ],
 
   // ── Elektronik Cihaz Tamiri — yeni hizmetler ──
@@ -1377,26 +1355,8 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
 
 
   // ── Uydu ve Anten Sistemleri — yeni hizmetler ──
-  'Uydu Alıcı Kurulumu': [
-    'uydu alıcısı kurulumu', 'receiver ayarı', 'kanal yükleme'
-  ],
-  'Karasal Anten Montajı': [
-    'karasal anten', 'çatı anteni montajı'
-  ],
-  'Anten Kablo Çekimi': [
-    'anten kablosu çekimi', 'tv kablo çekimi'
-  ],
 
   // ── İnternet ve Ağ Kurulumu — yeni hizmetler ──
-  'Fiber İnternet Kurulumu': [
-    'fiber kurulumu', 'fiber modem kurulumu', 'fiber hat çekimi'
-  ],
-  'Kamera Ağ Kurulumu': [
-    'ip kamera ağı', 'nvr ağ ayarı'
-  ],
-  'Sunucu ve NAS Kurulumu': [
-    'nas kurulumu', 'yedekleme sunucusu', 'ev sunucusu'
-  ],
 
   // ── Boya ve Badana — yeni hizmetler ──
   'Tavan Boyama': [
@@ -1620,15 +1580,6 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   ],
 
   // ── Çilingir ve Kilit — yeni hizmetler ──
-  'Çelik Kapı Kilidi Değişimi': [
-    'çelik kapı kilidi', 'çoklu kilit değişimi'
-  ],
-  'Kasa Açma': [
-    'kasa açma', 'para kasası açtırma'
-  ],
-  'Anahtar Kopyalama': [
-    'anahtar kopyalama', 'yedek anahtar'
-  ],
 
   // ── Bahçe ve Peyzaj — yeni hizmetler ──
   'Çim Biçme': [
@@ -1765,7 +1716,7 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'Evde Fitness Antrenörü': [
     'evde spor hocası', 'evde personal trainer'
   ],
-  'Yoga Dersi': [
+  'Yoga': [
     'yoga eğitmeni', 'yoga dersi'
   ],
   'Beslenme ve Antrenman Programı': [
@@ -1818,9 +1769,18 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   'İçerik Üretimi': [
     'içerik üretimi', 'blog yazarlığı', 'metin yazarlığı'
   ],
+  // ⚠ ÜÇÜNCÜ TARAF MARKA ADLARI KALDIRILDI (19 Eyl, kullanıcı
+  // kararı): burada iki pazaryeri şirketinin adı arama terimi olarak
+  // yazılıydı. Üretim deposunda başka şirketlerin markası bulunmamalı
+  // — yorumda bile.
+  //
+  // ⚠ ARAMA KAPSAMI KORUNDU: marka adı yerine kullanıcıların aynı
+  // hizmeti tarif ederken yazdığı genel terimler bırakıldı. Tek
+  // terime düşürseydim bu hizmet aramada bulunamaz hâle gelirdi.
   'E-Ticaret Pazaryeri Yönetimi': [
-    'trendyol mağaza yönetimi', 'pazaryeri yönetimi',
-    'hepsiburada mağaza'
+    'pazaryeri yönetimi', 'pazaryeri mağaza yönetimi',
+    'e-ticaret mağaza yönetimi', 'online mağaza yönetimi',
+    'sanal mağaza yönetimi'
   ],
 
   // ── Fotoğraf Çekimi — yeni hizmetler ──
@@ -1829,9 +1789,6 @@ const Map<String, List<String>> kAramaEsAnlamlilari = {
   ],
   'Bebek ve Aile Çekimi': [
     'bebek fotoğrafçısı', 'aile çekimi', 'doğum günü çekimi'
-  ],
-  'Mekan ve Emlak Çekimi': [
-    'emlak fotoğrafı', 'mekan çekimi', 'airbnb çekimi'
   ],
   'Video Çekim ve Kurgu': [
     'video çekimi', 'tanıtım filmi', 'drone çekimi'

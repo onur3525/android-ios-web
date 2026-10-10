@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../../core/test_modu.dart';
 
 /// SMS doğrulama soyutlaması. Production'da backend'e bağlanır;
 /// prototipte YALNIZ debug derlemede sabit kod kabul edilir
@@ -19,6 +19,8 @@ class MockOtpService implements OtpService {
   @override
   Future<bool> verify(String phone, String code) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    return kDebugMode && code == _debugCode;
+    // ⚠ YALNIZ TEST MODUNDA (bkz. `TestModu`): release'te ve varsayılan
+    // web derlemesinde sabit kod KABUL EDİLMEZ.
+    return TestModu.etkin && code == _debugCode;
   }
 }

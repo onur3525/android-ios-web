@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/core/boot.dart';
-import 'package:hizmetcep/core/deep_links.dart';
 import 'package:hizmetcep/data/izmir.dart';
 import 'package:hizmetcep/data/izmir_neighborhoods.dart';
 import 'package:hizmetcep/data/legal_cache.dart';

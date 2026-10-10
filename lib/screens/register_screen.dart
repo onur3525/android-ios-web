@@ -2,7 +2,6 @@ import 'dart:async';
 import '../domain/form_mesajlari.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/platform_kapilari.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/eposta_oneri.dart';
@@ -17,6 +16,7 @@ import '../data/controllers/region_controller.dart';
 import 'widgets/region_picker.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
+import '../ui/web_panel.dart';
 import '../data/controllers/profile_controller.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import '../data/models/pending_listing.dart';
@@ -30,6 +30,8 @@ import '../core/teshis.dart';
 import '../data/remote/api_config.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../ui/alt_panel.dart';
+import '../ui/panel_rotasi.dart';
 
 /// Kayıt Adım 1 — HTML kayıt formlarının birebir karşılığı.
 /// Müşteri: ad, soyad, e-posta*, telefon, İl (yalnız İzmir), ilçe, mahalle,
@@ -325,9 +327,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final refs = <String>[];
     try {
       for (final yol in fotograflar) {
-        final tip = contentTypeOf(yol);
+        // ⚠ WEB'DE TÜR YOLDAN ÇÖZÜLEMEZ: burada elimizde yalnız
+        // KAYITLI YOL var (`PendingListingStore`), `XFile` değil.
+        // Web'de o yol bir `blob:` adresidir ve uzantısı yoktur.
+        //
+        // ⚠ TÜR UYDURULMAZ: bilinmeyen türe `image/jpeg` demek,
+        // sunucuya yanlış `Content-Type` göndermek olurdu. Fotoğraf
+        // atlanır ve kayıt akışı sürer — bugünkü davranış budur.
+        //
+        // ⚠ ASIL ÇÖZÜM SEÇİM ANINDA: `photo_picker` artık türü
+        // `XFile.mimeType`ten okuyup `PhotoItem`e yazıyor. Bu akışın
+        // da yol yerine tür taşıyan bir kayıt kullanması gerekir —
+        // `PendingListingStore` sözleşmesi değişmeden yapılamaz, bu
+        // yüzden RAPORLANDI.
+        // ── ⚠ TÜR ÖNCE TASLAKTAN OKUNUR ──
+        //
+        // `PendingListing.localPhotoTypes`, seçim anında
+        // `XFile.mimeType`ten okunan gerçek türü taşır. Web'de yol bir
+        // `blob:` adresidir ve uzantısı yoktur; yoldan türetmek
+        // ÇALIŞMAZ ve fotoğraflar sessizce atlanıyordu.
+        //
+        // ⚠ YOLA GERİ DÜŞÜLÜR: eski taslaklarda (tür listesi yok ya da
+        // kısa) ve mobilde bugünkü davranış aynen sürer.
+        //
+        // ⚠ TÜR UYDURULMAZ: ikisi de çözemezse fotoğraf atlanır;
+        // sunucuya yanlış `Content-Type` gönderilmez.
+        final sira = fotograflar.indexOf(yol);
+        final taslakTuru = (sira >= 0 && sira < p.localPhotoTypes.length)
+            ? p.localPhotoTypes[sira]
+            : null;
+        final tip = taslakTuru ?? contentTypeOf(yol);
         if (tip == null) {
-          continue; // desteklenmeyen tür — atlanır
+          continue; // tür çözülemedi — atlanır
         }
         final boyut = await yerelBoyut(yol);
         // Mevcut yükleme sözleşmesi (`photo_picker` ile AYNI):
@@ -465,7 +496,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /// ⚠ İl DEĞİŞİRSE ilçe ve mahalle SIFIRLANIR; sağlayıcı tarafında
   /// hizmet bölgeleri de temizlenir (başka ilin ilçeleri taşınamaz).
   Future<void> _ilSec(BuildContext context) async {
-    final sel = await showModalBottomSheet<String>(
+    final sel = await altPanelGoster<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -498,7 +529,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   /// İlçe seçimi — `RegionPickerSheet` (kontrollü liste).
   Future<void> _ilceSec(BuildContext context) async {
-    final sel = await showModalBottomSheet<String>(
+    final sel = await altPanelGoster<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -530,7 +561,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   /// Mahalle seçimi — ilçeye bağlı liste; serbest metin YOK.
   Future<void> _mahalleSec(BuildContext context) async {
-    final sel = await showModalBottomSheet<String>(
+    final sel = await altPanelGoster<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -790,7 +821,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _busy = false);
     Navigator.push(
       context,
-      MaterialPageRoute(
+      panelRotasi<void>(
+        // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
+        // adından seçer; adsız rota tanınmıyordu. Gezinme davranışı
+        // DEĞİŞMEZ.
+        settings: const RouteSettings(name: '/dogrulama'),
         builder: (_) => OtpScreen(
           phone: phone,
           purpose: OtpPurpose.register,
@@ -969,7 +1004,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /// Seçimler `_cats` içinde tutulur; sheet kapanınca, widget yeniden
   /// çizilince ve doğrulama sırasında KAYBOLMAZ.
   Future<void> _kategoriSec(BuildContext context) async {
-    final sonuc = await showModalBottomSheet<Set<String>>(
+    final sonuc = await altPanelGoster<Set<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -1004,7 +1039,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /// işaretler. Böylece mevcut iş kuralı (hizmet bölgesi listesi)
   /// değişmeden korunur.
   Future<void> _ilceSecCoklu(BuildContext context) async {
-    final sonuc = await showModalBottomSheet<Set<String>>(
+    final sonuc = await altPanelGoster<Set<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -1151,10 +1186,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: RC.pageBg,
+                // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
         // ⚠ TEŞHİS: bayrak kapalıyken `Stack` tek çocukla çizilir,
         // panel `SizedBox.shrink()` döner — davranış değişmez.
-        body: Stack(children: [
+        body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: Stack(children: [
           SafeArea(
           child: SingleChildScrollView(
             // ⚠ KLAVYE AÇIKKEN EK ALT BOŞLUK — "Devam Et" butonu
@@ -1772,20 +1822,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       busy: _busy, onPressed: gecerli ? _next : null),
                 ),
 
-                // `.rg-or` + `.rg-google` — kayıt akışında da bulunur
-                //
-                // ⚠ iOS'TA GÖSTERİLMEZ (App Store kuralı 4.8 — bkz.
-                // lib/core/platform_kapilari.dart). Ayırıcı ile düğme
-                // BİRLİKTE gizlenir; sahipsiz "veya" çizgisi kalmaz.
-                //
-                // ⚠ ANDROID'DE HİÇBİR ŞEY DEĞİŞMEZ.
               ]),
             ),
             ),
           ),
         ),
           const TeshisPaneli(),
-        ]),
+        ])),
 
       );
 

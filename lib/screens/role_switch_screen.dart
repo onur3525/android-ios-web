@@ -8,6 +8,7 @@ import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'widgets/kategori_secim_paneli.dart';
+import '../ui/alt_panel.dart';
 
 /// ROL DEĞİŞTİR
 ///
@@ -213,7 +214,7 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     // Artık Hizmet Kategorilerim ekranıyla AYNI panel kullanılır:
     // kullanıcı yazar, eşleşen ALT HİZMETLER çıkar, dokununca seçilir.
     // İki ekranda iki farklı davranış olmaz.
-    final sonuc = await showModalBottomSheet<Set<String>>(
+    final sonuc = await altPanelGoster<Set<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -238,7 +239,7 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     if (iller.isEmpty) {
       return;
     }
-    final sonuc = await showModalBottomSheet<Set<String>>(
+    final sonuc = await altPanelGoster<Set<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -275,7 +276,7 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     }
     // ⚠ Controller DİNLENİR: bölge verisi sonradan gelirse liste
     // kendiliğinden dolar, boş "Sonuç bulunamadı" oluşmaz.
-    final sonuc = await showModalBottomSheet<Set<String>>(
+    final sonuc = await altPanelGoster<Set<String>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,

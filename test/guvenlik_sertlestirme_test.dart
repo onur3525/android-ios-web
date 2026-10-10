@@ -97,15 +97,8 @@ void main() {
     });
   });
 
-  group('KART ALANLARINDA PANO KAPALI', () {
-
-    test('numara ve CVV kopyalanamaz', () {
-      expect('enableInteractiveSelection: false'.allMatches(k).length,
-          greaterThanOrEqualTo(2));
-      expect('contextMenuBuilder: null'.allMatches(k).length,
-          greaterThanOrEqualTo(2));
-    });
-  });
+  // (Kaldırıldı, 3 Eki: 'KART ALANLARINDA PANO KAPALI' grubu kaldırılmış kart
+  // ödeme formunu denetliyordu; derlenmeyen yetim test.)
 
   group('SERTİFİKA SABİTLEME', () {
     test('PİN YOKKEN devre dışı — davranış değişmez', () {
@@ -242,12 +235,8 @@ void main() {
       expect(k.contains('isDebuggerConnected'), isTrue);
     });
 
-    test('UYARI ŞERİDİ yalnız riskliyken çizilir', () {
-      expect(t.contains('_cihaz?.paraIcinRiskli ?? false'), isTrue);
-      // ⚠ İşlem ENGELLENMEZ: düğme yalnız tutar kuralına bakar.
-      expect(t.contains('paraIcinRiskli ? null :'), isFalse,
-          reason: 'riskli ortamda işlem engellenmiş — yanlış pozitif riski');
-    });
+    // (Kaldırıldı, 3 Eki: 'UYARI ŞERİDİ…' testi kaldırılmış ödeme ekranındaki
+    // şeridi denetliyordu; derlenmeyen yetim test.)
   });
 
   group('SÜRÜM DERLEMESİ KARARTMALI', () {

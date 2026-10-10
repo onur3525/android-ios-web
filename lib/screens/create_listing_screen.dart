@@ -20,8 +20,10 @@ import '../data/remote/api_client.dart';
 import 'widgets/photo_picker.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/izmir.dart';
+import '../ui/header_arama.dart' show kHizmetAramaIpucu;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import '../data/models/pending_listing.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import 'role_select_screen.dart';
@@ -35,7 +37,6 @@ import 'widgets/ilan_otp_adimi.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../core/validators.dart';
 import '../core/teshis.dart';
-import 'category_ui.dart';
 import '../core/platform/yerel_gorsel.dart';
 
 /// Müşteri — İlan Oluştur 3 adım (HTML vPost):
@@ -406,9 +407,16 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       }
       try {
         // ⚠ Gerçek imza: kind / contentType / sizeBytes → Map döner.
+        // ⚠ TÜR SABİT `image/jpeg` YAZILIYORDU — YANLIŞTI.
+        //
+        // `PhotoItem` seçim anında gerçek türü taşıyor (PNG, WEBP
+        // dahil; web'de `XFile.mimeType`ten okunuyor). Sabit değer,
+        // PNG bir dosyayı sunucuya JPEG diye bildiriyordu ve yükleme
+        // aşamasındaki `Content-Type` ile ÇELİŞİYORDU — aşağıdaki
+        // `uploadBytes` çağrısı zaten `foto.contentType` gönderiyor.
         final res = await _storageApi.createUploadRef(
           kind: 'listing-photo',
-          contentType: 'image/jpeg',
+          contentType: foto.contentType,
           sizeBytes: await yerelBoyut(foto.localPath),
         );
         final ref = res['storageRef'] as String? ?? res['ref'] as String?;
@@ -635,6 +643,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
       // ⚠ Yalnız CİHAZ yolları; sunucu referansı YOK.
       localPhotoPaths:
           _photos.map((p) => p.localPath).toList(growable: false),
+      // ⚠ TÜRLER DE TAŞINIR: web'de yol bir `blob:` adresidir ve
+      // uzantısı yoktur; tür yalnız seçim anında (`XFile.mimeType`)
+      // bilinir. Yazılmazsa kayıt sonrası yükleme aşamasında
+      // çözülemez ve fotoğraf sessizce atlanırdı.
+      localPhotoTypes:
+          _photos.map((p) => p.contentType).toList(growable: false),
       // ⚠ Kayıtsız akışta seçim taslakta taşınır; kayıt sonrası
       // ilan oluşturulurken kullanılır.
       isZamani: _isZamani,
@@ -732,8 +746,23 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     // Yayın sonrası: oturumsuz akışta 5, oturumluda 4.
     if (_step == (widget.preLogin ? 5 : 4)) {
       return Scaffold(
-        backgroundColor: RC.pageBg,
-        body: SafeArea(
+                // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+        body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: SafeArea(
           child: RefScroll(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: _Adim3Tamam(
@@ -742,7 +771,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   Navigator.pushReplacementNamed(context, '/customer/listings'),
             ),
           ),
-        ),
+        )),
       );
     }
 
@@ -763,8 +792,20 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         }
       },
       child: Scaffold(
-      backgroundColor: RC.pageBg,
-      body: SafeArea(
+      // ⚠ WEB PANELİNDE ZEMİN SAYDAM (giriş ekranı gibi): akış artık
+      // saydam panel rotasıyla açılıyor; beyaz zemin arkadaki sayfayı
+      // örterdi. Mobilde `panelMi` hep false → `RC.pageBg` aynen.
+      backgroundColor:
+          WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+      body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: SafeArea(
         child: Column(
           children: [
             Expanded(
@@ -779,7 +820,9 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                       child: Row(
                         children: [
                           // ⚠ Cihazın geri tuşuyla AYNI yol (`_geriAdim`).
-                          RefBackButton(onTap: _geriAdim),
+                          // ⚠ AKIŞ İÇİ: rotadan çıkmaz, önceki ADIMA döner. Panelde ve
+                          // kenar çubuğunda da çizilmeli.
+                          RefBackButton.akisIci(onTap: _geriAdim),
                           const SizedBox(width: 8),
                           // .po-title{flex:1;center;19px/700;ls -.2}
                           Expanded(
@@ -877,7 +920,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
             ),
           ],
         ),
-      ),
+      )),
       ),
     );
   }
@@ -888,7 +931,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         children: [
           // .po-h2{18px/700;ls -.2}
           Text(
-            'Hangi hizmete ihtiyacınız var?',
+            kHizmetAramaIpucu,
             style: refText(
               size: RF.s18,
               weight: RF.w700,

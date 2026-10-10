@@ -20,15 +20,17 @@
 // etiketlerin KARAKTER SAYISI üzerinden kaba bir üst sınır kurar;
 // asıl piksel ölçümü teslim raporundadır. Buradaki test, etiketlerin
 // bir daha uzamasını ve kart ölçülerinin ayrışmasını engeller.
+//
+// ⚠ GÜNCEL DURUM: `KategoriKarti` (lib/screens/widgets/kategori_karti.dart)
+// hiçbir ekranda kullanılmıyordu — ölü kod olarak SİLİNDİ. Kart
+// ölçüsü/etiket taşması kilitleri onunla birlikte kalktı. Kalan tek
+// kilit: ilan verme ekranına fotoğraflı kategori ızgarası geri
+// gelmez (seçim YALNIZ arama ile).
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hizmetcep/data/category_tree.dart';
-// ⚠ `kKategoriIzgaraSutun` bu dosyada tanımlıdır (ızgara sabitleri
-// kart bileşeniyle birlikte durur); import edilmeden kullanılamaz.
-import 'package:hizmetcep/screens/widgets/kategori_karti.dart';
 
 String _kod(String yol) {
   final f = File(yol);
@@ -48,87 +50,17 @@ String _kod(String yol) {
 }
 
 void main() {
-  final k = _kod('lib/screens/widgets/kategori_karti.dart');
   final grid = _kod('lib/screens/create_listing_screen.dart');
 
-  group('TÜM KARTLAR AYNI ÖLÇÜDE', () {
-    test('İLAN IZGARASI KALDIRILDI — kart ölçüsü konusu kalmadı', () {
-      expect(grid.contains('crossAxisCount: kKategoriIzgaraSutun'), isFalse);
-      expect(grid.contains('KategoriKarti('), isFalse);
-      expect(grid.contains('SearchService.services('), isTrue);
-      expect(grid.contains('crossAxisSpacing: kKategoriIzgaraBosluk'), isFalse);
-      // Sabitler kaldırılmadı; başka bir yüzeyde gerekebilir.
-      expect(kKategoriIzgaraSutun, 3);
-    });
-
-    test('etiket kutusu SABİT 40px — metne göre büyümez', () {
-      expect(k.contains('height: 40,'), isTrue);
-      expect(k.contains('mainAxisSize: MainAxisSize.min'), isTrue);
-    });
-
-    test('görselin kart içindeki yeri değişmedi', () {
-      // Yatay dolgu 8 → 4 indi ama fotoğrafa kendi 4px'i verildi:
-      // 4 + 4 = eski 8. Kartın görsel geometrisi aynı kalır.
-      expect(k.contains('padding: const EdgeInsets.fromLTRB(4, 8, 4, 8)'),
-          isTrue);
-      expect(k.contains('padding: const EdgeInsets.symmetric(horizontal: 4)'),
-          isTrue);
-      expect(k.contains('padding: const EdgeInsets.all(8)'), isFalse,
-          reason: 'eski dolgu metin alanını daraltıyordu');
-    });
+  test('İLAN IZGARASI YOK — seçim yalnız arama ile', () {
+    expect(grid.contains('crossAxisCount: kKategoriIzgaraSutun'), isFalse);
+    expect(grid.contains('KategoriKarti('), isFalse);
+    expect(grid.contains('SearchService.services('), isTrue);
+    expect(grid.contains('crossAxisSpacing: kKategoriIzgaraBosluk'), isFalse);
   });
 
-  group('TÜM YAZILAR AYNI TİP VE ÖLÇÜDE', () {
-    test('tek punto, tek kalınlık', () {
-      expect(k.contains('size: RF.s11'), isTrue);
-      expect(k.contains('weight: RF.w700'), isTrue);
-      expect(k.contains('height: RF.lh120'), isTrue);
-    });
-
-    test('metin KÜÇÜLTÜLEREK sığdırılmaz', () {
-      // `FittedBox` kartlar arasında beş farklı punto üretiyordu.
-      expect(k.contains('FittedBox'), isFalse);
-    });
-
-    test('font ailesi ortak `refText` üzerinden gelir', () {
-      expect(k.contains('style: refText('), isTrue);
-      expect(k.contains('fontFamily:'), isFalse,
-          reason: 'kart kendi fontunu tanımlamamalı');
-    });
-  });
-
-  group('TAŞMA · KESİLME · YARIM KALMA YOK', () {
-    test('en fazla 3 satır ve taşma koruması', () {
-      expect(k.contains('maxLines: 3'), isTrue);
-      expect(k.contains('overflow: TextOverflow.ellipsis'), isTrue);
-      expect(k.contains('textAlign: TextAlign.center'), isTrue);
-    });
-
-    test('sistem yazı ölçeği bu etikette sınırlı', () {
-      expect(k.contains('MediaQuery.withClampedTextScaling'), isTrue);
-      expect(k.contains('maxScaleFactor: 1.0'), isTrue);
-    });
-
-    test('etiketler üç satıra sığacak uzunlukta', () {
-      // ⚠ ÜST SINIR: 320dp ekranda metin alanı 81,3px ve Poppins-Bold
-      // 11px'te ortalama karakter ~5,5px → satır başına ~14 karakter,
-      // üç satır ~42 karakter. Sınır 34'te tutuluyor; ölçülen en uzun
-      // etiket 29 karakterdir ("Araç Temizlik & Detaylı Bakım").
-      for (final c in kKartKategorileri) {
-        final e = kategoriEtiketi(c);
-        expect(e.length, lessThanOrEqualTo(34), reason: '$e (${e.length})');
-      }
-    });
-
-    test('tek kelimelik en uzun parça satıra sığar', () {
-      // Bir kelime satır genişliğini aşarsa ORTADAN kesilir
-      // ("Marangozl…"). 320dp'de 81,3px ≈ 14 karakter; sınır 13.
-      for (final c in kKartKategorileri) {
-        for (final kelime in kategoriEtiketi(c).split(' ')) {
-          expect(kelime.length, lessThanOrEqualTo(13),
-              reason: '$kelime (${kelime.length}) satıra sığmaz');
-        }
-      }
-    });
+  test('ölü kart bileşeni geri gelmedi', () {
+    expect(File('lib/screens/widgets/kategori_karti.dart').existsSync(),
+        isFalse);
   });
 }

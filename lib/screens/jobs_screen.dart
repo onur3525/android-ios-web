@@ -443,7 +443,7 @@ class _JobsScreenState extends State<JobsScreen> {
     // `RefShell` ile AYNI kural (`masaustuNav`). Bu ekran `RefShell`
     // kullanmıyor — listenin kendi kaydırmasını yönetmesi gerektiği
     // için `Scaffold.bottomNavigationBar` ile kurulmuş. Bu yüzden
-    // menü burada `appBar` olarak veriliyor; `WebHeader`
+    // menü artık `WebKenarCubugu` olarak gövdenin solunda; `WebHeader`
     // `PreferredSizeWidget` olduğu için ikisine de uyar.
     //
     // ⚠ ÖĞELER AYNI KAYNAKTAN: `custNavItems` ikisini de besler,
@@ -455,9 +455,10 @@ class _JobsScreenState extends State<JobsScreen> {
     final aktifAnahtar = widget.kazandigim ? 'kazandigim' : 'ilanlarim';
     return Scaffold(
       backgroundColor: RC.pageBg,
-      appBar: ustMenu
-          ? WebHeader(items: navOgeleri, activeKey: aktifAnahtar)
-          : null,
+      // ⚠ ÜST MENÜ YERİNE KENAR ÇUBUĞU: `RefShell` ile aynı karar.
+      // Bu ekran `RefShell` kullanmıyor (liste kendi kaydırmasını
+      // yönetiyor), o yüzden kenar çubuğu gövdenin soluna Row ile
+      // eklenir; `appBar` kullanılmaz.
       bottomNavigationBar: ustMenu
           ? null
           : RefBottomNav(
@@ -467,7 +468,35 @@ class _JobsScreenState extends State<JobsScreen> {
             ),
       body: SafeArea(
         bottom: false,
+        // ⚠ KENAR ÇUBUĞU `GlobalWebKabugu`DA ÇİZİLİR: burada da
+        // çizilirse ekranda İKİ ÇUBUK olurdu.
         child: Column(children: [
+          // ── ⚠ SAYFA BAŞLIĞI ──
+          //
+          // Bu ekranın başlığı HİÇ YOKTU: kenar çubuğunda
+          // "Kazandığım" seçiliyken sağ tarafta hangi bölümde
+          // olunduğunu söyleyen bir şey bulunmuyordu. Öteki bölümler
+          // (`Bildirimler`, `Profil Bilgilerim`, `Hizmet
+          // Kategorilerim`) başlığını gösteriyor.
+          //
+          // ⚠ ORTAK BİLEŞEN, ORTAK ÖLÇÜ: `RefPageTitle` — 25 px,
+          // ortalı. Elle `Text` yazılsaydı boyut ayrışırdı.
+          //
+          // ⚠ AD KENAR ÇUBUĞUYLA AYNI: "Kazandığım" ve hizmet
+          // verende "İşlerim", hizmet alanda "İlanlarım" —
+          // `nav_actions.dart`taki etiketlerin birebir aynısı.
+          //
+          // ⚠ GERİ OKU YOK: bu bir bölüm, alt sayfa değil.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: RefPageTitle(
+              // ⚠ BU EKRAN YALNIZ HİZMET VERENE AİT: `custNavItems`
+              // burada `saglayici: true` ile kuruluyor, ayrı bir rol
+              // denetimi gerekmiyor.
+              widget.kazandigim ? 'Kazandığım' : 'İşlerim',
+              geriDugmesi: false,
+            ),
+          ),
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve
@@ -673,6 +702,7 @@ class _JobsScreenState extends State<JobsScreen> {
                                   : () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
+                                          settings: RouteSettings(name: '/is/${l.id}'),
                                           builder: (_) => JobDetailScreen(
                                               listingId: l.id))),
                               child: Container(
@@ -802,6 +832,7 @@ class _JobsScreenState extends State<JobsScreen> {
         onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
+                settings: RouteSettings(name: '/talep/${t.id}'),
                 builder: (_) => TeklifTalebiDetayScreen(talepId: t.id))),
         child: Container(
           padding: const EdgeInsets.all(13),
@@ -964,7 +995,9 @@ class _JobsScreenState extends State<JobsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => JobDetailScreen(listingId: l.id))),
+              MaterialPageRoute(
+                  settings: RouteSettings(name: '/is/${l.id}'),
+                  builder: (_) => JobDetailScreen(listingId: l.id))),
           child: Container(
             padding: const EdgeInsets.all(13),
             // ── OKUNMAMIŞ İLAN YEŞİL VE KALIN ──

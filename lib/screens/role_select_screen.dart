@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
+import '../ui/panel_rotasi.dart';
 
 /// İki modlu ekran:
 /// * Kayıt için rol seçimi (girişsiz — login'deki "Kayıt Ol" buraya gelir)
@@ -16,7 +17,12 @@ class RoleSelectScreen extends StatelessWidget {
   /// Ana sayfa kartlarından doğrudan kayıt başlatma (HTML data-act="register").
   static void startRegister(BuildContext context, Role role) {
     Navigator.push(context,
-        MaterialPageRoute(builder: (_) => RegisterScreen(role: role)));
+        panelRotasi<void>(
+            // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
+            // adından seçiyor; adsız rota tanınmıyordu. Gezinme
+            // davranışı DEĞİŞMEZ.
+            settings: const RouteSettings(name: '/kayit'),
+            builder: (_) => RegisterScreen(role: role)));
   }
 
   @override
@@ -34,6 +40,10 @@ class RoleSelectScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // ⚠ ÇİFT OK OLMASIN: bu ekranın kendi `RefBackButton`'ı var.
+          // ⚠ BAŞLIK HER PLATFORMDA AYNI: bir tur web'de "Kayıt Ol"
+          // yapılmıştı, çünkü web açılışının ilk ekranı sanılıyordu.
+          // Web açılışı artık ana sayfa; bu ekran iki tarafta da
+          // kartlardan gelinen rol adımı, dolayısıyla metin ayrışmaz.
           RefPageTitle(
               switching ? 'Rol Değiştir' : 'Nasıl Başlamak İstersiniz?',
               geriDugmesi: false),

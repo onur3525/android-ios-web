@@ -6,6 +6,15 @@ class NotificationRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final List<AppNotification> _items = [];
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<AppNotification> get sekmeKayitlari => List.unmodifiable(_items);
+  void sekmeKayitlariniYukle(Iterable<AppNotification> kayitlar) {
+    _items
+      ..clear()
+      ..addAll(kayitlar);
+    notifyListeners();
+  }
+
   List<AppNotification> forUser(String userId) =>
       _items.where((n) => n.userId == userId).toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
@@ -15,12 +16,11 @@ import '../data/models/support_info.dart';
 import '../data/remote/api/legal_api.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api_config.dart';
-import 'package:image_picker/image_picker.dart';
-import '../data/controllers/profile_controller.dart';
 import 'role_switch_screen.dart';
 import '../data/repositories/oturum_tercihi.dart';
-import 'widgets/fotograf_kaynak_paneli.dart';
-import '../core/platform/yerel_gorsel.dart';
+import '../core/baglanti_modu.dart';
+import 'widgets/profil_fotografi.dart';
+import '../ui/destek_talebi_formu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// PROFİL — referans `vProfileCust()` / `vProfileProv()`
@@ -75,6 +75,10 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
+          // sekme olduğu için geri oku YOK. Mobilde bu satır hiç
+          // eklenmez; aşağıdaki rol etiketi düzeni aynen durur.
+          if (kIsWeb) const RefPageTitle('Profil', geriDugmesi: false),
           // ⚠ BÜYÜK BAŞLIK YERİNE ROL ETİKETİ.
           //
           // "Profil - Hizmet Veren" satırı iki iş yapıyordu: sayfayı
@@ -285,37 +289,45 @@ class ProfileScreen extends StatelessWidget {
         // devamı gibi görünüyor, dokunulabilir olduğu anlaşılmıyordu.
         // Artık kendi kutusunda, ikonla birlikte ve tıklanınca
         // e-posta uygulamasını açıyor.
-        altKisim: RefTap(
-          onTap: () => _mailAc(c, bilgi.email),
-          borderRadius: BorderRadius.circular(RR.r12),
-          child: Container(
-            width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3E9FD),
+        // ⚠ E-posta kutusu AYNEN durur; altına Talep Gönder formu eklenir
+        // (web paneliyle ORTAK bileşen — `destek_talebi_formu.dart`).
+        altKisim: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RefTap(
+              onTap: () => _mailAc(c, bilgi.email),
               borderRadius: BorderRadius.circular(RR.r12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const RefSvg('assets/svg/ic_mail.svg',
-                    size: 18, color: Color(0xFF7C3AED)),
-                const SizedBox(width: 9),
-                Flexible(
-                  child: Text(
-                    bilgi.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: refText(
-                        size: RF.s145,
-                        weight: RF.w700,
-                        color: const Color(0xFF7C3AED)),
-                  ),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E9FD),
+                  borderRadius: BorderRadius.circular(RR.r12),
                 ),
-              ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const RefSvg('assets/svg/ic_mail.svg',
+                        size: 18, color: Color(0xFF7C3AED)),
+                    const SizedBox(width: 9),
+                    Flexible(
+                      child: Text(
+                        bilgi.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: refText(
+                            size: RF.s145,
+                            weight: RF.w700,
+                            color: const Color(0xFF7C3AED)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            const DestekTalebiFormu(),
+          ],
         ),
       ),
     );
@@ -341,7 +353,7 @@ class ProfileScreen extends StatelessWidget {
   Future<void> _mailAc(BuildContext c, String adres) async {
     final uri = Uri(scheme: 'mailto', path: adres);
     try {
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final ok = await launchUrl(uri, mode: acilisModu());
       if (!ok && c.mounted) {
         sysToastErr(c, SysKind.genericError,
             extra: 'E-posta uygulaması bulunamadı: $adres');
@@ -424,7 +436,7 @@ class _ProfilKarti extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // .pf-av — pfAvatar(96)
-        _Avatar(ad: ad, fotoYolu: fotoYolu),
+        ProfilFotografi(ad: ad, fotoYolu: fotoYolu),
         const SizedBox(width: 14), // gap:14px
         // .pf-card
         Expanded(
@@ -518,206 +530,6 @@ class _Satir extends StatelessWidget {
 ///
 /// Hem avatarın TAMAMI hem kamera ikonu tıklanabilir; ikisi de aynı
 /// fotoğraf seçme işlevini çağırır. Kaynak GALERİdir (kamera açılmaz).
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.ad, required this.fotoYolu});
-
-  final String ad;
-  final String fotoYolu;
-
-  /// ⚠ SEÇENEK PANELİ — tek bir "galeriden seç" değil.
-  ///
-  /// Eskiden avatara dokunmak DOĞRUDAN galeriyi açıyordu: kamerayla
-  /// çekmek ya da mevcut fotoğrafı silmek mümkün değildi. Artık
-  /// uygulamanın ortak alt paneli açılır ve kullanıcı seçer.
-  ///
-  /// ⚠ "Fotoğrafı Kaldır" YALNIZ fotoğraf varken görünür.
-  Future<void> _fotoMenusu(BuildContext context) async {
-    final secim = await RefBottomSheet.goster<String>(
-      context,
-      title: 'Profil Fotoğrafı',
-      // ── ⚠ İLAN AKIŞIYLA AYNI SATIRLAR (12 Eyl, kullanıcı isteği) ──
-      //
-      // "İlan oluştururken fotoğraf yükle ve fotoğraf çek ikonları,
-      // assetleri, renkleri profil fotoğrafı yüklerken de aynı
-      // olmalı — iki rol için de."
-      //
-      // ⚠ ÖNCEDEN `RefSecimKarti` KULLANILIYORDU: renkli daire rozet
-      // yok, gri düz ikon, sağda chevron yerine RADYO DAİRESİ ve
-      // farklı metinler ("Galeriden Yükle" / "Cihazınızdaki bir
-      // fotoğrafı seçin."). Aynı iş, iki farklı panel görünümü.
-      //
-      // ⚠ SATIR ORTAK, PANEL DEĞİL: burada üçüncü bir seçenek var
-      // ("Fotoğrafı Kaldır"), ilan panelinde yok. Paylaşılan şey
-      // GÖRÜNÜM; seçenek kümesi her panelin kendi işi.
-      //
-      // ⚠ METİNLER DE EŞİTLENDİ: ilan akışı referanstır.
-      //
-      // ⚠ ROL AYRIMI YOK: panel hesap rolüne bakmaz, iki rolde de
-      // aynı çizilir.
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          fotografSecenekSatiri(
-            context,
-            rozetRengi: RC.blue,
-            ikon: 'assets/svg/ic_cam.svg',
-            baslik: 'Fotoğraf Çek',
-            aciklama: 'Kamerayı açar',
-            onTap: () => Navigator.of(context).pop('kamera'),
-          ),
-          const SizedBox(height: 2),
-          fotografSecenekSatiri(
-            context,
-            rozetRengi: RC.success,
-            ikon: 'assets/svg/ic_gallery.svg',
-            ikonRengi: RC.white,
-            baslik: 'Galeriden Seç',
-            aciklama: 'Kayıtlı fotoğraflarınız',
-            onTap: () => Navigator.of(context).pop('galeri'),
-          ),
-          // ⚠ YALNIZ FOTOĞRAF VARKEN: silinecek bir şey yokken
-          // satırı göstermek kullanıcıyı yanıltır.
-          //
-          // ⚠ KIRMIZI ROZET: yıkıcı eylem, mavi/yeşilden ayrılır.
-          if (fotoYolu.trim().isNotEmpty) ...[
-            const SizedBox(height: 2),
-            fotografSecenekSatiri(
-              context,
-              rozetRengi: RC.danger,
-              ikon: 'assets/svg/ic_trash.svg',
-              ikonRengi: RC.white,
-              baslik: 'Fotoğrafı Kaldır',
-              aciklama: 'Yerine adınızın baş harfi gösterilir',
-              onTap: () => Navigator.of(context).pop('sil'),
-            ),
-          ],
-        ],
-      ),
-    );
-    if (secim == null || !context.mounted) {
-      return;
-    }
-    if (secim == 'sil') {
-      await _fotoYaz(context, '', 'Profil fotoğrafı kaldırıldı');
-      return;
-    }
-    await _fotoSec(
-      context,
-      secim == 'kamera' ? ImageSource.camera : ImageSource.gallery,
-    );
-  }
-
-  Future<void> _fotoSec(BuildContext context, ImageSource kaynak) async {
-    try {
-      final x = await ImagePicker().pickImage(source: kaynak, maxWidth: 1024);
-      if (x == null || !context.mounted) {
-        return;
-      }
-      await _fotoYaz(context, x.path, 'Profil fotoğrafı güncellendi');
-    } catch (_) {
-      if (context.mounted) {
-        sysToastErr(context, SysKind.photoUploadError);
-      }
-    }
-  }
-
-  /// ⚠ FOTOĞRAF YALNIZ AKTİF ROLE YAZILIR.
-  ///
-  /// `Account.photoPath` aktif rolün fotoğrafına bağlıdır; çift rollü
-  /// kullanıcıda öteki rol ETKİLENMEZ (bkz. `Account.fotografAta`).
-  Future<void> _fotoYaz(
-      BuildContext context, String yol, String basariMesaji) async {
-    final err = await context
-        .read<ProfileController>()
-        .updateProfile(photoPath: yol);
-    if (!context.mounted) {
-      return;
-    }
-    if (err != null) {
-      sysToastErr(context, SysKind.genericError, extra: err.message);
-      return;
-    }
-    sysToastOk(context, basariMesaji);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final harf = ad.trim().isEmpty ? '?' : ad.trim()[0].toUpperCase();
-    final varFoto = fotoYolu.trim().isNotEmpty && yerelVarMi(fotoYolu);
-
-    return SizedBox(
-      width: 96,
-      height: 100, // .pf-cam{bottom:4px} taşmasına pay
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Avatarın TAMAMI tıklanabilir.
-          RefTap(
-            onTap: () => _fotoMenusu(context),
-            borderRadius: BorderRadius.circular(RR.circle),
-            child: ClipOval(
-              child: Container(
-                width: 96,
-                height: 96,
-                alignment: Alignment.center,
-                color: RC.blueSoft,
-                child: varFoto
-                    ? yerelGorsel(
-                        fotoYolu,
-                        width: 96,
-                        height: 96,
-                        fit: BoxFit.cover,
-                        hataYedegi: (_) => Text(
-                          harf,
-                          style: refText(
-                              size: 38, weight: RF.w700, color: RC.blue),
-                        ),
-                      )
-                    : Text(
-                        harf,
-                        style: refText(
-                            size: 38, weight: RF.w700, color: RC.blue),
-                      ),
-              ),
-            ),
-          ),
-
-          // .pf-cam — kamera ikonu da tıklanabilir.
-          Positioned(
-            right: 0,
-            bottom: 4,
-            child: RefTap(
-              onTap: () => _fotoMenusu(context),
-              borderRadius: BorderRadius.circular(RR.circle),
-              child: Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: RC.blue,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: RC.white, width: 3),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x33142850),
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                // ⚠ `color` VERİLMEZ — referans `IC_CAM(15)` İKİ
-                // RENKLİDİR: gövde beyaz (`fill=#fff`), objektif
-                // halkası mavi (`fill=#1D6BE3`). Tek renge zorlanınca
-                // objektif kayboluyor ve ikon düz beyaz leke oluyordu.
-                child: const RefSvg('assets/svg/ic_cam.svg', size: 15),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 
 /// Telefon gösterimi: `0532 123 45 67`.

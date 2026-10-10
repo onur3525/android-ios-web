@@ -56,28 +56,15 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<!-- Harici uygulama açma izinleri: mağaza ve ödeme sayfası. -->
-	<!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: URL ŞEMASI ──
-	     `hizmetcep://payment/return?session=<id>` adresinin iOS'ta
-	     uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır; kayıt
-	     yoktu, yani deep link iOS'ta hiç çalışmıyordu.
-
-	     ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı şemayı
-	     kaydedebilir ve geri dönüşü çalabilir. Kalıcı çözüm Universal
-	     Links'tir (Associated Domains + apple-app-site-association);
-	     o, doğrulanmış alan adı gerektirir ve web tarafı hazır
-	     olduğunda eklenmelidir.
-
-	     ⚠ GÜVENLİK BUNA DAYANMAZ: geri dönüş adresi yalnız `session`
-	     kimliği taşır. `success=true` gibi bir parametre gelse bile
-	     ödeme kanıtı SAYILMAZ; sonuç her zaman backend `confirmTopup`
-	     ile doğrulanır (bkz. `core/deep_links.dart`). -->
 	<key>CFBundleURLTypes</key>
 	<array>
+		<!-- Firebase Phone Auth: APNs (sessiz bildirim) yokken iOS doğrulaması
+		     reCAPTCHA ile yapılır; dönüş bu şemayla olur. Değer, iOS uygulama
+		     kimliğinin (GOOGLE_APP_ID) kodlanmış biçimidir. -->
 		<dict>
 			<key>CFBundleTypeRole</key><string>Editor</string>
-			<key>CFBundleURLName</key><string>com.hizmetcep.app</string>
 			<key>CFBundleURLSchemes</key>
-			<array><string>hizmetcep</string></array>
+			<array><string>app-1-262578778971-ios-c86fad4c01cbcf890b207e</string></array>
 		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
@@ -85,5 +72,15 @@
 		<string>https</string>
 		<string>itms-apps</string>
 	</array>
+	<!-- Push bildirim (FCM/APNs): arka planda/kapalıyken gelen
+	     bildirimlerin uygulamaya iletilmesi için. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<!-- Firebase yöntem değiştirme (swizzling) AÇIK: APNs jetonu FCM'e
+	     otomatik iletilir; AppDelegate'te ek kod gerekmez. -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 </dict>
 </plist>

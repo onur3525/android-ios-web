@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../domain/failures.dart';
@@ -10,6 +13,8 @@ import '../api/contact_api.dart';
 import '../api/listing_api.dart';
 import '../api/offer_api.dart';
 import '../api/profile_api.dart';
+import '../api/storage_api.dart';
+import '../../../core/platform/yerel_gorsel.dart';
 import '../api_client.dart';
 import '../api_error_mapper.dart';
 import '../mappers.dart';
@@ -32,6 +37,11 @@ class ApiAuthRepository extends ChangeNotifier {
   /// Dışarıdan haber vermek için — bildirim tercihleri gibi yalnız
   void bildir() => notifyListeners();
 
+  /// Bildirim tercihlerini sunucuya yazar. Hata dönerse çağıran yerel
+  /// değeri geri alır (ekran sunucudan farklı bir durum göstermez).
+  Future<DomainError?> bildirimTercihleriniKaydet(Map<String, bool> degisenler) async =>
+      (await _guard(() => _profile.updateNotificationPrefs(degisenler))).$2;
+
   final AuthApi _auth;
   final ProfileApi _profile;
   final ApiClient _client;
@@ -53,9 +63,6 @@ class ApiAuthRepository extends ChangeNotifier {
     return loadMe();
   }
 
-  /// GOOGLE İLE GİRİŞ — `idToken` sunucuda doğrulanır.
-  /// İstemci e-posta/ad göndermez; sunucu Google'dan okur.
-
   /// Profil + TEK adres. Adres ayrı uçtan gelir (GET /profiles/me/address);
   /// kayıt yoksa sunucu null döner ve hesabın adresi boş kalır.
   Future<DomainError?> loadMe() async {
@@ -76,10 +83,12 @@ class ApiAuthRepository extends ChangeNotifier {
   Future<DomainError?> register({
     required String phone, required String password, required String name,
     required String email, required Role role, required String otpCode,
+    String? firebaseIdToken,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
           email: email, role: Mappers.roleApi(role), otpCode: otpCode,
+          firebaseIdToken: firebaseIdToken,
         ));
     if (err != null) {
       return err;
@@ -90,6 +99,35 @@ class ApiAuthRepository extends ChangeNotifier {
       await _client.tokens.save(access: at, refresh: rt);
       return loadMe();
     }
+    return null;
+  }
+
+  /// Firebase ID token → HizmetCep oturumu (sunucu doğrular ve eşleştirir).
+  Future<DomainError?> firebaseOturum(String idToken) async {
+    final (res, err) = await _guard(() => _auth.firebaseSession(idToken));
+    if (err != null) {
+      return err;
+    }
+    await _client.tokens.save(
+      access: res!['accessToken'] as String,
+      refresh: res['refreshToken'] as String,
+    );
+    return loadMe();
+  }
+
+  Future<DomainError?> forgotCompleteFirebase(String phone, String idToken, String newPass) async =>
+      (await _guard(() => _auth.forgotComplete(
+              phone: phone, otpCode: '', newPassword: newPass, firebaseIdToken: idToken)))
+          .$2;
+
+  Future<DomainError?> changePhoneFirebase(String newPhone, String idToken) async {
+    final (res, err) = await _guard(
+        () => _profile.changePhone(newPhone: newPhone, otpCode: '', firebaseIdToken: idToken));
+    if (err != null) {
+      return err;
+    }
+    currentAccount = Mappers.account(res!);
+    notifyListeners();
     return null;
   }
 
@@ -115,27 +153,95 @@ class ApiAuthRepository extends ChangeNotifier {
   Future<DomainError?> changePassword(String current, String next) async =>
       (await _guard(() => _auth.changePassword(current: current, next: next))).$2;
 
-  /// ⚠ SUNUCU UCU HENÜZ YOK.
-  ///
-  /// `POST /auth/verify-password` sözleşmesi burada tanımlıdır;
-  /// backend bu ucu açana kadar gerçek API modunda doğrulama
-  /// BAŞARISIZ döner. Sessizce "doğru" saymak, kritik işlemi
-  /// doğrulamasız yapmak demek olurdu.
+  /// `POST /auth/verify-password` — kritik işlem (hesap silme vb.) öncesi
+  /// şifre doğrulaması. Sunucu, Firebase'e bağlı hesapta Firebase şifresini
+  /// esas alır. Hata sessizce "doğru" sayılmaz.
   Future<DomainError?> verifyPassword(String password) async =>
       (await _guard(() => _auth.verifyPassword(password: password))).$2;
 
   Future<DomainError?> forgotComplete(String phone, String otp, String newPass) async =>
       (await _guard(() => _auth.forgotComplete(phone: phone, otpCode: otp, newPassword: newPass))).$2;
 
-  Future<DomainError?> updateProfile({String? name, String? email, String? photoRef}) async {
+  Future<DomainError?> updateProfile({String? name, String? email}) async {
     final (res, err) =
-        await _guard(() => _profile.updateProfile(name: name, email: email, photoRef: photoRef));
+        await _guard(() => _profile.updateProfile(name: name, email: email));
     if (err != null) {
       return err;
     }
     currentAccount = Mappers.account(res!);
     notifyListeners();
     return null;
+  }
+
+  /// ── PROFİL FOTOĞRAFI (API modu) ──
+  ///
+  /// Önceden yerel dosya yolu `photoRef` diye sunucuya gidiyor ve
+  /// yok sayılıyordu: fotoğraf hiçbir zaman yüklenmiyordu. Akış artık:
+  /// bayt + tür → `upload-ref` (`profile-photo`) → imzalı adrese yükle →
+  /// `PATCH /profiles/me` {photoRef, photoRole} → sunucu doğrular →
+  /// yanıttaki imzalı adresler hesaba yazılır. Yükleme yarıda kalırsa
+  /// bekleyen referans atılır. [yol] boşsa fotoğraf KALDIRILIR.
+  Future<DomainError?> profilFotografiniKaydet(String yol, Role rol) async {
+    final rolKodu = rol == Role.provider ? 'PROVIDER' : 'CUSTOMER';
+    String? ref;
+    if (yol.isNotEmpty) {
+      final veri = await _fotoVerisi(yol);
+      if (veri == null) {
+        return const ValidationError('Yalnızca JPG, PNG, WEBP ya da HEIC yüklenebilir.');
+      }
+      final depo = StorageApi(_client);
+      final (yanit, hata) = await _guard(() => depo.createUploadRef(
+          kind: 'profile-photo', contentType: veri.$2, sizeBytes: veri.$1.length));
+      if (hata != null) {
+        return hata;
+      }
+      ref = yanit!['storageRef'] as String?;
+      final adres = yanit['uploadUrl'] as String?;
+      if (ref == null || adres == null) {
+        return const ValidationError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
+      }
+      try {
+        await depo.uploadBytes(uploadUrl: adres, bytes: veri.$1, contentType: veri.$2);
+      } catch (_) {
+        final atilacak = ref;
+        unawaited(depo.discardPending(atilacak).then((_) {}, onError: (_) {}));
+        return const ValidationError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
+      }
+    }
+    final (res, err) = await _guard(() => _profile.updatePhoto(ref, rolKodu));
+    if (err != null) {
+      return err;
+    }
+    currentAccount = Mappers.account(res!);
+    notifyListeners();
+    return null;
+  }
+
+  /// (bayt, içerik türü) — web'de `data:` adresi, mobilde dosya yolu.
+  /// Tür çözülemezse null (yanlış `Content-Type` gönderilmez).
+  static Future<(List<int>, String)?> _fotoVerisi(String yol) async {
+    const turler = {
+      'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
+      'webp': 'image/webp', 'heic': 'image/heic',
+    };
+    if (yol.startsWith('data:')) {
+      final virgul = yol.indexOf(',');
+      if (virgul < 0) {
+        return null;
+      }
+      final baslik = yol.substring(5, virgul);
+      final tur = baslik.split(';').first.toLowerCase();
+      if (!turler.values.contains(tur) || !baslik.contains('base64')) {
+        return null;
+      }
+      return (base64Decode(yol.substring(virgul + 1)), tur);
+    }
+    final nokta = yol.lastIndexOf('.');
+    final tur = nokta < 0 ? null : turler[yol.substring(nokta + 1).toLowerCase()];
+    if (tur == null) {
+      return null;
+    }
+    return (await yerelBaytlar(yol), tur);
   }
 
   /// E-POSTA DEĞİŞİM BAĞLANTISI İSTER.
@@ -286,22 +392,6 @@ class ApiListingRepository extends ChangeNotifier {
       return err;
     }
     _cache.removeWhere((l) => l.id == id);
-    notifyListeners();
-    return null;
-  }
-
-  Future<DomainError?> _mutate(Future<Map<String, dynamic>> Function() fn) async {
-    final (res, err) = await _guard(fn);
-    if (err != null) {
-      return err;
-    }
-    final updated = Mappers.listing(res!);
-    final i = _cache.indexWhere((l) => l.id == updated.id);
-    if (i >= 0) {
-      _cache[i] = updated;
-    } else {
-      _cache.add(updated);
-    }
     notifyListeners();
     return null;
   }

@@ -18,14 +18,14 @@ void main() {
   group('KATALOG BÜYÜMEDİ', () {
     test('ana kategori 55, alt hizmet 517', () {
       // ⚠ 54 → 55: kombi ikiye ayrıldı (Montaj + Servis).
-      expect(kCategoryTree.length, 158);
+      expect(kCategoryTree.length, 166);
       final toplam =
           kCategoryTree.values.fold<int>(0, (t, v) => t + v.length);
       // ⚠ 255 → 459 → 439 → 517: önce öneri listesindeki ayrı işler hizmet oldu,
       // sonra tekrar eden ve dağıtım şirketine ait olanlar kaldırıldı
       // (eski not: ayrı işler gerçek
       // hizmet kaydına çevrildi.
-      expect(toplam, 640);
+      expect(toplam, 1587);
     });
 
     test('hiçbir alias ana kategori DEĞİL', () {

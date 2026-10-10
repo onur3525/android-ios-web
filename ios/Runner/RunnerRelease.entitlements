@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push bildirim (APNs) — Release yapılandırması: aps-environment = production.
+	     Debug → development (Xcode'dan cihaza kurulum),
+	     Release/Profile → production (TestFlight / App Store).
+	     ⚠ İmzalama için Apple Developer'da App ID üzerinde "Push
+	     Notifications" yetkinliği açık bir provisioning profile gerekir.
+	     Associated Domains (applinks) YOK: uygulamada universal link
+	     işleyen akış yok (eski ödeme dönüşü kaldırıldı). -->
+	<key>aps-environment</key>
+	<string>production</string>
+</dict>
+</plist>

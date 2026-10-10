@@ -99,9 +99,7 @@ class Account {
 
   /// E-posta doğrulandı mı?
   ///
-  /// Normal kayıtta yalnız gerçek doğrulama işlemi başarıyla
-  /// tamamlanınca `true` olur. Google akışında Google'ın doğrulanmış
-  /// e-postası kabul edilir (ikinci doğrulama istenmez).
+  /// Yalnız gerçek doğrulama işlemi başarıyla tamamlanınca `true` olur.
   ///
   /// ⚠ E-posta DEĞİŞİRSE `false`'a döner (bkz. `changeEmail`).
   bool emailVerified;
@@ -117,9 +115,7 @@ class Account {
   /// işaretle.
   String? bekleyenEposta;
 
-  /// Kullanım Sözleşmesi ve Gizlilik Politikası kabul edildi mi?
-  ///
-  /// ⚠ Google ile kayıt bunu BYPASS ETMEZ.
+  /// Kullanım Sözleşmesi ve Gizlilik Politikası kabul edildi mi? (ZORUNLU)
   bool termsAccepted;
 
   /// ── ⚠ TAMAMLANAN İŞ SAYACI — HESAPTA SAKLANIR ──
@@ -192,10 +188,6 @@ class Account {
   //
   // ⚠ Yalnız UI kontrolüne güvenilmez: bu kurallar domain
   // katmanındadır ve kayıt/rol aktifleştirme akışları bunu kullanır.
-  //
-  // Google ile kayıt HİÇBİR zorunluluğu bypass ETMEZ; tek fark
-  // Google'ın doğrulanmış e-postası için ikinci doğrulama
-  // istenmemesidir (`emailVerified` zaten true gelir).
   // ═══════════════════════════════════════════════════════════════
 
   /// Her iki rol için ORTAK zorunluluklar.

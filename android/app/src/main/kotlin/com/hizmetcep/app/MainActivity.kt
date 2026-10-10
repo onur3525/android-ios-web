@@ -1,8 +1,6 @@
 package com.hizmetcep.app
 
-import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.graphics.Color
@@ -12,32 +10,22 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * ÖDEME DÖNÜŞÜ — DERİN BAĞLANTI KÖPRÜSÜ (Android)
+ * HizmetCep ana Activity'si — native köprüler:
+ *   MethodChannel("hizmetcep/splash")          → bootReady
+ *   MethodChannel("hizmetcep/ekran_korumasi")  → ac / kapat (FLAG_SECURE)
+ *   MethodChannel("hizmetcep/cihaz_butunlugu") → durum
  *
- * Dart tarafı ile sözleşme:
- *   MethodChannel("hizmetcep/deeplinks")        → getInitialLink
- *   EventChannel ("hizmetcep/deeplinks/events") → sonraki bağlantılar
- *
- * Yakalanan durumlar:
- *   • Uygulama KAPALIYKEN  → açılış intent'i, getInitialLink ile TEK SEFER
- *   • ARKA PLANDAYKEN      → onNewIntent (manifest'te launchMode=singleTop)
- *   • ÖN PLANDAYKEN        → onNewIntent
- *
- * GÜVENLİK:
- *   • URI'deki "success"/"status" gibi alanlara GÜVENİLMEZ ve Dart'a
- *     ayrıca iletilmez; yalnız bağlantının kendisi taşınır. Ödemenin
- *   • Aynı bağlantı iki kez iletilmez (duplicate callback koruması).
+ * ⚠ Eski ödeme dönüşü derin bağlantı köprüsü ("hizmetcep/deeplinks")
+ * KALDIRILDI: ödeme ürünü kaldırıldı, Dart dinleyicisi yoktu ve
+ * manifest'te bağlantıyı yakalayacak intent-filter bulunmuyordu.
  */
 class MainActivity : FlutterActivity() {
 
     companion object {
-        private const val TAG = "HizmetCepDeepLink"
-        private const val METHOD_CHANNEL = "hizmetcep/deeplinks"
-        private const val EVENT_CHANNEL = "hizmetcep/deeplinks/events"
+        private const val TAG = "HizmetCep"
 
         /**
          * SPLASH KANALI
@@ -90,24 +78,6 @@ class MainActivity : FlutterActivity() {
          */
         private const val SPLASH_MAX_MS = 9000L
 
-        /** Özel şema — ödeme sağlayıcısının döndüğü adres. */
-        private const val SCHEME = "hizmetcep"
-
-        /**
-         * APP LINKS ALAN ADI (HTTPS)
-         *
-         * ⚠ HAZIRLIK, ÇALIŞIR DURUM DEĞİL: App Links'in doğrulanması
-         * için `https://hizmetcep.com/.well-known/assetlinks.json`
-         * YAYINLANMIŞ olmalı ve uygulamanın imza parmak izini
-         * içermelidir. O dosya bu turda OLUŞTURULMADI (kapsam dışı);
-         * yayınlanana kadar sistem bağlantıyı doğrulayamaz ve
-         * kullanıcıya "hangi uygulamayla açılsın" sorar. Uygulama
-         * tarafı hazırdır.
-         *
-         * ⚠ ÖZEL ŞEMA KALDIRILMADI: `hizmetcep://payment/return` aynen
-         * çalışmaya devam eder. İki yol da AYNI Dart akışına düşer.
-         */
-        private const val APP_LINK_HOST = "hizmetcep.com"
     }
 
     /** Dart açılış kararını verdi mi? */
@@ -143,14 +113,6 @@ class MainActivity : FlutterActivity() {
     /** Activity'nin oluşturulma anı — en kısa splash süresi buradan sayılır. */
     private var basladi = 0L
 
-    /** Açılışa neden olan bağlantı; Dart bir kez okur ve tüketir. */
-    private var initialLink: String? = null
-    private var initialLinkConsumed = false
-
-    private var eventSink: EventChannel.EventSink? = null
-
-    /** Duplicate koruması: iletilen bağlantılar. */
-    private val delivered = mutableSetOf<String>()
 
     /**
      * TEK GÖRÜNÜR SPLASH
@@ -332,102 +294,8 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        // Açılış intent'i motor kurulmadan önce gelmiş olabilir.
-        initialLink = derinBaglantiCikar(intent)
-
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "getInitialLink" -> {
-                        // TEK SEFER: ikinci çağrıda null döner.
-                        if (initialLinkConsumed) {
-                            result.success(null)
-                        } else {
-                            initialLinkConsumed = true
-                            val link = initialLink
-                            if (link != null) delivered.add(link)
-                            result.success(link)
-                        }
-                    }
-                    else -> result.notImplemented()
-                }
-            }
-
-        EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL)
-            .setStreamHandler(object : EventChannel.StreamHandler {
-                override fun onListen(args: Any?, sink: EventChannel.EventSink?) {
-                    eventSink = sink
-                }
-
-                override fun onCancel(args: Any?) {
-                    eventSink = null
-                }
-            })
     }
 
-    /**
-     * Uygulama ARKA PLANDA veya ÖN PLANDA iken gelen bağlantı.
-     * manifest'te launchMode=singleTop olduğu için yeni bir Activity
-     * örneği açılmaz; mevcut örnek bu geri çağrıyı alır.
-     */
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        // setIntent: sonradan getIntent() güncel bağlantıyı versin.
-        setIntent(intent)
-
-        val link = derinBaglantiCikar(intent) ?: return
-        if (!delivered.add(link)) {
-            // Aynı bağlantı daha önce iletildi — yok sayılır.
-            Log.i(TAG, "Yinelenen ödeme dönüşü yok sayıldı")
-            return
-        }
-        val sink = eventSink
-        if (sink == null) {
-            // Dart henüz dinlemiyorsa bağlantı KAYBOLMASIN: açılış
-            // bağlantısı olarak saklanır ve getInitialLink ile okunur.
-            initialLink = link
-            initialLinkConsumed = false
-            Log.i(TAG, "Dinleyici yok — bağlantı açılış bağlantısı olarak saklandı")
-            return
-        }
-        sink.success(link)
-    }
-
-    /**
-     * Intent'ten geçerli ödeme dönüş bağlantısını çıkarır.
-     * Geçersiz/eksik durumlarda null döner ve nedeni loglanır
-     * (sessizce yutulmaz).
-     */
-    private fun derinBaglantiCikar(intent: Intent?): String? {
-        if (intent == null) return null
-        if (intent.action != Intent.ACTION_VIEW) return null
-        val uri: Uri = intent.data ?: return null
-
-        // ── ⚠ İKİ YOL KABUL EDİLİR ──
-        //
-        //   1) Özel şema:  hizmetcep://payment/return?session=...
-        //   2) App Link:   https://hizmetcep.com/payment/return?session=...
-        //
-        // ⚠ ÖZEL ŞEMA ÖNCE DENETLENİR ve davranışı DEĞİŞMEDİ; App Link
-        // yalnız EK bir giriş yoludur.
-        //
-        // ⚠ ALAN ADI ZORUNLU: yalnız `https` görmek yetmez. Alan adı
-        // denetlenmezse başka bir sitenin bağlantısı da uygulamaya
-        // girebilirdi.
-        //
-        // ⚠ ADRES OLDUĞU GİBİ DART'A GEÇER: Dart tarafı `Uri` olarak
-        // çözümler ve `session` dışındaki hiçbir parametreye güvenmez
-        // (bkz. `lib/core/deep_links.dart`). Şema farkı Dart akışını
-        // değiştirmez.
-        val sema = uri.scheme?.lowercase()
-        val ozelSema = sema == SCHEME
-        val appLink = sema == "https" && uri.host.equals(APP_LINK_HOST, ignoreCase = true)
-        if (!ozelSema && !appLink) {
-            Log.w(TAG, "Beklenmeyen bağlantı yok sayıldı: ${uri.scheme}://${uri.host}")
-            return null
-        }
-        return uri.toString()
-    }
     /**
      * ROOT İZLERİ — dosya varlığı ve yaygın araç paketleri.
      *

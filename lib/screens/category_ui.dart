@@ -346,7 +346,47 @@ const Map<String, String> kKategoriIkonu = {
 /// hiçbiri buraya düşmez. Yalnız silinmiş/yeniden adlandırılmış bir ad
 /// elde kalırsa UI çökmesin diye durur.
 String categoryIcon(String c) =>
-    kKategoriIkonu[c] ?? 'assets/svg/ic_build.svg';
+    _sunucuIkonu[c] ?? kKategoriIkonu[c] ?? 'assets/svg/ic_build.svg';
+
+/// ── ⚠ ADMİN PANELİNDEN İKON (yalnız API modu) ──
+///
+/// Sunucu kataloğu (`GET /categories`) kategori başına `icon` taşıyabilir.
+/// YALNIZ uygulama paketinde ZATEN bulunan ikonlar kabul edilir (gömülü
+/// eşlemedeki dosyalar); bilinmeyen yol yok sayılır → uygulama hiçbir
+/// zaman olmayan bir dosyayı çizmeye çalışmaz. Böylece admin'in eklediği
+/// YENİ kategoriye de mevcut ikonlardan biri atanabilir.
+final Map<String, String> _sunucuIkonu = {};
+
+/// ── ⚠ ADMİN PANELİNDEN KATEGORİ FOTOĞRAFI (yalnız API modu) ──
+///
+/// Sunucu kataloğu admin'in yüklediği fotoğrafı göreli yol olarak verir
+/// (`/api/v1/categories/photo/katalog/kategori/<uuid>.jpg`). YALNIZ bu
+/// kalıp kabul edilir (başka adres/yol yok sayılır) ve API sunucusunun
+/// kendi kökenine çözülür; depo özel kalır, görsel API üzerinden gelir.
+/// Sunucu fotoğrafı yoksa [categoryPhotoUrl] null döner ve çağıran mevcut
+/// paket fotoğrafına ([categoryAsset]) düşer — 166 kategorinin bugünkü
+/// görünümü değişmez.
+final Map<String, String> _sunucuFoto = {};
+final RegExp _sunucuFotoKalibi =
+    RegExp(r'^/api/v1/categories/photo/katalog/kategori/[0-9a-f-]{36}\.(jpg|png|webp)$');
+
+void sunucuFotograflariniAyarla(Map<String, String> fotograflar, {required String apiKoku}) {
+  _sunucuFoto
+    ..clear()
+    ..addEntries(fotograflar.entries
+        .where((e) => _sunucuFotoKalibi.hasMatch(e.value))
+        .map((e) => MapEntry(e.key, '$apiKoku${e.value}')));
+}
+
+/// Admin'den yüklenmiş sunucu fotoğrafının tam adresi; yoksa null.
+String? categoryPhotoUrl(String category) => _sunucuFoto[category];
+
+void sunucuIkonlariniAyarla(Map<String, String> ikonlar) {
+  final paketteki = kKategoriIkonu.values.toSet();
+  _sunucuIkonu
+    ..clear()
+    ..addEntries(ikonlar.entries.where((e) => paketteki.contains(e.value)));
+}
 
 /// Küçük kare kategori rozeti (liste/başlık kullanımı).
 ///
@@ -365,12 +405,35 @@ class CategoryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(size * .26);
+    final svg = RefSvg(categoryIcon(category), size: size * .5, color: RC.blue);
+    // ⚠ SUNUCU FOTOĞRAFI → SVG YEDEĞİ (kullanıcı onayı, 3 Eki — Seçenek 1).
+    // Yalnız admin'den yüklenmiş sunucu fotoğrafı (API modu; güvenli yol
+    // denetimi `categoryPhotoUrl`'de). Yoksa / yüklenirken / hata olursa
+    // bugünkü SVG AYNEN. Kutu ölçüsü, rengi ve köşesi değişmez. Paket
+    // fotoğrafı (`categoryAsset`) burada KULLANILMAZ.
+    final foto = categoryPhotoUrl(category);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
           color: const Color(0xFFEFF4FD), borderRadius: radius),
-      child: RefSvg(categoryIcon(category), size: size * .5, color: RC.blue),
+      child: foto == null
+          ? svg
+          : ClipRRect(
+              borderRadius: radius,
+              child: Image.network(
+                foto,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                // Web: CORS engelinde tarayıcının <img> öğesine düşer.
+                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                // İlk kare gelene kadar SVG (önbellekteyse anında fotoğraf).
+                frameBuilder: (_, child, kare, esZamanli) =>
+                    esZamanli || kare != null ? child : svg,
+                errorBuilder: (_, __, ___) => svg,
+              ),
+            ),
     );
   }
 }

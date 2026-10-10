@@ -29,6 +29,27 @@ class PendingListing {
   /// Cihazdaki fotoğraf yolları. Yükleme kayıt SONRASINDA yapılır.
   final List<String> localPhotoPaths;
 
+  /// Fotoğrafların MIME türleri — `localPhotoPaths` ile AYNI SIRADA.
+  ///
+  /// ── ⚠ NİÇİN AYRI BİR LİSTE ──
+  ///
+  /// Web'de `image_picker`, yol olarak `blob:https://…/uuid` döndürür
+  /// ve bu adreste UZANTI YOKTUR. Tür yalnız yoldan türetildiği için
+  /// kayıt öncesi ilan akışında fotoğraflar "desteklenmeyen tür"
+  /// sayılıp SESSİZCE ATLANIYORDU.
+  ///
+  /// Tür, seçim anında `XFile.mimeType`ten okunuyor (bkz.
+  /// `photo_picker.fotografTuru`); burada saklanarak yükleme
+  /// aşamasına taşınır.
+  ///
+  /// ⚠ ESKİ KAYITLARLA UYUMLU: liste boş olabilir ya da yollardan kısa
+  /// olabilir. Okuyan taraf eksik indekste yola geri düşer — mobilde
+  /// bugünkü davranış budur ve bozulmaz.
+  ///
+  /// ⚠ TÜR UYDURULMAZ: ne burada ne okuyan tarafta varsayılan bir
+  /// MIME atanır. Çözülemeyen fotoğraf atlanır.
+  final List<String> localPhotoTypes;
+
   /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
   ///
   /// ⚠ Kayıtsız akışta da taşınır: kullanıcı ilanı doldurup kayıt
@@ -45,6 +66,7 @@ class PendingListing {
     this.district = '',
     this.neighborhood = '',
     this.localPhotoPaths = const [],
+    this.localPhotoTypes = const [],
     this.isZamani,
     required this.createdAt,
   });
@@ -71,6 +93,7 @@ class PendingListing {
     String? district,
     String? neighborhood,
     List<String>? localPhotoPaths,
+    List<String>? localPhotoTypes,
   }) =>
       PendingListing(
         category: category ?? this.category,
@@ -80,6 +103,7 @@ class PendingListing {
         district: district ?? this.district,
         neighborhood: neighborhood ?? this.neighborhood,
         localPhotoPaths: localPhotoPaths ?? this.localPhotoPaths,
+        localPhotoTypes: localPhotoTypes ?? this.localPhotoTypes,
         createdAt: createdAt,
       );
 
@@ -91,6 +115,7 @@ class PendingListing {
         'district': district,
         'neighborhood': neighborhood,
         'localPhotoPaths': localPhotoPaths,
+        'localPhotoTypes': localPhotoTypes,
         // ⚠ SEÇİM YOKSA ANAHTAR YAZILMAZ: eski taslaklar okunurken
         // `null` döner ve sorun çıkmaz.
         if (isZamani != null) 'isZamani': isZamani!.kod,
@@ -105,6 +130,9 @@ class PendingListing {
         district: (j['district'] as String?) ?? '',
         neighborhood: (j['neighborhood'] as String?) ?? '',
         localPhotoPaths: ((j['localPhotoPaths'] as List<dynamic>?) ?? const [])
+            .whereType<String>()
+            .toList(growable: false),
+        localPhotoTypes: ((j['localPhotoTypes'] as List<dynamic>?) ?? const [])
             .whereType<String>()
             .toList(growable: false),
         // ⚠ Alan yoksa ya da bilinmeyense `null` — eski taslaklarla

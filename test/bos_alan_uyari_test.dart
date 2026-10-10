@@ -128,14 +128,8 @@ void main() {
           reason: 'alan başına tek onChanged olmalı (tutar + açıklama)');
     });
 
-    test('kart formunda düğme TÜM alanlar geçerliyken aktif', () {
-      // ⚠ Bu ekran alan-altı `errorText` KULLANMIYOR: dört alan da
-      // geçerli olmadan düğme pasif kalıyor, dolayısıyla kullanıcı
-      // hiç hata metniyle karşılaşmıyor. Kural aynı, uygulaması
-      // farklı.
-      expect(s.contains('bool get _formGecerli'), isTrue);
-      expect(s.contains('_formGecerli'), isTrue);
-    });
+    // (Kaldırıldı, 3 Eki: 'kart formunda düğme…' testi kaldırılmış kart
+    // ödeme ekranını denetliyordu; derlenmeyen yetim test.)
 
     test('şifre tekrar alanı yalnız EŞLEŞME sorar', () {
       // Aynı kuralı iki satırda birden söylemek hangi alanın sorunlu

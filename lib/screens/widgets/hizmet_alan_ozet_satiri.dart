@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme.dart';
 import '../../domain/hizmet_alan_ozeti.dart';
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';

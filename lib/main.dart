@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ import 'screens/notifications_screen.dart';
 import 'screens/profile_info_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/provider_status_screen.dart';
-import 'core/deep_links.dart';
 import 'core/offline_banner.dart';
 import 'core/boot_log.dart';
 import 'core/theme.dart';
@@ -44,6 +44,7 @@ import 'data/repositories/account_test_store.dart';
 import 'data/ports/repository_ports.dart';
 import 'data/remote/api_client.dart';
 import 'data/remote/api_config.dart';
+import 'data/remote/api_teklif_talebi_port.dart';
 import 'data/remote/api/auth_api.dart';
 import 'data/remote/api/chat_api.dart';
 import 'data/remote/api/notification_api.dart';
@@ -61,16 +62,17 @@ import 'data/repositories/demo_hesap_ozetleri.dart';
 import 'data/repositories/chat_repository.dart';
 import 'data/repositories/contact_repository.dart';
 import 'data/repositories/listing_repository.dart';
-import 'data/models/listing.dart';
 import 'data/models/offer.dart';
 import 'data/repositories/notification_repository.dart';
 import 'data/repositories/offer_repository.dart';
 import 'data/repositories/review_repository.dart';
-import 'domain/config.dart';
+import 'data/repositories/ilan_no_uretici.dart';
+import 'data/models/notification.dart';
 import 'data/services/listing_expiry_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/role_select_screen.dart';
+import 'screens/role_switch_screen.dart';
 import 'data/controllers/region_controller.dart';
 import 'data/remote/api/region_api.dart';
 import 'data/remote/sabitlemeli_istemci.dart';
@@ -81,6 +83,12 @@ import 'data/repositories/pending_listing_store.dart';
 import 'data/controllers/incelenen_ilan_controller.dart';
 import 'data/repositories/incelenen_ilan_store.dart';
 import 'ui/global_web_kabugu.dart';
+import 'ui/panel_rotasi.dart';
+import 'ui/gezgin.dart';
+import 'ui/yasal_kabul_kapisi.dart';
+import 'ui/push_kapisi.dart';
+import 'core/sekme_durumu.dart';
+import 'data/repositories/sekme_anligi.dart';
 import 'screens/bulunamadi_screen.dart';
 import 'screens/listing_detail_screen.dart';
 import 'screens/job_detail_screen.dart';
@@ -138,6 +146,9 @@ class AppPorts {
   /// Yalnız mock modda kurulur (API modunda süre kuralı sunucudadır).
   final ListingExpiryService? expiry;
 
+  /// Yalnız mock modda: web'de yenilemede veriyi korumak için (sekme anlığı).
+  final MockDepolar? mockDepolar;
+
   const AppPorts({
     required this.auth,
     required this.listings,
@@ -149,6 +160,7 @@ class AppPorts {
     required this.regions,
     required this.apiClient,
     this.expiry,
+    this.mockDepolar,
     this.notifRepo,
     this.teklifTalebiRepo,
     this.authRepo,
@@ -254,6 +266,8 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     notifRepo: notifRepo,
     teklifTalebiRepo: teklifTalebiRepo,
     authRepo: authRepo,
+    mockDepolar: MockDepolar(listingRepo, offerRepo, chatRepo, contactRepo,
+        reviewRepo, notifRepo, teklifTalebiRepo),
     // MOCK: sabit dosyalardan üretilir (yalnız geliştirme).
     regions: MockRegionPort(),
     // Geliştirmede varsayılan: hak YOK — cüzdan akışı da görülebilsin.
@@ -322,15 +336,10 @@ Future<void> main() async {
   yonlendirmeyiUygula();
 
 
-  // DERİN BAĞLANTI: uygulama açık/arka plandayken gelen bağlantılar için
-  // dinleyici başlatılır. Uygulama TAMAMEN KAPALIYKEN açılışa sebep olan
-  // bağlantı aşağıda `initialLink()` ile bir kez okunur.
-  //
-  // GÜVENLİK: bağlantı yalnız TETİKLEYİCİDİR — ödeme sonucu her zaman
-  // backend'in confirmTopup çağrısıyla doğrulanır.
-  unawaited(DeepLinks.instance.start());
-
-  final navKey = GlobalKey<NavigatorState>();
+  // ⚠ ORTAK ANAHTAR (`ui/gezgin.dart`): kabuk katmanı da bunu
+  // kullanır. Yerel bir anahtar üretilseydi kenar çubuğu boş bir
+  // anahtara bakardı.
+  final navKey = gezginAnahtari;
   BootLog.olay('BUILD_PORTS_START');
   final ports = buildPorts(
     // Oturum kurtarılamazsa (refresh de geçersiz) giriş ekranına dönülür.
@@ -338,8 +347,16 @@ Future<void> main() async {
     //
     // HTML sözleşmesinde giriş ekranı otomatik AÇILMAZ; kullanıcı
     // karşılama ekranına döner ve isterse profil ikonundan giriş yapar.
-    onSessionExpired: () => navKey.currentState
-        ?.pushNamedAndRemoveUntil('/home', (route) => false),
+    //
+    // ⚠ WEB'DE DE ANA SAYFA: anonim açılış her platformda `/home`
+    // olduğu için oturum düştüğünde de oraya dönülür. Bir tur web'de
+    // `/role`a yönlendirilmişti; geri alındı.
+    //
+    // ⚠ `pushNamedAndRemoveUntil` DEĞİŞMEDİ: yığın tamamen
+    // temizlenir, korumalı ekranlar arkada açık kalmaz. Jetonlar
+    // `_forceLogout` içinde ZATEN silinmiş durumda.
+    onSessionExpired: () =>
+        navKey.currentState?.pushNamedAndRemoveUntil('/home', (route) => false),
   );
 
   // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — TEK ÖRNEKLEME ──
@@ -349,11 +366,21 @@ Future<void> main() async {
   // EKLENDİ (bkz. sınıf tanımındaki not) — bildirimler mevcut
   // `NotificationController`ın GÖRDÜĞÜ AYNI depoya yazılsın diye;
   // başka hiçbir port/repository DEĞİŞMEDİ.
-  final teklifTalebiPort = MockTeklifTalebiPort(
-      ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
-      notifs: ports.notifRepo,
-      // ⚠ Tamamlanan iş sayacı hizmet verenin hesabına yazılır.
-      auth: ports.authRepo);
+  // ⚠ API MODUNDA gerçek sunucu portu; mock modda (web demosu, testler)
+  // bugünkü mock port AYNEN. Ekranlar ve denetleyici aynı arayüzü görür.
+  final TeklifTalebiPort teklifTalebiPort = ApiConfig.useRealApi
+      ? ApiTeklifTalebiPort(ports.apiClient)
+      : MockTeklifTalebiPort(
+          ports.teklifTalebiRepo ?? TeklifTalebiRepository(),
+          notifs: ports.notifRepo,
+          // ⚠ Tamamlanan iş sayacı hizmet verenin hesabına yazılır.
+          auth: ports.authRepo);
+  // "Bul" değerlendirmesi: sunucunun talep görünümündeki değerlendirme
+  // yorum deposuna bağlanır (yeniden girişte "Değerlendirme Yapıldı").
+  final yorumPortu = ports.reviews;
+  if (yorumPortu is ApiReviewPort && teklifTalebiPort is ApiTeklifTalebiPort) {
+    yorumPortu.repo.talepCozucu = teklifTalebiPort.degerlendirme;
+  }
   BootLog.olay('BUILD_PORTS_END');
 
   // ═══════════════════════════════════════════════════════════════
@@ -368,7 +395,17 @@ Future<void> main() async {
   //
   // `AppPorts`e DOKUNULMADI: `MockAuthPort.repo` zaten PUBLIC bir
   // alan (bkz. `mock_ports.dart`), doğrudan ondan erişildi.
-  if (ports.auth is MockAuthPort) {
+  // ⚠ WEB'DE TEST HESABI DEPOSU OKUNMAZ.
+  //
+  // `AccountTestStore` bir GELİŞTİRME kolaylığıdır: cihazda kayıtlı
+  // demo hesaplarını geri yükler. Web'de bunun karşılığı yok ama
+  // okuması var — `flutter_secure_storage`ın tarayıcı uygulaması
+  // devreye giriyor, IndexedDB açılıyor ve WebCrypto anahtar türetmesi
+  // çalışıyor. Bu, AÇILIŞTA BEKLENEN SÜREYE doğrudan ekleniyordu ve
+  // kullanıcı o süreyi beyaz ekran olarak görüyordu.
+  //
+  // ⚠ MOBİLDE AYNEN KALIR: geliştirme akışı bozulmasın.
+  if (!kIsWeb && ports.auth is MockAuthPort) {
     final authRepo = (ports.auth as MockAuthPort).repo;
     final accountStore = AccountTestStore();
     final kayitliHesaplar = await accountStore.read();
@@ -389,6 +426,153 @@ Future<void> main() async {
   if (expiry != null) {
     expiry.sweep();
     Timer.periodic(const Duration(minutes: 1), (_) => expiry.sweep());
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ⚠ WEB'DE SPLASH EKRANI YOKTUR — HEDEF `runApp`TAN ÖNCE BELLİ
+  // ══════════════════════════════════════════════════════════════
+  //
+  // Web'de açılış ekranı diye bir kalıp yoktur: sayfa yüklenir ve
+  // içerik gelir. `SplashScreen`, açılış kararını verdiği İÇİN
+  // zincirde duruyordu; web'de hiçbir şey çizmediğinden kullanıcı o
+  // süreyi BOŞ SAYFA olarak görüyordu.
+  //
+  // Karar buraya, `runApp`tan ÖNCEYE alındı. `MaterialApp` açıldığında
+  // hedef ekran ZATEN bellidir ve doğrudan o çizilir — arada hiçbir
+  // route, hiçbir bekleme yüzeyi yok.
+  //
+  // ⚠ MOBİL DEĞİŞMEZ: `kIsWeb` değilse `ilkRota` null kalır ve
+  // `MaterialApp.home` bugünkü gibi `SplashScreen` olur. Marka
+  // splash'ı, bakım/zorunlu güncelleme kararları ve native splash
+  // köprüsü orada aynen sürer.
+  //
+  // ⚠ OTURUM MEKANİZMASI AYNI: `restoreSession` bugünkü port üzerinden
+  // çağrılır, jetonlar yine `flutter_secure_storage`ta durur. Yeni bir
+  // auth ya da saklama sistemi kurulmadı.
+  //
+  // ⚠ ÇİFT ROL → HİZMET VEREN ve `switchRole` kuralı `SplashScreen`
+  // içindekiyle AYNI: `RoleGuard` hedefe değil `activeRole`e bakar;
+  // yönlendirmeden önce eşitlenmezse kullanıcı kendi paneline
+  // giremez.
+  //
+  // ⚠ BAKIM / ZORUNLU GÜNCELLEME BURADA SORULMAZ. O denetimler ağ
+  // çağrısı gerektiriyor ve buraya alınsaydı açılış yine bekleyecekti
+  // — çözülmek istenen sorunun ta kendisi. Karar: web'de açılış
+  // hızlıdır, bloke durumları ilk API çağrısında zaten ortaya çıkar
+  // (`onSessionExpired` ve hata eşlemesi devrede). Bunu RAPORLUYORUM,
+  // gizlemiyorum.
+  // ── ⚠ WEB: YENİLEMEDE AYNI EKRAN ("Masaüstü sitesi" geçişi dahil) ──
+  //
+  // Mobil tarayıcıda masaüstü/mobil görünüm değiştirilince sayfa BAŞTAN
+  // yüklenir. Mock modda bütün veri bellekte olduğundan kayıtlı hesaplar
+  // ve açık oturum kayboluyor, açılış ana sayfaya düşüyordu. Çözüm, SEKMEYE
+  // ÖZEL depo (sessionStorage — sekme kapanınca silinir):
+  //   · mock hesaplar ve sekmenin açık oturumu (yalnız MOCK modda),
+  //   · açık ekranın rotası (AktifRota yazar, aşağıda okunur).
+  // ⚠ MOBİL DEĞİŞMEZ (kIsWeb). API modunda jeton buraya YAZILMAZ.
+  if (kIsWeb && ports.auth is MockAuthPort) {
+    final repo = (ports.auth as MockAuthPort).repo;
+    // Demo hesaplar KALICI depodan (mobildeki gibi; kullanıcı kararı 1 Eki).
+    void hesaplariYukle() {
+      final ham = kaliciOku(_kSekmeHesaplar);
+      final liste = ham == null ? const [] : jsonDecode(ham);
+      if (liste is List) {
+        for (final j in liste.whereType<Map<String, dynamic>>()) {
+          final h = Account.fromJson(j);
+          repo.accounts.removeWhere((a) => a.id == h.id);
+          repo.accounts.add(h);
+        }
+      }
+    }
+
+    try {
+      hesaplariYukle();
+      final tel = sekmeOku(_kSekmeOturum);
+      final acc = tel == null ? null : repo.findByPhone(tel);
+      if (acc != null) {
+        repo.oturumuGeriYukle(acc);
+      }
+    } catch (_) {
+      // Bozuk kayıt açılışı kilitlemez; sekme sıfırdan başlar.
+    }
+    final depolar = ports.mockDepolar;
+    if (depolar != null) {
+      depolar.sekmedenYukle();
+      depolar.sekmeyeKaydetmeyiBaslat();
+    }
+    // İKİ SEKMEDE İKİ ROL: başka sekme hesap/veri yazınca bu sekme eşitlenir.
+    kaliciDegisince((anahtar) {
+      try {
+        if (anahtar == _kSekmeHesaplar) {
+          // Bildirim YOK: geri yazım tetiklenmez (sekmeler arası döngü olmaz);
+          // giriş anında hesap listesi zaten okunur.
+          hesaplariYukle();
+        } else if (anahtar == MockDepolar.anahtar) {
+          depolar?.sekmedenYukle();
+        }
+      } catch (_) {}
+    });
+    repo.addListener(() {
+      kaliciYaz(_kSekmeHesaplar, jsonEncode(repo.accounts.map((a) => a.toJson()).toList()));
+      final aktif = repo.currentAccount;
+      if (aktif == null) {
+        sekmeSil(_kSekmeOturum);
+      } else {
+        sekmeYaz(_kSekmeOturum, aktif.phone);
+      }
+    });
+  }
+
+  String? ilkRota;
+  if (kIsWeb) {
+    try {
+      // ⚠ BÜTÇELİ: güvenli depo okuması web'de IndexedDB açılışı ve
+      // WebCrypto anahtar türetmesi demek. Askıda kalırsa kullanıcı
+      // beyaz ekranda bekler; 1200 ms sonra anonim açılışa düşülür.
+      // Oturum varsa ilk API çağrısında zaten geri yüklenir.
+      await ports.auth
+          .restoreSession()
+          .timeout(const Duration(milliseconds: 1200));
+      final acc = ports.auth.currentAccount;
+      if (acc != null) {
+        final hedefRol =
+            acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+        if (acc.activeRole != hedefRol) {
+          await ports.auth.switchRole(hedefRol);
+        }
+        ilkRota = hedefRol == Role.provider
+            ? '/provider/jobs'
+            : '/customer/listings';
+      } else {
+        ilkRota = '/home';
+      }
+      // ⚠ Yenileme öncesi AÇIK EKRAN varsa oraya dönülür. Oturumluysa her
+      // ekran; oturumsuzsa yalnız oturum gerektirmeyen ekranlar. Rota
+      // yine onGenerateRoute + RoleGuard'dan geçer (yetki atlanamaz).
+      final kayitli = sekmeOku(kSekmeRota);
+      if (kayitli != null &&
+          (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
+        final argHam = sekmeOku(kSekmeRotaArg);
+        if (argHam == null) {
+          ilkRota = kayitli;
+        } else {
+          // Argümanlı ekran: ana ekran üzerine, ilk kareden sonra AYNI
+          // argümanla açılır (geri tuşu da doğal çalışır).
+          Object? arg;
+          try {
+            arg = jsonDecode(argHam);
+          } catch (_) {}
+          if (arg != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) =>
+                gezginAnahtari.currentState?.pushNamed(kayitli, arguments: arg));
+          }
+        }
+      }
+    } catch (e) {
+      // ⚠ HATA AÇILIŞI KİLİTLEMEZ: oturum çözülemezse anonim açılış.
+      BootLog.olay('WEB_BOOT_FALLBACK', e.runtimeType.toString());
+      ilkRota = '/home';
+    }
   }
 
   BootLog.olay('RUN_APP_CALL');
@@ -441,7 +625,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (_) => ReviewController(ports.reviews)),
       ChangeNotifierProvider(create: (_) => NotificationController(ports.notifications)),
     ],
-    child: HizmetCepApp(navigatorKey: navKey),
+    child: HizmetCepApp(navigatorKey: navKey, ilkRota: ilkRota),
   ));
 }
 
@@ -529,7 +713,8 @@ void _seedDemo(
       // ⚠ Kayıt sözleşmesinin geri kalanı DEĞİŞMEDİ: OTP, sözleşme
       // onayı ve tüm doğrulamalar aynen işler.
       hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet,
-      phone: '5507654321', pass: '1986onur', role: Role.provider,
+      // ⚠ Düz şifre kaynakta YOK: hazır özet kullanılır, `pass` yok sayılır.
+      phone: '5507654321', pass: '', role: Role.provider,
       otpVerified: true, name: 'Ali Usta', termsAccepted: true,
       // Demo hesabın e-postası da doldurulur — profil ekranı boş
       // alanla değil gerçek veriyle denenebilsin.
@@ -605,7 +790,9 @@ void _seedDemo(
   }
 
   final ikinciUsta = auth.register(
-      phone: '5559998877', pass: '1986onur', role: Role.provider,
+      // ⚠ Düz şifre kaynakta YOK: demo ustayla aynı hazır özet.
+      hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet,
+      phone: '5559998877', pass: '', role: Role.provider,
       otpVerified: true, name: 'Mehmet Yıldız', termsAccepted: true,
       email: 'mehmet.yildiz@example.com');
   if (ikinciUsta.account != null) {
@@ -731,7 +918,13 @@ void _seedDemo(
 
 class HizmetCepApp extends StatelessWidget {
   final GlobalKey<NavigatorState>? navigatorKey;
-  const HizmetCepApp({super.key, this.navigatorKey});
+
+  /// Web'de açılışta doğrudan gösterilecek rota.
+  ///
+  /// ⚠ NULL İSE MOBİL DAVRANIŞI: `home` olarak `SplashScreen` kurulur.
+  final String? ilkRota;
+
+  const HizmetCepApp({super.key, this.navigatorKey, this.ilkRota});
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -758,27 +951,28 @@ class HizmetCepApp extends StatelessWidget {
         // `MaterialApp.builder` Navigator'ın üstünde çalıştığı için
         // rotayı başka türlü öğrenemez.
         navigatorObservers: [AktifRota()],
-        builder: (context, child) => GlobalWebKabugu(
-          child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+        // ⚠ PushKapisi (FCM yaşam döngüsü; izin yalnız girişte) ve
+        // YasalKabulKapisi (yalnız API modu) ekran DIŞINDAN sarar; mevcut
+        // builder yapısı (GlobalWebKabugu → OfflineBanner) AYNEN korunur.
+        builder: (context, child) => PushKapisi(
+          child: YasalKabulKapisi(
+            child: GlobalWebKabugu(
+              child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+            ),
+          ),
         ),
-        home: const SplashScreen(),
+        // ⚠ İKİSİ BİRDEN VERİLEMEZ: `home` ve `initialRoute` aynı anda
+        // tanımlanırsa Flutter `home`u kullanır. Web'de `home` null
+        // bırakılır ki `initialRoute` işlesin.
+        home: ilkRota == null ? const SplashScreen() : null,
+        initialRoute: ilkRota,
         routes: {
           '/home': (_) => const HomeScreen(),
-          '/login': (_) => const LoginScreen(),
-          '/role': (_) => const RoleSelectScreen(),
+
 
           // ── Ortak (her iki rol) ──
           '/profile': (_) => RoleGuard(builder: (_) => const ProfileScreen()),
-          '/profile/info': (_) =>
-              RoleGuard(builder: (_) => const ProfileInfoScreen()),
-          '/profile/address': (_) =>
-              RoleGuard(builder: (_) => const AddressesScreen()),
-          '/profile/password': (_) =>
-              RoleGuard(builder: (_) => const ChangePasswordScreen()),
-          '/profile/account': (_) =>
-              RoleGuard(builder: (_) => const AccountSettingsScreen()),
-          '/profile/rate': (_) =>
-              RoleGuard(builder: (_) => const AppRateScreen()),
+
           '/notifications': (_) =>
               RoleGuard(builder: (_) => const NotificationsScreen()),
 
@@ -797,10 +991,7 @@ class HizmetCepApp extends StatelessWidget {
               RoleGuard.provider(builder: (_) => const ProviderStatusScreen()),
           '/provider/reviews': (_) =>
               RoleGuard.provider(builder: (_) => const MyReviewsScreen()),
-          '/provider/categories': (_) =>
-              RoleGuard.provider(builder: (_) => const MyCategoriesScreen()),
-          '/provider/areas': (_) =>
-              RoleGuard.provider(builder: (_) => const MyAreasScreen()),
+
 
           // ── YALNIZ MÜŞTERİ ──
           '/customer/listings': (_) =>
@@ -812,9 +1003,12 @@ class HizmetCepApp extends StatelessWidget {
           // ⚠ PUBLIC (kayıt öncesi) — yalnız TASLAK üretir, yayın YAPMAZ.
           // `/customer/new-listing` korumalı KALIR; bu route onu
           // bypass etmez (bkz. prelogin_listing_route.dart).
-          PreLoginListingRoute.name: preLoginListingBuilder,
-          '/customer/new-listing': (_) =>
-              RoleGuard.customer(builder: (_) => const CreateListingScreen()),
+          // ⚠ WEB'DE HARİTADA YOK: web'de bu ad `onGenerateRoute`ta
+          // panel rotasıyla kurulur (giriş ekranı gibi). Haritada
+          // kalsaydı Flutter `onGenerateRoute`u hiç çağırmazdı.
+          // Mobilde satır AYNEN durur.
+          if (!kIsWeb) PreLoginListingRoute.name: preLoginListingBuilder,
+
         },
         // ── ⚠ PARAMETRELİ ADRESLER (web için) ──
         //
@@ -845,6 +1039,130 @@ class HizmetCepApp extends StatelessWidget {
         // adres de öyle olmalı.
         onGenerateRoute: (settings) {
           final ad = settings.name ?? '';
+
+          // ── ⚠ ROTALAR `routes:` HARİTASINDAN BURAYA TAŞINDI ──
+          //
+          // ⚠ HANGİSİ MODAL, HANGİSİ SAYFA (19 Eyl, kullanıcı kararı):
+          //
+          //   · OTURUM ÖNCESİ akış (giriş, rol seçimi) → MODAL.
+          //     Kullanıcı ana sayfayı gezerken araya giren kısa bir
+          //     adımdır; arkasında sayfa durmalı.
+          //
+          //   · OTURUM İÇİ ekranlar (hizmet bölgelerim, kategorilerim,
+          //     profil bilgileri, ilan oluştur …) → SIRADAN SAYFA.
+          //     Bunlar kenar çubuğundan açılan BÖLÜMLERDİR; üstte
+          //     modal olarak çıkınca kenar çubuğu kararıyor ve
+          //     kullanıcı bölüm değiştirdiğini değil, bir pencere
+          //     açtığını sanıyordu.
+          //
+          // ⚠ MOBİLDE İKİSİ DE AYNI: `panelRotasi` zaten `kIsWeb`
+          // değilse düz `MaterialPageRoute` döndürüyordu; bu ayrım
+          // yalnız web'i etkiler.
+          //
+          // `routes:` haritası her zaman `MaterialPageRoute` üretir ve
+          // o rota OPAKTIR: altındaki sayfa çizilmez. Masaüstü web'de
+          // panelin arkasında önceki sayfanın görünmesi için rotanın
+          // `opaque: false` olması gerekiyor ve bu, rota kurulurken
+          // verilen bir özellik.
+          //
+          // ⚠ AYNI EKRANLAR, AYNI KORUMALAR: `RoleGuard` sarmalayıcıları
+          // birebir taşındı; yetki kapıları değişmedi.
+          //
+          // ⚠ MOBİLDE FARK YOK: `panelRotasi` `kIsWeb` değilse ya da
+          // ekran dar ise düpedüz `MaterialPageRoute` döndürür.
+          //
+          // ⚠ `routes:` İLE ÇAKIŞMA OLMAZ: bu adlar haritadan
+          // ÇIKARILDI. Haritada kalsalardı Flutter onGenerateRoute'u
+          // hiç çağırmazdı.
+          if (ad == '/login') {
+            return panelRotasi<void>(
+              settings: settings,
+              builder: (_) => const LoginScreen(),
+            );
+          }
+          if (ad == '/role') {
+            return panelRotasi<void>(
+              settings: settings,
+              builder: (_) => const RoleSelectScreen(),
+            );
+          }
+          // ── ⚠ YALNIZ WEB: ROL DEĞİŞTİR SAĞ ALANDA ──
+          //
+          // Web kenar çubuğundaki "Rol Değiştir" bu adı açar. Ekran
+          // Android'in profil ekranından açtığı `RoleSwitchScreen`'in
+          // KENDİSİ — kopya değil; düz sayfa rotası olduğu için diğer
+          // menü sayfaları gibi sağ alanda çizilir.
+          //
+          // ⚠ MOBİL KİLİTLİ: `kIsWeb` koşulu yüzünden Android/iOS'ta bu
+          // dal hiç eşleşmez; orada profil ekranı `RoleSwitchScreen`'i
+          // bugünkü gibi doğrudan açar.
+          if (kIsWeb && ad == '/profile/role') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) =>
+                  RoleGuard(builder: (_) => const RoleSwitchScreen()),
+            );
+          }
+          if (ad == '/profile/info') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const ProfileInfoScreen()),
+            );
+          }
+          if (ad == '/profile/address') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const AddressesScreen()),
+            );
+          }
+          if (ad == '/profile/password') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const ChangePasswordScreen()),
+            );
+          }
+          if (ad == '/profile/account') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const AccountSettingsScreen()),
+            );
+          }
+          if (ad == '/profile/rate') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const AppRateScreen()),
+            );
+          }
+          if (ad == '/provider/categories') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard.provider(builder: (_) => const MyCategoriesScreen()),
+            );
+          }
+          if (ad == '/provider/areas') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard.provider(builder: (_) => const MyAreasScreen()),
+            );
+          }
+          // ── ⚠ İLAN OLUŞTURMA: WEB'DE PANEL (giriş ekranı gibi) ──
+          //
+          // Kullanıcı kararı: kategori kartlarıyla başlayan akış ve ilan
+          // oluşturma ekranları web'de tam ekran değil, panel olarak
+          // açılır. `akisRotasi` web değilse bugünkü `MaterialPageRoute`un
+          // KENDİSİNİ döndürür — mobil DEĞİŞMEZ.
+          if (ad == '/customer/new-listing') {
+            return akisRotasi<void>(
+              settings: settings,
+              builder: (_) => RoleGuard.customer(builder: (_) => const CreateListingScreen()),
+            );
+          }
+          if (kIsWeb && ad == PreLoginListingRoute.name) {
+            return akisRotasi<void>(
+              settings: settings,
+              builder: preLoginListingBuilder,
+            );
+          }
 
           // `/ilan/<id>` — hizmet alanın kendi ilanı.
           final ilan = _idAyikla(ad, '/ilan/');
@@ -951,5 +1269,107 @@ class HizmetCepApp extends StatelessWidget {
       return null;
     }
     return kalan;
+  }
+}
+
+/// Sekme deposu anahtarları (yalnız web + mock; bkz. main()).
+const String _kSekmeHesaplar = 'hc.demo.hesaplar'; // KALICI (localStorage)
+const String _kSekmeOturum = 'hc.sekme.oturum';
+
+/// Oturum gerektirmeyen ve yenilemede geri dönülebilen ekranlar.
+const List<String> _kOturumsuzAcilabilir = [
+  '/home', '/login', '/register', '/listing/new', '/legal', '/kategori', '/hizmet-alani', '/search',
+];
+
+/// ═══════════════════════════════════════════════════════════════
+/// MOCK DEPOLAR — web'de yenilemede (masaüstü görünümü geçişi dahil)
+/// ilan, teklif, sohbet, iletişim, yorum, bildirim ve teklif talebi
+/// verisi SEKMEYE ÖZEL depoya yazılır ve açılışta geri yüklenir.
+/// Yalnız web + mock modda kullanılır (bkz. main()); mobil değişmez.
+/// ═══════════════════════════════════════════════════════════════
+class MockDepolar {
+  MockDepolar(this.ilan, this.teklif, this.sohbet, this.iletisim, this.yorum,
+      this.bildirim, this.talep);
+
+  final ListingRepository ilan;
+  final OfferRepository teklif;
+  final ChatRepository sohbet;
+  final ContactRepository iletisim;
+  final ReviewRepository yorum;
+  final NotificationRepository bildirim;
+  final TeklifTalebiRepository talep;
+
+  static const String anahtar = 'hc.demo.veri';
+  bool _yukleniyor = false;
+  bool _kayitBekliyor = false;
+
+  void sekmedenYukle() {
+    final ham = kaliciOku(anahtar);
+    if (ham == null) {
+      return;
+    }
+    _yukleniyor = true;
+    try {
+      final j = jsonDecode(ham) as Map<String, dynamic>;
+      List<Map<String, dynamic>> liste(String k) =>
+          ((j[k] as List?) ?? const []).whereType<Map<String, dynamic>>().toList();
+      final ilanlar = liste('ilan').map(ilanCoz).toList();
+      for (final l in ilanlar) {
+        IlanNoUretici.rezerveEt(l.ilanNo);
+      }
+      ilan.sekmeKayitlariniYukle(ilanlar);
+      teklif.sekmeKayitlariniYukle(liste('teklif').map(teklifCoz));
+      sohbet.sekmeKayitlariniYukle({
+        for (final e in ((j['sohbet'] as Map?) ?? const {}).entries)
+          '${e.key}': ((e.value as List?) ?? const [])
+              .whereType<Map<String, dynamic>>()
+              .map(mesajCoz)
+              .toList(),
+      });
+      iletisim.sekmeKayitlariniYukle(((j['iletisim'] as List?) ?? const []).map((e) => '$e'));
+      yorum.sekmeKayitlariniYukle(liste('yorum').map(yorumCoz));
+      bildirim.sekmeKayitlariniYukle(liste('bildirim').map(bildirimCoz).whereType<AppNotification>());
+      final talepler = liste('talep').map(talepCoz).toList();
+      for (final t in talepler) {
+        IlanNoUretici.rezerveEt(t.talepNo);
+      }
+      talep.sekmeKayitlariniYukle(talepler);
+    } catch (_) {
+      // Bozuk anlık açılışı kilitlemez; sekme boş veriyle sürer.
+    } finally {
+      _yukleniyor = false;
+    }
+  }
+
+  void sekmeyeKaydetmeyiBaslat() {
+    for (final d in <ChangeNotifier>[ilan, teklif, sohbet, iletisim, yorum, bildirim, talep]) {
+      d.addListener(_kaydetIste);
+    }
+  }
+
+  // Aynı karede gelen çok sayıda değişiklik TEK yazıma toplanır.
+  void _kaydetIste() {
+    if (_yukleniyor || _kayitBekliyor) {
+      return;
+    }
+    _kayitBekliyor = true;
+    scheduleMicrotask(() {
+      _kayitBekliyor = false;
+      try {
+        kaliciYaz(anahtar, jsonEncode({
+          'ilan': ilan.sekmeKayitlari.map(ilanJson).toList(),
+          'teklif': teklif.sekmeKayitlari.map(teklifJson).toList(),
+          'sohbet': {
+            for (final e in sohbet.sekmeKayitlari.entries) e.key: e.value.map(mesajJson).toList(),
+          },
+          'iletisim': iletisim.sekmeKayitlari,
+          'yorum': yorum.sekmeKayitlari.map(yorumJson).toList(),
+          'bildirim': bildirim.sekmeKayitlari.map(bildirimJson).toList(),
+          'talep': talep.sekmeKayitlari.map(talepJson).toList(),
+        }));
+      } catch (_) {
+        // Depo dolu/kapalı: bellekteki veri etkilenmez.
+      }
+    });
   }
 }

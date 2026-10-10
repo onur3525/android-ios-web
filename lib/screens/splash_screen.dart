@@ -13,11 +13,13 @@ import '../data/remote/api_client.dart';
 import '../data/remote/api/config_api.dart';
 import '../data/category_tree.dart';
 import '../data/remote/api/category_api.dart';
+import 'category_ui.dart' show sunucuFotograflariniAyarla, sunucuIkonlariniAyarla;
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
 import '../core/boot_log.dart';
 import '../data/repositories/oturum_tercihi.dart';
+import '../core/baglanti_modu.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // SPLASH — REFERANS DEĞERLERİ
@@ -84,6 +86,31 @@ class SplashView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ── ⚠ WEB'DE MARKA SPLASH'I ÇİZİLMEZ ──
+    //
+    // Web'in kendi açılış örtüsü ZATEN VAR: `web/index.html`
+    // içindeki `#acilis` bloğu, ilk Flutter karesinde
+    // (`flutter-first-frame`) kaldırılıyor. Bu yüzey de marka
+    // görselini çizerse kullanıcı AYNI logoyu İKİ KEZ görür —
+    // tarayıcı örtüsü kalkar, hemen ardından Flutter aynı şeyi
+    // yeniden çizer. Web'de splash ekranı diye bir kalıp yoktur;
+    // sayfa yüklenir ve içerik gelir.
+    //
+    // ⚠ AÇILIŞ KARARI KALDIRILMADI: bakım, zorunlu güncelleme ve
+    // oturum denetimi `SplashScreen` içinde aynen çalışmaya devam
+    // eder (bkz. aşağıdaki durum sınıfı). Burada değişen YALNIZ ne
+    // çizildiği.
+    //
+    // ⚠ BOŞ DEĞİL, SAYFA ZEMİNİ: karar birkaç yüz milisaniye sürerse
+    // kullanıcı beyaz bir boşluk değil, uygulamanın kendi zeminini
+    // görür. Marka yok, yükleniyor yazısı yok — tarayıcı örtüsünden
+    // içeriğe sessiz bir geçiş.
+    //
+    // ⚠ ANDROID/iOS KİLİTLİ: `kIsWeb` değilse aşağıdaki yüzey
+    // birebir bugünkü hâliyle çizilir.
+    if (kIsWeb) {
+      return const ColoredBox(color: RC.pageBg, child: SizedBox.expand());
+    }
     // ══════════════════════════════════════════════════════════════
     // ⚠ SÖZLEŞME DEĞİŞTİ — BU YÜZEY ARTIK BOŞ DEĞİL.
     //
@@ -286,6 +313,27 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<AgDurumu> _agDurumu() async {
+    // ── ⚠ WEB'DE AĞ DENETİMİ ATLANIR ──
+    //
+    // Sayfa sunucudan İNDİ; tarayıcı oraya ulaştıysa internet vardır.
+    // Denetimi bir kez daha yapmak web'de bilgi katmıyor, yalnız
+    // açılışı geciktiriyordu.
+    //
+    // ⚠ MALİYETİ CİDDİYDİ: olumsuz cevapta 600 ms beklenip TEKRAR
+    // soruluyor, her sorgu 500 ms bütçeli — en kötü durumda tek
+    // başına 1,6 saniye. Web'de bu sürenin tamamı boş ekran olarak
+    // görülüyordu.
+    //
+    // ⚠ ÜSTELİK YANILTICI: `connectivity_plus`ın tarayıcı uygulaması
+    // sınırlıdır ve yanlış "offline" dönebilir; o zaman yeniden
+    // deneme de devreye girip gecikmeyi büyütür.
+    //
+    // ⚠ MOBİLDE AYNEN KALIR: uçak modu, kapsama dışı ve Wi-Fi geçişi
+    // gerçek durumlardır; oradaki iki aşamalı denetim değişmedi.
+    if (kIsWeb) {
+      BootLog.olay('CONNECTIVITY_RESULT', 'online(web-varsayılan)');
+      return AgDurumu.online;
+    }
     BootLog.olay('CONNECTIVITY_CHECK_START');
     try {
       if (await defaultOnlineChecker().timeout(_kAgSorguButce)) {
@@ -363,10 +411,21 @@ class _SplashScreenState extends State<SplashScreen> {
         _navSonrasiKareyiBekle(hedef);
         return;
       }
-      BootLog.olay('NAVIGATION_START', '/home');
-      Navigator.of(context).pushReplacementNamed('/home');
-      BootLog.olay('NAVIGATION_CALL_RETURNED', '/home');
-      _navSonrasiKareyiBekle('/home');
+      // ⚠ ANONİM AÇILIŞ HER PLATFORMDA ANA SAYFADIR.
+      //
+      // Bir tur web'de `/role`a yönlendirilmişti; yanlış anlaşılmadan
+      // doğdu. "Kayıt ekranı" ile kastedilen ROL SEÇİMİ DEĞİL, ana
+      // sayfadır: arama kutusu, kategori ızgarası ve "Hizmet Alan /
+      // Hizmet Veren Olarak Başla" kartları orada. Kullanıcı kayda o
+      // kartlardan giriyor.
+      //
+      // ⚠ WEB VE MOBİL AYNI: ayrı hedef tutmak, iki tarafın açılışını
+      // ayrıştırırdı.
+      const anonimHedef = '/home';
+      BootLog.olay('NAVIGATION_START', anonimHedef);
+      Navigator.of(context).pushReplacementNamed(anonimHedef);
+      BootLog.olay('NAVIGATION_CALL_RETURNED', anonimHedef);
+      _navSonrasiKareyiBekle(anonimHedef);
       return;
     }
 
@@ -429,7 +488,25 @@ class _SplashScreenState extends State<SplashScreen> {
   /// tercih diskte kalıcıdır ama oturum kalıcı değildir (mock'ta
   /// uygulama kapanınca silinir, API'de jeton süresi dolabilir).
   Future<String?> _hatirlananHedef() async {
-    if (!await OturumTercihi().hatirlaniyor) {
+    // ── ⚠ WEB'DE "BENİ HATIRLA" KAPISI ARANMAZ ──
+    //
+    // Mobilde bu tercih anlamlıdır: uygulama arka planda kalır,
+    // kullanıcı açık bırakmayı bilinçli seçer. Web'de ise sekmeyi
+    // kapatmak olağan davranıştır; tercihi şart koşmak, her sekme
+    // kapanışında yeniden giriş istemek demekti.
+    //
+    // ⚠ OTURUMUN KENDİSİ YİNE ARANIR (aşağıdaki `acc == null`
+    // denetimi): tercih atlanır, GERÇEK oturum atlanmaz. Çıkış
+    // yapıldığında jetonlar silindiği için burada `acc` null döner ve
+    // kullanıcı kayıt girişine gider.
+    //
+    // ⚠ YENİ SAKLAMA MEKANİZMASI YOK: oturum bugünkü gibi
+    // `flutter_secure_storage` üzerinde durur; web'de o paketin kendi
+    // tarayıcı uygulaması devreye girer. `localStorage`a elle jeton
+    // yazılmadı.
+    //
+    // ⚠ MOBİL DEĞİŞMEZ: `kIsWeb` değilse tercih kapısı aynen işler.
+    if (!kIsWeb && !await OturumTercihi().hatirlaniyor) {
       return null;
     }
     if (!mounted) {
@@ -547,6 +624,9 @@ class _SplashScreenState extends State<SplashScreen> {
         final j = await CategoryApi(client!).tree().timeout(_kConfigButce);
         final agac = CategoryApi.parse(j);
         KatalogKaynagi.i.guncelle(agac);
+        sunucuIkonlariniAyarla(CategoryApi.ikonlar(j));
+        sunucuFotograflariniAyarla(CategoryApi.fotograflar(j),
+            apiKoku: Uri.parse(ApiConfig.baseUrl).origin);
         BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
       } catch (e) {
         // ⚠ Gömülü katalog devrede kalır — kategorisiz uygulama olmaz.
@@ -660,7 +740,7 @@ class BootBlockedScreen extends StatelessWidget {
   Future<void> _openStore(BuildContext context) async {
     final uri = Uri.parse(storeUrlForPlatform());
     try {
-      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final ok = await launchUrl(uri, mode: acilisModu());
       if (!ok && context.mounted) {
         sysToastErr(context, SysKind.genericError,
             extra: 'Mağaza açılamadı. Lütfen elle güncelleyin.');

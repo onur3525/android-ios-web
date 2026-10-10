@@ -1,15 +1,21 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/controllers/review_controller.dart';
+import '../data/remote/api/saglayici_api.dart';
+import '../data/remote/api_client.dart';
+import '../data/remote/api_config.dart';
 import '../data/mock_saglayici_dizini.dart';
 import '../domain/saglayici_ozeti.dart';
 import '../domain/yakinlik_saglayici.dart';
 import 'widgets/saglayici_ozet_satiri.dart';
 import '../ui/ref_tokens.dart';
+import '../ui/kalan_alanda_ortala.dart';
 import '../ui/ref_widgets.dart';
 import 'teklif_iste_screen.dart';
 
@@ -50,6 +56,13 @@ class SonuclarScreen extends StatefulWidget {
 class _SonuclarScreenState extends State<SonuclarScreen> {
   List<({MockSaglayici saglayici, int yakinlikSirasi})> _sonuclar = const [];
 
+  /// API modunda sunucu yanıtı beklenirken `true`: "sonuç bulunamadı"
+  /// metni bu sırada ÇİZİLMEZ (henüz bilinmiyor).
+  bool _yukleniyor = false;
+
+  /// Sunucu hatası (kullanıcı dilinde); boş liste ile karıştırılmaz.
+  String? _hata;
+
   /// ⚠ KESİN ÜST SINIR — 9. hizmet veren ASLA listelenmez. Bölgede
   /// 1 varsa yalnız 1 gösterilir (yukarı doğru ZORLAMA yok, yalnız
   /// aşağı doğru KIRPMA). Bu artık MUTLAK bir sınır olduğu için
@@ -67,24 +80,66 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
     // ⚠ GERÇEK KOORDİNAT TABANLI SIRALAMA — `IlBazliYakinlikSaglayici`
     // artık yalnız koordinatı olmayan iller için sessiz geri düşüş
     // (bkz. `KoordinatTabanliYakinlikSaglayici` içindeki kural).
-    final yakinlik =
+    _yakinlik =
         KoordinatTabanliYakinlikSaglayici((il) => rc.districtsOf(il));
+    // ── API MODU: kayıtlı hizmet verenler SUNUCUDAN (`GET
+    // /providers/search`). Mock modda bugünkü yerel eşleşme AYNEN.
+    // İki yol da AYNI sıralamadan (`mockSaglayicilariBul`) geçer.
+    if (ApiConfig.useRealApi) {
+      _yukleniyor = true;
+      final api = SaglayiciApi(context.read<ApiClient>());
+      unawaited(_sunucudanYukle(api));
+      return;
+    }
+    _sirala(_gercekSaglayicilariBul(
+      context,
+      kategori: widget.kategori,
+      hizmet: widget.hizmet,
+      musteriIlcesi: widget.ilce,
+    ));
+  }
+
+  late final KoordinatTabanliYakinlikSaglayici _yakinlik;
+
+  /// ⚠ SIRALAMA `mockSaglayicilariBul` İÇİNDE — burada yalnız
+  /// KIRPILIR. En iyi kriterlere göre sıralı listenin İLK 8'i alınır;
+  /// 8'den azsa olduğu gibi kalır, UYDURMA/ÇOĞALTMA YAPILMAZ.
+  void _sirala(List<MockSaglayici> gercekler) {
     final tumSonuclar = mockSaglayicilariBul(
       il: widget.il,
       ilce: widget.ilce,
-      yakinlik: yakinlik,
-      gercekSaglayicilar: _gercekSaglayicilariBul(
-        context,
-        kategori: widget.kategori,
-        hizmet: widget.hizmet,
-        musteriIlcesi: widget.ilce,
-      ),
+      yakinlik: _yakinlik,
+      gercekSaglayicilar: gercekler,
     );
-    // ⚠ SIRALAMA ZATEN `mockSaglayicilariBul` İÇİNDE YAPILDI — burada
-    // yalnız KIRPILIYOR. En iyi kriterlere göre sıralı listenin İLK
-    // 8'i alınır; 8'den azsa (ör. bölgede tek 1 hizmet veren varsa)
-    // olduğu gibi kalır, UYDURMA/ÇOĞALTMA YAPILMAZ.
     _sonuclar = tumSonuclar.take(_maksimumGoster).toList();
+  }
+
+  Future<void> _sunucudanYukle(SaglayiciApi api) async {
+    try {
+      final liste = await api.ara(
+          kategori: widget.kategori, hizmet: widget.hizmet, ilce: widget.ilce);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _sirala(saglayicilariSunucudanCevir(liste, musteriIlcesi: widget.ilce));
+        _yukleniyor = false;
+      });
+    } on ApiFailure catch (e) {
+      if (mounted) {
+        setState(() {
+          _hata = e.error.message;
+          _yukleniyor = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _hata = 'Hizmet verenler yüklenemedi. Lütfen tekrar deneyin.';
+          _yukleniyor = false;
+        });
+      }
+    }
   }
 
   /// "Teklif İste" formuna geçer — hizmet ve hizmet veren bilgisi
@@ -105,8 +160,11 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
           puan: s.yorumSayisi == 0 ? null : s.puan,
           yorumSayisi: s.yorumSayisi,
           tamamlananIs: s.tamamlananIs,
-          ilce: s.ilce,
+          // ⚠ GÖSTERİLEN konum hesabın adresidir (sunucu kaydında
+          // `adresIlcesi`); kurgusal kayıtta eskisi gibi `ilce`.
+          ilce: s.gercek ? s.adresIlcesi : s.ilce,
           il: widget.il,
+          fotoUrl: s.fotoUrl,
         ),
       ),
     );
@@ -122,6 +180,14 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Boş durum açıklaması — TEK tanım (mobil ve web aynı metni çizer).
+    final bosAciklama = Text(
+        'Seçtiğiniz hizmeti bu bölgede sunan kayıtlı '
+        'hizmet veren bulunmuyor. İlan vererek '
+        'teklif toplayabilirsiniz.',
+        textAlign: TextAlign.center,
+        style: refText(size: RF.s135, weight: RF.w400, color: RC.textSoft));
+
     return Scaffold(
       backgroundColor: RC.white,
       body: SafeArea(
@@ -194,6 +260,23 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                   //
                   // ⚠ Başlığın kendisi 18/w700 olduğu için aradaki
                   // fark hem ölçü hem renkle kuruluyor.
+                  if (_yukleniyor)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32),
+                      child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2.4)),
+                    )
+                  else if (_hata != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Text(_hata!,
+                          textAlign: TextAlign.center,
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w400,
+                              color: RC.textSoft)),
+                    )
+                  else ...[
                   Text(
                       _sonuclar.isEmpty
                           ? 'Bu hizmet için sonuç bulunamadı'
@@ -215,18 +298,18 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                   // ⚠ SAYI YA DA TAHMİN YAZILMAZ: "yakında eklenecek",
                   // "N kişi bekleniyor" gibi bilmediğimiz şeyler
                   // söylenmez. Yalnız durum ve tek bir öneri.
-                  if (_sonuclar.isEmpty)
+                  // ── ⚠ WEB: BİLGİLENDİRME KALAN ALANIN ORTASINDA ──
+                  //
+                  // Ortak `KalanAlandaOrtala` (Bildirimler ile aynı kural).
+                  // Metin TEK tanım (`bosAciklama`); mobilde `else` dalı
+                  // önceki `Padding(vertical: 32)` düzeninin BİREBİR aynısı.
+                  // `altBosluk: 20` = listenin alt dolgusu.
+                  if (_sonuclar.isEmpty && kIsWeb)
+                    KalanAlandaOrtala(altBosluk: 20, child: bosAciklama)
+                  else if (_sonuclar.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 32),
-                      child: Text(
-                          'Seçtiğiniz hizmeti bu bölgede sunan kayıtlı '
-                          'hizmet veren bulunmuyor. İlan vererek '
-                          'teklif toplayabilirsiniz.',
-                          textAlign: TextAlign.center,
-                          style: refText(
-                              size: RF.s135,
-                              weight: RF.w400,
-                              color: RC.textSoft)),
+                      child: bosAciklama,
                     ),
 
                   // ── TEK KESİNTİSİZ LİSTE — İLÇE BAŞLIĞI YOK ──
@@ -244,6 +327,7 @@ class _SonuclarScreenState extends State<SonuclarScreen> {
                       onTeklifIste: () =>
                           _teklifIste(_sonuclar[i].saglayici),
                     ),
+                  ],
                   ],
                 ],
               ),
@@ -329,11 +413,15 @@ class _SaglayiciKarti extends StatelessWidget {
                     puan: saglayici.yorumSayisi == 0 ? null : saglayici.puan,
                     yorumSayisi: saglayici.yorumSayisi,
                     tamamlananIs: saglayici.tamamlananIs,
-                    ilce: saglayici.ilce,
+                    // ⚠ Sunucu kaydında GÖSTERİLEN konum hesabın
+                    // adresidir; adres yoksa satır çizilmez.
+                    ilce: saglayici.gercek
+                        ? saglayici.adresIlcesi
+                        : saglayici.ilce,
                     il: il,
-                    // ⚠ YEDEK KAYIT (kurgusal sağlayıcı): hesap yok,
-                    // fotoğraf da yok — baş harfe düşer.
-                    fotoYolu: '',
+                    // Sunucu kaydında imzalı fotoğraf adresi; yoksa
+                    // baş harfe düşer.
+                    fotoYolu: saglayici.fotoUrl,
                   ),
             ),
           ),
@@ -480,4 +568,55 @@ double _aktiflikTahmini(
   final tamamlanan = _tamamlananIsGercek(c, providerId);
   final skor = tamamlanan * 0.05 + yorumSayisi * 0.03;
   return skor > 1 ? 1 : skor;
+}
+
+/// ── API MODU: sunucu yanıtı → `MockSaglayici` (gerçek kayıt) ──
+///
+/// Alanlar `_gercekSaglayicilariBul` ile AYNI kuralla doldurulur:
+/// sıralama ilçesi hizmet bölgesinden (müşterinin ilçesi varsa o),
+/// gösterilen konum hesabın adresinden. Sayılar sunucudan; yorum yoksa
+/// puan 0 (kart `yorumSayisi == 0` iken puanı göstermez). Aktiflik,
+/// yerel moddaki AYNI vekil formülle (tamamlanan iş ve yorum sayısı).
+/// Bozuk satır atlanır; uygulama ÇÖKMEZ.
+@visibleForTesting
+List<MockSaglayici> saglayicilariSunucudanCevir(List<dynamic> liste,
+    {required String musteriIlcesi}) {
+  final out = <MockSaglayici>[];
+  for (final x in liste) {
+    if (x is! Map) {
+      continue;
+    }
+    final id = x['id'];
+    final ad = x['name'];
+    if (id is! String || id.isEmpty || ad is! String) {
+      continue;
+    }
+    final bolgeler = (x['serviceDistricts'] is List)
+        ? (x['serviceDistricts'] as List).whereType<String>().toList()
+        : const <String>[];
+    final adres = x['address'];
+    final adresIlcesi = adres is Map && adres['district'] is String &&
+            (adres['district'] as String).isNotEmpty
+        ? adres['district'] as String
+        : null;
+    final yorum = x['reviewCount'] is int ? x['reviewCount'] as int : 0;
+    final is_ = x['completedJobs'] is int ? x['completedJobs'] as int : 0;
+    final puan = x['rating'] is num ? (x['rating'] as num).toDouble() : 0.0;
+    final aktiflik = is_ * 0.05 + yorum * 0.03;
+    out.add(MockSaglayici(
+      gercek: true,
+      id: id,
+      adSoyad: ad,
+      ilce: bolgeler.contains(musteriIlcesi)
+          ? musteriIlcesi
+          : (bolgeler.isNotEmpty ? bolgeler.first : musteriIlcesi),
+      puan: puan,
+      yorumSayisi: yorum,
+      tamamlananIs: is_,
+      aktiflikSkoru: aktiflik > 1 ? 1 : aktiflik,
+      adresIlcesi: adresIlcesi,
+      fotoUrl: x['photoUrl'] is String ? x['photoUrl'] as String : '',
+    ));
+  }
+  return out;
 }

@@ -21,6 +21,8 @@ class MockSaglayici {
     required this.tamamlananIs,
     required this.aktiflikSkoru,
     this.gercek = false,
+    this.adresIlcesi,
+    this.fotoUrl = '',
   });
 
   final String id;
@@ -43,6 +45,16 @@ class MockSaglayici {
   /// DEĞİL). "Teklif İste" bu id'yi kullanır; gerçek hizmet veren
   /// gerçekten kendi "Teklif İstekleri" sekmesinde talebi görür.
   final bool gercek;
+
+  /// Sunucudan gelen kayıtta hesabın KENDİ adresindeki ilçe — kartta
+  /// GÖSTERİLEN konum (yoksa satır çizilmez). [ilce] ise sıralamada
+  /// kullanılan hizmet bölgesidir; ikisi ayrı sorulardır (bkz.
+  /// `gercekSaglayiciOzeti`).
+  final String? adresIlcesi;
+
+  /// Sunucudan gelen kayıtta hizmet veren profil fotoğrafının kısa
+  /// süreli imzalı adresi; yoksa boş (baş harf çizilir).
+  final String fotoUrl;
 }
 
 /// Seçilen hizmet + kullanıcının il/ilçesi için hizmet veren

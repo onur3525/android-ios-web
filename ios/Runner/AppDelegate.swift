@@ -5,40 +5,17 @@ import QuartzCore
 import UIKit
 
 /**
- ÖDEME DÖNÜŞÜ — DERİN BAĞLANTI KÖPRÜSÜ (iOS)
+ HizmetCep uygulama temsilcisi — native köprüler (Android ile aynı sözleşme):
+   hizmetcep/splash          → bootReady
+   hizmetcep/ekran_korumasi  → ac / kapat (önizleme karartması)
 
- Dart tarafı ile sözleşme (Android ile BİREBİR AYNI):
-   MethodChannel("hizmetcep/deeplinks")        → getInitialLink
-   EventChannel ("hizmetcep/deeplinks/events") → sonraki bağlantılar
-
- Yakalanan durumlar:
-   • Uygulama KAPALIYKEN → launchOptions[.url], getInitialLink ile TEK SEFER
-   • ARKA PLAN / ÖN PLAN → application(_:open:options:)
-
- GÜVENLİK:
-   • URI'deki "success"/"status" alanlarına GÜVENİLMEZ; Dart'a yalnız
-   • Aynı bağlantı iki kez iletilmez (duplicate callback koruması).
+ ⚠ Eski ödeme dönüşü derin bağlantı köprüsü ("hizmetcep/deeplinks")
+ KALDIRILDI: ödeme ürünü kaldırıldı, Dart dinleyicisi yoktu ve Info.plist'te
+ `hizmetcep://` şeması tanımlı değildi. URL ve universal link istekleri
+ artık doğrudan FlutterAppDelegate'e (eklentilere, ör. Firebase Auth) gider.
  */
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-
-  private static let methodChannelName = "hizmetcep/deeplinks"
-  private static let eventChannelName = "hizmetcep/deeplinks/events"
-  private static let scheme = "hizmetcep"
-
-  /**
-   UNIVERSAL LINKS ALAN ADI (HTTPS)
-
-   ⚠ HAZIRLIK, ÇALIŞIR DURUM DEĞİL: Apple
-   `https://hizmetcep.com/.well-known/apple-app-site-association`
-   dosyasını indirip App ID ile eşleştirmeden universal link
-   ÇALIŞMAZ. O dosya bu turda oluşturulmadı (kapsam dışı). Ayrıca
-   `Runner.entitlements` Xcode'da hedefe bağlanmalıdır.
-
-   ⚠ ÖZEL ŞEMA KALDIRILMADI: `hizmetcep://payment/return` aynen
-   çalışır. İki yol da AYNI Dart akışına düşer.
-   */
-  private static let appLinkHost = "hizmetcep.com"
 
   /**
    EKRAN KORUMASI KANALI (iOS karşılığı)
@@ -115,16 +92,6 @@ import UIKit
   /// Arka plana geçerken konulan örtü.
   private var privacyCover: UIView?
 
-  /// Sağlayıcı SDK adaptörü bağlandığında `true` yapılır.
-
-  /// Açılışa neden olan bağlantı; Dart bir kez okur ve tüketir.
-  private var initialLink: String?
-  private var initialLinkConsumed = false
-
-  private var eventSink: FlutterEventSink?
-
-  /// Duplicate koruması.
-  private var delivered = Set<String>()
 
   override func application(
     _ application: UIApplication,
@@ -132,42 +99,9 @@ import UIKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    // SOĞUK BAŞLANGIÇ: uygulama tamamen kapalıyken gelen derin bağlantı.
-    if let url = launchOptions?[.url] as? URL {
-      initialLink = Self.derinBaglanti(from: url)
-    }
-
     // Kanallar, Flutter motoru hazır olduktan sonra kurulur.
     if let controller = window?.rootViewController as? FlutterViewController {
       let messenger = controller.binaryMessenger
-
-      let method = FlutterMethodChannel(
-        name: Self.methodChannelName, binaryMessenger: messenger)
-      method.setMethodCallHandler { [weak self] call, result in
-        guard let self = self else {
-          result(nil)
-          return
-        }
-        switch call.method {
-        case "getInitialLink":
-          // TEK SEFER: ikinci çağrıda nil döner.
-          if self.initialLinkConsumed {
-            result(nil)
-          } else {
-            self.initialLinkConsumed = true
-            if let link = self.initialLink {
-              self.delivered.insert(link)
-            }
-            result(self.initialLink)
-          }
-        default:
-          result(FlutterMethodNotImplemented)
-        }
-      }
-
-      let events = FlutterEventChannel(
-        name: Self.eventChannelName, binaryMessenger: messenger)
-      events.setStreamHandler(self)
 
       // ── AÇILIŞ (SPLASH) KÖPRÜSÜ ──
       //
@@ -219,78 +153,6 @@ import UIKit
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  /// Uygulama AÇIK veya ARKA PLANDA iken gelen bağlantı.
-  override func application(
-    _ app: UIApplication,
-    open url: URL,
-    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
-  ) -> Bool {
-    guard let link = Self.derinBaglanti(from: url) else {
-      // Ödeme dışı bağlantı: diğer eklentilere devredilir.
-      return super.application(app, open: url, options: options)
-    }
-
-    // ⚠ DAVRANIŞ DEĞİŞMEDİ: aynı yinelenme koruması ve aynı "dinleyici
-    // yoksa sakla" mantığı; yalnız universal link ile PAYLAŞILAN tek
-    // yere taşındı.
-    teslimEt(link)
-    return true
-  }
-
-  /**
-   UNIVERSAL LINK GİRİŞİ
-
-   ⚠ ÖZEL ŞEMADAN FARKLI KAPI: `hizmetcep://` adresleri
-   `application(_:open:options:)` ile gelir; HTTPS universal link'ler
-   ise `NSUserActivity` üzerinden `continueUserActivity` ile gelir.
-   İkinci kapı yoktu, bu yüzden HTTPS bağlantı uygulamaya hiç
-   ulaşamıyordu.
-
-   ⚠ AYNI BORUYA BAĞLANIR: bağlantı, özel şemadakiyle AYNI
-   `teslimEt` yoluna verilir — aynı yinelenme koruması, aynı
-   "dinleyici yoksa sakla" davranışı. İki giriş yolu, tek akış.
-
-   ⚠ SOĞUK BAŞLANGIÇ DA BURADAN GELİR: uygulama kapalıyken açılan
-   universal link, `didFinishLaunchingWithOptions` yerine bu metotla
-   iletilir; `eventSink` henüz yokken `initialLink` olarak saklanır.
-   */
-  override func application(
-    _ application: UIApplication,
-    continue userActivity: NSUserActivity,
-    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
-  ) -> Bool {
-    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-      let url = userActivity.webpageURL,
-      let link = Self.derinBaglanti(from: url)
-    else {
-      return super.application(
-        application, continue: userActivity, restorationHandler: restorationHandler)
-    }
-    teslimEt(link)
-    return true
-  }
-
-  /// Bağlantıyı Dart'a iletir; dinleyici yoksa açılış için saklar.
-  ///
-  /// ⚠ TEK YER: özel şema ve universal link aynı mantığı kullanır.
-  /// İki kopya olsaydı yinelenme koruması birinde eksik kalabilirdi.
-  private func teslimEt(_ link: String) {
-    guard !delivered.contains(link) else {
-      NSLog("[HizmetCepDeepLink] Yinelenen bağlantı yok sayıldı")
-      return
-    }
-    delivered.insert(link)
-
-    if let sink = eventSink {
-      sink(link)
-    } else {
-      // Dart henüz dinlemiyorsa bağlantı KAYBOLMASIN.
-      initialLink = link
-      initialLinkConsumed = false
-      NSLog("[HizmetCepDeepLink] Dinleyici yok — açılış bağlantısı olarak saklandı")
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -417,49 +279,4 @@ import UIKit
     privacyCover = nil
   }
 
-  /**
-   Geçerli ödeme dönüş bağlantısını doğrular.
-   Geçersiz şema/host veya EKSİK session kimliğinde nil döner ve
-   neden loglanır (sessizce yutulmaz).
-   */
-  private static func derinBaglanti(from url: URL) -> String? {
-    // ── ⚠ İKİ YOL KABUL EDİLİR ──
-    //
-    //   1) Özel şema:  hizmetcep://payment/return?session=...
-    //   2) Universal:  https://hizmetcep.com/payment/return?session=...
-    //
-    // ⚠ ÖZEL ŞEMA ÖNCE DENETLENİR ve davranışı DEĞİŞMEDİ.
-    //
-    // ⚠ ALAN ADI ZORUNLU: yalnız `https` görmek yetmez; denetlenmezse
-    // başka bir sitenin bağlantısı da uygulamaya girebilirdi.
-    //
-    // ⚠ ADRES OLDUĞU GİBİ DART'A GEÇER: Dart `session` dışındaki
-    // hiçbir parametreye güvenmez.
-    let sema = url.scheme?.lowercased()
-    if sema == scheme {
-      return url.absoluteString
-    }
-    if sema == "https", url.host?.lowercased() == appLinkHost {
-      return url.absoluteString
-    }
-    NSLog(
-      "[HizmetCepDeepLink] Beklenmeyen bağlantı yok sayıldı: "
-        + "\(url.scheme ?? "-")://\(url.host ?? "-")")
-    return nil
-  }
-}
-
-// MARK: - EventChannel
-extension AppDelegate: FlutterStreamHandler {
-  func onListen(
-    withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink
-  ) -> FlutterError? {
-    eventSink = events
-    return nil
-  }
-
-  func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    eventSink = nil
-    return nil
-  }
 }

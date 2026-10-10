@@ -394,7 +394,6 @@ void main() {
 
   group('AÇILIŞ BLOKLAYICILARI KALDIRILDI', () {
     final m = read('lib/main.dart');
-    final b = read('lib/data/services/card_tokenization_bridge.dart');
 
     /// ⚠ YORUMSUZ metin: açıklamalarda ESKİ çağrılar anlatılıyor
     /// ("burada `_seedDemo(authRepo)` çağrılıyordu"). Ham metinde
@@ -471,15 +470,10 @@ void main() {
       final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
     });
 
-    test('platform ping ZAMAN AŞIMLI', () {
-      // Timeout'suz `await` uygulamayı süresiz bekletebiliyordu.
-      expect(b.contains('.timeout(pingButce)'), isTrue);
-      expect(b.contains('pingButce = Duration(milliseconds:'), isTrue);
-    });
-
-    test('tokenizer sonucu ÖNBELLEKLENİR, tek sorgu yapılır', () {
-      expect(b.contains('_bekleyen ??= _sor();'), isTrue);
-    });
+    // (Kaldırıldı, 4 Eki: 'platform ping ZAMAN AŞIMLI' ve 'tokenizer sonucu
+    // ÖNBELLEKLENİR' testleri kaldırılmış kart ödeme köprüsünü
+    // (`card_tokenization_bridge.dart`) okuyordu; dosya uygulamada yok.
+    // Grup düzeyindeki okuma TÜM test dosyasının yüklenmesini engelliyordu.)
 
     test('oturum geri yükleme TEK yerden', () {
       expect(mKod.contains('ports.auth.restoreSession()'), isFalse,
@@ -563,16 +557,8 @@ void main() {
       expect(iIlkAwait, greaterThan(iAl));
     });
 
-    test('ping bütçesi sonsuz beklemeyi önler ama toleranslıdır', () {
-      final b = read('lib/data/services/card_tokenization_bridge.dart');
-      final ms = int.parse(
-          RegExp(r'pingButce = Duration\(milliseconds: (\d+)\)')
-              .firstMatch(b)!
-              .group(1)!);
-      expect(ms, greaterThanOrEqualTo(500),
-          reason: 'yavaş cihazda gerçek tokenizer yanlışlıkla elenmemeli');
-      expect(ms, lessThanOrEqualTo(2000), reason: 'sonsuz bekleme olmamalı');
-    });
+    // (Kaldırıldı, 4 Eki: 'ping bütçesi…' testi kaldırılmış kart ödeme
+    // köprüsünü okuyordu; dosya uygulamada yok.)
   });
 
   group('NATIVE ↔ FLUTTER MARKA SÜREKLİLİĞİ', () {

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
+import '../../ui/olcu.dart';
 
 /// ── ⚠ FOTOĞRAF KAYNAĞI PANELİ — TEK KAYNAK ──
 ///
@@ -49,6 +50,11 @@ Future<ImageSource?> fotografKaynagiSec(BuildContext context) {
       //
       // `ic_cam` BEYAZ gövdelidir; yalnız renkli daire rozetin
       // İÇİNDE okunur, beyaz zemine doğrudan konulmaz.
+      // ⚠ KAMERA YOKSA SEÇENEK GÖSTERİLMEZ (`kameraVarMi`).
+      // Masaüstü tarayıcıda "Fotoğraf Çek" ya web kamerasını açıyor
+      // ya da hiçbir şey yapmıyordu; çalışmayan bir seçenek
+      // gösterilmez. Mobil web ve uygulamalarda AYNEN durur.
+      if (kameraVarMi(context)) ...[
       fotografSecenekSatiri(
         context,
         rozetRengi: RC.blue,
@@ -57,7 +63,8 @@ Future<ImageSource?> fotografKaynagiSec(BuildContext context) {
         aciklama: 'Kamerayı açar',
         onTap: () => Navigator.of(context).pop(ImageSource.camera),
       ),
-      const SizedBox(height: 2),
+      const SizedBox(height: 2)
+      ],
       fotografSecenekSatiri(
         context,
         rozetRengi: RC.success,

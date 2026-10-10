@@ -71,11 +71,10 @@ class AuthController extends BaseController {
     String email = '',
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
-    /// Sözleşme + gizlilik onayı — Google akışında da ZORUNLU.
+    /// Sözleşme + gizlilik onayı — ZORUNLU.
     bool termsAccepted = false,
-    /// Google akışında doğrulanmış e-posta ile gelinir.
+    /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
-    /// Google `sub` — hesap eşleştirme kimliği.
 
     /// ⚠ OTP doğrulamasından üretilen kayıt yetkisi (Y1).
     String? kayitYetkisi,

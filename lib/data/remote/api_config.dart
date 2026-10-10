@@ -117,8 +117,10 @@ abstract final class ApiConfig {
   /// Yalnız GET ve ağ/5xx hatalarında; POST'lar idempotency-key olmadan tekrarlanmaz.
   static const int maxRetries = 2;
 
-  /// Uygulama sürümü — pubspec.yaml ile aynı tutulmalıdır.
-  /// Zorunlu güncelleme kontrolü bu değeri kullanır.
+  /// Uygulama sürümü — `pubspec.yaml` `version:` alanının sürüm adı
+  /// (`+` öncesi) ile AYNI olmalıdır; `test/surum_tutarliligi_test.dart`
+  /// ikisini karşılaştırır. Zorunlu güncelleme kontrolü bu değeri kullanır.
+  /// Release derlemesi isterse `--dart-define=APP_VERSION=` ile verir.
   static const String appVersion =
-      String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
+      String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0');
 }

@@ -10,12 +10,26 @@ class ProfileApi {
   Future<Map<String, dynamic>> setActiveRole(String role) =>
       c.post('/users/me/active-role', body: {'role': role});
 
-  Future<Map<String, dynamic>> updateProfile({String? name, String? email, String? photoRef}) =>
+  /// Ad güncellemesi. Fotoğraf AYRI ucu kullanır ([updatePhoto]): yerel
+  /// dosya yolu sunucuya referans diye GÖNDERİLMEZ.
+  Future<Map<String, dynamic>> updateProfile({String? name, String? email}) =>
       c.patch('/profiles/me', body: {
         if (name != null) 'name': name,
         if (email != null) 'email': email,
-        if (photoRef != null) 'photoRef': photoRef,
       });
+
+  /// PROFİL FOTOĞRAFI (rol bazlı). [ref]: `profile-photo` türünde
+  /// YÜKLENMİŞ depo referansı; `null` fotoğrafı kaldırır. Sunucu dosyayı
+  /// doğrular, eskisini silme kuyruğuna alır ve `photos` alanında imzalı
+  /// adresleri döndürür.
+  Future<Map<String, dynamic>> updatePhoto(String? ref, String role) =>
+      c.patch('/profiles/me', body: {'photoRef': ref, 'photoRole': role});
+
+  /// Bildirim tercihleri (Hesap Ayarları). Yalnız verilen alanlar değişir;
+  /// sunucu güncel dört değeri döndürür. Push gönderimi bunlara uyar.
+  Future<Map<String, dynamic>> updateNotificationPrefs(
+          Map<String, bool> degisenler) =>
+      c.patch('/profiles/me/notifications', body: degisenler);
 
   /// E-POSTA DEĞİŞİMİ — doğrulama bağlantısı ister.
   ///
@@ -30,8 +44,12 @@ class ProfileApi {
           body: {'newEmail': newEmail},
           idempotencyKey: ApiClient.newIdempotencyKey());
 
-  Future<Map<String, dynamic>> changePhone({required String newPhone, required String otpCode}) =>
-      c.post('/profiles/me/phone/change', body: {'newPhone': newPhone, 'otpCode': otpCode});
+  Future<Map<String, dynamic>> changePhone(
+          {required String newPhone, required String otpCode, String? firebaseIdToken}) =>
+      c.post('/profiles/me/phone/change', body: {
+        'newPhone': newPhone, 'otpCode': otpCode,
+        if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
+      });
 
   /// TEK adres: kayıt yoksa sunucu null döner.
   Future<Map<String, dynamic>?> address() => c.getOrNull('/profiles/me/address');

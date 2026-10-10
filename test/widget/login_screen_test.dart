@@ -179,32 +179,21 @@ void main() {
   /// Giriş düğmesi (e-posta modu).
   Future<void> girisYap(WidgetTester t) => dugmeyeBas(t, 'Giriş Yap');
 
-  /// Google sheet'ini açar.
+  /// Ortak alt paneli (`RefBottomSheet`) açar.
   ///
-  /// ⚠ DOĞRUDAN `tap` YAPILMAZ.
+  /// ⚠ Eskiden "Google ile Devam Et" düğmesine basılıyordu; Google girişi
+  /// ürün kararıyla KALDIRILDI (bkz. test/ucuncu_taraf_giris_test.dart).
+  /// Animasyon sözleşmesi (perde 220 ms, panel 260 ms) bileşenin
+  /// kendisine aittir; panel doğrudan açılır.
   ///
-  /// Widget testinin kök yüzeyi 800×600'dür. Login içeriği bundan
-  /// uzundur; "Google ile Devam Et" düğmesinin merkezi Y≈619'a düşer
-  /// ve hit-test kök ağacın DIŞINDA kalır:
-  ///
-  ///   Warning: Offset(400.0, 619.0) is outside the bounds of the
-  ///   root of the render tree, Size(800.0, 600.0).
-  ///
-  /// Bu durumda dokunuş hiç işlenmez, sheet açılmaz ve ardındaki
-  /// içerik/animasyon doğrulamaları ikincil olarak başarısız olur.
-  ///
-  /// `ensureVisible` düğmeyi gerçek kullanıcı gibi görünür alana
-  /// kaydırır; ardından dokunuş güvenle işlenir.
-  ///
-  /// Tap sonrası YALNIZ tek `pump` yapılır — animasyon başlar ama
+  /// Çağrı sonrası YALNIZ tek `pump` yapılır — animasyon başlar ama
   /// tamamlanmaz; açılış testi ara kareleri ölçebilsin diye.
   Future<void> sheetAc(WidgetTester t) async {
-    final dugme =
-        find.widgetWithText(RefSecondaryButton, 'Google ile Devam Et');
-    await t.ensureVisible(dugme);
-    await t.pumpAndSettle();      // kaydırma otursun
-    await t.tap(dugme);
-    await t.pump();               // rota başlasın (animasyon SÜRÜYOR)
+    final ctx = t.element(find.byType(LoginScreen));
+    // ignore: unawaited_futures
+    RefBottomSheet.goster<void>(ctx,
+        title: 'Deneme', child: const Text('PANEL_ICERIGI'));
+    await t.pump(); // rota başlasın (animasyon SÜRÜYOR)
   }
 
   /// Ana giriş düğmesi — referans `.rg-primary` karşılığı.
@@ -420,41 +409,6 @@ void main() {
     expect(find.text('MUSTERI_PANELI'), findsNothing);
     expect(find.text('SAGLAYICI_PANELI'), findsNothing);
   });
-
-  // ═════════════════════════════════════════════════════════════
-  // GOOGLE SHEET — referans `googleSheet()` içeriği
-  // ═════════════════════════════════════════════════════════════
-
-  testWidgets('Google sheet referans içeriğini gösterir', (t) async {
-    await t.pumpWidget(app());
-    await sheetAc(t);
-    await t.pumpAndSettle(); // içerik testi: animasyon tamamlansın
-
-    // 1) ÖNCE sheet'in gerçekten açıldığı kanıtlanır.
-    //    Aynı metnin ana düğmede de bulunması tek başına kanıt DEĞİLDİR.
-    expect(find.byType(RefBottomSheet), findsOneWidget,
-        reason: 'sheet açılmadı');
-
-    // 2) Başlık, RefBottomSheet BAĞLAMINDA doğrulanır.
-    expect(
-      find.descendant(
-        of: find.byType(RefBottomSheet),
-        matching: find.text('Google ile Devam Et'),
-      ),
-      findsOneWidget,
-      reason: 'sheet başlığı yok',
-    );
-
-    // 3) Referans içeriği.
-    expect(find.text('Devam etmek için bir hesap seçin'), findsOneWidget);
-    expect(find.text('Onur Bütün'), findsOneWidget);
-    expect(find.text('onur@butunmuhendislik.com.tr'), findsOneWidget);
-    expect(find.text('Başka bir hesap kullan'), findsOneWidget);
-  });
-
-  // ═════════════════════════════════════════════════════════════
-  // ASSET — Login'in kullandığı her SVG gerçek dosyaya çözülmeli
-  // ═════════════════════════════════════════════════════════════
 
   test('Login SVG yolları gerçek dosyaya çözülür', () {
     final src = File('lib/screens/login_screen.dart').readAsStringSync();

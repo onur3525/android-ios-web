@@ -45,7 +45,7 @@ void main() {
           .join('\n');
 
       // Eylem yönlendiricisi gövdesi çıkarılır (süslü parantez dengesi).
-      final i = kod.indexOf('void _hizmetSecildi');
+      final i = kod.indexOf('void hizmetSecildi(');
       expect(i, greaterThan(0),
           reason: 'arama önerisi yönlendiricisi bulunamadı');
       final acilis = kod.indexOf('{', i);
@@ -74,7 +74,7 @@ void main() {
 
     // Yönlendirici, rol sözleşmesine UYMAK ZORUNDADIR.
     test('arama önerisi yönlendiricisi rol sözleşmesine uyar', () {
-      final i = home.indexOf('void _hizmetSecildi');
+      final i = home.indexOf('void hizmetSecildi(');
       expect(i, greaterThan(0));
       final govde = home.substring(i, i + 1200);
       // Müşteri rolü varsa korumalı form; yoksa public taslak formu.
@@ -144,7 +144,10 @@ void main() {
     });
 
     test('oturum varken de Home hedefi korunur', () {
-      expect(splash.contains("pushReplacementNamed('/home')"), isTrue);
+      // Hedef artık `anonimHedef` sabitinde; "Beni Hatırla" ile kayıtlı
+      // rol paneli YOKSA (oturum olsa da) açılış yine ana sayfadır.
+      expect(splash.contains("const anonimHedef = '/home';"), isTrue);
+      expect(splash.contains('pushReplacementNamed(anonimHedef)'), isTrue);
     });
   });
 

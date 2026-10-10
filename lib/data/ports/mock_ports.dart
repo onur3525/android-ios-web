@@ -94,11 +94,10 @@ class MockAuthPort extends AuthPort {
     String email = '',
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
-    /// Sözleşme + gizlilik onayı — Google akışında da ZORUNLU.
+    /// Sözleşme + gizlilik onayı — ZORUNLU.
     bool termsAccepted = false,
-    /// Google akışında doğrulanmış e-posta ile gelinir.
+    /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
-    /// Google `sub` — hesap eşleştirme kimliği.
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async =>
@@ -401,31 +400,6 @@ class MockListingPort extends ListingPort {
     return (listing: l, error: null);
   }
 
-  DomainError? _transition(String id, String actorId, ListingStatus to) {
-    final a = _authorize(id, actorId);
-    if (a.error != null) {
-      return a.error;
-    }
-    if (!ListingStateMachine.canTransition(a.listing!.status, to)) {
-      return const InvalidStateError('Bu ilan için geçersiz durum geçişi');
-    }
-
-    // ── SEÇİLİ TEKLİF ZORUNLULUĞU ──
-    //
-    // ⚠ `providerSelected` ve `completed` durumları ANLAMLARINI seçili
-    // teklifden alır: "bir sağlayıcı seçildi" / "o sağlayıcı işi
-    // bitirdi". `selectedOfferId` boşken bu durumlara geçmek ilanı
-    // TUTARSIZ bir hâle sokar — kim seçildi, kim tamamladı belli
-    // olmaz; değerlendirme de hedefsiz kalır.
-    //
-    // ⚠ DENETİM GEÇİŞTEN ÖNCE yapılır: hata dönerse ilanın durumu
-    // DEĞİŞMEZ. Sonradan kontrol etmek, ilanı bozuk duruma sokup
-    // ardından hata göstermek olurdu.
-
-    listings.setStatus(id, to);
-    return null;
-  }
-
   /// İptal: açılmamış blokeler iade edilir; completed İPTAL EDİLEMEZ.
 
   /// Süre dolumu: yalnız open ilanlar için. completed DOKUNULMAZ.
@@ -437,6 +411,12 @@ class MockListingPort extends ListingPort {
     }
     if (!ListingStateMachine.canTransition(a.listing!.status, ListingStatus.expired)) {
       return const InvalidStateError('Bu ilanın süresi bu aşamada dolamaz');
+    }
+    // ⚠ TAMAMLANMIŞ İŞİN SÜRESİ DOLAMAZ (§24): tamamlanmışlık seçili
+    // tekliften türetilir; durum `active` kalsa da seçimi olan ilan
+    // "süresi doldu"ya düşürülmez (backend süre işi de seçili ilanı atlar).
+    if (_tamamlanmisIs(listingId, a.listing!)) {
+      return const InvalidStateError('Tamamlanmış işin süresi dolamaz');
     }
     offerPort.cancelAllForListing(listingId,
         reason: 'İlan süresi doldu', yeniDurum: OfferStatus.expired);
@@ -452,7 +432,10 @@ class MockListingPort extends ListingPort {
     if (a.error != null) {
       return a.error;
     }
-    if (!ListingStateMachine.canDelete(a.listing!)) {
+    // ⚠ `selectedOfferId` kaybolmuş olsa bile SEÇİLİ teklif kaydı varsa
+    // iş tamamlanmıştır; silme engellenir (veri tutarsızlığına karşı).
+    if (!ListingStateMachine.canDelete(a.listing!) ||
+        _tamamlanmisIs(listingId, a.listing!)) {
       return const InvalidStateError('Tamamlanmış ilan silinemez');
     }
     offerPort.cancelAllForListing(listingId,
@@ -464,6 +447,11 @@ class MockListingPort extends ListingPort {
     listings.remove(listingId);
     return null;
   }
+
+  /// İş tamamlanmış mı: seçim alanı YA DA seçili teklif kaydı.
+  bool _tamamlanmisIs(String listingId, Listing l) =>
+      l.selectedOfferId != null ||
+      offers.forListing(listingId).any((o) => o.status == OfferStatus.selected);
 }
 
 class MockOfferPort extends OfferPort {

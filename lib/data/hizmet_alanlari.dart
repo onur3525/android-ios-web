@@ -147,7 +147,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Dijital Hizmetler',
     aciklama:
-        'Web Sitesi, Logo Tasarım, Dijital Pazarlama',
+        'Web Sitesi, Logo, Dijital Pazarlama',
     gorsel: 'assets/alanlar/dijital.jpg',
     ikon: 'assets/svg/alanlar/dijital.svg',
     kategoriler: [

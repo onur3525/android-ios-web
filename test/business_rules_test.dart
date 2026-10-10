@@ -125,8 +125,10 @@ void main() {
     test('kapalı ilana teklif verilemez (cancelled/expired)', () async {
       final l1 = await yeniIlan();
       await listingCtl.delete(l1.id, actorId: cust);
+      // Silinen ilan kaydı TAMAMEN kaldırılır (MockListingPort.delete →
+      // listings.remove); teklif denemesi "ilan bulunamadı" ile reddedilir.
       expect(await offerCtl.placeOffer(listingId: l1.id, providerId: p1, amount: 500, note: 'n'),
-          isA<ListingClosedError>());
+          isA<NotFoundError>());
       final l2 = await yeniIlan();
       await listingCtl.expire(l2.id, actorId: cust);
       expect(await offerCtl.placeOffer(listingId: l2.id, providerId: p2, amount: 500, note: 'n'),
@@ -152,7 +154,7 @@ void main() {
       final o = offerCtl.myOfferFor(l.id, p1)!;
       expect(await contactCtl.openShared(o.id, actorId: cust), isNull);
       expect(contactCtl.isOpen(o.id), isTrue);
-      expect(w.avail, a1);
+      // (Kaldırıldı, 3 Eki: cüzdan bakiyesi denetimi — HizmetCep ücretsiz, cüzdan yok.)
     });
 
     test('YETKİSİZ aktör açamaz; başka usta başkasının teklifini açamaz (Y3)', () async {

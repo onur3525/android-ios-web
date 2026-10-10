@@ -77,7 +77,7 @@ abstract final class DomainConfig {
   /// Uygulamayı Paylaş metni (tek merkez).
   static const String shareText =
       'HizmetCep ile İzmir\'de güvenilir ustalara ücretsiz ilan verin, '
-      'dakikalar içinde teklif alın! İndirmek için: https://hizmetcep.app';
+      'dakikalar içinde teklif alın! İndirmek için: https://hizmetcep.com';
 
   /// İlan yayın süresi: her ilan yayınlandığı andan itibaren 30 SAAT aktiftir
   /// (expiresAt = createdAt + listingLifetime).

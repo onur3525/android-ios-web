@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/sys_state.dart';
 import '../data/remote/api_config.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import '../core/geri.dart';
+import '../core/test_modu.dart';
 
 /// OTP amacı — sunucu bu değere göre kod üretir ve doğrular.
 enum OtpPurpose {
@@ -277,8 +278,146 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget build(BuildContext context) {
     final saglayici = widget.purpose == OtpPurpose.register;
     return Scaffold(
-      backgroundColor: RC.pageBg,
-      body: SafeArea(
+              // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+      body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        // ⚠ PANELDE SADECE GÖVDE: tam gövde `Expanded` taşıdığı
+        // için kart içeriğe göre büzülemiyor, altında kocaman boş
+        // alan kalıyordu. `panelIcerik` `Expanded` İÇERMEZ.
+        //
+        // ⚠ TEK KAYNAK: aynı widget hem tam gövdede hem panelde;
+        // kopyalanmadı.
+        panelIcerik: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // .rg-title
+                    Text(
+                      'Telefon Doğrulama',
+                      style: refText(
+                        size: RF.s25,
+                        weight: RF.w700,
+                        color: RC.text,
+                        letterSpacing: RF.lsM03,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // .rg-sub
+                    Text(
+                      'Telefonunuza gönderilen 6 haneli doğrulama kodunu '
+                      'giriniz.',
+                      style: refText(
+                        size: RF.s145,
+                        weight: RF.w400,
+                        color: RC.textSoft,
+                        height: RF.lh145,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // rgStepper(2)
+                    const RefStepper(current: 2),
+
+                    // .rg-vicon + .rg-vlabel + .rg-vvalue
+                    RefVerifyHeader(
+                      label: 'Doğrulama kodu gönderilen numara',
+                      value: _masked,
+                    ),
+
+                    // rgOtp('otp')
+                    RefOtpBoxes(
+                      key: _otp,
+                      enabled: !_busy,
+                      onCompleted: _verify,
+                      // ⚠ Düğme kod TAM olmadan aktif olmasın.
+                      onDegisti: (kod) {
+                        if (_kodUzunluk != kod.length) {
+                          setState(() => _kodUzunluk = kod.length);
+                        }
+                      },
+                    ),
+
+                    // Hata metni — kutuların altında.
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: refText(
+                            size: RF.s135,
+                            weight: RF.w600,
+                            color: RC.danger,
+                          ),
+                        ),
+                      ),
+
+                    // rgResendRow('otp')
+                    RefResendRow(
+                      saniye: _left,
+                      onResend: _resending ? null : _resend,
+                    ),
+
+                    // .rg-primary
+                    // ── ⚠ EKSİK KODLA DÜĞME AKTİF DEĞİL ──
+                    //
+                    // Eskiden düğme her zaman aktifti; eksik kodla
+                    // basılınca "Lütfen 6 haneli kodu eksiksiz
+                    // giriniz" uyarısı çıkıyordu. Ortak kural:
+                    // eksik girdiyle düğme AKTİF OLMAZ, dolayısıyla
+                    // o uyarıya hiç gerek kalmaz.
+                    RefPrimaryButton(
+                      'Doğrula',
+                      busy: _busy,
+                      onPressed: _kodUzunluk < 6
+                          ? null
+                          : () => _verify(_otp.currentState?.code ?? ''),
+                    ),
+
+                    if (saglayici)
+                      RefInfoBox(
+                        child: Text(
+                          'Numaranız doğrulanmadan hesabınız aktif '
+                          'edilmez.',
+                          style: refText(
+                            size: RF.s135,
+                            weight: RF.w400,
+                            color: RC.textDark,
+                            height: RF.lh150,
+                          ),
+                        ),
+                      ),
+
+                    // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
+                    if (TestModu.etkin && !ApiConfig.useRealApi)
+                      RefInfoBox(
+                        mavi: true,
+                        margin: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          'Geliştirme sürümü test kodu: 123456',
+                          style: refText(
+                            size: RF.s135,
+                            weight: RF.w400,
+                            color: RC.textDark,
+                            height: RF.lh150,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+        icerik: SafeArea(
         child: Column(
           children: [
             // .rg-back
@@ -396,7 +535,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
 
                     // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
-                    if (kDebugMode && !ApiConfig.useRealApi)
+                    if (TestModu.etkin && !ApiConfig.useRealApi)
                       RefInfoBox(
                         mavi: true,
                         margin: const EdgeInsets.only(top: 12),
@@ -416,7 +555,7 @@ class _OtpScreenState extends State<OtpScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

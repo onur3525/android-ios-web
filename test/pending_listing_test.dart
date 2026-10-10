@@ -258,27 +258,26 @@ void main() {
 
   group('A/C — Ekran ve güvenlik sözleşmesi', () {
     final cat = read('lib/screens/category_screen.dart');
-    final sea = read('lib/screens/search_screen.dart');
     final mn = read('lib/main.dart');
     final reg = read('lib/screens/register_screen.dart');
     final cre = read('lib/screens/create_listing_screen.dart');
     final rot = read('lib/screens/prelogin_listing_route.dart');
 
-    test('1-2. kategori ve arama yolunda RoleSelectScreen AÇILMAZ', () {
-      for (final s in [cat, sea]) {
+    test('1-2. kategori yolunda RoleSelectScreen AÇILMAZ', () {
+      for (final s in [cat]) {
         expect(s.contains('RoleSelectScreen()'), isFalse,
             reason: 'rol seçim ekranı bu akıştan çıkarılmalı');
       }
     });
 
-    test('3. her iki yol public pre-login route\'a gider', () {
-      for (final s in [cat, sea]) {
+    test('3. kategori yolu public pre-login route\'a gider', () {
+      for (final s in [cat]) {
         expect(s.contains('PreLoginListingRoute.name'), isTrue);
       }
     });
 
     test('4-5. kategori ve ALT HİZMET taşınır', () {
-      for (final s in [cat, sea]) {
+      for (final s in [cat]) {
         expect(s.contains('PreLoginListingArgs('), isTrue);
         expect(s.contains('subService:'), isTrue);
       }

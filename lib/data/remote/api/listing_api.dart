@@ -21,7 +21,8 @@ class ListingApi {
     List<String> photoRefs = const [],
     IsZamani? isZamani,
   }) =>
-      c.post('/listings', body: {
+      // Idempotency-Key: yanıt ağda kaybolursa yeniden deneme ikinci ilan açmaz.
+      c.post('/listings', idempotencyKey: ApiClient.newIdempotencyKey(), body: {
         'title': title, 'location': location,
         'description': description, 'photoRefs': photoRefs,
         // ⚠ SEÇİM YOKSA ALAN HİÇ GÖNDERİLMEZ.

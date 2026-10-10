@@ -10,6 +10,7 @@ import '../../data/controllers/region_controller.dart';
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
 import 'region_picker.dart';
+import '../../ui/alt_panel.dart';
 
 /// İLAN AKIŞI — ADIM 3: HİZMET ALAN KAYDI
 ///
@@ -428,7 +429,7 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
       // bırakıyor ve altındaki form okunur hâlde görünüyordu.
       // Kayıt/adres ekranlarındaki çalışan çağrıyla AYNI:
       // beyaz zemin + üstte yuvarlatılmış köşe.
-      showModalBottomSheet<String>(
+      altPanelGoster<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,

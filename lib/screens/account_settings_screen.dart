@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -13,6 +14,7 @@ import '../data/remote/api_client.dart';
 import '../data/remote/api_error_mapper.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import '../data/repositories/oturum_tercihi.dart';
 import '../data/remote/api_config.dart';
 
@@ -298,8 +300,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final pending = _pendingDeletion;
 
     return Scaffold(
-      backgroundColor: HC.bg,
-      body: SafeArea(
+              // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : HC.bg,
+      body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: SafeArea(
         // ⚠ EKRAN ANINDA AÇILIR.
         //
         // Eskiden TÜM sayfa `_load()` bitene kadar boş bir çarkla
@@ -313,11 +330,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
                 children: [
                   // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: RefBackButton(),
-                  ),
-                  const SizedBox(height: 6),
+                  // ⚠ YALNIZ WEB: standart sayfa başlığı; geri oku kuralı
+                  // `RefPageTitle` içinde merkezî. Mobilde `else` dalı
+                  // önceki ağacın BİREBİR aynısı.
+                  if (kIsWeb)
+                    const RefPageTitle('Hesap Ayarları')
+                  else ...[
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: RefBackButton(),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   if (_error != null) ...[
                     Text(_error!,
                         style: const TextStyle(color: HC.red, fontSize: 13)),
@@ -456,7 +480,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ],
                 ],
               ),
-      ),
+      )),
     );
   }
 

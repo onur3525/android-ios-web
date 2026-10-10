@@ -4,6 +4,7 @@ import 'config.dart';
 // `validators.dart` de bu dosyadaki mesajları kullanır — ikisi de
 // yalnız sabit/statik üye okuduğu için sorun çıkmaz.
 import '../core/validators.dart';
+import 'destek_talebi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// FORM MESAJLARI — TEK KAYNAK
@@ -130,6 +131,31 @@ class FormMesaj {
   /// İlan açıklaması — teklif açıklamasıyla AYNI kuralı kullanır.
   static const ilanAciklama =
       'Açıklamanız en az $kMinAciklamaKelime kelime olmalıdır';
+
+  // ── DESTEK TALEBİ (Destek Merkezi › Talep Gönder) ──
+  //
+  // ⚠ SAYILAR KURALDAN GELİR (`destek_talebi.dart`); elle yazılmaz.
+
+  static const destekKonuKisa = 'Konu en az $kDestekKonuEnAz karakter olmalıdır';
+  static const destekKonuUzun =
+      'Konu en fazla $kDestekKonuEnFazla karakter olabilir';
+  static const destekMesajKisa =
+      'Mesajınız en az $kDestekMesajEnAz karakter olmalıdır';
+  static const destekMesajUzun =
+      'Mesajınız en fazla $kDestekMesajEnFazla karakter olabilir';
+
+  /// Sunucu kendi Türkçe mesajını vermediyse (beklenmeyen hata) gösterilir.
+  static const destekGonderilemedi =
+      'Talebiniz gönderilemedi. Lütfen tekrar deneyin.';
+
+  /// Başarı — form genelinde gösterilir (alan uyarısı değil).
+  ///
+  /// ⚠ Sunucu yanıtı YALNIZ DOĞRULANMIŞ e-postaya gönderir; adres
+  /// doğrulanmamışsa kullanıcıya bu açıkça söylenir (yanlış söz verilmez).
+  static String destekGonderildi(String talepNo,
+          {required bool epostaDogrulanmis}) =>
+      'Talebiniz bize ulaştı. Talep numaranız: $talepNo. '
+      '${epostaDogrulanmis ? 'Yanıtımız e-posta adresinize gönderilecektir.' : 'Yanıtımızı e-postayla alabilmek için e-posta adresinizi doğrulayınız.'}';
 
   // ── KART ──
 

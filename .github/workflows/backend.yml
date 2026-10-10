@@ -1,0 +1,46 @@
+# ═══════════════════════════════════════════════════════════════
+# HizmetCep backend — test (SQLite + GERÇEK PostgreSQL)
+#
+# Yalnız backend/ ve admin/ değişince çalışır; Flutter iş akışlarına
+# dokunmaz. Aynı test paketi iki veritabanında koşar: SQLite (hızlı)
+# ve PostgreSQL 16 hizmet kabı (canlı ile aynı sürücü).
+# ═══════════════════════════════════════════════════════════════
+name: backend
+on:
+  push:
+    paths: ['backend/**', 'admin/**', 'lib/data/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['backend/**', 'admin/**', 'lib/data/**', '.github/workflows/backend.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hc
+          POSTGRES_PASSWORD: hc_test_only
+          POSTGRES_DB: hizmetcep_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U hc" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # İlk koşuda package-lock.json üretilir; depoya işlenmesi gerekir.
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: SQLite
+        run: npm test
+      - name: PostgreSQL 16
+        env:
+          HC_TEST_DB: postgres
+          HC_DATABASE_URL: postgres://hc:hc_test_only@localhost:5432/hizmetcep_test
+        run: npm test

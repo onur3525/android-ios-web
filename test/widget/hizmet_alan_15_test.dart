@@ -239,12 +239,6 @@ void main() {
     });
   });
 
-  test('05 — arama sonucunda görsel/badge yok', () {
-    final s = read('lib/screens/search_screen.dart');
-    expect(s.contains('CategoryBadge'), isFalse,
-        reason: 'HTML .srow satırında görsel yoktur');
-  });
-
   test('06 — telefon yerel biçim ve uzunluk sınırı', () {
     // Kullanıcıya `0` ile gösterilir.
     expect(Validators.phoneLocal('5321112233'), '05321112233');
@@ -567,6 +561,8 @@ void main() {
     });
 
     test('beyaz şekilli hediye ikonu MAVİ zemin üzerinde', () {
+      // Hediye ikonu ilan verme ekranındadır (tek kullanım yeri).
+      final wl = read('lib/screens/create_listing_screen.dart');
       final i = wl.indexOf('ic_gift.svg');
       expect(i, greaterThan(0));
       // Zemin mavi, ikon beyaz olmalı.

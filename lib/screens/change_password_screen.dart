@@ -7,6 +7,7 @@ import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import 'nav_actions.dart';
 import '../core/geri.dart';
 import '../core/teshis.dart';
@@ -194,12 +195,30 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         // elle `validate()` çağırmaya gerek yoktur.
         autovalidateMode: AutovalidateMode.always,
         key: _form,
-        child: Column(
+        // ── ⚠ MASAÜSTÜ WEB: ORTAK PANEL (`ui/web_panel.dart`) ──
+        //
+        // Panel başlığı, X'i, genişliği ve kaydırmayı KENDİ yönetir;
+        // bu ekran yalnız içeriğini verir. Onüç form ekranı aynı
+        // bileşeni kullanacağı için ölçüler ayrışamaz.
+        //
+        // ⚠ MOBİLDE ARAYA GİRMEZ: `WebPanel` `kIsWeb` ve ≥1024 px
+        // sağlanmazsa gövdeyi olduğu gibi döndürür.
+        //
+        // ⚠ BAŞLIK ÇİFT ÇİZİLMEZ: panelde başlığı panel çizer, bu
+        // yüzden ekranın kendi `RefPageTitle`/`RefSubtitle` çifti
+        // yalnız panel DIŞINDA gösterilir. Geri oku da böylece
+        // masaüstünde kalkar, yerini X alır.
+        child: WebPanel(
+          baslik: 'Şifre Değiştir',
+          altYazi: 'Hesabınızın güvenliği için güçlü bir şifre belirleyin.',
+          icerik: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const RefPageTitle('Şifre Değiştir'),
-            const RefSubtitle(
-                'Hesabınızın güvenliği için güçlü bir şifre belirleyin.'),
+            if (!WebPanel.panelMi(context)) ...[
+              const RefPageTitle('Şifre Değiştir'),
+              const RefSubtitle(
+                  'Hesabınızın güvenliği için güçlü bir şifre belirleyin.'),
+            ],
 
             // .ad-card — üç şifre alanı
             RefFormCard(
@@ -378,6 +397,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

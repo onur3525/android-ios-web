@@ -6,6 +6,15 @@ class OfferRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final Map<String, Offer> _items = {};
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<Offer> get sekmeKayitlari => List.unmodifiable(_items.values);
+  void sekmeKayitlariniYukle(Iterable<Offer> kayitlar) {
+    _items
+      ..clear()
+      ..addEntries(kayitlar.map((o) => MapEntry(o.id, o)));
+    notifyListeners();
+  }
+
   Offer? byId(String id) => _items[id];
 
   /// Bir ilana verilmiş TÜM teklifler (çoklu hizmet veren desteği).

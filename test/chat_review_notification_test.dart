@@ -142,8 +142,8 @@ void main() {
       var created = false;
       final be = FakeBackend({
         'GET /offers/my': (_) => <dynamic>[offerJson(id: 'o1', providerId: 'p1')],
-        'POST /reviews': (_) { created = true; return {'id': 'r1'}; },
-        'GET /reviews/provider/p1': (_) => {
+        'POST /listings/l1/review': (_) { created = true; return {'id': 'r1'}; },
+        'GET /providers/p1/reviews': (_) => {
               'average': created ? 4.5 : null,
               'count': created ? 2 : 0,
               'reviews': created
@@ -171,7 +171,7 @@ void main() {
 
     test('silinen yorumlar listede ve ortalamada YOKTUR (sunucu göndermez)', () async {
       final be = FakeBackend({
-        'GET /reviews/provider/p1': (_) => {
+        'GET /providers/p1/reviews': (_) => {
               'average': 5.0, 'count': 1,
               'reviews': <dynamic>[
                 {'id': 'r1', 'listingId': 'l1', 'offerId': 'o1', 'authorId': 'u1',
@@ -189,7 +189,7 @@ void main() {
     test('kural ihlalinde sunucu mesajı döner', () async {
       final be = FakeBackend({
         'GET /offers/my': (_) => <dynamic>[offerJson(id: 'o1', providerId: 'p1')],
-        'POST /reviews': (_) => apiError(409, 'INVALID_STATE',
+        'POST /listings/l1/review': (_) => apiError(409, 'INVALID_STATE',
             'Bu iş için zaten bir değerlendirme yaptınız'),
       });
       final c = be.client();

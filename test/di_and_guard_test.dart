@@ -13,8 +13,6 @@ void main() {
   group('DI seçimi', () {
     test('DATA_SOURCE=mock → bellek içi portlar kurulur', () {
       final ports = buildPorts(mode: DataSourceMode.mock);
-      expect(ports.freeRights, isA<MockFreeRightPort>(),
-          reason: 'mock modda ücretsiz hak portu da mock olmalı');
       expect(ports.auth, isA<MockAuthPort>());
       expect(ports.listings, isA<MockListingPort>());
       expect(ports.offers, isA<MockOfferPort>());
@@ -24,8 +22,6 @@ void main() {
 
     test('DATA_SOURCE=api → gerçek API portları kurulur', () {
       final ports = buildPorts(mode: DataSourceMode.api);
-      expect(ports.freeRights, isA<ApiFreeRightPort>(),
-          reason: 'api modda ücretsiz hak portu gerçek API olmalı');
       expect(ports.auth, isA<ApiAuthPort>());
       expect(ports.listings, isA<ApiListingPort>());
       expect(ports.offers, isA<ApiOfferPort>());

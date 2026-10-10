@@ -96,41 +96,10 @@
       padding: 0;
       height: 100%;
       background-color: #FFFFFF;
-      /* Poppins uygulama içinde asset olarak gelir; burada yalnız
-         açılış metni için sistem yazı tipi kullanılır. */
+      /* ⚠ YALNIZ `noscript` UYARISI İÇİN: uygulama kendi Poppins
+         asset'ini kullanır, bu satır ona karışmaz. */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
                    Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    #acilis {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      background: #FFFFFF;
-      transition: opacity .25s ease;
-    }
-
-    #acilis img {
-      width: 96px;
-      height: 96px;
-      /* ⚠ Oran korunur; ikon esnetilmez. */
-      object-fit: contain;
-    }
-
-    #acilis .yazi {
-      color: #5B6472;
-      font-size: 14px;
-      letter-spacing: .2px;
-    }
-
-    /* Flutter ilk kareyi çizince gövdeye eklenir. */
-    body.hazir #acilis {
-      opacity: 0;
-      pointer-events: none;
     }
   </style>
 </head>
@@ -141,7 +110,7 @@
     kalır ve neden olduğunu anlayamaz.
 
     ⚠ `<noscript>` İÇERİĞİ TARAYICI TARAFINDAN GİZLENMEZ: JavaScript
-    açıkken hiç çizilmez, kapalıyken açılış örtüsünün üstünde görünür.
+    açıkken hiç çizilmez, kapalıyken sayfanın üstünde görünür.
   -->
   <noscript>
     <div style="position:fixed;inset:0;z-index:10;display:flex;
@@ -157,19 +126,16 @@
     </div>
   </noscript>
 
-  <div id="acilis">
-    <img src="icons/Icon-192.png" alt="HizmetCep">
-    <div class="yazi">Yükleniyor…</div>
-  </div>
+  <!-- ⚠ AÇILIŞ ÖRTÜSÜ TAMAMEN KALDIRILDI (18 Eyl, kullanıcı kararı).
+       Web'de açılış ekranı diye bir kalıp yok: sayfa yüklenir ve
+       içerik gelir. Örtü artık boş bir beyaz katmandan ibaretti ve
+       yalnız ilk kareyi geciktiriyordu. Tarayıcı zaten `body`
+       zeminini çiziyor; ayrı bir katman gerekmiyor. -->
 
-  <script>
-    // ⚠ Açılış örtüsü, Flutter ilk kareyi çizdiğinde kaldırılır.
-    // `flutter_bootstrap.js` Flutter tarafından derleme anında
-    // üretilir; bu dosyada elle script yönetimi YAPILMAZ.
-    window.addEventListener('flutter-first-frame', function () {
-      document.body.classList.add('hazir');
-    });
-  </script>
+  <!-- Web push (FCM): yalnız genel yapılandırma + köprü; base-href'e göreli.
+       Web uygulaması appId'si girilmedikçe köprü kapalı kalır. -->
+  <script src="fcm_yapilandirma.js"></script>
+  <script type="module" src="fcm_web.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

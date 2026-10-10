@@ -1,0 +1,42 @@
+diff -ruN a/backend/src/routes/kullanici.js b/backend/src/routes/kullanici.js
+--- a/backend/src/routes/kullanici.js	2026-10-07 13:25:41.534810513 +0000
++++ b/backend/src/routes/kullanici.js	2026-10-07 13:25:41.536255701 +0000
+@@ -387,13 +387,13 @@
+   r.patch('/api/v1/profiles/me', korumali(async (ctx) => {
+     const d = {};
+     if (ctx.body.name !== undefined) d.name = adSoyad(ctx.body.name);
++    // ⚠ GÜVENLİK (12 Eki denetimi): e-posta bu uçla DEĞİŞTİRİLEMEZ. Önceden
++    // doğrulamasız değişime (ve başkasının adresini sahiplenmeye) izin
++    // veriyordu; karar gereği e-posta yalnız Firebase'de doğrulanmış olarak
++    // POST /profiles/me/email/change ile değişir. Flutter bu alanı zaten
++    // göndermiyor (api_ports.dart: updateProfile).
+     if (ctx.body.email !== undefined) {
+-      const mail = eposta(ctx.body.email);
+-      if (mail !== (ctx.kullanici.email ?? '').toLowerCase()) {
+-        if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(mail, ctx.kullanici.id)) throw hata.cakisma('Bu e-posta adresi kayıtlı');
+-        d.email = mail;
+-        d.email_verified = 0;
+-      }
++      throw hata.dogrulama('E-posta bu yolla değiştirilemez; e-posta değiştirme akışını kullanın');
+     }
+     if (Object.keys(d).length) {
+       const a = Object.keys(d);
+diff -ruN a/backend/test/firebase_auth.test.js b/backend/test/firebase_auth.test.js
+--- a/backend/test/firebase_auth.test.js	2026-10-07 13:25:41.549231614 +0000
++++ b/backend/test/firebase_auth.test.js	2026-10-07 13:25:41.537656257 +0000
+@@ -139,3 +139,15 @@
+   assert.equal((await istek(yol, { firebaseIdToken: idToken({ sub: 'fb-uid-e1', email: 'x@ornek.com', email_verified: true }) })).durum, 401);
+ });
+ 
++test('GÜVENLİK: profil güncellemesiyle doğrulamasız e-posta değişimi reddedilir', async () => {
++  await db.prepare(`INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role, status, terms_accepted, failed_logins, firebase_uid, created_at, updated_at)
++    VALUES ('33333333-3333-3333-3333-333333333333', '5404445566', 'sabit@ornek.com', 'Profil', 'x', TRUE, TRUE, 'CUSTOMER', 'CUSTOMER', 'ACTIVE', TRUE, 0, 'fb-uid-p1', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')`).run();
++  const oturum = await istek('/api/v1/auth/firebase/session', { idToken: idToken({ sub: 'fb-uid-p1', phone_number: '+905404445566' }) });
++  const r = await fetch(`${taban}/api/v1/profiles/me`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${oturum.json.accessToken}` }, body: JSON.stringify({ email: 'baskasi@ornek.com' }) });
++  assert.equal(r.status, 400);
++  const u = await db.prepare('SELECT email, email_verified FROM users WHERE id = ?').get('33333333-3333-3333-3333-333333333333');
++  assert.equal(u.email, 'sabit@ornek.com'); assert.equal(u.email_verified, 1);
++  // Ad güncellemesi aynen çalışır
++  const r2 = await fetch(`${taban}/api/v1/profiles/me`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${oturum.json.accessToken}` }, body: JSON.stringify({ name: 'Yeni Ad' }) });
++  assert.equal(r2.status, 200);
++});

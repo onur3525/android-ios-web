@@ -1,4 +1,4 @@
-/// HİZMET KATALOĞU — 155 KATEGORİ · 1448 HİZMET (24 ÇATI)
+/// HİZMET KATALOĞU — 166 ANA KATEGORİ · 1587 ALT HİZMET
 ///
 /// ⚠ 158 → 157 → 155: üç kategori kaldırıldı, hepsi aynı desende —
 /// ismi farklı ama kavramsal olarak aynı/çok yakın, KÜÇÜK (1-3
@@ -1324,7 +1324,7 @@ const Map<String, String> kCategoryImage = {
       'assets/categories/mobilya.jpg',
   'Marangozluk ve Ahşap İşleri':
       'assets/categories/marangoz.jpg',
-  'Cam Balkon Sistemleri':
+  'Cam ve Ayna Hizmetleri':
       'assets/categories/cam_ve_balkon.jpg',
   'PVC ve Alüminyum Doğrama':
       'assets/categories/pvc_ve_dograma.jpg',
@@ -1351,13 +1351,11 @@ const Map<String, String> kCategoryImage = {
   //
   // Ayrı çizim/fotoğraf üretilmedi: ikisi de aynı cihazın işi.
   // Halı/Koltuk Yıkama ayrımında da aynı istisna uygulanmıştı.
-  'Kombi Montaj':
-      'assets/categories/kombi.jpg',
   'Kombi Servis':
       'assets/categories/kombi.jpg',
   'Alçı ve Sıva İşleri':
       'assets/categories/alci.jpg',
-  'Kapı Montaj ve Tamir':
+  'Kapı Sistemleri':
       'assets/categories/kapi.jpg',
   'Oto Çekici ve Yol Yardım':
       'assets/categories/oto_yardim.jpg',
@@ -1367,8 +1365,6 @@ const Map<String, String> kCategoryImage = {
       'assets/categories/oto_servis.jpg',
   'Araç Temizlik ve Detaylı Bakım':
       'assets/categories/oto_temizlik.jpg',
-  'Mühendislik ve Proje':
-      'assets/categories/muhendislik.jpg',
   'Özel Ders':
       'assets/categories/ozel_ders.jpg',
   'Yabancı Dil Eğitimi':
@@ -1380,7 +1376,7 @@ const Map<String, String> kCategoryImage = {
   // hâlâ `categoryIcon` ile çizer).
   'Sürücü Eğitimi':
       'assets/categories/surucu.jpg',
-  'Spor ve Kişisel Antrenör':
+  'Spor':
       'assets/categories/spor.jpg',
   'Müzik Dersleri':
       'assets/categories/muzik.jpg',
@@ -1406,7 +1402,7 @@ const Map<String, String> kCategoryImage = {
   // desenli yer tutucu. Fotoğraflar gelince YALNIZ dosyalar
   'Ayakkabı ve Deri İşleri':
       'assets/categories/ayakkabi_deri.jpg',
-  'Terzilik ve Dikiş':
+  'Terzilik ve Dikim':
       'assets/categories/terzilik.jpg',
   'Ev Tekstili':
       'assets/categories/ev_tekstili.jpg',

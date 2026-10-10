@@ -72,32 +72,8 @@ void main() {
     });
   });
 
-  group('KART FORMU — ZİNCİR EKLENDİ', () {
-
-    test('dört alanın da ileri tuşu tanımlı', () {
-      expect('textInputAction:'.allMatches(k).length, 4);
-      expect('TextInputAction.next'.allMatches(k).length, 3);
-      expect('TextInputAction.done'.allMatches(k).length, 1);
-    });
-
-    test('odak düğümleri tanımlı ve BIRAKILIYOR', () {
-      for (final f in const ['_fAd', '_fNumara', '_fSonKullanma', '_fCvv']) {
-        expect(k.contains('final $f = FocusNode();'), isTrue, reason: f);
-      }
-      expect(k.contains('for (final f in [_fAd, _fNumara, _fSonKullanma, _fCvv])'),
-          isTrue,
-          reason: 'odak düğümleri dispose edilmiyor');
-    });
-
-    test('geçiş sırası: Ad → Numara → Son Kullanma → CVV', () {
-      final i1 = k.indexOf('onEditingComplete: _fNumara.requestFocus');
-      final i2 = k.indexOf('onEditingComplete: _fSonKullanma.requestFocus');
-      final i3 = k.indexOf('onEditingComplete: _fCvv.requestFocus');
-      expect(i1, greaterThan(0));
-      expect(i2, greaterThan(i1));
-      expect(i3, greaterThan(i2));
-    });
-  });
+  // (Kaldırıldı, 3 Eki: 'KART FORMU — ZİNCİR EKLENDİ' grubu kaldırılmış kart
+  // ödeme formunu denetliyordu; değişkeni de onunla gitmişti — derlenmeyen yetim test.)
 
   group('ZATEN DOĞRU OLAN FORMLAR — BOZULMADI', () {
     test('kayıt formu altı alanda da zinciri korur', () {
@@ -153,13 +129,11 @@ void main() {
     /// Metin girişi olmayan / arama-sohbet gibi tek amaçlı alanlar.
     const kapsamDisi = {
       'chat_screen.dart',
-      'search_screen.dart',
       'inline_search_box.dart',
       'kategori_secim_paneli.dart',
       'region_picker.dart',
       'my_areas_screen.dart',
       'my_categories_screen.dart',
-      'all_categories_screen.dart',
       'account_settings_screen.dart',
       'job_detail_screen.dart',
       'ilan_otp_adimi.dart',

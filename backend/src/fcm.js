@@ -1,0 +1,265 @@
+// ═══════════════════════════════════════════════════════════════
+// FCM SUNUCU GÖNDERİMİ (HTTP v1) — mevcut push_tokens + notifications
+//
+// Kimlik: Firebase SERVİS HESABI yalnız ortam değişkeninden okunur
+//   HC_FCM_SERVICE_ACCOUNT  — servis hesabı JSON'u (düz ya da base64)
+// Koda, Git'e ve Flutter'a GİRMEZ. Tanımlı değilse gönderim kapalıdır;
+// uygulama içi bildirimler aynen çalışır.
+//
+// Akış: uygulamaIciBildir → notifications satırı (push_status NULL) →
+// `push_gonderimi` işi (mevcut kilitli iş altyapısı; ayrıca kayıttan hemen
+// sonra tetiklenir) → satır SENDING olarak SAHİPLENİR (tek örnek gönderir)
+// → kullanıcının bütün cihazlarına gönderilir.
+//   · UNREGISTERED / geçersiz jeton  → jeton KALICI silinir
+//     (INVALID_ARGUMENT yalnız `message.token` alan ihlaliyse)
+//   · 401 / 429 / 5xx / ağ hatası    → jeton KORUNUR, sonra yeniden denenir
+//   · Hesap ACTIVE değilse (askı/ban/silinmiş) push gönderilmez (SKIPPED)
+//   · Push hatası ana işlemi ASLA başarısız etmez (bildirim zaten yazıldı).
+//   · Günlüğe jeton, servis hesabı ya da erişim anahtarı YAZILMAZ.
+// Veri biçimi Flutter `push_kapisi.dart` ile aynı: data = {type, hedef, id}.
+// ═══════════════════════════════════════════════════════════════
+import { createSign } from 'node:crypto';
+import { config } from './config.js';
+import { simdi } from './db.js';
+
+const KAPSAM = 'https://www.googleapis.com/auth/firebase.messaging';
+const AZAMI_DENEME = 5;
+const SAHIPLIK_ZAMAN_ASIMI = 5 * 60 * 1000;
+const GERI_DENEME_ARALIGI = 60 * 1000;
+const TUR_BOYU = 500;
+const ESZAMANLI = 10; // tek turda aynı anda işlenen bildirim (FCM HTTP çağrıları paralel)
+
+function servisHesabi() {
+  const ham = (process.env.HC_FCM_SERVICE_ACCOUNT || '').trim();
+  if (!ham) return null;
+  let metin = ham;
+  if (!ham.startsWith('{')) metin = Buffer.from(ham, 'base64').toString('utf8');
+  const j = JSON.parse(metin);
+  if (!j.client_email || !j.private_key || !j.project_id) throw new Error('HC_FCM_SERVICE_ACCOUNT eksik alan içeriyor');
+  return j;
+}
+
+let onbellek = null; // { jeton, bitis }
+async function erisimJetonu(sh) {
+  if (onbellek && onbellek.bitis > Date.now() + 60_000) return onbellek.jeton;
+  const an = Math.floor(Date.now() / 1000);
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, scope: KAPSAM, aud: 'https://oauth2.googleapis.com/token', iat: an, exp: an + 3600 })}`;
+  const imza = createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url');
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${govde}.${imza}` }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error(`FCM erişim anahtarı alınamadı (HTTP ${r.status})`);
+  const j = await r.json();
+  onbellek = { jeton: j.access_token, bitis: Date.now() + (j.expires_in ?? 3600) * 1000 };
+  return onbellek.jeton;
+}
+
+/** Tek jetona gönderir → 'ok' | 'gecersiz' | 'gecici'. */
+export async function fcmGonder(sh, jeton, mesaj) {
+  let r;
+  try {
+    r = await fetch(`https://fcm.googleapis.com/v1/projects/${sh.project_id}/messages:send`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await erisimJetonu(sh)}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: { token: jeton, ...mesaj } }),
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch {
+    return 'gecici';
+  }
+  if (r.ok) return 'ok';
+  let j = null;
+  try { j = await r.json(); } catch { /* yok */ }
+  return fcmHataSinifi(r.status, j);
+}
+
+/**
+ * FCM HTTP v1 hata yanıtı → 'gecersiz' (jeton kalıcı silinir) | 'gecici'.
+ *
+ * ⚠ INVALID_ARGUMENT TEK BAŞINA jetonun bozuk olduğunu GÖSTERMEZ: mesaj
+ * gövdesindeki bir hata da aynı kodu verir. Böyle bir durumda jetonu
+ * silmek, kullanıcının BÜTÜN cihaz kayıtlarını yok ederdi. Bu yüzden
+ * INVALID_ARGUMENT yalnız alan ihlali `message.token` ise geçersiz sayılır.
+ * 401 (erişim anahtarı reddedildi) jetonla ilgili değildir → geçici; ayrıca
+ * önbellekteki erişim anahtarı atılır.
+ */
+export function fcmHataSinifi(durum, j) {
+  const detaylar = Array.isArray(j?.error?.details) ? j.error.details : [];
+  const kod = detaylar.map((d) => d?.errorCode).find(Boolean) ?? j?.error?.status ?? '';
+  const jetonAlani = detaylar.some((d) => Array.isArray(d?.fieldViolations)
+    && d.fieldViolations.some((v) => v?.field === 'message.token'));
+  if (durum === 401) { onbellek = null; return 'gecici'; }
+  if (durum === 404 || kod === 'UNREGISTERED') return 'gecersiz';
+  if (kod === 'SENDER_ID_MISMATCH' && (durum === 400 || durum === 403)) return 'gecersiz';
+  if (durum === 400 && kod === 'INVALID_ARGUMENT' && jetonAlani) return 'gecersiz';
+  return 'gecici';
+}
+
+/** FCM mesaj gövdesi (jeton hariç). Flutter `pushRotasi` biçimiyle aynı. */
+export function mesajGovdesi(n) {
+  const data = { type: String(n.type), bildirimId: String(n.id) };
+  if (n.push_target && n.ref_id) { data.hedef = n.push_target; data.id = String(n.ref_id); }
+  return {
+    notification: { title: n.title, body: n.body },
+    data,
+    android: { priority: 'HIGH' },
+    apns: { payload: { aps: { sound: 'default' } } },
+  };
+}
+
+let testGondericisi = null;
+/** Yalnız testler: sahte gönderici ({ gonder(jeton, mesaj) → 'ok'|'gecersiz'|'gecici' }). */
+export function fcmTestGondericisi(g) { testGondericisi = g; }
+
+export function fcmEtkin() {
+  if (testGondericisi) return true;
+  try { return !!servisHesabi(); } catch { return false; }
+}
+
+/** Arka plan işi: bekleyen bildirimleri gönderir. Çok örnekte güvenli (satır sahiplenme). */
+/**
+ * Kullanıcının bildirim tercihi bu türde push'a izin veriyor mu?
+ * Hesap Ayarları'ndaki üç anahtarla eşleşir: "Yeni teklifler" (teklif ve
+ * seçim), "Mesajlar" (mesaj ve iletişim açılması), "Duyurular". Bu üçüne
+ * girmeyen hizmet bildirimleri (ör. ilan süresinin dolması) her zaman gider.
+ */
+export function pushIzniVar(u, tur) {
+  if (tur === 'NEW_OFFER' || tur === 'OFFER_SELECTED') return u.notif_offer !== 0;
+  if (tur === 'NEW_MESSAGE' || tur === 'CONTACT_OPENED') return u.notif_message !== 0;
+  if (tur === 'ANNOUNCEMENT') return u.notif_announcement !== 0;
+  return true;
+}
+
+/**
+ * ── ÇOK İŞÇİ (yatay ölçek) ──
+ * Bildirim sahiplenmesi koşullu UPDATE ile yapıldığı için aynı kuyruğu
+ * birden çok işçi GÜVENLE tüketir (aynı bildirim iki kez gönderilmez —
+ * test/fcm.test.js "çok işçi"). Eşzamanlı çalıştırıcı sayısını belirleyen
+ * TEK şey danışma kilitleridir: HC_PUSH_PARALEL=N (varsayılan 1) ile N
+ * ayrı kilit yuvası açılır; her örnek boş yuvayı alır. Her yuva adayları
+ * farklı noktadan işlemeye başlar (aynı satırlar için boşuna yarışmaz).
+ * Bir tur dolu geldiyse (kuyrukta iş var) süre bütçesi içinde sürer;
+ * önceden dakikada en çok 1 tur (500 bildirim) işleniyordu.
+ */
+export async function pushKuyrugunuIsle(db, { sureMs = 45_000 } = {}) {
+  const n = Math.max(1, Math.min(32, config.pushParalel ?? 1));
+  const bas = Math.floor(Math.random() * n);
+  for (let i = 0; i < n; i++) {
+    const yuva = (bas + i) % n;
+    const ad = n === 1 ? 'is:push_gonderimi' : `is:push_gonderimi:${yuva}`;
+    const r = await db.isKilidi(ad, async () => {
+      const bitis = Date.now() + sureMs;
+      let toplam = 0;
+      for (;;) {
+        const t = await pushTuru(db, { yuva, yuvaSayisi: n });
+        toplam += t.gonderilen;
+        if (t.aday < TUR_BOYU || Date.now() > bitis) return toplam;
+      }
+    });
+    if (r !== null) return r;
+  }
+  return null; // bütün yuvalar başka örneklerde meşgul
+}
+
+/** Tek tur — gönderilen sayısı (testler ve eski çağrılar için). */
+export async function pushGonderiminiIsle(db) {
+  return (await pushTuru(db)).gonderilen;
+}
+
+async function pushTuru(db, { yuva = 0, yuvaSayisi = 1 } = {}) {
+  let gonder;
+  if (testGondericisi) {
+    gonder = (t, m) => testGondericisi.gonder(t, m);
+  } else {
+    let sh = null;
+    try { sh = servisHesabi(); } catch (e) { console.error('fcm: servis hesabı okunamadı:', e.message); }
+    if (!sh) {
+      // Push yapılandırılmamış: bekleyenler gönderilmeyecek olarak kapanır.
+      await db.prepare(`UPDATE notifications SET push_status = 'SKIPPED' WHERE push_status IS NULL`).run();
+      return { aday: 0, gonderilen: 0 };
+    }
+    gonder = (t, m) => fcmGonder(sh, t, m);
+  }
+  const sinir = new Date(Date.now() - SAHIPLIK_ZAMAN_ASIMI).toISOString();
+  // Geçici hatadan sonra bekleme: satır push_status NULL'a döner ama
+  // push_claimed_at "son deneme" zamanını tutar; GERI_DENEME_ARALIGI dolmadan
+  // yeniden alınmaz. FCM kısa süre kesildiğinde 5 deneme saniyeler içinde
+  // tükenip bildirim kalıcı FAILED olmasın diye.
+  const geriDeneme = new Date(Date.now() - GERI_DENEME_ARALIGI).toISOString();
+  const adaylar = await db.prepare(
+    `SELECT * FROM notifications
+      WHERE (push_status IS NULL AND (push_claimed_at IS NULL OR push_claimed_at < ?))
+         OR (push_status = 'SENDING' AND push_claimed_at < ?)
+      ORDER BY created_at LIMIT ${TUR_BOYU}`,
+  ).all(geriDeneme, sinir);
+  let gonderilen = 0;
+  // Sınırlı EŞZAMANLILIK: her bildirim kendi satırını koşullu UPDATE ile
+  // SAHİPLENİR, bu yüzden paralel işlemek (ya da birden çok işçi) aynı
+  // bildirimi iki kez göndermez. Önceden tamamen sıralıydı.
+  // Çok yuvada her yuva listeye farklı noktadan başlar.
+  const kaydir = adaylar.length ? Math.floor((yuva * adaylar.length) / yuvaSayisi) : 0;
+  const sirali = adaylar.slice(kaydir).concat(adaylar.slice(0, kaydir));
+  let sira = 0;
+  const isci = async () => {
+    while (sira < sirali.length) {
+      const n = sirali[sira++];
+      try {
+        // ⚠ `x += await f()` x'i await'ten ÖNCE okur: eşzamanlı işçilerde
+        // artışlar kaybolurdu. Önce sonuç alınır, sonra eklenir.
+        const r = await birBildirimiIsle(db, n, gonder, sinir, geriDeneme);
+        gonderilen += r;
+      } catch (e) {
+        console.error('fcm: bildirim işlenemedi', n.id, e?.message);
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(ESZAMANLI, adaylar.length) }, isci));
+  return { aday: adaylar.length, gonderilen };
+}
+
+/** Tek bildirim: sahiplen → izin/jeton denetimi → gönder → durum yaz. Gönderilen sayısı (0/1). */
+async function birBildirimiIsle(db, n, gonder, sinir, geriDeneme) {
+  {
+    const al = await db.prepare(
+      `UPDATE notifications SET push_status = 'SENDING', push_claimed_at = ?
+        WHERE id = ? AND ((push_status IS NULL AND (push_claimed_at IS NULL OR push_claimed_at < ?))
+                       OR (push_status = 'SENDING' AND push_claimed_at < ?))`,
+    ).run(simdi(), n.id, geriDeneme, sinir);
+    if (al.changes !== 1) return 0; // başka örnek/işçi sahiplendi
+    // Hesap silinmiş, askıya alınmış ya da banlıysa cihaza push GİTMEZ
+    // (uygulama içi kayıt aynen durur).
+    const sahip = await db.prepare('SELECT status, deleted_at, frozen_at, notif_offer, notif_message, notif_announcement FROM users WHERE id = ?').get(n.user_id);
+    if (!sahip || sahip.deleted_at || sahip.frozen_at || sahip.status !== 'ACTIVE' || !pushIzniVar(sahip, n.type)) {
+      await db.prepare(`UPDATE notifications SET push_status = 'SKIPPED' WHERE id = ?`).run(n.id);
+      return 0;
+    }
+    // Yalnız bildirimin SAHİBİNE ait jetonlar.
+    const jetonlar = await db.prepare('SELECT token FROM push_tokens WHERE user_id = ?').all(n.user_id);
+    if (!jetonlar.length) {
+      await db.prepare(`UPDATE notifications SET push_status = 'NO_TOKEN' WHERE id = ?`).run(n.id);
+      return 0;
+    }
+    const mesaj = mesajGovdesi(n);
+    let basarili = 0; let gecici = 0;
+    for (const { token } of jetonlar) {
+      let s = 'gecici';
+      try { s = await gonder(token, mesaj); } catch { s = 'gecici'; }
+      if (s === 'ok') basarili++;
+      else if (s === 'gecersiz') await db.prepare('DELETE FROM push_tokens WHERE token = ? AND user_id = ?').run(token, n.user_id);
+      else gecici++;
+    }
+    if (basarili > 0 || gecici === 0) {
+      await db.prepare(`UPDATE notifications SET push_status = ? WHERE id = ?`).run(basarili > 0 ? 'SENT' : 'NO_TOKEN', n.id);
+      return basarili > 0 ? 1 : 0;
+    }
+    const deneme = (n.push_attempts ?? 0) + 1;
+    // push_claimed_at = şimdi → GERI_DENEME_ARALIGI dolmadan yeniden alınmaz.
+    await db.prepare(`UPDATE notifications SET push_status = ?, push_attempts = ?, push_claimed_at = ? WHERE id = ?`)
+      .run(deneme >= AZAMI_DENEME ? 'FAILED' : null, deneme, simdi(), n.id);
+    if (deneme >= AZAMI_DENEME) console.error(`fcm: bildirim ${n.id} ${deneme} denemede gönderilemedi`);
+    return 0;
+  }
+}

@@ -105,8 +105,8 @@ void main() {
   group('KATALOG DEĞİŞMEDİ', () {
     test('çatı katmanı SAYILARA karışmaz', () {
       // ⚠ Çatılar ana kategori DEĞİL: katalog sayıları aynı kalır.
-      expect(kCategoryTree.length, 158);
-      expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 640);
+      expect(kCategoryTree.length, 166);
+      expect(kCategoryTree.values.fold<int>(0, (a, b) => a + b.length), 1587);
     });
 
     test('çatı adı KATEGORİ adı DEĞİL', () {
@@ -440,7 +440,7 @@ void main() {
           tum.add('${e.key}|$h');
         }
       }
-      expect(gorunen.length, 640);
+      expect(gorunen.length, 1587);
       expect(tum.difference(gorunen), isEmpty,
           reason: 'çatı yolundan erişilemeyen hizmet var');
     });

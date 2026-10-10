@@ -25,6 +25,21 @@ class ReviewApi {
           body: {'stars': stars, 'text': text},
           idempotencyKey: idempotencyKey);
 
+  /// "BUL" TEKLİF TALEBİ DEĞERLENDİRMESİ
+  /// (`POST /teklif-talepleri/{talepId}/review`). Kural denetimi SUNUCUDA:
+  /// yalnız talep sahibi, iş TAMAMLANDI iken, talep başına tek; puan 1-5,
+  /// yorum ≤ 1000. Yanıt { id, talepId, providerId, authorId, stars, text,
+  /// status, createdAt }.
+  Future<Map<String, dynamic>> talepIcin({
+    required String talepId,
+    required int stars,
+    required String text,
+    required String idempotencyKey,
+  }) =>
+      c.post('/teklif-talepleri/$talepId/review',
+          body: {'stars': stars, 'text': text},
+          idempotencyKey: idempotencyKey);
+
   /// Bir hizmet verenin YAYINLANMIŞ değerlendirmeleri.
   ///
   /// ⚠ ESKİ YOL `/reviews/provider/{id}` İDİ ve OpenAPI'de yoktu.

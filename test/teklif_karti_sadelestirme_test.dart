@@ -126,9 +126,9 @@ void main() {
     test('⚠ `tl()` TÜMÜYLE KALDIRILDI', () {
       // Fonksiyon dursaydı üçüncü bir çağrı yeri doğardı; bu kusur
       // dört turda dört ayrı ekranda tek tek düzeltilmişti.
-      final su = _kod('lib/screens/status_ui.dart');
-      expect(su.contains(r"String tl(int v)"), isFalse,
-          reason: 'ham biçimlendirici geri gelmiş');
+      // `status_ui.dart` (ölü kod) SİLİNDİ; fonksiyonun tek evi oydu.
+      expect(File('lib/screens/status_ui.dart').existsSync(), isFalse,
+          reason: 'ölü dosya geri gelmiş');
       final rev = _kod('lib/screens/review_screen.dart');
       expect(rev.contains('tutarMetni(offer.amount)'), isTrue,
           reason: 'değerlendirme ekranı hâlâ ham biçim kullanıyor');

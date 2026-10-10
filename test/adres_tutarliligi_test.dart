@@ -69,7 +69,6 @@ void main() {
       'lib/screens/jobs_screen.dart',
       'lib/screens/job_detail_screen.dart',
       'lib/screens/listing_detail_screen.dart',
-      'lib/screens/search_screen.dart',
     ];
 
     test('hepsi ortak çözücüyü kullanır', () {

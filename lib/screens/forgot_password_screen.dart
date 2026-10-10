@@ -8,8 +8,10 @@ import '../data/controllers/auth_controller.dart';
 import '../domain/form_mesajlari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import 'otp_screen.dart';
 import 'yeni_sifre_screen.dart';
+import '../ui/panel_rotasi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// ŞİFREMİ UNUTTUM
@@ -267,7 +269,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     // "Numaranızın doğru olduğundan emin olun" satırıyla yapılır.
     Navigator.push(
       context,
-      MaterialPageRoute(
+      panelRotasi<void>(
+        // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
+        // adından seçer; adsız rota tanınmıyordu. Gezinme davranışı
+        // DEĞİŞMEZ.
+        settings: const RouteSettings(name: '/dogrulama'),
         builder: (_) => OtpScreen(
           phone: telefonAnlik,
           purpose: OtpPurpose.hesapKurtarma,
@@ -309,8 +315,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: RC.pageBg,
-        body: SafeArea(
+                // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
+        // şeffaf rotanın altındaki sayfa ÖRTÜLÜYORDU — modalın arkası
+        // boş beyaz görünüyordu. Panelde zemin saydam olur, karartma
+        // ve bulanıklık altındaki gerçek sayfaya düşer.
+        //
+        // ⚠ MOBİLDE DEĞİŞMEZ: `panelMi` yalnız web'de true.
+        backgroundColor:
+            WebPanel.panelMi(context) ? Colors.transparent : RC.pageBg,
+        body: WebPanel(
+        // ⚠ MASAÜSTÜ WEB PANELİ — ortak bileşen
+        // (`ui/web_panel.dart`). Mobilde ve <1024 px'te gövdeyi
+        // OLDUĞU GİBİ döndürür; bu ekranın kendi Scaffold /
+        // RefScroll / adım yapısı değişmedi.
+        //
+        // ⚠ GÖVDENİN TAMAMI SARILIR: çok adımlı akışlarda
+        // yalnız ilk adım değil, tüm gövde panelin içindedir.
+        icerik: SafeArea(
           child: RefScroll(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
             child: Form(
@@ -523,6 +544,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ),
           ),
-        ),
+        )),
       );
 }

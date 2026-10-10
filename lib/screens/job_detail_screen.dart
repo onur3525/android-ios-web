@@ -19,14 +19,12 @@ import '../data/controllers/offer_controller.dart';
 import '../data/models/listing.dart';
 import '../data/models/teklif_talebi.dart' show IletisimTercihi;
 import '../data/models/offer.dart';
-import '../domain/config.dart';
 import '../data/controllers/profile_controller.dart';
 import '../data/models/provider_approval.dart';
 import 'provider_status_screen.dart';
 // ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
 // ne `offerStatusUi` ne `tl` kullanılıyor — teklif durum kutusu
 // kaldırıldı ve tutarlar `core/tutar_bicimi.dart`tan biçimleniyor.
-import 'widgets/hc_widgets.dart';
 import 'widgets/foto_goruntuleyici.dart';
 import '../ui/ref_widgets.dart';
 import '../domain/kullanici_konumu.dart';
@@ -43,6 +41,7 @@ import 'widgets/teklif_tutar_karti.dart';
 import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/yanlis_taraf_kapisi.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../core/baglanti_modu.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not);
@@ -752,6 +751,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           ? () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
+                                    // ⚠ Ad: web'de yenilemede AYNI ekrana dönülsün
+                                    // (main.dart `/mesaj/<id>` ile aynı ekran).
+                                    settings: RouteSettings(name: '/mesaj/${mine.id}'),
                                     builder: (_) =>
                                         ChatScreen(offerId: mine.id)),
                               )
@@ -884,7 +886,7 @@ Future<void> _telefonAra(BuildContext context, String? ham) async {
     return;
   }
   final uri = Uri.parse('tel:$d');
-  final acildi = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  final acildi = await launchUrl(uri, mode: acilisModu());
   // ⚠ Sahte başarı YOK: arama uygulaması açılamazsa kullanıcı uyarılır.
   if (!acildi && context.mounted) {
     sysToastErr(context, SysKind.genericError,

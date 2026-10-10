@@ -1,0 +1,736 @@
+diff -ruN a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+--- a/android/app/src/main/AndroidManifest.xml	2026-10-07 13:19:54.353366403 +0000
++++ b/android/app/src/main/AndroidManifest.xml	2026-10-07 13:19:54.354825448 +0000
+@@ -56,76 +56,7 @@
+                 <category android:name="android.intent.category.LAUNCHER"/>
+             </intent-filter>
+ 
+-            <!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: DERİN BAĞLANTI ──
+-                 `hizmetcep://payment/return?session=<id>` adresinin
+-                 uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır.
+-                 Kayıt yoktu: `MainActivity` deep link kodu, DeepLinks
+-                 sınıfı ve platform kanalı hazır olmasına rağmen
+-                 Android işletim sistemi bağlantıyı bu uygulamaya hiç
+-                 yönlendirmiyordu.
+ 
+-                 ⚠ `autoVerify` YOK, çünkü bu bir custom scheme'dir;
+-                 doğrulama yalnız https App Links için geçerlidir.
+-
+-                 ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı
+-                 şemayı kaydedip geri dönüşü yakalayabilir. Kalıcı
+-                 çözüm https App Links'tir (autoVerify + assetlinks.json);
+-                 doğrulanmış alan adı gerektirir ve web tarafı hazır
+-                 olduğunda eklenmelidir.
+-
+-                 ⚠ GÜVENLİK BUNA DAYANMAZ: adres yalnız `session`
+-                 kimliği taşır. `success=true` gibi bir parametre gelse
+-                 bile ödeme kanıtı SAYILMAZ; sonuç her zaman backend
+-                 `confirmTopup` ile doğrulanır (bkz.
+-                 `core/deep_links.dart`). Bağlantı ayrıca idempotenttir
+-                 (`markHandled`).
+-
+-                 ⚠ `exported` ZATEN true: Activity launcher olduğu için
+-                 dışa açıktır; bu filtre yeni bir yüzey açmaz, var olan
+-                 Activity'ye bir giriş yolu ekler. -->
+-            <intent-filter>
+-                <action android:name="android.intent.action.VIEW"/>
+-                <category android:name="android.intent.category.DEFAULT"/>
+-                <category android:name="android.intent.category.BROWSABLE"/>
+-                <data android:scheme="hizmetcep" android:host="payment"/>
+-            </intent-filter>
+-
+-            <!-- ── ⚠ APP LINKS (HTTPS) — ALTYAPI HAZIRLIĞI ──
+-                 `https://hizmetcep.com/payment/...` adreslerinin
+-                 tarayıcı yerine doğrudan uygulamada açılması için.
+-
+-                 ⚠ HENÜZ DOĞRULANMIŞ DEĞİL. `autoVerify="true"` yazmak
+-                 tek başına yetmez: sistem
+-                 `https://hizmetcep.com/.well-known/assetlinks.json`
+-                 dosyasını indirir ve içindeki SHA-256 imza parmak
+-                 izini uygulamanınkiyle karşılaştırır. O dosya bu
+-                 turda OLUŞTURULMADI (kapsam dışı). Yayınlanana kadar
+-                 bağlantı doğrulanmaz ve Android kullanıcıya "hangi
+-                 uygulamayla açılsın" diye sorar — bağlantı yine de
+-                 uygulamaya gelebilir, yalnız otomatik açılmaz.
+-
+-                 ⚠ ÖZEL ŞEMA FİLTRESİ YUKARIDA DURUYOR: bu filtre onun
+-                 yerine geçmez, YANINA eklenir. `hizmetcep://` yolu
+-                 aynen çalışır ve ödeme geri dönüşü bozulmaz.
+-
+-                 ⚠ `pathPrefix` DAR TUTULDU: alan adının tamamı değil
+-                 yalnız `/payment` altı yakalanır. Tüm site
+-                 yakalansaydı, uygulamanın karşılığı olmayan her
+-                 sayfa (tanıtım, yasal metinler) da uygulamada açılmaya
+-                 çalışılırdı.
+-
+-                 ⚠ GÜVENLİK BUNA DAYANMAZ: adres yalnız `session`
+-                 kimliği taşır; `success=true` gibi bir parametre gelse
+-                 bile ödeme kanıtı SAYILMAZ. Sonuç her zaman backend
+-                 `confirmTopup` ile doğrulanır. -->
+-            <intent-filter android:autoVerify="true">
+-                <action android:name="android.intent.action.VIEW"/>
+-                <category android:name="android.intent.category.DEFAULT"/>
+-                <category android:name="android.intent.category.BROWSABLE"/>
+-                <data android:scheme="https"
+-                      android:host="hizmetcep.com"
+-                      android:pathPrefix="/payment"/>
+-            </intent-filter>
+ 
+         </activity>
+         <meta-data android:name="flutterEmbedding" android:value="2"/>
+diff -ruN a/backend/DEPLOY.md b/backend/DEPLOY.md
+--- a/backend/DEPLOY.md	2026-10-07 13:19:54.375625405 +0000
++++ b/backend/DEPLOY.md	2026-10-07 13:19:54.377480426 +0000
+@@ -62,3 +62,30 @@
+   nesneler (uygulama `storage_objects.status = DISCARDED/PENDING` tutar)
+   için temizlik işi ya da kural.
+ - CORS: web istemcisinin kaynağından `PUT` + `Content-Type`.
++
++---
++
++## Ek (7 Eki): yeni ortam değişkenleri, yedekleme, push, izleme
++
++### Yeni/ek ortam değişkenleri
++
++| Değişken | Zorunlu mu | Varsayılan | Açıklama |
++|---|---|---|---|
++| `HC_CORS_ORIGINS` | Hayır | Üretimde `https://hizmetcep.com`, geliştirmede boş | Kullanıcı API'sine tarayıcıdan erişebilecek kökenler (virgülle). `*` ve yol içeren değer reddedilir; üretimde yalnız https. |
++| `HC_FCM_SERVICE_ACCOUNT` | Push için evet | Yok (push kapalı) | Firebase servis hesabı JSON'u (düz ya da base64). Yalnız sunucu gizli değişkeni; Git'e/istemciye girmez. Tanımlı değilse bildirimler yalnız uygulama içinde görünür. |
++| `HC_S3_*` | Fotoğraf için evet | Yok | Kimlik bilgisinin `PutObject`, `GetObject` **ve `DeleteObject`** yetkisi olmalı (fiziksel dosya silme). |
++
++### Arka plan işleri (kilitli; çok örnekte yalnız biri çalışır)
++
++`ilan_suresi`, `talep_suresi`, `hesap_silme`, `dosya_temizligi` (silinen ilan/hesap dosyalarını depodan siler; başarısızlık `storage_objects.delete_error` ve denetim kaydında `storage.delete.failed`), `push_gonderimi` (bekleyen bildirimleri FCM ile gönderir; geçersiz jetonu siler, geçici hatayı en fazla 5 kez yeniden dener).
++
++### Yedekleme ve geri yükleme
++
++- **Yedek al:** `HC_DATABASE_URL=… ./scripts/yedek_al.sh /güvenli/klasör` → `pg_dump` özel biçim + içerik listesi + SHA-256. Yedek kişisel veri içerir: şifreli depolayın, erişimi kısıtlayın, saklama süresini belirleyin.
++- **Önerilen sıklık:** günlük tam yedek + sağlayıcının noktasal geri dönüşü (PITR) açık.
++- **Geri yükleme provası (en az ayda bir):** boş bir veritabanına `HC_RESTORE_URL=… ./scripts/yedek_geri_yukle.sh dosya.dump`; betik hedef boş değilse DURUR, sonunda son göç, kullanıcı ve kategori sayısını yazar.
++- **Göçten önce:** her sürüm yükseltmesinden önce `yedek_al.sh` çalıştırılır. Göçler yalnız EKLEME yapar (sütun/tablo); geri dönüş = önceki uygulama sürümüne dönmek (eklenen sütunları eski sürüm görmezden gelir). Veri bozulması durumunda: yedekten boş veritabanına geri yükle → doğrula → `HC_DATABASE_URL`'i yeni veritabanına çevir → uygulamayı yeniden başlat.
++
++### Yeni göçler
++
++`008_kategori_foto`, `009_dosya_silme`, `010_push_gonderimi` — hepsi yalnız sütun ekler; mevcut veriyi değiştirmez (010, göç öncesi bildirimleri push gönderilmeyecek olarak işaretler).
+diff -ruN a/backend/migrations/postgres/010_push_gonderimi.sql b/backend/migrations/postgres/010_push_gonderimi.sql
+--- a/backend/migrations/postgres/010_push_gonderimi.sql	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/migrations/postgres/010_push_gonderimi.sql	2026-10-07 13:19:54.442360808 +0000
+@@ -0,0 +1,9 @@
++-- 010 — Uygulama içi bildirimlerin FCM ile telefona/tarayıcıya gönderimi.
++--   push_status : NULL = gönderilecek · SENDING · SENT · NO_TOKEN · SKIPPED · FAILED
++--   push_target : Flutter yönlendirme hedefi (ilan/is/teklif/talep/mesaj); NULL = Bildirimler
++-- Göçten ÖNCEKİ bildirimler SKIPPED işaretlenir (eski kayıtlar push olarak gönderilmez).
++ALTER TABLE notifications ADD COLUMN push_status TEXT;
++ALTER TABLE notifications ADD COLUMN push_target TEXT;
++ALTER TABLE notifications ADD COLUMN push_attempts INTEGER NOT NULL DEFAULT 0;
++ALTER TABLE notifications ADD COLUMN push_claimed_at TIMESTAMPTZ;
++UPDATE notifications SET push_status = 'SKIPPED';
+diff -ruN a/backend/migrations/sqlite/010_push_gonderimi.sql b/backend/migrations/sqlite/010_push_gonderimi.sql
+--- a/backend/migrations/sqlite/010_push_gonderimi.sql	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/migrations/sqlite/010_push_gonderimi.sql	2026-10-07 13:19:54.447356125 +0000
+@@ -0,0 +1,9 @@
++-- 010 — Uygulama içi bildirimlerin FCM ile telefona/tarayıcıya gönderimi.
++--   push_status : NULL = gönderilecek · SENDING · SENT · NO_TOKEN · SKIPPED · FAILED
++--   push_target : Flutter yönlendirme hedefi (ilan/is/teklif/talep/mesaj); NULL = Bildirimler
++-- Göçten ÖNCEKİ bildirimler SKIPPED işaretlenir (eski kayıtlar push olarak gönderilmez).
++ALTER TABLE notifications ADD COLUMN push_status TEXT;
++ALTER TABLE notifications ADD COLUMN push_target TEXT;
++ALTER TABLE notifications ADD COLUMN push_attempts INTEGER NOT NULL DEFAULT 0;
++ALTER TABLE notifications ADD COLUMN push_claimed_at TEXT;
++UPDATE notifications SET push_status = 'SKIPPED';
+diff -ruN a/backend/scripts/yedek_al.sh b/backend/scripts/yedek_al.sh
+--- a/backend/scripts/yedek_al.sh	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/scripts/yedek_al.sh	2026-10-07 13:19:54.457438103 +0000
+@@ -0,0 +1,17 @@
++#!/usr/bin/env bash
++# HizmetCep PostgreSQL YEDEĞİ (pg_dump, özel biçim, sıkıştırılmış).
++# Kullanım:  HC_DATABASE_URL=postgres://... ./scripts/yedek_al.sh [hedef_klasör]
++# ⚠ Yedek kişisel veri içerir: şifreli ve erişimi kısıtlı bir yerde saklayın.
++# ⚠ Bağlantı adresi (parola dahil) ekrana/günlüğe YAZDIRILMAZ.
++set -euo pipefail
++: "${HC_DATABASE_URL:?HC_DATABASE_URL tanımlı değil}"
++HEDEF="${1:-./yedekler}"
++mkdir -p "$HEDEF"; chmod 700 "$HEDEF"
++DOSYA="$HEDEF/hizmetcep-$(date -u +%Y%m%dT%H%M%SZ).dump"
++umask 077
++pg_dump --format=custom --no-owner --no-privileges --dbname="$HC_DATABASE_URL" --file="$DOSYA"
++# Doğrulama: arşivin içeriği okunabiliyor mu ve göç tablosu içinde mi?
++pg_restore --list "$DOSYA" > "$DOSYA.icerik"
++grep -q "schema_migrations" "$DOSYA.icerik" || { echo "HATA: yedekte schema_migrations yok" >&2; exit 1; }
++sha256sum "$DOSYA" > "$DOSYA.sha256"
++echo "Yedek hazır: $DOSYA ($(du -h "$DOSYA" | cut -f1)); özet: $DOSYA.sha256"
+diff -ruN a/backend/scripts/yedek_geri_yukle.sh b/backend/scripts/yedek_geri_yukle.sh
+--- a/backend/scripts/yedek_geri_yukle.sh	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/scripts/yedek_geri_yukle.sh	2026-10-07 13:19:54.462553616 +0000
+@@ -0,0 +1,17 @@
++#!/usr/bin/env bash
++# HizmetCep PostgreSQL GERİ YÜKLEME — BOŞ bir veritabanına.
++# Kullanım:  HC_RESTORE_URL=postgres://.../hizmetcep_geri ./scripts/yedek_geri_yukle.sh <dosya.dump>
++# ⚠ Canlı veritabanının ÜZERİNE yazmaz: hedefte tablo varsa durur. Önce
++#   boş bir veritabanına geri yükleyin, doğrulayın, sonra uygulamayı oraya
++#   yönlendirin (HC_DATABASE_URL). Eski veritabanı geri dönüş için kalır.
++set -euo pipefail
++: "${HC_RESTORE_URL:?HC_RESTORE_URL (boş hedef veritabanı) tanımlı değil}"
++DOSYA="${1:?yedek dosyası verilmedi}"
++[ -f "$DOSYA.sha256" ] && sha256sum -c "$DOSYA.sha256"
++VAR=$(psql "$HC_RESTORE_URL" -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")
++[ "$VAR" = "0" ] || { echo "HATA: hedef veritabanı boş değil ($VAR tablo). Durduruldu." >&2; exit 1; }
++pg_restore --no-owner --no-privileges --exit-on-error --dbname="$HC_RESTORE_URL" "$DOSYA"
++echo "Geri yüklendi. Doğrulama:"
++psql "$HC_RESTORE_URL" -tAc "SELECT 'son göç: ' || max(id) FROM schema_migrations"
++psql "$HC_RESTORE_URL" -tAc "SELECT 'kullanıcı: ' || count(*) FROM users"
++psql "$HC_RESTORE_URL" -tAc "SELECT 'kategori: ' || count(*) FROM categories WHERE deleted_at IS NULL"
+diff -ruN a/backend/src/fcm.js b/backend/src/fcm.js
+--- a/backend/src/fcm.js	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/src/fcm.js	2026-10-07 13:19:54.437459711 +0000
+@@ -0,0 +1,150 @@
++// ═══════════════════════════════════════════════════════════════
++// FCM SUNUCU GÖNDERİMİ (HTTP v1) — mevcut push_tokens + notifications
++//
++// Kimlik: Firebase SERVİS HESABI yalnız ortam değişkeninden okunur
++//   HC_FCM_SERVICE_ACCOUNT  — servis hesabı JSON'u (düz ya da base64)
++// Koda, Git'e ve Flutter'a GİRMEZ. Tanımlı değilse gönderim kapalıdır;
++// uygulama içi bildirimler aynen çalışır.
++//
++// Akış: uygulamaIciBildir → notifications satırı (push_status NULL) →
++// `push_gonderimi` işi (mevcut kilitli iş altyapısı; ayrıca kayıttan hemen
++// sonra tetiklenir) → satır SENDING olarak SAHİPLENİR (tek örnek gönderir)
++// → kullanıcının bütün cihazlarına gönderilir.
++//   · UNREGISTERED / geçersiz jeton  → jeton KALICI silinir
++//   · 429 / 5xx / ağ hatası          → jeton KORUNUR, sonra yeniden denenir
++//   · Push hatası ana işlemi ASLA başarısız etmez (bildirim zaten yazıldı).
++//   · Günlüğe jeton, servis hesabı ya da erişim anahtarı YAZILMAZ.
++// Veri biçimi Flutter `push_kapisi.dart` ile aynı: data = {type, hedef, id}.
++// ═══════════════════════════════════════════════════════════════
++import { createSign } from 'node:crypto';
++import { simdi } from './db.js';
++
++const KAPSAM = 'https://www.googleapis.com/auth/firebase.messaging';
++const AZAMI_DENEME = 5;
++const SAHIPLIK_ZAMAN_ASIMI = 5 * 60 * 1000;
++
++function servisHesabi() {
++  const ham = (process.env.HC_FCM_SERVICE_ACCOUNT || '').trim();
++  if (!ham) return null;
++  let metin = ham;
++  if (!ham.startsWith('{')) metin = Buffer.from(ham, 'base64').toString('utf8');
++  const j = JSON.parse(metin);
++  if (!j.client_email || !j.private_key || !j.project_id) throw new Error('HC_FCM_SERVICE_ACCOUNT eksik alan içeriyor');
++  return j;
++}
++
++let onbellek = null; // { jeton, bitis }
++async function erisimJetonu(sh) {
++  if (onbellek && onbellek.bitis > Date.now() + 60_000) return onbellek.jeton;
++  const an = Math.floor(Date.now() / 1000);
++  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
++  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, scope: KAPSAM, aud: 'https://oauth2.googleapis.com/token', iat: an, exp: an + 3600 })}`;
++  const imza = createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url');
++  const r = await fetch('https://oauth2.googleapis.com/token', {
++    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
++    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${govde}.${imza}` }),
++    signal: AbortSignal.timeout(10000),
++  });
++  if (!r.ok) throw new Error(`FCM erişim anahtarı alınamadı (HTTP ${r.status})`);
++  const j = await r.json();
++  onbellek = { jeton: j.access_token, bitis: Date.now() + (j.expires_in ?? 3600) * 1000 };
++  return onbellek.jeton;
++}
++
++/** Tek jetona gönderir → 'ok' | 'gecersiz' | 'gecici'. */
++export async function fcmGonder(sh, jeton, mesaj) {
++  let r;
++  try {
++    r = await fetch(`https://fcm.googleapis.com/v1/projects/${sh.project_id}/messages:send`, {
++      method: 'POST',
++      headers: { Authorization: `Bearer ${await erisimJetonu(sh)}`, 'Content-Type': 'application/json' },
++      body: JSON.stringify({ message: { token: jeton, ...mesaj } }),
++      signal: AbortSignal.timeout(10000),
++    });
++  } catch {
++    return 'gecici';
++  }
++  if (r.ok) return 'ok';
++  let kod = '';
++  try { const j = await r.json(); kod = (j.error?.details ?? []).map((d) => d.errorCode).find(Boolean) ?? j.error?.status ?? ''; } catch { /* yok */ }
++  if (r.status === 404 || kod === 'UNREGISTERED') return 'gecersiz';
++  if (r.status === 400 && (kod === 'INVALID_ARGUMENT' || kod === 'SENDER_ID_MISMATCH')) return 'gecersiz';
++  if (r.status === 403 && kod === 'SENDER_ID_MISMATCH') return 'gecersiz';
++  return 'gecici';
++}
++
++/** FCM mesaj gövdesi (jeton hariç). Flutter `pushRotasi` biçimiyle aynı. */
++export function mesajGovdesi(n) {
++  const data = { type: String(n.type), bildirimId: String(n.id) };
++  if (n.push_target && n.ref_id) { data.hedef = n.push_target; data.id = String(n.ref_id); }
++  return {
++    notification: { title: n.title, body: n.body },
++    data,
++    android: { priority: 'HIGH' },
++    apns: { payload: { aps: { sound: 'default' } } },
++  };
++}
++
++let testGondericisi = null;
++/** Yalnız testler: sahte gönderici ({ gonder(jeton, mesaj) → 'ok'|'gecersiz'|'gecici' }). */
++export function fcmTestGondericisi(g) { testGondericisi = g; }
++
++export function fcmEtkin() {
++  if (testGondericisi) return true;
++  try { return !!servisHesabi(); } catch { return false; }
++}
++
++/** Arka plan işi: bekleyen bildirimleri gönderir. Çok örnekte güvenli (satır sahiplenme). */
++export async function pushGonderiminiIsle(db) {
++  let gonder;
++  if (testGondericisi) {
++    gonder = (t, m) => testGondericisi.gonder(t, m);
++  } else {
++    let sh = null;
++    try { sh = servisHesabi(); } catch (e) { console.error('fcm: servis hesabı okunamadı:', e.message); }
++    if (!sh) {
++      // Push yapılandırılmamış: bekleyenler gönderilmeyecek olarak kapanır.
++      await db.prepare(`UPDATE notifications SET push_status = 'SKIPPED' WHERE push_status IS NULL`).run();
++      return 0;
++    }
++    gonder = (t, m) => fcmGonder(sh, t, m);
++  }
++  const sinir = new Date(Date.now() - SAHIPLIK_ZAMAN_ASIMI).toISOString();
++  const adaylar = await db.prepare(
++    `SELECT * FROM notifications WHERE push_status IS NULL OR (push_status = 'SENDING' AND push_claimed_at < ?)
++      ORDER BY created_at LIMIT 200`,
++  ).all(sinir);
++  let gonderilen = 0;
++  for (const n of adaylar) {
++    const al = await db.prepare(
++      `UPDATE notifications SET push_status = 'SENDING', push_claimed_at = ?
++        WHERE id = ? AND (push_status IS NULL OR (push_status = 'SENDING' AND push_claimed_at < ?))`,
++    ).run(simdi(), n.id, sinir);
++    if (al.changes !== 1) continue; // başka örnek sahiplendi
++    // Yalnız bildirimin SAHİBİNE ait jetonlar.
++    const jetonlar = await db.prepare('SELECT token FROM push_tokens WHERE user_id = ?').all(n.user_id);
++    if (!jetonlar.length) {
++      await db.prepare(`UPDATE notifications SET push_status = 'NO_TOKEN' WHERE id = ?`).run(n.id);
++      continue;
++    }
++    const mesaj = mesajGovdesi(n);
++    let basarili = 0; let gecici = 0;
++    for (const { token } of jetonlar) {
++      let s = 'gecici';
++      try { s = await gonder(token, mesaj); } catch { s = 'gecici'; }
++      if (s === 'ok') basarili++;
++      else if (s === 'gecersiz') await db.prepare('DELETE FROM push_tokens WHERE token = ? AND user_id = ?').run(token, n.user_id);
++      else gecici++;
++    }
++    if (basarili > 0 || gecici === 0) {
++      await db.prepare(`UPDATE notifications SET push_status = ? WHERE id = ?`).run(basarili > 0 ? 'SENT' : 'NO_TOKEN', n.id);
++      gonderilen += basarili > 0 ? 1 : 0;
++    } else {
++      const deneme = (n.push_attempts ?? 0) + 1;
++      await db.prepare(`UPDATE notifications SET push_status = ?, push_attempts = ?, push_claimed_at = NULL WHERE id = ?`)
++        .run(deneme >= AZAMI_DENEME ? 'FAILED' : null, deneme, n.id);
++      if (deneme >= AZAMI_DENEME) console.error(`fcm: bildirim ${n.id} ${deneme} denemede gönderilemedi`);
++    }
++  }
++  return gonderilen;
++}
+diff -ruN a/backend/src/routes/ilan.js b/backend/src/routes/ilan.js
+--- a/backend/src/routes/ilan.js	2026-10-07 13:19:54.333765834 +0000
++++ b/backend/src/routes/ilan.js	2026-10-07 13:19:54.335138286 +0000
+@@ -20,6 +20,7 @@
+ import { ApiHatasi, hata } from '../http.js';
+ import { kullaniciCoz } from './kullanici.js';
+ import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
++import { fcmEtkin, pushGonderiminiIsle } from '../fcm.js';
+ import { dosyalariBagla } from './depolama_entegrasyon.js';
+ 
+ export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
+@@ -43,10 +44,16 @@
+ });
+ 
+ /** Uygulama içi bildirim (Bildirimler sekmesi). */
+-export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, refId) {
++/**
++ * `pushHedef`: telefona giden bildirimin açacağı ekran (Flutter
++ * `kPushHedefleri`: ilan/is/teklif/talep/mesaj). Verilmezse Bildirimler açılır.
++ * Push gönderimi ayrı yürür (fcm.js); hatası bu işlemi etkilemez.
++ */
++export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, refId, pushHedef = null) {
+   await db.prepare(
+-    `INSERT INTO notifications (id, user_id, type, title, body, ref_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+-  ).run(randomUUID(), kullaniciId, tur, baslik, govde, refId ?? null, simdi());
++    `INSERT INTO notifications (id, user_id, type, title, body, ref_id, push_target, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
++  ).run(randomUUID(), kullaniciId, tur, baslik, govde, refId ?? null, pushHedef, simdi());
++  if (fcmEtkin()) setImmediate(() => { db.isKilidi('is:push_gonderimi', () => pushGonderiminiIsle(db)).catch(() => {}); });
+ }
+ 
+ /** Süresi dolan açık ilanları kapatır; sahibine bir kez bildirir (idempotent). */
+@@ -61,7 +68,7 @@
+       if (!n.changes) return;
+       await db.prepare(`UPDATE offers SET status = 'EXPIRED', updated_at = ? WHERE listing_id = ? AND status = 'ACTIVE'`).run(z, l.id);
+       if (l.expiry_notified !== 1) {
+-        await uygulamaIciBildir(db, l.owner_id, 'LISTING_EXPIRED', 'İlanınızın süresi doldu', `"${l.title}" ilanınızın yayın süresi sona erdi.`, l.id);
++        await uygulamaIciBildir(db, l.owner_id, 'LISTING_EXPIRED', 'İlanınızın süresi doldu', `"${l.title}" ilanınızın yayın süresi sona erdi.`, l.id, 'ilan');
+         await db.prepare('UPDATE listings SET expiry_notified = TRUE WHERE id = ?').run(l.id);
+       }
+     });
+@@ -216,7 +223,7 @@
+         `INSERT INTO offers (id, listing_id, provider_id, amount_tl, note, status, idempotency_key, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?)`,
+       ).run(id, l.id, ctx.kullanici.id, tutar, not, anahtar, z, z);
+-      await uygulamaIciBildir(db, l.owner_id, 'NEW_OFFER', 'Yeni teklif', `"${l.title}" ilanınıza yeni bir teklif geldi.`, l.id);
++      await uygulamaIciBildir(db, l.owner_id, 'NEW_OFFER', 'Yeni teklif', `"${l.title}" ilanınıza yeni bir teklif geldi.`, l.id, 'ilan');
+     });
+     return teklifGorunumu(await db.prepare('SELECT * FROM offers WHERE id = ?').get(id));
+   }));
+@@ -239,7 +246,7 @@
+       await db.prepare(`UPDATE offers SET status = 'SELECTED', updated_at = ? WHERE id = ?`).run(z, o.id);
+       await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND id <> ? AND status = 'ACTIVE'`).run(z, l.id, o.id);
+       await db.prepare('UPDATE listings SET selected_offer_id = ?, updated_at = ? WHERE id = ?').run(o.id, z, l.id);
+-      await uygulamaIciBildir(db, o.provider_id, 'OFFER_SELECTED', 'Teklifiniz seçildi', `"${l.title}" ilanında teklifiniz seçildi.`, l.id);
++      await uygulamaIciBildir(db, o.provider_id, 'OFFER_SELECTED', 'Teklifiniz seçildi', `"${l.title}" ilanında teklifiniz seçildi.`, l.id, 'is');
+     });
+     return ilanGorunumu(await db.prepare('SELECT * FROM listings WHERE id = ?').get(l.id));
+   }));
+@@ -271,7 +278,7 @@
+     await db.tx(async () => {
+       await db.prepare('INSERT INTO contacts (offer_id, opened_by, opened_at) VALUES (?, ?, ?)').run(o.id, ctx.kullanici.id, z);
+       const karsi = ctx.kullanici.id === o.provider_id ? l.owner_id : o.provider_id;
+-      await uygulamaIciBildir(db, karsi, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id);
++      await uygulamaIciBildir(db, karsi, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
+     });
+     return { open: true, contactOpenAt: z };
+   }));
+diff -ruN a/backend/src/routes/sohbet_talep.js b/backend/src/routes/sohbet_talep.js
+--- a/backend/src/routes/sohbet_talep.js	2026-10-07 13:19:54.337269488 +0000
++++ b/backend/src/routes/sohbet_talep.js	2026-10-07 13:19:54.341392929 +0000
+@@ -122,7 +122,7 @@
+       if (ref) await dosyalariBagla(db, [ref], ctx.kullanici.id);
+       await db.prepare('INSERT INTO messages (id, offer_id, sender_id, text, storage_ref, idempotency_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+         .run(id, o.id, ctx.kullanici.id, metin, ref, anahtar, z);
+-      await uygulamaIciBildir(db, karsi, 'NEW_MESSAGE', 'Yeni mesaj', `"${l.title}" ilanı için yeni bir mesajınız var.`, o.id);
++      await uygulamaIciBildir(db, karsi, 'NEW_MESSAGE', 'Yeni mesaj', `"${l.title}" ilanı için yeni bir mesajınız var.`, o.id, 'mesaj');
+     });
+     const m = mesajGorunumu(await db.prepare('SELECT * FROM messages WHERE id = ?').get(id));
+     await olaylar.yayinla('message.new', { offerId: o.id, messageId: m.id });
+@@ -198,7 +198,7 @@
+                                        iletisim_tercihi, is_zamani, durum, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'BEKLEMEDE', ?, ?)`,
+       ).run(id, String(no.value), u.id, s.id, kategori, hizmet, aciklama, JSON.stringify(foto), tercih, zaman, z, z);
+-      await uygulamaIciBildir(db, s.id, 'NEW_OFFER', 'Yeni teklif talebi', `"${hizmet}" için size teklif talebi geldi.`, id);
++      await uygulamaIciBildir(db, s.id, 'NEW_OFFER', 'Yeni teklif talebi', `"${hizmet}" için size teklif talebi geldi.`, id, 'talep');
+     });
+     return talepTam(await talepGetir(id, u));
+   }));
+@@ -215,7 +215,7 @@
+     const z = simdi();
+     await db.prepare(`UPDATE teklif_talepleri SET durum = 'TEKLIF_GELDI', teklif_fiyati = ?, teklif_aciklamasi = ?, teklif_tarihi = ?, updated_at = ? WHERE id = ?`)
+       .run(fiyat, ac, z, z, t.id);
+-    await uygulamaIciBildir(db, t.hizmet_alan_id, 'NEW_OFFER', 'Teklif geldi', `"${t.hizmet}" talebinize teklif geldi.`, t.id);
++    await uygulamaIciBildir(db, t.hizmet_alan_id, 'NEW_OFFER', 'Teklif geldi', `"${t.hizmet}" talebinize teklif geldi.`, t.id, 'talep');
+     return talepTam(await talepGetir(t.id, ctx.kullanici));
+   }));
+ 
+@@ -225,7 +225,7 @@
+     if (t.durum === 'SECILDI') return talepTam(t);
+     if (t.durum !== 'TEKLIF_GELDI') throw kural('INVALID_STATE', 'Bu teklif seçilemez');
+     await db.prepare(`UPDATE teklif_talepleri SET durum = 'SECILDI', updated_at = ? WHERE id = ?`).run(simdi(), t.id);
+-    await uygulamaIciBildir(db, t.saglayici_id, 'OFFER_SELECTED', 'Teklifiniz kabul edildi', `"${t.hizmet}" teklifiniz kabul edildi.`, t.id);
++    await uygulamaIciBildir(db, t.saglayici_id, 'OFFER_SELECTED', 'Teklifiniz kabul edildi', `"${t.hizmet}" teklifiniz kabul edildi.`, t.id, 'talep');
+     return talepTam(await talepGetir(t.id, ctx.kullanici));
+   }));
+ 
+@@ -261,7 +261,7 @@
+       if (ref) await dosyalariBagla(db, [ref], ctx.kullanici.id);
+       await db.prepare('INSERT INTO teklif_mesajlari (id, talep_id, gonderen_id, metin, fotograf_ref, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+         .run(randomUUID(), t.id, ctx.kullanici.id, metin, ref, simdi());
+-      await uygulamaIciBildir(db, karsi, 'NEW_MESSAGE', 'Yeni mesaj', `"${t.hizmet}" talebi için yeni bir mesajınız var.`, t.id);
++      await uygulamaIciBildir(db, karsi, 'NEW_MESSAGE', 'Yeni mesaj', `"${t.hizmet}" talebi için yeni bir mesajınız var.`, t.id, 'talep');
+     });
+     return talepTam(await talepGetir(t.id, ctx.kullanici));
+   }));
+diff -ruN a/backend/src/server.js b/backend/src/server.js
+--- a/backend/src/server.js	2026-10-07 13:19:54.346249205 +0000
++++ b/backend/src/server.js	2026-10-07 13:19:54.347655533 +0000
+@@ -28,6 +28,7 @@
+ import { ilanRotalar, suresiDolanlariIsle } from './routes/ilan.js';
+ import { silmeTalepleriniIsle, sohbetTalepRotalar, talepSureleriniIsle } from './routes/sohbet_talep.js';
+ import { dosyaTemizliginiIsle } from './dosya_temizligi.js';
++import { pushGonderiminiIsle } from './fcm.js';
+ import { publicRotalar } from './routes/public.js';
+ 
+ const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
+@@ -164,6 +165,7 @@
+     ['talep_suresi', talepSureleriniIsle],
+     ['hesap_silme', silmeTalepleriniIsle],
+     ['dosya_temizligi', dosyaTemizliginiIsle],
++    ['push_gonderimi', pushGonderiminiIsle],
+   ];
+   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
+   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.
+diff -ruN a/backend/test/fcm.test.js b/backend/test/fcm.test.js
+--- a/backend/test/fcm.test.js	1970-01-01 00:00:00.000000000 +0000
++++ b/backend/test/fcm.test.js	2026-10-07 13:19:54.452403800 +0000
+@@ -0,0 +1,102 @@
++// FCM sunucu gönderimi — sahte gönderici ve sahte HTTP ile (gerçek Firebase YOK).
++import { test, before, after } from 'node:test';
++import assert from 'node:assert/strict';
++import { randomUUID, generateKeyPairSync } from 'node:crypto';
++process.env.HC_SESSIZ = '1';
++const { testDb } = await import('./destek.js');
++const { simdi } = await import('../src/db.js');
++const { uygulamaIciBildir } = await import('../src/routes/ilan.js');
++const { pushGonderiminiIsle, fcmTestGondericisi, fcmGonder, mesajGovdesi } = await import('../src/fcm.js');
++
++let db;
++const giden = [];
++let davranis = () => 'ok';
++before(async () => { db = await testDb(); });
++after(async () => { fcmTestGondericisi(null); await db?.close(); });
++
++async function kullanici(tel) {
++  const id = randomUUID();
++  await db.prepare(`INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role, status, terms_accepted, failed_logins, created_at, updated_at)
++    VALUES (?, ?, NULL, 'T', 'x', TRUE, FALSE, 'CUSTOMER', 'CUSTOMER', 'ACTIVE', TRUE, 0, ?, ?)`).run(id, tel, simdi(), simdi());
++  return id;
++}
++const jeton = (u, t, pl = 'android') => db.prepare(`INSERT INTO push_tokens (token, user_id, platform, created_at, last_seen) VALUES (?, ?, ?, ?, ?)`).run(t, u, pl, simdi(), simdi());
++const durum = async (u) => (await db.prepare('SELECT push_status, push_attempts FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').get(u));
++
++test('yalnız bildirim sahibinin bütün cihazlarına, Flutter biçiminde gönderilir', async () => {
++  fcmTestGondericisi({ gonder: async (t, m) => { giden.push({ t, m }); return davranis(t); } });
++  const a = await kullanici('5551110001'); const b = await kullanici('5551110002');
++  await jeton(a, 'a-jeton-1-xxxxxxxxxxxxxxxxxxxx', 'android'); await jeton(a, 'a-jeton-2-xxxxxxxxxxxxxxxxxxxx', 'ios');
++  await jeton(b, 'b-jeton-1-xxxxxxxxxxxxxxxxxxxx', 'web');
++  const ilanId = randomUUID();
++  await uygulamaIciBildir(db, a, 'NEW_OFFER', 'Yeni teklif', 'İlanınıza teklif geldi', ilanId, 'ilan');
++  await new Promise((ok) => setTimeout(ok, 50));
++  giden.length = 0;
++  await db.prepare(`UPDATE notifications SET push_status = NULL WHERE user_id = ?`).run(a); // anında tetikleme sonucunu sıfırla, işi doğrudan sına
++  await pushGonderiminiIsle(db);
++  assert.deepEqual(giden.map((g) => g.t).sort(), ['a-jeton-1-xxxxxxxxxxxxxxxxxxxx', 'a-jeton-2-xxxxxxxxxxxxxxxxxxxx']);
++  const m = giden[0].m;
++  assert.equal(m.notification.title, 'Yeni teklif');
++  assert.equal(m.data.type, 'NEW_OFFER'); assert.equal(m.data.hedef, 'ilan'); assert.equal(m.data.id, ilanId);
++  assert.equal((await durum(a)).push_status, 'SENT');
++  // Tekrar işlemek ikinci gönderim yapmaz (idempotent)
++  giden.length = 0; await pushGonderiminiIsle(db); assert.equal(giden.length, 0);
++});
++
++test('geçersiz jeton KALICI silinir; geçici hatada jeton korunur ve yeniden denenir', async () => {
++  const c = await kullanici('5551110003');
++  await jeton(c, 'c-gecersiz-xxxxxxxxxxxxxxxxxxxx'); await jeton(c, 'c-gecici-xxxxxxxxxxxxxxxxxxxxx');
++  davranis = (t) => (t.startsWith('c-gecersiz') ? 'gecersiz' : 'gecici');
++  await uygulamaIciBildir(db, c, 'NEW_MESSAGE', 'Yeni mesaj', 'x', randomUUID(), 'mesaj');
++  await new Promise((ok) => setTimeout(ok, 50));
++  await pushGonderiminiIsle(db);
++  const kalan = (await db.prepare('SELECT token FROM push_tokens WHERE user_id = ?').all(c)).map((r) => r.token);
++  assert.deepEqual(kalan, ['c-gecici-xxxxxxxxxxxxxxxxxxxxx']);
++  const d = await durum(c);
++  assert.equal(d.push_status, null); assert.ok(d.push_attempts >= 1); // yeniden denenecek
++  davranis = () => 'ok';
++  await pushGonderiminiIsle(db);
++  assert.equal((await durum(c)).push_status, 'SENT');
++});
++
++test('jetonu olmayan kullanıcı NO_TOKEN; gönderici hata fırlatsa da iş ve ana işlem bozulmaz', async () => {
++  const d = await kullanici('5551110004');
++  await uygulamaIciBildir(db, d, 'ANNOUNCEMENT', 'Duyuru', 'x', randomUUID());
++  await new Promise((ok) => setTimeout(ok, 50));
++  await pushGonderiminiIsle(db);
++  assert.equal((await durum(d)).push_status, 'NO_TOKEN');
++  const e = await kullanici('5551110005'); await jeton(e, 'e-jeton-xxxxxxxxxxxxxxxxxxxxxxx');
++  fcmTestGondericisi({ gonder: async () => { throw new Error('ağ yok'); } });
++  await uygulamaIciBildir(db, e, 'NEW_OFFER', 'Teklif', 'x', randomUUID(), 'talep'); // ana işlem hata vermez
++  await new Promise((ok) => setTimeout(ok, 50));
++  await pushGonderiminiIsle(db);
++  assert.equal((await db.prepare('SELECT COUNT(*) n FROM push_tokens WHERE user_id = ?').get(e)).n, 1, 'geçici hatada jeton silinmez');
++  // Hedefsiz bildirim (duyuru) Bildirimler ekranına gider: veri hedef/id taşımaz
++  const g = mesajGovdesi({ id: 'n1', type: 'ANNOUNCEMENT', title: 't', body: 'b', ref_id: 'x', push_target: null });
++  assert.equal(g.data.hedef, undefined);
++});
++
++test('FCM HTTP v1 yanıtlarının sınıflandırılması (sahte HTTP)', async () => {
++  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
++  const sh = { project_id: 'p', client_email: 'x@p.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) };
++  const asil = globalThis.fetch;
++  let gonderYaniti;
++  globalThis.fetch = async (url) => {
++    if (String(url).includes('oauth2')) return new Response(JSON.stringify({ access_token: 'erisim', expires_in: 3600 }), { status: 200 });
++    return gonderYaniti();
++  };
++  try {
++    gonderYaniti = () => new Response('{}', { status: 200 });
++    assert.equal(await fcmGonder(sh, 't', {}), 'ok');
++    gonderYaniti = () => new Response(JSON.stringify({ error: { status: 'NOT_FOUND', details: [{ errorCode: 'UNREGISTERED' }] } }), { status: 404 });
++    assert.equal(await fcmGonder(sh, 't', {}), 'gecersiz');
++    gonderYaniti = () => new Response(JSON.stringify({ error: { status: 'INVALID_ARGUMENT', details: [{ errorCode: 'INVALID_ARGUMENT' }] } }), { status: 400 });
++    assert.equal(await fcmGonder(sh, 't', {}), 'gecersiz');
++    gonderYaniti = () => new Response('{}', { status: 503 });
++    assert.equal(await fcmGonder(sh, 't', {}), 'gecici');
++    gonderYaniti = () => new Response(JSON.stringify({ error: { status: 'RESOURCE_EXHAUSTED', details: [{ errorCode: 'QUOTA_EXCEEDED' }] } }), { status: 429 });
++    assert.equal(await fcmGonder(sh, 't', {}), 'gecici');
++    gonderYaniti = () => { throw new Error('ağ'); };
++    assert.equal(await fcmGonder(sh, 't', {}), 'gecici');
++  } finally { globalThis.fetch = asil; }
++});
+diff -ruN a/ios/Runner/Info.plist b/ios/Runner/Info.plist
+--- a/ios/Runner/Info.plist	2026-10-07 13:19:54.361418657 +0000
++++ b/ios/Runner/Info.plist	2026-10-07 13:19:54.362758199 +0000
+@@ -56,29 +56,8 @@
+ 		<string>UIInterfaceOrientationLandscapeRight</string>
+ 	</array>
+ 	<!-- Harici uygulama açma izinleri: mağaza ve ödeme sayfası. -->
+-	<!-- ── ⚠ ÖDEME GERİ DÖNÜŞÜ: URL ŞEMASI ──
+-	     `hizmetcep://payment/return?session=<id>` adresinin iOS'ta
+-	     uygulamaya ulaşabilmesi için şema KAYITLI olmalıdır; kayıt
+-	     yoktu, yani deep link iOS'ta hiç çalışmıyordu.
+-
+-	     ⚠ CUSTOM SCHEME'İN SINIRI: başka bir uygulama da aynı şemayı
+-	     kaydedebilir ve geri dönüşü çalabilir. Kalıcı çözüm Universal
+-	     Links'tir (Associated Domains + apple-app-site-association);
+-	     o, doğrulanmış alan adı gerektirir ve web tarafı hazır
+-	     olduğunda eklenmelidir.
+-
+-	     ⚠ GÜVENLİK BUNA DAYANMAZ: geri dönüş adresi yalnız `session`
+-	     kimliği taşır. `success=true` gibi bir parametre gelse bile
+-	     ödeme kanıtı SAYILMAZ; sonuç her zaman backend `confirmTopup`
+-	     ile doğrulanır (bkz. `core/deep_links.dart`). -->
+ 	<key>CFBundleURLTypes</key>
+ 	<array>
+-		<dict>
+-			<key>CFBundleTypeRole</key><string>Editor</string>
+-			<key>CFBundleURLName</key><string>com.hizmetcep.app</string>
+-			<key>CFBundleURLSchemes</key>
+-			<array><string>hizmetcep</string></array>
+-		</dict>
+ 		<!-- Firebase Phone Auth: APNs (sessiz bildirim) yokken iOS doğrulaması
+ 		     reCAPTCHA ile yapılır; dönüş bu şemayla olur. Değer, iOS uygulama
+ 		     kimliğinin (GOOGLE_APP_ID) kodlanmış biçimidir. -->
+diff -ruN a/lib/data/category_tree.dart b/lib/data/category_tree.dart
+--- a/lib/data/category_tree.dart	2026-10-07 13:19:54.383558548 +0000
++++ b/lib/data/category_tree.dart	2026-10-07 13:19:54.384868644 +0000
+@@ -1,4 +1,4 @@
+-/// HİZMET KATALOĞU — 155 KATEGORİ · 1448 HİZMET (24 ÇATI)
++/// HİZMET KATALOĞU — 166 ANA KATEGORİ · 1587 ALT HİZMET
+ ///
+ /// ⚠ 158 → 157 → 155: üç kategori kaldırıldı, hepsi aynı desende —
+ /// ismi farklı ama kavramsal olarak aynı/çok yakın, KÜÇÜK (1-3
+diff -ruN a/lib/data/hizmet_alanlari.dart b/lib/data/hizmet_alanlari.dart
+--- a/lib/data/hizmet_alanlari.dart	2026-10-07 13:19:54.402218206 +0000
++++ b/lib/data/hizmet_alanlari.dart	2026-10-07 13:19:54.403481026 +0000
+@@ -147,7 +147,7 @@
+   HizmetAlani(
+     ad: 'Dijital Hizmetler',
+     aciklama:
+-        'Web Sitesi, Logo Tasarım, Dijital Pazarlama',
++        'Web Sitesi, Logo, Dijital Pazarlama',
+     gorsel: 'assets/alanlar/dijital.jpg',
+     ikon: 'assets/svg/alanlar/dijital.svg',
+     kategoriler: [
+diff -ruN a/lib/data/izmir.dart b/lib/data/izmir.dart
+--- a/lib/data/izmir.dart	2026-10-07 13:19:54.395779391 +0000
++++ b/lib/data/izmir.dart	2026-10-07 13:19:54.397112158 +0000
+@@ -16,7 +16,7 @@
+ // KATEGORİ VERİSİ — TEK KAYNAK: `category_tree.dart`
+ //
+ 
+-/// Ana kategoriler — referans ağacın tamamı.
++/// Ana kategoriler — referans ağacın tamamı (166 kategori, 1587 alt hizmet).
+ List<String> get kHomeCategories => kTreeCategories;
+ 
+ /// Ana kategori → alt hizmetler.
+diff -ruN a/lib/data/service_aliases.dart b/lib/data/service_aliases.dart
+--- a/lib/data/service_aliases.dart	2026-10-07 13:19:54.389606844 +0000
++++ b/lib/data/service_aliases.dart	2026-10-07 13:19:54.391042066 +0000
+@@ -6,7 +6,7 @@
+ /// ## BU DOSYA KATALOG DEĞİLDİR
+ ///
+ /// ⚠ Buradaki hiçbir ad yeni ana kategori ya da yeni alt hizmet
+-/// DEĞİLDİR. `kCategoryTree` 63 ana kategori / 640 alt hizmet olarak
++/// DEĞİLDİR. `kCategoryTree` 166 ana kategori / 1587 alt hizmet olarak
+ /// AYNEN kalır; alias sayısı hiçbir sayaca, ızgaraya, ikon listesine
+ /// veya kart sayısına girmez.
+ ///
+diff -ruN a/lib/screens/create_listing_screen.dart b/lib/screens/create_listing_screen.dart
+--- a/lib/screens/create_listing_screen.dart	2026-10-07 13:19:54.422926843 +0000
++++ b/lib/screens/create_listing_screen.dart	2026-10-07 13:19:54.424379970 +0000
+@@ -20,6 +20,7 @@
+ import 'widgets/photo_picker.dart';
+ import '../data/controllers/region_controller.dart';
+ import '../data/izmir.dart';
++import '../ui/header_arama.dart' show kHizmetAramaIpucu;
+ import '../ui/ref_tokens.dart';
+ import '../ui/ref_widgets.dart';
+ import '../ui/web_panel.dart';
+@@ -930,7 +931,7 @@
+         children: [
+           // .po-h2{18px/700;ls -.2}
+           Text(
+-            'Hangi hizmete ihtiyacınız var?',
++            kHizmetAramaIpucu,
+             style: refText(
+               size: RF.s18,
+               weight: RF.w700,
+diff -ruN a/lib/screens/hizmet_alani_screen.dart b/lib/screens/hizmet_alani_screen.dart
+--- a/lib/screens/hizmet_alani_screen.dart	2026-10-07 13:19:54.408559469 +0000
++++ b/lib/screens/hizmet_alani_screen.dart	2026-10-07 13:19:54.409791450 +0000
+@@ -16,6 +16,7 @@
+ import '../data/izmir.dart';
+ import '../data/hizmet_alanlari.dart';
+ import '../data/services/search_service.dart';
++import '../ui/header_arama.dart' show kHizmetAramaIpucu;
+ import '../ui/ref_tokens.dart';
+ import '../ui/ref_widgets.dart';
+ import 'category_screen.dart';
+@@ -207,7 +208,7 @@
+                       errorBorder: InputBorder.none,
+                       focusedErrorBorder: InputBorder.none,
+                       contentPadding: EdgeInsets.zero,
+-                      hintText: 'Hangi hizmete ihtiyacınız var?',
++                      hintText: kHizmetAramaIpucu,
+                       hintStyle: refText(
+                           size: 14.5,
+                           weight: RF.w400,
+diff -ruN a/lib/screens/home_screen.dart b/lib/screens/home_screen.dart
+--- a/lib/screens/home_screen.dart	2026-10-07 13:19:54.414496175 +0000
++++ b/lib/screens/home_screen.dart	2026-10-07 13:19:54.415856616 +0000
+@@ -1,5 +1,6 @@
+ import 'dart:async';
+ import 'package:flutter/material.dart';
++import '../ui/header_arama.dart' show kHizmetAramaIpucu;
+ import '../ui/olcu.dart';
+ import 'package:flutter/foundation.dart';
+ // `context.read<T>()` bu paketin BuildContext eklentisidir.
+@@ -272,7 +273,7 @@
+               // `kSubServices`'ten gelir; admin yeni kategori eklerse
+               // liste kendiliğinden genişler.
+               InlineSearchBox(
+-                title: 'Hangi hizmete ihtiyacınız var?',
++                title: kHizmetAramaIpucu,
+                 subtitle:
+                     'Örnek: Kombi Bakımı, Elektrik Arızası, Boya Badana, Klima Montajı',
+                 onSecim: (kategori, altHizmet) =>
+diff -ruN a/lib/ui/header_arama.dart b/lib/ui/header_arama.dart
+--- a/lib/ui/header_arama.dart	2026-10-07 13:19:54.429222240 +0000
++++ b/lib/ui/header_arama.dart	2026-10-07 13:19:54.430484637 +0000
+@@ -5,6 +5,10 @@
+ import '../screens/home_screen.dart' show hizmetSecildi;
+ import 'ref_tokens.dart';
+ import 'ref_widgets.dart';
++
++/// Hizmet arama alanlarının ipucu metni — TEK KAYNAK (ana sayfa başlık
++/// araması ve hizmet alanı ekranı aynı metni buradan okur).
++const String kHizmetAramaIpucu = 'Hangi hizmete ihtiyacınız var?';
+ import 'web_oneri_dokunusu.dart';
+ 
+ /// ═══════════════════════════════════════════════════════════════
+@@ -246,7 +250,7 @@
+               style: refText(size: RF.s135, weight: RF.w500, color: RC.text),
+               decoration: InputDecoration(
+                 isDense: true,
+-                hintText: 'Hangi hizmete ihtiyacınız var?',
++                hintText: kHizmetAramaIpucu,
+                 hintStyle:
+                     refText(size: RF.s135, weight: RF.w400, color: RC.textSoft),
+                 filled: true,

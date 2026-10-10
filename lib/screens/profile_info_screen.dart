@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../domain/form_mesajlari.dart';
 import 'package:provider/provider.dart';
@@ -12,8 +13,11 @@ import 'otp_screen.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/web_panel.dart';
 import 'nav_actions.dart';
 import '../core/geri.dart';
+import '../ui/panel_rotasi.dart';
+import 'widgets/profil_fotografi.dart';
 
 /// Profil Bilgileri (HTML pinfo): ad, e-posta, profil fotoğrafı;
 /// telefon değişikliği SMS DOĞRULAMALI (OTP ekranı yeniden kullanılır).
@@ -332,7 +336,11 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       var challengeId = ch.challengeId!;
       Navigator.push(
         context,
-        MaterialPageRoute(
+        panelRotasi<void>(
+          // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
+          // adından seçer; adsız rota tanınmıyordu. Gezinme davranışı
+          // DEĞİŞMEZ.
+          settings: const RouteSettings(name: '/dogrulama'),
           builder: (_) => OtpScreen(
             phone: newPhone,
             purpose: OtpPurpose.phoneChange,
@@ -377,7 +385,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               ? 'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. '
                   'Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.'
               : 'Profil bilgileriniz güncellendi');
-      geriGit(context);
+      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
+      kayittanSonra(context, () => geriGit(context));
     }
   }
 
@@ -415,13 +424,59 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         // kırmızı" davranışı oluşmaz.
         autovalidateMode: AutovalidateMode.always,
         key: _form,
-        child: Column(
+        // ── ⚠ MASAÜSTÜ WEB: ORTAK PANEL — `change_password_screen`
+        // ile AYNI kural (bkz. `ui/web_panel.dart`). ──
+        child: WebPanel(
+          baslik: 'Profil Bilgilerim',
+          altYazi: 'Profil bilgilerinizi görüntüleyebilir ve '
+              'güncelleyebilirsiniz.',
+          icerik: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const RefPageTitle('Profil Bilgilerim'),
-            const RefSubtitle(
-                'Profil bilgilerinizi görüntüleyebilir ve '
-                'güncelleyebilirsiniz.'),
+            // ⚠ BAŞLIK ÇİFT ÇİZİLMEZ: panelde başlığı panel çizer.
+            if (!WebPanel.panelMi(context)) ...[
+              const RefPageTitle('Profil Bilgilerim'),
+              const RefSubtitle(
+                  'Profil bilgilerinizi görüntüleyebilir ve '
+                  'güncelleyebilirsiniz.'),
+              // ── ⚠ PROFİL FOTOĞRAFI BURAYA TAŞINDI ──
+              //
+              // Fotoğraf seçici yalnız Profil ekranındaki avatarda
+              // vardı. Masaüstü web'de kenar çubuğu gelince o ekran
+              // gereksizleşti (menüsü çubukta zaten var) ama fotoğrafa
+              // ulaşmanın tek yolu orasıydı.
+              //
+              // Ad, soyad, e-posta ve telefon zaten burada
+              // düzenleniyor; fotoğraf da buraya aittir.
+              //
+              // ⚠ ORTAK BİLEŞEN (`widgets/profil_fotografi.dart`):
+              // Profil ekranı da AYNI sınıfı kullanır, kopyalanmadı.
+              Consumer<AuthController>(
+                builder: (_, auth, __) {
+                  final acc = auth.currentAccount;
+                  // ── ⚠ YALNIZ WEB: ORTALI AVATAR, KAMERA ROZETİ YOK ──
+                  //
+                  // Sütun `CrossAxisAlignment.stretch` olduğu için bileşen
+                  // satır genişliğine yayılıyor, avatar sola yaslanıyor ve
+                  // kamera rozeti (`Positioned(right: 0)`) satırın sağ
+                  // kenarına yapışıyordu. Web'de bileşen `Center` ile kendi
+                  // 96 px genişliğine döner ve rozet çizilmez (kullanıcı
+                  // kararı). Fotoğraf menüsü avatara dokununca açılır.
+                  //
+                  // ⚠ MOBİL KİLİTLİ: `kIsWeb` false iken ağaç BİREBİR
+                  // önceki hâlidir (sarmalayıcı yok, rozet açık).
+                  final foto = ProfilFotografi(
+                    ad: acc?.name ?? '',
+                    fotoYolu: acc?.photoPath ?? '',
+                    kameraRozeti: !kIsWeb,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 14),
+                    child: kIsWeb ? Center(child: foto) : foto,
+                  );
+                },
+              ),
+            ],
 
             // ⚠ Alt başlıkla ilk alan arasındaki boşluk da etiketten
             // geliyordu; etiket kalkınca elle verildi.
@@ -599,6 +654,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               onPressed: (_formGecerli && _degisiklikVar) ? _save : null,
             ),
           ],
+        ),
         ),
       ),
     );

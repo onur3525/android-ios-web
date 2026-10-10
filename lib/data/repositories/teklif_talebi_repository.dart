@@ -17,6 +17,15 @@ class TeklifTalebiRepository extends ChangeNotifier {
   final _uuid = const Uuid();
   final Map<String, TeklifTalebi> _items = {};
 
+  // ── Sekme anlığı (yalnız web + mock; bkz. sekme_anligi.dart) ──
+  List<TeklifTalebi> get sekmeKayitlari => List.unmodifiable(_items.values);
+  void sekmeKayitlariniYukle(Iterable<TeklifTalebi> kayitlar) {
+    _items
+      ..clear()
+      ..addEntries(kayitlar.map((t) => MapEntry(t.id, t)));
+    notifyListeners();
+  }
+
   /// ⚠ SÜRESİ DOLAN TEKLİFLER — her okumadan ÖNCE tembelce (lazily)
   /// uygulanır: 30 saat geçtiyse ve hâlâ `teklifGeldi` durumundaysa
   /// artık SEÇİLEMEZ. Ayrı bir zamanlayıcı/arka plan görevi İCAT

@@ -1,0 +1,388 @@
+diff -ru a/lib/core/platform_kapilari.dart b/lib/core/platform_kapilari.dart
+--- a/lib/core/platform_kapilari.dart	2026-10-07 05:12:42.615868526 +0000
++++ b/lib/core/platform_kapilari.dart	2026-10-07 05:12:42.617676882 +0000
+@@ -4,4 +4,3 @@
+ // burada toplanır. Amaç, aynı koşulun iki ekranda ayrı ayrı yazılıp
+ // birinin unutulmasını önlemektir.
+ 
+-import 'package:flutter/foundation.dart';
+diff -ru a/lib/data/ports/api_ports.dart b/lib/data/ports/api_ports.dart
+--- a/lib/data/ports/api_ports.dart	2026-10-07 05:12:42.598644534 +0000
++++ b/lib/data/ports/api_ports.dart	2026-10-07 05:12:42.600632184 +0000
+@@ -1,5 +1,4 @@
+ import '../../domain/failures.dart';
+-import '../remote/api_client.dart';
+ import '../remote/firebase_kimlik.dart';
+ import '../models/account.dart';
+ import '../remote/api/region_api.dart';
+@@ -15,7 +14,6 @@
+ import '../remote/repositories/api_repositories.dart';
+ import 'repository_ports.dart';
+ import '../remote/api_error_mapper.dart';
+-import '../remote/api_config.dart';
+ 
+ /// API PORT UYGULAMALARI — iş kuralları SUNUCUDA yürür; burada yalnız
+ /// çağrı, önbellek ve hata aktarımı vardır. İstemci tarafında sahte
+diff -ru a/lib/data/ports/mock_ports.dart b/lib/data/ports/mock_ports.dart
+--- a/lib/data/ports/mock_ports.dart	2026-10-07 05:12:42.607125225 +0000
++++ b/lib/data/ports/mock_ports.dart	2026-10-07 05:12:42.609005023 +0000
+@@ -401,31 +401,6 @@
+     return (listing: l, error: null);
+   }
+ 
+-  DomainError? _transition(String id, String actorId, ListingStatus to) {
+-    final a = _authorize(id, actorId);
+-    if (a.error != null) {
+-      return a.error;
+-    }
+-    if (!ListingStateMachine.canTransition(a.listing!.status, to)) {
+-      return const InvalidStateError('Bu ilan için geçersiz durum geçişi');
+-    }
+-
+-    // ── SEÇİLİ TEKLİF ZORUNLULUĞU ──
+-    //
+-    // ⚠ `providerSelected` ve `completed` durumları ANLAMLARINI seçili
+-    // teklifden alır: "bir sağlayıcı seçildi" / "o sağlayıcı işi
+-    // bitirdi". `selectedOfferId` boşken bu durumlara geçmek ilanı
+-    // TUTARSIZ bir hâle sokar — kim seçildi, kim tamamladı belli
+-    // olmaz; değerlendirme de hedefsiz kalır.
+-    //
+-    // ⚠ DENETİM GEÇİŞTEN ÖNCE yapılır: hata dönerse ilanın durumu
+-    // DEĞİŞMEZ. Sonradan kontrol etmek, ilanı bozuk duruma sokup
+-    // ardından hata göstermek olurdu.
+-
+-    listings.setStatus(id, to);
+-    return null;
+-  }
+-
+   /// İptal: açılmamış blokeler iade edilir; completed İPTAL EDİLEMEZ.
+ 
+   /// Süre dolumu: yalnız open ilanlar için. completed DOKUNULMAZ.
+diff -ru a/lib/data/remote/api_client.dart b/lib/data/remote/api_client.dart
+--- a/lib/data/remote/api_client.dart	2026-10-07 05:12:42.581750132 +0000
++++ b/lib/data/remote/api_client.dart	2026-10-07 05:12:42.583692472 +0000
+@@ -171,8 +171,6 @@
+             expectList: expectList, attempt: attempt + 1);
+       }
+       throw ApiFailure(networkError(), 0, 'NETWORK', null);
+-    } on http.ClientException {
+-      throw ApiFailure(networkError(), 0, 'NETWORK', null);
+     }
+ 
+     // 401 → access token süresi dolmuş olabilir: TEK SEFER refresh dene.
+diff -ru a/lib/data/remote/repositories/api_repositories.dart b/lib/data/remote/repositories/api_repositories.dart
+--- a/lib/data/remote/repositories/api_repositories.dart	2026-10-07 05:12:42.590197059 +0000
++++ b/lib/data/remote/repositories/api_repositories.dart	2026-10-07 05:12:42.592108839 +0000
+@@ -320,22 +320,6 @@
+     notifyListeners();
+     return null;
+   }
+-
+-  Future<DomainError?> _mutate(Future<Map<String, dynamic>> Function() fn) async {
+-    final (res, err) = await _guard(fn);
+-    if (err != null) {
+-      return err;
+-    }
+-    final updated = Mappers.listing(res!);
+-    final i = _cache.indexWhere((l) => l.id == updated.id);
+-    if (i >= 0) {
+-      _cache[i] = updated;
+-    } else {
+-      _cache.add(updated);
+-    }
+-    notifyListeners();
+-    return null;
+-  }
+ }
+ 
+ /// Teklifler.
+diff -ru a/lib/main.dart b/lib/main.dart
+--- a/lib/main.dart	2026-10-07 05:12:42.572791110 +0000
++++ b/lib/main.dart	2026-10-07 05:12:42.574748167 +0000
+@@ -63,14 +63,12 @@
+ import 'data/repositories/chat_repository.dart';
+ import 'data/repositories/contact_repository.dart';
+ import 'data/repositories/listing_repository.dart';
+-import 'data/models/listing.dart';
+ import 'data/models/offer.dart';
+ import 'data/repositories/notification_repository.dart';
+ import 'data/repositories/offer_repository.dart';
+ import 'data/repositories/review_repository.dart';
+ import 'data/repositories/ilan_no_uretici.dart';
+ import 'data/models/notification.dart';
+-import 'domain/config.dart';
+ import 'data/services/listing_expiry_service.dart';
+ import 'screens/home_screen.dart';
+ import 'screens/login_screen.dart';
+diff -ru a/lib/screens/create_listing_screen.dart b/lib/screens/create_listing_screen.dart
+--- a/lib/screens/create_listing_screen.dart	2026-10-07 05:12:42.693980620 +0000
++++ b/lib/screens/create_listing_screen.dart	2026-10-07 05:12:42.695767984 +0000
+@@ -36,7 +36,6 @@
+ import 'widgets/foto_goruntuleyici.dart';
+ import '../core/validators.dart';
+ import '../core/teshis.dart';
+-import 'category_ui.dart';
+ import '../core/platform/yerel_gorsel.dart';
+ 
+ /// Müşteri — İlan Oluştur 3 adım (HTML vPost):
+diff -ru a/lib/screens/job_detail_screen.dart b/lib/screens/job_detail_screen.dart
+--- a/lib/screens/job_detail_screen.dart	2026-10-07 05:12:42.650219444 +0000
++++ b/lib/screens/job_detail_screen.dart	2026-10-07 05:12:42.652241481 +0000
+@@ -19,14 +19,12 @@
+ import '../data/models/listing.dart';
+ import '../data/models/teklif_talebi.dart' show IletisimTercihi;
+ import '../data/models/offer.dart';
+-import '../domain/config.dart';
+ import '../data/controllers/profile_controller.dart';
+ import '../data/models/provider_approval.dart';
+ import 'provider_status_screen.dart';
+ // ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
+ // ne `offerStatusUi` ne `tl` kullanılıyor — teklif durum kutusu
+ // kaldırıldı ve tutarlar `core/tutar_bicimi.dart`tan biçimleniyor.
+-import 'widgets/hc_widgets.dart';
+ import 'widgets/foto_goruntuleyici.dart';
+ import '../ui/ref_widgets.dart';
+ import '../domain/kullanici_konumu.dart';
+diff -ru a/lib/screens/jobs_screen.dart b/lib/screens/jobs_screen.dart
+--- a/lib/screens/jobs_screen.dart	2026-10-07 05:12:42.701602123 +0000
++++ b/lib/screens/jobs_screen.dart	2026-10-07 05:12:42.703191838 +0000
+@@ -41,7 +41,6 @@
+ import '../data/controllers/chat_controller.dart';
+ import 'teklif_istekleri_screen.dart';
+ import 'teklif_talebi_detay_screen.dart';
+-import '../ui/web_kenar_cubugu.dart';
+ 
+ // ── ⚠ KAZANILAN İŞ KARTINDA TEKLİF TUTARI — TEK STİL ──
+ //
+diff -ru a/lib/screens/login_screen.dart b/lib/screens/login_screen.dart
+--- a/lib/screens/login_screen.dart	2026-10-07 05:12:42.641747508 +0000
++++ b/lib/screens/login_screen.dart	2026-10-07 05:12:42.643652002 +0000
+@@ -2,7 +2,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ import 'package:flutter/foundation.dart';
+-import '../core/platform_kapilari.dart';
+ import '../core/sys_state.dart';
+ import '../core/telefon_bicimi.dart';
+ import '../core/validators.dart';
+@@ -12,8 +11,6 @@
+ import '../ui/ref_tokens.dart';
+ import '../ui/ref_widgets.dart';
+ import '../ui/web_panel.dart';
+-import '../data/remote/api_config.dart';
+-import '../core/teshis.dart';
+ import '../data/repositories/oturum_tercihi.dart';
+ import '../ui/panel_rotasi.dart';
+ 
+diff -ru a/lib/screens/my_listings_screen.dart b/lib/screens/my_listings_screen.dart
+--- a/lib/screens/my_listings_screen.dart	2026-10-07 05:12:42.676651861 +0000
++++ b/lib/screens/my_listings_screen.dart	2026-10-07 05:12:42.678486892 +0000
+@@ -4,7 +4,6 @@
+ import '../core/tutar_bicimi.dart';
+ import '../domain/hata_mesajlari.dart';
+ import 'widgets/hata_gosterimi.dart';
+-import 'widgets/ilan_no_etiketi.dart';
+ import 'package:provider/provider.dart';
+ import '../data/controllers/auth_controller.dart';
+ import '../data/controllers/listing_controller.dart';
+diff -ru a/lib/screens/offer_detail_screen.dart b/lib/screens/offer_detail_screen.dart
+--- a/lib/screens/offer_detail_screen.dart	2026-10-07 05:12:42.658902554 +0000
++++ b/lib/screens/offer_detail_screen.dart	2026-10-07 05:12:42.660899186 +0000
+@@ -19,7 +19,6 @@
+ import '../data/models/review.dart';
+ // ⚠ `status_ui.dart` importu KALDIRILDI (10 Eyl): bu ekranda artık
+ // `tl` kullanılmıyor, tutar `core/tutar_bicimi.dart`tan biçimleniyor.
+-import 'widgets/hc_widgets.dart';
+ import 'chat_screen.dart';
+ import 'review_screen.dart';
+ import '../domain/saglayici_ozeti.dart';
+@@ -30,7 +29,6 @@
+ import 'widgets/durum_seridi.dart';
+ import '../ui/ref_tokens.dart';
+ import '../ui/ref_widgets.dart';
+-import '../core/geri.dart';
+ import '../core/baglanti_modu.dart';
+ 
+ /// Müşteri — Teklif / Teklif Veren Profili (HTML vOffer):
+@@ -790,21 +788,6 @@
+       .join(' ');
+ }
+ 
+-/// Yorum sahibi maskesi: `A*** Y.` — ad maskeli, soyadın baş harfi.
+-String _yorumcuAdi(String? tamAd, {required bool acik}) {
+-  final t = (tamAd ?? '').trim();
+-  if (t.isEmpty) {
+-    return 'Hizmet Alan';
+-  }
+-  final p = t.split(RegExp(r'\s+')).where((k) => k.isNotEmpty).toList();
+-  if (acik) {
+-    return t;
+-  }
+-  final ad = p.first;
+-  final maskeli = '${ad[0]}${'*' * (ad.length - 1)}';
+-  return p.length > 1 ? '$maskeli ${p[1][0]}.' : maskeli;
+-}
+-
+ /// `%N olumlu yorum` — 4 ve 5 yıldızlı yorumların oranı.
+ /// Yorum yoksa `null` döner ve satır HİÇ çizilmez (uydurma yüzde yok).
+ /// Hizmet verenin TAMAMLANAN İŞ sayısı (API sözleşmesi §11).
+diff -ru a/lib/screens/profile_screen.dart b/lib/screens/profile_screen.dart
+--- a/lib/screens/profile_screen.dart	2026-10-07 05:12:42.632959204 +0000
++++ b/lib/screens/profile_screen.dart	2026-10-07 05:12:42.634844337 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ import 'package:flutter/foundation.dart';
+-import 'dart:convert';
+ import 'package:provider/provider.dart';
+ import '../core/sys_state.dart';
+ import '../core/telefon_bicimi.dart';
+@@ -17,12 +16,8 @@
+ import '../data/remote/api/legal_api.dart';
+ import '../data/remote/api_client.dart';
+ import '../data/remote/api_config.dart';
+-import 'package:image_picker/image_picker.dart';
+-import '../data/controllers/profile_controller.dart';
+ import 'role_switch_screen.dart';
+ import '../data/repositories/oturum_tercihi.dart';
+-import 'widgets/fotograf_kaynak_paneli.dart';
+-import '../core/platform/yerel_gorsel.dart';
+ import '../core/baglanti_modu.dart';
+ import 'widgets/profil_fotografi.dart';
+ 
+diff -ru a/lib/screens/register_screen.dart b/lib/screens/register_screen.dart
+--- a/lib/screens/register_screen.dart	2026-10-07 05:12:42.709806141 +0000
++++ b/lib/screens/register_screen.dart	2026-10-07 05:12:42.711735490 +0000
+@@ -2,7 +2,6 @@
+ import '../domain/form_mesajlari.dart';
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+-import '../core/platform_kapilari.dart';
+ import '../core/sys_state.dart';
+ import '../core/telefon_bicimi.dart';
+ import '../core/eposta_oneri.dart';
+diff -ru a/lib/screens/sonuclar_screen.dart b/lib/screens/sonuclar_screen.dart
+--- a/lib/screens/sonuclar_screen.dart	2026-10-07 05:12:42.624447827 +0000
++++ b/lib/screens/sonuclar_screen.dart	2026-10-07 05:12:42.626211622 +0000
+@@ -2,7 +2,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ 
+-import '../core/theme.dart';
+ import '../data/controllers/auth_controller.dart';
+ import '../data/controllers/region_controller.dart';
+ import '../data/controllers/review_controller.dart';
+diff -ru a/lib/screens/teklif_iste_screen.dart b/lib/screens/teklif_iste_screen.dart
+--- a/lib/screens/teklif_iste_screen.dart	2026-10-07 05:12:42.685225867 +0000
++++ b/lib/screens/teklif_iste_screen.dart	2026-10-07 05:12:42.687121337 +0000
+@@ -9,7 +9,6 @@
+ // ⚠ `IsZamani` enum'u burada tanımlı — `_isZamani` alanı için gerekli
+ // (`create_listing_screen.dart`taki AYNI import notu).
+ import '../data/models/listing.dart';
+-import '../data/models/review.dart';
+ import '../data/models/teklif_talebi.dart';
+ import '../data/remote/api_client.dart';
+ import '../data/remote/api/storage_api.dart';
+diff -ru a/lib/screens/teklif_talebi_detay_screen.dart b/lib/screens/teklif_talebi_detay_screen.dart
+--- a/lib/screens/teklif_talebi_detay_screen.dart	2026-10-07 05:12:42.667881312 +0000
++++ b/lib/screens/teklif_talebi_detay_screen.dart	2026-10-07 05:12:42.669859240 +0000
+@@ -721,9 +721,6 @@
+ 
+     if (benSaglayiciMi) {
+       final hizmetAlan = auth.accountById(talep.hizmetAlanId);
+-      final adGoster = acik
+-          ? (hizmetAlan?.name ?? 'Hizmet Alan')
+-          : maskeliAd(hizmetAlan?.name ?? 'Hizmet Alan');
+       // ⚠ Telefon YALNIZ hizmet alan "Telefon numaramı göster"
+       // SEÇTİYSE açılır — "Sadece uygulama içi mesajlaşma"
+       // seçiliyse teklif verilse bile telefon HİÇ açılmaz.
+diff -ru a/lib/screens/widgets/durum_rozeti.dart b/lib/screens/widgets/durum_rozeti.dart
+--- a/lib/screens/widgets/durum_rozeti.dart	2026-10-07 05:12:42.756090795 +0000
++++ b/lib/screens/widgets/durum_rozeti.dart	2026-10-07 05:12:42.757416766 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../ui/ref_tokens.dart';
+ 
+ /// ── ⚠ BEKLEME METNİ — TEK KAYNAK ──
+diff -ru a/lib/screens/widgets/hizmet_alan_ozet_satiri.dart b/lib/screens/widgets/hizmet_alan_ozet_satiri.dart
+--- a/lib/screens/widgets/hizmet_alan_ozet_satiri.dart	2026-10-07 05:12:42.718393889 +0000
++++ b/lib/screens/widgets/hizmet_alan_ozet_satiri.dart	2026-10-07 05:12:42.720276980 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../domain/hizmet_alan_ozeti.dart';
+ import '../../ui/ref_tokens.dart';
+ import '../../ui/ref_widgets.dart';
+diff -ru a/lib/screens/widgets/puan_dagilim_satiri.dart b/lib/screens/widgets/puan_dagilim_satiri.dart
+--- a/lib/screens/widgets/puan_dagilim_satiri.dart	2026-10-07 05:12:42.763167165 +0000
++++ b/lib/screens/widgets/puan_dagilim_satiri.dart	2026-10-07 05:12:42.764862951 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../ui/ref_tokens.dart';
+ import '../../ui/ref_widgets.dart';
+ 
+diff -ru a/lib/screens/widgets/saglayici_ozet_satiri.dart b/lib/screens/widgets/saglayici_ozet_satiri.dart
+--- a/lib/screens/widgets/saglayici_ozet_satiri.dart	2026-10-07 05:12:42.748610018 +0000
++++ b/lib/screens/widgets/saglayici_ozet_satiri.dart	2026-10-07 05:12:42.750002665 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../domain/saglayici_ozeti.dart';
+ import '../../ui/ref_tokens.dart';
+ import '../../ui/ref_widgets.dart';
+diff -ru a/lib/screens/widgets/teklif_aciklama_karti.dart b/lib/screens/widgets/teklif_aciklama_karti.dart
+--- a/lib/screens/widgets/teklif_aciklama_karti.dart	2026-10-07 05:12:42.734259044 +0000
++++ b/lib/screens/widgets/teklif_aciklama_karti.dart	2026-10-07 05:12:42.735779400 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../ui/ref_tokens.dart';
+ 
+ /// ── ⚠ TEKLİF AÇIKLAMASI KARTI — TEK ÇİZİM ──
+diff -ru a/lib/screens/widgets/teklif_rozeti.dart b/lib/screens/widgets/teklif_rozeti.dart
+--- a/lib/screens/widgets/teklif_rozeti.dart	2026-10-07 05:12:42.726707925 +0000
++++ b/lib/screens/widgets/teklif_rozeti.dart	2026-10-07 05:12:42.728670572 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../ui/ref_tokens.dart';
+ 
+ /// ── ⚠ TEKLİF ROZETİ — TEK KAYNAK ──
+diff -ru a/lib/screens/widgets/teklif_tutar_karti.dart b/lib/screens/widgets/teklif_tutar_karti.dart
+--- a/lib/screens/widgets/teklif_tutar_karti.dart	2026-10-07 05:12:42.771037660 +0000
++++ b/lib/screens/widgets/teklif_tutar_karti.dart	2026-10-07 05:12:42.772854986 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../core/tutar_bicimi.dart';
+ import '../../ui/ref_tokens.dart';
+ 
+diff -ru a/lib/screens/widgets/yeni_mesaj_seridi.dart b/lib/screens/widgets/yeni_mesaj_seridi.dart
+--- a/lib/screens/widgets/yeni_mesaj_seridi.dart	2026-10-07 05:12:42.740983003 +0000
++++ b/lib/screens/widgets/yeni_mesaj_seridi.dart	2026-10-07 05:12:42.742519276 +0000
+@@ -1,6 +1,5 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../core/theme.dart';
+ import '../../ui/ref_tokens.dart';
+ import '../../ui/ref_widgets.dart';
+ 
+diff -ru a/lib/ui/ref_widgets.dart b/lib/ui/ref_widgets.dart
+--- a/lib/ui/ref_widgets.dart	2026-10-07 05:12:42.562912524 +0000
++++ b/lib/ui/ref_widgets.dart	2026-10-07 05:12:42.564499731 +0000
+@@ -11,7 +11,6 @@
+ import '../data/services/share_service.dart';
+ import '../domain/profil_menusu.dart';
+ import 'web_destek_paneli.dart';
+-import 'web_kenar_cubugu.dart';
+ import 'web_panel.dart';
+ import 'web_header.dart';
+ import '../core/turkce_arama.dart';
