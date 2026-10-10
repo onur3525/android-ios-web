@@ -80,3 +80,11 @@ jobs:
         run: flutter build web --debug --base-href /android-ios-web/
       - name: Web push dosyaları çıktıda
         run: ls -la build/web/firebase-messaging-sw.js build/web/fcm_web.js build/web/fcm_yapilandirma.js
+
+      - name: Web derleme dosyalarini Artifact olarak yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: hizmetcep-web-debug
+          path: build/web/
+          if-no-files-found: error
+          retention-days: 7
