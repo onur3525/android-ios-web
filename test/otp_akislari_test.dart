@@ -259,10 +259,10 @@ void main() {
       _hesap(auth);
       final ch = auth.hesapKurtarmaKodGonder('05321110001');
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
-      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni456'), isNull);
+      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni4567'), isNull);
       expect(auth.currentAccount, isNull);
       // Kullanıcı yeni şifresiyle normal yoldan girer.
-      expect(auth.girisEposta('a@example.com', 'yeni456'), isNull);
+      expect(auth.girisEposta('a@example.com', 'yeni4567'), isNull);
     });
 
     test('yetki TEK KULLANIMLIK', () async {
@@ -270,16 +270,16 @@ void main() {
       _hesap(auth);
       final ch = auth.hesapKurtarmaKodGonder('05321110001');
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
-      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni456'), isNull);
+      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni4567'), isNull);
       expect(auth.kurtarmaSifreBelirle(d.yetki!, 'baska789'), isNotNull);
       // İkinci şifre işlenmedi.
-      expect(auth.girisEposta('a@example.com', 'yeni456'), isNull);
+      expect(auth.girisEposta('a@example.com', 'yeni4567'), isNull);
     });
 
     test('UYDURMA yetkiyle şifre değiştirilemez', () {
       final auth = _temizDepo();
       _hesap(auth);
-      expect(auth.kurtarmaSifreBelirle('uydurma', 'yeni456'), isNotNull);
+      expect(auth.kurtarmaSifreBelirle('uydurma', 'yeni4567'), isNotNull);
       expect(auth.girisEposta('a@example.com', 'abc123'), isNull);
     });
 
@@ -417,7 +417,7 @@ void main() {
       // Kod DOĞRU olsa bile yetki verilmez.
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
       expect(d.yetki, isNull);
-      expect(auth.kurtarmaSifreBelirle('uydurma', 'yeni456'), isNotNull);
+      expect(auth.kurtarmaSifreBelirle('uydurma', 'yeni4567'), isNotNull);
       // Var olan hesabın şifresi bozulmadı.
       expect(auth.girisEposta('a@example.com', 'abc123'), isNull);
     });
@@ -439,8 +439,8 @@ void main() {
       _hesap(auth, phone: '5321110002', email: 'b@example.com');
       final ch = auth.hesapKurtarmaKodGonder('05321110001');
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
-      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni456'), isNull);
-      expect(auth.girisEposta('a@example.com', 'yeni456'), isNull);
+      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni4567'), isNull);
+      expect(auth.girisEposta('a@example.com', 'yeni4567'), isNull);
       auth.logout();
       expect(auth.girisEposta('b@example.com', 'abc123'), isNull);
     });
@@ -457,7 +457,7 @@ void main() {
       final ch = auth.hesapKurtarmaKodGonder('05321110001');
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
       simdi = simdi.add(const Duration(minutes: 11));
-      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni456'), isNotNull);
+      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni4567'), isNotNull);
       // Eski şifre hâlâ geçerli.
       expect(auth.girisEposta('a@example.com', 'abc123'), isNull);
     });
@@ -467,7 +467,7 @@ void main() {
       _hesap(auth);
       final ch = auth.hesapKurtarmaKodGonder('05321110001');
       final d = await auth.hesapKurtarmaDogrula(ch.challengeId, '123456');
-      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni456'), isNull);
+      expect(auth.kurtarmaSifreBelirle(d.yetki!, 'yeni4567'), isNull);
       expect(auth.kurtarmaSifreBelirle(d.yetki!, 'ucuncu999'), isNotNull);
     });
   });

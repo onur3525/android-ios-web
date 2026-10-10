@@ -109,7 +109,7 @@ void main() {
   });
 
   group('Bildirimler', () {
-    test('teklif → ilan sahibine; seçim → seçilen ustaya; iade → kaybedene', () async {
+    test('teklif → ilan sahibine; seçim → seçilen ustaya; kaybedene İADE bildirimi YOK', () async {
       final l = (await listingCtl.publish(
           ownerId: cust, title: 'Boya', location: 'Konak, İzmir',
           desc: 'Boya işi var evet beş kelime')).listing!;
@@ -122,7 +122,10 @@ void main() {
       await offerCtl.selectOffer(listingId: l.id, offerId: o2.id, actorId: cust);
       expect(notifs.forUser('usta-2').map((n) => n.type),
           contains(NotifType.offerSelected));
-      expect(notifs.forUser(p1).map((n) => n.type), contains(NotifType.refund));
+      // ⚠ Ücretsiz model: bloke/iade yok. Backend de REFUND üretmez;
+      // kaybeden ustaya iade bildirimi GİTMEZ (tür eski kayıtlar için durur).
+      expect(notifs.forUser(p1).map((n) => n.type),
+          isNot(contains(NotifType.refund)));
     });
 
     test('iletişim açılınca KARŞI tarafa; süre dolunca ilan sahibine', () async {
@@ -133,6 +136,14 @@ void main() {
       expect(
           notifs.forUser(p1).where((n) => n.type == NotifType.contactOpened),
           isEmpty); // açan tarafa gitmez
+      // Backend gibi YALNIZ İLK açmada: ikinci açma bildirimi tekrarlamaz.
+      await contactCtl.openShared(t.offerId, actorId: cust);
+      expect(
+          notifs.forUser(cust).where((n) => n.type == NotifType.contactOpened),
+          hasLength(1));
+      expect(
+          notifs.forUser(p1).where((n) => n.type == NotifType.contactOpened),
+          isEmpty);
 
       // ListingExpiryService bir PORT bekler (MockOfferPort), controller değil.
       final expiry = ListingExpiryService(listings, w0.offerPort,

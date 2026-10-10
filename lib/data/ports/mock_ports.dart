@@ -444,7 +444,10 @@ class MockListingPort extends ListingPort {
     contacts.removeForOffers(offerIds);
     chats.removeForOffers(offerIds);
     offers.removeForListing(listingId);
-    listings.remove(listingId);
+    // ⚠ BACKEND İLE AYNI (11 Eki): ilan kaydı SİLİNMEZ, `userDeleted`
+    // durumuna geçer (backend: `USER_DELETED`). Açık listelerden durum
+    // filtresiyle düşer; yeni teklif `acceptsOffers` ile reddedilir.
+    listings.setStatus(listingId, ListingStatus.userDeleted);
     return null;
   }
 
@@ -762,20 +765,17 @@ class MockContactPort extends ContactPort {
       return null;
     }
 
-    // ── ⚠ "İletişim açıldı" BİLDİRİMİ KALDIRILDI (12 Eyl, kullanıcı
-    // isteği) ──
+    // ── "İletişim açıldı" BİLDİRİMİ — BACKEND İLE AYNI (11 Eki) ──
     //
-    // Haber değeri düşüktü: iletişimi açan taraf zaten ne yaptığını
-    // biliyor, karşı taraf da ekranda telefon numarasını ve mesaj
-    // düğmesini görüyor. Üstelik karşılıklı yazışma başlayınca ilk
-    // mesaj bildirimi aynı şeyi zaten haber veriyordu.
-    //
-    // ⚠ İLETİŞİMİ AÇMA İŞLEMİ DEĞİŞMEDİ: `contacts.open` ve
-    // idempotentlik aynen çalışır — kalkan yalnız BİLDİRİM.
-    //
-    // ⚠ `NotifType.contactOpened` SİLİNMEDİ: geçmişte gönderilmiş
-    // bildirimler hâlâ o türle kayıtlı ve yönlendirmesi duruyor; tür
-    // kalkarsa eski kayıtlar çözümlenemez.
+    // Backend iletişim İLK KEZ açıldığında KARŞI tarafa bir kez
+    // bildirim gönderir (refId = teklif id; açan tarafa gitmez).
+    // 12 Eyl'de yalnız mock'tan kaldırılmıştı; iki mod ayrışıyordu.
+    // `open` idempotent olduğu için ikinci açmada bildirim TEKRARLANMAZ
+    // (yukarıdaki erken dönüş). Metin ortak kaynaktan.
+    notifs?.push(
+        userId: actorId == o.providerId ? l.ownerId : o.providerId,
+        type: NotifType.contactOpened, refId: offerId,
+        title: kIletisimAcildiBaslik, body: iletisimAcildiGovde(l.title));
     return null;
   }
 }

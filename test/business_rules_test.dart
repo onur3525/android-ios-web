@@ -122,10 +122,11 @@ void main() {
     test('kapalı ilana teklif verilemez (cancelled/expired)', () async {
       final l1 = await yeniIlan();
       await listingCtl.delete(l1.id, actorId: cust);
-      // Silinen ilan kaydı TAMAMEN kaldırılır (MockListingPort.delete →
-      // listings.remove); teklif denemesi "ilan bulunamadı" ile reddedilir.
+      // Silinen ilan backend gibi USER_DELETED durumuna geçer (kayıt
+      // kaldırılmaz); kapalı ilana teklif "ilan kapalı" ile reddedilir.
+      expect(l1.status, ListingStatus.userDeleted);
       expect(await offerCtl.placeOffer(listingId: l1.id, providerId: p1, amount: 500, note: 'n'),
-          isA<NotFoundError>());
+          isA<ListingClosedError>());
       final l2 = await yeniIlan();
       await listingCtl.expire(l2.id, actorId: cust);
       expect(await offerCtl.placeOffer(listingId: l2.id, providerId: p2, amount: 500, note: 'n'),

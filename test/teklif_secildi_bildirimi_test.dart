@@ -189,12 +189,18 @@ void main() {
   });
 
   group('6 — ⚠ KALDIRILAN BİLDİRİMLER', () {
-    test('"İletişim açıldı" gönderilmez', () {
-      // Haber değeri düşüktü: açan taraf ne yaptığını biliyor, karşı
-      // taraf ekranda numarayı ve mesaj düğmesini görüyor.
+    test('"İletişim açıldı" BACKEND İLE AYNI: ortak metin, karşı tarafa', () {
+      // ⚠ 11 Eki (kullanıcı kararı): 12 Eyl'de yalnız mock'tan
+      // kaldırılmıştı, backend göndermeye devam ediyordu. Mock artık
+      // backend gibi gönderir; metin ortak kaynaktan gelir (port kendi
+      // metnini yazmaz). Davranış `pack3_test.dart`ta sınanır.
       final m = _kod('lib/data/ports/mock_ports.dart');
-      expect(m.contains("title: 'İletişim açıldı'"), isFalse);
-      expect(m.contains('NotifType.contactOpened'), isFalse);
+      expect(m.contains("title: 'İletişim açıldı'"), isFalse,
+          reason: 'port kendi metnini yazmamalı');
+      expect(m.contains('title: kIletisimAcildiBaslik'), isTrue);
+      expect(m.contains('iletisimAcildiGovde(l.title)'), isTrue);
+      expect(m.contains('actorId == o.providerId ? l.ownerId : o.providerId'),
+          isTrue, reason: 'bildirim KARŞI tarafa gitmeli');
     });
 
     test('⚠ İLETİŞİMİ AÇMA İŞLEMİ DEĞİŞMEDİ', () {

@@ -25,6 +25,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/core/validators.dart';
+import 'package:hizmetcep/domain/form_mesajlari.dart';
 
 void main() {
   group('1 — DESENLER ÖNCEDEN DERLENİR', () {
@@ -80,8 +81,15 @@ void main() {
     });
 
     test('şifre', () {
-      expect(Validators.password('a' * kPasswordMinLength), isNull);
-      expect(Validators.password('a' * (kPasswordMinLength - 1)), isNotNull);
+      // ⚠ Uzunluk sınırı, başka bir kurala TAKILMAYAN değerle sınanır:
+      // `'a' * 8` "aynı karakteri tekrar etmeyin" kuralına takılırdı.
+      // Karakterler birbirini tekrar etmez, ardışık ya da yaygın değil.
+      const ornek = 'k7m2q9x4w8';
+      final sinirda = ornek.substring(0, kPasswordMinLength);
+      final kisa = ornek.substring(0, kPasswordMinLength - 1);
+      expect(sinirda.length, kPasswordMinLength);
+      expect(Validators.password(sinirda), isNull);
+      expect(Validators.password(kisa), FormMesaj.sifreKisa);
     });
 
     test('kart numarası biçimi — dörtlü gruplama', () {

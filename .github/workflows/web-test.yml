@@ -24,8 +24,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # ⚠ DEMO YAYINI: debug + mock. Release derleme her zaman gerçek
+      # API modunda açılır ve API_BASE_URL ister; verilmezse açılışta
+      # ApiClient hata fırlatır ve sayfa boş kalır. Production web
+      # derlemesi ayrı iş akışındadır (web-production.yml).
       - name: Build Web
-        run: flutter build web --release --base-href "/android-ios-web/"
+        run: flutter build web --debug --dart-define=DATA_SOURCE=mock --base-href "/android-ios-web/"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

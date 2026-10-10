@@ -34,6 +34,11 @@ class ListingExpiryService {
     var n = 0;
     for (final l in _listings.all) {
       if (l.status != ListingStatus.active) continue; // completed/cancelled/expired dokunulmaz
+      // ⚠ TAMAMLANMIŞ İŞ (teklif seçilmiş) `active` durumunda KALIR (§24);
+      // süresi dolmuş sayılmaz ve sahibine "süre doldu" bildirimi gitmez.
+      // Tekil `expire` ve backend işi (`selected_offer_id IS NULL`) aynı
+      // kuralı uygular; toplu tarama da aynı tek kaynak yardımcıyı kullanır.
+      if (l.isTamamlanmisIs) continue;
       if (t.isBefore(l.expiresAt)) continue;        // 31s59dk → hâlâ açık
       if (!ListingStateMachine.canTransition(
           l.status, ListingStatus.expired)) continue;

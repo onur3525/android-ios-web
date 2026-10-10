@@ -4,6 +4,8 @@ import 'support/mock_wiring.dart';
 import 'package:hizmetcep/data/controllers/listing_controller.dart';
 import 'package:hizmetcep/data/controllers/offer_controller.dart';
 import 'package:hizmetcep/data/models/listing.dart';
+import 'package:hizmetcep/data/models/notification.dart';
+import 'package:hizmetcep/data/models/offer.dart';
 import 'package:hizmetcep/data/repositories/listing_repository.dart';
 import 'package:hizmetcep/data/services/listing_expiry_service.dart';
 import 'package:hizmetcep/domain/config.dart';
@@ -110,7 +112,32 @@ void main() {
     // ⚠ Tamamlanmış işe süre dolumu DOKUNMAZ; ilan ACTIVE kalır ama
     // tamamlanmışlık ilişkisi korunur (§24).
     expect(lc.isTamamlanmisIs, isTrue);
+    expect(lc.status, ListingStatus.active);
+    // Silme backend ile aynı: ilan kaldırılmaz, USER_DELETED durumuna geçer.
     expect(lx.status, ListingStatus.userDeleted);
-    expect(listings.byId(ld.id), isNull);
+    expect(listings.byId(ld.id)?.status, ListingStatus.userDeleted);
+  });
+
+  test('⚠ TAMAMLANMIŞ İŞ süre dolunca EXPIRED olmaz, sahibine "süre doldu" bildirimi GİTMEZ', () async {
+    final servis =
+        ListingExpiryService(listings, w0.offerPort, notifications: w0.notifs);
+    final lc = ilan();
+    await offerCtl.placeOffer(listingId: lc.id, providerId: p1, amount: 900, note: 'n');
+    final secilen = offerCtl.myOfferFor(lc.id, p1)!;
+    await offerCtl.selectOffer(listingId: lc.id, offerId: secilen.id, actorId: cust);
+    // Kontrol: tamamlanmamış ilan aynı taramada yine EXPIRED olur.
+    final lo = ilan();
+
+    expect(servis.sweep(now: t0.add(const Duration(hours: 100))), 1);
+    expect(lc.status, ListingStatus.active);
+    expect(lc.isTamamlanmisIs, isTrue);
+    expect(secilen.status, OfferStatus.selected);
+    expect(lo.status, ListingStatus.expired);
+    final sureDoldu = w0.notifs
+        .forUser(cust)
+        .where((n) => n.type == NotifType.listingExpired)
+        .map((n) => n.refId)
+        .toList();
+    expect(sureDoldu, [lo.id], reason: 'tamamlanmış işe süre bildirimi gitti');
   });
 }

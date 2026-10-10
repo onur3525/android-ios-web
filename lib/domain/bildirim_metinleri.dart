@@ -93,3 +93,16 @@ String yeniMesajGovde(String? metin) {
   final m = metin?.trim();
   return (m == null || m.isEmpty) ? 'Fotoğraf gönderildi.' : m;
 }
+
+/// ── "İLETİŞİM AÇILDI" BİLDİRİMİ — BACKEND İLE AYNI ──
+///
+/// ⚠ ÜRÜN KARARI (11 Eki, kullanıcı): mock mod backend ile uyumlu
+/// olmalı. Backend (`backend/src/routes/ilan.js`, iletişim açma ucu)
+/// iletişim İLK KEZ açıldığında KARŞI tarafa bu bildirimi bir kez
+/// gönderir; metin oradaki ile aynıdır. (12 Eyl'de yalnız mock'tan
+/// kaldırılmıştı; backend göndermeye devam ediyordu.)
+const String kIletisimAcildiBaslik = 'İletişim açıldı';
+
+/// [ilanBasligi] iletişimin açıldığı ilanın başlığıdır.
+String iletisimAcildiGovde(String ilanBasligi) =>
+    '"$ilanBasligi" ilanı için iletişim bilgileri paylaşıldı.';

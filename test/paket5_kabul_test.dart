@@ -98,6 +98,8 @@ void main() {
       final l = await ilan();
       await w.listingCtl.delete(l.id, actorId: cust, reason: 'vazgeçtim');
       expect(l.status, ListingStatus.userDeleted);
+      // Backend gibi: kayıt SİLİNMEZ, yalnız durumu değişir.
+      expect(w.listings.byId(l.id)?.status, ListingStatus.userDeleted);
       // Açık işler sekmesinin filtresi.
       final acikSekme = w.listings
           .byOwner(cust)
