@@ -6,14 +6,12 @@ import 'package:hizmetcep/data/controllers/listing_controller.dart';
 import 'package:hizmetcep/data/controllers/offer_controller.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/models/offer.dart';
-import 'package:hizmetcep/data/repositories/offer_repository.dart';
 import 'package:hizmetcep/domain/config.dart';
 import 'package:hizmetcep/domain/failures.dart';
 import 'package:hizmetcep/domain/listing_state_machine.dart';
 
 void main() {
   late MockWiring w0;
-  late OfferRepository offers;
   late OfferController offerCtl;
   late ContactController contactCtl;
   late ListingController listingCtl;
@@ -22,7 +20,6 @@ void main() {
   setUp(() {
     // Uygulamadaki DI ile aynı bileşim: controller'lar port üzerinden bağlanır.
     w0 = MockWiring();
-    offers = w0.offers;
     offerCtl = w0.offerCtl;
     contactCtl = w0.contactCtl;
     listingCtl = w0.listingCtl;

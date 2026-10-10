@@ -9,6 +9,7 @@ import '../data/controllers/region_controller.dart';
 import '../data/controllers/review_controller.dart';
 import '../data/remote/api/saglayici_api.dart';
 import '../data/remote/api_client.dart';
+import '../data/remote/api_error_mapper.dart';
 import '../data/remote/api_config.dart';
 import '../data/mock_saglayici_dizini.dart';
 import '../domain/saglayici_ozeti.dart';

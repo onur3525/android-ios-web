@@ -91,6 +91,14 @@ Dart dinleyicisi (`lib/core/deep_links.dart`), Android `MainActivity` ve iOS
 `ios/Runner/Runner.entitlements` (applinks) silindi. Uygulama artık hiçbir
 dış bağlantıyı yakalamaz; bu yüzden bu başlıkta açık risk kalmadı.
 
+Uygulama Android App Links (`autoVerify`) ya da iOS universal links
+kullanmadığı için `https://hizmetcep.com/.well-known/assetlinks.json`
+dosyasının yayımlanması şu an gerekmez. İleride https bağlantıları
+uygulamada açılacaksa bu dosya, uygulamayı imzalayan anahtarın SHA-256
+parmak iziyle (Play App Signing kullanılıyorsa Play Console'daki uygulama
+imzalama anahtarı) yayımlanmalı ve manifest'e `autoVerify="true"` ile https
+intent-filter eklenmelidir.
+
 ## 7. İstemci-only kurallar — SUNUCU BEKLİYOR
 
 Aşağıdaki kurallar YALNIZ uygulamada uygulanıyor. Değiştirilmiş bir

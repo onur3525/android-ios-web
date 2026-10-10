@@ -5,11 +5,11 @@ import '../data/services/search_service.dart';
 import '../screens/home_screen.dart' show hizmetSecildi;
 import 'ref_tokens.dart';
 import 'ref_widgets.dart';
+import 'web_oneri_dokunusu.dart';
 
 /// Hizmet arama alanlarının ipucu metni — TEK KAYNAK (ana sayfa başlık
 /// araması ve hizmet alanı ekranı aynı metni buradan okur).
 const String kHizmetAramaIpucu = 'Hangi hizmete ihtiyacınız var?';
-import 'web_oneri_dokunusu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// HEADER ARAMASI — MASAÜSTÜ WEB

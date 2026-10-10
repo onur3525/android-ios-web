@@ -1,11 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/mock_wiring.dart';
-import 'package:hizmetcep/data/controllers/contact_controller.dart';
 import 'package:hizmetcep/data/controllers/listing_controller.dart';
 import 'package:hizmetcep/data/controllers/offer_controller.dart';
 import 'package:hizmetcep/data/models/listing.dart';
-import 'package:hizmetcep/data/models/offer.dart';
 import 'package:hizmetcep/data/repositories/listing_repository.dart';
 import 'package:hizmetcep/data/services/listing_expiry_service.dart';
 import 'package:hizmetcep/domain/config.dart';
@@ -14,17 +12,15 @@ import 'package:hizmetcep/domain/failures.dart';
 void main() {
   late ListingRepository listings;
   late OfferController offerCtl;
-  late ContactController contactCtl;
   late ListingController listingCtl;
   late ListingExpiryService expiry;
-  const p1 = 'usta-1', p2 = 'usta-2', cust = 'musteri-1';
+  const p1 = 'usta-1', cust = 'musteri-1';
 
   late MockWiring w0;
   setUp(() {
     w0 = MockWiring();
     listings = w0.listings;
     offerCtl = w0.offerCtl;
-    contactCtl = w0.contactCtl;
     listingCtl = w0.listingCtl;
     // Süre kuralı servisi port üzerinden çalışır (mock modda istemcide).
     expiry = ListingExpiryService(listings, w0.offerPort);

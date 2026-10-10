@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hizmetcep/data/ports/mock_ports.dart';
 
 import 'support/mock_wiring.dart';
 import 'package:hizmetcep/data/controllers/chat_controller.dart';
@@ -13,9 +12,7 @@ import 'package:hizmetcep/data/repositories/auth_repository.dart';
 import 'package:hizmetcep/data/repositories/listing_repository.dart';
 import 'package:hizmetcep/data/repositories/notification_repository.dart';
 import 'package:hizmetcep/data/services/listing_expiry_service.dart';
-import 'package:hizmetcep/domain/config.dart';
 import 'package:hizmetcep/domain/failures.dart';
-import 'support/test_config.dart';
 
 void main() {
   late ListingRepository listings;

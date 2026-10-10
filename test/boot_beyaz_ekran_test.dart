@@ -467,7 +467,6 @@ void main() {
     });
 
     test('tokenizer runApp\'i BEKLETMEZ', () {
-      final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
     });
 
     // (Kaldırıldı, 4 Eki: 'platform ping ZAMAN AŞIMLI' ve 'tokenizer sonucu

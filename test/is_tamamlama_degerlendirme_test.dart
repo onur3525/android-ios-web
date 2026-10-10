@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/domain/config.dart';
 
-import 'support/kaynak_okuma.dart';
 
 /// Kaynak dosyayı okur — `incelenen_ilan_test` ile aynı yaklaşım.
 String read(String p) => File(p).readAsStringSync();

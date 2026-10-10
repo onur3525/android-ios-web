@@ -6,7 +6,6 @@ import 'package:http/testing.dart';
 import 'package:hizmetcep/data/remote/api_client.dart';
 import 'package:hizmetcep/data/remote/api_error_mapper.dart';
 import 'package:hizmetcep/data/remote/token_store.dart';
-import 'package:hizmetcep/domain/failures.dart';
 
 /// Bellek içi token deposu (gerçek Keychain testte kullanılmaz).
 class FakeTokenStore implements TokenStore {

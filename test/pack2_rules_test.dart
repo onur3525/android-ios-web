@@ -9,7 +9,6 @@ import 'package:hizmetcep/data/controllers/offer_controller.dart';
 import 'package:hizmetcep/data/controllers/review_controller.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/models/offer.dart';
-import 'package:hizmetcep/domain/config.dart';
 import 'package:hizmetcep/domain/failures.dart';
 
 /// Yorumsuz kaynak metni.
