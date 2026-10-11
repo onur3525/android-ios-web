@@ -100,9 +100,18 @@ export function cerez(ad, deger, { maxAgeSn, secure, path = '/' }) {
  * tek başına iki değer ekler.
  * Proxy'ye güvenilmiyorsa (0), başlıkta yeterli değer yoksa ya da seçilen
  * değer geçerli bir IP değilse SOKET ADRESİ kullanılır.
+ *
+ * ⚠ IPv4-EŞLENMİŞ IPv6 DÜZ IPv4'E ÇEVRİLİR. Çift yığınlı (`::`) dinleyen
+ * sunucuda IPv4 istemcinin soket adresi `::ffff:127.0.0.1` biçiminde gelir;
+ * aynı makine bir istekte `127.0.0.1`, başka bir istekte `::ffff:127.0.0.1`
+ * olarak yazılırsa hız sınırı sayacı İKİYE BÖLÜNÜR ve oturum/denetim
+ * kayıtları tutarsızlaşır. Çeviri, değer SEÇİLİP DOĞRULANDIKTAN SONRA
+ * yapılır: hangi değerin seçileceğini değiştirmez, yalnız yazımını
+ * tekleştirir. Diğer IPv6 adresleri olduğu gibi kalır.
  */
 export function istemciIp(req) {
-  const soket = req.socket?.remoteAddress || 'bilinmiyor';
+  const soketHam = req.socket?.remoteAddress;
+  const soket = soketHam ? ipBicimle(soketHam) : 'bilinmiyor';
   const hop = config.guvenilirProxySayisi;
   if (!hop) return soket;
   const baslik = req.headers?.['x-forwarded-for'];
@@ -112,7 +121,30 @@ export function istemciIp(req) {
   if (parcalar.length < hop) return soket;
   const aday = parcalar[parcalar.length - hop];
   if (aday.length > 64 || isIP(aday) === 0) return soket;
-  return aday;
+  return ipBicimle(aday);
+}
+
+/**
+ * Geçerli bir IP'yi tek yazıma indirir: IPv4-eşlenmiş IPv6
+ * (`::ffff:a.b.c.d`, `::ffff:7f00:1`, `0:0:0:0:0:ffff:…`) → `a.b.c.d`.
+ * IPv4 ve diğer IPv6 adresleri DEĞİŞMEZ; geçersiz değer de olduğu gibi
+ * döner (doğrulama çağıranın işidir).
+ */
+export function ipBicimle(ip) {
+  if (typeof ip !== 'string' || isIP(ip) !== 6) return ip;
+  let kanonik;
+  try {
+    // WHATWG URL, IPv6'yı kanonik biçime getirir; eşlenmiş adres her
+    // zaman `::ffff:XXXX:XXXX` olarak serileşir.
+    kanonik = new URL(`http://[${ip}]/`).hostname.slice(1, -1);
+  } catch {
+    return ip; // ör. bölge kimlikli (`fe80::1%eth0`) adres: dokunma
+  }
+  const m = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(kanonik);
+  if (!m) return ip;
+  const ust = parseInt(m[1], 16);
+  const alt = parseInt(m[2], 16);
+  return `${ust >> 8}.${ust & 255}.${alt >> 8}.${alt & 255}`;
 }
 
 /**

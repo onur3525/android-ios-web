@@ -152,6 +152,43 @@ test('A7 · soket adresi yoksa "bilinmiyor" (önceki davranış korunur)', () =>
   assert.equal(istemciIp({ headers: {} }), 'bilinmiyor');
 });
 
+// ═════ A8–A10. IPv4-eşlenmiş IPv6 tek yazıma iner ═════
+// Çift yığınlı sunucuda IPv4 istemcinin soket adresi `::ffff:a.b.c.d`
+// gelir. Aynı adres iki yazımla kaydedilirse hız sınırı sayacı bölünür.
+test('A8 · soket adresi: IPv4 aynen, IPv4-eşlenmiş IPv6 → IPv4, diğer IPv6 aynen', () => {
+  config.guvenilirProxySayisi = 0;
+  assert.equal(istemciIp(req(undefined, '127.0.0.1')), '127.0.0.1');
+  assert.equal(istemciIp(req(undefined, '::ffff:127.0.0.1')), '127.0.0.1');
+  assert.equal(istemciIp(req(undefined, '::FFFF:198.51.100.7')), GERCEK);
+  assert.equal(istemciIp(req(undefined, '::ffff:c633:6407')), GERCEK); // onaltılık yazım
+  assert.equal(istemciIp(req(undefined, '0:0:0:0:0:ffff:c633:6407')), GERCEK); // uzun yazım
+  assert.equal(istemciIp(req(undefined, '::1')), '::1');
+  assert.equal(istemciIp(req(undefined, '2001:db8::1')), '2001:db8::1');
+  // Eşlenmiş OLMAYAN v4 gömülü biçimler dönüştürülmez.
+  assert.equal(istemciIp(req(undefined, '64:ff9b::a00:1')), '64:ff9b::a00:1');
+  assert.equal(istemciIp(req(undefined, '::ffff:0:127.0.0.1')), '::ffff:0:127.0.0.1');
+});
+
+test('A9 · güvenilir konumdaki eşlenmiş değer IPv4\'e iner; seçim kuralı DEĞİŞMEZ', () => {
+  config.guvenilirProxySayisi = 1;
+  assert.equal(istemciIp(req(`${sahte(1)}, ::ffff:${GERCEK}`)), GERCEK);
+  // Sahte EN SOL değer eşlenmiş yazımla gelse de seçilmez.
+  assert.equal(istemciIp(req(`::ffff:${sahte(1)}, ${GERCEK}`)), GERCEK);
+  assert.equal(istemciIp(req(`::ffff:${sahte(1)}, ::ffff:${sahte(2)}, 2001:db8::1`)), '2001:db8::1');
+  config.guvenilirProxySayisi = 2;
+  assert.equal(istemciIp(req(`::ffff:${sahte(1)}, ::ffff:${GERCEK}, 130.211.0.1`)), GERCEK);
+  // Başlık yetersiz/geçersizse soket adresine düşülür; o da tekleştirilir.
+  assert.equal(istemciIp(req(`::ffff:${GERCEK}`, '::ffff:10.9.8.7')), '10.9.8.7');
+  config.guvenilirProxySayisi = 1;
+  assert.equal(istemciIp(req(`${GERCEK}, ::ffff:999.1.1.1`, '::ffff:10.9.8.7')), '10.9.8.7');
+});
+
+test('A10 · hop 0: eşlenmiş yazımlı sahte başlık da yok sayılır', () => {
+  config.guvenilirProxySayisi = 0;
+  assert.equal(istemciIp(req(`::ffff:${GERCEK}`, '::ffff:10.9.8.7')), '10.9.8.7');
+  assert.equal(istemciIp(req(`::ffff:${sahte(1)}, ::ffff:${GERCEK}`, '10.9.8.7')), '10.9.8.7');
+});
+
 // ═════ C. Hız sınırları sahte başlıkla aşılamaz ═════
 test('C1 · kullanıcı girişi (15 dk / 30): en sol değer her seferinde değişse de 31. istek 429', async () => {
   config.guvenilirProxySayisi = 1;

@@ -180,7 +180,18 @@ void main() {
       // ⚠ GÖSTERİM: 9 Eyl'de ortalı sade yazıya inmişti; 12 Eyl'de
       // (kullanıcı isteği) İLAN AKIŞIYLA AYNI ortak şeride geçti —
       // yeşil zemin, tik, "Görüntüle". Yıldızlı kart geri GELMEDİ.
-      final varken = _pencere(k, '] else', 'class ');
+      //
+      // ⚠ PENCERE YORUM DALINDAN BAŞLAR. Dosyada ilk `] else` yorum
+      // bölümünde değil, yukarıdaki reddedildi/süresi doldu zincirinde
+      // geçiyor; aramayı oradan başlatmak testi YANLIŞ bölüme
+      // baktırıyordu. "Varken" dalı, `if (yorum == null)` kapısının
+      // kendi `] else` kolundan sonraki ilk sınıfa kadar okunur.
+      final dal = k.substring(k.indexOf('if (yorum == null)'));
+      final varken = _pencere(dal, '] else', 'class ');
+      expect(varken.contains("'Yorum Yaz'"), isFalse,
+          reason: 'pencere yorum yokken dalına taşmış');
+      expect(varken.contains('onTap: onYorumYaz'), isTrue,
+          reason: 'pencere yorum dalını kapsamıyor');
       expect(
           varken.contains(
               "DurumSeridi('Yorum yapıldı',\n                    aksiyon: 'Görüntüle')"),
