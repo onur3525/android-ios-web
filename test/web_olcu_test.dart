@@ -19,7 +19,12 @@ void main() {
       expect(ekranSinifiFor(320), EkranSinifi.mobil);
       expect(ekranSinifiFor(599), EkranSinifi.mobil);
       expect(ekranSinifiFor(600), EkranSinifi.tablet);
-      expect(ekranSinifiFor(1023), EkranSinifi.tablet);
+      // Laptop eşiği 900 (Chrome "Masaüstü sitesi" 980 px bildirir;
+      // bkz. `Kirilma.laptop`).
+      expect(Kirilma.laptop, 900);
+      expect(ekranSinifiFor(899), EkranSinifi.tablet);
+      expect(ekranSinifiFor(900), EkranSinifi.laptop);
+      expect(ekranSinifiFor(980), EkranSinifi.laptop);
       expect(ekranSinifiFor(1024), EkranSinifi.laptop);
       expect(ekranSinifiFor(1439), EkranSinifi.laptop);
       expect(ekranSinifiFor(1440), EkranSinifi.masaustu);

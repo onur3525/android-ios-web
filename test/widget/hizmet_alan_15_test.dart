@@ -194,8 +194,14 @@ void main() {
           reason: 'marka splash yeterince görünmeli');
       expect(minMs, lessThanOrEqualTo(3000));
       expect(maxMs, greaterThan(minMs));
-      // Kilitlenmeyi önlemek için üst sınır KISA tutulmalı.
-      expect(maxMs, lessThanOrEqualTo(6000));
+      // Kilitlenmeyi önlemek için üst sınır sınırlı tutulmalı.
+      //
+      // ⚠ 6000 → 9000 (MainActivity açıklaması): kötü ağda açılış
+      // bütçesi (config + katalog + ağ + oturum) ~6300-6800 ms tutuyor;
+      // 5000/6000 ms'lik fail-safe `bootReady` gelmeden splash'ı
+      // bırakıyor ve logo "küçülüp" sonra uygulama açılıyordu. Sınır
+      // yine SONLU ve 10 sn'nin altında: sonsuz kilitlenme imkânsız.
+      expect(maxMs, lessThanOrEqualTo(9000));
     });
 
     test('Dart: bootReady HER YOLDA gönderilir (finally)', () {
@@ -430,7 +436,13 @@ void main() {
     // alt panel açılıyor ve kullanıcı seçiyor — Fotoğraf Çek ·
     // Galeriden Yükle · Fotoğrafı Kaldır. Kamera artık BEKLENEN
     // davranıştır.
-    final p = read('lib/screens/profile_screen.dart');
+    //
+    // ⚠ TEK KAYNAK: bileşen `profile_screen` içinden ortak
+    // `widgets/profil_fotografi.dart`a taşındı; Profil ekranı onu
+    // çağırır (Profil Bilgilerim de aynı sınıfı kullanır).
+    expect(read('lib/screens/profile_screen.dart').contains('ProfilFotografi('),
+        isTrue);
+    final p = read('lib/screens/widgets/profil_fotografi.dart');
     expect(p.contains('ic_cam.svg'), isTrue);
     expect(p.contains('ImageSource.gallery'), isTrue);
     expect(p.contains('ImageSource.camera'), isTrue,

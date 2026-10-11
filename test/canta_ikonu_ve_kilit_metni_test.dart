@@ -66,9 +66,30 @@ void main() {
     });
 
     test('"iş tamamladı" yüzeylerinin hepsinde çanta kullanılıyor', () {
+      // ⚠ TEK KAYNAK: "iş tamamladı" satırı artık ortak bileşenlerde
+      // çiziliyor (`SaglayiciOzetSatiri`, `SahipKarti`,
+      // `HizmetAlanOzetSatiri`). Ekran çantayı ya KENDİSİ çizer ya da
+      // bu bileşenlerden birini çağırır; bileşenlerin hepsi çanta
+      // kullanmak ZORUNDA.
+      const bilesenler = <String, String>{
+        'SaglayiciOzetSatiri(':
+            'lib/screens/widgets/saglayici_ozet_satiri.dart',
+        'SahipKarti(': 'lib/screens/widgets/detay_karti_parcalari.dart',
+        'HizmetAlanOzetSatiri(':
+            'lib/screens/widgets/hizmet_alan_ozet_satiri.dart',
+      };
+      bilesenler.forEach((_, dosya) {
+        final k = _kodu(dosya);
+        expect(k.contains('assets/svg/ic_briefcase.svg'), isTrue,
+            reason: '$dosya hâlâ eski ikonu kullanıyor');
+        expect(k.contains('assets/svg/ic_shieldok.svg'), isFalse,
+            reason: '$dosya içinde kalkan kalmış');
+      });
       for (final yol in _isTamamladiEkranlari) {
-        expect(_kodu(yol).contains('assets/svg/ic_briefcase.svg'), isTrue,
-            reason: '$yol hâlâ eski ikonu kullanıyor');
+        final k = _kodu(yol);
+        final cantaVar = k.contains('assets/svg/ic_briefcase.svg') ||
+            bilesenler.keys.any(k.contains);
+        expect(cantaVar, isTrue, reason: '$yol hâlâ eski ikonu kullanıyor');
       }
     });
 

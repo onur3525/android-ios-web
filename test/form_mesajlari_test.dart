@@ -114,11 +114,17 @@ void main() {
       // ── ÜRÜN KARARI (madde 3) ──
       //
       // Teklif verme ekranından açıklama alanı, karakter sayacı ve
+      //
+      // ⚠ SONRAKİ KARAR (12 Eyl, kullanıcı isteği): teklif NOTU geri
+      // geldi — ama İSTEĞE BAĞLI ("Notunuz (isteğe bağlı)"). Kaldırılan
+      // zorunlu açıklama doğrulaması ve 1000'lik sayaç geri GELMEDİ;
+      // not boşken düğme pasifleşmez.
       final j = _kod('lib/screens/job_detail_screen.dart');
       expect(j.contains('_noteError'), isFalse,
           reason: 'açıklama doğrulaması geri gelmiş');
-      expect(j.contains('_note.text'), isFalse,
-          reason: 'açıklama alanı geri gelmiş');
+      expect(j.contains("labelText: 'Notunuz (isteğe bağlı)'"), isTrue);
+      expect(j.contains('_note.text.trim().isEmpty'), isFalse,
+          reason: 'not zorunlu hâle getirilmiş');
       expect(j.contains(r'/ 1000'), isFalse, reason: 'karakter sayacı kalmış');
       // ⚠ Teklif TUTARI korunur.
       expect(j.contains('_amtError'), isTrue);

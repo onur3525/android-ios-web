@@ -81,7 +81,9 @@ void main() {
     test('⚠ ELLE KURULAN KONUM METNİ KALMADI', () {
       // Özetler de kendi metnini kurmamalı.
       final ha = _kodu('lib/domain/hizmet_alan_ozeti.dart');
-      expect(ha.contains('konumMetni(adres)'), isTrue);
+      // Mahalle de gösterilir (`mahalleDahil: true`); biçim yine
+      // tek kaynaktan.
+      expect(ha.contains('konumMetni(adres'), isTrue);
       expect(ha.contains(r"'${adres.district} / ${adres.city}'"), isFalse,
           reason: 'özet kendi biçimini kuruyor');
     });

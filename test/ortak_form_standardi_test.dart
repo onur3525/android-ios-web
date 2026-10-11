@@ -216,8 +216,15 @@ void main() {
       expect(w.contains('refYerTutucu(hint!, zorunlu: zorunlu)'), isFalse,
           reason: 'RefTextField adı hâlâ kutunun içine yazıyor');
       // Etiket iki bileşende de kutunun ÜSTÜNDE çiziliyor.
-      expect(w.contains('RefFieldLabel(hint, zorunlu: zorunlu, ilk: true)'),
-          isTrue, reason: 'RefFormField etiketi çizmiyor');
+      // ⚠ `RefFormField` ayrı `etiket` alabilir (verilmezse `hint`);
+      // ilan kayıt adımı için etiket kapatılabilir (`etiketGoster`,
+      // varsayılan AÇIK).
+      expect(
+          w.contains(
+              'if (etiketGoster) RefFieldLabel(etiket ?? hint, zorunlu: zorunlu, ilk: true)'),
+          isTrue,
+          reason: 'RefFormField etiketi çizmiyor');
+      expect(w.contains('this.etiketGoster = true,'), isTrue);
       expect(w.contains('RefFieldLabel(ad, zorunlu: zorunlu, ilk: true)'),
           isTrue, reason: 'RefTextField etiketi çizmiyor');
     });
@@ -279,8 +286,10 @@ void main() {
       // eder; anlam korunur, yalnız görsel tekrar gider.
       final w = _kod('lib/ui/ref_widgets.dart');
       expect(w.contains('this.zorunlu = false'), isTrue);
+      // Biçim örneği kutunun içinde (`yerTutucu`), alan adı etikette.
       final f = _kod('lib/screens/forgot_password_screen.dart');
-      expect(f.contains("hint: '5XX XXX XX XX'"), isTrue);
+      expect(f.contains("etiket: 'Telefon'"), isTrue);
+      expect(f.contains("yerTutucu: '5XX XXX XX XX'"), isTrue);
     });
   });
 }

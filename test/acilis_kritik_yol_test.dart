@@ -139,10 +139,12 @@ void main() {
     test('geri çağrı NAVİGASYON ÇAĞRISINDAN SONRA kaydedilir', () {
       // Öncesinde kaydedilirse hedef rotayı içermeyen bir karenin
       // sonunda tetiklenir ve splash erken kalkar.
-      final i = sp.indexOf("BootLog.olay('NAVIGATION_START', '/home')");
+      // ⚠ Hedef sabite alındı: `const anonimHedef = '/home';`.
+      expect(sp.contains("const anonimHedef = '/home';"), isTrue);
+      final i = sp.indexOf("BootLog.olay('NAVIGATION_START', anonimHedef)");
       expect(i, greaterThan(0));
       final iCagri = sp.indexOf('pushReplacementNamed', i);
-      final iKayit = sp.indexOf("_navSonrasiKareyiBekle('/home')", i);
+      final iKayit = sp.indexOf('_navSonrasiKareyiBekle(anonimHedef)', i);
       expect(iCagri, greaterThan(i));
       expect(iKayit, greaterThan(iCagri));
     });

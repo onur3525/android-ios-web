@@ -44,12 +44,12 @@ void main() {
       for (final a in kKategoriAileleri) {
         uyeler.addAll(a);
       }
-      // ⚠ 41 → 42: kombi ikiye ayrıldı, ikisi de ısıtma ailesinde.
-      expect(uyeler.length, 42);
-      // ⚠ TEKİL SAYI DA 42: kombi iki kategoriye ayrıldı ve İKİSİ DE
-      // ısıtma ailesinde. Bu iddia tekrarı yakalar — sayı listeyle
-      // aynı olmalı.
-      expect(uyeler.toSet().length, 42, reason: 'bir kategori iki ailede');
+      // ⚠ 41 → 42 → 41: kilitli katalogda ayrı 'Kombi Montaj'
+      // kategorisi yok (kombi montajı 'Doğalgaz'da); aileden düştü.
+      // Diğer üç eski ad güncel karşılığıyla değişti.
+      expect(uyeler.length, 41);
+      // ⚠ TEKİL SAYI DA aynı: bu iddia tekrarı yakalar.
+      expect(uyeler.toSet().length, 41, reason: 'bir kategori iki ailede');
       for (final c in uyeler) {
         expect(kCategoryTree.containsKey(c), isTrue, reason: '$c katalogda yok');
       }
@@ -149,7 +149,8 @@ void main() {
     });
 
     test('kapı ve kilit aynı ailede', () {
-      expect(aileEslesir('Kapı Montaj ve Tamir', 'Kapı Açma'), isTrue);
+      // ⚠ Kapı kategorisinin güncel adı 'Kapı Sistemleri'.
+      expect(aileEslesir('Kapı Sistemleri', 'Kapı Açma'), isTrue);
     });
   });
 

@@ -40,7 +40,15 @@ void main() {
     const ornekler = [
       '3. Sok. Sk.', '3 sok.', '3 Sokak', '3065 sok. Sk',
       'Lale sok', 'Lale Sok.', 'Lale Sk.', 'Lale sok cad',
-      'Lale Caddesi', 'Lale Cd.', 'Lale Mahallesi', 'Lale Mh.',
+      'Lale Caddesi', 'Lale Cd.',
+      // ⚠ 'Lale Mahallesi' / 'Lale Mh.' TEK BAŞINA buradan çıktı:
+      // modüldeki ürün kuralı "MAHALLE TEK BAŞINA ADRES DEĞİLDİR"
+      // (il/ilçe/mahalle ilanın konum alanında zaten görünür;
+      // regresyon testi 'Karşıyaka / Girne Mahallesi' serbest). Bu iki
+      // örnek o karardan önce yazılmıştı ve onunla çelişiyordu. Mahalle
+      // İKİNCİ bir işaretle birlikte maskelenir — aşağıdaki
+      // 'B2 — MAHALLE + İKİNCİ İŞARET' grubu.
+      'Lale Mahallesi No 5', 'Lale Mh. Gül Sk.',
       'No:25', 'No 25', 'No.25', 'Numara 25', 'Kapı No 25', '25 numara',
       'D4', 'D:4', 'D.4', 'Daire 4', 'Dai 4', 'Dai4', 'DAİRE 4',
       '4. Daire', 'B Blok', 'X Apartmanı', 'X Sitesi',
@@ -48,6 +56,16 @@ void main() {
     for (final t in ornekler) {
       test('yakalanır: $t', () => expect(yakalandi(t), isTrue));
     }
+  });
+
+  group('B2 — MAHALLE + İKİNCİ İŞARET', () {
+    test('mahalle tek başına SERBEST, ikinci işaretle MASKELİ', () {
+      // Kural modülde: mahalle ZAYIF işarettir (bkz. `_zayif`).
+      expect(yakalandi('Lale Mahallesi'), isFalse);
+      expect(yakalandi('Lale Mh.'), isFalse);
+      expect(yakalandi('Lale Mahallesi, 3. Daire'), isTrue);
+      expect(yakalandi('LALE MAHALLESİ, KAT 2'), isTrue);
+    });
   });
 
   group('C — TARİFLİ KONUM', () {
@@ -186,8 +204,13 @@ void main() {
     test('⚠ 5) HİZMET VEREN KENDİ TEKLİF NOTUNU HAM GÖRÜR', () {
       // `job_detail_screen`'de hizmet veren kendi teklifini görür.
       // Kendi notu maskelenmez; maskelenen YALNIZ ilan açıklamasıdır.
+      //
+      // ⚠ Not artık ortak "Notunuz" kartında (`TeklifAciklamaKarti`,
+      // 12 Eyl) çiziliyor; metin yine HAM geçer.
       final jd = kod('lib/screens/job_detail_screen.dart');
-      expect(jd.contains('Text(mine.note,'), isTrue,
+      expect(
+          jd.contains("baslik: 'Notunuz', metin: mine.note.trim())"),
+          isTrue,
           reason: 'kendi not gösterimi kalkmış');
       expect(jd.contains('maskele(mine.note'), isFalse);
       expect(jd.contains('gorunenMetin(mine.note'), isFalse);

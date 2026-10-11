@@ -76,7 +76,11 @@ void main() {
     test('arama önerisi yönlendiricisi rol sözleşmesine uyar', () {
       final i = home.indexOf('void hizmetSecildi(');
       expect(i, greaterThan(0));
-      final govde = home.substring(i, i + 1200);
+      // Gövde fonksiyonun KAPANIŞINA kadar alınır (sabit karakter
+      // penceresi açıklamalar büyüdükçe kuralı dışarıda bırakıyordu).
+      final son = home.indexOf('\n}\n', i);
+      expect(son, greaterThan(i), reason: 'fonksiyon sonu bulunamadı');
+      final govde = home.substring(i, son);
       // Müşteri rolü varsa korumalı form; yoksa public taslak formu.
       expect(govde.contains('roles.contains(Role.customer)'), isTrue);
       expect(govde.contains('PreLoginListingRoute.name'), isTrue);

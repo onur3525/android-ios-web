@@ -146,7 +146,8 @@ void main() {
   group('KATALOG İKİ SEVİYELİDİR', () {
     test('54 ana kategori, her birinin alt hizmeti var', () {
       // ⚠ 54 → 55: kombi ikiye ayrıldı (Montaj + Servis).
-      expect(kTreeCategories.length, 63);
+      // ⚠ Kilitli katalog: 166 ana kategori.
+      expect(kTreeCategories.length, 166);
       for (final c in kTreeCategories) {
         expect(kCategoryTree[c], isNotEmpty, reason: '$c alt hizmetsiz');
       }

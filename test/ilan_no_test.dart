@@ -50,7 +50,13 @@ void main() {
       // ⚠ TEST HATASIYDI: `_ilan(r1)` iki kez çağrılınca İKİNCİ
       // ilan üretiliyor ve numara bir artıyordu. İlk ilanlar bir kez
       // üretilip karşılaştırılır.
+      //
+      // ⚠ SAYAÇ TEK VE `static` (ürün kararı, 12 Eyl): ilan ve talep
+      // AYNI diziden numara alır; yeni depo açmak sayacı sıfırlamaz.
+      // Determinizm, testin sayacı kendisinin başa almasıyla ölçülür.
+      IlanNoUretici.sifirlaTestIcin();
       final ilk1 = _ilan(ListingRepository());
+      IlanNoUretici.sifirlaTestIcin();
       final ilk2 = _ilan(ListingRepository());
       expect(ilk1.ilanNo, ilk2.ilanNo);
       expect(ilk1.ilanNo, '10458231');
@@ -293,16 +299,20 @@ void main() {
     });
 
     test('numara BOŞSA hiçbir şey çizilmez', () {
+      // ⚠ Bileşen artık numarayı doğrudan alır (`IlanNoEtiketi(no)`).
       final w = _kod('lib/screens/widgets/ilan_no_etiketi.dart');
       expect(w.contains('SizedBox.shrink()'), isTrue);
-      expect(w.contains('listing.ilanNo.trim().isEmpty'), isTrue);
+      expect(w.contains('no.trim().isEmpty'), isTrue);
     });
 
     test('etiket İKİNCİL ölçüde — başlığın önüne geçmez', () {
       final w = _kod('lib/screens/widgets/ilan_no_etiketi.dart');
-      expect(w.contains('size: RF.s12'), isTrue);
+      // ⚠ DAHA DA SOLUK (kullanıcı isteği: "hafif silik okunabilir
+      // olsun") — her kartta göründüğü için 12 → 11, textSoft →
+      // greyLight. İkincillik kuralı korunur, yalnız daha sıkı.
+      expect(w.contains('size: RF.s11'), isTrue);
       expect(w.contains('weight: RF.w400'), isTrue);
-      expect(w.contains('color: RC.textSoft'), isTrue);
+      expect(w.contains('color: RC.greyLight'), isTrue);
     });
   });
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/data/arama_es_anlamlilari.dart';
 import 'package:hizmetcep/data/category_tree.dart';
+import 'package:hizmetcep/core/turkce_arama.dart';
 import 'package:hizmetcep/data/services/search_service.dart';
 
 /// KATALOG YAPISI — 58 ana kategori · 517 alt hizmet.
@@ -46,7 +47,11 @@ void main() {
       // ⚠ 1541 → 1569 → 1592: ilk turda 28 hizmet, ikinci turda
       // "muhtemelen zaten var" (6) ve "mantıklı kategori bulunan"
       // (17, Ev Tamiri hariç) toplam 23 hizmet daha eklendi.
-      expect(kTreeServices.length, 1592);
+      // ⚠ `kTreeServices` katalogdaki her hizmetin (kategori, hizmet)
+      // satırıdır — toplamla AYNI olmak zorunda. 1592 yazılıydı; kilitli
+      // katalog 1587 hizmettir (başlık notu da 1587 der).
+      expect(kTreeServices.length, toplam);
+      expect(kTreeServices.length, 1587);
     });
 
 
@@ -171,13 +176,18 @@ void main() {
     test('Isıtma YALNIZ ısıtma hizmetleri içerir', () {
       // ⚠ KATALOG GENİŞLEDİ: liste sabit değil. Asıl denetim şu —
       final isitma = kCategoryTree['Isıtma Sistemleri']!;
+      // ⚠ Katalog genişleyince ilk sıralara petek işleri girdi; sıra
+      // anlık görüntüdür. Eski üç hizmet de kategoride DURUYOR.
       expect(isitma.take(5), [
         'Petek Temizliği',
         'Petek Montajı',
-        'Yerden Isıtma',
-        'Şofben Tamiri',
-        'Termosifon Tamiri',
+        'Petek Havası Alma',
+        'Petek Vana Değişimi',
+        'Termostatik Vana Montajı',
       ]);
+      for (final h in const ['Yerden Isıtma', 'Şofben Tamiri', 'Termosifon Tamiri']) {
+        expect(isitma, contains(h));
+      }
       for (final h in isitma) {
         expect(h.contains('Kombi'), isFalse, reason: h);
         expect(h.contains('Doğalgaz'), isFalse, reason: h);
@@ -201,6 +211,15 @@ void main() {
         'Mutfak ve Banyo',
         'Isıtma Sistemleri Servisi',
         'Halı ve Koltuk Yıkama',
+        // ⚠ ÜÇÜNCÜ ADLANDIRMA TURU (166 kategorilik katalog):
+        //   · 'Cam Balkon Sistemleri' → cam balkon artık
+        //     'Cam ve Ayna Hizmetleri'nin HİZMETİ,
+        //   · 'Kombi Montaj' → kombi montaj işleri 'Doğalgaz' altında,
+        //   · 'Kapı Montaj ve Tamir' → iç kapı 'Mobilya Yapım ve
+        //     Montaj', çelik kapı 'Kapı Sistemleri'.
+        'Cam Balkon Sistemleri',
+        'Kombi Montaj',
+        'Kapı Montaj ve Tamir',
       ]) {
         expect(kCategoryTree.containsKey(eski), isFalse, reason: eski);
       }
@@ -218,16 +237,15 @@ void main() {
         'Beyaz Eşya Servisi',
         'Fayans ve Seramik Döşeme',
         'Zemin Kaplama',
-        'Cam Balkon Sistemleri',
+        'Cam ve Ayna Hizmetleri',
         'PVC ve Alüminyum Doğrama',
         'Demir Doğrama ve Kaynak',
         'Bahçe ve Peyzaj',
         'Marangozluk ve Ahşap İşleri',
         'Mutfak Tadilat ve Dolap',
         'Banyo Tadilat ve Montaj',
-        'Kombi Montaj',
         'Kombi Servis',
-        'Kapı Montaj ve Tamir',
+        'Kapı Sistemleri',
         'Alçı ve Sıva İşleri',
         'Isıtma Sistemleri',
         'Halı Yıkama',
@@ -322,10 +340,10 @@ void main() {
       // hâlâ eski kısa adı yazar; alias olmasaydı kategoriyi
       // bulamazdı.
       for (final (eski, yeni) in [
-        ('kombi', 'Kombi Montaj'),
+        ('kombi', 'Kombi Servis'),
         ('yazılım', 'Yazılım ve Web Hizmetleri'),
         ('banyo', 'Banyo Tadilat ve Montaj'),
-        ('kapı', 'Kapı Montaj ve Tamir'),
+        ('kapı', 'Kapı Sistemleri'),
         ('mutfak', 'Mutfak Tadilat ve Dolap'),
         ('güzellik', 'Güzellik ve Bakım Hizmetleri'),
         ('fotoğraf', 'Fotoğraf Çekimi'),
@@ -347,8 +365,23 @@ void main() {
       // ⚠ Katalog genişleyince "te" ile başlayan hizmet 3'ten 10'a
       // çıktı; pencere de büyütüldü. Kural aynı: prefix eşleşmeler
       // eş anlamlı eşleşmelerin ÖNÜNDE.
+      //
+      // ⚠ PENCERE SABİT DEĞİL, PREFIX BLOĞUNUN KENDİSİ: 1587 hizmetlik
+      // katalogda "te" ile başlayan sonuç 12'yi aştı (lider hizmetler
+      // de öne çıkıyor). Kural aynen denetlenir: sonuçların başı
+      // KESİNTİSİZ bir prefix bloğudur ve beklenenler o bloğun
+      // İÇİNDEDİR — eş anlamlı/iç eşleşme bloğun önüne geçemez.
       final r = SearchService.services('te');
-      final ilk8 = r.take(12).map((h) => h.label).toList();
+      final ilk8 = r
+          .takeWhile((h) => turkceNormalize(h.label).startsWith('te'))
+          .map((h) => h.label)
+          .toList();
+      expect(ilk8, isNotEmpty);
+      expect(
+          r.skip(ilk8.length).every(
+              (h) => !turkceNormalize(h.label).startsWith('te')),
+          isTrue,
+          reason: 'prefix eşleşme bloğun DIŞINA düşmüş');
       // ⚠ Ana kategori adı 'Temizlik Hizmetleri' oldu; alt hizmetler
       // değişmedi.
       for (final beklenen in [

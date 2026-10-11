@@ -30,13 +30,25 @@ void main() {
   final pr = _kodu('lib/screens/provider_reviews_screen.dart');
 
   group('1 — DAĞILIM ÇUBUĞU DOLAR', () {
+    // ⚠ TEK KAYNAK: çubuk ortak `PuanDagilimSatiri` bileşenine
+    // taşındı (teklif detayındaki kopya yüzde yazıp çubuğu hiç
+    // doldurmuyordu). Ekran bileşeni çağırır; kurallar bileşende.
+    final d = _kodu('lib/screens/widgets/puan_dagilim_satiri.dart');
+
+    test('ekran ortak satırı kullanır', () {
+      expect(my.contains('PuanDagilimSatiri('), isTrue);
+      expect(my.contains('toplam: _count'), isTrue);
+    });
+
     test('⚠ heightFactor VERİLİR', () {
-      expect(my.contains('heightFactor: 1'), isTrue,
+      expect(d.contains('heightFactor: 1'), isTrue,
           reason: 'dolgunun yüksekliği sıfır kalır, çubuk boş görünür');
     });
 
     test('oran gerçek sayıdan hesaplanır', () {
-      expect(my.contains('n / _count'), isTrue,
+      expect(d.contains('adet / toplam'), isTrue,
+          reason: 'dolgu oranı yıldız sayısından gelmiyor');
+      expect(my.contains('adet: n,'), isTrue,
           reason: 'dolgu oranı yıldız sayısından gelmiyor');
     });
 
@@ -47,14 +59,14 @@ void main() {
       //
       // Oran artık DOĞRUDAN uygulanır; gri raylar zaten görünür
       // olduğu için satırın ölçek olduğu yine anlaşılıyor.
-      expect(my.contains('widthFactor: oran,'), isTrue);
-      expect(my.contains('oran < 0.03 ? 0.03 : oran'), isFalse,
+      expect(d.contains('widthFactor: oran,'), isTrue);
+      expect(d.contains('oran < 0.03 ? 0.03 : oran'), isFalse,
           reason: 'taban dolgu geri gelmiş — 0 oy dolu görünür');
     });
 
     test('⚠ SIFIRA BÖLME KORUNDU', () {
       // Hiç değerlendirme yokken `n / _count` NaN üretirdi.
-      expect(my.contains('_count == 0 ? 0.0 : n / _count'), isTrue);
+      expect(d.contains('toplam == 0 ? 0.0 : adet / toplam'), isTrue);
     });
   });
 

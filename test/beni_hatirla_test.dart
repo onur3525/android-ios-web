@@ -98,13 +98,27 @@ void main() {
   });
 
   group('Kaynak sözleşmesi', () {
+    // ⚠ ÜRÜN KARARI: "Beni Hatırla" KUTUCUĞU KALDIRILDI — cihaz her
+    // başarılı girişte hatırlar (kayıt akışıyla aynı). Hatırlamayı
+    // bitirmenin yolu ÇIKIŞTIR; çıkış tercihi siler. Test adı iz için
+    // korunur; sözleşme: giriş KAYDEDER, çıkış TEMİZLER.
     test('LOGIN kutucuğu VAR ve tercihi kaydeder', () {
-      final k = _oku('lib/screens/login_screen.dart');
-      expect(k.contains("'Beni Hatırla'"), isTrue);
-      expect(k.contains('_beniHatirla'), isTrue);
-      expect(k.contains('OturumTercihi().kaydet'), isTrue);
-      // Kutucuk kapalıysa ÖNCEKİ tercih silinmeli.
-      expect(k.contains('OturumTercihi().temizle()'), isTrue);
+      final k = _oku('lib/screens/login_screen.dart')
+          .split('\n')
+          .where((l) => !l.trimLeft().startsWith('//'))
+          .join('\n');
+      expect(k.contains('_beniHatirla'), isFalse,
+          reason: 'kaldırılan kutucuk geri gelmiş');
+      expect(
+          k.contains(
+              'OturumTercihi().kaydet(_epostaModu ? epostaAnlik : telefonAnlik)'),
+          isTrue);
+      // Çıkış (port katmanı) tercihi siler.
+      final m = _oku('lib/data/ports/mock_ports.dart');
+      final i = m.indexOf('Future<void> logout() async {');
+      expect(i, greaterThan(-1));
+      expect(m.substring(i, m.indexOf('\n  }\n', i))
+          .contains('await OturumTercihi().temizle();'), isTrue);
     });
 
     test('ÇIKIŞ noktalarının HEPSİ temizler', () {
@@ -131,9 +145,15 @@ void main() {
       // ⚠ İŞ KURALI: iki rolü olan kullanıcı hizmet veren panelinde
       // açılır — gelen ilanlar 30 saatte kapanır, teklif yarışı var.
       final k = _oku('lib/screens/splash_screen.dart');
+      // Önce hedef ROL seçilir (sağlayıcı öncelikli), rota ondan çıkar.
       expect(
           k.contains(
-              "roles.contains(Role.provider)\n        ? '/provider/jobs'"),
+              'acc.roles.contains(Role.provider) ? Role.provider : Role.customer'),
+          isTrue,
+          reason: 'çift rolde sağlayıcı önceliği kaybolmuş');
+      expect(
+          k.contains(
+              "return hedefRol == Role.provider ? '/provider/jobs' : '/customer/listings';"),
           isTrue,
           reason: 'çift rolde sağlayıcı önceliği kaybolmuş');
     });

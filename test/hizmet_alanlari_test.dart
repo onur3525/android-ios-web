@@ -110,7 +110,16 @@ void main() {
     });
 
     test('çatı adı KATEGORİ adı DEĞİL', () {
+      // ⚠ TEK BİLİNÇLİ İSTİSNA: 'Evcil Hayvan Hizmetleri' hem çatı hem
+      // o çatının TEK kategorisidir (aşağıdaki "EVCİL HAYVAN kendi
+      // çatısında" kararı). Çatı ile kategori aynı kapsamı anlattığı
+      // için karışma yoktur. Başka bir çatı kategori adını alamaz.
+      const istisna = {'Evcil Hayvan Hizmetleri'};
       for (final a in kHizmetAlanlari) {
+        if (istisna.contains(a.ad)) {
+          expect(a.kategoriler, [a.ad], reason: a.ad);
+          continue;
+        }
         expect(kCategoryTree.containsKey(a.ad), isFalse,
             reason: '${a.ad} kategori olarak da açılmış');
       }
@@ -177,15 +186,22 @@ void main() {
     test('SPOR DERSLERİ Eğitim değil KİŞİSEL HİZMET', () {
       // Eğitim çatısı okul/dil/müzik/sürücü için temiz tutulur.
       
+      // ⚠ KİLİTLİ KATALOG: kategori adı 'Spor', çatı adı 'Güzellik,
+      // Bakım, Spor & Kişisel Gelişim'; 'Pilates Dersi'/'Yoga Dersi'
+      // hizmetlerinin adı 'Pilates'/'Yoga'. Karar aynı: spor dersleri
+      // Eğitim çatısında DEĞİL.
       for (final d in const [
         'Yüzme Dersi',
         'Fitness Özel Ders',
-        'Pilates Dersi',
+        'Pilates',
         'Tenis Dersi',
-        'Yoga Dersi',
+        'Yoga',
       ]) {
-        expect(hizmetAlani('Spor ve Kişisel Antrenör', d), 'Güzellik & Kişisel Bakım',
+        expect(kCategoryTree['Spor'], contains(d), reason: d);
+        expect(hizmetAlani('Spor', d),
+            'Güzellik, Bakım, Spor & Kişisel Gelişim',
             reason: d);
+        expect(hizmetAlani('Spor', d), isNot('Eğitim'), reason: d);
       }
     });
 
@@ -200,8 +216,8 @@ void main() {
     test('HİZMET DÜZEYİNDE İSTİSNA çalışıyor', () {
       // ⚠ Kategori bir çatıda, hizmet başka çatıda olabilir.
       expect(kKategoriAlani['Çilingir ve Kilit'], 'Ev & Yaşam');
-      expect(hizmetAlani('Çilingir ve Kilit', 'Oto Anahtarcı'),
-          'Araç Hizmetleri');
+      // ⚠ 'Oto Anahtarcı' istisnası kaldırıldı (hizmet kilitli
+      // katalogda yok); mekanizma aşağıdaki istisnayla denetlenir.
 
       expect(kKategoriAlani['Koltuk ve Döşeme Yıkama'], 'Temizlik');
       expect(hizmetAlani('Koltuk ve Döşeme Yıkama', 'Araç Döşeme Yıkama'),
@@ -230,19 +246,20 @@ void main() {
     });
 
     test('alanHizmetleri istisnayı HESABA KATAR', () {
-      final arac = alanHizmetleri('Araç Hizmeti').map((e) => e.hizmet);
-      expect(arac, contains('Oto Anahtarcı'));
+      // ⚠ Çatı adı 'Araç Hizmetleri' (Paket A).
+      final arac = alanHizmetleri('Araç Hizmetleri').map((e) => e.hizmet);
       expect(arac, contains('Araç Döşeme Yıkama'));
 
-      final ev = alanHizmetleri('Teknik Hizmetler').map((e) => e.hizmet);
-      expect(ev, isNot(contains('Oto Anahtarcı')));
+      final tem = alanHizmetleri('Temizlik').map((e) => e.hizmet);
+      expect(tem, isNot(contains('Araç Döşeme Yıkama')));
 
       // Toplam korunur: hiçbir hizmet kaybolmaz veya iki kez sayılmaz.
       var toplam = 0;
       for (final a in kHizmetAlanlari) {
         toplam += alanHizmetleri(a.ad).length;
       }
-      expect(toplam, 640);
+      // Kilitli katalog: 1587 hizmet.
+      expect(toplam, 1587);
     });
   });
 
@@ -262,7 +279,12 @@ void main() {
     });
 
     test('ARAMA ÇUBUĞU var ve metni ortak', () {
-      expect(e.contains("hint: 'Hangi hizmete ihtiyacınız var?'"), isTrue);
+      // ⚠ Metin TEK KAYNAKTAN: `kHizmetAramaIpucu` (ana sayfa
+      // çubuğuyla aynı sabit).
+      expect(e.contains('hintText: kHizmetAramaIpucu'), isTrue);
+      expect(File('lib/ui/header_arama.dart').readAsStringSync().contains(
+              "const String kHizmetAramaIpucu = 'Hangi hizmete ihtiyacınız var?';"),
+          isTrue);
     });
 
     test('arama YALNIZ bu çatının içinde', () {
@@ -296,9 +318,9 @@ void main() {
     test('ana sayfadaki ÇATI KARTI bu ekranı açar', () {
       final h = _kod('lib/screens/home_screen.dart');
       expect(h.contains('HizmetAlaniScreen(alan: alan)'), isTrue);
-      // On iki çatının hepsi aynı karttan çizilir.
-      // ⚠ Girinti değişebilir; ADI aranır, biçimi değil.
-      expect(h.contains('satir * _kSutun + s'), isTrue);
+      // Çatıların hepsi aynı karttan çizilir.
+      // ⚠ Sütun sayısı artık ekrana göre kademeli (`sutun`).
+      expect(h.contains('satir * sutun + s'), isTrue);
     });
   });
 
@@ -351,8 +373,8 @@ void main() {
     test('12 ÇATININ HEPSİ tıklanabilir ve kendi ekranını açar', () {
       final h = _k('lib/screens/home_screen.dart');
       // Tek kart sınıfından çizilir; biri hariç kalamaz.
-      // ⚠ Girinti değişebilir; ADI aranır, biçimi değil.
-      expect(h.contains('satir * _kSutun + s'), isTrue);
+      // ⚠ Sütun sayısı artık ekrana göre kademeli (`sutun`).
+      expect(h.contains('satir * sutun + s'), isTrue);
       expect(h.contains('HizmetAlaniScreen(alan: alan)'), isTrue);
       expect(h.contains('class _AlanKarti'), isTrue);
     });
@@ -404,25 +426,28 @@ void main() {
     });
 
     test('OTO ANAHTARCI Araç Hizmeti kapsamında, Ev Hizmeti değil', () {
-      final arac = alanHizmetleri('Araç Hizmeti').map((e) => e.hizmet);
-      final ev = alanHizmetleri('Teknik Hizmetler').map((e) => e.hizmet);
-      expect(arac, contains('Oto Anahtarcı'));
-      expect(ev, isNot(contains('Oto Anahtarcı')));
+      // ⚠ 'Oto Anahtarcı' kilitli katalogda YOK; istisnası da
+      // kaldırıldı. Ölü istisna kalmadığı denetlenir.
+      final tum = {for (final v in kCategoryTree.values) ...v};
+      expect(tum.contains('Oto Anahtarcı'), isFalse);
+      expect(kHizmetCatiIstisnasi.containsKey('Oto Anahtarcı'), isFalse);
     });
 
     test('ARAÇ DÖŞEME YIKAMA Araç Hizmeti kapsamında, Temizlik değil', () {
-      final arac = alanHizmetleri('Araç Hizmeti').map((e) => e.hizmet);
+      final arac = alanHizmetleri('Araç Hizmetleri').map((e) => e.hizmet);
       final tem = alanHizmetleri('Temizlik').map((e) => e.hizmet);
       expect(arac, contains('Araç Döşeme Yıkama'));
       expect(tem, isNot(contains('Araç Döşeme Yıkama')));
     });
 
     test('İSTİSNA GELEN KATEGORİ çatı ekranında görünür', () {
-      // Çilingir kategorisi Ev Hizmeti'nde ama Araç Hizmeti ekranında
-      // da satır olarak çıkmalı — yoksa Oto Anahtarcı'ya ulaşılamaz.
-      final arac = alanHizmetleri('Araç Hizmeti').map((e) => e.kategori);
-      expect(arac, contains('Çilingir ve Kilit'));
-      expect(arac, contains('Koltuk ve Döşeme Yıkama'));
+      // ⚠ Kilitli katalogda 'Araç Döşeme Yıkama' kendi araç
+      // kategorisinde ('Araç Temizlik ve Detaylı Bakım'); istisna
+      // onu yine Araç çatısında tutar. Çilingir satırı ('Oto
+      // Anahtarcı') hizmet katalogdan kalktığı için gelmez.
+      final arac = alanHizmetleri('Araç Hizmetleri').map((e) => e.kategori);
+      expect(arac, contains('Araç Temizlik ve Detaylı Bakım'));
+      expect(arac, isNot(contains('Çilingir ve Kilit')));
     });
 
     test('HİÇBİR HİZMET ERİŞİLEMEZ KALMIYOR', () {
@@ -516,7 +541,8 @@ void main() {
     test('SEÇİLİ hâl yalnız RENKLE anlatılmaz', () {
       // Renk körü kullanıcı için kenarlık ve işaret de değişir.
       expect(c.contains('width: secili ? 1.4 : 1'), isTrue);
-      expect(c.contains('ic_checksm.svg'), isTrue);
+      // İşaret ortak tik bileşeninden (`RefTik`).
+      expect(c.contains('const RefTik(size: 18, color: RC.blue)'), isTrue);
     });
   });
 }

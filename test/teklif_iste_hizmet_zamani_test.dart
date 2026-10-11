@@ -121,8 +121,10 @@ void main() {
       // KULLANICI KARARI (9 Eyl): fotoğraflar açıklamanın İÇİNDE
       // değil, kendi başlıklı bölümünde ve en altta olmalı.
       final k = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
-      final iZaman = k.indexOf("Text('Hizmet Zamanı'");
-      final iAciklama = k.indexOf("Text('Açıklama'");
+      // ⚠ ETİKETLER İLAN AKIŞIYLA EŞİTLENDİ: "Hizmet Zamanı" →
+      // "Zaman tercihi", "Açıklama" → "İşin detayı". Sıra kuralı aynı.
+      final iZaman = k.indexOf("Text('Zaman tercihi'");
+      final iAciklama = k.indexOf("Text('İşin detayı'");
       final iFoto = k.indexOf("Text('Fotoğraflar'");
       expect(iZaman, greaterThan(-1), reason: 'Hizmet Zamanı başlığı yok');
       expect(iAciklama, greaterThan(iZaman),
@@ -165,7 +167,8 @@ void main() {
       expect(RegExp(r'ic_dots\.svg').allMatches(k).length, 1,
           reason: 'üç nokta birden fazla yerde çiziliyor');
       // Menü talebi silme içindir; hizmet verende çizilmez.
-      expect(k.contains('if (!benSaglayiciMi)'), isTrue);
+      // (Silinebilir olmayan talepte de çizilmez.)
+      expect(k.contains('if (!benSaglayiciMi && t.silinebilir)'), isTrue);
     });
 
     test('⚠ MENÜ AKIŞI DEĞİŞMEDİ', () {

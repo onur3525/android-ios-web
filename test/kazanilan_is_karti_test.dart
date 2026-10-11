@@ -87,8 +87,14 @@ void main() {
 
   group('2 — HESAPLAMA TEK KAYNAKTA', () {
     test('detay ekranı ortak fonksiyona delege eder', () {
-      expect(detay.contains('hizmetAlanTamamlananIs(c, hizmetAlanId)'), isTrue);
-      expect(detay.contains('uyelikTarihiMetni(tarih)'), isTrue);
+      // ⚠ Kart ortak `SahipKarti`na taşındı: ekran sayıyı ortak
+      // fonksiyondan verir, üyelik metnini bileşen ortak fonksiyonla
+      // biçimler.
+      expect(detay.contains('hizmetAlanTamamlananIs(c, t.hizmetAlanId)'),
+          isTrue);
+      expect(detay.contains('kayitTarihi: hesap?.kayitTarihi'), isTrue);
+      expect(_kodu('lib/screens/widgets/detay_karti_parcalari.dart')
+          .contains('uyelikTarihiMetni(kayitTarihi!)'), isTrue);
       // Ay adları listesi artık burada olmamalı.
       expect(detay.contains('_kAyAdlari'), isFalse,
           reason: 'üyelik metni kopyası geri gelmiş');
@@ -160,7 +166,8 @@ void main() {
       expect(jobs.contains('kazanilanlar.sort('), isTrue);
       expect(jobs.contains('myOffers.sort('), isFalse,
           reason: 'sıralama yine yalnız tekliflere uygulanıyor');
-      expect(jobs.contains('itemCount: kazanilanlar.length'), isTrue,
+      // (Liste ortak `MasaustuListe` ile çizilir: `adet:`.)
+      expect(jobs.contains('adet: kazanilanlar.length'), isTrue,
           reason: 'liste yine iki bölüm hâlinde çiziliyor');
       // İndeks aritmetiğiyle bölümleme geri gelmemeli.
       expect(jobs.contains('i - myOffers.length'), isFalse);

@@ -34,13 +34,13 @@ void main() {
       for (final s in kSubServices['Doğalgaz']!) {
         expect(etiketler, contains(s), reason: '$s listelenmeli');
       }
-      // ⚠ `Kombi Montajı` ve `Petek Temizliği` ARTIK BAŞKA
-      // KATEGORİLERDE (`Kombi` / `Isıtma`); "doğalgaz" sorgusunda
+      // ⚠ KİLİTLİ KATALOGDA kombi MONTAJ işleri `Doğalgaz` altındadır
+      // (yukarıdaki döngü onları zaten kapsar); kombi BAKIM/ARIZA
+      // işleri `Kombi Servis`te durur ve "doğalgaz" sorgusunda
       // gelmeleri BEKLENMEZ. Kural değişmedi — kategori eşleşince o
-      // kategorinin tüm alt hizmetleri gelir; yukarıdaki döngü bunu
-      // zaten `kSubServices['Doğalgaz']` üzerinden doğruluyor.
-      expect(etiketler, isNot(contains('Kombi Montajı')),
-          reason: 'Kombi ayrı kategoridir');
+      // kategorinin tüm alt hizmetleri gelir.
+      expect(etiketler, isNot(contains('Kombi Bakımı')),
+          reason: 'Kombi Servis ayrı kategoridir');
     });
 
     test('her kayıt AYRI bir öneridir — tekrar yok', () {
@@ -62,10 +62,18 @@ void main() {
     test('"te" → Temizlik ve Tesisat zinciri', () {
       // ⚠ `Tesisat` ana kategorisi artık `Su Tesisatı` adıyla duruyor;
       // katalog 53 kategoriye çıkarken yeniden adlandırıldı.
+      //
+      // ⚠ 1587 hizmetlik katalogda "te" ile BAŞLAYAN sonuçlar 40'lık
+      // listeyi dolduruyor; "Su Tesisatçısı" gibi iç eşleşmeler
+      // sınırın dışına düşer (ilgi sıralaması doğru çalışıyor). Zincir
+      // prefix yoluyla denetlenir: Temizlik kategorisi ve Tesisat işi.
       final etiketler =
           SearchService.services('te').map((h) => h.label).toList();
       expect(etiketler, contains('Temizlik Hizmetleri'));
-      expect(etiketler, contains('Su Tesisatçısı'));
+      expect(etiketler, contains('Tesisat Tamiri'));
+      // İç eşleşme yolu hâlâ çalışır: tam kelimeyle aranınca gelir.
+      expect(SearchService.services('tesisatçı').map((h) => h.label),
+          contains('Su Tesisatçısı'));
     });
 
     test('Türkçe büyük/küçük harf duyarsız', () {
@@ -109,9 +117,12 @@ void main() {
     });
 
     test('öneri seçimi rol seçim ekranı AÇMAZ', () {
-      final i = home.indexOf('void _hizmetSecildi');
+      // ⚠ Fonksiyon dosya düzeyine alındı (`hizmetSecildi`; Tüm
+      // Kategoriler ve kategori kartı da çağırıyor). Gövde fonksiyonun
+      // KAPANIŞINA kadar okunur.
+      final i = home.indexOf('void hizmetSecildi(');
       expect(i, greaterThan(0));
-      final govde = home.pencere(i, 1200);
+      final govde = home.substring(i, home.indexOf('\n}\n', i));
       expect(govde.contains('RoleSelectScreen'), isFalse);
       expect(govde.contains('PreLoginListingRoute.name'), isTrue);
     });
@@ -123,8 +134,9 @@ void main() {
       // (hizmet veren kendi alanında ilan açamaz). Aranan satırlar
       // 1200 karakterlik pencerenin DIŞINA düştü. İDDİA AYNI, yalnız
       // bakılan alan büyütüldü.
-      final i = home.indexOf('void _hizmetSecildi');
-      final govde = home.pencere(i, 2800);
+      final i = home.indexOf('void hizmetSecildi(');
+      expect(i, greaterThan(0));
+      final govde = home.substring(i, home.indexOf('\n}\n', i));
       expect(govde.contains('category: kategori'), isTrue);
       expect(govde.contains('subService: altHizmet'), isTrue);
       expect(govde.contains('initialCategory: kategori'), isTrue);
@@ -138,8 +150,9 @@ void main() {
       // (hizmet veren kendi alanında ilan açamaz). Aranan satırlar
       // 1200 karakterlik pencerenin DIŞINA düştü. İDDİA AYNI, yalnız
       // bakılan alan büyütüldü.
-      final i = home.indexOf('void _hizmetSecildi');
-      final govde = home.pencere(i, 2800);
+      final i = home.indexOf('void hizmetSecildi(');
+      expect(i, greaterThan(0));
+      final govde = home.substring(i, home.indexOf('\n}\n', i));
       // Müşteri rolü varsa korumalı form, yoksa public taslak.
       expect(govde.contains('roles.contains(Role.customer)'), isTrue);
       expect(govde.contains('switchRole(Role.customer)'), isTrue);

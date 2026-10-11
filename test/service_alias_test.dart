@@ -52,12 +52,18 @@ void main() {
       // HİZMET oldu (15 hizmet aliası + 12 kategori niyeti). Alias
       // olarak durmaları `kAliasDizini`'nde çakışma üretirdi —
       // belgenin kendi kuralı: kanonik ad alias olamaz.
+      //
+      // ⚠ 543 → 501 → 497 (166 kategori · 1587 hizmetlik katalog):
+      // aynı kuralla daha fazla alias kanonik hizmet oldu. Son dört
+      // ('Topraklama Ölçümü', 'Mutfak Tezgahı Yapımı', 'Şehir İçi
+      // Nakliyat', 'Seramik Kaplama') kategori niyetiydi ve artık
+      // AYNI kategoride kanonik hizmet. Sayı kilidi korunur.
       final hizmet =
           kServiceAliases.where((a) => a.hizmetAliasi).length;
       final niyet = kServiceAliases.length - hizmet;
-      expect(kServiceAliases.length, 543);
-      expect(hizmet, 474);
-      expect(niyet, 69);
+      expect(kServiceAliases.length, 497);
+      expect(hizmet, 432);
+      expect(niyet, 65);
     });
   });
 
@@ -125,7 +131,9 @@ void main() {
     /// hedefi getirmeli.
     const ornekler = <String, (String, String?)>{
       'Laptop Tamiri': ('Elektronik Cihaz Tamiri', 'Bilgisayar Tamiri'),
-      'Dükkan Temizliği': ('Temizlik Hizmetleri', 'Ofis Temizliği'),
+      // ⚠ 'Dükkan Temizliği', 'Priz Değişimi', 'Batarya Montajı' ARTIK
+      // GERÇEK HİZMET (katalog genişletmesi); alias olamazlar —
+      // bkz. 'KANONİK HİZMETE DÖNEN ADLAR' testi.
       'Tuvalet Tıkanıklığı Açma': ('Su Tesisatı', 'Tıkanıklık Açma'),
       'Kombi Arıza': ('Kombi Servis', 'Kombi Tamiri'),
       // ⚠ Kaçak TESPİTİ artık ayrı hizmet; alias oraya bağlandı.
@@ -137,16 +145,15 @@ void main() {
           ('İlaçlama ve Haşere Kontrolü', 'Böcek İlaçlama'),
       'Evde Halı Yıkama': ('Halı Yıkama', 'Yerinde Halı Yıkama'),
       'Koltuk Temizleme': ('Koltuk ve Döşeme Yıkama', 'Koltuk Yıkama'),
-      'Zebra Perde Yıkama':
-          ('Koltuk ve Döşeme Yıkama', 'Stor Perde Temizliği'),
-      'Priz Değişimi': ('Elektrik', 'Priz Montajı'),
+      // ⚠ Stor perde temizliği katalogda 'Kuru Temizleme' altına
+      // taşındı; alias da oraya bağlı.
+      'Zebra Perde Yıkama': ('Kuru Temizleme', 'Stor Perde Temizliği'),
       'Avize Takma': ('Elektrik', 'Avize Montajı'),
       'Radyatör Petek Temizliği': ('Isıtma Sistemleri', 'Petek Temizliği'),
       // ⚠ 'Kalıcı Oje' ARTIK GERÇEK HİZMET (katalog genişletmesi);
       'Gelin Saçı': ('Güzellik ve Bakım Hizmetleri', 'Saç Tasarımı'),
       'Köpek Yürütme': ('Evcil Hayvan Hizmetleri', 'Köpek Gezdirme'),
       'Tesisatçı': ('Su Tesisatı', 'Su Tesisatçısı'),
-      'Batarya Montajı': ('Su Tesisatı', 'Musluk Montajı'),
       'Yatak Böceği İlaçlama':
           ('İlaçlama ve Haşere Kontrolü', 'Tahtakurusu İlaçlama'),
       'Kemirgen Mücadelesi':
@@ -173,6 +180,25 @@ void main() {
             isTrue,
             reason: '$alias → ilk 5 sonuçta yok');
       });
+    });
+
+    test('KANONİK HİZMETE DÖNEN ADLAR alias değildir, kendi adıyla bulunur',
+        () {
+      for (final ad in const [
+        'Dükkan Temizliği',
+        'Priz Değişimi',
+        'Batarya Montajı',
+        'Topraklama Ölçümü',
+        'Mutfak Tezgahı Yapımı',
+        'Şehir İçi Nakliyat',
+        'Seramik Kaplama',
+      ]) {
+        expect(aliasBul(ad), isNull, reason: '$ad hâlâ alias');
+        final s = SearchService.services(ad);
+        expect(s.any((h) => h.subService == ad && h.aliasEtiketi == null),
+            isTrue,
+            reason: '$ad kanonik yoldan bulunmuyor');
+      }
     });
 
     test('KANONİK AD ALIASTAN ÖNCE gelir', () {
@@ -202,7 +228,9 @@ void main() {
       const niyetler = [
         'Apartman Temizliği',
         'Sinek İlaçlama',
-        'Topraklama Ölçümü',
+        // ⚠ 'Topraklama Ölçümü' ARTIK GERÇEK HİZMET (Elektrik); yerine
+        // aynı türden bir niyet aliası denetlenir.
+        'Bina Temizliği',
         // ⚠ 'Sandalye Yıkama' ARTIK GERÇEK HİZMET; niyet aliası
         'Apartman Temizliği',
         'Epilasyon',
@@ -266,9 +294,13 @@ void main() {
       //
       // Asıl kabul kriteri: sorgu DOĞRU kategori ve hizmete ulaşsın.
       // Alias satırı varsa etiketi de kullanıcının yazdığı ad olsun.
+      // ⚠ 'Buharlı Ev Temizliği' ve 'Ofis Halı Yıkama' katalog
+      // genişletmesiyle KENDİ ADLARIYLA kanonik hizmet oldu; doğru
+      // hedef artık kendileridir.
       const yeni = {
-        'Buharlı Ev Temizliği': ('Temizlik Hizmetleri', 'Ev Temizliği'),
-        'Ofis Halı Yıkama': ('Halı Yıkama', 'Yerinde Halı Yıkama'),
+        'Buharlı Ev Temizliği':
+            ('Temizlik Hizmetleri', 'Buharlı Ev Temizliği'),
+        'Ofis Halı Yıkama': ('Halı Yıkama', 'Ofis Halı Yıkama'),
         'İşyeri Temizliği': ('Temizlik Hizmetleri', 'Ofis Temizliği'),
         'Taşınma Sonrası Temizlik':
             ('Temizlik Hizmetleri', 'Taşınma Temizliği'),
@@ -313,8 +345,7 @@ void main() {
     test('aranan alias hedefi SONUÇLARDA vardır (satır tipi ne olursa)', () {
       const bekleyen = {
         'Laptop Tamiri': ('Elektronik Cihaz Tamiri', 'Bilgisayar Tamiri'),
-        'Zebra Perde Yıkama':
-            ('Koltuk ve Döşeme Yıkama', 'Stor Perde Temizliği'),
+        'Zebra Perde Yıkama': ('Kuru Temizleme', 'Stor Perde Temizliği'),
       };
       bekleyen.forEach((sorgu, hedef) {
         final s = SearchService.services(sorgu);

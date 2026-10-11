@@ -27,7 +27,16 @@ void main() {
       // katalog sırası öne çıkarıyordu). Hizmet 'Petek Borusu
       // Tesisatı' olarak yeniden adlandırıldı — kategori adıyla
       // başlayan hizmet BAŞKA kategoride durmamalı.
-      expect(SearchService.services('kombi').first.category, 'Kombi Montaj');
+      //
+      // ⚠ KİLİTLİ KATALOG (166/1587): ayrı "Kombi Montaj" kategorisi
+      // yok; kombi montaj işleri `Doğalgaz` altında ve katalogda
+      // `Kombi Servis`ten önce geliyor. İlk sonuç bu yüzden bir kombi
+      // MONTAJ hizmetidir; kategori satırı (`Kombi Servis`) ilk beşte.
+      final kombi = SearchService.services('kombi');
+      expect(kombi.first.label.startsWith('Kombi'), isTrue);
+      expect(
+          kombi.take(5).any((h) => h.category == 'Kombi Servis' && h.subService == null),
+          isTrue);
     });
 
     test('ilan başlığı ve açıklamasında yalnız AÇIK ilanları bulur', () {

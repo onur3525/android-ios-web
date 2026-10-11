@@ -99,7 +99,15 @@ void main() {
 
       final w = _kod('lib/screens/widgets/ilan_baslik_satiri.dart');
       expect(w.contains('String ilanIkonu(String baslik)'), isTrue);
-      expect(w.contains('SearchService.services(baslik)'), isTrue,
+      // ⚠ Geçiş ORTAK `kategoriAdi` üzerinden (önce birebir katalog
+      // eşleşmesi, sonra arama) — ilan kartındaki kategori satırıyla
+      // AYNI yol; ikon ile kategori adı ayrışamaz.
+      expect(w.contains('final kategori = kategoriAdi(t);'), isTrue,
+          reason: 'başlıktan kategoriye geçiş kalkmış');
+      expect(w.contains('return categoryIcon(kategori);'), isTrue,
+          reason: 'başlıktan kategoriye geçiş kalkmış');
+      expect(_kod('lib/screens/category_ui.dart')
+          .contains('SearchService.services(t)'), isTrue,
           reason: 'başlıktan kategoriye geçiş kalkmış');
     });
 

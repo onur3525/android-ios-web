@@ -95,7 +95,11 @@ void main() {
       // Durum koşulu YOK — çünkü "Teklifi Seç" düğmesi zaten yalnız
       // iletişim AÇIKKEN çiziliyor ve değerlendirme gönderimi ilanı o
       // anda tamamlıyor (`submitReviewDo`).
-      expect(teklifDetay.contains('onPressed: !reviewed'), isTrue);
+      //
+      // ⚠ GÜNCEL: yorum yapılmışsa düğme HİÇ çizilmez (`if
+      // (!reviewed)`), yerinde salt okunur durum şeridi durur.
+      expect(teklifDetay.contains("if (!reviewed)\n                RefPrimaryButton(\n                  'Yorum Yaz',"),
+          isTrue);
     });
 
     test('YORUM SATIRINDA "5 puan", ortalamada "5.0"', () {
@@ -108,9 +112,20 @@ void main() {
       //
       // Hizmet verenin ORTALAMASI ise ondalıklı kalır: 4 ve 5'ten
       // 4.5 çıkabilir.
-      expect(teklifDetay.contains("'\${review.stars} puan'"), isTrue,
+      //
+      // ⚠ GÜNCEL (10 Eyl): yorum satırı ortak `YorumKarti`na taşındı;
+      // yorumun kendi puanı TAM yıldız sayısı olarak çizilir (`i <=
+      // widget.yildiz`) — ondalık metin hiç yok.
+      expect(teklifDetay.contains('YorumKarti('), isTrue,
+          reason: 'yorum puanı tam sayı olarak yazılmalı');
+      final kart = read('lib/screens/provider_reviews_screen.dart');
+      expect(kart.contains('yildiz: review.stars,'), isTrue,
+          reason: 'yorum puanı tam sayı olarak yazılmalı');
+      expect(kart.contains('i <= widget.yildiz'), isTrue,
           reason: 'yorum puanı tam sayı olarak yazılmalı');
       expect(teklifDetay.contains('review.stars.toStringAsFixed(1)'), isFalse,
+          reason: 'yorum puanı yine ondalıklı yazılmış');
+      expect(kart.contains('stars.toStringAsFixed(1)'), isFalse,
           reason: 'yorum puanı yine ondalıklı yazılmış');
       // Ortalama gösterimleri KORUNUR.
       expect(teklifDetay.contains('avg.toStringAsFixed(1)'), isTrue);
@@ -182,7 +197,15 @@ void main() {
       // geliyordu.
       expect(ilanDetay.contains("'Yorum Yaz'"), isTrue);
       expect(teklifDetay.contains("'Yorum Yaz'"), isTrue);
-      expect(ilanDetay.contains('Hizmeti Değerlendir'), isFalse);
+      // (Eski ad açıklama satırında gerekçe olarak geçiyor; yalnız
+      // KOD denetlenir.)
+      expect(
+          ilanDetay
+              .split('\n')
+              .where((l) => !l.trimLeft().startsWith('//'))
+              .join('\n')
+              .contains('Hizmeti Değerlendir'),
+          isFalse);
       // ⚠ İkon: `SysButton` ikon almıyordu ve metnin yanında sahipsiz
       // bir işaret kalıyordu. İki ekran da `RefPrimaryButton` +
       // yıldız ikonu kullanır.
@@ -195,9 +218,11 @@ void main() {
     test('⚠ PUAN ZORUNLU, YORUM İSTEĞE BAĞLI', () {
       // Puan olmadan gönderim yapılamaz.
       expect(degerlendirme.contains('if (_stars < 1)'), isTrue);
-      // ⚠ Boş yorum gönderimi ENGELLEMEZ: kelime kuralı yalnız DOLU
-      // yoruma uygulanır.
-      expect(degerlendirme.contains('if (yorum.isNotEmpty)'), isTrue,
+      // ⚠ Boş yorum gönderimi ENGELLEMEZ: kelime kuralı tamamen
+      // kalktı; yorum olduğu gibi (boş da olabilir) gönderilir.
+      expect(degerlendirme.contains('text: yorum'), isTrue,
+          reason: 'boş yorum gönderimi engelliyor');
+      expect(degerlendirme.contains('if (yorum.isEmpty)'), isFalse,
           reason: 'boş yorum gönderimi engelliyor');
     });
 

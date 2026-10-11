@@ -145,17 +145,33 @@ void main() {
   });
 
   group('4 — Hassas ekranlar karışımı kullanıyor', () {
-    // İki platform da AYNI beş ekranı korur; ekran listesi
-    // platforma göre AYRILMAZ.
+    // ⚠ KAPSAM ÜRÜN KARARIYLA DARALTILDI (17 Ağu): koruma yalnız KART
+    // BİLGİSİ ekranında kalır; teklif detayı, sohbet ve iş detayı
+    // kullanıcının kendi ekran görüntüsünü engellediği için
+    // KAPATILDI (bkz. `guvenlik_sertlestirme_test` — "DİĞER
+    // EKRANLARDA AÇILMAZ"). İki test aynı listeyi zıt yönde
+    // kilitleyemez; karar tek: bu üç ekranda karışım YOK.
+    //
+    // ⚠ İki platform AYNI listeyi kullanır; ekran listesi platforma
+    // göre AYRILMAZ — karışım platformdan bağımsızdır.
+    test('karışım tanımlı ve tek kaynakta', () {
+      final k = _oku('lib/core/ekran_korumasi.dart');
+      expect(k.contains('mixin EkranKorumaliState<T extends StatefulWidget>'),
+          isTrue);
+    });
+
     for (final yol in [
       'lib/screens/job_detail_screen.dart',
       'lib/screens/chat_screen.dart',
       'lib/screens/offer_detail_screen.dart',
     ]) {
       test(yol, () {
-        final k = _oku(yol);
-        expect(k.contains('EkranKoruma'), isTrue,
-            reason: '$yol koruma karışımını kullanmıyor');
+        final k = _oku(yol)
+            .split('\n')
+            .where((l) => !l.trimLeft().startsWith('//'))
+            .join('\n');
+        expect(k.contains('EkranKorumaliState'), isFalse,
+            reason: '$yol ürün kararıyla kapatılan korumayı geri açmış');
       });
     }
   });

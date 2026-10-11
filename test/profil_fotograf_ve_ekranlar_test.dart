@@ -115,14 +115,26 @@ void main() {
       for (final a in const ['Ad', 'Soyad', 'E-posta']) {
         expect(p.contains("hint: '$a'"), isTrue, reason: a);
       }
-      expect(p.contains("hint: '5XX XXX XX XX'"), isTrue, reason: 'Telefon');
+      // ⚠ Telefon alanı: başlık `etiket:`, örnek numara `yerTutucu:`.
+      expect(p.contains("yerTutucu: '5XX XXX XX XX'"), isTrue,
+          reason: 'Telefon');
       expect(p.contains('RefFieldLabel('), isFalse,
           reason: 'kutu dışında etiket kalmış');
     });
   });
 
   group('PROFİL EKRANI — FOTOĞRAF SEÇENEKLERİ', () {
-    final s = _kod('lib/screens/profile_screen.dart');
+    // ⚠ TEK KAYNAK: avatar + seçim paneli `profile_screen` içindeki
+    // özel `_Avatar`dan ortak `ProfilFotografi` bileşenine taşındı
+    // (Profil ve Profil Bilgilerim AYNI sınıfı çağırır). Sözleşme
+    // bileşen üzerinden denetlenir; ekranın onu çağırdığı ayrıca
+    // kilitlenir.
+    final s = _kod('lib/screens/widgets/profil_fotografi.dart');
+
+    test('profil ekranı ortak bileşeni çağırır', () {
+      expect(_kod('lib/screens/profile_screen.dart')
+          .contains('ProfilFotografi(ad: ad, fotoYolu: fotoYolu)'), isTrue);
+    });
 
     test('avatara dokununca PANEL açılır, doğrudan galeri DEĞİL', () {
       expect(s.contains('Future<void> _fotoMenusu(BuildContext context)'),
@@ -132,7 +144,8 @@ void main() {
 
     test('üç seçenek de var', () {
       expect(s.contains("baslik: 'Fotoğraf Çek'"), isTrue);
-      expect(s.contains("baslik: 'Galeriden Yükle'"), isTrue);
+      // ⚠ Metin ilan akışıyla EŞİTLENDİ (12 Eyl): "Galeriden Seç".
+      expect(s.contains("baslik: 'Galeriden Seç'"), isTrue);
       expect(s.contains("baslik: 'Fotoğrafı Kaldır'"), isTrue);
     });
 
@@ -168,9 +181,12 @@ void main() {
       expect(w.contains('class RefBasHarfAvatar'), isTrue);
       expect(w.contains('this.fotoYolu'), isTrue,
           reason: 'ortak avatar yine yalnız baş harf çiziyor');
-      expect(w.contains('Image.file('), isTrue);
+      // ⚠ `Image.file` yerine platform köprüsü (`yerelGorsel`):
+      // `dart:io` web derlemesini kırıyordu; mobil köprü yine
+      // `Image.file` kullanır.
+      expect(w.contains('child: yerelGorsel('), isTrue);
       // ⚠ Dosya okunamazsa çökmez, baş harfe düşer.
-      expect(w.contains('errorBuilder: (_, __, ___) => basHarf'), isTrue);
+      expect(w.contains('hataYedegi: (_) => basHarf'), isTrue);
     });
 
     test('⚠ MASKELİYKEN FOTOĞRAF OKUNMAZ', () {
@@ -287,7 +303,9 @@ void main() {
       // Baş harf rozetine dokunmak boş siyah bir sayfa açardı;
       // tepkisiz bir dokunma alanı "bozuk" hissi verir.
       final a = _kod('lib/screens/widgets/profil_avatari.dart');
-      expect(a.contains('if (yol.isEmpty || !File(yol).existsSync())'), isTrue);
+      // Varlık denetimi platform köprüsünden (`yerelVarMi`): web'de
+      // `File` yoktur.
+      expect(a.contains('if (yol.isEmpty || !yerelVarMi(yol))'), isTrue);
     });
 
     test('⚠ EKRANLAR KENDİ AÇMA KODUNU YAZMAZ', () {

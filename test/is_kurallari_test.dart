@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/domain/config.dart';
-import 'support/kaynak_okuma.dart';
 import 'package:hizmetcep/core/turkce_arama.dart';
 import 'package:hizmetcep/data/category_tree.dart';
 
@@ -61,20 +60,35 @@ void main() {
       }
     });
 
+    /// Metodun gövdesi: imzadan sınıf içi kapanışa (`\n  }\n`) kadar.
+    String metot(String kaynak, String imza) {
+      final i = kaynak.indexOf(imza);
+      expect(i, greaterThan(0), reason: '$imza bulunamadı');
+      final son = kaynak.indexOf('\n  }\n', i);
+      expect(son, greaterThan(i), reason: '$imza kapanışı bulunamadı');
+      return kaynak.substring(i, son);
+    }
+
+    // ⚠ İŞ MODELİ DEĞİŞTİ: iletişim ve teklif ÜCRETSİZ; bloke/iade
+    // zinciri kaldırıldı (`MockContactPort.openShared` açıklaması).
+    // Sözleşme artık: süre dolunca/silinince AÇIK teklifler kapatılır
+    // ve hiçbir cüzdan hareketi yapılmaz.
     test('süre dolunca açılmamış blokeler İADE edilir', () {
       final mp = read('lib/data/ports/mock_ports.dart');
-      final i = mp.indexOf('Future<DomainError?> expire(');
-      expect(i, greaterThan(0));
-      final govde = mp.pencere(i, 600);
+      final govde = metot(mp, 'Future<DomainError?> expire(');
       expect(govde.contains('cancelAllForListing'), isTrue);
-      // İptal zinciri tüketilmemiş blokeyi iade eder.
-      expect(mp.contains('_refundIfUnconsumed'), isTrue);
+      expect(govde.contains('yeniDurum: OfferStatus.expired'), isTrue);
+      // Ücretsiz model: kodda bloke tüketimi/iadesi YOK.
+      final kod = kodu('lib/data/ports/mock_ports.dart');
+      expect(kod.contains('wallets.consume('), isFalse);
+      expect(kod.contains('wallets.refund('), isFalse);
     });
 
     test('ilan silinince de iade edilir', () {
       final mp = read('lib/data/ports/mock_ports.dart');
-      final i = mp.indexOf('Future<DomainError?> delete(');
-      expect(mp.pencere(i, 500).contains('cancelAllForListing'), isTrue);
+      final govde = metot(mp, 'Future<DomainError?> delete(');
+      expect(govde.contains('cancelAllForListing'), isTrue);
+      expect(govde.contains('yeniDurum: OfferStatus.closed'), isTrue);
     });
   });
 
@@ -157,7 +171,10 @@ void main() {
       // kapsamaz.
       expect(uygun({'Doğalgaz'}, 'Kombi Bakımı'), isFalse);
       expect(uygun({'Kombi Servis'}, 'Kombi Bakımı'), isTrue);
-      expect(uygun({'Kombi Montaj'}, 'Kombi Montajı'), isTrue);
+      // Güncel katalogda kombi montaj işleri `Doğalgaz` altındadır
+      // (ayrı "Kombi Montaj" kategorisi yok).
+      expect(uygun({'Doğalgaz'}, 'Kombi Montajı'), isTrue);
+      expect(uygun({'Kombi Servis'}, 'Kombi Montajı'), isFalse);
       expect(uygun({'Doğalgaz'}, 'Su Tesisatçısı'), isFalse);
 
       // ── "Elektrik" seçimi ──
@@ -200,7 +217,12 @@ void main() {
 
     test('genişleme KATEGORİ kısıtını KALDIRMAZ', () {
       // İl geneline çıkılsa bile yalnız seçili kategoriler.
-      expect(js.contains('acikVeBaskasinin(l) && kategoriUygun(l)'), isTrue);
+      // Teklif verilmiş ilan da düşülür; kategori kısıtı korunur.
+      expect(
+          js.contains(
+              'acikVeBaskasinin(l) && teklifVermedim(l) && kategoriUygun(l)'),
+          isTrue);
+      expect(js.contains('kategoriUyanlar.where(ilceUygun)'), isTrue);
     });
 
     // ⚠ Genişleme SİSTEM İÇİ bir davranıştır; kullanıcıya
@@ -210,7 +232,7 @@ void main() {
           reason: 'genişleme için bilgi kutusu gösterilmemeli');
       expect(js.contains('il genelindeki ilanlar'), isFalse);
       // Liste indeksi kaydırılmaz; ilan sayısı olduğu gibi.
-      expect(js.contains('itemCount: jobs.length'), isTrue);
+      expect(js.contains('adet: jobs.length'), isTrue);
       expect(js.contains('jobs[genislet ? i - 1 : i]'), isFalse);
     });
   });
@@ -223,8 +245,17 @@ void main() {
       expect(jd.contains('iletisimAcik ? tamAd : maskeliAd(tamAd)'), isTrue);
     });
 
+    // ⚠ GÜNCEL KARAR: kilitliyken maskeli numara da GÖSTERİLMEZ;
+    // kutu yalnız "Kilitli" notunu taşır (Mesajlaşma kutusuyla aynı).
+    // Numara yalnız iletişim açık VE ilan sahibi telefonu paylaştıysa
+    // çizilir — kural gevşemedi, daha sıkı.
     test('telefon maskeli gösterilir', () {
-      expect(jd.contains('05** *** *** **'), isTrue);
+      expect(
+          jd.contains('acik && l.iletisimTercihi == IletisimTercihi.telefonGoster'),
+          isTrue);
+      expect(jd.contains('deger: telefonAcik'), isTrue);
+      expect(jd.contains("? null\n                          : 'Kilitli'"), isTrue);
+      expect(jd.contains('kilitli: !telefonAcik'), isTrue);
     });
   });
 }

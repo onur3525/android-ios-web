@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/sys_state.dart';
 import '../domain/config.dart';
+import '../domain/form_mesajlari.dart';
 import '../data/controllers/auth_controller.dart';
 // ⚠ YALNIZ `Role`: fotoğraf rol bazlıdır (bkz. Account.fotografi).
 import '../data/models/account.dart' show Role;
@@ -49,7 +50,9 @@ class _TeklifTalebiYorumScreenState extends State<TeklifTalebiYorumScreen> {
   Future<void> _submit() async {
     if (_busy) return;
     if (_stars < 1) {
-      setState(() => _error = 'Lütfen bir puan seçin');
+      // ⚠ METİN TEK KAYNAKTAN (`FormMesaj.puanSec`): ilan akışındaki
+      // yorum ekranıyla aynı uyarı; iki akış ayrı cümle kurmaz.
+      setState(() => _error = FormMesaj.puanSec);
       return;
     }
     final yorum = _text.text.trim();

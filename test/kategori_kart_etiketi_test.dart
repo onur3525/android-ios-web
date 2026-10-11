@@ -76,8 +76,9 @@ void main() {
 
     test('kart listesi 50 kategori', () {
       // ⚠ Kombi ikiye ayrıldı: katalog 54 → 55, kart 50 → 51.
-      expect(kKartKategorileri.length, 63 - kKartDisiKategoriler.length);
-      expect(kKartKategorileri.length, 54);
+      // ⚠ Kilitli katalog: 166 kategori − 4 kart dışı = 162.
+      expect(kKartKategorileri.length, 166 - kKartDisiKategoriler.length);
+      expect(kKartKategorileri.length, 162);
     });
 
     test('İLAN VERME IZGARASI KALDIRILDI', () {
@@ -170,12 +171,17 @@ void main() {
       // kategorinin alt hizmetleri katalogda DURUYOR — asıl denetim
       // bu; ilk dördü de yerinde.
       final altlar = kCategoryTree['Koltuk ve Döşeme Yıkama']!;
+      // ⚠ Kilitli katalogda perde yıkama işleri 'Kuru Temizleme'ye
+      // taşındı; bu kategorinin ilk dördü değişti. Taşınanlar da
+      // katalogda erişilebilir durumda.
       expect(altlar.take(4), [
         'Koltuk Yıkama',
         'Yatak Yıkama',
-        'Perde Yıkama',
-        'Stor Perde Temizliği',
+        'Sandalye Yıkama',
+        'Halıfleks Yıkama',
       ]);
+      expect(kCategoryTree['Kuru Temizleme'],
+          containsAll(['Perde Yıkama', 'Stor Perde Temizliği']));
       expect(altlar.length, greaterThanOrEqualTo(4));
     });
 

@@ -80,14 +80,20 @@ void main() {
     });
 
     test('ad, tarih, hizmet ve aç/kapa ortak kurallardan gelir', () {
+      // ⚠ Kart ortak bileşen oldu (`YorumKarti` → `YorumKartiGovde`);
+      // değişken adı `review`.
       expect(k.contains('kisaYazarAdi('), isTrue);
-      expect(k.contains('kisaTarih(r.createdAt)'), isTrue);
-      expect(k.contains('yorumHizmetAdi(context, r)'), isTrue);
+      expect(k.contains('kisaTarih(review.createdAt)'), isTrue);
+      expect(k.contains('yorumHizmetAdi(context, review)'), isTrue);
       expect(k.contains('uzunYorumMu(metin)'), isTrue);
     });
 
+    // ⚠ METİN DEĞİŞTİ (16 Eyl, kullanıcı kararı): "Küçült"/"Göster"
+    // yanıltıcıydı → "Daha az göster"/"Devamını oku". Test adı iz
+    // için korunur; sözleşme (açıkken kısalt, kapalıyken aç) aynı.
     test('açıkken "Küçült", kapalıyken "Göster"', () {
-      expect(k.contains("_acik ? 'Küçült' : 'Göster'"), isTrue);
+      expect(k.contains("_acik ? 'Daha az göster' : 'Devamını oku'"), isTrue);
+      expect(k.contains("'Küçült'"), isFalse);
     });
 
     test('⚠ KAPALIYKEN ÜÇ SATIR, AÇIKKEN SINIRSIZ', () {

@@ -173,16 +173,18 @@ void main() {
     test('yorum yokken düğme, varken "Yorum yapıldı" yazısı', () {
       expect(k.contains('if (yorum == null)'), isTrue,
           reason: 'düğmeyi gizleyen kapı yok');
-      final p = _pencere(k, 'if (yorum == null)', 'Center(');
+      final p = _pencere(k, 'if (yorum == null)', '] else');
       expect(p.contains("'Yorum Yaz'"), isTrue,
           reason: 'düğme kapının içinde değil');
 
-      // ⚠ GÖSTERİM SADELEŞTİ (9 Eyl): bu bölüm sırayla üç hâl aldı —
-      // yeşil şerit, yıldızlı kart, şimdi ortalı sade yazı. Yıldızlı
-      // kart hemen üstündeki "Yorumlar" bölümüyle yarışıyor ve aynı
-      // yorum sayfada İKİ KEZ görünüyordu.
-      expect(k.contains("Text('Yorum yapıldı'"), isTrue);
-      expect(k.contains('Center('), isTrue, reason: 'yazı ortalı değil');
+      // ⚠ GÖSTERİM: 9 Eyl'de ortalı sade yazıya inmişti; 12 Eyl'de
+      // (kullanıcı isteği) İLAN AKIŞIYLA AYNI ortak şeride geçti —
+      // yeşil zemin, tik, "Görüntüle". Yıldızlı kart geri GELMEDİ.
+      final varken = _pencere(k, '] else', 'class ');
+      expect(
+          varken.contains(
+              "DurumSeridi('Yorum yapıldı',\n                    aksiyon: 'Görüntüle')"),
+          isTrue);
     });
 
     test('⚠ GÖRÜNTÜLEME YOLU KAYBOLMADI', () {

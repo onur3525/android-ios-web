@@ -125,8 +125,13 @@ void _fotografTestleri() {
   });
 
   test('gerçek görsel çizilir — cihaz yolu ve ağ adresi', () {
-    expect(k.contains('Image.file(File(yol)'), isTrue);
+    // ⚠ CİHAZ YOLU platform köprüsünden (`yerelGorsel`) çizilir:
+    // `Image.file` `dart:io` ister ve web derlemesini kırıyordu. Mobil
+    // köprü yine `Image.file` kullanır.
+    expect(k.contains('yerelGorsel(yol'), isTrue);
     expect(k.contains('Image.network(yol'), isTrue);
+    expect(_kodu('lib/core/platform/yerel_gorsel_io.dart')
+        .contains('Image.file('), isTrue);
   });
 
   test('⚠ DOKUNUNCA TAM EKRAN AÇILIR', () {

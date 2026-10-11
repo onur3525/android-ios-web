@@ -480,7 +480,8 @@ void main() {
     test('üç yeni kategori KATALOGDA', () {
       for (final k in const [
         'Ayakkabı ve Deri İşleri',
-        'Terzilik ve Dikiş',
+        // ⚠ Kilitli katalogda adı 'Terzilik ve Dikim'.
+        'Terzilik ve Dikim',
         'Ev Tekstili',
       ]) {
         expect(kCategoryTree.containsKey(k), isTrue, reason: k);

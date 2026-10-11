@@ -111,8 +111,11 @@ void main() {
           isTrue);
 
       // Kayıt navigasyondan SONRA olmalı.
-      final iNav = sp.indexOf("BootLog.olay('NAVIGATION_START', '/home')");
-      final iKayit = sp.indexOf("_navSonrasiKareyiBekle('/home')", iNav);
+      // ⚠ Anonim hedef sabite alındı (`anonimHedef = '/home'`).
+      expect(sp.contains("const anonimHedef = '/home';"), isTrue);
+      final iNav = sp.indexOf("BootLog.olay('NAVIGATION_START', anonimHedef)");
+      expect(iNav, greaterThan(0));
+      final iKayit = sp.indexOf('_navSonrasiKareyiBekle(anonimHedef)', iNav);
       expect(iKayit, greaterThan(iNav));
       final iCagri = sp.indexOf('pushReplacementNamed', iNav);
       expect(iKayit, greaterThan(iCagri),
@@ -192,7 +195,14 @@ void main() {
       expect(sp.contains("Image.asset(\n          'assets/logo/splash_brand.png'"),
           isTrue);
       expect(sp.contains('const double _kMarkaKutusu = 240;'), isTrue);
-      expect(sp.contains('SizedBox.expand()'), isFalse,
+      // ⚠ WEB İSTİSNASI: web'de splash kalıbı yok; yüzey yalnız sayfa
+      // zeminini çizer (`kIsWeb` dalı). Android/iOS dalı marka
+      // bloğunu çizmeye devam eder — boş yüzey orada YASAK.
+      const webDali =
+          'if (kIsWeb) {\n      return const ColoredBox(color: RC.pageBg, child: SizedBox.expand());\n    }';
+      expect(sp.contains(webDali), isTrue);
+      final mobilYuzey = sp.substring(sp.indexOf(webDali) + webDali.length);
+      expect(mobilYuzey.contains('SizedBox.expand()'), isFalse,
           reason: 'boş yüzey geri gelmiş');
 
       // ⚠ SPINNER KURALI KORUNDU.
@@ -253,18 +263,18 @@ void main() {
     test('kontrol hatası SAHTE ONLINE da üretmez', () {
       final i = sp.indexOf('Future<AgDurumu> _agDurumu()');
       expect(i, greaterThan(0));
-      final govde = sp.pencere(i, 1600);
+      // Gövde metodun KAPANIŞINA kadar (web dalı açıklamasıyla uzadı).
+      final son = sp.indexOf('\n  }\n', i);
+      expect(son, greaterThan(i));
+      final govde = sp.substring(i, son);
       expect(govde.contains("'unknown:"), isTrue);
       // catch bloğu `bilinmiyor` dönmeli — `online` DEĞİL.
-      expect(
-          RegExp(r'catch \(e\) \{[\s\S]{0,600}?return AgDurumu\.bilinmiyor;')
-              .hasMatch(govde),
-          isTrue,
+      final iCatch = govde.indexOf('catch (e) {');
+      expect(iCatch, greaterThan(0));
+      final yakala = govde.substring(iCatch);
+      expect(yakala.contains('return AgDurumu.bilinmiyor;'), isTrue,
           reason: 'hata durumunda kesin bilgi yokmuş gibi davranılmalı');
-      expect(
-          RegExp(r'catch \(e\) \{[\s\S]{0,600}?return AgDurumu\.online;')
-              .hasMatch(govde),
-          isFalse,
+      expect(yakala.contains('return AgDurumu.online;'), isFalse,
           reason: 'hata SAHTE ONLINE üretmemeli');
     });
 
@@ -411,10 +421,18 @@ void main() {
       // ⚠ İmza genişledi: tohumlama artık depoları da alıyor
       // (demo ilan/teklif senaryosu için). Çağrının VARLIĞI ve
       // post-frame'e alınmış olması aynen kilitli.
-      expect(m.contains('demoTohumla(authRepo,'), isTrue);
-      expect(m.contains('addPostFrameCallback'), isTrue);
+      // ⚠ GÜNCEL KARAR (canlı hazırlığı): demo tohumlama KAPATILDI —
+      // `buildPorts` onu hiç çağırmaz. Fonksiyon silinmedi; geri
+      // açılırsa yine ilk kareden SONRA çalışır.
+      expect(mKod.contains('demoTohumla(authRepo'), isFalse,
+          reason: 'demo tohumlama yeniden çağrılmış');
+      final iFn = m.indexOf('void demoTohumla(');
+      final iSeed = m.indexOf('void _seedDemo(', iFn);
+      expect(iFn, greaterThan(0));
+      expect(m.substring(iFn, iSeed).contains('addPostFrameCallback'), isTrue);
       // Doğrudan çağrı geri gelmemeli.
       final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
+      expect(iRun, greaterThan(0));
       expect(mKod.substring(0, iRun).contains('_seedDemo(authRepo)'), isFalse,
           reason: 'tohumlama yine runApp öncesine alınmış');
     });
@@ -422,13 +440,23 @@ void main() {
     test('⚠ DEMO SENARYOSU YALNIZ DEBUG KAPISININ ARKASINDA', () {
       // ⚠ EN ÖNEMLİ KİLİT: mağazaya giden release paketinde uydurma
       // ilan ÜRETİLMEZ. Çağrı `kDebugMode` bloğunun içinde olmalı.
-      final i = mKod.indexOf('if (kDebugMode) {');
-      final j = mKod.indexOf('demoTohumla(authRepo,');
-      expect(i, greaterThan(0), reason: 'debug kapısı kalkmış');
-      expect(j, greaterThan(i),
-          reason: 'tohumlama debug kapısının DIŞINA çıkmış');
-      expect(j - i, lessThan(200),
-          reason: 'çağrı debug bloğunun içinde değil');
+      //
+      // ⚠ GÜNCEL DURUM DAHA SIKI: tohumlama hiçbir derlemede
+      // çağrılmıyor. Kural: çağrı ya YOK ya da `kDebugMode` bloğunun
+      // içinde. `_seedDemo` yalnız `demoTohumla` içinden çağrılır.
+      final j = mKod.indexOf('demoTohumla(authRepo');
+      if (j >= 0) {
+        final i = mKod.lastIndexOf('if (kDebugMode) {', j);
+        expect(i, greaterThan(0), reason: 'debug kapısı kalkmış');
+        expect(j - i, lessThan(200),
+            reason: 'çağrı debug bloğunun içinde değil');
+      }
+      final iFn = mKod.indexOf('void demoTohumla(');
+      final iSeed = mKod.indexOf('void _seedDemo(');
+      for (final e in RegExp(r'_seedDemo\(auth').allMatches(mKod)) {
+        expect(e.start > iFn && e.start < iSeed, isTrue,
+            reason: '_seedDemo demoTohumla dışından çağrılıyor');
+      }
     });
 
     test('⚠ TAMAMLANMIŞ demo işlerde ZİNCİR TAM', () {
@@ -450,9 +478,12 @@ void main() {
       // İki farklı hizmet verenden teklif.
       expect(mKod.contains("phone: '5559998877'"), isTrue,
           reason: 'ikinci demo usta yok — teklif karşılaştırması olmaz');
-      expect('offers.create('.allMatches(mKod).length, 2);
-      // ⚠ Bloke GERÇEKTEN düşülür; cüzdan tutarsız kalmaz.
-      expect('wallets.block('.allMatches(mKod).length, 2);
+      // Açık ilana (ilanA) iki ayrı ustadan teklif; üçüncü
+      // `offers.create` geçmiş işler yardımcısındadır (`gecmisIs`).
+      expect('listingId: ilanA.id'.allMatches(mKod).length, 2);
+      expect('offers.create('.allMatches(mKod).length, 3);
+      // ⚠ Ücretsiz model: bloke/cüzdan hareketi YOK.
+      expect('wallets.block('.allMatches(mKod).length, 0);
     });
 
     test('demo VERİSİ kaldırılmadı', () {
@@ -517,11 +548,21 @@ void main() {
       // Post-frame geri çağrıları KAYIT SIRASINA göre işlenir.
       // `demoTohumla` buildPorts sırasında (runApp öncesi),
       // `_bootGuvenli` ise SplashScreen.initState'te kaydedilir.
-      final iSeed = m.indexOf('demoTohumla(authRepo);');
-      final iRun = m.indexOf("BootLog.olay('RUN_APP_CALL')");
-      expect(iSeed, greaterThan(0));
-      expect(iSeed, lessThan(iRun),
-          reason: 'tohumlama kaydı runApp SONRASINA kaymış');
+      //
+      // ⚠ GÜNCEL: tohumlama çağrılmadığı için yarış da yok. Çağrı geri
+      // açılırsa kayıt runApp'ten ÖNCE olmalı.
+      final mKod = m
+          .split('\n')
+          .where((l) =>
+              !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
+          .join('\n');
+      final iSeed = mKod.indexOf('demoTohumla(authRepo');
+      final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
+      expect(iRun, greaterThan(0));
+      if (iSeed >= 0) {
+        expect(iSeed, lessThan(iRun),
+            reason: 'tohumlama kaydı runApp SONRASINA kaymış');
+      }
     });
 
     test('ilk yüzey seed verisine İHTİYAÇ DUYMAZ', () {

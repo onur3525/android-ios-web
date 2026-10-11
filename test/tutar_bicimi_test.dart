@@ -167,13 +167,20 @@ void main() {
     final k = _kodu('lib/screens/teklif_istediklerim_screen.dart');
 
     test('durum rozeti ismin YANINDA, altta değil', () {
-      final iAd = k.indexOf('maskeliAd(talep.saglayiciAdi)');
-      final iRozet = k.indexOf('Text(metin,');
-      final iIstatistik = k.indexOf('iş tamamladı');
-      expect(iRozet, greaterThan(iAd), reason: 'rozet addan önce çiziliyor');
-      expect(iRozet, lessThan(iIstatistik),
+      // ⚠ SONRAKİ KARAR (10 Eyl, kullanıcı isteği): rozet kartın SAĞ
+      // ÜST köşesine, hizmet başlığıyla AYNI satıra taşındı (ortak
+      // `DurumRozeti`). Sözleşmenin özü aynı: rozet istatistiklerin
+      // ALTINDA değil — özet satırından (ad + istatistik) ÖNCE.
+      final iBaslik = k.indexOf('Text(talep.hizmet,');
+      final iRozet = k.indexOf('DurumRozeti(');
+      final iOzet = k.indexOf('SaglayiciOzetSatiri(ozet');
+      expect(iBaslik, greaterThan(-1));
+      expect(iRozet, greaterThan(iBaslik),
+          reason: 'rozet addan önce çiziliyor');
+      expect(iRozet, lessThan(iOzet),
           reason: 'rozet hâlâ istatistiklerin altında — '
               'ismin yanına taşınmamış');
+      expect(RegExp(r'DurumRozeti\(').allMatches(k).length, 1);
     });
 
     test('teklif geldiyse tutar rozetin altında', () {

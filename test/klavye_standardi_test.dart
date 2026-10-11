@@ -72,9 +72,18 @@ void main() {
       // beliriyordu. Karar artık `_kural` içinde verilir: doğrulama
       // her yeniden çizimde koşar (`always`) ama alan ODAKTAYSA veya
       // henüz TERK EDİLMEDİYSE `null` döner.
-      expect(r.contains('AutovalidateMode.always'), isTrue);
-      expect(r.contains('AutovalidateMode.onUserInteraction'), isFalse,
-          reason: 'her tuşta tüm form doğrulanmamalı');
+      //
+      // ⚠ GÜNCEL (performans düzeltmesi): `always` her ODAK
+      // değişiminde (klavye açılırken) altı alanın hepsini yeniden
+      // doğruluyordu. Form `onUserInteraction`a geçti; uyarının ZAMANI
+      // yine `_kural` içinde (odak + terk kapısı) — çerçeveye
+      // bırakılmadı.
+      expect(r.contains('autovalidateMode: AutovalidateMode.onUserInteraction'),
+          isTrue);
+      expect(r.contains('autovalidateMode: AutovalidateMode.always'), isFalse,
+          reason: 'her odak değişiminde tüm form doğrulanmamalı');
+      expect(r.contains('if (f != null && f.hasFocus) {'), isTrue,
+          reason: 'zaman kararı `_kural` içinde değil');
       expect(r.contains('_terkEdilen'), isTrue,
           reason: 'terk edilen alan kaydı olmadan zamanlama kontrol edilemez');
       // ⚠ `always` her TUŞTA koşmaz: alan değişimi `setState`

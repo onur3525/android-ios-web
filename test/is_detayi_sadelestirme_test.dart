@@ -90,7 +90,13 @@ void main() {
     });
 
     test('⚠ TUTAR EKRANDA TEK KEZ', () {
-      expect(RegExp(r'tutarMetni\(mine\.amount\)').allMatches(k).length, 1);
+      // ⚠ Tutar kartı ortak bileşene taşındı (`TeklifTutarKarti`);
+      // biçim yine `tutarMetni` ile, bileşenin içinde.
+      expect(RegExp(r'TeklifTutarKarti\(mine\.amount\)').allMatches(k).length,
+          1);
+      expect(RegExp(r'tutarMetni\(mine\.amount\)').allMatches(k).length, 0);
+      expect(_kodu('lib/screens/widgets/teklif_tutar_karti.dart')
+          .contains('tutarMetni(tutar)'), isTrue);
     });
 
     test('⚠ İLAN NUMARASI KARTIN EN ÜSTÜNDE (10 Eyl)', () {
@@ -98,18 +104,30 @@ void main() {
       // sütunun içindeydi; o sütun `Expanded` olduğu için numara
       // kartın gerçek sağ kenarına değil sütunun sağına yaslanıyor
       // ve ikonun hizasını da bozuyordu.
-      expect(RegExp(r'IlanNoEtiketi\(l\)').allMatches(k).length, 1,
+      // ⚠ Bileşen artık numarayı alır (`IlanNoEtiketi(l.ilanNo)`);
+      // sahip kartı ortak `SahipKarti`.
+      expect(RegExp(r'IlanNoEtiketi\(').allMatches(k).length, 1,
           reason: 'numara birden fazla yerde çiziliyor');
-      expect(k.indexOf('IlanNoEtiketi('), lessThan(k.indexOf('_SahipKarti(')),
+      expect(k.contains('IlanNoEtiketi(l.ilanNo)'), isTrue);
+      final iSahip = k.indexOf('SahipKarti(');
+      expect(iSahip, greaterThan(-1));
+      expect(k.indexOf('IlanNoEtiketi('), lessThan(iSahip),
           reason: 'numara kartın en üstünde değil');
     });
 
     test('⚠ KATEGORİ İKONU METİNLE YAN YANA', () {
       // Hiza `start` olduğu için ikon metnin ÜSTÜNDE kalıyordu.
-      expect(
-          k.contains(
-              'Row(crossAxisAlignment: CrossAxisAlignment.center, children: ['),
-          isTrue);
+      //
+      // ⚠ Satır ortak bileşene taşındı (`IlanBaslikSatiri`); hiza
+      // orada tek yerde.
+      expect(k.contains('IlanBaslikSatiri('), isTrue);
+      final b = _kodu('lib/screens/widgets/ilan_baslik_satiri.dart');
+      final iRow = b.indexOf('return Row(');
+      expect(iRow, greaterThan(-1));
+      expect(b.indexOf('crossAxisAlignment: CrossAxisAlignment.center', iRow),
+          lessThan(b.indexOf('children:', iRow)));
+      expect(b.indexOf('crossAxisAlignment: CrossAxisAlignment.center', iRow),
+          greaterThan(iRow));
     });
 
     test('⚠ "Kategori" SATIRI KALKTI', () {

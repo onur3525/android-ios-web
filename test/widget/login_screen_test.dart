@@ -311,7 +311,11 @@ void main() {
     expect(authRepo.loggedIn, isTrue);
     expect(authPort.loginCagriSayisi, 1);
     await t.pump(const Duration(milliseconds: 300));
-    expect(find.textContaining('Hoş geldiniz'), findsOneWidget);
+    // ⚠ BAŞARI ŞERİDİ YOK (kullanıcı isteği, 9 Eyl): bilgilendirme
+    // uyarıları kaynağında susturuldu (`sysToastOk` boş). Sonuç
+    // ekranda şeritle değil yönlendirmeyle görünür — bkz. aşağıdaki
+    // navigasyon testleri.
+    expect(find.textContaining('Hoş geldiniz'), findsNothing);
   });
 
   // ═════════════════════════════════════════════════════════════

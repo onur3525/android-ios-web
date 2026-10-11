@@ -22,6 +22,14 @@ String _kod(String yol) {
       .join('\n');
 }
 
+/// Ortak oturum kapatma (`core/oturum_temizligi.dart`) `auth.logout()`
+/// çağırıyor mu?
+bool _oturumKapatmaLogoutCagirir() {
+  final o = _kod('lib/core/oturum_temizligi.dart');
+  final i = o.indexOf('Future<void> oturumuKapat(BuildContext context)');
+  return i >= 0 && o.indexOf('auth.logout()', i) > i;
+}
+
 void main() {
   final a = _kod('lib/screens/account_settings_screen.dart');
 
@@ -39,20 +47,27 @@ void main() {
 
     test('ana ekranda uzun hukuki metin YOK', () {
       // Uzun açıklamalar yalnız karta dokununca açılan panelde.
-      expect(a.contains('Mevzuat gereği saklanması zorunlu kayıtlar, ilgili'),
+      //
+      // ⚠ Metin sadeleşti (anlam korundu): mevzuat cümlesi panelin
+      // bilgi satırında duruyor.
+      expect(a.contains('Yasal zorunluluklar nedeniyle bazı veriler mevzuat '),
           isTrue);
       final i = a.indexOf('_SatirKart(');
-      final govde = a.substring(i, i + 900);
-      expect(govde.contains('Mevzuat'), isFalse);
+      expect(i, greaterThan(-1));
+      final govde = a.substring(i, i + 900 > a.length ? a.length : i + 900);
+      expect(govde.toLowerCase().contains('mevzuat'), isFalse);
     });
   });
 
   group('DONDURMA AKIŞI', () {
     test('panel metni: SİLMEZ ifadesi açık', () {
       // ⚠ Metin kaynakta satırlara bölünmüştür; parçalar aranır.
-      expect(a.contains('hesabınızı veya kişisel verilerinizi silmez.'),
-          isTrue);
-      expect(a.contains('yeniden etkinleştirene kadar HizmetCep '), isTrue);
+      //
+      // ⚠ Metin sadeleşti (anlam korundu): "silinmez" + "yeniden
+      // etkinleştirene kadar" ifadeleri duruyor.
+      expect(a.contains('Hesabınız geçici olarak dondurulacaktır.'), isTrue);
+      expect(a.contains('verileriniz silinmez.'), isTrue);
+      expect(a.contains('yeniden etkinleştirene '), isTrue);
     });
 
     test('iki düğme: Vazgeç / Hesabı Dondur', () {
@@ -68,8 +83,11 @@ void main() {
     test('dondurma sonrası oturum kapanır', () {
       final i = a.indexOf('Future<void> _freeze() async {');
       expect(i, greaterThan(-1));
-      final govde = a.substring(i, i + 1600);
-      expect(govde.contains('auth.logout()'), isTrue);
+      final govde = a.substring(i, a.indexOf('\n  }\n', i));
+      // ⚠ Oturum kapatma TEK KAYNAKTA: `oturumuKapat` (yerel kullanıcı
+      // verisini de temizler) içinde `auth.logout()` çağrılır.
+      expect(govde.contains('oturumuKapat(context)'), isTrue);
+      expect(_oturumKapatmaLogoutCagirir(), isTrue);
       expect(govde.contains("pushNamedAndRemoveUntil('/home'"), isTrue);
     });
 
@@ -81,8 +99,9 @@ void main() {
 
   group('SİLME AKIŞI — ÜÇ AŞAMA', () {
     test('1. aşama: açıklama + Vazgeç / Devam Et', () {
+      // ⚠ Metin sadeleşti (anlam korundu).
       expect(
-          a.contains('Hesabınızın silinmesi için işlem başlatılacaktır.'),
+          a.contains('Hesabınızı kalıcı olarak silmek üzeresiniz.'),
           isTrue);
       expect(a.contains("onayMetni: 'Devam Et'"), isTrue);
     });
@@ -156,7 +175,9 @@ void main() {
       // Kaldırılan yalnız EKRANDA BELİREN YAZI; işlemin kendisi aynı.
       expect(a.contains('requestDeletion()'), isTrue,
           reason: 'silme talebi çağrısı kalkmış');
-      expect(a.contains('auth.logout()'), isTrue,
+      expect(a.contains('oturumuKapat(context)'), isTrue,
+          reason: 'oturum kapatma kalkmış');
+      expect(_oturumKapatmaLogoutCagirir(), isTrue,
           reason: 'oturum kapatma kalkmış');
       expect(a.contains('OturumTercihi().temizle()'), isTrue);
     });
@@ -173,9 +194,11 @@ void main() {
 
     test('oturum kapatılır ve ana ekrana dönülür', () {
       final i = a.indexOf('Future<void> _requestDeletion() async {');
-      final govde = a.substring(i, i + 2000);
+      expect(i, greaterThan(-1));
+      final govde = a.substring(i, a.indexOf('\n  }\n', i));
       expect(govde.contains('OturumTercihi().temizle()'), isTrue);
-      expect(govde.contains('auth.logout()'), isTrue);
+      expect(govde.contains('oturumuKapat(context)'), isTrue);
+      expect(_oturumKapatmaLogoutCagirir(), isTrue);
       expect(govde.contains("pushNamedAndRemoveUntil('/home'"), isTrue);
     });
   });
@@ -243,17 +266,21 @@ void main() {
     test('CANLI kayıtlar sayılır, kapanmışlar sayılmaz', () {
       final i = k.indexOf('bool _devamEdenIsVar() {');
       expect(i, greaterThan(-1));
-      final govde = k.substring(i, i + 900);
+      final govde = k.substring(i, k.indexOf('\n  }\n', i));
       for (final d in const [
         // ⚠ CANLI = YAŞAYAN (§24). Eski küme iş gidişatı durumlarını
         // da sayıyordu; onlar kalktı.
         'ListingStatus.active',
+        '!l.isTamamlanmisIs',
         'OfferStatus.active',
-        'OfferStatus.selected',
       ]) {
         expect(govde.contains(d), isTrue, reason: d);
       }
+      // ⚠ GÜNCEL KARAR: SEÇİLMİŞ teklif tamamlanmış işin kendisidir,
+      // dondurmayı ENGELLEMEZ (aksi hâlde işi biten kullanıcı hesabını
+      // hiç donduramıyordu).
       for (final d in const [
+        'OfferStatus.selected',
         'ListingStatus.userDeleted',
         'ListingStatus.expired',
         'OfferStatus.closed',

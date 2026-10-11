@@ -142,8 +142,17 @@ void main() {
       expect(k.contains('pinler.length < 2'), isTrue);
       // ⚠ TEK ÇAĞRI YERİ `buildPorts`: hem uygulamanın hem testlerin
       // ortak giriş noktası.
+      //
+      // ⚠ WEB KÖPRÜSÜ: `sertifika_sabitleme.dart` `dart:io` içerdiği
+      // için `main.dart` onu doğrudan değil platform köprüsü
+      // (`sabitlemeli_istemci.dart`) üzerinden çağırır. Mobil köprü
+      // aynı kurala DEVREDER; web'de pin karşılaştırması yapılamaz.
       final m = _kod('lib/main.dart');
-      expect(m.contains('SertifikaSabitleme.pinDenetimi(gercekApi:'), isTrue);
+      expect(m.contains('pinDenetimi(gercekApi: m == DataSourceMode.api)'),
+          isTrue);
+      expect(_kod('lib/data/remote/sabitlemeli_istemci_io.dart')
+          .contains('SertifikaSabitleme.pinDenetimi(gercekApi: gercekApi)'),
+          isTrue);
     });
 
     test('istemci pin yokken SADE döner', () {
@@ -153,9 +162,13 @@ void main() {
     });
 
     test('ApiClient sabitlemeyi KOŞULLU kullanır', () {
+      // ⚠ Seçim platform köprüsüne taşındı (web derlemesi `dart:io`
+      // kabul etmez); `ApiClient` köprüyü çağırır.
       final k = _kod('lib/data/remote/api_client.dart');
-      expect(k.contains('SertifikaSabitleme.etkin'), isTrue);
-      expect(k.contains('IOClient(SertifikaSabitleme.istemci())'), isTrue);
+      expect(k.contains('httpClient ?? sabitlemeliIstemci()'), isTrue);
+      final io = _kod('lib/data/remote/sabitlemeli_istemci_io.dart');
+      expect(io.contains('SertifikaSabitleme.etkin'), isTrue);
+      expect(io.contains('IOClient(SertifikaSabitleme.istemci())'), isTrue);
     });
   });
 

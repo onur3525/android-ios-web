@@ -194,7 +194,8 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Lamba Montajı', 'Elektrik', 'Aydınlatma Sistemleri'),
   ServiceAlias('Elektrik Panosu Montajı', 'Elektrik', 'Sigorta Panosu Montajı'),
   ServiceAlias('Pano Revizyonu', 'Elektrik', 'Elektrik Panosu Yenileme'),
-  ServiceAlias.kategoriNiyeti('Topraklama Ölçümü', 'Elektrik'),
+  // ⚠ 'Topraklama Ölçümü' ALIAS OLMAKTAN ÇIKTI: katalogda artık KANONİK hizmet
+  // (Elektrik). Kanonik ad alias olamaz; arama onu kendi adıyla bulur.
 
   // ── Güvenlik Sistemleri ──
   ServiceAlias('Güvenlik Kamerası Kurulumu', 'Güvenlik Sistemleri', 'Kamera Sistemi Kurulumu'),
@@ -312,7 +313,8 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Hazır Mutfak Dolabı Montajı', 'Mutfak Tadilat ve Dolap', 'Hazır Mutfak'),
   ServiceAlias('Komple Mutfak Yenileme', 'Mutfak Tadilat ve Dolap', 'Mutfak Tadilatı'),
   ServiceAlias.kategoriNiyeti('Mutfak Tezgahı', 'Mutfak Tadilat ve Dolap'),
-  ServiceAlias.kategoriNiyeti('Mutfak Tezgahı Yapımı', 'Mutfak Tadilat ve Dolap'),
+  // ⚠ 'Mutfak Tezgahı Yapımı' ALIAS OLMAKTAN ÇIKTI: katalogda artık KANONİK hizmet
+  // (Mutfak Tadilat ve Dolap). Kanonik ad alias olamaz; arama onu kendi adıyla bulur.
   ServiceAlias.kategoriNiyeti('Granit Mutfak Tezgahı', 'Mutfak Tadilat ve Dolap'),
   ServiceAlias.kategoriNiyeti('Mermer Mutfak Tezgahı', 'Mutfak Tadilat ve Dolap'),
 
@@ -419,11 +421,16 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Kırık Cam Tamiri', 'Cam ve Ayna Hizmetleri', 'Cam Değişimi'),
   ServiceAlias('Çift Cam Tamiri', 'Cam ve Ayna Hizmetleri', 'Cam Değişimi'),
   ServiceAlias('Ayna Asma', 'Cam ve Ayna Hizmetleri', 'Ayna Montajı'),
-  ServiceAlias.kategoriNiyeti('Duşakabin Cam Değişimi', 'Cam Balkon Sistemleri'),
-  ServiceAlias.kategoriNiyeti('Duşakabin Cam Tamiri', 'Cam Balkon Sistemleri'),
-  ServiceAlias.kategoriNiyeti('Vitrin Camı', 'Cam Balkon Sistemleri'),
-  ServiceAlias.kategoriNiyeti('Cam Montajı', 'Cam Balkon Sistemleri'),
-  ServiceAlias.kategoriNiyeti('Cam İmalatı', 'Cam Balkon Sistemleri'),
+  // ⚠ HEDEF DÜZELTİLDİ: 'Cam Balkon Sistemleri' kategorisi katalogda
+  // artık YOK (cam balkon 'Cam ve Ayna Hizmetleri'nin hizmeti oldu;
+  // yukarıdaki aliaslar zaten oraya bağlı). Eski ad, aramada var
+  // olmayan bir kategoriye giden sonuç üretiyordu. İmalat işi
+  // ('Lamine Cam', 'Masa Camı İmalatı') 'Cam & Alüminyum'dadır.
+  ServiceAlias.kategoriNiyeti('Duşakabin Cam Değişimi', 'Cam ve Ayna Hizmetleri'),
+  ServiceAlias.kategoriNiyeti('Duşakabin Cam Tamiri', 'Cam ve Ayna Hizmetleri'),
+  ServiceAlias.kategoriNiyeti('Vitrin Camı', 'Cam ve Ayna Hizmetleri'),
+  ServiceAlias.kategoriNiyeti('Cam Montajı', 'Cam ve Ayna Hizmetleri'),
+  ServiceAlias.kategoriNiyeti('Cam İmalatı', 'Cam & Alüminyum'),
 
   // ── PVC ve Alüminyum Doğrama ──
   ServiceAlias('Pimapen Tamiri', 'PVC ve Alüminyum Doğrama', 'PVC Pencere Tamiri'),
@@ -494,7 +501,8 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Depolama', 'Depolama Hizmetleri', 'Eşya Depolama'),
   ServiceAlias.kategoriNiyeti('Nakliye', 'Nakliyat ve Taşımacılık'),
   ServiceAlias.kategoriNiyeti('Şehirler Arası Parça Eşya Taşıma', 'Nakliyat ve Taşımacılık'),
-  ServiceAlias.kategoriNiyeti('Şehir İçi Nakliyat', 'Nakliyat ve Taşımacılık'),
+  // ⚠ 'Şehir İçi Nakliyat' ALIAS OLMAKTAN ÇIKTI: katalogda artık KANONİK hizmet
+  // (Nakliyat ve Taşımacılık). Kanonik ad alias olamaz; arama onu kendi adıyla bulur.
   ServiceAlias.kategoriNiyeti('Hamal', 'Nakliyat ve Taşımacılık'),
 
   // ── Kurye ve Küçük Taşıma ──
@@ -525,7 +533,10 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Mekanik Proje Çizimi', 'Mekanik Projeler', 'Mekanik Tesisat Projesi'),
   ServiceAlias('Zemin Etüdü Raporu', 'Zemin ve Jeoteknik', 'Zemin Etüdü'),
   ServiceAlias('Enerji Kimlik Belgesi Raporu', 'Enerji ve Yapı Belgelendirme', 'Enerji Kimlik Belgesi'),
-  ServiceAlias.kategoriNiyeti('İnşaat Proje Çizimi', 'Mühendislik ve Proje'),
+  // ⚠ HEDEF DÜZELTİLDİ: 'Mühendislik ve Proje' kategorisi katalogda
+  // artık YOK (proje kategorilerine bölündü). İnşaat projesi =
+  // ruhsat/mimari proje → 'Mimari Proje'.
+  ServiceAlias.kategoriNiyeti('İnşaat Proje Çizimi', 'Mimari Proje'),
 
   // ── Oto Çekici ve Yol Yardım ──
   ServiceAlias('Çekici Hizmeti', 'Oto Çekici ve Yol Yardım', 'Oto Çekici'),
@@ -558,7 +569,8 @@ const List<ServiceAlias> kServiceAliases = [
   ServiceAlias('Oto Koltuk Yıkama', 'Araç Temizlik ve Detaylı Bakım', 'Araç Koltuk Yıkama'),
   ServiceAlias.kategoriNiyeti('VIP Araç Yıkama', 'Araç Temizlik ve Detaylı Bakım'),
   ServiceAlias.kategoriNiyeti('Pasta Cila', 'Araç Temizlik ve Detaylı Bakım'),
-  ServiceAlias.kategoriNiyeti('Seramik Kaplama', 'Araç Temizlik ve Detaylı Bakım'),
+  // ⚠ 'Seramik Kaplama' ALIAS OLMAKTAN ÇIKTI: katalogda artık KANONİK hizmet
+  // (Araç Temizlik ve Detaylı Bakım). Kanonik ad alias olamaz; arama onu kendi adıyla bulur.
 
   // ── Özel Ders ──
   ServiceAlias('Ortaokul Matematik Özel Ders', 'Özel Ders', 'Matematik Özel Ders'),

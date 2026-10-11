@@ -270,8 +270,15 @@ void main() {
       // Ürün kararı: anlamsız metin kullanıcıyı ENGELLEMEZ.
       final k = File('lib/screens/create_listing_screen.dart')
           .readAsStringSync();
+      //
+      // ⚠ KAPSAM: bu kilit MASKELEME modülünün ilan gönderimini
+      // engellememesidir. Klavye karması ENGELİ ayrı bir kuraldır ve
+      // ürün kararıyla (6 Eki) ilan girişinde AYNEN geçerlidir:
+      // `Validators.anlamsizKelimeVarMi` (bkz. `iletisim_maskesi.dart`
+      // notu). O kural maskeleme değildir, burada aranmaz.
       expect(k.contains('iletisim_maskesi'), isFalse);
-      expect(k.contains('anlamsiz'), isFalse);
+      expect(k.contains('iletisimIceriyor('), isFalse);
+      expect(k.contains('maskele('), isFalse);
     });
   });
 }

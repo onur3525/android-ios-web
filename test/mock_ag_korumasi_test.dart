@@ -38,7 +38,17 @@ void main() {
         if (!k.contains('ApiClient>()')) {
           continue;
         }
-        if (!k.contains('ApiConfig.useRealApi')) {
+        // ⚠ AĞA ÇIKMAYAN KULLANIM: istemci yalnız fotoğraf seçicinin
+        // `StorageApi` parametresi için okunuyor ve yükleme KAPALI
+        // (`uploadEnabled: false`) — bu ekran hiçbir modda HTTP
+        // çağrısı yapmaz (ör. `teklif_iste_screen`: Bul akışında
+        // yükleme ucu yok, fotoğraf cihazda kalır).
+        final yalnizKapaliYukleme =
+            'ApiClient>()'.allMatches(k).length == 1 &&
+                k.contains('StorageApi(context.read<ApiClient>())') &&
+                k.contains('uploadEnabled: false') &&
+                !k.contains('uploadEnabled: true');
+        if (!k.contains('ApiConfig.useRealApi') && !yalnizKapaliYukleme) {
           korumasiz.add(f.path.split('/').last);
         }
       }

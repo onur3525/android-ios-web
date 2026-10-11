@@ -61,15 +61,15 @@ void main() {
     test('ana kategori eşleşince ALT HİZMETLERİ de gelir', () {
       final sonuc = SearchService.services('kombi', enFazla: 400);
       final etiketler = sonuc.map((h) => h.label).toList();
-      // ⚠ Kombi ikiye ayrıldı; "kombi" araması İKİ kategoriyi de
-      // getirir. Alt hizmetlerin tamamı yine listelenir.
-      expect(etiketler, contains('Kombi Montaj'),
-          reason: 'montaj kategorisi satırı yok');
+      // ⚠ KİLİTLİ KATALOG (166/1587): ayrı "Kombi Montaj" kategorisi
+      // YOK — kombi montaj işleri `Doğalgaz` altındadır ve ADLARIYLA
+      // eşleşir. Kategori satırı `Kombi Servis`tir ve eşleşince TÜM
+      // alt hizmetleri gelir.
       expect(etiketler, contains('Kombi Servis'),
           reason: 'servis kategorisi satırı yok');
       final altlar = [
-        ...?kCategoryTree['Kombi Montaj'],
         ...?kCategoryTree['Kombi Servis'],
+        ...kCategoryTree['Doğalgaz']!.where((h) => h.startsWith('Kombi')),
       ];
       expect(altlar, isNotEmpty);
       for (final a in altlar) {

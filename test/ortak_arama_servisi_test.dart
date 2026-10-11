@@ -170,7 +170,10 @@ void main() {
       expect(k.contains('LayerLink'), isTrue);
       expect(k.contains('CompositedTransformTarget'), isTrue);
       expect(k.contains('CompositedTransformFollower'), isTrue);
-      expect(k.contains('Overlay.of(context).insert'), isTrue);
+      // ⚠ KÖK overlay'e eklenir (`rootOverlay: true`): web kabuğunun
+      // ara katmanlarında işaretçi olayları panele ulaşmıyordu.
+      // Mobilde tek overlay olduğu için en yakın ile kök aynıdır.
+      expect(k.contains('Overlay.of(context, rootOverlay: true).insert'), isTrue);
     });
 
     test('panel kutunun ALT KÖŞESİNE yapışır', () {

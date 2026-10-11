@@ -292,11 +292,18 @@ void main() {
     });
 
     test('24. RoleGuard.customer GEVŞETİLMEMİŞ', () {
+      // ⚠ Rota tablodan `onGenerateRoute`a taşındı (web'de panel,
+      // mobilde aynı sayfa rotası — `akisRotasi`). Koruma aynen duruyor.
+      final i = mn.indexOf("if (ad == '/customer/new-listing') {");
+      expect(i, greaterThan(-1), reason: 'korumalı route aynen kalmalı');
+      final j = mn.indexOf('\n          }', i);
       expect(
-          mn.contains(
-              "'/customer/new-listing': (_) =>\n              RoleGuard.customer"),
+          mn.substring(i, j).contains(
+              'RoleGuard.customer(builder: (_) => const CreateListingScreen())'),
           isTrue,
           reason: 'korumalı route aynen kalmalı');
+      expect(mn.contains("'/customer/new-listing': (_) =>"), isFalse,
+          reason: 'korumasız ikinci tanım');
     });
 
     test('25. public route customer-only yetki VERMEZ', () {

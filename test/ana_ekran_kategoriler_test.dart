@@ -118,7 +118,8 @@ void main() {
         'Isıtma Sistemleri',
         'Banyo Tadilat ve Montaj',
         'Mutfak Tadilat ve Dolap',
-        'Kapı Montaj ve Tamir',
+        // ⚠ Kilitli katalogda kapı kategorisinin adı 'Kapı Sistemleri'.
+        'Kapı Sistemleri',
         'Zemin Kaplama',
         'Mobilya Yapım ve Montaj',
         'Doğalgaz',
@@ -222,12 +223,14 @@ void main() {
       for (final k in [
         'Kombi Servis',
         'Alçı ve Sıva İşleri',
-        'Kapı Montaj ve Tamir',
+        // ⚠ Kilitli katalog adları: 'Kapı Montaj ve Tamir' →
+        // 'Kapı Sistemleri' (aynı `kapi.jpg`). 'Mühendislik ve Proje'
+        // kategorisi bölündüğü için listeden çıktı.
+        'Kapı Sistemleri',
         'Oto Çekici ve Yol Yardım',
         'Banyo Tadilat ve Montaj',
         'Oto Servis ve Bakım',
         'Araç Temizlik ve Detaylı Bakım',
-        'Mühendislik ve Proje',
         'Özel Ders',
         'Yabancı Dil Eğitimi',
       ]) {
@@ -241,7 +244,8 @@ void main() {
       // etkinlik kategorileri fotoğrafsız kalan son gruptu.
       for (final k in [
         'Sürücü Eğitimi',
-        'Spor ve Kişisel Antrenör',
+        // ⚠ Kilitli katalogda adı 'Spor' (aynı `spor.jpg`).
+        'Spor',
         'Müzik Dersleri',
         'Yazılım ve Web Hizmetleri',
         'Grafik ve Logo Tasarım',

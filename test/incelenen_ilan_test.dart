@@ -154,11 +154,16 @@ void main() {
     });
 
     test('teklif sayısı sağlayıcıya GÖSTERİLİR', () {
-      expect(js.contains('_TeklifRozeti'), isTrue);
+      // ⚠ TEK KAYNAK (9 Eyl kesin kuralı): rozet ortak
+      // `TeklifRozeti` bileşenine taşındı; metinler yalnız orada.
+      // "Henüz" sözcüğü kullanıcı isteğiyle kaldırıldı.
+      expect(js.contains('TeklifRozeti(sayi: teklifAdedi)'), isTrue);
       expect(js.contains('offersForListing(l.id).length'), isTrue);
-      // Metinler referansla aynı.
-      expect(js.contains('Henüz teklif verilmedi'), isTrue);
-      expect(js.contains("'\$adet teklif verildi'"), isTrue);
+      final r = File('lib/screens/widgets/teklif_rozeti.dart')
+          .readAsStringSync();
+      expect(r.contains("sayi == 0 ? 'Teklif verilmedi' : '\$sayi teklif verildi'"),
+          isTrue);
+      expect(js.contains('Henüz teklif verilmedi'), isFalse);
     });
 
     test('liste durumu controller\'dan okur', () {

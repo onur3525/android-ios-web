@@ -27,6 +27,16 @@ String _kod(String yol) => File(yol)
         !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
     .join('\n');
 
+/// `_openTarget` içindeki tek `case NotifType.<tur>:` dalının gövdesi.
+String _dal(String kaynak, String tur) {
+  final i = kaynak.indexOf('case NotifType.$tur:');
+  if (i < 0) {
+    throw StateError('$tur dalı yok');
+  }
+  final j = kaynak.indexOf('case NotifType.', i + 1);
+  return kaynak.substring(i, j < 0 ? kaynak.length : j);
+}
+
 ChatMessage _mesaj(String gonderen, MessageStatus d) =>
     ChatMessage(id: 'm', senderId: gonderen, text: 'selam', status: d);
 
@@ -35,9 +45,12 @@ void main() {
 
   group('1 — ⚠ MESAJ BİLDİRİMİ SOHBETİ AÇAR', () {
     test('ilan akışı: ChatScreen, teklif id ile', () {
-      expect(n.contains('ChatScreen(offerId: ilan)'), isTrue);
-      // Eski, hatalı hedef geri gelmemeli.
-      expect(n.contains('JobDetailScreen(listingId: ilan)'), isFalse,
+      final dal = _dal(n, 'newMessage');
+      expect(dal.contains('ChatScreen(offerId: ilan)'), isTrue);
+      // Eski, hatalı hedef geri gelmemeli. (`offerSelected` dalı ilan
+      // id'si taşıdığı için `JobDetailScreen(listingId: ilan)` orada
+      // DOĞRUDUR; denetim yalnız mesaj dalında yapılır.)
+      expect(dal.contains('JobDetailScreen('), isFalse,
           reason: 'teklif id\'si ilan id\'si gibi geçiriliyor');
     });
 
@@ -56,7 +69,15 @@ void main() {
     test('⚠ `contactOpened` SOHBETE GİTMEZ', () {
       // Orada haber "telefon numarası artık görünüyor"dur, sohbet
       // değil.
-      expect(n.contains('OfferDetailScreen(offerId: ilan)'), isTrue);
+      //
+      // ⚠ GÜNCEL (12 Eyl): hedef OKUYANA göre dallanır — ilan sahibi
+      // kendi ilan ekranına, hizmet veren kendi iş ekranına. `refId`
+      // teklif id'sidir; ilan teklif üzerinden bulunur.
+      final dal = _dal(n, 'contactOpened');
+      expect(dal.contains('ChatScreen('), isFalse);
+      expect(dal.contains('ListingDetailScreen(listingId: l.id)'), isTrue);
+      expect(dal.contains('JobDetailScreen(listingId: l.id)'), isTrue);
+      expect(dal.contains('l.ownerId == me.id'), isTrue);
     });
   });
 

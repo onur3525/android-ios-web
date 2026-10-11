@@ -113,12 +113,15 @@ void main() {
     test('teklif formunda alanlar AYRI hata tutar', () {
       final j = _kod('lib/screens/job_detail_screen.dart');
       expect(j.contains('_amtError'), isTrue);
-      expect(j.contains('_noteError'), isTrue);
-      // Bir alan değişince YALNIZ kendi hatası düşer.
+      // ⚠ NOT ARTIK İSTEĞE BAĞLI ("Notunuz (isteğe bağlı)"): boş
+      // bırakılabilir, hata durumu YOKTUR — dolayısıyla `_noteError`
+      // da yok. Tutar alanı yalnız KENDİ hatasını düşürür; not alanı
+      // yalnız yeniden çizer.
+      expect(j.contains('_noteError'), isFalse);
+      expect(j.contains("labelText: 'Notunuz (isteğe bağlı)'"), isTrue);
       expect(j.contains('onChanged: (_) => setState(() => _amtError = null)'),
           isTrue);
-      expect(j.contains('onChanged: (_) => setState(() => _noteError = null)'),
-          isTrue);
+      expect(j.contains('onChanged: (_) => setState(() {})'), isTrue);
       // ⚠ ALAN BAŞINA TEK `onChanged`.
       //
       // İki ayrı `onChanged` verilince Dart derlemeyi durduruyordu

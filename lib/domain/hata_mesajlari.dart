@@ -108,13 +108,6 @@ HataBilgisi hataBilgisi(DomainError hata) {
         eylem: 'Listeye dön',
         bicim: HataBicimi.tamEkran,
       );
-    // ── Aşağıdakiler KULLANICI GİRDİSİNE ait: alan altında gösterilir,
-    // metin domain katmanından gelir (backend'in Türkçe mesajı).
-    case ValidationError():
-    case InvalidStateError():
-    case OfferLimitReachedError():
-    case DuplicateOfferError():
-    case OwnListingOfferError():
     // ── ⚠ İLETİŞİM ZATEN AÇIK — BAŞARISIZLIK DEĞİL ──
     //
     // İletişim açma idempotenttir (§10): ikinci istek ikinci tahsilat
@@ -131,6 +124,17 @@ HataBilgisi hataBilgisi(DomainError hata) {
         aciklama: 'Karşı tarafın bilgilerine erişebilirsiniz.',
         bicim: HataBicimi.bildirim,
       );
+    // ── Aşağıdakiler KULLANICI GİRDİSİNE ait: alan altında gösterilir,
+    // metin domain katmanından gelir (backend'in Türkçe mesajı).
+    //
+    // ⚠ SIRA DÜZELTİLDİ: bu beş durum `IletisimZatenAcikError` dalının
+    // ÜSTÜNE eklenmişti ve Dart'ta boş `case` bir sonrakine düştüğü
+    // için hepsi "İletişim zaten açık" bilgisini gösteriyordu.
+    case ValidationError():
+    case InvalidStateError():
+    case OfferLimitReachedError():
+    case DuplicateOfferError():
+    case OwnListingOfferError():
     case ListingClosedError():
     case OtpRequiredError():
     case WrongPasswordError():

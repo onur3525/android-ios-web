@@ -75,10 +75,12 @@ void main() {
       // kullanımı arasında guard gerçekten duruyor mu?
       final k = _oku('lib/screens/listing_detail_screen.dart');
 
+      // ⚠ TEK KANONİK SİLME (Paket 4 · 1b): `cancel` ucu kaldırıldı;
+      // silme yalnız `delete` ile yapılır. Guard onun ardında aranır.
       final iDelete = k.indexOf('await ctl.delete(');
-      final iCancel = k.indexOf('await ctl.cancel(');
       expect(iDelete, greaterThan(-1), reason: 'delete çağrısı yok');
-      expect(iCancel, greaterThan(iDelete), reason: 'cancel delete sonrası');
+      expect(k.contains('await ctl.cancel('), isFalse,
+          reason: 'kaldırılan cancel çağrısı geri gelmiş');
 
       // ⚠ YORUM SATIRLARI ELENİR.
       //
@@ -91,9 +93,9 @@ void main() {
           .where((l) => !l.trimLeft().startsWith('//'))
           .join(' ');
 
-      final jCancel = kod.indexOf('await ctl.cancel(');
-      expect(jCancel, greaterThan(-1));
-      final pencere = kod.substring(jCancel);
+      final jDelete = kod.indexOf('await ctl.delete(');
+      expect(jDelete, greaterThan(-1));
+      final pencere = kod.substring(jDelete);
 
       final iGuard = pencere.indexOf('context.mounted');
       final iToast = pencere.indexOf("sysToastOk(context, 'İlanınız silindi");

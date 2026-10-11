@@ -46,7 +46,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Ev & Yaşam',
     aciklama:
-        'Tesisatçı, Elektrikçi, Çilingir',
+        'Tesisatçı, Elektrikçi',
     gorsel: 'assets/alanlar/ev.jpg',
     ikon: 'assets/svg/alanlar/ev.svg',
     kategoriler: [
@@ -60,7 +60,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Araç Hizmetleri',
     aciklama:
-        'Oto Tamiri, Lastikçi, Oto Yıkama',
+        'Oto Tamiri, Lastikçi',
     gorsel: 'assets/alanlar/arac.jpg',
     ikon: 'assets/svg/alanlar/arac.svg',
     kategoriler: [
@@ -73,7 +73,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Beyaz Eşya & Elektronik',
     aciklama:
-        'Buzdolabı, Televizyon, Telefon Tamiri',
+        'Buzdolabı, Televizyon',
     gorsel: 'assets/alanlar/tamir.jpg',
     ikon: 'assets/svg/alanlar/tamir.svg',
     kategoriler: [
@@ -84,7 +84,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Temizlik',
     aciklama:
-        'Ev Temizliği, Halı Yıkama, İlaçlama',
+        'Ev Temizliği, Halı Yıkama',
     gorsel: 'assets/alanlar/temizlik.jpg',
     ikon: 'assets/svg/alanlar/temizlik.svg',
     kategoriler: [
@@ -96,7 +96,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Taşıma & Nakliyat',
     aciklama:
-        'Evden Eve Nakliyat, Kurye, Ofis Taşıma',
+        'Evden Eve, Kurye',
     gorsel: 'assets/alanlar/tasima.jpg',
     ikon: 'assets/svg/alanlar/tasima.svg',
     kategoriler: [
@@ -114,7 +114,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     // GENİŞLETİLDİ.
     ad: 'Güzellik, Bakım, Spor & Kişisel Gelişim',
     aciklama:
-        'Kuaför, Masaj, Personal Trainer',
+        'Kuaför, Masaj, Spor',
     gorsel: 'assets/alanlar/kisisel.jpg',
     ikon: 'assets/svg/alanlar/kisisel.svg',
     kategoriler: [
@@ -125,7 +125,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Evcil Hayvan Hizmetleri',
     aciklama:
-        'Köpek Gezdirme, Pet Kuaför, Bakıcılık',
+        'Pet Kuaför, Bakıcılık',
     gorsel: 'assets/alanlar/evcil.jpg',
     ikon: 'assets/svg/alanlar/evcil.svg',
     kategoriler: [
@@ -135,7 +135,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Eğitim',
     aciklama:
-        'Özel Ders, Yabancı Dil, Sürücü Kursu',
+        'Özel Ders, Yabancı Dil',
     gorsel: 'assets/alanlar/egitim.jpg',
     ikon: 'assets/svg/alanlar/egitim.svg',
     kategoriler: [
@@ -147,7 +147,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Dijital Hizmetler',
     aciklama:
-        'Web Sitesi, Logo, Dijital Pazarlama',
+        'Web Sitesi, Logo, SEO',
     gorsel: 'assets/alanlar/dijital.jpg',
     ikon: 'assets/svg/alanlar/dijital.svg',
     kategoriler: [
@@ -160,7 +160,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Organizasyon & Etkinlik',
     aciklama:
-        'Düğün Organizasyonu, Fotoğrafçı, Catering',
+        'Düğün, Fotoğrafçı',
     gorsel: 'assets/alanlar/organizasyon.jpg',
     ikon: 'assets/svg/alanlar/organizasyon.svg',
     kategoriler: [
@@ -172,7 +172,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'İnşaat & Dekorasyon',
     aciklama:
-        'Tadilat, Boya Badana, Mutfak Dolabı',
+        'Tadilat, Boya, Fayans',
     gorsel: 'assets/alanlar/insaat.jpg',
     ikon: 'assets/svg/alanlar/insaat.svg',
     kategoriler: [
@@ -195,7 +195,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Teknik Hizmetler',
     aciklama:
-        'Jeneratör Servisi, Endüstriyel Bakım',
+        'Jeneratör, Otomasyon',
     gorsel: 'assets/alanlar/teknik.jpg',
     ikon: 'assets/svg/alanlar/teknik.svg',
     kategoriler: [
@@ -207,7 +207,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Giyim & Tekstil',
     aciklama:
-        'Terzi, Ayakkabı Tamiri, Perde Dikimi',
+        'Terzi, Perde, Ayakkabı',
     gorsel: 'assets/alanlar/giyim.jpg',
     ikon: 'assets/svg/alanlar/giyim.svg',
     kategoriler: [
@@ -219,7 +219,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Mühendislik & Proje',
     aciklama:
-        'Mimari Proje, Statik Proje, Harita ve Ölçüm',
+        'Mimari Proje, Harita Ölçüm',
     gorsel: 'assets/alanlar/muhendislik.jpg',
     ikon: 'assets/svg/alanlar/muhendislik.svg',
     kategoriler: [
@@ -236,7 +236,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
     // hizmetleri — eski ad bunları tam temsil etmiyordu.
     ad: 'Hukuk, Finans & Danışmanlık',
     aciklama:
-        'Avukat, Mali Müşavir, Sigorta',
+        'Avukat, Muhasebe',
     gorsel: 'assets/alanlar/hukuk.jpg',
     ikon: 'assets/svg/alanlar/hukuk.svg',
     kategoriler: [
@@ -249,7 +249,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Sağlık Hizmetleri',
     aciklama:
-        'Hasta Bakıcı, Evde Hemşire, Fizyoterapist',
+        'Hasta Bakıcı, Hemşire',
     gorsel: 'assets/alanlar/saglik.jpg',
     ikon: 'assets/svg/alanlar/saglik.svg',
     kategoriler: [
@@ -265,7 +265,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Tarım & Hayvancılık',
     aciklama:
-        'Veteriner, Tarım Danışmanlığı',
+        'Veteriner, Tarım',
     gorsel: 'assets/alanlar/tarim.jpg',
     ikon: 'assets/svg/alanlar/tarim.svg',
     kategoriler: [
@@ -277,7 +277,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Turizm & Konaklama',
     aciklama:
-        'Tur Rehberi, Otel Rezervasyonu, Transfer',
+        'Tur Rehberi, Transfer',
     gorsel: 'assets/alanlar/turizm.jpg',
     ikon: 'assets/svg/alanlar/turizm.svg',
     kategoriler: [
@@ -288,7 +288,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Gayrimenkul & Emlak',
     aciklama:
-        'Emlakçı, Site Yönetimi, Gayrimenkul',
+        'Emlak, Site Yönetimi',
     gorsel: 'assets/alanlar/emlak.jpg',
     ikon: 'assets/svg/alanlar/emlak.svg',
     kategoriler: [
@@ -299,7 +299,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Özel Güvenlik & Koruma',
     aciklama:
-        'Güvenlik Görevlisi, Yakın Koruma',
+        'Güvenlik, Yakın Koruma',
     gorsel: 'assets/alanlar/guvenlik.jpg',
     ikon: 'assets/svg/alanlar/guvenlik.svg',
     kategoriler: [
@@ -309,7 +309,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Matbaa & Baskı',
     aciklama:
-        'Kartvizit Baskı, Davetiye, Tabela',
+        'Kartvizit, Davetiye',
     gorsel: 'assets/alanlar/matbaa.jpg',
     ikon: 'assets/svg/alanlar/matbaa.svg',
     kategoriler: [
@@ -322,7 +322,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Geri Dönüşüm & Atık Yönetimi',
     aciklama:
-        'Hurdacı, Geri Dönüşüm, Atık Toplama',
+        'Hurda Alımı, Atık Toplama',
     gorsel: 'assets/alanlar/geridonusum.jpg',
     ikon: 'assets/svg/alanlar/geridonusum.svg',
     kategoriler: [
@@ -332,7 +332,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Çocuk & Bebek Bakımı',
     aciklama:
-        'Bebek Bakıcısı, Çocuk Bakıcısı',
+        'Bebek Bakıcı, Oyun Ablası',
     gorsel: 'assets/alanlar/cocuk.jpg',
     ikon: 'assets/svg/alanlar/cocuk.svg',
     kategoriler: [
@@ -343,7 +343,7 @@ const List<HizmetAlani> kHizmetAlanlari = [
   HizmetAlani(
     ad: 'Diğer Hizmetler',
     aciklama:
-        'Çiçekçi, Dedektiflik, Nikah Hizmetleri',
+        'Çiçekçi, Dedektif',
     gorsel: 'assets/alanlar/diger.jpg',
     ikon: 'assets/svg/alanlar/diger.svg',
     kategoriler: [
@@ -370,12 +370,12 @@ const List<HizmetAlani> kHizmetAlanlari = [
 ///
 /// ⚠ GEREKÇE her madde için ayrı yazılır; gerekçesiz istisna eklenmez.
 const Map<String, String> kHizmetCatiIstisnasi = {
-  // Mesleği çilingir ama kullanıcı aracın yanında kalmışken
-  // Araç Hizmeti çatısına bakar.
+  // ⚠ 'Oto Anahtarcı' İSTİSNASI KALDIRILDI: hizmet kilitli katalogda
+  // (166/1587) artık YOK; kayıt hiçbir hizmete denk gelmeyen ölü bir
+  // satırdı. Katalog o hizmeti geri alırsa istisna da geri eklenir.
+  //
   // ⚠ ÇATI ADI GÜNCELLENDİ: Paket A'da "Araç Hizmeti" →
-  // "Araç Hizmetleri" oldu; bu iki istisna eski adı işaret ettiği
-  // için HİÇBİR çatıya eşleşmiyordu — sessizce etkisiz kalmışlardı.
-  'Oto Anahtarcı': 'Araç Hizmetleri',
+  // "Araç Hizmetleri" oldu.
 
   // Aynı makine ve kimyayla yıkanır (temizlikçi işi) ama kullanıcı
   // "araç" diye arar; aradığı yer Araç Hizmeti.

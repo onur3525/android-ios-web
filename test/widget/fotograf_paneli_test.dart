@@ -123,7 +123,9 @@ void main() {
       // Profil ekranı kendi panelini `RefSecimKarti` ile çiziyordu:
       // renkli daire rozet yok, gri düz ikon, chevron yerine RADYO
       // dairesi, farklı metinler.
-      final k = _kodu('lib/screens/profile_screen.dart');
+      // ⚠ Panel artık ortak `ProfilFotografi` bileşeninde (Profil ve
+      // Profil Bilgilerim aynı sınıfı çağırır).
+      final k = _kodu('lib/screens/widgets/profil_fotografi.dart');
       expect(k.contains('fotografSecenekSatiri('), isTrue,
           reason: 'profil paneli ortak satırı kullanmıyor');
       expect(k.contains("ikon: 'assets/svg/ic_camplus.svg'"), isFalse,
@@ -139,7 +141,7 @@ void main() {
       // Profil panelinde üçüncü bir satır var ("Fotoğrafı Kaldır");
       // ilan panelinde yok. Paneli tümüyle ortaklaştırmak, ilan
       // akışına anlamsız bir "kaldır" seçeneği eklerdi.
-      final k = _kodu('lib/screens/profile_screen.dart');
+      final k = _kodu('lib/screens/widgets/profil_fotografi.dart');
       final p = _kodu('lib/screens/widgets/fotograf_kaynak_paneli.dart');
       expect(k.contains("baslik: 'Fotoğrafı Kaldır'"), isTrue);
       expect(p.contains('Fotoğrafı Kaldır'), isFalse,

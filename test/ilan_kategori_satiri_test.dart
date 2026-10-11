@@ -41,7 +41,8 @@ void main() {
       expect(kategoriAdi('Marka Tescili'), 'Marka ve Patent');
       expect(kategoriAdi('DASK'), 'Sigorta');
       expect(kategoriAdi('Ev Temizliği'), 'Temizlik Hizmetleri');
-      expect(kategoriAdi('Zemin Etüdü'), 'Mühendislik ve Proje');
+      // ⚠ 'Mühendislik ve Proje' kilitli katalogda bölündü.
+      expect(kategoriAdi('Zemin Etüdü'), 'Zemin ve Jeoteknik');
     });
 
     test('⚠ KATALOGDAKİ 640 HİZMETİN TAMAMI kategori döner', () {
@@ -57,6 +58,15 @@ void main() {
       final yanlis = <String>[];
       for (final h in kTreeServices) {
         final ad = kategoriAdi(h.service);
+        // ⚠ KENDİ KATEGORİSİYLE AYNI ADI TAŞIYAN HİZMET (ör. 'Oto
+        // Ekspertiz', 'Kuru Temizleme'): satır KASITLI olarak çizilmez
+        // — aynı ad alt alta iki kez yazılmaz (aşağıdaki "başlığın
+        // KENDİSİ kategoriyse null" kuralı; `katalog_yapisi_test`teki
+        // 'Halı Yıkama' istisnası). Burada `null` DOĞRU sonuçtur.
+        if (h.service == h.category) {
+          expect(ad, isNull, reason: h.service);
+          continue;
+        }
         if (ad == null) {
           bos.add(h.service);
         } else if (ad != h.category) {

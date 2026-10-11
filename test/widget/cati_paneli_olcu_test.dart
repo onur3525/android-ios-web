@@ -84,15 +84,21 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
 
-    // ⚠ PANEL KAYMIYOR: 12 kartın hepsi çizili olmalı.
+    // ⚠ PANEL KAYMIYOR: kartların HEPSİ çizili olmalı.
+    //
+    // ⚠ ÇATI SAYISI VERİDEN OKUNUR: katalog çatı katmanı 12'den 24'e
+    // büyüdü (`kHizmetAlanlari`). Kural aynı — hepsi aynı anda
+    // görünür, satır sayısı çatı sayısından türer
+    // (`HizmetAlanlariPaneli.kGorunenSatir`).
     final g = _gorunen(t);
-    expect(g.length, 12, reason: 'görünen kart: ${g.length}');
+    expect(g.length, kHizmetAlanlari.length, reason: 'görünen kart: ${g.length}');
 
     // ⚠ Sütun/satır sayısı KOORDİNATTAN çıkarılır, koddan değil.
     final sutunlar = g.map((e) => e.kutu.left.roundToDouble()).toSet();
     final satirlar = g.map((e) => e.kutu.top.roundToDouble()).toSet();
     expect(sutunlar.length, 3, reason: 'sütun x konumları: $sutunlar');
-    expect(satirlar.length, 4, reason: 'satır y konumları: $satirlar');
+    expect(satirlar.length, HizmetAlanlariPaneli.kGorunenSatir,
+        reason: 'satır y konumları: $satirlar');
   });
 
   testWidgets('12 KARTIN ÖLÇÜLERİ EŞİT', (t) async {
@@ -105,7 +111,7 @@ void main() {
       olculer[e.ad] = e.kutu.size;
     }
 
-    expect(olculer.length, 12,
+    expect(olculer.length, kHizmetAlanlari.length,
         reason: 'ölçülemeyen çatı: '
             '${kHizmetAlanlari.map((a) => a.ad).where((a) => !olculer.containsKey(a))}');
 
@@ -122,7 +128,12 @@ void main() {
     await t.pumpWidget(app());
     await t.pumpAndSettle();
 
-    final sonUc = kHizmetAlanlari.skip(9).map((a) => a.ad).toList();
+    // ⚠ Adı tarihî ("10-11-12"): kural SON ÜÇ çatının da ilk çizimde
+    // görünmesidir; çatı sayısı veriden okunur.
+    final sonUc = kHizmetAlanlari
+        .skip(kHizmetAlanlari.length - 3)
+        .map((a) => a.ad)
+        .toList();
     expect(sonUc.length, 3);
 
     // ⚠ Kaydırma kalktı: son üç çatı da ilk çizimde görünür.
@@ -191,8 +202,10 @@ void main() {
     await t.pumpAndSettle();
 
     final g = _gorunen(t);
-    expect(g.length, 12, reason: 'ölçek 1.3\'te görünen: ${g.length}');
-    expect(g.map((e) => e.kutu.top.roundToDouble()).toSet().length, 4);
+    expect(g.length, kHizmetAlanlari.length,
+        reason: 'ölçek 1.3\'te görünen: ${g.length}');
+    expect(g.map((e) => e.kutu.top.roundToDouble()).toSet().length,
+        HizmetAlanlariPaneli.kGorunenSatir);
   });
 
 

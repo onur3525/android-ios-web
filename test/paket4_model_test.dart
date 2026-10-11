@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/models/review.dart';
+import 'package:hizmetcep/domain/config.dart';
 
 /// PAKET 4 — PATCH KURALI VE MODEL ALANLARI
 String _kodu(String yol) => File(yol)
@@ -160,7 +161,12 @@ void main() {
           text: 'işini düzgün yaptı',
           createdAt: DateTime.now());
       expect(eski.yayinlandiMi, isTrue);
-      expect(yeni.yayinlandiMi, isFalse);
+      // Köprü süresi `DomainConfig.yorumYayinGecikmesi`ten okunur.
+      // Kullanıcı kararı: yorum ANINDA yansır (süre sıfır) — yeni yorum
+      // da yayında sayılır. Süre yeniden verilirse yeni yorum beklemeye
+      // düşer; test her iki durumu aynı kaynaktan doğrular.
+      expect(yeni.yayinlandiMi,
+          DomainConfig.yorumYayinGecikmesi == Duration.zero);
     });
 
     test('mapper alanları okur, varsayım yapmaz', () {

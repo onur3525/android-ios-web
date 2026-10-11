@@ -144,7 +144,13 @@ void main() {
         reason: 'mobil satırlar web dokunuş bileşenine bağlanmaz');
     final liste = find.byType(ListView);
     expect(liste, findsOneWidget);
-    expect(t.widget<ListView>(liste).physics, isNull,
+    // ⚠ Kod mobilde `physics: null` verir (varsayılan). Flutter'ın
+    // güncel sürümleri birincil dikey listede `null`ı
+    // `AlwaysScrollableScrollPhysics`e çevirir; değer çerçeve
+    // sürümüne bağlıdır. Sözleşme: mobilde iç liste KAYAR (web'deki
+    // `NeverScrollableScrollPhysics` mobile sızmaz).
+    expect(t.widget<ListView>(liste).physics,
+        isNot(isA<NeverScrollableScrollPhysics>()),
         reason: 'mobilde varsayılan kaydırma fiziği');
     final g = await t.startGesture(t.getCenter(
         find.descendant(of: liste, matching: find.byType(InkWell)).first));

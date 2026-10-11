@@ -249,14 +249,20 @@ List<_Aralik> _kanalAraliklari(String metin) {
 /// örneklerinin maskelenmemesi için gereklidir.
 
 /// Tek başına adres sayılan sözcükler.
+/// ⚠ TÜRKÇE EK (11 Eki): `\w` yalnız ASCII harfleri kapsar; "Apartmanı",
+/// "binasının", "sitesinde" gibi Türkçe harfle biten ekli biçimler sözcük
+/// sınırı denetiminde (`(?![\wçğıöşü])`) düşüyor ve adres YAKALANMIYORDU.
+/// Yer adlarının ek kısmı `[\wçğıöşü]*` ile okunur. `numara\w*` BİLEREK
+/// aynen kaldı: "…93 numarasından arayın" cümlesi maskelenmemeli
+/// (telefonun kendisi ayrıca maskelenir).
 final RegExp _guclu = RegExp(
   r'(?<![\wçğıöşü])('
-  r'sokak|sokağ\w*|sok\.?|sk\.?|'
-  r'cadde\w*|cad\.?|cd\.?|'
-  r'apartman\w*|apart\w*|apt\.?|'
+  r'sokak|sokağ[\wçğıöşü]*|sok\.?|sk\.?|'
+  r'cadde[\wçğıöşü]*|cad\.?|cd\.?|'
+  r'apartman[\wçğıöşü]*|apart[\wçğıöşü]*|apt\.?|'
   r'sitesi|site|'
-  r'blok|bloğ\w*|'
-  r'pasaj\w*|'
+  r'blok|bloğ[\wçğıöşü]*|'
+  r'pasaj[\wçğıöşü]*|'
   r'plaza|'
   r'iş\s*hanı|iş\s*merkezi|'
   // ⚠ "daire" TEK BAŞINA yetmez: "2+1 daire" normal bir ilan
@@ -272,7 +278,7 @@ final RegExp _guclu = RegExp(
   // tek başına yakalanamıyordu. `no` tek başına DEĞİL, YALNIZ ardından
   // sayı gelirse sayılır — "no problem" gibi kullanımlar etkilenmez.
   r'no\s*[:.]?\s*\d{1,5}|numara\s*[:.]?\s*\d{1,5}|\d{1,5}\s*numara\w*|'
-  r'bulvar\w*|bulv\.?|blv\.?'
+  r'bulvar[\wçğıöşü]*|bulv\.?|blv\.?'
   r')(?![\wçğıöşü])',
   caseSensitive: false,
 );
@@ -290,13 +296,13 @@ final RegExp _zayif = RegExp(
   // ⚠ Güçlü listedeyken bu cümle maskeleniyordu. Artık ZAYIF: ancak
   // sokak/cadde/no/daire gibi İKİNCİ bir işaretle birlikte adres
   // sayılır ("Girne Mahallesi, X Sokak, No: 25").
-  r'mahalle\w*|mah\.?|mh\.?|'
+  r'mahalle[\wçğıöşü]*|mah\.?|mh\.?|'
   // ⚠ "no/numara" BURADAN ÇIKARILDI — artık GÜÇLÜ listede
   // (bkz. `_guclu`): sayıyla birlikte kapı numarası demektir.
-  r'bina|binası|'
-  r'giriş\w*|'
+  r'bina[\wçğıöşü]*|'
+  r'giriş[\wçğıöşü]*|'
   r'avm|'
-  r'mağaza\w*|dükkan\w*|dükkân\w*|'
+  r'mağaza[\wçğıöşü]*|dükkan[\wçğıöşü]*|dükkân[\wçğıöşü]*|'
   r'karşısı|karşısında|yanı|yanında|arkası|arkasında|içinde|üstünde'
   r')(?![\wçğıöşü])',
   caseSensitive: false,
@@ -322,6 +328,12 @@ List<_Aralik> _obekler(String metin) {
   for (var i = 0; i < metin.length; i++) {
     final c = metin[i];
     if (c == '.' || c == ',' || c == ';' || c == '\n') {
+      // ⚠ KISALTMA / SIRA SAYISI NOKTASI BÖLMEZ (11 Eki): "D.4",
+      // "No.25", "4. Daire", "3. katı" noktadan ikiye bölünüyor ve
+      // parçalar tek tek adres sayılmıyordu. Bkz. `_noktaBolmez`.
+      if (c == '.' && _noktaBolmez(metin, i)) {
+        continue;
+      }
       if (i > bas) {
         out.add(_Aralik(bas, i));
       }
@@ -334,11 +346,40 @@ List<_Aralik> _obekler(String metin) {
   return out;
 }
 
+/// Nokta öbeği BÖLMEZ mi?
+///
+///   · noktanın hemen ardından RAKAM geliyorsa ("D.4", "No.25"),
+///   · rakamdan sonraki nokta bir SIRA SAYISIYSA ve ardından `daire`
+///     ya da `kat` geliyorsa ("4. Daire", "3. katı").
+///
+/// ⚠ Cümle sonu noktası aynen böler: "D4. Yarın uygunum" ikiye
+/// ayrılır, "Yarın uygunum" görünür kalır.
+bool _noktaBolmez(String metin, int i) {
+  final sonra = metin.substring(i + 1);
+  if (RegExp(r'^[0-9]').hasMatch(sonra)) {
+    return true;
+  }
+  return i > 0 &&
+      RegExp(r'[0-9]').hasMatch(metin[i - 1]) &&
+      RegExp(r'^[ \t]*(daire|dairesi|kat|katı|kati)(?![\wçğıöşü])')
+          .hasMatch(_katla(sonra));
+}
+
+/// ⚠ TÜRKÇE BÜYÜK HARF (11 Eki): Dart'ın `caseSensitive: false`
+/// eşleşmesi `İ` ile `i`yi, `I` ile `ı`yı EŞİT SAYMAZ; "DAİRE 4"
+/// yakalanmıyordu. Kalıplar Türkçe küçültülmüş metinde aranır.
+/// `trKucuk` harf harf çevirir; uzunluk değişirse (beklenmeyen
+/// karakter) özgün metin kullanılır ki konumlar kaymasın.
+String _katla(String s) {
+  final k = trKucuk(s);
+  return k.length == s.length ? k : s;
+}
+
 /// Adres içeren öbekleri bulur.
 List<_Aralik> _adresAraliklari(String metin) {
   final out = <_Aralik>[];
   for (final o in _obekler(metin)) {
-    final parca = metin.substring(o.bas, o.son);
+    final parca = _katla(metin.substring(o.bas, o.son));
     final guclu = _guclu.allMatches(parca).length;
     final zayif = _zayif.allMatches(parca).length;
     final daire = _daireKisa.allMatches(parca).length;
@@ -379,8 +420,10 @@ final RegExp _adresIsareti = RegExp(
 );
 
 /// İşaretin ardından gelen sayı sözcüklerini adres olarak işaretler.
-List<_Aralik> _yaziylaAdresNo(String metin) {
+List<_Aralik> _yaziylaAdresNo(String ozgun) {
   final out = <_Aralik>[];
+  // ⚠ Türkçe küçültülmüş metinde aranır ("KAT İKİ"); konumlar aynı.
+  final metin = _katla(ozgun);
   for (final m in _adresIsareti.allMatches(metin)) {
     // İşaretten sonraki metinde ilk belirteçleri incele.
     final kalan = metin.substring(m.end);
@@ -437,12 +480,12 @@ List<_Aralik> _yaziylaAdresNo(String metin) {
 final RegExp _yerSozcugu = RegExp(
   // ⚠ GENEL İŞLETME/YER SÖZCÜKLERİ — markaya özel değil.
   r'(?<![\wçğıöşü])('
-  r'pasaj\w*|avm|çarşı\w*|market\w*|mağaza\w*|dükkan\w*|dükkân\w*|'
-  r'fırın\w*|eczane\w*|restoran\w*|lokanta\w*|kafe\w*|büfe\w*|'
-  r'benzinlik\w*|benzin\s*istasyon\w*|otel\w*|banka\w*|berber\w*|'
-  r'cami\w*|okul\w*|hastane\w*|karakol\w*|postane\w*|'
-  r'apartman\w*|site\w*|bina\w*|plaza|han|iş\s*hanı|durak\w*|'
-  r'köprü\w*|meydan\w*|park\w*|terminal\w*|istasyon\w*|hal'
+  r'pasaj[\wçğıöşü]*|avm|çarşı[\wçğıöşü]*|market[\wçğıöşü]*|mağaza[\wçğıöşü]*|dükkan[\wçğıöşü]*|dükkân[\wçğıöşü]*|'
+  r'fırın[\wçğıöşü]*|eczane[\wçğıöşü]*|restoran[\wçğıöşü]*|lokanta[\wçğıöşü]*|kafe[\wçğıöşü]*|büfe[\wçğıöşü]*|'
+  r'benzinlik[\wçğıöşü]*|benzin\s*istasyon[\wçğıöşü]*|otel[\wçğıöşü]*|banka[\wçğıöşü]*|berber[\wçğıöşü]*|'
+  r'cami[\wçğıöşü]*|okul[\wçğıöşü]*|hastane[\wçğıöşü]*|karakol[\wçğıöşü]*|postane[\wçğıöşü]*|'
+  r'apartman[\wçğıöşü]*|site[\wçğıöşü]*|bina[\wçğıöşü]*|plaza|han|iş\s*hanı|durak[\wçğıöşü]*|'
+  r'köprü[\wçğıöşü]*|meydan[\wçğıöşü]*|park[\wçğıöşü]*|terminal[\wçğıöşü]*|istasyon[\wçğıöşü]*|hal'
   r')(?![\wçğıöşü])',
   caseSensitive: false,
 );
@@ -465,7 +508,7 @@ final RegExp _konumEki = RegExp(
 List<_Aralik> _tarifliKonum(String metin) {
   final out = <_Aralik>[];
   for (final o in _obekler(metin)) {
-    final parca = metin.substring(o.bas, o.son);
+    final parca = _katla(metin.substring(o.bas, o.son));
     // ⚠ YER SÖZCÜĞÜ + KAT da konum tarifidir: "Y binasının 3. katı"
     // içinde konum eki yoktur ama kişiyi fiziksel olarak bulmaya yarar.
     final katVar = RegExp(r'(?<![\wçğıöşü])kat[ıi]?(?![\wçğıöşü])',
@@ -674,12 +717,15 @@ List<_Aralik> _markaKonum(String metin) {
   final out = <_Aralik>[];
   for (final o in _obekler(metin)) {
     final parca = metin.substring(o.bas, o.son);
-    if (!_konumEki.hasMatch(parca)) {
+    // ⚠ Konum eki ve yer sözcüğü Türkçe küçültülmüş metinde aranır;
+    // ÖZEL AD büyük harfe bakar, özgün metinde kalır.
+    final katli = _katla(parca);
+    if (!_konumEki.hasMatch(katli)) {
       continue;
     }
     // ⚠ Yalnız konum eki YETMEZ ("içinde" tek başına adres değildir);
     // yanında bir özel ad ya da yer sözcüğü bulunmalı.
-    if (_ozelAd.hasMatch(parca) || _yerSozcugu.hasMatch(parca)) {
+    if (_ozelAd.hasMatch(parca) || _yerSozcugu.hasMatch(katli)) {
       out.add(o);
     }
   }

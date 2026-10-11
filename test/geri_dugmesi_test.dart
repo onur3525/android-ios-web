@@ -27,6 +27,9 @@ const _yardimcilar = {
   'category_ui.dart',
   'nav_actions.dart',
   'prelogin_listing_route.dart',
+  // ⚠ Kendi başına ekran DEĞİL: `JobsScreen` içinde üçüncü sekmenin
+  // GÖVDESİ (`TeklifIstekleriListesi`); Scaffold/başlık/ok taşımaz.
+  'teklif_istekleri_screen.dart',
 };
 
 /// ⚠ YALNIZ EKRANLAR — `lib/screens/widgets/` DIŞARIDA.
@@ -47,10 +50,13 @@ void main() {
     test('RefDetailHeader varsayılanı AÇIK', () {
       expect(k.contains('this.geriDugmesi,'), isTrue,
           reason: 'bayrak artık nullable olmalı');
-      expect(
-          k.contains(
-              'static bool okGosterilirMi(bool? istek) => istek ?? true;'),
-          isTrue,
+      // ⚠ İmza bağlam aldı (web paneli / masaüstü kenar çubuğu
+      // istisnaları merkezde); istek yoksa varsayılan YİNE açık.
+      final i = k.indexOf(
+          'static bool okGosterilirMi(bool? istek, [BuildContext? context]) {');
+      expect(i, greaterThan(-1), reason: 'varsayılan açık olmalı');
+      final govde = k.substring(i, k.indexOf('\n  }\n', i));
+      expect(govde.contains('return istek ?? true;'), isTrue,
           reason: 'varsayılan açık olmalı');
     });
 
@@ -60,7 +66,8 @@ void main() {
     });
 
     test('ok koşullu çizilir, boşluğu da aynı koşulda', () {
-      expect(k.contains('final okVar = okGosterilirMi(geriDugmesi);'), isTrue);
+      expect(k.contains('final okVar = okGosterilirMi(geriDugmesi, context);'),
+          isTrue);
       expect(k.contains('if (okVar)'), isTrue);
     });
   });
@@ -95,7 +102,12 @@ void main() {
         'create_listing_screen.dart': 'ilan oluşturma',
       };
       for (final e in akis.entries) {
-        expect(_kod('lib/screens/${e.key}').contains('RefBackButton('), isTrue,
+        // `RefBackButton.akisIci(` — akış içi ADIM geri oku (ilan
+        // oluşturma); web'de de çizilir.
+        final k = _kod('lib/screens/${e.key}');
+        expect(
+            k.contains('RefBackButton(') || k.contains('RefBackButton.akisIci('),
+            isTrue,
             reason: '${e.value} akışında önceki adım oku kaybolmuş');
       }
     });
@@ -113,7 +125,14 @@ void main() {
         'login_screen.dart',
       ];
       for (final ad in geriGelenler) {
-        expect(_kod('lib/screens/$ad').contains('RefBackButton'), isTrue,
+        // ⚠ `RefDetailHeader` oku KENDİSİ çizer (varsayılan açık);
+        // ayrı `RefBackButton` eklemek çift ok yapardı.
+        final k = _kod('lib/screens/$ad');
+        expect(
+            k.contains('RefBackButton') ||
+                (k.contains('RefDetailHeader(') &&
+                    !k.contains('geriDugmesi: false')),
+            isTrue,
             reason: ad);
       }
     });

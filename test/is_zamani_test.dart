@@ -27,8 +27,10 @@ void main() {
     test('⚠ TAM ÜÇ SEÇENEK — fazlası eklenmez', () {
       // "Acil", "Bugün", "Yarın", "Planlı", "Tarih seç" YOKTUR.
       expect(IsZamani.values.length, 3);
+      // ⚠ GÖRÜNEN METİN "Hemen" → "Acil" (kullanıcı isteği); enum
+      // değeri (`hemen`) ve sunucu kodu (`NOW`) AYNI.
       expect(IsZamani.values.map((e) => e.etiket).toList(),
-          ['Hemen', 'Bu hafta', 'Esnek zaman']);
+          ['Acil', 'Bu hafta', 'Esnek zaman']);
     });
 
     test('sunucu kodları', () {
@@ -174,8 +176,14 @@ void main() {
     });
 
     test('anlam yükleyen renk YOK', () {
-      // Kırmızı/yeşil kullanılmaz; mevcut birincil mavi.
-      expect(w.contains('RC.danger'), isFalse);
+      // ⚠ TEK İSTİSNA (kullanıcı isteği): "Acil" seçiliyken ve
+      // rozetinde KIRMIZI (`RC.danger`) — aciliyet göze hitap etsin.
+      // Kırmızı YALNIZ `acilMi` koşuluna bağlı; diğer iki seçenek
+      // birincil mavi. Yeşil ve ham Material renkleri yok.
+      expect(w.contains('final renk = acilMi ? RC.danger : RC.blue;'), isTrue);
+      expect(w.contains('color: acilMi ? RC.danger : RC.blueSoft'), isTrue);
+      expect(RegExp(r'RC\.danger').allMatches(w).length, 2,
+          reason: 'kırmızı Acil dışındaki bir yerde kullanılmış');
       expect(w.contains('RC.success'), isFalse);
       expect(w.contains('Colors.red'), isFalse);
       expect(w.contains('Colors.green'), isFalse);

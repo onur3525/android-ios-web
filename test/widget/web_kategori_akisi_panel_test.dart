@@ -24,7 +24,10 @@ void main() {
             '    return MaterialPageRoute<T>(settings: settings, builder: builder);'),
         isTrue,
         reason: 'mobil yol değişmiş');
-    expect(govde.contains('return panelRotasi<T>('), isTrue);
+    // ⚠ Web rotası işaretlenir (`akisRotasi` olduğu bilinsin; X ile
+    // akışın tamamı kapanırken kullanılır).
+    expect(govde.contains('final rota = panelRotasi<T>('), isTrue);
+    expect(govde.contains('_akisRotalari[rota] = true;'), isTrue);
   });
 
   test('akıştaki bütün geçişler akisRotasi kullanır', () {

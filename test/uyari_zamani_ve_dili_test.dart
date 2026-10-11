@@ -42,8 +42,15 @@ void main() {
     final r = _kod('lib/screens/register_screen.dart');
 
     test('karar çerçeveye bırakılmaz, `_kural` içinde verilir', () {
-      expect(r.contains('AutovalidateMode.always'), isTrue);
-      expect(r.contains('AutovalidateMode.onUserInteraction'), isFalse);
+      // ⚠ GÜNCEL (klavye performansı): form `onUserInteraction` ile
+      // doğrular — `always`, her odak değişiminde altı alanı birden
+      // klavye animasyonuyla AYNI ANDA yeniden doğruluyordu. Uyarının
+      // ZAMANI yine çerçevede değil `_kural` içinde: odak ve terk
+      // kapısı orada (aşağıdaki testler).
+      expect(r.contains('AutovalidateMode.onUserInteraction'), isTrue);
+      expect(r.contains('AutovalidateMode.always'), isFalse);
+      expect(r.contains('String? _kural('), isTrue);
+      expect(r.contains('validator: (v) => _kural('), isTrue);
     });
 
     test('ODAKTAKİ alanın uyarısı gösterilmez', () {
@@ -263,7 +270,12 @@ void main() {
     });
 
     test('kural YENİ ŞİFRE alanında duruyor', () {
-      expect(c.contains('Yeni şifreniz mevcut şifrenizden farklı '), isTrue);
+      // ⚠ Metin ortak kaynağa taşındı: `FormMesaj.sifreEskisiyleAyni`.
+      final i = c.indexOf("'yeni',");
+      expect(i, greaterThan(-1));
+      final j = c.indexOf("'tekrar',", i);
+      expect(c.substring(i, j).contains('FormMesaj.sifreEskisiyleAyni'),
+          isTrue);
     });
 
     test('güncellemede tüm alanlar denetlenir', () {

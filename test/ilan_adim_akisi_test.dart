@@ -276,7 +276,9 @@ void main() {
 
     test('ekrandaki ok ile cihaz tuşu AYNI yolu kullanır', () {
       // İki geri yolu ayrışmamalı.
-      expect(c.contains('RefBackButton(onTap: _geriAdim)'), isTrue);
+      // `akisIci`: akış içi ADIM oku — web panelinde de çizilir
+      // (rotadan çıkan oklar panelde gizlenir, bu gizlenmez).
+      expect(c.contains('RefBackButton.akisIci(onTap: _geriAdim)'), isTrue);
       expect(c.contains('void _geriAdim() {'), isTrue);
       // Eski satır içi mantık geri gelmemeli.
       expect(c.contains('? setState(() => _step--)'), isFalse,

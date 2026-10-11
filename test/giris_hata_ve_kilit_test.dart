@@ -221,10 +221,15 @@ void main() {
       final l = _kod('lib/screens/login_screen.dart');
       final r = _kod('lib/data/repositories/auth_repository.dart');
 
-      expect(l.contains("'Test girişi — E-posta: '"), isTrue);
-      expect(l.contains("'Test girişi — Telefon: '"), isTrue);
-      expect(l.contains("? 'test@hizmetcep.com'"), isTrue);
-      expect(l.contains("'0532 111 22 33'"), isTrue);
+      //
+      // ⚠ KULLANICI KARARI (1 Eki): giriş ekranında demo hesap bilgisi
+      // GÖSTERİLMEZ — kutu kaldırıldı (bkz. `demo_hesap_ozetleri.dart`).
+      // Kutu olmadığı için yanlış kimlik gösterme riski de yok; kalan
+      // sözleşme tohumlanan hesabın kimliğidir. Test adı iz için
+      // korunur.
+      expect(l.contains('Test girişi —'), isFalse,
+          reason: 'kaldırılan demo hesap kutusu geri gelmiş');
+      expect(l.contains("'test@hizmetcep.com'"), isFalse);
 
       // Tohumlanan hesapla eşleşme.
       expect(r.contains("email: 'test@hizmetcep.com'"), isTrue);

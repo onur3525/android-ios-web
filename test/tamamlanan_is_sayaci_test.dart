@@ -59,9 +59,14 @@ void main() {
 
   group('2 — SAYAÇ İŞ TAMAMLANINCA ARTAR', () {
     test('ilan akışı: teklif seçilince', () {
+      // ⚠ Artırma TEK YERDE: `AuthRepository.tamamlananIsArtir`
+      // (sayaç değişince depo kalıcı kayda yazar ve dinleyenlere
+      // haber verir; port içinde `+= 1` yapmak bunu atlıyordu).
       final k = _kodu('lib/data/ports/mock_ports.dart');
-      expect(k.contains('saglayiciHesabi.tamamlananIs += 1'), isTrue,
+      expect(k.contains('auth?.tamamlananIsArtir(chosen.providerId)'), isTrue,
           reason: 'ilan tamamlandığında sayaç yazılmıyor');
+      expect(_kodu('lib/data/repositories/auth_repository.dart')
+          .contains('a.tamamlananIs += 1'), isTrue);
     });
 
     test('⚠ SAYACI YAZAN SINIF HESAP DEPOSUNU TAŞIR', () {
@@ -78,12 +83,13 @@ void main() {
       final govde = k.substring(i, j > 0 ? j : k.length);
       expect(govde.contains('final AuthRepository? auth;'), isTrue,
           reason: 'MockOfferPort hesap deposunu taşımıyor');
-      expect(govde.contains('auth?.byId(chosen.providerId)'), isTrue);
+      expect(govde.contains('auth?.tamamlananIsArtir(chosen.providerId)'),
+          isTrue);
     });
 
     test('"Bul" akışı: talep tamamlanınca', () {
       final k = _kodu('lib/data/ports/teklif_talebi_port.dart');
-      expect(k.contains('hesap.tamamlananIs += 1'), isTrue,
+      expect(k.contains('auth?.tamamlananIsArtir(t.saglayiciId)'), isTrue,
           reason: 'kazanılan talep sayaca yazılmıyor');
     });
 

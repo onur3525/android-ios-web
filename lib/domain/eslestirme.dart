@@ -56,8 +56,14 @@ const int kEslesmeAile = 1;
 /// Güzellik) tek başına durur — onlarda karışma sorunu yoktur ve
 /// kapsamları GENİŞLEMEZ.
 const List<List<String>> kKategoriAileleri = [
+  // ⚠ KATALOG ADLARI GÜNCELLENDİ (166 kategorilik kilitli katalog):
+  // listede artık var olmayan dört ad kalmıştı ve o kategorilerin
+  // ilanı aileye HİÇ düşmüyordu.
+  //   · 'Kombi Montaj'           → yok; kombi montajı 'Doğalgaz'da
+  //   · 'Cam Balkon Sistemleri'  → 'Cam ve Ayna Hizmetleri'
+  //   · 'Kapı Montaj ve Tamir'   → 'Kapı Sistemleri' (çelik kapı)
+  //   · 'Spor ve Kişisel Antrenör' → 'Spor'
   [
-    'Kombi Montaj',
     'Kombi Servis',
     'Isıtma Sistemleri',
     'Doğalgaz',
@@ -81,10 +87,10 @@ const List<List<String>> kKategoriAileleri = [
   [
     'PVC ve Alüminyum Doğrama',
     'Demir Doğrama ve Kaynak',
-    'Cam Balkon Sistemleri',
+    'Cam ve Ayna Hizmetleri',
   ],
   [
-    'Kapı Montaj ve Tamir',
+    'Kapı Sistemleri',
     'Çilingir ve Kilit',
   ],
   [
@@ -115,7 +121,7 @@ const List<List<String>> kKategoriAileleri = [
     'Özel Ders',
     'Yabancı Dil Eğitimi',
     'Sürücü Eğitimi',
-    'Spor ve Kişisel Antrenör',
+    'Spor',
     'Müzik Dersleri',
   ],
   [

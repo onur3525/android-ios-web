@@ -207,7 +207,10 @@ void main() {
       expect(p.contains("hint: 'Ad'"), isTrue);
       expect(p.contains("hint: 'Soyad'"), isTrue);
       expect(p.contains("hint: 'E-posta'"), isTrue);
-      expect(p.contains("hint: '5XX XXX XX XX'"), isTrue);
+      // ⚠ Telefon alanı etiketli biçime geçti: başlık `etiket:`,
+      // örnek numara `yerTutucu:` (metin aynı).
+      expect(p.contains("etiket: 'Telefon'"), isTrue);
+      expect(p.contains("yerTutucu: '5XX XXX XX XX'"), isTrue);
       // Eski uzun biçimler geri gelmemeli.
       expect(p.contains("hint: 'Adınız'"), isFalse);
       expect(p.contains("hint: 'ornek@eposta.com'"), isFalse);
@@ -221,7 +224,7 @@ void main() {
       final iAd = p.indexOf("hint: 'Ad'");
       final iSoyad = p.indexOf("hint: 'Soyad'");
       final iEposta = p.indexOf("hint: 'E-posta'");
-      final iTel = p.indexOf("hint: '5XX XXX XX XX'");
+      final iTel = p.indexOf("yerTutucu: '5XX XXX XX XX'");
       expect(iAd, greaterThan(0));
       expect(iSoyad, greaterThan(iAd));
       expect(iEposta, greaterThan(iSoyad));

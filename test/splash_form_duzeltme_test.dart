@@ -141,7 +141,10 @@ void main() {
 
     test('tek seçim çubukları VAR', () {
       expect(r.contains("label: 'Hizmet Kategorileri'"), isTrue);
-      expect(r.contains("label: 'Hizmet Verilen İl'"), isTrue);
+      // ⚠ "Hizmet Verilen İl" satırı KALDIRILDI (kullanıcı isteği):
+      // kişisel İl'in kilitli bir kopyasıydı; hizmet ili artık kişisel
+      // İl'in kendisi sayılır.
+      expect(r.contains("label: 'Hizmet Verilen İl'"), isFalse);
       expect(r.contains("label: 'Hizmet Verilen İlçeler'"), isTrue);
       expect(r.contains('_altAciklama(FormMesaj.kategoriSec)'), isTrue);
       expect(r.contains('Bir veya birden fazla ilçe seçebilirsiniz.'), isTrue);
