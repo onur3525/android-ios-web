@@ -144,6 +144,10 @@ class PostgresDb {
       ssl: ayar.ssl ? { rejectUnauthorized: true, ...(ayar.ca ? { ca: ayar.ca } : {}) } : false,
     });
     this.als = new AsyncLocalStorage();
+    // LISTEN için havuzdan ayrılıp KALICI tutulan bağlantılar (bkz. dinleyiciAc).
+    this.dinleyiciler = new Set();
+    this.kapandi = false;
+    this._kapanis = null;
   }
   _istemci() { return this.als.getStore() || this.havuz; }
   // PG boolean sütunlarına 1/0 yazılabilsin diye sayılar metne çevrilir
@@ -181,9 +185,62 @@ class PostgresDb {
   }
   commitSonrasi(fn) { commitSonrasiEkle(this.als, fn); }
   async exec(sql) { await this._istemci().query(sql); }
-  async close() { await this.havuz.end(); }
-  /** LISTEN için havuzdan ayrılmış kalıcı bağlantı (olay yolu). */
-  async dinleyiciAc() { return this.havuz.connect(); }
+  /**
+   * Havuzu kapatır.
+   *
+   * ⚠ NİÇİN ÖNCE DİNLEYİCİLER: `pg.Pool#end()` dışarıda tutulan BÜTÜN
+   * bağlantılar havuza dönene kadar TAMAMLANMAZ. LISTEN bağlantısı
+   * (`dinleyiciAc`) bilerek hiç geri verilmez; `olaylar.kapat()`
+   * çağrılmadan `close()` çağrılırsa kapanış SONSUZA KADAR bekliyordu
+   * (CI'da PostgreSQL adımı ilk kapanışta takıldı). Bu yüzden açık
+   * dinleme bağlantıları önce SONLANDIRILIR (`release(true)`: LISTEN
+   * durumundaki bağlantı havuza geri konmaz), sonra havuz kapatılır.
+   *
+   * ⚠ İKİ KEZ ÇAĞRILABİLİR: ikinci çağrı aynı kapanışı bekler; havuz bir
+   * kez kapatılır. Kapanış başladıktan sonra yeni dinleyici verilmez.
+   * Normal sorgu bağlantıları (`tx`, `isKilidi`) eskisi gibi kendi
+   * `release()`'leriyle döner; `end()` onları bekler.
+   */
+  close() {
+    if (!this._kapanis) {
+      this.kapandi = true;
+      this._kapanis = (async () => {
+        for (const istemci of [...this.dinleyiciler]) {
+          try { istemci.release(true); } catch { /* zaten kapanmış */ }
+        }
+        await this.havuz.end();
+      })();
+    }
+    return this._kapanis;
+  }
+
+  /**
+   * LISTEN için havuzdan ayrılmış kalıcı bağlantı (olay yolu).
+   *
+   * Bağlantı takip edilir ki `close()` onu sonlandırabilsin. `release`
+   * TEK SEFERLİKTİR: ikinci çağrı (ör. `olaylar.kapat()` ardından
+   * `close()`) yok sayılır — pg aynı bağlantı iki kez bırakılınca hata
+   * fırlatır.
+   */
+  async dinleyiciAc() {
+    if (this.kapandi) throw new Error('Veritabanı kapanıyor: yeni dinleyici açılamaz');
+    const istemci = await this.havuz.connect();
+    const ozgun = istemci.release.bind(istemci);
+    let birakildi = false;
+    istemci.release = (hata) => {
+      if (birakildi) return;
+      birakildi = true;
+      this.dinleyiciler.delete(istemci);
+      ozgun(hata);
+    };
+    // Bağlantı alınırken kapanış başladıysa hemen sonlandırılır.
+    if (this.kapandi) {
+      istemci.release(true);
+      throw new Error('Veritabanı kapanıyor: yeni dinleyici açılamaz');
+    }
+    this.dinleyiciler.add(istemci);
+    return istemci;
+  }
   /**
    * Arka plan işini YALNIZ BİR örnek çalıştırır (danışma kilidi, işlem
    * süresince). Kilidi alamayan örnek işi atlar — çift iş/çift bildirim yok.

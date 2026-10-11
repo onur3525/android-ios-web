@@ -66,6 +66,8 @@ before(async () => {
 after(async () => {
   sunucu.closeAllConnections?.();
   sunucu.close();
+  // Önce LISTEN bağlantısı (olcekleme.test.js ile aynı sıra), sonra havuz.
+  await olaylar.kapat();
   await db?.close();
 });
 
