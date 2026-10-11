@@ -1347,10 +1347,9 @@ const Map<String, String> kCategoryImage = {
   // Eski `muhendislik.png` bozuktu (yalnız gri degrade) ve haritadan
   // çıkarılmıştı. Yerine gerçek fotoğraf üretildi: `muhendislik.jpg`
   // (teknik çizim üzerinde kalem tutan eller).
-  // ⚠ İKİ KOMBİ KATEGORİSİ AYNI FOTOĞRAFI KULLANIR.
-  //
-  // Ayrı çizim/fotoğraf üretilmedi: ikisi de aynı cihazın işi.
-  // Halı/Koltuk Yıkama ayrımında da aynı istisna uygulanmıştı.
+  // ⚠ TEK KOMBİ KATEGORİSİ: kilitli katalogda ayrı "Kombi Montaj"
+  // kategorisi YOK (kombi montajı `Doğalgaz` altında bir hizmettir);
+  // `kombi.jpg` yalnız `Kombi Servis`e aittir.
   'Kombi Servis':
       'assets/categories/kombi.jpg',
   'Alçı ve Sıva İşleri':

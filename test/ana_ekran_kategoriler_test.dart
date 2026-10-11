@@ -9,6 +9,43 @@ import 'package:hizmetcep/screens/category_ui.dart';
 /// ⚠ Bu testler GERÇEK MAPPING'İ denetler, kaynak metni değil.
 String _oku(String p) => File(p).readAsStringSync();
 
+/// ONAYLI SVG PAYLAŞIMI — TEK KAYNAK (iki test de buradan okur).
+///
+/// Ayrıntılı gerekçe `DUPLICATE SVG MAPPING` testindeki yorumdadır.
+const _onayliPaylasim = <String, Set<String>>{
+  'assets/svg/categories/hali_yikama.svg': {
+    'Halı Yıkama', 'Koltuk ve Döşeme Yıkama',
+  },
+  'assets/svg/categories/elektrik.svg': {
+    'Elektrik', 'Elektrik Projeleri', 'Jeneratör Servisi',
+  },
+  'assets/svg/categories/guvenlik.svg': {
+    'Güvenlik Sistemleri', 'Özel Güvenlik',
+  },
+  'assets/svg/categories/klima.svg': {
+    'Klima Montaj ve Servis', 'Havalandırma Sistemleri',
+  },
+  'assets/svg/categories/insaat.svg': {
+    'İnşaat ve Kaba Yapı', 'Emlak Danışmanlığı',
+  },
+  'assets/svg/categories/ozel_ders.svg': {
+    'Özel Ders', 'Kişisel Gelişim ve Koçluk', "Kur'an-ı Kerim Eğitimi",
+  },
+  'assets/svg/categories/yabanci_dil.svg': {
+    'Yabancı Dil Eğitimi', 'Tercüme ve Çeviri Hizmetleri',
+  },
+  'assets/svg/categories/muzik.svg': {
+    'Müzik Dersleri', 'Müzik & Ses Prodüksiyonu', 'Müzik & Eğlence',
+    'İlahi ve Dini Musiki',
+  },
+  'assets/svg/categories/yazilim.svg': {
+    'Yazılım ve Web Hizmetleri', 'Kodlama ve Yazılım Eğitimi',
+  },
+  'assets/svg/categories/organizasyon.svg': {
+    'Etkinlik ve Organizasyon', 'Nikah ve Tören Hizmetleri',
+  },
+};
+
 void main() {
   group('58/58 SVG MAPPING', () {
     test('HER KATEGORİNİN İKONU TANIMLI', () {
@@ -35,30 +72,63 @@ void main() {
     test('DUPLICATE SVG MAPPING — yalnız ONAYLI istisna', () {
       // İki kategori aynı dosyaya düşerse biri yanlış görünür.
       //
-      // ⚠ ONAYLI İSTİSNA: `Halı Yıkama` ile `Koltuk ve Döşeme Yıkama`
-      // aynı çizgi ikonu paylaşır. Kategori ikiye bölünürken döşeme
-      // yıkama için AYRI bir SVG üretilemedi; kart FOTOĞRAFLARI
-      // farklıdır, ızgarada karışmazlar. Ayrı çizim gelince bu
-      // istisna kaldırılacaktır.
-      // ⚠ İKİNCİ ONAYLI PAYLAŞIM: `Kombi Montaj` + `Kombi Servis`.
-      // Kategori ikiye ayrılırken ayrı çizim üretilmedi; ikisi de
-      // aynı cihazın işi. Ayrı ikon gelince istisna kaldırılacak.
-      const onayliPaylasim = {
-        'Halı Yıkama', 'Koltuk ve Döşeme Yıkama',
-        'Kombi Montaj', 'Kombi Servis',
-      };
-
+      // ⚠ ONAYLI PAYLAŞIM GRUP BAZLIDIR (11 Eki, kullanıcı onayı).
+      //
+      // Eskiden düz bir ad kümesiydi: kümedeki HERHANGİ iki kategori
+      // aynı dosyaya düşse test geçerdi (ilgisiz iki onaylı kategori
+      // sessizce aynı ikonu paylaşabilirdi). Artık her izin TEK BİR
+      // dosyaya bağlıdır; o dosyayı kullanan kategorilerin TAMAMI o
+      // dosyanın izin kümesinde olmalıdır.
+      //
+      // Kabul ölçütü: aynı KONU, FARKLI çatı. Aynı çatı ekranında
+      // yan yana duran kategoriler ayırt edilebilmeli; onlara izin
+      // VERİLMEZ, ayrı ikon gerekir.
+      //
+      //   · Halı Yıkama + Koltuk ve Döşeme Yıkama — kategori ikiye
+      //     bölünürken ayrı SVG üretilemedi (eski onaylı istisna).
+      //   · Diğerleri — aynı konunun başka çatıdaki karşılığı
+      //     (müzik, yazılım, dil, eğitim, bina, kalkan, klima, tören).
+      //
+      // ⚠ Eski `Kombi Montaj` + `Kombi Servis` istisnası KALDIRILDI:
+      // kilitli katalogda ayrı "Kombi Montaj" kategorisi yok.
       final sayim = <String, List<String>>{};
       kKategoriIkonu.forEach((kategori, yol) {
         sayim.putIfAbsent(yol, () => []).add(kategori);
       });
-      final beklenmeyen = sayim.entries
-          .where((e) => e.value.length > 1)
-          .where((e) => !e.value.every(onayliPaylasim.contains))
-          .map((e) => '${e.key} → ${e.value}')
-          .toList();
+      final beklenmeyen = <String>[];
+      for (final e in sayim.entries) {
+        if (e.value.length < 2) {
+          continue;
+        }
+        final izinli = _onayliPaylasim[e.key] ?? const <String>{};
+        final izinsiz = e.value.where((k) => !izinli.contains(k)).toList();
+        if (izinsiz.isNotEmpty) {
+          beklenmeyen.add('${e.key} → izinsiz: $izinsiz');
+        }
+      }
       expect(beklenmeyen, isEmpty,
           reason: 'aynı SVG birden fazla kategoride: $beklenmeyen');
+    });
+
+    test('ONAYLI PAYLAŞIM LİSTESİNDE ÖLÜ KAYIT YOK', () {
+      // ⚠ NİÇİN VAR: eski `Kombi Montaj` istisnası kategori katalogdan
+      // çıktıktan sonra da listede kaldı ve kimse fark etmedi. İzin
+      // verilen her kategori katalogda olmalı ve GERÇEKTEN o dosyayı
+      // kullanmalı.
+      //
+      // Liste TEK KAYNAKTIR (`_onayliPaylasim`); burada yalnız
+      // dosya → kategori bağının canlı olduğu denetlenir.
+      final olu = <String>[];
+      for (final e in _onayliPaylasim.entries) {
+        for (final k in e.value) {
+          if (!kCategoryTree.containsKey(k)) {
+            olu.add('$k (katalogda yok)');
+          } else if (kKategoriIkonu[k] != e.key) {
+            olu.add('$k (artık ${e.key} kullanmıyor)');
+          }
+        }
+      }
+      expect(olu, isEmpty, reason: 'ölü istisna kaydı: $olu');
     });
 
     test('haritada KATALOGDA OLMAYAN anahtar yok', () {

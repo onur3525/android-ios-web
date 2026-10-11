@@ -121,9 +121,10 @@ abstract final class SearchService {
   'Temizlik Hizmetleri': 'Temizlik',
   'İlaçlama ve Haşere Kontrolü': 'İlaçlama',
   'Doğalgaz': 'Doğalgaz',
-  // ⚠ Kategori ikiye ayrıldıktan sonra da eski kısa ad ARANABİLİR
-  // kalır: kullanıcı "kombi" yazınca iki kategoriyi de bulmalı.
-  'Kombi Montaj': 'Kombi',
+  // ⚠ Eski kısa ad ARANABİLİR kalır: kullanıcı "kombi" yazınca
+  // kategoriyi bulmalı. (Ayrı "Kombi Montaj" kategorisi kilitli
+  // katalogda YOK; o kayıt hiçbir kategoriyle eşleşmediği için
+  // kaldırıldı. Kombi montajı `Doğalgaz` altında bir hizmettir.)
   'Kombi Servis': 'Kombi',
   'Isıtma Sistemleri': 'Isıtma',
   'Elektrik': 'Elektrik',
