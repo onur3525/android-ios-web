@@ -153,7 +153,10 @@ test('bildirim tercihi: kapatılan türde push GİTMEZ (uygulama içi kayıt dur
   fcmTestGondericisi({ gonder: async (t) => { giden3.push(t); return 'ok'; } });
   const k = await kullanici('5551110021');
   await jeton(k, 'tercih-jeton-xxxxxxxxxxxxxxxxxx');
-  await db.prepare('UPDATE users SET notif_offer = 0, notif_message = 1, notif_announcement = 0 WHERE id = ?').run(k);
+  // ⚠ Değerler PARAMETRE olarak verilir (uygulamanın tercih ucu gibi):
+  // PostgreSQL'de bu sütunlar BOOLEAN'dır ve SQL metnine yazılan 0/1
+  // tamsayısını kabul etmez; parametreler sürücüde '0'/'1'e çevrilir.
+  await db.prepare('UPDATE users SET notif_offer = ?, notif_message = ?, notif_announcement = ? WHERE id = ?').run(0, 1, 0, k);
   for (const tur of ['NEW_OFFER', 'OFFER_SELECTED', 'ANNOUNCEMENT', 'NEW_MESSAGE', 'CONTACT_OPENED', 'LISTING_EXPIRED']) {
     await uygulamaIciBildir(db, k, tur, tur, 'x', randomUUID());
   }
