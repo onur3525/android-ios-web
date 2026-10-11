@@ -88,7 +88,7 @@ const Map<String, String> kKategoriIkonu = {
       'assets/svg/categories/su_tesisati.svg',
   'Doğalgaz':
       'assets/svg/categories/dogalgaz.svg',
-  // ⚠ İki kombi kategorisi aynı ikonu paylaşır (onaylı istisna).
+  // ⚠ Tek kombi kategorisi (ayrı "Kombi Montaj" kilitli katalogda yok).
   'Kombi Servis':
       'assets/svg/categories/kombi.svg',
   'Isıtma Sistemleri':
@@ -145,10 +145,8 @@ const Map<String, String> kKategoriIkonu = {
       'assets/svg/categories/havuz.svg',
   'Nakliyat ve Taşımacılık':
       'assets/svg/categories/nakliyat.svg',
-  // ⚠ YENİ KATEGORİ — AYNI çatının nakliyat ikonuyla aynı tema
-  // (araç), yeni SVG ÜRETİLMEDİ.
   'Araç ve Ekipman Kiralama':
-      'assets/svg/categories/nakliyat.svg',
+      'assets/svg/categories/arac_kiralama.svg',
   'Kurye ve Küçük Taşıma':
       'assets/svg/categories/kurye.svg',
   'Asansör Montaj ve Bakım':
@@ -211,92 +209,93 @@ const Map<String, String> kKategoriIkonu = {
   // `ic_build.svg`ye düşüyordu — listelerde aynı simge tekrar
   // ediyor, hiçbir şeyi ayırt etmiyordu.
   //
-  // ⚠ BENZER KATEGORİLER İKON PAYLAŞIR. "Hasta Bakımı" ile "Evde
-  // Hasta Bakımı" aynı simgeyi alır: ikisi de aynı işi anlatıyor,
-  // ayrı simge vermek karışıklık üretirdi.
-  'Oto Ekspertiz': 'assets/svg/categories/oto_servis.svg',
-  'Kaporta ve Boya': 'assets/svg/categories/oto_servis.svg',
-  'Lastik ve Jant Hizmetleri': 'assets/svg/categories/oto_servis.svg',
-  'Oto Görsel & Koruma Hizmetleri': 'assets/svg/categories/oto_temizlik.svg',
-  'Güneş Enerjisi Sistemleri': 'assets/svg/categories/elektrik.svg',
+  // ⚠ İKON PAYLAŞIMI YALNIZ ONAYLI GRUPLARDA (11 Eki).
+  //
+  // Aynı çatı ekranında yan yana duran kategoriler ayırt edilebilmeli;
+  // bu yüzden 64 kategoriye kendi konusunu gösteren AYRI çizim
+  // eklendi (aynı aile: 24×24, tek renk #1D6BE3, çizgi 1.7, dolgu
+  // yok). Ortak kullanım yalnız aynı konunun BAŞKA çatıdaki karşılığı
+  // için kalır (müzik, yazılım, dil, eğitim, bina, kalkan, klima,
+  // tören, halı/koltuk) ve test bu listeyi kilitler
+  // (`ana_ekran_kategoriler_test` → `_onayliPaylasim`).
+  'Oto Ekspertiz': 'assets/svg/categories/oto_ekspertiz.svg',
+  'Kaporta ve Boya': 'assets/svg/categories/kaporta_boya.svg',
+  'Lastik ve Jant Hizmetleri': 'assets/svg/categories/lastik_jant.svg',
+  'Oto Görsel & Koruma Hizmetleri': 'assets/svg/categories/oto_koruma.svg',
+  'Güneş Enerjisi Sistemleri': 'assets/svg/categories/gunes_enerjisi.svg',
   'Jeneratör Servisi': 'assets/svg/categories/elektrik.svg',
-  'Kompresör ve Basınçlı Hava Sistemleri': 'assets/svg/categories/elektrik.svg',
-  'Endüstriyel Otomasyon ve Kontrol': 'assets/svg/categories/elektrik.svg',
-  'Endüstriyel Makine ve Ekipman Servisi': 'assets/svg/categories/elektrik.svg',
+  'Kompresör ve Basınçlı Hava Sistemleri': 'assets/svg/categories/kompresor.svg',
+  'Endüstriyel Otomasyon ve Kontrol': 'assets/svg/categories/otomasyon.svg',
+  'Endüstriyel Makine ve Ekipman Servisi': 'assets/svg/categories/endustriyel_makine.svg',
   'Havalandırma Sistemleri': 'assets/svg/categories/klima.svg',
-  'Küçük Ev Aletleri': 'assets/svg/categories/beyaz_esya.svg',
-  'Kuru Temizleme': 'assets/svg/categories/temizlik.svg',
-  'Zemin ve Yüzey Temizliği': 'assets/svg/categories/zemin.svg',
-  'Depolama Hizmetleri': 'assets/svg/categories/nakliyat.svg',
-  'Personel ve Öğrenci Servisi': 'assets/svg/categories/nakliyat.svg',
-  'Masaj ve Wellness': 'assets/svg/categories/guzellik.svg',
+  'Küçük Ev Aletleri': 'assets/svg/categories/kucuk_ev_aletleri.svg',
+  'Kuru Temizleme': 'assets/svg/categories/kuru_temizleme.svg',
+  'Zemin ve Yüzey Temizliği': 'assets/svg/categories/zemin_temizligi.svg',
+  'Depolama Hizmetleri': 'assets/svg/categories/depolama.svg',
+  'Personel ve Öğrenci Servisi': 'assets/svg/categories/servis_araci.svg',
+  'Masaj ve Wellness': 'assets/svg/categories/masaj.svg',
   'Spor': 'assets/svg/categories/spor.svg',
-  'Sauna, Hamam & Spa': 'assets/svg/categories/guzellik.svg',
+  'Sauna, Hamam & Spa': 'assets/svg/categories/sauna.svg',
   'Kişisel Gelişim ve Koçluk': 'assets/svg/categories/ozel_ders.svg',
-  'Teknik ve Hobi Eğitimleri': 'assets/svg/categories/ozel_ders.svg',
+  'Teknik ve Hobi Eğitimleri': 'assets/svg/categories/hobi_egitim.svg',
   'Kodlama ve Yazılım Eğitimi': 'assets/svg/categories/yazilim.svg',
-  'Video ve Animasyon': 'assets/svg/categories/tasarim.svg',
-  'Video, Ses & Animasyon': 'assets/svg/categories/tasarim.svg',
+  'Video ve Animasyon': 'assets/svg/categories/video_animasyon.svg',
+  'Video, Ses & Animasyon': 'assets/svg/categories/video_ses.svg',
   'Müzik & Ses Prodüksiyonu': 'assets/svg/categories/muzik.svg',
   'Müzik & Eğlence': 'assets/svg/categories/muzik.svg',
-  'Catering ve İkram': 'assets/svg/categories/organizasyon.svg',
-  'Etkinlik Personeli': 'assets/svg/categories/organizasyon.svg',
-  'Fuar & Stand Hizmetleri': 'assets/svg/categories/organizasyon.svg',
-  'Çelik Yapı & Prefabrik Yapılar': 'assets/svg/categories/insaat.svg',
-  'Endüstriyel Yapı & Kurulum': 'assets/svg/categories/insaat.svg',
-  'Pergola & Gölgelendirme Sistemleri': 'assets/svg/categories/tadilat.svg',
-  'Kepenk Sistemleri': 'assets/svg/categories/kapi.svg',
+  'Catering ve İkram': 'assets/svg/categories/catering.svg',
+  'Etkinlik Personeli': 'assets/svg/categories/etkinlik_personeli.svg',
+  'Fuar & Stand Hizmetleri': 'assets/svg/categories/fuar_stand.svg',
+  'Çelik Yapı & Prefabrik Yapılar': 'assets/svg/categories/celik_yapi.svg',
+  'Endüstriyel Yapı & Kurulum': 'assets/svg/categories/endustriyel_yapi.svg',
+  'Pergola & Gölgelendirme Sistemleri': 'assets/svg/categories/pergola.svg',
+  'Kepenk Sistemleri': 'assets/svg/categories/kepenk.svg',
   'Kapı Sistemleri': 'assets/svg/categories/kapi.svg',
-  'Cam Film ve Kış Bahçesi': 'assets/svg/categories/cam.svg',
+  'Cam Film ve Kış Bahçesi': 'assets/svg/categories/kis_bahcesi.svg',
   'Cam ve Ayna Hizmetleri': 'assets/svg/categories/cam.svg',
-  'Cam & Alüminyum': 'assets/svg/categories/cam.svg',
-  'Zemin & Beton': 'assets/svg/categories/zemin.svg',
-  'Perde Hizmetleri': 'assets/svg/categories/ev_tekstili.svg',
-  'Örgü ve Triko': 'assets/svg/categories/terzilik.svg',
-  'Nakış ve Tekstil İşleme': 'assets/svg/categories/terzilik.svg',
-  'Kumaş ve Tekstil İşleme': 'assets/svg/categories/terzilik.svg',
+  'Cam & Alüminyum': 'assets/svg/categories/cam_aluminyum.svg',
+  'Zemin & Beton': 'assets/svg/categories/beton.svg',
+  'Perde Hizmetleri': 'assets/svg/categories/perde.svg',
+  'Örgü ve Triko': 'assets/svg/categories/orgu.svg',
+  'Nakış ve Tekstil İşleme': 'assets/svg/categories/nakis.svg',
+  'Kumaş ve Tekstil İşleme': 'assets/svg/categories/kumas.svg',
   'Terzilik ve Dikim': 'assets/svg/categories/terzilik.svg',
   'Mimari Proje': 'assets/svg/categories/muhendislik.svg',
-  'Statik ve Yapı Projeleri': 'assets/svg/categories/muhendislik.svg',
-  'Mekanik Projeler': 'assets/svg/categories/muhendislik.svg',
-  'Proje Danışmanlığı': 'assets/svg/categories/muhendislik.svg',
-  'Yapı Denetim': 'assets/svg/categories/muhendislik.svg',
-  'Harita ve Ölçüm': 'assets/svg/categories/muhendislik.svg',
+  'Statik ve Yapı Projeleri': 'assets/svg/categories/statik.svg',
+  'Mekanik Projeler': 'assets/svg/categories/mekanik_proje.svg',
+  'Proje Danışmanlığı': 'assets/svg/categories/proje_danismanligi.svg',
+  'Yapı Denetim': 'assets/svg/categories/yapi_denetim.svg',
+  'Harita ve Ölçüm': 'assets/svg/categories/harita_olcum.svg',
   'Elektrik Projeleri': 'assets/svg/categories/elektrik.svg',
-  'Zemin ve Jeoteknik': 'assets/svg/categories/zemin.svg',
-  'Enerji ve Yapı Belgelendirme': 'assets/svg/categories/is_guvenligi.svg',
-  'Ofis & İş Yeri Hizmetleri': 'assets/svg/categories/muhasebe.svg',
-  'Dış Ticaret & Gümrük': 'assets/svg/categories/muhasebe.svg',
-  // ⚠ ARAŞTIRMA SONUCU EKLENDİ — dil temalı mevcut ikon kullanıldı
-  // (`yabanci_dil.svg`, "Yabancı Dil Eğitimi" ile AYNI), YENİ SVG
-  // ÜRETİLMEDİ.
+  'Zemin ve Jeoteknik': 'assets/svg/categories/jeoteknik.svg',
+  'Enerji ve Yapı Belgelendirme': 'assets/svg/categories/enerji_belgesi.svg',
+  'Ofis & İş Yeri Hizmetleri': 'assets/svg/categories/ofis.svg',
+  'Dış Ticaret & Gümrük': 'assets/svg/categories/dis_ticaret.svg',
+  // ⚠ Onaylı paylaşım: dil teması, "Yabancı Dil Eğitimi" ile AYNI
+  // (farklı çatı).
   'Tercüme ve Çeviri Hizmetleri': 'assets/svg/categories/yabanci_dil.svg',
-  'Teşvik & Hibe Danışmanlığı': 'assets/svg/categories/muhasebe.svg',
-  // ⚠ DÜZELTİLDİ — önceden üçü de 'hukuk.svg' kullanıyordu; bu
-  // kategorilerin hukukla ilgisi yok, mülk/bina ile ilgili. En yakın
-  // temalı mevcut ikona ('insaat.svg', bina/yapı görselliği)
-  // değiştirildi — yeni SVG ÜRETİLMEDİ.
+  'Teşvik & Hibe Danışmanlığı': 'assets/svg/categories/tesvik_hibe.svg',
+  // ⚠ Emlak Danışmanlığı onaylı paylaşımla `insaat.svg` kullanır
+  // (bina teması, farklı çatı); aynı çatıdaki diğer ikisi kendi
+  // ikonlarını aldı.
   'Emlak Danışmanlığı': 'assets/svg/categories/insaat.svg',
-  'Site ve Apartman Yönetimi': 'assets/svg/categories/insaat.svg',
-  'Gayrimenkul Hizmetleri': 'assets/svg/categories/insaat.svg',
+  'Site ve Apartman Yönetimi': 'assets/svg/categories/site_yonetimi.svg',
+  'Gayrimenkul Hizmetleri': 'assets/svg/categories/gayrimenkul.svg',
   'Özel Güvenlik': 'assets/svg/categories/guvenlik.svg',
-  'Yakın Koruma': 'assets/svg/categories/guvenlik.svg',
-  'Güvenlik Personeli': 'assets/svg/categories/guvenlik.svg',
+  'Yakın Koruma': 'assets/svg/categories/yakin_koruma.svg',
+  'Güvenlik Personeli': 'assets/svg/categories/guvenlik_personeli.svg',
   'Hasta Bakımı': 'assets/svg/categories/saglik_bakim.svg',
-  'Yaşlı Bakımı': 'assets/svg/categories/saglik_bakim.svg',
-  'Evde Hasta Bakımı': 'assets/svg/categories/saglik_bakim.svg',
-  'Evde Yaşlı Bakımı': 'assets/svg/categories/saglik_bakim.svg',
+  'Yaşlı Bakımı': 'assets/svg/categories/yasli_bakimi.svg',
+  'Evde Hasta Bakımı': 'assets/svg/categories/evde_hasta.svg',
+  'Evde Yaşlı Bakımı': 'assets/svg/categories/evde_yasli.svg',
   'Hastane Refakatçisi': 'assets/svg/categories/refakat.svg',
-  'Evde Refakat': 'assets/svg/categories/refakat.svg',
-  'Günlük Yaşam Desteği': 'assets/svg/categories/refakat.svg',
+  'Evde Refakat': 'assets/svg/categories/evde_refakat.svg',
+  'Günlük Yaşam Desteği': 'assets/svg/categories/gunluk_yasam.svg',
   'Geleneksel ve Tamamlayıcı Sağlık Uygulamaları': 'assets/svg/categories/saglik_geleneksel.svg',
-  // ⚠ ARAŞTIRMA SONUCU EKLENEN 4 KATEGORİ — YENİ SVG ÜRETİLMEDİ,
-  // mevcut genel sağlık ikonu (`saglik_bakim.svg`, "Hasta Bakımı" ile
-  // AYNI) kullanıldı.
-  'Psikolojik Danışmanlık ve Terapi': 'assets/svg/categories/saglik_bakim.svg',
-  'Diyetisyen ve Beslenme Danışmanlığı': 'assets/svg/categories/saglik_bakim.svg',
-  'Fizyoterapi ve Rehabilitasyon': 'assets/svg/categories/saglik_bakim.svg',
-  'Evde Hemşirelik Hizmetleri': 'assets/svg/categories/saglik_bakim.svg',
+  'Psikolojik Danışmanlık ve Terapi': 'assets/svg/categories/psikoloji.svg',
+  'Diyetisyen ve Beslenme Danışmanlığı': 'assets/svg/categories/diyetisyen.svg',
+  'Fizyoterapi ve Rehabilitasyon': 'assets/svg/categories/fizyoterapi.svg',
+  'Evde Hemşirelik Hizmetleri': 'assets/svg/categories/hemsirelik.svg',
   'Tarım Danışmanlığı': 'assets/svg/categories/tarim.svg',
   'Tarla ve Bahçe İşleri': 'assets/svg/categories/tarla.svg',
   'Tarımsal Sulama': 'assets/svg/categories/sulama.svg',
@@ -310,32 +309,29 @@ const Map<String, String> kKategoriIkonu = {
   'Rehberlik': 'assets/svg/categories/rehberlik.svg',
   'Vize & Seyahat İşlemleri': 'assets/svg/categories/vize.svg',
   'Kartvizit & Kurumsal Baskı': 'assets/svg/categories/matbaa_kartvizit.svg',
-  'Broşür & Tanıtım Baskıları': 'assets/svg/categories/matbaa_brosur.svg',
+  'Broşür & Tanıtım Baskıları': 'assets/svg/categories/brosur.svg',
   'Davetiye & Özel Gün Baskıları': 'assets/svg/categories/matbaa_davetiye.svg',
   'Etiket & Ambalaj Baskıları': 'assets/svg/categories/matbaa_etiket.svg',
-  'Promosyon Baskıları': 'assets/svg/categories/matbaa_etiket.svg',
+  'Promosyon Baskıları': 'assets/svg/categories/promosyon.svg',
   'Kitap & Yayın Baskıları': 'assets/svg/categories/matbaa_brosur.svg',
   '3D Baskı & Üretim': 'assets/svg/categories/matbaa_3d.svg',
   'Tabela & Reklam Uygulamaları': 'assets/svg/categories/matbaa_tabela.svg',
   'Geri Dönüşüm Hizmetleri': 'assets/svg/categories/geri_donusum.svg',
   'Bebek Bakımı': 'assets/svg/categories/cocuk_bakim.svg',
-  'Çocuk Bakımı': 'assets/svg/categories/cocuk_bakim.svg',
+  'Çocuk Bakımı': 'assets/svg/categories/cocuk_bakimi.svg',
   'Oyun & Gelişim Desteği': 'assets/svg/categories/cocuk_oyun.svg',
-  'Çocuk Refakat ve Destek': 'assets/svg/categories/cocuk_oyun.svg',
+  'Çocuk Refakat ve Destek': 'assets/svg/categories/cocuk_refakat.svg',
   'Çiçekçilik': 'assets/svg/categories/cicekci.svg',
   'Asistanlık & Günlük Destek': 'assets/svg/categories/asistan.svg',
   'Dedektiflik & Araştırma': 'assets/svg/categories/dedektif.svg',
-  'Araştırma & Saha Hizmetleri': 'assets/svg/categories/dedektif.svg',
-  'Günlük Eleman & Personel Desteği': 'assets/svg/categories/asistan.svg',
-  // ⚠ YENİ KATEGORİ — geleneksel metal alet zanaati; en yakın
-  // mevcut ikon (metal/demir teması) kullanıldı, YENİ SVG
-  // ÜRETİLMEDİ.
+  'Araştırma & Saha Hizmetleri': 'assets/svg/categories/saha_arastirma.svg',
+  'Günlük Eleman & Personel Desteği': 'assets/svg/categories/gunluk_eleman.svg',
   'Bileme ve Keskinleştirme Hizmetleri':
-      'assets/svg/categories/demir.svg',
-  // ⚠ ARAŞTIRMA SONUCU EKLENEN 4 KATEGORİ — YENİ SVG ÜRETİLMEDİ,
-  // en yakın temalı mevcut ikonlar kullanıldı.
+      'assets/svg/categories/bileme.svg',
+  // ⚠ Nikah/Kur'an/İlahi onaylı paylaşımla organizasyon, özel ders ve
+  // müzik ikonlarını kullanır (farklı çatı); Mevlüt kendi ikonunu aldı.
   'Nikah ve Tören Hizmetleri': 'assets/svg/categories/organizasyon.svg',
-  'Mevlüt ve Dua Programları': 'assets/svg/categories/organizasyon.svg',
+  'Mevlüt ve Dua Programları': 'assets/svg/categories/mevlut_dua.svg',
   'Kur\'an-ı Kerim Eğitimi': 'assets/svg/categories/ozel_ders.svg',
   'İlahi ve Dini Musiki': 'assets/svg/categories/muzik.svg',
 };

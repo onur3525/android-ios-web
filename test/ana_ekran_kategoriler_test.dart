@@ -330,13 +330,30 @@ void main() {
       }
     });
 
-    test('HER KATEGORİNİN FOTOĞRAFI VAR', () {
-      // ⚠ Fotoğrafsız kategori HEDEFİ 0'dır. Yeni kategori eklenirse
-      // bu test kırılır — kırılması DOĞRUDUR, fotoğrafı da eklenmelidir.
-      final fotografsiz =
-          kTreeCategories.where((c) => categoryAsset(c) == null).toList();
-      expect(fotografsiz, isEmpty, reason: 'fotoğrafsız: $fotografsiz');
-      expect(kCategoryImage.length, 63);
+    test('FOTOĞRAF HARİTASI KÜÇÜLMEZ; fotoğrafsız kategori SVG ile çizilir', () {
+      // ⚠ HEDEF DEĞİŞTİ (11 Eki, kullanıcı onayı).
+      //
+      // Eskiden "fotoğrafsız kategori 0, harita 63 kayıt" kilitliydi.
+      // 63, katalog 63 kategoriyken konmuş bir hedefti; kilitli katalog
+      // 166 kategoriye çıkınca tutulamaz oldu. Ayrıca paketteki bu
+      // fotoğraflar artık HİÇBİR EKRANDA çizilmiyor (`KategoriKarti`
+      // silindi; bkz. kategori_fotograf_kapsami_test). Ekranda görünen
+      // kategori fotoğrafı yalnız admin panelinden yüklenen SUNUCU
+      // fotoğrafıdır; eksik fotoğraflar oradan tamamlanır.
+      //
+      // Korunan kurallar:
+      //   · mevcut gerçek fotoğraf kayıtları sessizce SİLİNEMEZ (61),
+      //   · kaydı olan her fotoğrafın dosyası var ve teknik ölçüte uyar
+      //     (ayrı testler: "tanımlı fotoğrafların dosyası VAR",
+      //     "FOTOĞRAFLAR TEKNİK ÖLÇÜTE UYAR", "ÖLÜ anahtar yok"),
+      //   · fotoğrafı olmayan kategori BOŞ kalmaz, kendi SVG'si diskte.
+      expect(kCategoryImage.length, greaterThanOrEqualTo(61),
+          reason: 'fotoğraf kaydı silinmiş');
+      final ikonsuz = kTreeCategories
+          .where((c) => categoryAsset(c) == null)
+          .where((c) => !File(categoryIcon(c)).existsSync())
+          .toList();
+      expect(ikonsuz, isEmpty, reason: 'fotoğrafı da ikonu da yok: $ikonsuz');
     });
 
     test('FOTOĞRAFLAR TEKNİK ÖLÇÜTE UYAR', () {
