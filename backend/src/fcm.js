@@ -19,6 +19,7 @@
 // Veri biçimi Flutter `push_kapisi.dart` ile aynı: data = {type, hedef, id}.
 // ═══════════════════════════════════════════════════════════════
 import { createSign } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { config } from './config.js';
 import { simdi } from './db.js';
 
@@ -30,7 +31,10 @@ const TUR_BOYU = 500;
 const ESZAMANLI = 10; // tek turda aynı anda işlenen bildirim (FCM HTTP çağrıları paralel)
 
 function servisHesabi() {
-  const ham = (process.env.HC_FCM_SERVICE_ACCOUNT || '').trim();
+  const ham = (process.env.HC_FCM_SERVICE_ACCOUNT || (() => {
+      try { return readFileSync('/etc/secrets/firebase-service-account.json', 'utf8'); }
+      catch { return ''; }
+    })() || '').trim();
   if (!ham) return null;
   let metin = ham;
   if (!ham.startsWith('{')) metin = Buffer.from(ham, 'base64').toString('utf8');

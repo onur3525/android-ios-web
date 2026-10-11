@@ -5,6 +5,7 @@
 // AÇILMAZ (fail-closed).
 // ═══════════════════════════════════════════════════════════════
 import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 const env = process.env;
 export const uretim = env.NODE_ENV === 'production';
@@ -122,7 +123,10 @@ function depolamaDenetimi() {
 // olmalı: farklı projenin hesabıyla gönderim SENDER_ID_MISMATCH verir ve
 // kullanıcıların cihaz kayıtları geçersiz sayılıp silinirdi.
 function fcmDenetimi() {
-  const ham = (env.HC_FCM_SERVICE_ACCOUNT || '').trim();
+  const ham = (env.HC_FCM_SERVICE_ACCOUNT || (() => {
+      try { return readFileSync('/etc/secrets/firebase-service-account.json', 'utf8'); }
+      catch { return ''; }
+    })() || '').trim();
   if (!ham) {
     if (uretim) zorunlu('HC_FCM_SERVICE_ACCOUNT');
     return false;
