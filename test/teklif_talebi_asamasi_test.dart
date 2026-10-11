@@ -105,9 +105,19 @@ void main() {
   });
 
   group('3 — DÖRT LİSTE DE TEK KAYNAKTAN OKUR', () {
-    test('"Bul" gönderilen talepler → süren', () {
+    test('"Bul" gönderilen talepler → süren + sonlanan (11 Eki)', () {
+      // ⚠ BEKLENTİ ÜRÜN KARARIYLA DEĞİŞTİ (11 Eki, kullanıcı kararı):
+      // süresi dolan / reddedilen talebin kartı (hizmet veren, puan,
+      // yorum, fiyat) listeden kaybolmamalı. Liste artık tek kaynaktan
+      // `teklifIstediklerimTalepleri` = süren + sonlanan okur. Seçilen /
+      // tamamlanan talepler yine BU listede DEĞİL (aşağıdaki testler ve
+      // "Tamamlanan işler" kuralı aynen geçerli).
       final k = _kodu('lib/screens/teklif_istediklerim_screen.dart');
-      expect(k.contains('surenTalepler('), isTrue);
+      expect(k.contains('teklifIstediklerimTalepleri('), isTrue);
+      final d = _kodu('lib/domain/teklif_talebi_asamasi.dart');
+      expect(
+          d.contains('[...surenTalepler(hepsi), ...sonlananTalepler(hepsi)]'),
+          isTrue);
     });
 
     test('hizmet verenin "Teklif İstekleri" → süren', () {

@@ -33,6 +33,15 @@ class AppNotification {
   final String body;
   final String? refId; // ilgili ilan/teklif id
   bool read;
+
+  /// Bildirimin GERÇEK oluşturulma zamanı.
+  ///
+  /// ⚠ DÜZELTİLDİ (11 Eki, kullanıcı bulgusu): alan her zaman
+  /// `DateTime.now()` ile dolduruluyordu; sunucunun gönderdiği
+  /// `createdAt` okunmuyor, web deneme deposu da zamanı saklamıyordu.
+  /// Sonuç: her bildirim, liste yüklendiği an gelmiş gibi "x dk"
+  /// görünüyordu (30 saati geçmiş bir teklif "7 dk önce" çıkıyordu).
+  /// Verilmezse yeni oluşturulan bildirim için "şimdi" kullanılır.
   final DateTime createdAt;
   AppNotification({
     required this.id,
@@ -42,5 +51,6 @@ class AppNotification {
     required this.body,
     this.refId,
     this.read = false,
-  }) : createdAt = DateTime.now();
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 }

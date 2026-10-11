@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../domain/bildirim_metinleri.dart';
 import '../../domain/failures.dart';
+import '../../domain/teklif_talebi_asamasi.dart';
 // ⚠ `IsZamani` tip olarak `listing.dart`ta tanımlıdır; `show` ile
 // YALNIZ o alınır — bu dosyaya `Listing` modeli SIZMAZ.
 import '../models/listing.dart' show IsZamani;
@@ -271,6 +272,11 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
     }
     if (!kayit.tarafMi(gonderenId)) {
       return const UnauthorizedError();
+    }
+    // ⚠ SUNUCUYLA AYNI KURAL (11 Eki): süresi dolan teklifte iletişim
+    // kapanır; sessizce yutulmaz, anlamlı hata döner.
+    if (kayit.durum == TeklifTalebiDurumu.suresiDoldu) {
+      return const InvalidStateError(kTalepMesajlasmaKapandi);
     }
     final onceki = _repo.byId(id)?.mesajlar.length ?? 0;
     _repo.mesajGonder(id,

@@ -9,6 +9,7 @@ import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/services/search_service.dart';
 import '../domain/cikar_catismasi.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
@@ -106,9 +107,11 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
     if (me == null) {
       return false;
     }
-    return context
-        .watch<TeklifTalebiController>()
-        .byHizmetAlan(me.id)
+    // ⚠ LİSTEYLE AYNI KURAL (11 Eki): başlık bütün taleplere,
+    // liste yalnız gösterilenlere bakıyordu; süresi dolmuş tek bir
+    // talep varken başlık çıkıyor, altı BOŞ kalıyordu.
+    return teklifIstediklerimTalepleri(
+            context.watch<TeklifTalebiController>().byHizmetAlan(me.id))
         .isNotEmpty;
   }
 

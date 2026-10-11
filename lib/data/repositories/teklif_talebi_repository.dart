@@ -152,8 +152,12 @@ class TeklifTalebiRepository extends ChangeNotifier {
   /// bu durumda kutuyu göstermez; burası ikinci bir güvenlik katmanı).
   void mesajGonder(String id,
       {required String gonderenId, String? metin, String? fotografYolu}) {
+    _suresiDolanlariUygula();
     final t = _items[id];
-    if (t == null || t.teklifTarihi == null) {
+    // ⚠ SÜRESİ DOLAN TEKLİFTE MESAJ YOK (11 Eki): iletişim kilitlenir.
+    if (t == null ||
+        t.teklifTarihi == null ||
+        t.durum == TeklifTalebiDurumu.suresiDoldu) {
       return;
     }
     final temizMetin = metin?.trim();

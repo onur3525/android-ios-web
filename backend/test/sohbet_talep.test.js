@@ -102,6 +102,12 @@ test('teklif talebi: teklif 30 saatte süresi doluyor; usta yalnız beklemedeyke
   await db.prepare('UPDATE teklif_talepleri SET teklif_tarihi = ? WHERE id = ?').run('2000-01-01T00:00:00.000Z', t.json.id);
   await talepSureleriniIsle(db);
   assert.equal((await istek(`/api/v1/teklif-talepleri/${t.json.id}`, { token: alan.token })).json.durum, 'SURESI_DOLDU');
+  // Süresi dolan teklifte iletişim kapanır: iki taraf da mesaj yazamaz.
+  for (const k of [alan, usta]) {
+    const m = await istek(`/api/v1/teklif-talepleri/${t.json.id}/mesajlar`, { yontem: 'POST', token: k.token, govde: { metin: 'hâlâ geçerli mi?' } });
+    assert.equal(m.durum, 409, 'süresi dolan teklifte mesaj gönderilebildi');
+    assert.equal(m.json.error.code, 'INVALID_STATE');
+  }
 });
 
 test('yasal kabul: yalnız kabul isteyen + yayındaki sürüm; sürüm değişince yeniden istenir', async () => {

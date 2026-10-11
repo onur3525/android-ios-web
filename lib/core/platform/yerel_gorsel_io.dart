@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
+import 'gorsel_yedegi.dart';
+
 // ⚠ MOBİL UYGULAMA — ANDROID VE iOS.
 //
 // Gövdeler bugüne kadar ekranların içinde yazılı olan kodun BİREBİR
@@ -31,18 +33,20 @@ Widget yerelGorsel(
             width: width,
             height: height,
             fit: fit,
-            errorBuilder: hataYedegi == null
-                ? null
-                : (context, _, __) => hataYedegi(context),
+            // ⚠ YEDEK HER ZAMAN VAR (11 Eki): verilmezse nötr yer
+            // tutucu çizilir; ham hata kutusu kullanıcıya görünmez.
+            errorBuilder: (context, _, __) =>
+                (hataYedegi ?? varsayilanGorselYedegi)(context),
           )
         : Image.file(
             File(yol),
             width: width,
             height: height,
             fit: fit,
-            errorBuilder: hataYedegi == null
-                ? null
-                : (context, _, __) => hataYedegi(context),
+            // ⚠ YEDEK HER ZAMAN VAR (11 Eki): verilmezse nötr yer
+            // tutucu çizilir; ham hata kutusu kullanıcıya görünmez.
+            errorBuilder: (context, _, __) =>
+                (hataYedegi ?? varsayilanGorselYedegi)(context),
           );
 
 bool _uzakMi(String yol) => yol.startsWith('https://');

@@ -232,5 +232,10 @@ abstract final class Mappers {
         body: (j['body'] ?? '') as String,
         refId: j['refId'] as String?,
         read: j['readAt'] != null || (j['read'] ?? false) as bool,
+        // ⚠ SUNUCUNUN ZAMANI (11 Eki): okunmazsa her bildirim liste
+        // yüklendiği an gelmiş gibi görünüyordu.
+        createdAt: j['createdAt'] is String
+            ? DateTime.tryParse(j['createdAt'] as String)?.toLocal()
+            : null,
       );
 }

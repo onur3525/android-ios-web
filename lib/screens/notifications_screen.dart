@@ -328,7 +328,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Navigator.push(
               context,
               MaterialPageRoute<void>(
-                  builder: (_) => TeklifTalebiDetayScreen(talepId: ilan)));
+                  builder: (_) => TeklifTalebiDetayScreen(
+                        talepId: ilan,
+                        // ⚠ BİLDİRİMİN ANLATTIĞI YER (11 Eki): teklif
+                        // ve karar bildirimleri sayfayı TEKLİF bölümüne
+                        // kaydırarak açar — fiyat, not, "Teklifi Seç".
+                        // "Yeni teklif isteği" ise talebin kendisini
+                        // anlatır; sayfa başından açılır.
+                        teklifeOdaklan: t != NotifType.teklifTalebiGeldi,
+                      )));
         }
 
       case NotifType.refund:

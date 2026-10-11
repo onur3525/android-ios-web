@@ -156,6 +156,24 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
     if (me == null) {
       return;
     }
+    // ── ⚠ FOTOĞRAF KURALI — "İlan Ver" ile AYNI (11 Eki) ──
+    //
+    // Talep, yalnız YÜKLENMİŞ fotoğrafların sunucu referansını taşır.
+    // Önceden cihazdaki dosya yolu (`localPath`; web'de geçici `blob:`
+    // adresi) gönderiliyordu: canlı sürümde sunucu bunu "Geçersiz
+    // fotoğraf" diye reddediyor, deneme sitesinde ise yenilemeden sonra
+    // fotoğraf açılamıyordu. Mock modda seçici referansı yerel yol
+    // olarak verir (davranış aynı kalır).
+    if (_photos.any((p) => p.uploading)) {
+      sysToastErr(context, SysKind.genericError,
+          extra: 'Fotoğraflar yükleniyor — lütfen bekleyin');
+      return;
+    }
+    if (_photos.any((p) => !p.isUploaded)) {
+      sysToastErr(context, SysKind.photoUploadError,
+          extra: 'Yüklenemeyen fotoğrafları kaldırın veya tekrar deneyin');
+      return;
+    }
     setState(() => _gonderiliyor = true);
     final err = await context.read<TeklifTalebiController>().gonder(
           hizmetAlanId: me.id,
@@ -165,7 +183,7 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
           hizmet: widget.hizmet,
           aciklama: _aciklama.text.trim(),
           iletisimTercihi: _iletisim,
-          fotograflar: _photos.map((p) => p.localPath).toList(),
+          fotograflar: _photos.map((p) => p.storageRef!).toList(),
           // ⚠ SEÇİM YOKSA `null` GİDER — "belirtilmedi" demektir,
           // varsayılan bir değere ÇEVRİLMEZ.
           isZamani: _isZamani,
@@ -484,13 +502,17 @@ class _TeklifIsteScreenState extends State<TeklifIsteScreen> {
               style: refText(size: RF.s16, weight: RF.w700, color: RC.text)),
           const SizedBox(height: 8),
           // ⚠ GENUİNE YENİDEN KULLANIM: "İlan Ver" ekranındaki AYNI
-          // fotoğraf seçici bileşeni. `uploadEnabled: false` — bu
-          // akış için gerçek yükleme UCU YOK; fotoğraf yalnız cihazda
-          // tutulur (mock).
+          // fotoğraf seçici bileşeni.
+          //
+          // ⚠ YÜKLEME AÇIK (11 Eki): sunucu teklif talebi fotoğrafını
+          // ilan fotoğrafıyla AYNI türde (`listing-photo`) kabul ediyor;
+          // eskiden yükleme kapalıydı ve talep cihaz yolunu taşıyordu.
+          // Mock modda seçici AĞA ÇIKMAZ (kendi `ApiConfig` kapısı),
+          // referansı yerel yol olarak verir.
           ListingPhotoPicker(
             photos: _photos,
             storage: _storageApi,
-            uploadEnabled: false,
+            uploadEnabled: true,
             sade: true,
             onChanged: (next) => setState(() {
               _photos

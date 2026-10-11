@@ -320,6 +320,9 @@ export function sohbetTalepRotalar(r, db) {
     const t = await talepGetir(ctx.params.id, ctx.kullanici);
     await mesajSiniri.denetle(db, ctx.kullanici.id);
     if (!t.teklif_tarihi) throw kural('INVALID_STATE', 'Mesaj için önce teklif verilmelidir');
+    // Teklifin süresi dolunca iletişim kapanır (ürün kararı, 11 Eki);
+    // `talepGetir` süre taramasını önce yaptığı için durum günceldir.
+    if (t.durum === 'SURESI_DOLDU') throw kural('INVALID_STATE', 'Teklifin süresi doldu; mesajlaşma kapandı.');
     const metin = ctx.body.metin == null ? null : String(ctx.body.metin).trim();
     const ref = ctx.body.fotografRef == null ? null : String(ctx.body.fotografRef);
     if (!metin && !ref) throw hata.dogrulama('Boş mesaj gönderilemez');

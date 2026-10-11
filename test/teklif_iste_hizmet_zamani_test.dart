@@ -155,7 +155,10 @@ void main() {
       // Önceden "Yorumlar"ın ALTINDAYDI; kilitli iletişim, onu
       // açıklayan not ve yorumlar arasında sıra bozuktu.
       final iNot = k.indexOf('Hizmet veren teklif verdiğinde');
-      final iYorum = k.indexOf("Text('Yorumlar',");
+      // ⚠ Başlık "Yorumlar" → "Hizmet Verenin Yorumları" oldu (11 Eki,
+      // kullanıcı kararı: bunlar talebin değil, hizmet verenin profil
+      // yorumları). Sıra kuralı AYNEN denetlenir.
+      final iYorum = k.indexOf("Text('Hizmet Verenin Yorumları',");
       expect(iNot, greaterThan(-1));
       expect(iYorum, greaterThan(iNot),
           reason: 'iletişim bloğu yorumların altında kalmış');

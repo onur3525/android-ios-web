@@ -6,6 +6,7 @@ import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/teklif_talebi.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'widgets/sohbet_fotograf_akisi.dart';
@@ -124,6 +125,10 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
         ? talepKaydi
         : null;
     final mesajlar = talep?.mesajlar ?? const <TeklifMesaj>[];
+    // ⚠ TEKLİFİN SÜRESİ DOLUNCA MESAJLAŞMA KAPANIR (11 Eki, kullanıcı
+    // kararı): geçmiş mesajlar okunur, yeni mesaj yazılamaz. Kural tek
+    // yerde (`talepIletisimAcikMi`); sunucu da aynı durumda 409 döner.
+    final yazilabilir = talep != null && talepIletisimAcikMi(talep);
 
     return Scaffold(
       backgroundColor: RC.white,
@@ -168,6 +173,23 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
                       ],
                     ),
             ),
+            if (!yazilabilir)
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(
+                      talep?.durum == TeklifTalebiDurumu.suresiDoldu
+                          ? kTalepMesajlasmaKapandi
+                          : 'Mesajlaşma şu anda kapalı.',
+                      textAlign: TextAlign.center,
+                      style: refText(
+                          size: RF.s13,
+                          weight: RF.w400,
+                          color: RC.textSoft)),
+                ),
+              )
+            else
             SafeArea(
               top: false,
               child: Padding(

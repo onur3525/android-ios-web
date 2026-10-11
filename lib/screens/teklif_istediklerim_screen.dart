@@ -95,7 +95,13 @@ class TeklifIstediklerimListesi extends StatelessWidget {
         // ⚠ SÜZGEÇ BURADA YAZILMAZ: aşama kuralı
         // `domain/teklif_talebi_asamasi.dart` içinde TEK yerde. Dört
         // liste aynı kaynaktan okur.
-        : surenTalepler(
+        //
+        // ⚠ SONLANAN TALEPLER DE LİSTEDE (11 Eki, kullanıcı kararı):
+        // süresi dolan / reddedilen teklifin kartı (hizmet veren, puan,
+        // iş sayısı, yorum, fiyat) kaybolmaz; süren talepler üstte,
+        // sonlananlar altta kendi rozetiyle durur. Seçilen/tamamlanan
+        // talepler yine "Tamamlanan işler"e taşınır.
+        : teklifIstediklerimTalepleri(
             context.watch<TeklifTalebiController>().byHizmetAlan(me.id));
 
     if (talepler.isEmpty) {

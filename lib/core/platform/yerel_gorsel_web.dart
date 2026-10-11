@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
 
+import 'gorsel_yedegi.dart';
+
 // ⚠ WEB UYGULAMASI — TARAYICI.
 //
 // Tarayıcıda dosya sistemi YOKTUR. `image_picker` web'de `XFile.path`
@@ -29,9 +31,10 @@ Widget yerelGorsel(
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: hataYedegi == null
-          ? null
-          : (context, _, __) => hataYedegi(context),
+      // ⚠ YEDEK HER ZAMAN VAR (11 Eki): verilmezse nötr yer
+      // tutucu çizilir; ham hata kutusu kullanıcıya görünmez.
+      errorBuilder: (context, _, __) =>
+          (hataYedegi ?? varsayilanGorselYedegi)(context),
     );
 
 /// Baytlar — `XFile` blob adresinden okur.

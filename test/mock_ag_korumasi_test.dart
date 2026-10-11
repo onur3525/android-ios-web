@@ -48,7 +48,20 @@ void main() {
                 k.contains('StorageApi(context.read<ApiClient>())') &&
                 k.contains('uploadEnabled: false') &&
                 !k.contains('uploadEnabled: true');
-        if (!k.contains('ApiConfig.useRealApi') && !yalnizKapaliYukleme) {
+        // ⚠ YENİ İSTİSNA (11 Eki) — GEVŞETME DEĞİL, AYNI GÜVENCE:
+        // istemci YALNIZ fotoğraf seçiciye `StorageApi` olarak veriliyor
+        // ve yükleme AÇIK. Ağa çıkan tek kod seçicinin kendisidir; seçici
+        // mock modda ağa çıkmaz (aşağıda AYRICA denetlenir). Teklif İste
+        // ekranı bu yolla yüklenmiş fotoğrafın referansını gönderir.
+        final yalnizSeciciYuklemesi =
+            'ApiClient>()'.allMatches(k).length == 1 &&
+                k.contains('StorageApi(context.read<ApiClient>())') &&
+                k.contains('uploadEnabled: true') &&
+                _oku('lib/screens/widgets/photo_picker.dart')
+                    .contains('if (!ApiConfig.useRealApi) {');
+        if (!k.contains('ApiConfig.useRealApi') &&
+            !yalnizKapaliYukleme &&
+            !yalnizSeciciYuklemesi) {
           korumasiz.add(f.path.split('/').last);
         }
       }

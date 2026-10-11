@@ -9,6 +9,7 @@ import '../core/tutar_bicimi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/saglayici_ozeti.dart';
+import '../domain/teklif_talebi_asamasi.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../core/route_guard.dart';
 import '../core/theme.dart';
@@ -57,9 +58,19 @@ import '../core/baglanti_modu.dart';
 /// o ekranların kopyası DEĞİL; farklı bir modele (`TeklifTalebi`)
 /// bakan YENİ ve ayrı bir ekran.
 class TeklifTalebiDetayScreen extends StatefulWidget {
-  const TeklifTalebiDetayScreen({super.key, required this.talepId});
+  const TeklifTalebiDetayScreen(
+      {super.key, required this.talepId, this.teklifeOdaklan = false});
 
   final String talepId;
+
+  /// ── ⚠ BİLDİRİMDEN AÇILIŞ: TEKLİF BÖLÜMÜNE ODAKLAN (11 Eki) ──
+  ///
+  /// "Yeni teklif aldınız" bildirimine dokunan kullanıcı, bildirimin
+  /// anlattığı şeyi (fiyat, hizmet verenin notu, "Teklifi Seç") ilk
+  /// bakışta görmeli. Sayfa talep ayrıntılarıyla başladığından teklif
+  /// bölümü dar ekranda aşağıda kalıyordu; `true` iken ilk karede o
+  /// bölüm görünür alana kaydırılır. Başka hiçbir davranış değişmez.
+  final bool teklifeOdaklan;
 
   @override
   State<TeklifTalebiDetayScreen> createState() =>
@@ -89,6 +100,23 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   /// GERÇEK `teklifTarihi`den hesaplanır (bkz. model); bu zamanlayıcı
   /// yalnız EKRANI dakikada bir yeniden çizer, süreyi UYDURMAZ.
   Timer? _tik;
+
+  /// Teklif/aksiyon bölümünün yeri — bkz. [TeklifTalebiDetayScreen.teklifeOdaklan].
+  final GlobalKey _teklifBolumu = GlobalKey();
+  bool _odaklandi = false;
+
+  void _teklifeKaydir() {
+    if (_odaklandi || !widget.teklifeOdaklan) return;
+    _odaklandi = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final c = _teklifBolumu.currentContext;
+      if (!mounted || c == null) return;
+      Scrollable.ensureVisible(c,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          alignment: 0.1);
+    });
+  }
 
   @override
   void initState() {
@@ -324,6 +352,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     }
 
     final benSaglayiciMi = me.id == t.saglayiciId;
+    _teklifeKaydir();
 
     // ── ⚠ AKTİF ROL DENETİMİ (mevcut rol sistemi) ──
     //
@@ -654,8 +683,11 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
             ),
 
             const SizedBox(height: 20),
-            if (benSaglayiciMi)
-              _SaglayiciAksiyonlari(
+            // ⚠ BİLDİRİMDEN AÇILIŞTA BURAYA KAYDIRILIR (`teklifeOdaklan`).
+            KeyedSubtree(
+              key: _teklifBolumu,
+              child: benSaglayiciMi
+              ? _SaglayiciAksiyonlari(
                 talep: t,
                 fiyatController: _fiyat,
                 cevapController: _cevap,
@@ -664,8 +696,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                 onTeklifVer: () => _teklifVer(t),
                 onTamamla: () => _tamamla(t),
               )
-            else
-              _HizmetAlanAksiyonlari(
+              : _HizmetAlanAksiyonlari(
                 talep: t,
                 onSec: () => _sec(t),
                 onYorumYaz: () => Navigator.push<void>(
@@ -674,6 +705,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                         builder: (_) =>
                             TeklifTalebiYorumScreen(talep: t))),
               ),
+            ),
                   ]),
             ),
           ],
@@ -718,6 +750,11 @@ class _KarsiTarafBilgisi extends StatelessWidget {
     // dolduğu AN maskeleme İKİ TARAF İÇİN de kalkar — tek
     // tetikleyici budur (bkz. model dokümanı).
     final acik = talep.teklifTarihi != null;
+    // ⚠ İLETİŞİM AYRI KURAL (11 Eki, kullanıcı kararı): kimlik teklif
+    // gelince açılır ve açık KALIR; telefon + mesajlaşma ise teklifin
+    // süresi dolunca kilitlenir. Kural tek yerde: `talepIletisimAcikMi`.
+    final iletisim = talepIletisimAcikMi(talep);
+    final sureDoldu = talep.durum == TeklifTalebiDurumu.suresiDoldu;
 
     if (benSaglayiciMi) {
       final hizmetAlan = auth.accountById(talep.hizmetAlanId);
@@ -725,7 +762,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
       // SEÇTİYSE açılır — "Sadece uygulama içi mesajlaşma"
       // seçiliyse teklif verilse bile telefon HİÇ açılmaz.
       final telefonAcik =
-          acik && talep.iletisimTercihi == IletisimTercihi.telefonGoster;
+          iletisim && talep.iletisimTercihi == IletisimTercihi.telefonGoster;
       // ── ⚠ AD / KONUM / GEÇMİŞ BLOKLARI BU KARTTAN ÇIKTI
       // (12 Eyl, ürün kararı) ──
       //
@@ -738,6 +775,10 @@ class _KarsiTarafBilgisi extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (sureDoldu) ...[
+            const _IletisimKapandiNotu(),
+            const SizedBox(height: 8),
+          ],
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -766,12 +807,12 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   child: IletisimKutusu(
                     ikon: 'assets/svg/ic_chat.svg',
                     etiket: 'Mesajlaşma',
-                    deger: acik ? 'Mesaj yaz' : null,
-                    not: acik
+                    deger: iletisim ? 'Mesaj yaz' : null,
+                    not: iletisim
                         ? null
                         : 'Kilitli',
-                    kilitli: !acik,
-                    onTap: acik
+                    kilitli: !iletisim,
+                    onTap: iletisim
                         ? () => _sohbeteGit(context, talep.hizmet)
                         : null,
                   ),
@@ -871,6 +912,10 @@ class _KarsiTarafBilgisi extends StatelessWidget {
               style: refText(
                   size: RF.s12, weight: RF.w400, color: RC.textSoft)),
         if (!acik) const SizedBox(height: 8),
+        if (sureDoldu) ...[
+          const _IletisimKapandiNotu(),
+          const SizedBox(height: 8),
+        ],
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -892,11 +937,12 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                   child: IletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
-                    deger:
-                        acik ? _telefonGosterMetni(hizmetVeren?.phone) : null,
-                    not: acik ? null : 'Kilitli',
-                    kilitli: !acik,
-                    onTap: acik
+                    deger: iletisim
+                        ? _telefonGosterMetni(hizmetVeren?.phone)
+                        : null,
+                    not: iletisim ? null : 'Kilitli',
+                    kilitli: !iletisim,
+                    onTap: iletisim
                         ? () => _telefonAra(context, hizmetVeren?.phone)
                         : null,
                   ),
@@ -907,12 +953,12 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                 child: IletisimKutusu(
                   ikon: 'assets/svg/ic_chat.svg',
                   etiket: 'Mesajlaşma',
-                  deger: acik ? 'Mesaj yaz' : null,
-                  not: acik
+                  deger: iletisim ? 'Mesaj yaz' : null,
+                  not: iletisim
                       ? null
                       : 'Kilitli',
-                  kilitli: !acik,
-                  onTap: acik
+                  kilitli: !iletisim,
+                  onTap: iletisim
                       ? () => _sohbeteGit(context, talep.hizmet)
                       : null,
                 ),
@@ -934,7 +980,10 @@ class _KarsiTarafBilgisi extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Yorumlar',
+                // ⚠ BAŞLIK NETLEŞTİ (11 Eki, kullanıcı kararı): bunlar bu
+                // talebin değil, hizmet verenin PROFİLİNE yazılmış
+                // yorumlardır; "Yorumlar" talep ile karışıyordu.
+                Text('Hizmet Verenin Yorumları',
                     textAlign: TextAlign.center,
                     style: refText(
                         size: RF.s16, weight: RF.w700, color: RC.text)),
@@ -1240,24 +1289,7 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
           children: [
             // ⚠ ORTAK KART (bkz. hizmet veren tarafı): iki taraf da
             // aynı tutarı aynı biçimde görür.
-            TeklifTutarKarti(talep.teklifFiyati!),
-            // ⚠ AÇIKLAMA BOŞSA BÖLÜM HİÇ ÇİZİLMEZ (10 Eyl): hizmet
-            // veren cevap yazmak zorunda değil. Boş başlık, karşı
-            // tarafa "açıklama var ama okunamıyor" izlenimi verirdi.
-            if ((talep.teklifAciklamasi ?? '').trim().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              // ⚠ ORTAK KART: hizmet veren tarafıyla BİREBİR aynı
-              // görünüm; değişen yalnız başlık, çünkü iki taraf aynı
-              // metne kendi açısından bakıyor.
-              TeklifAciklamaKarti(
-                  // ⚠ "Hizmet Verenin Açıklaması" DEĞİL (12 Eyl,
-                  // kullanıcı kararı): oradaki metin bir beyan değil,
-                  // hizmet verenin fiyatının yanına iliştirdiği kısa
-                  // bir nottur. "Açıklama" hem fazla ağır kaçıyor hem
-                  // de ilan açıklamasıyla karışıyordu.
-                  baslik: 'Hizmet Verenin Notu',
-                  metin: talep.teklifAciklamasi!.trim()),
-            ],
+            _GelenTeklif(talep: talep),
             const SizedBox(height: 10),
             if (kalan != null && kalan.inMinutes > 0)
               Text(
@@ -1302,15 +1334,19 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
         // tek yerde; ekran kendi şeridini çizmez.
         return const DurumSeridi('Teklif seçildi');
 
+      // ── ⚠ SONLANAN TEKLİF DE GÖRÜNÜR (11 Eki, kullanıcı kararı) ──
+      //
+      // Önce yalnız tek satırlık durum yazısı çiziliyordu; "Yeni teklif
+      // aldınız" bildirimine dokunan kullanıcı fiyatı ve hizmet verenin
+      // notunu HİÇ göremiyordu. Teklif artık SALT OKUNUR görünür; yalnız
+      // "Teklifi Seç" düğmesi yoktur (süresi dolan teklif seçilemez).
       case TeklifTalebiDurumu.reddedildi:
-        return Text('Bu teklifi reddettin.',
-            style:
-                refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
+        return _SonlananTeklif(
+            talep: talep, metin: 'Bu teklifi reddettin.');
 
       case TeklifTalebiDurumu.suresiDoldu:
-        return Text('Teklifin süresi doldu — artık seçilemez.',
-            style:
-                refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
+        return _SonlananTeklif(
+            talep: talep, metin: 'Teklifin süresi doldu — artık seçilemez.');
 
       case TeklifTalebiDurumu.tamamlandi:
         // ── ⚠ "TEKLİFİ SEÇ" ARTIK "YORUM YAZ"A DÖNÜŞÜYOR ──
@@ -1429,6 +1465,73 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
 /// ⚠ `w600` DÜZELTİLDİ: pubspec'te Poppins'in yalnız 400/500/700
 /// ağırlıkları var; `w600` sentezlenip bulanık basıyordu (ilan
 /// açıklaması tipografisinde kurulan kural).
+/// Gelen teklif — tutar kartı + (varsa) hizmet verenin notu.
+///
+/// ⚠ TEK KAYNAK: karar bekleyen teklif ile sonlanan (süresi dolan /
+/// reddedilen) teklif AYNI görünümü kullanır; değişen yalnız altındaki
+/// düğme ya da durum yazısıdır.
+class _GelenTeklif extends StatelessWidget {
+  const _GelenTeklif({required this.talep});
+
+  final TeklifTalebi talep;
+
+  @override
+  Widget build(BuildContext context) {
+    final fiyat = talep.teklifFiyati;
+    if (fiyat == null) {
+      return const SizedBox.shrink();
+    }
+    final not = (talep.teklifAciklamasi ?? '').trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TeklifTutarKarti(fiyat),
+        // ⚠ AÇIKLAMA BOŞSA BÖLÜM HİÇ ÇİZİLMEZ (10 Eyl): hizmet veren
+        // cevap yazmak zorunda değil. Boş başlık, karşı tarafa
+        // "açıklama var ama okunamıyor" izlenimi verirdi.
+        if (not.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          // ⚠ "Hizmet Verenin Açıklaması" DEĞİL (12 Eyl, kullanıcı
+          // kararı): fiyatın yanına iliştirilmiş kısa bir nottur.
+          TeklifAciklamaKarti(baslik: 'Hizmet Verenin Notu', metin: not),
+        ],
+      ],
+    );
+  }
+}
+
+/// Sonlanan teklif: salt okunur teklif + durum yazısı, düğme YOK.
+class _SonlananTeklif extends StatelessWidget {
+  const _SonlananTeklif({required this.talep, required this.metin});
+
+  final TeklifTalebi talep;
+  final String metin;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (talep.teklifFiyati != null) ...[
+            _GelenTeklif(talep: talep),
+            const SizedBox(height: 10),
+          ],
+          Text(metin,
+              style: refText(
+                  size: RF.s135, weight: RF.w500, color: RC.textSoft)),
+        ],
+      );
+}
+
+/// Teklifin süresi dolunca iletişim kutularının üstündeki açıklama.
+class _IletisimKapandiNotu extends StatelessWidget {
+  const _IletisimKapandiNotu();
+
+  @override
+  Widget build(BuildContext context) => Text(
+      'Teklifin süresi doldu; telefon ve mesajlaşma kapandı.',
+      style: refText(size: RF.s12, weight: RF.w400, color: RC.textSoft));
+}
+
 class _BeklemeGostergesi extends StatelessWidget {
   const _BeklemeGostergesi();
 

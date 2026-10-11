@@ -81,6 +81,9 @@ ChatMessage mesajCoz(Map<String, dynamic> j) => ChatMessage(
 Map<String, dynamic> bildirimJson(AppNotification n) => {
       'id': n.id, 'userId': n.userId, 'type': n.type.name, 'title': n.title,
       'body': n.body, 'refId': n.refId, 'read': n.read,
+      // ⚠ ZAMAN DA SAKLANIR (11 Eki): saklanmadığında yenilemeden sonra
+      // her bildirim "az önce gelmiş" görünüyordu.
+      'createdAt': _t(n.createdAt),
     };
 
 AppNotification? bildirimCoz(Map<String, dynamic> j) {
@@ -96,6 +99,8 @@ AppNotification? bildirimCoz(Map<String, dynamic> j) {
     body: j['body'] as String,
     refId: j['refId'] as String?,
     read: j['read'] == true,
+    // Eski kayıtta zaman yoksa (bu düzeltmeden önce yazılmış) "şimdi".
+    createdAt: _d(j['createdAt']),
   );
 }
 

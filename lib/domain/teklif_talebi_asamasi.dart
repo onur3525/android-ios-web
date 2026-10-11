@@ -54,11 +54,9 @@ bool talepKazanildiMi(TeklifTalebiDurumu d) =>
 
 /// İŞ OLUMSUZ SONUÇLANDI: reddedildi ya da süresi doldu.
 ///
-/// ⚠ ŞU AN HİÇBİR LİSTEDE GÖSTERİLMİYOR — bu bilinçli bir boşluktur,
-/// unutulmuş bir dal değil. Nereye düşeceği (hizmet alanda "Süresi
-/// dolan işler"e mi, ayrı bir geçmişe mi) ürün kararı bekliyor.
-/// Fonksiyon burada duruyor ki karar verildiğinde yine TEK yerden
-/// bağlansın.
+/// ⚠ HİZMET ALANDA "Teklif İstediklerim" listesinin ALTINDA gösterilir
+/// (11 Eki, kullanıcı kararı; bkz. [teklifIstediklerimTalepleri]).
+/// Hizmet verenin "Teklif İstekleri" listesi değişmedi.
 bool talepSonlandiMi(TeklifTalebiDurumu d) =>
     d == TeklifTalebiDurumu.reddedildi ||
     d == TeklifTalebiDurumu.suresiDoldu;
@@ -66,6 +64,44 @@ bool talepSonlandiMi(TeklifTalebiDurumu d) =>
 /// [hepsi] içinden hâlâ süren talepler.
 List<TeklifTalebi> surenTalepler(List<TeklifTalebi> hepsi) =>
     [for (final t in hepsi) if (talepSurenMi(t.durum)) t];
+
+/// [hepsi] içinden olumsuz sonuçlanmış (reddedilen / süresi dolan)
+/// talepler.
+List<TeklifTalebi> sonlananTalepler(List<TeklifTalebi> hepsi) =>
+    [for (final t in hepsi) if (talepSonlandiMi(t.durum)) t];
+
+/// ── ⚠ HİZMET ALANIN "TEKLİF İSTEDİKLERİM" LİSTESİ (11 Eki, kullanıcı
+/// kararı) ──
+///
+/// Önce yalnız SÜREN talepler gösteriliyordu; 30 saat içinde seçilmeyen
+/// teklifin kartı (hizmet veren, puan, iş sayısı, yorum, FİYAT) listeden
+/// tamamen kayboluyordu ve talebe yalnız bildirimden ulaşılabiliyordu.
+/// Artık sonlanan talepler de kalır — süren talepler ÜSTTE, sonlananlar
+/// altta (kendi "Süresi doldu" / "Reddedildi" rozetiyle).
+///
+/// ⚠ TEK KAYNAK: hem liste hem Bul ekranındaki başlık bu fonksiyonu
+/// okur. İkisi ayrı süzgeç kullandığında başlık var ama liste boş
+/// kalıyordu ("sahipsiz başlık").
+List<TeklifTalebi> teklifIstediklerimTalepleri(List<TeklifTalebi> hepsi) =>
+    [...surenTalepler(hepsi), ...sonlananTalepler(hepsi)];
+
+/// ── ⚠ İLETİŞİM (telefon + mesajlaşma) AÇIK MI? (11 Eki, kullanıcı
+/// kararı) ──
+///
+/// Teklif geldiği an iki taraf için de açılır; teklifin SÜRESİ DOLUNCA
+/// kilitlenir ("Teklifin süresi dolduktan sonra telefon ve mesaj
+/// kutuları kilitlensin"). Kimlik (ad, puan) açık kalır — yalnız
+/// iletişim kapanır.
+///
+/// ⚠ İKİ TARAF, DETAY EKRANI VE SOHBET EKRANI bu fonksiyonu okur;
+/// mock depo da aynı kuralla mesajı reddeder (sunucu ayrıca 409 döner).
+/// Süresi dolan teklifte mesaj denenince gösterilen metin — TEK yer
+/// (sohbet ekranı ve mock port okur; sunucu da aynı cümleyi döner).
+const String kTalepMesajlasmaKapandi =
+    'Teklifin süresi doldu; mesajlaşma kapandı.';
+
+bool talepIletisimAcikMi(TeklifTalebi t) =>
+    t.teklifTarihi != null && t.durum != TeklifTalebiDurumu.suresiDoldu;
 
 /// [hepsi] içinden kazanılmış/tamamlanmış talepler.
 List<TeklifTalebi> kazanilanTalepler(List<TeklifTalebi> hepsi) =>
