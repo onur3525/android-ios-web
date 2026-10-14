@@ -68361,7 +68361,7 @@
     _KategoriSecimPaneliState: function _KategoriSecimPaneliState(t0, t1) {
       var _ = this;
       _._kategori_secim_paneli$_ara = t0;
-      _.___KategoriSecimPaneliState__secili_AI = $;
+      _.___KategoriSecimPaneliState__secili_FI = $;
       _._widget = null;
       _._debugLifecycleState = t1;
       _._framework$_element = null;
@@ -272519,7 +272519,7 @@
     _bootGuvenli$0() {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$handler = 2, $async$errorStack = [], $async$next = [], $async$self = this, e, iz, exception, t1, $async$exception;
+        $async$handler = 1, $async$errorStack = [], $async$next = [], $async$self = this, e, iz, exception, $async$exception;
       var $async$_bootGuvenli$0 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1) {
           $async$errorStack.push($async$result);
@@ -272529,56 +272529,51 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              $async$handler = 4;
-              $async$goto = 7;
-              return A._asyncAwait($async$self._boot$0(), $async$_bootGuvenli$0);
-            case 7:
-              // returning from await.
-              $async$next.push(6);
-              // goto finally
-              $async$goto = 5;
-              break;
-            case 4:
-              // catch
               $async$handler = 3;
+              $async$goto = 6;
+              return A._asyncAwait($async$self._boot$0(), $async$_bootGuvenli$0);
+            case 6:
+              // returning from await.
+              $async$next.push(5);
+              // goto finally
+              $async$goto = 4;
+              break;
+            case 3:
+              // catch
+              $async$handler = 2;
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
               iz = A.getTraceFromException($async$exception);
               A.BootLog_olay("BOOT_EXCEPTION", A._rtiToString(J.get$runtimeType$(e)._rti, null));
               A.print__debugPrintThrottled$closure().call$1("A\xe7\u0131l\u0131\u015f hatas\u0131: " + A.S(e) + "\n" + A.S(iz));
               $async$self._yonlendir$1(B.BootResult_BootDecision_2_null_null);
-              $async$next.push(6);
+              $async$next.push(5);
               // goto finally
-              $async$goto = 5;
+              $async$goto = 4;
               break;
-            case 3:
+            case 2:
               // uncaught
-              $async$next = [2];
-            case 5:
+              $async$next = [1];
+            case 4:
               // finally
-              $async$handler = 2;
+              $async$handler = 1;
               if (!$async$self._yonlendirildi) {
                 A.BootLog_olay("BOOT_FALLBACK", "yonlendirme_yapilmadi");
                 $async$self._yonlendir$1(B.BootResult_BootDecision_2_null_null);
               }
-              t1 = !$async$self._yonlendirildi;
-              if (t1 && $async$self._framework$_element == null) {
+              if (!$async$self._yonlendirildi && $async$self._framework$_element == null)
                 A.BootLog_olay("BOOT_UNMOUNTED", "rota_kurulamadi");
-                // goto return
-                $async$goto = 1;
-                break;
-              }
-              if (t1)
-                A.BindingBase_checkInstance($.WidgetsBinding__instance, type$.WidgetsBinding).addPostFrameCallback$1(new A._SplashScreenState__bootGuvenli_closure($async$self));
+              if (!$async$self._yonlendirildi)
+                if ($async$self._framework$_element != null)
+                  A.BindingBase_checkInstance($.WidgetsBinding__instance, type$.WidgetsBinding).addPostFrameCallback$1(new A._SplashScreenState__bootGuvenli_closure($async$self));
               // goto the next finally handler
               $async$goto = $async$next.pop();
               break;
-            case 6:
+            case 5:
               // after finally
+              // implicit return
+              return A._asyncReturn(null, $async$completer);
             case 1:
-              // return
-              return A._asyncReturn($async$returnValue, $async$completer);
-            case 2:
               // rethrow
               return A._asyncRethrow($async$errorStack.at(-1), $async$completer);
           }
@@ -274527,18 +274522,19 @@
   };
   A._GelenTeklif.prototype = {
     build$1(context) {
-      var not, t2,
+      var t2, t3,
         t1 = this.talep,
         fiyat = t1.teklifFiyati;
       if (fiyat == null)
         return B.SizedBox_0_0_null_null;
+      t2 = type$.JSArray_Widget;
+      t3 = A._setArrayType([new A.TeklifTutarKarti(fiyat, null)], t2);
       t1 = t1.teklifAciklamasi;
-      not = B.JSString_methods.trim$0(t1 == null ? "" : t1);
-      t1 = type$.JSArray_Widget;
-      t2 = A._setArrayType([new A.TeklifTutarKarti(fiyat, null)], t1);
-      if (not.length !== 0)
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_10_null_null, new A.TeklifAciklamaKarti("Hizmet Verenin Notu", not, null)], t1));
-      return A.Column$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
+      if (B.JSString_methods.trim$0(t1 == null ? "" : t1).length !== 0) {
+        t1.toString;
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_10_null_null, new A.TeklifAciklamaKarti("Hizmet Verenin Notu", B.JSString_methods.trim$0(t1), null)], t2));
+      }
+      return A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A._SonlananTeklif.prototype = {
@@ -276586,8 +276582,15 @@
   };
   A._KategoriSecimPaneliState.prototype = {
     get$_kategori_secim_paneli$_secili() {
-      var value = this.___KategoriSecimPaneliState__secili_AI;
-      return value === $ ? this.___KategoriSecimPaneliState__secili_AI = A.LinkedHashSet_LinkedHashSet$of(this._widget.baslangic, type$.String) : value;
+      var t1, _this = this,
+        value = _this.___KategoriSecimPaneliState__secili_FI;
+      if (value === $) {
+        t1 = A.LinkedHashSet_LinkedHashSet$of(_this._widget.baslangic, type$.String);
+        _this.___KategoriSecimPaneliState__secili_FI !== $ && A.throwLateFieldADI("_secili");
+        _this.___KategoriSecimPaneliState__secili_FI = t1;
+        value = t1;
+      }
+      return value;
     },
     dispose$0() {
       this._kategori_secim_paneli$_ara.dispose$0();
@@ -276611,8 +276614,9 @@
       return out;
     },
     _kaldir$1(ad) {
-      var _this = this;
-      if (_this.get$_kategori_secim_paneli$_secili()._collection$_length === 1 && _this.get$_kategori_secim_paneli$_secili().contains$1(0, ad)) {
+      var _this = this,
+        t1 = _this.get$_kategori_secim_paneli$_secili();
+      if (t1._collection$_length === 1 && t1.contains$1(0, ad)) {
         A._toast(_this.get$context(0), string$.En_az_);
         return;
       }
@@ -276622,7 +276626,7 @@
       return this.setState$1(new A._KategoriSecimPaneliState__ekle_closure(this, ad));
     },
     build$1(context) {
-      var mq, t1, t2, t3, t4, t5, _i, r, t6, t7, t8, side, t9, t10, _this = this, _null = null,
+      var mq, t1, t2, t3, t4, t5, _i, r, t6, t7, t8, t9, side, t10, t11, _this = this, _null = null,
         _s7_ = "Poppins",
         sonuc = _this.get$_sonuclar();
       A.debugCheckHasMediaQuery(context);
@@ -276647,26 +276651,27 @@
         t6 = A.Text$(r._0, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
         t4.push(new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_2_null_null, A.Text$(r._1, _null, _null, _null, _null, new A.TextStyle(true, B.Color_A9k, _null, _s7_, B.List_MNo, _null, 12, B.FontWeight_400, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_2Tw, _null, _null, _null, _null, B.EdgeInsets_18_11_18_11, _null, _null, 1 / 0), new A._KategoriSecimPaneliState_build_closure2(_this, r), _null, _null, _null));
       }
-      t4.push(new A.Padding(B.EdgeInsets_18_14_18_0, A.Align$(B.Alignment_m1_0, A.Text$("Se\xe7ili Hizmetlerim (" + _this.get$_kategori_secim_paneli$_secili()._collection$_length + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null), _null, _null, _null), _null));
+      t5 = _this.get$_kategori_secim_paneli$_secili();
+      t4.push(new A.Padding(B.EdgeInsets_18_14_18_0, A.Align$(B.Alignment_m1_0, A.Text$("Se\xe7ili Hizmetlerim (" + t5._collection$_length + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null), _null, _null, _null), _null));
       t4.push(new A.Padding(B.EdgeInsets_18_4_18_0, A.Align$(B.Alignment_m1_0, A.Text$("En az bir hizmet kategorisi se\xe7iniz", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null), _null));
-      if (_this.get$_kategori_secim_paneli$_secili()._collection$_length === 0)
-        t5 = A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null);
+      if (t5._collection$_length === 0)
+        t6 = A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null);
       else {
-        t5 = A._setArrayType([], t3);
-        for (t6 = _this.get$_kategori_secim_paneli$_secili(), t6 = A._LinkedHashSetIterator$(t6, t6._collection$_modifications, A._instanceType(t6)._precomputed1), t7 = t6.$ti._precomputed1; t6.moveNext$0();) {
-          t8 = t6._collection$_current;
-          if (t8 == null)
-            t8 = t7._as(t8);
+        t6 = A._setArrayType([], t3);
+        for (t7 = A._LinkedHashSetIterator$(t5, t5._collection$_modifications, A._instanceType(t5)._precomputed1), t8 = t7.$ti._precomputed1; t7.moveNext$0();) {
+          t9 = t7._collection$_current;
+          if (t9 == null)
+            t9 = t8._as(t9);
           side = new A.BorderSide(B.Color_jIV, 1, B.BorderStyle_1, -1);
-          t9 = new A.Radius(11, 11);
-          t10 = new A.Radius(999, 999);
-          t5.push(A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(t8, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null), B.SizedBox_8_null_null_null, new A.RefTap(B.Padding_XRX, new A._KategoriSecimPaneliState_build_closure3(_this, t8), new A.BorderRadius(t10, t10, t10, t10), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, _null), B.Clip_0, _null, _null, new A.BoxDecoration(B.Color_wst, _null, new A.Border(side, side, side, side), new A.BorderRadius(t9, t9, t9, t9), _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null));
+          t10 = new A.Radius(11, 11);
+          t11 = new A.Radius(999, 999);
+          t6.push(A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(t9, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null), B.SizedBox_8_null_null_null, new A.RefTap(B.Padding_XRX, new A._KategoriSecimPaneliState_build_closure3(_this, t9), new A.BorderRadius(t11, t11, t11, t11), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, _null), B.Clip_0, _null, _null, new A.BoxDecoration(B.Color_wst, _null, new A.Border(side, side, side, side), new A.BorderRadius(t10, t10, t10, t10), _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null));
         }
-        t5 = A.Wrap$(t5, B.WrapCrossAlignment_0, 9, 9);
+        t6 = A.Wrap$(t6, B.WrapCrossAlignment_0, 9, 9);
       }
-      t4.push(new A.Padding(B.EdgeInsets_18_10_18_4, A.Align$(B.Alignment_m1_0, t5, _null, _null, _null), _null));
+      t4.push(new A.Padding(B.EdgeInsets_18_10_18_4, A.Align$(B.Alignment_m1_0, t6, _null, _null, _null), _null));
       t4 = A.ListView$(t4, _null, B.EdgeInsets_0_0_0_0, true);
-      return new A.Padding(new A.EdgeInsets(0, 0, 0, mq.viewInsets.bottom), A.SafeArea$(true, A.ConstrainedBox$(A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_18_16_12_10, t2, _null), new A.Padding(B.EdgeInsets_18_0_18_10, t1, _null), new A.Flexible(1, B.FlexFit_1, t4, _null), new A.Padding(B.EdgeInsets_18_10_18_14, A.SizedBox$(new A.RefPrimaryButton("Tamam", _null, _this.get$_kategori_secim_paneli$_secili()._collection$_length === 0 ? _null : new A._KategoriSecimPaneliState_build_closure4(_this, context), false, _null), _null, 1 / 0), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), new A.BoxConstraints(0, 1 / 0, 0, mq.size._dy * 0.88)), B.EdgeInsets_0_0_0_0, true), _null);
+      return new A.Padding(new A.EdgeInsets(0, 0, 0, mq.viewInsets.bottom), A.SafeArea$(true, A.ConstrainedBox$(A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_18_16_12_10, t2, _null), new A.Padding(B.EdgeInsets_18_0_18_10, t1, _null), new A.Flexible(1, B.FlexFit_1, t4, _null), new A.Padding(B.EdgeInsets_18_10_18_14, A.SizedBox$(new A.RefPrimaryButton("Tamam", _null, t5._collection$_length === 0 ? _null : new A._KategoriSecimPaneliState_build_closure4(_this, context), false, _null), _null, 1 / 0), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), new A.BoxConstraints(0, 1 / 0, 0, mq.size._dy * 0.88)), B.EdgeInsets_0_0_0_0, true), _null);
     }
   };
   A._KategoriSecimPaneliState__kaldir_closure.prototype = {
