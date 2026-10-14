@@ -248417,7 +248417,7 @@
     register$body$ApiAuthPort(_, categories, email, emailVerified, kayitYetkisi, $name, otpCode, otpVerified, pass, phone, role, serviceDistricts, taslakKimligi, termsAccepted) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.Record_2_nullable_Account_account_and_nullable_DomainError_error),
-        $async$returnValue, $async$self = this, t1, err;
+        $async$returnValue, $async$self = this, t1, err, profilHatasi;
       var $async$register$13$categories$email$emailVerified$kayitYetkisi$name$otpCode$otpVerified$pass$phone$role$serviceDistricts$taslakKimligi$termsAccepted = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -248461,6 +248461,13 @@
               return A._asyncAwait(t1.saveProviderProfile$2(categories, serviceDistricts), $async$register$13$categories$email$emailVerified$kayitYetkisi$name$otpCode$otpVerified$pass$phone$role$serviceDistricts$taslakKimligi$termsAccepted);
             case 9:
               // returning from await.
+              profilHatasi = $async$result;
+              if (profilHatasi != null) {
+                $async$returnValue = new A._Record_2_account_error(t1.currentAccount, new A.ValidationError("Hesab\u0131n\u0131z a\xe7\u0131ld\u0131 ancak hizmet kategorileri ve il\xe7eleri kaydedilemedi (" + profilHatasi.get$message(profilHatasi) + "). Profilinizden yeniden kaydedin."));
+                // goto return
+                $async$goto = 1;
+                break;
+              }
             case 8:
               // join
               $async$returnValue = new A._Record_2_account_error(t1.currentAccount, null);
@@ -270566,7 +270573,7 @@
     call$2(otpContext, otpCode) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$self = this, il, t1, t2, t3, t4, t5, t6, t7, t8, r;
+        $async$returnValue, $async$self = this, profilUyarisi, il, t1, t2, t3, t4, t5, t6, t7, t8, r;
       var $async$call$2 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -270592,11 +270599,17 @@
                 $async$goto = 1;
                 break;
               }
-              t1 = r._1;
-              if (t1 != null) {
-                t2 = A.ScaffoldMessenger_of(otpContext);
-                t2.clearSnackBars$0();
-                t2.showSnackBar$1(A.SnackBar$(null, null, null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, null, A.Text$(t1.get$message(t1), null, null, null, null, null, B.TextAlign_2, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
+              t1 = r._0 == null;
+              if (!t1) {
+                t4 = r._1;
+                profilUyarisi = t4 == null ? null : t4.get$message(t4);
+              } else
+                profilUyarisi = null;
+              t4 = r._1;
+              if (t4 != null && t1) {
+                t1 = A.ScaffoldMessenger_of(otpContext);
+                t1.clearSnackBars$0();
+                t1.showSnackBar$1(A.SnackBar$(null, null, null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, null, A.Text$(t4.get$message(t4), null, null, null, null, null, B.TextAlign_2, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
                 A.Navigator_of(otpContext, false).pop$1$1(0, null, type$.nullable_Object);
                 // goto return
                 $async$goto = 1;
@@ -270634,6 +270647,8 @@
                 $async$goto = 1;
                 break;
               }
+              if (profilUyarisi != null)
+                A.sysToastErr(otpContext, B.SysKind_2, profilUyarisi);
               t1 = type$.dynamic;
               A.Navigator_pushReplacement(otpContext, A.MaterialPageRoute$(new A._RegisterScreenState__next___closure(), false, null, t1), t1, type$.nullable_Object);
             case 1:
