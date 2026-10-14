@@ -54,7 +54,16 @@ IP'yi TEK yerden alır (`src/http.js` → `istemciIp`).
 | Önde ek proxy (ör. CDN) | o proxy'nin eklediği değer(ler) | eklenen her değer için +1 | Ölçülmeli |
 | Proxy yok / yerel | — | tanımsız | Soket adresi |
 
-**Ölçüm (yeni uç ya da kod gerekmez):** staging'de aday değerle başlat;
+**Ölçüm — geçici teşhis ucu (15 Eki, önerilen):** Render'da
+`HC_IP_TESHIS=true` ekleyip yeniden dağıtın; telefondan (Wi-Fi kapalı) ve
+bilgisayardan `https://<api adresi>/teshis/ip` açın. Kendi genel IP'nizi
+(herhangi bir "IP adresim" sitesinden) yanıttaki `sagdan` listesinde bulun:
+o satırın `sira` değeri `HC_TRUST_PROXY_HOPS` değeridir. Değeri girin,
+`HC_IP_TESHIS`'i SİLİN ve yeniden dağıtın (açıkken açılışta uyarı yazılır;
+kapalıyken uç 404 döner). Yanıt yalnız isteği yapanın kendi bağlantı
+bilgisidir.
+
+**Ölçüm — kodsuz yöntem:** staging'de aday değerle başlat;
 bilinen bir istemci IP'sinden `X-Forwarded-For: 203.0.113.9` başlığıyla
 admin girişine bilerek yanlış şifre gönder; admin panelindeki denetim
 kaydında `auth.login_failed` satırının IP'sine bak. Gerçek istemci IP'si ise

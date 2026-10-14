@@ -41,9 +41,9 @@ env:
   API_BASE_URL: https://api.hizmetcep.com/api/v1
 jobs:
   web-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Zorunlu değerler tanımlı mı
         env:
@@ -90,7 +90,7 @@ jobs:
           fi
           ls -la firebase-messaging-sw.js fcm_web.js fcm_yapilandirma.js
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: hizmetcep-web-production
           path: build/web

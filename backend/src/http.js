@@ -232,3 +232,29 @@ export class Yonlendirici {
 export function istekKimligi() {
   return randomUUID();
 }
+
+/**
+ * ── GEÇİCİ IP TEŞHİSİ (HC_TRUST_PROXY_HOPS ölçümü) ──
+ *
+ * YALNIZ `HC_IP_TESHIS=true` iken `GET /teshis/ip` yanıt verir; aksi hâlde
+ * uç YOKTUR (404). Ölçüm bitince değişken KALDIRILMALIDIR (açılışta uyarı).
+ * Yanıt yalnız İSTEĞİ YAPANIN kendi bağlantı bilgisidir: soket adresi,
+ * `X-Forwarded-For` değerleri (sağdan numaralı), mevcut ayarla seçilen IP.
+ * Sır, oturum ya da başka kullanıcı verisi İÇERMEZ.
+ *
+ * Kullanım: telefondan (Wi-Fi kapalı) ve bilgisayardan açın; kendi genel
+ * IP'nizi (ör. bir "IP'm ne" sitesi) `sagdan` listesinde bulun. O değerin
+ * sağdan sıra numarası doğru `HC_TRUST_PROXY_HOPS` değeridir.
+ */
+export function ipTeshisi(req) {
+  const baslik = req.headers?.['x-forwarded-for'];
+  const ham = Array.isArray(baslik) ? baslik.join(',') : (baslik ?? '');
+  const degerler = String(ham).split(',').map((s) => s.trim()).filter(Boolean).slice(-10);
+  return {
+    soket: req.socket?.remoteAddress ? ipBicimle(req.socket.remoteAddress) : null,
+    xForwardedFor: degerler,
+    sagdan: degerler.map((ip, i) => ({ sira: degerler.length - i, ip })).reverse(),
+    yapilandirilanHop: config.guvenilirProxySayisi,
+    secilenIp: istemciIp(req),
+  };
+}

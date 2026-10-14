@@ -252,7 +252,21 @@ class ApiAuthPort extends AuthPort {
       await FirebaseKimlik.i.epostaBaglaVeDogrulamaGonder(email, pass);
     }
     if (categories.isNotEmpty || serviceDistricts.isNotEmpty) {
-      await repo.saveProviderProfile(categories, serviceDistricts);
+      // ⚠ HATA YUTULMAZ (15 Eki): hesap açıldı ama hizmet kategorileri /
+      // ilçeleri sunucuda reddedildiyse hizmet veren hiçbir ilan
+      // eşleşmesinde görünmezdi ve bunu bilmezdi. Kısmi başarı: hesap
+      // DÖNER, hata da döner — ekran kaydı geri almaz, kullanıcıyı uyarır.
+      final profilHatasi =
+          await repo.saveProviderProfile(categories, serviceDistricts);
+      if (profilHatasi != null) {
+        return (
+          account: repo.currentAccount,
+          error: ValidationError(
+              'Hesabınız açıldı ancak hizmet kategorileri ve ilçeleri '
+              'kaydedilemedi (${profilHatasi.message}). Profilinizden '
+              'yeniden kaydedin.'),
+        );
+      }
     }
     return (account: repo.currentAccount, error: null);
   }

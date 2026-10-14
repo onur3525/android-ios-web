@@ -17,7 +17,7 @@ import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
   ApiHatasi, Yonlendirici, cerezleriOku, govdeOku, hata, istekKimligi,
-  istemciIp, jsonGonder,
+  ipTeshisi, istemciIp, jsonGonder,
 } from './http.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
@@ -103,6 +103,10 @@ export function uygulamaKur(db) {
       return res.end();
     }
     try {
+      // Geçici IP teşhisi: yalnız HC_IP_TESHIS=true iken (bkz. http.js ipTeshisi).
+      if (req.method === 'GET' && yol === '/teshis/ip' && process.env.HC_IP_TESHIS === 'true') {
+        return jsonGonder(res, 200, ipTeshisi(req));
+      }
       // Katalog görselleri (ham yanıt): yüklenen fotoğraf (depodan, özel) ve
       // uygulama paketindeki katalog görselleri (beyaz listeli, salt okunur).
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
@@ -210,6 +214,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.log(`HizmetCep backend dinliyor: :${config.port} (veritabanı: ${config.veritabani.surucu}, örnek: ${olaylar.ornekId})`);
     // Ortamda SMS/e-posta sağlayıcısı yoksa açıkça uyarılır (admin
     // entegrasyonu da etkin değilse gönderimler FAILED düşer). Sır yazılmaz.
+    if (process.env.HC_IP_TESHIS === 'true') console.warn('UYARI: HC_IP_TESHIS açık — /teshis/ip geçici ölçüm ucu yanıt veriyor; ölçüm bitince kaldırın.');
     for (const [ad, s] of [['SMS', config.sms], ['EMAIL', config.eposta]]) {
       if (s.ad === 'yok') console.warn(`UYARI: HC_${ad}_PROVIDER tanımsız — ${ad} gönderimi yalnız admin panelindeki etkin entegrasyonla yapılır; o da yoksa gönderimler FAILED kaydedilir.`);
     }

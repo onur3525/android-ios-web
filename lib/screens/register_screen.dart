@@ -889,7 +889,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             if (!otpContext.mounted) {
               return;
             }
-            if (r.error != null) {
+            // ⚠ KISMİ BAŞARI (15 Eki): hesap açıldı ama hizmet veren
+            // profili kaydedilemediyse forma DÖNÜLMEZ (aynı numarayla
+            // yeniden kayıt "kayıtlı" hatası verirdi); uyarı aşağıda,
+            // başarı akışının sonunda gösterilir.
+            final profilUyarisi =
+                r.account != null ? r.error?.message : null;
+            if (r.error != null && r.account == null) {
               ScaffoldMessenger.of(otpContext)
                 ..clearSnackBars()
                 ..showSnackBar(SnackBar(
@@ -949,6 +955,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             await _bekleyenIlaniYayinla(otpContext);
             if (!otpContext.mounted) {
               return;
+            }
+            if (profilUyarisi != null) {
+              sysToastErr(otpContext, SysKind.genericError,
+                  extra: profilUyarisi);
             }
             Navigator.pushReplacement(otpContext,
                 MaterialPageRoute(builder: (_) => const RegisterDoneScreen()));
