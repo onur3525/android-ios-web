@@ -28,6 +28,9 @@ const GIRIS_KILIT_ESIGI = 5;
 const GIRIS_KILIT_SURESI = 15 * 60 * 1000;
 const otpIpSiniri = new HizSiniri('otp_ip', 20, 60 * 60 * 1000);
 const girisIpSiniri = new HizSiniri('giris_ip', 30, 15 * 60 * 1000);
+// Rol ekleme: kullanıcı başına 15 dakikada en çok 5 deneme (şifre denemesi
+// bu uçtan sınırsız yapılamasın).
+const rolEklemeSiniri = new HizSiniri('rol_ekleme', 5, 15 * 60 * 1000);
 
 const ozet = (v) => createHash('sha256').update(v).digest('hex');
 const otpOzet = (telefon, amac, kod) => ozet(`${config.jwtSirri}|${telefon}|${amac}|${kod}`);
@@ -233,12 +236,55 @@ function firebaseTelefonu(yuk, beklenen) {
 }
 
 /**
+ * ── KRİTİK İŞLEM: YAKIN ZAMANDA, YENİ TELEFON DOĞRULAMASI (15 Eki) ──
+ *
+ * Firebase ID token 1 saat geçerlidir ve oturum boyunca YENİLENİR; yeni bir
+ * token, kullanıcının yeni bir doğrulama yaptığını GÖSTERMEZ (yenilemede
+ * `iat` değişir, `auth_time` DEĞİŞMEZ). Bu yüzden üç koşul birlikte aranır:
+ *   1. `firebase.sign_in_provider === 'phone'` — son kimlik doğrulama SMS
+ *      koduyla yapıldı (şifre/e-posta oturumunun belgesi kabul edilmez);
+ *   2. `auth_time` son YAKIN_DOGRULAMA_SN içinde (gelecek zaman ve saat
+ *      kayması firebaseTokenDogrula'da reddedilir);
+ *   3. `auth_time`, bu SUNUCU OTURUMUNUN açılışından en az OTURUM_PAYI_SN
+ *      SONRA — telefonla girişte alınan belge (doğrulama oturumdan hemen
+ *      ÖNCE yapılır) rol eklemede YENİDEN KULLANILAMAZ; kullanıcı rol ekleme
+ *      sırasında YENİ bir kod doğrulamak zorundadır. Oturum yenilemede
+ *      (`/auth/refresh`) açılış zamanı korunur, bu yüzden pencere kaymaz.
+ */
+const YAKIN_DOGRULAMA_SN = 10 * 60;
+const OTURUM_PAYI_SN = 30; // sunucu ile Firebase saat farkına pay
+export function yakinTelefonDogrulamasi(yuk, oturumBaslangici, simdiMs = Date.now()) {
+  const an = Math.floor(simdiMs / 1000);
+  const yontem = yuk?.firebase?.sign_in_provider;
+  // ISO metin (SQLite `simdi()` ve PostgreSQL ayrıştırıcısı: UTC 'Z') ya da Date.
+  // ⚠ Boş değer 0'a (1970) dönüşüp denetimi etkisizleştirmesin: NaN → red.
+  const acilis = oturumBaslangici ? Math.floor(new Date(oturumBaslangici).getTime() / 1000) : NaN;
+  if (yontem !== 'phone' || typeof yuk.auth_time !== 'number' || an - yuk.auth_time > YAKIN_DOGRULAMA_SN
+      || !Number.isFinite(acilis) || yuk.auth_time < acilis + OTURUM_PAYI_SN) {
+    throw new ApiHatasi(400, 'REAUTH_REQUIRED', 'Güvenliğiniz için telefonunuza gelen yeni kodla doğrulama yapın.');
+  }
+}
+
+/**
  * Telefon doğrulama kanıtı: Firebase ID token (canlı yol) YA DA sunucunun
  * kendi OTP'si (eski/yedek yol). Firebase yolunda dönen `uid` hesaba bağlanır.
  */
-async function telefonKaniti(db, body, tel, amaclar) {
+async function telefonKaniti(db, body, tel, amaclar, { yakinDogrulama = null } = {}) {
   if (body.firebaseIdToken) {
-    const yuk = await firebaseKimlikIste(body.firebaseIdToken);
+    // İmza, proje (aud/iss), süre ve sub denetimi firebaseTokenDogrula'da.
+    let yuk;
+    if (yakinDogrulama) {
+      // Oturum AÇIKKEN yapılan kritik işlem: geçersiz kanıt 401 DEĞİL 400
+      // döner — istemci 401'de oturum yenileyip isteği TEKRARLAR (hız
+      // sınırını iki kez tüketirdi) ve kanıt hatası oturum hatası değildir.
+      yuk = await firebaseTokenDogrula(body.firebaseIdToken).catch(() => null);
+      if (!yuk) throw new ApiHatasi(400, 'PHONE_PROOF_INVALID', 'Telefon doğrulaması geçersiz ya da süresi dolmuş. Yeni kod isteyin.');
+      // Belgenin geçerli olması YETMEZ — yakın zamanda ve bu oturum
+      // açıldıktan SONRA telefonla yeniden doğrulama (yakinTelefonDogrulamasi).
+      yakinTelefonDogrulamasi(yuk, yakinDogrulama.oturumBaslangici);
+    } else {
+      yuk = await firebaseKimlikIste(body.firebaseIdToken);
+    }
     firebaseTelefonu(yuk, tel);
     return { uid: yuk.sub, yuk };
   }
@@ -433,9 +479,14 @@ export function kullaniciRotalar(r, db) {
   }));
 
   r.post('/api/v1/auth/roles/add', korumali(async (ctx) => {
+    // Kullanıcı başına hız sınırı (şifre denemesi dahil): şifre ve kanıt
+    // denetiminden ÖNCE sayılır; çok örnekte ortak (rate_limits tablosu).
+    await rolEklemeSiniri.denetle(db, ctx.kullanici.id);
     const rol = rolDogrula(ctx.body.role);
     if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
-    await telefonKaniti(db, ctx.body, ctx.kullanici.phone, ['ROLE_ADD', 'LOGIN']);
+    // Firebase kanıtı: yakın zamanda telefonla yeniden doğrulama ŞART.
+    // Kanıt yoksa eski sunucu OTP yolu (yalnız gerçekten istenmiş kod).
+    await telefonKaniti(db, ctx.body, ctx.kullanici.phone, ['ROLE_ADD', 'LOGIN'], { yakinDogrulama: { oturumBaslangici: ctx.kOturum.created_at } });
     const mevcut = roller(ctx.kullanici);
     if (mevcut.includes(rol)) throw hata.cakisma('Bu rol hesabınızda zaten var');
     await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?').run([...mevcut, rol].join(','), rol, simdi(), ctx.kullanici.id);
