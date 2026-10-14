@@ -40,7 +40,7 @@ class KategoriSecimPaneli extends StatefulWidget {
 
 class _KategoriSecimPaneliState extends State<KategoriSecimPaneli> {
   final _ara = TextEditingController();
-  late Set<String> _secili = {...widget.baslangic};
+  late final Set<String> _secili = {...widget.baslangic};
 
   @override
   void dispose() {

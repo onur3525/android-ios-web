@@ -284,9 +284,11 @@ class _SplashScreenState extends State<SplashScreen> {
       // Widget kalkmışsa yerine BAŞKA bir rota gelmiş demektir
       // (uygulama başka bir yere gitmiştir); o rota kendi karesini
       // çizer ve fail-safe splash'ı bırakır.
+      // ⚠ `finally` içinde `return` YOK (analyze: control_flow_in_finally):
+      // erken dönüş yerine aşağıdaki son çare sinyali `mounted` ile
+      // korunur — davranış aynı, olası bir istisna yutulmaz.
       if (!_yonlendirildi && !mounted) {
         BootLog.olay('BOOT_UNMOUNTED', 'rota_kurulamadi');
-        return;
       }
       // ── ⚠ FALLBACK — NORMAL YOL BURAYA BAĞLI DEĞİLDİR ──
       //
@@ -305,9 +307,12 @@ class _SplashScreenState extends State<SplashScreen> {
       // olmadan: kök sarmalayıcı hiç çalışmadığı için tek çalışan yol
       // burasıydı. Artık iki yol açıkça ayrıdır.
       if (!_yonlendirildi) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          unawaited(_splashBirak());
-        });
+        // Widget kalktıysa (yukarıdaki koruma) sinyal BİZDEN gitmez.
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            unawaited(_splashBirak());
+          });
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cross_file/cross_file.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:flutter/widgets.dart';
 
 import 'gorsel_yedegi.dart';
@@ -13,8 +13,10 @@ import 'gorsel_yedegi.dart';
 // yalnız sekme yaşadığı sürece geçerlidir ve `dart:io` ile
 // okunamaz.
 //
-// ⚠ `cross_file` YENİ BİR BAĞIMLILIK DEĞİLDİR: `image_picker` zaten
-// onu getirir (`XFile` o pakettedir). pubspec'e paket eklenmedi.
+// ⚠ `XFile` doğrudan `cross_file`tan DEĞİL, bağımlılığımız olan
+// `image_picker`ın yeniden dışa aktarımından alınır (analyze:
+// depend_on_referenced_packages). pubspec'e paket eklenmedi; kilit
+// dosyası değişmez.
 
 /// `data:` adresi mi? (bkz. [kaliciYerelYol])
 bool _veriAdresiMi(String yol) => yol.startsWith('data:');

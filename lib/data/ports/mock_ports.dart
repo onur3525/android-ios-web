@@ -171,6 +171,7 @@ class MockAuthPort extends AuthPort {
   Future<DomainError?> sifreSifirlamaIste(String email) async =>
       repo.sifreSifirlamaIste(email);
 
+  @override
   Future<DomainError?> forgotStart(String phone) async => repo.forgotStart(phone);
   @override
   /// ŞİFRE SIFIRLAMA — SON ADIM.
@@ -953,6 +954,7 @@ class MockReviewPort extends ReviewPort {
   List<Review> byProvider(String providerId) => reviews.byProvider(providerId);
 
   /// Müşterinin YAZDIĞI değerlendirmeler.
+  @override
   List<Review> byAuthor(String authorId) => reviews.byAuthor(authorId);
   @override
   double? averageOf(String providerId) {

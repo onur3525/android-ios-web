@@ -295,6 +295,7 @@ class ApiAuthPort extends AuthPort {
   Future<DomainError?> sifreSifirlamaIste(String email) =>
       FirebaseKimlik.i.sifreSifirlamaEpostasi(email);
 
+  @override
   Future<DomainError?> forgotStart(String phone) => repo.requestOtp(phone, 'FORGOT');
   @override
   Future<DomainError?> forgotComplete(String phone, String otp, String newPass) =>
