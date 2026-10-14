@@ -33,6 +33,7 @@ import { pushKuyrugunuIsle } from './fcm.js';
 import { publicRotalar } from './routes/public.js';
 import { destekRotalar } from './routes/destek.js';
 import { kayitBakimi } from './bakim.js';
+import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
 
 const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
 const ACIK_ADMIN_YOLLARI = new Set(['/admin/v1/auth/login', '/admin/v1/auth/mfa']);
@@ -166,6 +167,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // dengeleyici arkasında N örnek aynı kodla çalışır; otomatik ölçekleme
   // altyapıya aittir (bkz. backend/DEPLOY.md).
   const db = await veritabaniAc(config.veritabani);
+  // Katalog/bölge/yasal tablolar BOŞSA uygulama verisinden doldurulur
+  // (bkz. baslangic_verisi.js). Hata açılışı durdurmaz ama açıkça yazılır.
+  try {
+    const s = await baslangicVerisiniHazirla(db);
+    if (s && Object.values(s).some((n) => n > 0)) console.log('Başlangıç verisi aktarıldı:', JSON.stringify(s));
+  } catch (e) {
+    console.error('UYARI: başlangıç verisi aktarılamadı (ilan açma katalog ister):', e.message);
+  }
   await olaylar.kur(db);
   const isler = [
     ['ilan_suresi', suresiDolanlariIsle],

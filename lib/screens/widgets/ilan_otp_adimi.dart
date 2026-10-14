@@ -17,11 +17,19 @@ class IlanOtpAdimi extends StatefulWidget {
     required this.telefon,
     required this.veri,
     required this.onDegisti,
+    this.yenidenGonder,
   });
 
   final String telefon;
   final OtpVerisi veri;
   final VoidCallback onDegisti;
+
+  /// GERÇEK YENİDEN GÖNDERİM (API modu). Hata metni döner; `null` başarı.
+  ///
+  /// ⚠ Verilmezse (mock) "Kodu Tekrar Gönder" yalnız sayacı yeniler —
+  /// eski davranış. Verilirse sayaç YALNIZ başarılı gönderimde yeniden
+  /// başlar; hata kutuların altında gösterilir (sahte başarı yok).
+  final Future<String?> Function()? yenidenGonder;
 
   @override
   State<IlanOtpAdimi> createState() => _IlanOtpAdimiState();
@@ -112,6 +120,30 @@ class _IlanOtpAdimiState extends State<IlanOtpAdimi> {
   void dispose() {
     _zaman?.cancel();
     super.dispose();
+  }
+
+  bool _gonderiliyor = false;
+
+  Future<void> _tekrarGonder() async {
+    final gonder = widget.yenidenGonder;
+    if (gonder == null) {
+      _sayacBaslat();
+      return;
+    }
+    if (_gonderiliyor) {
+      return;
+    }
+    _gonderiliyor = true;
+    final hata = await gonder();
+    _gonderiliyor = false;
+    if (!mounted) {
+      return;
+    }
+    setState(() => widget.veri.hata = hata);
+    widget.onDegisti();
+    if (hata == null) {
+      _sayacBaslat();
+    }
   }
 
   void _sayacBaslat() {
@@ -255,7 +287,7 @@ class _IlanOtpAdimiState extends State<IlanOtpAdimi> {
                     ],
                   )
                 : RefTap(
-                    onTap: _sayacBaslat,
+                    onTap: _tekrarGonder,
                     borderRadius: BorderRadius.circular(RR.r10),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

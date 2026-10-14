@@ -90,6 +90,37 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   /// Referans akış: 1 Kategori · 2 İlan Bilgileri · 3 Kayıt · 4 SMS.
   final _kayit = KayitVerisi();
   final _otp = OtpVerisi();
+
+  /// ── ⚠ GERÇEK API MODU: KAYIT KODU (15 Eki) ──
+  ///
+  /// Bu akış API modunda HİÇ SMS göndermiyordu ("Kodu Tekrar Gönder"
+  /// yalnız sayacı yeniliyordu) ve kodu sunucuya `otpCode` olarak
+  /// yolluyordu; sunucuda o numara için kod olmadığından kayıt her
+  /// zaman "kodun süresi doldu" ile düşüyordu. Artık kayıt ekranıyla
+  /// AYNI use-case kullanılır: kod `kayitKodGonder` ile (Firebase)
+  /// gönderilir, `kayitDogrula` ile doğrulanır ve dönen kayıt yetkisi
+  /// `register(kayitYetkisi:)` ile sunucuya gider. Mock akış DEĞİŞMEDİ.
+  final String _taslakKimligi =
+      'ilan-kayit-${DateTime.now().microsecondsSinceEpoch}';
+  String? _kayitChallenge;
+  String? _kayitYetkisi;
+
+  /// API modunda kodu gönderir; hata varsa kullanıcıya gösterilecek
+  /// metni döner. Mock modda bir şey yapmaz (yerel test kodu).
+  Future<String?> _kayitKoduGonder() async {
+    if (!ApiConfig.useRealApi) {
+      return null;
+    }
+    final ch = await context.read<AuthController>().kayitKodGonder(
+        Validators.phoneFmt(_kayit.telefon.text),
+        taslakKimligi: _taslakKimligi);
+    if (ch.challengeId.isEmpty) {
+      return FormMesaj.otpGonderilemedi;
+    }
+    _kayitChallenge = ch.challengeId;
+    _kayitYetkisi = null;
+    return null;
+  }
   String? _cat;
 
   /// İŞİN YAPILMASI İSTENEN ZAMAN — İSTEĞE BAĞLI.
@@ -303,6 +334,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         role: Role.customer,
         otpVerified: true,
         otpCode: _otp.kod,
+        // API modunda telefon kanıtı (Firebase kayıt yetkisi); mock'ta null.
+        kayitYetkisi: _kayitYetkisi,
         name: _kayit.adSoyad,
         email: _kayit.eposta.text.trim(),
         termsAccepted: _kayit.sozlesme,
@@ -542,12 +575,38 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         setState(() => _kayit.dokunulan.addAll(KayitVerisi.alanlar));
         return;
       }
+      if (ApiConfig.useRealApi) {
+        // Kod gönderilemezse SMS adımına geçilmez (sahte bekleme yok).
+        unawaited(_smsAdiminaGec());
+        return;
+      }
       setState(() => _step = 4);
     } else if (_step == 4 && widget.preLogin) {
       if (!_otp.tamam) {
         return;
       }
       unawaited(_otpDogrulaVeKaydol());
+    }
+  }
+
+  /// API modu: kodu gönderir, başarıdaysa SMS adımına geçer.
+  Future<void> _smsAdiminaGec() async {
+    if (_busy) {
+      return;
+    }
+    setState(() => _busy = true);
+    final hata = await _kayitKoduGonder();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _busy = false;
+      if (hata == null) {
+        _step = 4;
+      }
+    });
+    if (hata != null) {
+      sysToastErr(context, SysKind.genericError, extra: hata);
     }
   }
 
@@ -584,9 +643,32 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     //   · Mock modda yerel doğrulama çalışır ve YALNIZ debug
     //     derlemede geçer (`MockOtpService.verify` release'te her
     //     zaman false döner).
-    final gecerli = ApiConfig.useRealApi
-        ? _otp.kod.length == 6
-        : await MockOtpService().verify(telefon, _otp.kod);
+    // ⚠ API MODU (15 Eki): kod Firebase'de doğrulanır; dönen kayıt
+    // yetkisi sunucuya gider ve sunucu onu ayrıca doğrular. Sabit test
+    // kodu bu yolda HİÇ kullanılmaz.
+    if (ApiConfig.useRealApi) {
+      final challenge = _kayitChallenge;
+      final d = challenge == null
+          ? (yetki: null, hata: FormMesaj.otpSuresiDoldu)
+          : await context
+              .read<AuthController>()
+              .kayitDogrula(challenge, _otp.kod);
+      if (!mounted) {
+        return;
+      }
+      if (d.hata != null || d.yetki == null) {
+        setState(() {
+          _busy = false;
+          _otp.hata = d.hata ?? 'Doğrulama kodu hatalı';
+        });
+        return;
+      }
+      _kayitYetkisi = d.yetki;
+      setState(() => _busy = false);
+      await _kaydolVeYayinla();
+      return;
+    }
+    final gecerli = await MockOtpService().verify(telefon, _otp.kod);
 
     if (!mounted) {
       return;
@@ -894,7 +976,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                       IlanOtpAdimi(
                           telefon: _kayit.telefon.text,
                           veri: _otp,
-                          onDegisti: () => setState(() {})),
+                          onDegisti: () => setState(() {}),
+                          // API modunda gerçek yeniden gönderim; mock'ta
+                          // yalnız sayaç (yerel test kodu).
+                          yenidenGonder: ApiConfig.useRealApi
+                              ? _kayitKoduGonder
+                              : null),
                   ],
                 ),
               ),

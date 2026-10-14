@@ -819,6 +819,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     setState(() => _busy = false);
+    // ⚠ KOD GÖNDERİLEMEDİYSE DOĞRULAMA EKRANI AÇILMAZ (15 Eki).
+    //
+    // Gerçek API modunda kodu Firebase gönderir; gönderim başarısızsa
+    // (yetkisiz alan adı, reCAPTCHA, kota, ağ) challenge boş döner.
+    // Eskiden yine de doğrulama ekranı açılıyor, kullanıcı hiç gelmeyecek
+    // bir kodu bekliyordu.
+    if (ch.challengeId.isEmpty) {
+      sysToastErr(context, SysKind.genericError,
+          extra: FormMesaj.otpGonderilemedi);
+      return;
+    }
     Navigator.push(
       context,
       panelRotasi<void>(
@@ -841,9 +852,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // ⚠ AKIŞA ÖZEL: yeni KAYIT challenge'ı üretilir, eskisi
           // iptal olur (C7). Aynı taslak kimliği korunur.
           yenidenGonder: () async {
-            ch = await context
+            final yeni = await context
                 .read<AuthController>()
                 .kayitKodGonder(phone, taslakKimligi: _taslakKimligi);
+            // ⚠ SAHTE BAŞARI YOK: gönderilemediyse sayaç yeniden
+            // başlamaz, hata ekranda görünür; eski challenge korunur.
+            if (yeni.challengeId.isEmpty) {
+              return FormMesaj.otpGonderilemedi;
+            }
+            ch = yeni;
             return null;
           },
           onVerified: (otpContext, otpCode) async {

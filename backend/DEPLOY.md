@@ -172,7 +172,9 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
 3. **Environment** sekmesi: `NODE_ENV=production`, `HC_DB_DRIVER=postgres`,
    `HC_DATABASE_URL`, `HC_MASTER_KEY` (`openssl rand -base64 32`),
    `HC_JWT_SECRET` (en az 32 karakter), `HC_FIREBASE_PROJECT_ID`,
-   `HC_CORS_ORIGINS` (web kökeni/kökenleri; ör. Netlify'ın özel alan adı),
+   `HC_CORS_ORIGINS` (web kökeni/kökenleri, virgülle; ör. Netlify'ın özel alan
+   adı. GitHub Pages test sitesi bu sunucuya bağlanıyorsa
+   `https://onur3525.github.io` da eklenmeli — yoksa tarayıcı istekleri engeller),
    `HC_FIREBASE_WEB_API_KEY` (AÇIK web anahtarı; tanımsızsa giriş yalnız yerel
    şifre özetine bakar ve e-posta ile yapılan Firebase şifre sıfırlaması
    girişe yansımaz).
@@ -194,8 +196,12 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
    (askı/ban, destek yanıtı) içindir.
 6. **Depolama**: `HC_S3_*` (dördü birlikte) ya da admin paneli →
    Entegrasyonlar → Depolama. Kimlik bilgisi Put/Get/Delete yetkili olmalı.
-7. **İlk dağıtım sonrası** (Render Shell): `npm run seed` (boş tablolara
-   katalog verisi), `HC_ADMIN_PASSWORD=… npm run admin:create -- <e-posta> "<Ad Soyad>"`.
+7. **İlk dağıtım sonrası**: katalog, bölge, yasal metin ve destek tabloları
+   BOŞSA sunucu açılışta bunları uygulamanın kendi verisinden doldurur
+   (günlükte "Başlangıç verisi aktarıldı" satırı; kapatmak için
+   `HC_OTOMATIK_TOHUM=false`, elle: `npm run seed`). Katalog boşken ilan
+   açılamaz ("Geçerli bir hizmet seçiniz"). İlk yönetici için (kabuk erişimi
+   gerekir): `HC_ADMIN_PASSWORD=… npm run admin:create -- <e-posta> "<Ad Soyad>"`.
 8. **`HC_TRUST_PROXY_HOPS`**: "İstemci IP'si" bölümündeki ölçüm adımıyla
    belirleyin; ölçmeden değer vermeyin (tanımsız = başlığa güvenilmez).
 9. **Alan adı**: Render → Custom Domains → `api.hizmetcep.com` (Flutter
