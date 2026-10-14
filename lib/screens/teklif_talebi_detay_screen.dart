@@ -1464,7 +1464,6 @@ class _GelenTeklif extends StatelessWidget {
     if (fiyat == null) {
       return const SizedBox.shrink();
     }
-    final not = (talep.teklifAciklamasi ?? '').trim();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1472,11 +1471,15 @@ class _GelenTeklif extends StatelessWidget {
         // ⚠ AÇIKLAMA BOŞSA BÖLÜM HİÇ ÇİZİLMEZ (10 Eyl): hizmet veren
         // cevap yazmak zorunda değil. Boş başlık, karşı tarafa
         // "açıklama var ama okunamıyor" izlenimi verirdi.
-        if (not.isNotEmpty) ...[
+        // ⚠ KOŞUL hizmet veren tarafıyla BİREBİR AYNI ifade (iki taraf
+        // ayrışmasın; test/teklif_karti_ve_mesaj_test.dart 5 ve 6).
+        if ((talep.teklifAciklamasi ?? '').trim().isNotEmpty) ...[
           const SizedBox(height: 10),
           // ⚠ "Hizmet Verenin Açıklaması" DEĞİL (12 Eyl, kullanıcı
           // kararı): fiyatın yanına iliştirilmiş kısa bir nottur.
-          TeklifAciklamaKarti(baslik: 'Hizmet Verenin Notu', metin: not),
+          TeklifAciklamaKarti(
+              baslik: 'Hizmet Verenin Notu',
+              metin: talep.teklifAciklamasi!.trim()),
         ],
       ],
     );
