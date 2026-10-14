@@ -31,7 +31,14 @@ void main() {
   test('03 — şifre değiştir ekranında sıfırlama yolu var', () {
     final c = read('lib/screens/change_password_screen.dart');
     expect(c.contains('Şifremi Unuttum'), isTrue);
-    expect(c.contains('forgotStart('), isTrue);
+    // ⚠ Eskiden `forgotStart(` (sunucu SMS OTP'si) aranıyordu; ama
+    // panel e-posta bağlantısı vaat ediyor, kod girme adımı da yoktu.
+    // Artık e-posta → `sifreSifirlamaIste(`, e-posta yok → Şifremi
+    // Unuttum ekranının telefon doğrulama akışı.
+    expect(c.contains('sifreSifirlamaIste('), isTrue);
+    expect(c.contains('ForgotPasswordScreen('), isTrue);
+    expect(c.contains('forgotStart('), isFalse,
+        reason: 'kod girme adımı olmayan çıkmaz akış geri gelmemeli');
   });
 
   // ══════════════════════════════════════════════════════════════

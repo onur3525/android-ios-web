@@ -227,7 +227,10 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               child: RefBackButton(),
             ),
             const SizedBox(height: 4),
-            // ── ⚠ MASAÜSTÜ WEB: ANA İÇERİK + SAĞ YAN PANEL ──
+            // ── ⚠ ANA İÇERİK + YARDIMCI BÖLÜM — HER EKRANDA TEK SÜTUN
+            // (14 Eki, kullanıcı kararı: masaüstünde yan yana olmaz;
+            // bkz. `MasaustuDetay`). Aşağıdaki "SOL/SAĞ" ifadeleri eski
+            // iki kolonlu düzeni anlatır; bugün "üst/alt" demektir. ──
             //
             // İlan kartı SOLDA (ana), teklif formu / verilen teklif /
             // iletişim blokları SAĞDA (yan). Mobilde ikisi bugünkü

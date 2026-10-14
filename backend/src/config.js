@@ -5,7 +5,7 @@
 // AÇILMAZ (fail-closed).
 // ═══════════════════════════════════════════════════════════════
 import { randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { servisHesabiOku } from './servis_hesabi.js';
 
 const env = process.env;
 export const uretim = env.NODE_ENV === 'production';
@@ -68,11 +68,20 @@ function jwtSirri() {
  *               Üretimde REDDEDİLİR.
  *   'webhook' — sağlayıcıdan bağımsız HTTPS POST (JSON); gerçek SMS/e-posta
  *               sağlayıcısına köprü. Adres ve anahtar ortamdan gelir.
+ *   tanımsız  — ÜRETİMDE izinli: gönderim yalnız admin panelinden
+ *               etkinleştirilen entegrasyonla yapılır (bildirim.js önce onu
+ *               kullanır). İkisi de yoksa her gönderim outbound_messages'a
+ *               FAILED ("sağlayıcı yapılandırılmamış") düşer; OTP isteği 503
+ *               döner. Sessiz başarı YOK, sahte sağlayıcı YOK.
+ *               (Telefon doğrulaması uygulamada Firebase Authentication ile
+ *               yapılır; bu kanal sunucu OTP'si ve hesap bildirimleri içindir.)
  */
 function saglayici(tur) {
-  const ad = (env[`HC_${tur}_PROVIDER`] || (uretim ? '' : 'log')).trim();
+  const ham = (env[`HC_${tur}_PROVIDER`] ?? '').trim();
+  const ad = ham || (uretim ? 'yok' : 'log');
+  if (ad === 'yok') return { ad };
   if (!['log', 'webhook'].includes(ad)) {
-    throw new Error(`HC_${tur}_PROVIDER log ya da webhook olmalıdır.`);
+    throw new Error(`HC_${tur}_PROVIDER geçersiz ("${ham.slice(0, 20)}"): webhook (canlı), log (yalnız geliştirme) ya da tanımsız (yalnız admin entegrasyonu) olmalıdır.`);
   }
   if (uretim && ad === 'log') throw new Error(`Üretimde HC_${tur}_PROVIDER=log kullanılamaz.`);
   if (ad === 'webhook') {
@@ -123,25 +132,18 @@ function depolamaDenetimi() {
 // olmalı: farklı projenin hesabıyla gönderim SENDER_ID_MISMATCH verir ve
 // kullanıcıların cihaz kayıtları geçersiz sayılıp silinirdi.
 function fcmDenetimi() {
-  const ham = (env.HC_FCM_SERVICE_ACCOUNT || (() => {
-      try { return readFileSync('/etc/secrets/firebase-service-account.json', 'utf8'); }
-      catch { return ''; }
-    })() || '').trim();
-  if (!ham) {
-    if (uretim) zorunlu('HC_FCM_SERVICE_ACCOUNT');
+  // Okuma/doğrulama tek kaynakta (servis_hesabi.js): ortam değeri YA DA
+  // Secret File yolu (HC_FCM_SERVICE_ACCOUNT_FILE).
+  const s = servisHesabiOku(env);
+  if (!s) {
+    if (uretim) {
+      throw new Error('Üretimde HC_FCM_SERVICE_ACCOUNT zorunludur (servis hesabı JSON değeri) ya da HC_FCM_SERVICE_ACCOUNT_FILE ile dosya yolu verilmelidir (ör. Render Secret File: /etc/secrets/<dosya adı>).');
+    }
     return false;
   }
-  let j;
-  try { j = JSON.parse(ham.startsWith('{') ? ham : Buffer.from(ham, 'base64').toString('utf8')); } catch {
-    throw new Error('HC_FCM_SERVICE_ACCOUNT geçerli bir servis hesabı JSON değeri (düz ya da base64) değil.');
-  }
-  for (const k of ['project_id', 'client_email', 'private_key']) {
-    if (!j[k]) throw new Error(`HC_FCM_SERVICE_ACCOUNT içinde ${k} eksik.`);
-  }
-  if (!String(j.private_key).includes('PRIVATE KEY')) throw new Error('HC_FCM_SERVICE_ACCOUNT private_key PEM biçiminde değil.');
   const proje = (env.HC_FIREBASE_PROJECT_ID || 'hizmetcep-fe036').trim();
-  if (uretim && j.project_id !== proje) {
-    throw new Error(`HC_FCM_SERVICE_ACCOUNT projesi (${j.project_id}) Firebase projesiyle (${proje}) aynı değil.`);
+  if (uretim && s.hesap.project_id !== proje) {
+    throw new Error(`Firebase servis hesabı projesi (${s.hesap.project_id}) Firebase projesiyle (${proje}) aynı değil.`);
   }
   return true;
 }

@@ -51,10 +51,23 @@ function doldur(metin, degerler) {
   return metin.replace(/\{(\w+)\}/g, (_, k) => (degerler[k] ?? ''));
 }
 
+/**
+ * Kanalın bir gönderim yolu var mı? (admin entegrasyonu etkin YA DA ortam
+ * sağlayıcısı tanımlı). Numaradan bağımsızdır; yanıt kayıt bilgisi sızdırmaz.
+ */
+export async function kanalHazir(db, kanal) {
+  if (await etkinEntegrasyon(db, kanal === 'SMS' ? 'SMS' : 'EMAIL')) return true;
+  return (kanal === 'SMS' ? config.sms : config.eposta).ad !== 'yok';
+}
+
 async function saglayiciyaGonder(db, kanal, hedef, konu, govde) {
   // Admin panelinden etkinleştirilmiş entegrasyon ÖNCELİKLİ; yoksa ortam.
   const e = await etkinEntegrasyon(db, kanal === 'SMS' ? 'SMS' : 'EMAIL');
   const s = e ? { ad: 'webhook', url: e.config.url, anahtar: e.secret.token } : (kanal === 'SMS' ? config.sms : config.eposta);
+  if (s.ad === 'yok') {
+    // Üretimde ortam sağlayıcısı tanımsız ve admin entegrasyonu etkin değil.
+    throw new Error(`${kanal === 'SMS' ? 'SMS' : 'E-posta'} sağlayıcısı yapılandırılmamış (HC_${kanal === 'SMS' ? 'SMS' : 'EMAIL'}_PROVIDER ya da admin entegrasyonu)`);
+  }
   if (s.ad === 'log') {
     if (uretim) throw new Error('Üretimde log sağlayıcısı kullanılamaz');
     if (!process.env.HC_SESSIZ) console.log(`[BİLDİRİM:${kanal}] → ${hedef}: ${govde}`);

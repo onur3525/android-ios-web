@@ -93,6 +93,14 @@ test('teklif talebi: durum makinesi, taraf denetimi, mesaj ve değerlendirme', a
   assert.equal(y.durum, 200);
   const ustaListe = await istek('/api/v1/teklif-talepleri', { token: usta.token });
   assert.equal(ustaListe.json.length, 1);
+  // Bildirimler Bul akışının KENDİ kodlarıyla ve hedefle döner: istemci
+  // bunları ilan bildirimi sanıp talep kimliğiyle ilan ekranını açmasın.
+  const bildirimler = async (tk) => (await istek('/api/v1/notifications', { token: tk })).json.filter((n) => n.refId === id);
+  const ustaB = await bildirimler(usta.token);
+  assert.deepEqual(ustaB.map((n) => n.type).sort(), ['TALEP_ACCEPTED', 'TALEP_MESSAGE', 'TALEP_REQUEST']);
+  const alanB = await bildirimler(alan.token);
+  assert.deepEqual(alanB.map((n) => n.type), ['TALEP_OFFER']);
+  assert.ok([...ustaB, ...alanB].every((n) => n.target === 'talep'));
 });
 
 test('teklif talebi: teklif 30 saatte süresi doluyor; usta yalnız beklemedeyken reddeder', async () => {

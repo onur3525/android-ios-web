@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/platform/yerel_gorsel.dart';
+import '../../data/remote/api_config.dart';
+
 import 'fotograf_kaynak_paneli.dart';
 
 /// ── ⚠ PAYLAŞIMLI SOHBET FOTOĞRAFI AKIŞI ──
@@ -58,14 +61,23 @@ Future<List<String>> sohbetFotograflariSec(BuildContext context) async {
       // tutulur — büyük dosya hem yüklemeyi hem belleği zorlar.
       final tek = await ImagePicker().pickImage(
           source: ImageSource.camera, maxWidth: 1280, imageQuality: 85);
-      return tek == null ? const [] : [tek.path];
+      return tek == null ? const [] : [await _kalici(tek.path)];
     }
     // ⚠ GALERİ: çoklu seçim. Kullanıcı tek tek seçer, sistem seçicisi
     // sırayı korur.
-    final coklu = await ImagePicker().pickMultiImage(imageQuality: 85);
-    return coklu.map((x) => x.path).toList(growable: false);
+    final coklu = await ImagePicker().pickMultiImage(
+        imageQuality: 85,
+        maxWidth: ApiConfig.useRealApi ? null : kaliciGorselEnFazlaGenislik);
+    return [for (final x in coklu) await _kalici(x.path)];
   } catch (_) {
     // Seçici açılamadı ya da izin reddedildi — sessizce vazgeçilir.
     return const [];
   }
 }
+
+/// ⚠ DENEME MODUNDA KALICI YOL (14 Eki): web'de `blob:` adresi sayfa
+/// yenilenince ölür; mesajdaki fotoğraf "Masaüstü sitesi"ne geçince
+/// açılamıyordu. Gerçek API modunda yol AYNEN döner (fotoğraf sunucuya
+/// yüklenir); mobilde dosya yolu zaten kalıcıdır.
+Future<String> _kalici(String yol) =>
+    ApiConfig.useRealApi ? Future.value(yol) : kaliciYerelYol(yol);

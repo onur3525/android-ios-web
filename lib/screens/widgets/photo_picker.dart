@@ -202,6 +202,11 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
   /// doğrudan çağrılmaz.
   void _bildir(List<PhotoItem> liste) => widget.onChanged(List.of(liste));
 
+  /// Deneme (mock) modunda fotoğraf cihazda/tarayıcıda SAKLANIR; web'de
+  /// yerel depo sınırlı olduğu için seçim sırasında küçültülür (mobilde
+  /// sınır `null` — davranış değişmez). Gerçek API modunda dokunulmaz.
+  bool get _yerelSaklanir => !ApiConfig.useRealApi;
+
   Future<void> _pick(ImageSource source) async {
     if (!widget.enabled || _full) {
       return;
@@ -212,11 +217,15 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
       final List<XFile> picked;
       if (source == ImageSource.camera) {
         final one = await _picker.pickImage(
-            source: ImageSource.camera, imageQuality: 85);
+            source: ImageSource.camera,
+            imageQuality: 85,
+            maxWidth: _yerelSaklanir ? kaliciGorselEnFazlaGenislik : null);
         picked = one == null ? const [] : [one];
       } else {
         // ÇOKLU SEÇİM
-        final many = await _picker.pickMultiImage(imageQuality: 85);
+        final many = await _picker.pickMultiImage(
+            imageQuality: 85,
+            maxWidth: _yerelSaklanir ? kaliciGorselEnFazlaGenislik : null);
         picked = many.take(remaining).toList();
       }
       if (picked.isEmpty || !mounted) {
@@ -306,11 +315,28 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
     // Mock modda dosya cihazda durur ve YERELDE yüklenmiş sayılır;
     // gerçek referans API modunda sunucudan gelir.
     if (!ApiConfig.useRealApi) {
+      // ⚠ WEB'DE `blob:` ADRESİ SAYFAYLA ÖLÜR (14 Eki, kullanıcı bulgusu):
+      // "Masaüstü sitesi"ne geçince sayfa yenileniyor ve kayıttaki
+      // fotoğraf açılamıyordu. Referans kalıcı biçime çevrilir (web'de
+      // `data:` adresi; mobilde dosya yolu AYNEN).
+      final String yerel;
+      try {
+        yerel = await kaliciYerelYol(p.localPath, tur: p.contentType);
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          p.uploading = false;
+          p.error = 'Fotoğraf okunamadı';
+        });
+        _bildir(widget.photos);
+        return;
+      }
+      if (!mounted) return;
       setState(() {
         // ⚠ Referans biçimi mevcut sözleşmeyle AYNI: kayıtsız akışta
         // da mock modda yerel yol referans olarak kullanılıyor
         // (`create_listing_screen`). İki yol ayrışmamalı.
-        p.storageRef = p.localPath;
+        p.storageRef = yerel;
         p.yerelRef = true;
         p.uploading = false;
         p.error = null;

@@ -55,6 +55,12 @@ const yorumGorunumu = (y) => ({
 
 /** Uygulama içi bildirim (Bildirimler sekmesi). */
 /**
+ * `tur`: ilan akışı NEW_OFFER · OFFER_SELECTED · CONTACT_OPENED · NEW_MESSAGE ·
+ * LISTING_EXPIRED · ANNOUNCEMENT; Bul (teklif talebi) akışı AYRI kodlarla:
+ * TALEP_REQUEST (hizmet verene talep) · TALEP_OFFER (hizmet alana teklif) ·
+ * TALEP_ACCEPTED (hizmet verene kabul) · TALEP_MESSAGE. ⚠ Eskiden talep
+ * bildirimleri ilan kodlarıyla (NEW_OFFER…) yazılıyordu; istemci onları
+ * İLAN bildirimi sanıp talep kimliğiyle ilan ekranını açıyordu.
  * `pushHedef`: telefona giden bildirimin açacağı ekran (Flutter
  * `kPushHedefleri`: ilan/is/teklif/talep/mesaj). Verilmezse Bildirimler açılır.
  * Push gönderimi ayrı yürür (fcm.js); hatası bu işlemi etkilemez.
@@ -473,7 +479,7 @@ export function ilanRotalar(r, db) {
   // ── BİLDİRİMLER ──
   r.get('/api/v1/notifications', korumali(async (ctx) =>
     (await db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 200').all(ctx.kullanici.id))
-      .map((n) => ({ id: n.id, userId: n.user_id, type: n.type, title: n.title, body: n.body, refId: n.ref_id, createdAt: n.created_at, readAt: n.read_at })),
+      .map((n) => ({ id: n.id, userId: n.user_id, type: n.type, title: n.title, body: n.body, refId: n.ref_id, target: n.push_target ?? null, createdAt: n.created_at, readAt: n.read_at })),
   ));
   r.get('/api/v1/notifications/unread-count', korumali(async (ctx) => ({
     count: (await db.prepare('SELECT COUNT(*) n FROM notifications WHERE user_id = ? AND read_at IS NULL').get(ctx.kullanici.id)).n,

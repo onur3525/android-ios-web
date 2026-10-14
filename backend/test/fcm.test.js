@@ -157,7 +157,8 @@ test('bildirim tercihi: kapatılan türde push GİTMEZ (uygulama içi kayıt dur
   // PostgreSQL'de bu sütunlar BOOLEAN'dır ve SQL metnine yazılan 0/1
   // tamsayısını kabul etmez; parametreler sürücüde '0'/'1'e çevrilir.
   await db.prepare('UPDATE users SET notif_offer = ?, notif_message = ?, notif_announcement = ? WHERE id = ?').run(0, 1, 0, k);
-  for (const tur of ['NEW_OFFER', 'OFFER_SELECTED', 'ANNOUNCEMENT', 'NEW_MESSAGE', 'CONTACT_OPENED', 'LISTING_EXPIRED']) {
+  for (const tur of ['NEW_OFFER', 'OFFER_SELECTED', 'ANNOUNCEMENT', 'NEW_MESSAGE', 'CONTACT_OPENED', 'LISTING_EXPIRED',
+    'TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED', 'TALEP_MESSAGE']) {
     await uygulamaIciBildir(db, k, tur, tur, 'x', randomUUID());
   }
   await new Promise((ok) => setTimeout(ok, 50));
@@ -167,8 +168,10 @@ test('bildirim tercihi: kapatılan türde push GİTMEZ (uygulama içi kayıt dur
   assert.deepEqual(durumu, {
     NEW_OFFER: 'SKIPPED', OFFER_SELECTED: 'SKIPPED', ANNOUNCEMENT: 'SKIPPED',
     NEW_MESSAGE: 'SENT', CONTACT_OPENED: 'SENT', LISTING_EXPIRED: 'SENT',
+    // Bul akışı kodları aynı anahtarlara bağlı: teklif kapalı, mesaj açık.
+    TALEP_REQUEST: 'SKIPPED', TALEP_OFFER: 'SKIPPED', TALEP_ACCEPTED: 'SKIPPED', TALEP_MESSAGE: 'SENT',
   });
-  assert.equal(giden3.filter((t) => t.startsWith('tercih-')).length, 3);
+  assert.equal(giden3.filter((t) => t.startsWith('tercih-')).length, 4);
 });
 
 test('çok işçi: aynı kuyruğu eşzamanlı işleyen işçiler bir bildirimi İKİ KEZ göndermez', async () => {

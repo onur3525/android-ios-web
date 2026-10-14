@@ -324,9 +324,23 @@ class IletisimKutusu extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // `.pr-cl`
-                  Text(etiket,
-                      style: refText(
-                          size: RF.s12, weight: RF.w400, color: RC.textSoft)),
+                  //
+                  // ⚠ KELİME ORTASINDAN BÖLÜNMEZ (14 Eki, kullanıcı
+                  // bulgusu): masaüstü görünümün dar yan sütununda
+                  // "Mesajlaşma" → "Mesajlaş / ma" diye iki satıra
+                  // kırılıyordu. Etiket tek satırdır; sığmazsa yazı
+                  // küçülür, bölünmez.
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(etiket,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: refText(
+                            size: RF.s12,
+                            weight: RF.w400,
+                            color: RC.textSoft)),
+                  ),
                   if (deger != null) ...[
                     const SizedBox(height: 2),
                     // `.pr-cv`

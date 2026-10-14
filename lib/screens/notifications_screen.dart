@@ -63,6 +63,180 @@ class NotificationsScreen extends StatefulWidget {
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
+
+  /// Bildirim hedefi — mevcut yönlendirme kuralı KORUNDU.
+  /// BİLDİRİMDEN İLGİLİ İÇERİĞE YÖNLENDİRME.
+  ///
+  /// ── ⚠ NİÇİN `refId` GEREKLİ ──
+  ///
+  /// Önce yalnız TÜRE bakılıyordu; "Yeni teklif aldınız" bildirimine
+  /// dokunan kullanıcı Bildirimler ekranında KALIYORDU. Hangi ilana
+  /// gideceği `refId`de duruyor ve okunmuyordu.
+  ///
+  /// ⚠ `refId` BOŞSA YERİNDE KALINIR: uydurma bir ilana yönlendirmek
+  /// yerine hiçbir şey yapılmaz.
+  ///
+  /// ⚠ TEK KAYNAK (14 Eki): uygulama içi bildirim kartı VE telefon
+  /// bildirimine (push) dokunma AYNI fonksiyondan geçer (`PushKapisi`).
+  /// Gidildiyse `true`; gidilecek yer yoksa `false` (çağıran karar verir).
+  static bool hedefeGit(BuildContext context, NotifType t, String? refId) {
+    final ilan = refId?.trim();
+    final gecerli = ilan != null && ilan.isNotEmpty;
+
+    switch (t) {
+      case NotifType.announcement:
+        break;
+      case NotifType.accountStatus:
+      case NotifType.categoryRequest:
+        Navigator.pushNamed(context, '/provider/status');
+        return true;
+
+      // ── HİZMET ALANIN İLANINA ──
+      //
+      // "Yeni teklif aldınız" ilan SAHİBİNE gider; ilan detayında
+      // gelen teklifler listelenir.
+      case NotifType.newOffer:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => ListingDetailScreen(listingId: ilan)));
+          return true;
+        }
+
+      // ── ⚠ HİZMET VERENİN İŞ EKRANINA (12 Eyl düzeltmesi) ──
+      //
+      // "Teklifiniz seçildi" bildirimi HİZMET VERENE gider
+      // (`mock_ports`: `userId: chosen.providerId`). Buradaki dal onu
+      // `newOffer` ile aynı kutuya koyup `ListingDetailScreen`e
+      // gönderiyordu — yani hizmet vereni, hizmet alanın kendi ilan
+      // YÖNETİM ekranına düşürüyordu: gelen teklifler, "Teklifi Seç",
+      // silme menüsü, "Yorum Yaz".
+      //
+      // ⚠ İKİ BİLDİRİM AYNI `refId`yi TAŞIR (ilan id'si) ama AYRI
+      // TARAFA gider. Aynı `case` kutusunda toplanmaları bu farkı
+      // gizliyordu.
+      case NotifType.offerSelected:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => JobDetailScreen(listingId: ilan)));
+          return true;
+        }
+
+      // ── ⚠ MESAJ BİLDİRİMİ DOĞRUDAN SOHBETE GİDER (12 Eyl,
+      // kullanıcı isteği) ──
+      //
+      // "Mesaj geldi bildirimine tıklandığında direkt ilgili
+      // mesajlaşma ekranına gidilmeli."
+      //
+      // ⚠ BURADA AYRICA BİR HATA VARDI: `newMessage` bildiriminin
+      // `refId`si TEKLİF id'sidir (bkz. `mock_ports`: `refId: offerId`),
+      // ilan id'si DEĞİL. Buradaki dal onu `JobDetailScreen`e
+      // `listingId` olarak geçiriyordu — yani var olmayan bir ilan
+      // aranıyordu. Bildirime dokunmak hiçbir yere götürmüyor ya da
+      // boş ekran açıyordu.
+      case NotifType.newMessage:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => ChatScreen(offerId: ilan)));
+          return true;
+        }
+
+      // ── ⚠ `contactOpened` ALICIYA GÖRE DALLANIR (12 Eyl
+      // düzeltmesi) ──
+      //
+      // Bu bildirim KARŞI TARAFA gider ve karşı taraf HER İKİ ROL DE
+      // olabilir: iletişimi hizmet veren açtıysa ilan sahibine,
+      // hizmet alan açtıysa hizmet verene gider
+      // (`mock_ports`: `actorId == o.providerId ? l.ownerId : o.providerId`).
+      //
+      // Tek bir hedefe göndermek taraflardan birini daima yanlış
+      // ekrana düşürüyordu. Hedef, bildirimi AÇAN kişiye göre değil,
+      // OKUYAN kişiye göre seçilir.
+      //
+      // ⚠ `refId` TEKLİF id'sidir; ilan id'si teklif üzerinden
+      // bulunur. Teklif ya da ilan okunamazsa hiçbir yere gidilmez —
+      // yanlış ekran açmaktansa bildirim sessiz kalır.
+      case NotifType.contactOpened:
+        if (gecerli) {
+          final me = context.read<AuthController>().currentAccount;
+          final teklif = context.read<OfferController>().byId(ilan);
+          final l = teklif == null
+              ? null
+              : context.read<ListingController>().byId(teklif.listingId);
+          if (me != null && l != null) {
+            Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => l.ownerId == me.id
+                        // Okuyan ilan sahibi → kendi ilan ekranı.
+                        ? ListingDetailScreen(listingId: l.id)
+                        // Okuyan hizmet veren → kendi iş ekranı.
+                        : JobDetailScreen(listingId: l.id)));
+            return true;
+          }
+        }
+
+      // ── DOĞRUDAN TEKLİF TALEBİ DETAYINA ──
+      //
+      // Tüm "Doğrudan Teklif İste" bildirimleri AYNI detay ekranına
+      // gider; ekran ROL FARKINDA (bkz. `TeklifTalebiDetayScreen`),
+      // hangi tarafa gittiğine bakılmaksızın doğru görünümü çizer.
+      // ── ⚠ BUL AKIŞINDA MESAJ DA DOĞRUDAN SOHBETE (12 Eyl) ──
+      //
+      // Aynı kural: mesaj bildirimi mesajlaşma ekranını açar, detay
+      // ekranını değil.
+      //
+      // ⚠ BAŞLIK ÇAĞIRANDAN GELİR (`TeklifTalebiSohbetScreen` bu
+      // kararı vermez). Talep okunamazsa ekran açılmaz — uydurma bir
+      // başlıkla boş sohbet açmaktansa bildirim sessiz kalır.
+      case NotifType.teklifYeniMesaj:
+        if (gecerli) {
+          final talep =
+              context.read<TeklifTalebiController>().byId(ilan);
+          if (talep != null) {
+            Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                    builder: (_) => TeklifTalebiSohbetScreen(
+                        talepId: ilan, baslik: talep.hizmet)));
+            return true;
+          }
+        }
+
+      case NotifType.teklifTalebiGeldi:
+      case NotifType.teklifVerildi:
+      case NotifType.teklifSecildi:
+      case NotifType.teklifReddedildi:
+      case NotifType.teklifSuresiDoldu:
+      case NotifType.teklifIsiTamamlandi:
+        if (gecerli) {
+          Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                  builder: (_) => TeklifTalebiDetayScreen(
+                        talepId: ilan,
+                        // ⚠ BİLDİRİMİN ANLATTIĞI YER (11 Eki): teklif
+                        // ve karar bildirimleri sayfayı TEKLİF bölümüne
+                        // kaydırarak açar — fiyat, not, "Teklifi Seç".
+                        // "Yeni teklif isteği" ise talebin kendisini
+                        // anlatır; sayfa başından açılır.
+                        teklifeOdaklan: t != NotifType.teklifTalebiGeldi,
+                      )));
+          return true;
+        }
+
+      case NotifType.refund:
+      case NotifType.listingExpired:
+      case NotifType.unknown:
+        break;
+    }
+    return false;
+  }
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
@@ -183,168 +357,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             RC.grey
           ),
       };
-
-  /// Bildirim hedefi — mevcut yönlendirme kuralı KORUNDU.
-  /// BİLDİRİMDEN İLGİLİ İÇERİĞE YÖNLENDİRME.
-  ///
-  /// ── ⚠ NİÇİN `refId` GEREKLİ ──
-  ///
-  /// Önce yalnız TÜRE bakılıyordu; "Yeni teklif aldınız" bildirimine
-  /// dokunan kullanıcı Bildirimler ekranında KALIYORDU. Hangi ilana
-  /// gideceği `refId`de duruyor ve okunmuyordu.
-  ///
-  /// ⚠ `refId` BOŞSA YERİNDE KALINIR: uydurma bir ilana yönlendirmek
-  /// yerine hiçbir şey yapılmaz.
-  void _openTarget(BuildContext context, NotifType t, String? refId) {
-    final ilan = refId?.trim();
-    final gecerli = ilan != null && ilan.isNotEmpty;
-
-    switch (t) {
-      case NotifType.announcement:
-        break;
-      case NotifType.accountStatus:
-      case NotifType.categoryRequest:
-        Navigator.pushNamed(context, '/provider/status');
-
-      // ── HİZMET ALANIN İLANINA ──
-      //
-      // "Yeni teklif aldınız" ilan SAHİBİNE gider; ilan detayında
-      // gelen teklifler listelenir.
-      case NotifType.newOffer:
-        if (gecerli) {
-          Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (_) => ListingDetailScreen(listingId: ilan)));
-        }
-
-      // ── ⚠ HİZMET VERENİN İŞ EKRANINA (12 Eyl düzeltmesi) ──
-      //
-      // "Teklifiniz seçildi" bildirimi HİZMET VERENE gider
-      // (`mock_ports`: `userId: chosen.providerId`). Buradaki dal onu
-      // `newOffer` ile aynı kutuya koyup `ListingDetailScreen`e
-      // gönderiyordu — yani hizmet vereni, hizmet alanın kendi ilan
-      // YÖNETİM ekranına düşürüyordu: gelen teklifler, "Teklifi Seç",
-      // silme menüsü, "Yorum Yaz".
-      //
-      // ⚠ İKİ BİLDİRİM AYNI `refId`yi TAŞIR (ilan id'si) ama AYRI
-      // TARAFA gider. Aynı `case` kutusunda toplanmaları bu farkı
-      // gizliyordu.
-      case NotifType.offerSelected:
-        if (gecerli) {
-          Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (_) => JobDetailScreen(listingId: ilan)));
-        }
-
-      // ── ⚠ MESAJ BİLDİRİMİ DOĞRUDAN SOHBETE GİDER (12 Eyl,
-      // kullanıcı isteği) ──
-      //
-      // "Mesaj geldi bildirimine tıklandığında direkt ilgili
-      // mesajlaşma ekranına gidilmeli."
-      //
-      // ⚠ BURADA AYRICA BİR HATA VARDI: `newMessage` bildiriminin
-      // `refId`si TEKLİF id'sidir (bkz. `mock_ports`: `refId: offerId`),
-      // ilan id'si DEĞİL. Buradaki dal onu `JobDetailScreen`e
-      // `listingId` olarak geçiriyordu — yani var olmayan bir ilan
-      // aranıyordu. Bildirime dokunmak hiçbir yere götürmüyor ya da
-      // boş ekran açıyordu.
-      case NotifType.newMessage:
-        if (gecerli) {
-          Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (_) => ChatScreen(offerId: ilan)));
-        }
-
-      // ── ⚠ `contactOpened` ALICIYA GÖRE DALLANIR (12 Eyl
-      // düzeltmesi) ──
-      //
-      // Bu bildirim KARŞI TARAFA gider ve karşı taraf HER İKİ ROL DE
-      // olabilir: iletişimi hizmet veren açtıysa ilan sahibine,
-      // hizmet alan açtıysa hizmet verene gider
-      // (`mock_ports`: `actorId == o.providerId ? l.ownerId : o.providerId`).
-      //
-      // Tek bir hedefe göndermek taraflardan birini daima yanlış
-      // ekrana düşürüyordu. Hedef, bildirimi AÇAN kişiye göre değil,
-      // OKUYAN kişiye göre seçilir.
-      //
-      // ⚠ `refId` TEKLİF id'sidir; ilan id'si teklif üzerinden
-      // bulunur. Teklif ya da ilan okunamazsa hiçbir yere gidilmez —
-      // yanlış ekran açmaktansa bildirim sessiz kalır.
-      case NotifType.contactOpened:
-        if (gecerli) {
-          final me = context.read<AuthController>().currentAccount;
-          final teklif = context.read<OfferController>().byId(ilan);
-          final l = teklif == null
-              ? null
-              : context.read<ListingController>().byId(teklif.listingId);
-          if (me != null && l != null) {
-            Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                    builder: (_) => l.ownerId == me.id
-                        // Okuyan ilan sahibi → kendi ilan ekranı.
-                        ? ListingDetailScreen(listingId: l.id)
-                        // Okuyan hizmet veren → kendi iş ekranı.
-                        : JobDetailScreen(listingId: l.id)));
-          }
-        }
-
-      // ── DOĞRUDAN TEKLİF TALEBİ DETAYINA ──
-      //
-      // Tüm "Doğrudan Teklif İste" bildirimleri AYNI detay ekranına
-      // gider; ekran ROL FARKINDA (bkz. `TeklifTalebiDetayScreen`),
-      // hangi tarafa gittiğine bakılmaksızın doğru görünümü çizer.
-      // ── ⚠ BUL AKIŞINDA MESAJ DA DOĞRUDAN SOHBETE (12 Eyl) ──
-      //
-      // Aynı kural: mesaj bildirimi mesajlaşma ekranını açar, detay
-      // ekranını değil.
-      //
-      // ⚠ BAŞLIK ÇAĞIRANDAN GELİR (`TeklifTalebiSohbetScreen` bu
-      // kararı vermez). Talep okunamazsa ekran açılmaz — uydurma bir
-      // başlıkla boş sohbet açmaktansa bildirim sessiz kalır.
-      case NotifType.teklifYeniMesaj:
-        if (gecerli) {
-          final talep =
-              context.read<TeklifTalebiController>().byId(ilan);
-          if (talep != null) {
-            Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                    builder: (_) => TeklifTalebiSohbetScreen(
-                        talepId: ilan, baslik: talep.hizmet)));
-          }
-        }
-
-      case NotifType.teklifTalebiGeldi:
-      case NotifType.teklifVerildi:
-      case NotifType.teklifSecildi:
-      case NotifType.teklifReddedildi:
-      case NotifType.teklifSuresiDoldu:
-      case NotifType.teklifIsiTamamlandi:
-        if (gecerli) {
-          Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                  builder: (_) => TeklifTalebiDetayScreen(
-                        talepId: ilan,
-                        // ⚠ BİLDİRİMİN ANLATTIĞI YER (11 Eki): teklif
-                        // ve karar bildirimleri sayfayı TEKLİF bölümüne
-                        // kaydırarak açar — fiyat, not, "Teklifi Seç".
-                        // "Yeni teklif isteği" ise talebin kendisini
-                        // anlatır; sayfa başından açılır.
-                        teklifeOdaklan: t != NotifType.teklifTalebiGeldi,
-                      )));
-        }
-
-      case NotifType.refund:
-      case NotifType.listingExpired:
-      case NotifType.unknown:
-        break;
-    }
-  }
 
   String _zaman(DateTime d) {
     final f = DateTime.now().difference(d);
@@ -516,7 +528,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 gorunum: _gorunum(n.type),
                 onTap: () {
                   context.read<NotificationController>().markRead(n.id);
-                  _openTarget(context, n.type, n.refId);
+                  NotificationsScreen.hedefeGit(context, n.type, n.refId);
                 },
               ),
               const SizedBox(height: 10),

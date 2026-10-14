@@ -9,6 +9,8 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
 import 'nav_actions.dart';
+import 'forgot_password_screen.dart';
+import '../ui/panel_rotasi.dart';
 import '../core/geri.dart';
 import '../core/teshis.dart';
 
@@ -405,17 +407,36 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   /// ŞİFRE SIFIRLAMA AKIŞINI BAŞLAT
   ///
-  /// E-posta ve telefon KULLANICI HESABINDAN alınır; kullanıcıdan
-  /// yeniden istenmez.
+  /// E-posta KULLANICI HESABINDAN alınır; kullanıcıdan yeniden istenmez.
   ///
-  /// Mock modda güvenli simülasyon yapılır (gerçek e-posta gönderilmez).
-  /// API modunda `forgotStart` gerçek sıfırlama ucuna gider.
+  /// ⚠ PANELDE SÖZ VERİLEN YOL GERÇEKTEN ÇALIŞIR.
+  ///
+  /// Eskiden e-postası olan kullanıcıya "Sıfırlama bağlantısı
+  /// gönderilecek" deniyor, ama sunucuya TELEFON OTP isteği
+  /// (`forgotStart`) gidiyordu; kodu girecek bir adım da yoktu (akış
+  /// çıkmazdı). Artık:
+  ///   · e-posta kayıtlıysa → `sifreSifirlamaIste` (Şifremi Unuttum
+  ///     ekranının ana yolu ile AYNI: Firebase sıfırlama bağlantısı),
+  ///   · e-posta yoksa → Şifremi Unuttum ekranı açılır; telefon
+  ///     doğrulaması oradaki tam akışla (kod gönder → doğrula → yeni
+  ///     şifre) yapılır.
+  /// Mock modda iki yol da güvenli simülasyondur (gerçek gönderim yok).
   Future<void> _sifreSifirla() async {
     final acc = context.read<AuthController>().currentAccount;
     if (acc == null) {
       return;
     }
     final eposta = acc.email.trim();
+    if (eposta.isEmpty) {
+      await Navigator.push(
+        context,
+        panelRotasi<void>(
+          settings: const RouteSettings(name: '/sifremi-unuttum'),
+          builder: (_) => const ForgotPasswordScreen(),
+        ),
+      );
+      return;
+    }
     final onay = await RefBottomSheet.goster<bool>(
       context,
       title: 'Şifre Sıfırlama',
@@ -435,24 +456,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               color: RC.blueSoft,
               shape: BoxShape.circle,
             ),
-            child: RefSvg(
-              eposta.isEmpty
-                  ? 'assets/svg/ic_chat.svg'
-                  : 'assets/svg/ic_mail.svg',
+            child: const RefSvg(
+              'assets/svg/ic_mail.svg',
               size: 26,
               color: RC.blue,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            eposta.isEmpty
-                ? 'Doğrulama kodu gönderilecek'
-                : 'Sıfırlama bağlantısı gönderilecek',
+            'Sıfırlama bağlantısı gönderilecek',
             textAlign: TextAlign.center,
             style: refText(size: 16.5, weight: RF.w700, color: RC.text),
           ),
           const SizedBox(height: 10),
-          // Adres/numara VURGULU kutuda — cümlenin içinde kaybolmaz.
+          // Adres VURGULU kutuda — cümlenin içinde kaybolmaz.
           Container(
             width: double.infinity,
             padding:
@@ -462,7 +479,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               borderRadius: BorderRadius.circular(RR.r10),
             ),
             child: Text(
-              eposta.isEmpty ? _telefonMaskeli(acc.phone) : eposta,
+              eposta,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -484,21 +501,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     setState(() => _busy = true);
-    final err =
-        await context.read<AuthController>().forgotStart(acc.phone);
+    final hata =
+        await context.read<AuthController>().sifreSifirlamaIste(eposta);
     if (!mounted) {
       return;
     }
     setState(() => _busy = false);
-    if (err != null) {
-      sysToastErr(context, SysKind.genericError, extra: err.message);
+    if (hata != null) {
+      // ⚠ SAHTE BAŞARI YOK: istek kabul edilmediyse "gönderildi" denmez.
+      sysToastErr(context, SysKind.genericError, extra: hata);
       return;
     }
     // Kısa onay — adres zaten panelde gösterildi, tekrarlanmaz.
-    sysToastOk(
-      context,
-      eposta.isEmpty ? 'Doğrulama kodu gönderildi' : 'Bağlantı gönderildi',
-    );
+    sysToastOk(context, 'Bağlantı gönderildi');
   }
 
   /// `.rg-eye` — göster/gizle.
@@ -513,16 +528,4 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   /// Ortak davranış için bkz. `RefSifreGozu`.
   Widget _gozDugmesi(bool gizli, ValueChanged<bool> ayarla) =>
       RefSifreGozu(gizli: gizli, onDegisti: ayarla);
-}
-
-/// Sıfırlama panelinde gösterilen maskeli numara: `0555 *** ** 93`.
-///
-/// ⚠ Numaranın tamamı gösterilmez: panel omuz üstünden okunabilir.
-/// Kullanıcının hangi hattı olduğunu anlamasına yetecek kadarı yazılır.
-String _telefonMaskeli(String ham) {
-  final d = Validators.phoneLocal(ham);
-  if (d.length != 11) {
-    return d.isEmpty ? 'Kayıtlı numara' : d;
-  }
-  return '${d.substring(0, 4)} *** ** ${d.substring(9)}';
 }

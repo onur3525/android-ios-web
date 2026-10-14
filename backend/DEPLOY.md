@@ -99,9 +99,15 @@ doğrudan bağlantı).
 
 ## Zorunlu ortam değişkenleri (BÜTÜN örneklerde AYNI)
 
-`NODE_ENV=production`, `HC_DATABASE_URL`, `HC_MASTER_KEY`, `HC_JWT_SECRET`,
-`HC_SMS_PROVIDER`/`HC_EMAIL_PROVIDER` (+ webhook adres/anahtar) ya da admin
-panelinden etkin entegrasyon, depolama için `HC_S3_*` ya da admin
+Tam liste ve biçimler: `backend/.env.example` (gerçek değer içermez).
+
+Üretimde eksikse sunucu **açılmaz**: `NODE_ENV=production`,
+`HC_DATABASE_URL`, `HC_MASTER_KEY`, `HC_JWT_SECRET` ve FCM servis hesabı
+(`HC_FCM_SERVICE_ACCOUNT` **ya da** `HC_FCM_SERVICE_ACCOUNT_FILE`, yalnız biri).
+
+Sunucuyu durdurmayan ama işlev için gerekenler: SMS/e-posta gönderim yolu
+(`HC_SMS_PROVIDER`/`HC_EMAIL_PROVIDER=webhook` + adres/anahtar **ya da**
+admin panelinden etkin entegrasyon), depolama için `HC_S3_*` ya da admin
 entegrasyonu. ⚠ `HC_MASTER_KEY` ve `HC_JWT_SECRET` örnekler arasında farklı
 olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
 
@@ -111,7 +117,9 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
 - Yaşam döngüsü kuralı: `u/` önekinde 1 günden eski, ilana bağlanmamış
   nesneler (uygulama `storage_objects.status = DISCARDED/PENDING` tutar)
   için temizlik işi ya da kural.
-- CORS: web istemcisinin kaynağından `PUT` + `Content-Type`.
+- CORS: web istemcisinin kaynağından `PUT` + `Content-Type` (yükleme) ve `GET`
+  (14 Eki: ilan/talep/sohbet fotoğrafları web'de imzalı adresten doğrudan
+  çizilir; GET izni yoksa tarayıcı görseli açmaz, yer tutucu görünür).
 
 ---
 
@@ -122,7 +130,7 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
 | Değişken | Zorunlu mu | Varsayılan | Açıklama |
 |---|---|---|---|
 | `HC_CORS_ORIGINS` | Hayır | Üretimde `https://hizmetcep.com`, geliştirmede boş | Kullanıcı API'sine tarayıcıdan erişebilecek kökenler (virgülle). `*` ve yol içeren değer reddedilir; üretimde yalnız https. |
-| `HC_FCM_SERVICE_ACCOUNT` | **Üretimde evet** | Yok | Firebase servis hesabı JSON'u (düz ya da base64). Yalnız sunucu gizli değişkeni; Git'e/istemciye girmez. Üretimde eksikse ya da `project_id` değeri `HC_FIREBASE_PROJECT_ID` (varsayılan `hizmetcep-fe036`) ile aynı değilse sunucu **açılmaz** (yanlış projeyle gönderim cihaz kayıtlarını sildirirdi). Geliştirmede tanımsızsa bildirimler yalnız uygulama içinde görünür. |
+| `HC_FCM_SERVICE_ACCOUNT` / `HC_FCM_SERVICE_ACCOUNT_FILE` | **Üretimde evet (yalnız biri)** | Yok | Firebase servis hesabı. `HC_FCM_SERVICE_ACCOUNT`: JSON'un kendisi (düz ya da base64). `HC_FCM_SERVICE_ACCOUNT_FILE`: JSON dosyasının yolu (Render Secret File → `/etc/secrets/<dosya adı>`). İkisi birden verilirse, dosya okunamazsa, JSON bozuksa ya da `project_id` değeri `HC_FIREBASE_PROJECT_ID` (varsayılan `hizmetcep-fe036`) ile aynı değilse sunucu **açılmaz** (yanlış projeyle gönderim cihaz kayıtlarını sildirirdi). Hata mesajları içerik/anahtar yazmaz. Geliştirmede tanımsızsa bildirimler yalnız uygulama içinde görünür. |
 | `HC_INTEGRATION_ALLOW_PRIVATE` | Hayır (yalnız geliştirme) | Yok | `true` ise admin entegrasyon adreslerinde iç ağ (localhost/özel IP) engeli kalkar — yalnız yerel köprü/MinIO denemesi için. **Üretimde tanımlanırsa sunucu açılmaz.** |
 | `HC_S3_*` | Fotoğraf için evet | Yok | Kimlik bilgisinin `PutObject`, `GetObject` **ve `DeleteObject`** yetkisi olmalı (fiziksel dosya silme). |
 
@@ -140,3 +148,72 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
 ### Yeni göçler
 
 `008_kategori_foto`, `009_dosya_silme`, `010_push_gonderimi` — hepsi yalnız sütun ekler; mevcut veriyi değiştirmez (010, göç öncesi bildirimleri push gönderilmeyecek olarak işaretler).
+
+---
+
+## Render kurulumu (sıralı)
+
+> Bu bölüm canlı ortamda **henüz doğrulanmadı**; kod ve testlerle uyumlu
+> kurulum adımlarıdır. Gerçek değerler yalnız Render panelinde girilir.
+
+1. **PostgreSQL**: Render → New → PostgreSQL (16). Oluşunca *External
+   Database URL* değerini kopyalayın. Sunucu TLS'i zorunlu ve sertifikayı
+   doğrulayarak (`rejectUnauthorized`) bağlanır; bağlantı TLS/sertifika
+   hatası verirse sağlayıcının CA sertifikasını `HC_DB_CA_PEM` ile verin.
+   ⚠ İç (internal) adresin sertifika ad eşleşmesi canlıda denenmeden
+   kullanılmamalıdır.
+2. **Web Service**: New → Web Service → depo. *Runtime: Docker*,
+   *Dockerfile Path:* `backend/Dockerfile`, *Docker Build Context:* depo
+   kökü (`.`). *Health Check Path:* `/healthz`. `PORT`'u Render verir.
+   ⚠ İmaj `package-lock.json` olmadan **bilerek** derlenmez
+   (docs/kilit_dosyalari.md). Kilit, backend CI'ının ilk koşusunda
+   `backend-package-lock` ürünü olarak üretilir; indirip
+   `backend/package-lock.json` olarak depoya işleyin.
+3. **Environment** sekmesi: `NODE_ENV=production`, `HC_DB_DRIVER=postgres`,
+   `HC_DATABASE_URL`, `HC_MASTER_KEY` (`openssl rand -base64 32`),
+   `HC_JWT_SECRET` (en az 32 karakter), `HC_FIREBASE_PROJECT_ID`,
+   `HC_CORS_ORIGINS` (web kökeni/kökenleri; ör. Netlify'ın özel alan adı),
+   `HC_FIREBASE_WEB_API_KEY` (AÇIK web anahtarı; tanımsızsa giriş yalnız yerel
+   şifre özetine bakar ve e-posta ile yapılan Firebase şifre sıfırlaması
+   girişe yansımaz).
+4. **Secret Files** sekmesi: Firebase konsolu → Proje ayarları → Hizmet
+   hesapları → *Yeni özel anahtar oluştur* ile indirilen JSON'u ekleyin
+   (dosya adı ör. `firebase-servis-hesabi.json`). Environment'a
+   `HC_FCM_SERVICE_ACCOUNT_FILE=/etc/secrets/firebase-servis-hesabi.json`
+   yazın. `HC_FCM_SERVICE_ACCOUNT`'u **tanımlamayın** (ikisi birden
+   reddedilir). ⚠ `google-services.json` (istemci dosyası) servis hesabı
+   DEĞİLDİR; verilirse "private_key eksik" hatasıyla reddedilir.
+5. **SMS / e-posta**: gerçek sağlayıcı köprüsü varsa
+   `HC_SMS_PROVIDER=webhook` + `HC_SMS_WEBHOOK_URL` (https) +
+   `HC_SMS_WEBHOOK_TOKEN` (e-posta için `HC_EMAIL_*`). Yoksa bu değişkenleri
+   **hiç tanımlamayın** (boş/rastgele değer girmeyin); sağlayıcı sonradan
+   admin paneli → Entegrasyonlar'dan eklenebilir. Bu durumda açılışta uyarı
+   yazılır, gönderimler `outbound_messages`'a FAILED düşer, sunucu OTP
+   isteği 503 döner. Uygulamadaki telefon doğrulaması Firebase
+   Authentication ile yapılır; bu kanal sunucu OTP'si ve hesap bildirimleri
+   (askı/ban, destek yanıtı) içindir.
+6. **Depolama**: `HC_S3_*` (dördü birlikte) ya da admin paneli →
+   Entegrasyonlar → Depolama. Kimlik bilgisi Put/Get/Delete yetkili olmalı.
+7. **İlk dağıtım sonrası** (Render Shell): `npm run seed` (boş tablolara
+   katalog verisi), `HC_ADMIN_PASSWORD=… npm run admin:create -- <e-posta> "<Ad Soyad>"`.
+8. **`HC_TRUST_PROXY_HOPS`**: "İstemci IP'si" bölümündeki ölçüm adımıyla
+   belirleyin; ölçmeden değer vermeyin (tanımsız = başlığa güvenilmez).
+9. **Alan adı**: Render → Custom Domains → `api.hizmetcep.com` (Flutter
+   release derlemeleri bu adresi kullanır: `API_BASE_URL=https://api.hizmetcep.com/api/v1`).
+10. **Doğrulama**: `https://api.hizmetcep.com/healthz` → `{"ok":true}`;
+    günlükte "HizmetCep backend dinliyor" satırı; SMS/e-posta uyarısı
+    varsa bilinçli olmalı.
+
+### Önceki Render hatalarının kök nedeni
+
+- **"Üretimde HC_FCM_SERVICE_ACCOUNT zorunludur."** — Servis hesabı Render'a
+  *Secret File* olarak eklenmişti; kod yalnız `HC_FCM_SERVICE_ACCOUNT`
+  ortam DEĞERİNİ okuyordu, dosya yolunu hiç okumuyordu. Düzeltme: tek okuyucu
+  (`src/servis_hesabi.js`), `HC_FCM_SERVICE_ACCOUNT_FILE` desteği; config ve
+  FCM gönderici aynı okuyucuyu kullanır. Zorunluluk **korundu** (push ürünün
+  parçası; eksikse bildirimler sessizce kaybolurdu).
+- **"HC_SMS_PROVIDER log ya da webhook olmalıdır."** — Üretimde değişken
+  tanımsızken boş değer "geçersiz" sayılıyordu; oysa bu belge admin
+  entegrasyonunu da geçerli yol sayıyordu (kod ile belge çelişkiliydi).
+  Düzeltme: tanımsız değer üretimde izinli (admin entegrasyonu ya da açık
+  FAILED/503); `log` üretimde hâlâ yasak, geçersiz değer hâlâ reddedilir.

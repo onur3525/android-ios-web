@@ -36,7 +36,21 @@ jobs:
         with:
           node-version: '22'
       # İlk koşuda package-lock.json üretilir; depoya işlenmesi gerekir.
-      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - id: kurulum
+        run: |
+          if [ -f package-lock.json ]; then npm ci; echo "uretildi=0" >> "$GITHUB_OUTPUT"
+          else npm install; echo "uretildi=1" >> "$GITHUB_OUTPUT"; fi
+      # Kilit depoda YOKSA, bu koşuda npm kayıt defterinden GERÇEKTEN çözülen
+      # kilit dosyası indirilebilir ürün olarak saklanır (elle yazılmaz).
+      # İndirip backend/package-lock.json olarak depoya işleyin; sonraki
+      # koşular `npm ci` kullanır ve bu adım atlanır (docs/kilit_dosyalari.md).
+      - name: Üretilen kilit dosyasını sakla
+        if: steps.kurulum.outputs.uretildi == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-package-lock
+          path: backend/package-lock.json
+          retention-days: 30
       - name: SQLite
         run: npm test
       - name: PostgreSQL 16

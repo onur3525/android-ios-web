@@ -4,45 +4,38 @@ import 'package:flutter/widgets.dart';
 import 'olcu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
-/// MASAÜSTÜ DETAY DÜZENİ — ANA İÇERİK + SAĞ YAN PANEL
+/// DETAY DÜZENİ — ANA İÇERİK + YARDIMCI BÖLÜM, TEK SÜTUN
 ///
-/// ## ⚠ NE YAPAR, NE YAPMAZ
+/// ## ⚠ MASAÜSTÜNDE DE ALT ALTA (14 Eki, kullanıcı kararı)
 ///
-/// Yalnız KONUMLANDIRIR. Verilen iki parça masaüstü web'de yan yana,
-/// mobilde bugünkü gibi alt alta dizilir.
+/// Önceden masaüstü web'de (≥1024 px) iki parça YAN YANA çiziliyordu:
+/// solda detay kartı, sağda 360 px'lik yan panel (iletişim kutuları,
+/// teklif formu / verilen teklif). Kullanıcı bulgusu: telefonun
+/// tarayıcısında "Masaüstü sitesi" seçilince dar yan panelde kutular
+/// sıkışıyor, sayfa mobildeki düzenden kopuyordu. Karar: "Masaüstü
+/// görünümde yan yana olmamalı — sayfa tek sütun olsun."
 ///
-/// İçerik, kart, renk, ikon, düğme ve iş mantığı bu widget'ın
-/// DIŞINDADIR ve değiştirilmez. Sağ panele konan şey ekranda zaten
-/// var olan bir parçadır; yeni bilgi ya da yeni özellik üretilmez.
+/// Artık HER ekran sınıfında `ana` ÖNCE, `yan` SONRA, alt alta çizilir.
+/// Masaüstünde sütun okunabilir genişlikte (`IcerikGenisligi.liste`)
+/// ortalanır; kenardan kenara gerilmez.
 ///
-/// ## ⚠ MOBİL SIRASI BİREBİR KORUNUR
+/// ## ⚠ TEK YER
 ///
-/// Masaüstü olmayan her durumda `ana` ÖNCE, `yan` SONRA çizilir —
-/// yani bugünkü dikey sıra aynı kalır. Aradaki boşluk `aralik`
-/// parametresiyle verilir; çağıran ekran oraya BUGÜNKÜ değeri
-/// geçirerek mobil görünümü piksel piksel korur.
+/// İki detay ekranı (ilan akışı `job_detail_screen`, Bul akışı
+/// `teklif_talebi_detay_screen`) bu widget'ı kullanır; ikisi bu depoda
+/// defalarca birbirine eşitlendi. Kural burada değiştiği için ikisi
+/// birlikte tek sütuna geçer — biri iki kolon kalıp öteki tek kolona
+/// geçseydi yeniden ayrışırlardı.
 ///
-/// ## ⚠ İKİ KOŞUL BİRLİKTE
+/// ## ⚠ MOBİL BİREBİR AYNI
 ///
-/// `kIsWeb` VE ≥1024 px (`EkranSinifi.masaustuMu`). Android/iOS'ta —
-/// tablet dahil — ve dar tarayıcı penceresinde hiçbir şey değişmez.
-/// Eşik `masaustuNav` ve `MasaustuListe` ile AYNI; biri yan yana
-/// çizerken öteki alt alta kalsaydı sayfa tutarsız görünürdü.
-///
-/// ## ⚠ YAN PANEL SABİT GENİŞLİKTE
-///
-/// Ana içerik kalan yeri alır, yan panel `yanGenislik` kadar kalır.
-/// İkisi de esnek olsaydı panel geniş ekranda gereksiz büyür, dar
-/// ekranda okunamayacak kadar daralırdı. 360 px, liste kartlarının en
-/// az genişliğiyle (`MasaustuIzgara._enAzKart`) aynı tutuldu — sayfa
-/// genelinde tek bir dar-sütun ölçüsü olsun diye.
+/// Masaüstü olmayan her durumda çıktı öncekiyle aynıdır: aynı sıra,
+/// aynı `aralik`.
 ///
 /// ## ⚠ KAYDIRMA ÇAĞIRANIN İŞİ
 ///
-/// Bu widget kaydırma kurmaz. Detay ekranları kendi
-/// `SingleChildScrollView` yapısını kullanmaya devam eder; buraya
-/// ikinci bir kaydırma katmanı konsaydı iç içe kaydırma sorunu
-/// çıkardı.
+/// Bu widget kaydırma kurmaz; detay ekranları kendi kaydırma yapısını
+/// kullanmaya devam eder.
 /// ═══════════════════════════════════════════════════════════════
 class MasaustuDetay extends StatelessWidget {
   const MasaustuDetay({
@@ -50,37 +43,33 @@ class MasaustuDetay extends StatelessWidget {
     required this.ana,
     required this.yan,
     this.aralik = 16,
-    this.yanGenislik = 360,
   });
 
-  /// Sol/üst — ekranın asıl içeriği.
+  /// Üst — ekranın asıl içeriği.
   final Widget ana;
 
-  /// Sağ/alt — ekranda zaten bulunan yardımcı bölüm.
+  /// Alt — ekranda zaten bulunan yardımcı bölüm.
   final Widget yan;
 
   final double aralik;
-  final double yanGenislik;
 
   @override
   Widget build(BuildContext context) {
+    final sutun = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [ana, SizedBox(height: aralik), yan],
+    );
     if (!kIsWeb || !ekranSinifi(context).masaustuMu) {
       // ⚠ BUGÜNKÜ DAVRANIŞ: alt alta, aynı sırayla, aynı boşlukla.
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [ana, SizedBox(height: aralik), yan],
-      );
+      return sutun;
     }
-    return Row(
-      // ⚠ ÜSTTEN HİZALI: iki sütun farklı yükseklikte. `stretch`
-      // olsaydı kısa olan panel gereksiz uzar, içindeki kartlar
-      // dikeyde yayılırdı.
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: ana),
-        SizedBox(width: aralik),
-        SizedBox(width: yanGenislik, child: yan),
-      ],
+    // Masaüstü: aynı tek sütun, okunabilir genişlikte ve ortalı.
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: IcerikGenisligi.liste),
+        child: sutun,
+      ),
     );
   }
 }

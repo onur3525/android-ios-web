@@ -257,7 +257,7 @@ export function sohbetTalepRotalar(r, db) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'BEKLEMEDE', ?, ?, ?, ?)`,
       ).run(id, String(no.value), u.id, s.id, kategori, hizmet, aciklama, JSON.stringify(foto), tercih, zaman, z, z,
         talepAnahtari, talepAnahtari ? talepOzeti : null);
-      await uygulamaIciBildir(db, s.id, 'NEW_OFFER', 'Yeni teklif talebi', `"${hizmet}" için size teklif talebi geldi.`, id, 'talep');
+      await uygulamaIciBildir(db, s.id, 'TALEP_REQUEST', 'Yeni teklif talebi', `"${hizmet}" için size teklif talebi geldi.`, id, 'talep');
       return { id };
     }));
     return talepTam(await talepGetir(kayit.id, u));
@@ -280,7 +280,7 @@ export function sohbetTalepRotalar(r, db) {
     const g1 = await db.prepare(`UPDATE teklif_talepleri SET durum = 'TEKLIF_GELDI', teklif_fiyati = ?, teklif_aciklamasi = ?, teklif_tarihi = ?, updated_at = ? WHERE id = ? AND durum = 'BEKLEMEDE'`)
       .run(fiyat, ac, z, z, t.id);
     if (g1.changes !== 1) throw kural('INVALID_STATE', 'Bu talebe teklif verilemez');
-    await uygulamaIciBildir(db, t.hizmet_alan_id, 'NEW_OFFER', 'Teklif geldi', `"${t.hizmet}" talebinize teklif geldi.`, t.id, 'talep');
+    await uygulamaIciBildir(db, t.hizmet_alan_id, 'TALEP_OFFER', 'Teklif geldi', `"${t.hizmet}" talebinize teklif geldi.`, t.id, 'talep');
     return talepTam(await talepGetir(t.id, ctx.kullanici));
   }));
 
@@ -291,7 +291,7 @@ export function sohbetTalepRotalar(r, db) {
     if (t.durum !== 'TEKLIF_GELDI') throw kural('INVALID_STATE', 'Bu teklif seçilemez');
     const g2 = await db.prepare(`UPDATE teklif_talepleri SET durum = 'SECILDI', updated_at = ? WHERE id = ? AND durum = 'TEKLIF_GELDI'`).run(simdi(), t.id);
     if (g2.changes !== 1) throw kural('INVALID_STATE', 'Bu teklif seçilemez');
-    await uygulamaIciBildir(db, t.saglayici_id, 'OFFER_SELECTED', 'Teklifiniz kabul edildi', `"${t.hizmet}" teklifiniz kabul edildi.`, t.id, 'talep');
+    await uygulamaIciBildir(db, t.saglayici_id, 'TALEP_ACCEPTED', 'Teklifiniz kabul edildi', `"${t.hizmet}" teklifiniz kabul edildi.`, t.id, 'talep');
     return talepTam(await talepGetir(t.id, ctx.kullanici));
   }));
 
@@ -338,7 +338,7 @@ export function sohbetTalepRotalar(r, db) {
       if (ref) await dosyalariBagla(db, [ref], ctx.kullanici.id);
       await db.prepare('INSERT INTO teklif_mesajlari (id, talep_id, gonderen_id, metin, fotograf_ref, created_at, idempotency_key, idem_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         .run(randomUUID(), t.id, ctx.kullanici.id, metin, ref, simdi(), anahtar, anahtar ? ozet : null);
-      await uygulamaIciBildir(db, karsi, 'NEW_MESSAGE', 'Yeni mesaj', `"${t.hizmet}" talebi için yeni bir mesajınız var.`, t.id, 'talep');
+      await uygulamaIciBildir(db, karsi, 'TALEP_MESSAGE', 'Yeni mesaj', `"${t.hizmet}" talebi için yeni bir mesajınız var.`, t.id, 'talep');
       return {};
     }));
     return talepTam(await talepGetir(t.id, ctx.kullanici));

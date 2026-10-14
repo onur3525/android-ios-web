@@ -1,0 +1,15 @@
+# Backend — GİZLİ BİLGİLER DEPOYA GİRMEZ
+# Gerçek ortam dosyaları (örnek dosya .env.example İZLENİR)
+.env
+.env.*
+!.env.example
+# Firebase / Google servis hesabı anahtarları (Render'da Secret File olarak verilir)
+*service-account*.json
+*servis-hesabi*.json
+*firebase-adminsdk*.json
+# Yerel bağımlılıklar ve yerel SQLite dosyaları
+node_modules/
+*.db
+*.db-journal
+# Yedekler kişisel veri içerir (scripts/yedek_al.sh)
+*.dump

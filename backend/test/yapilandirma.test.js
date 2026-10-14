@@ -3,6 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { generateKeyPairSync } from 'node:crypto';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const FCM_PEM = generateKeyPairSync('rsa', { modulusLength: 1024 }).privateKey.export({ type: 'pkcs8', format: 'pem' });
 const FCM_HESAP = (proje = 'hizmetcep-fe036') => JSON.stringify({ project_id: proje, client_email: `x@${proje}.iam.gserviceaccount.com`, private_key: FCM_PEM });
@@ -78,4 +81,44 @@ test('proxy hop sayısı: varsayılan yok, 0–5 kabul, geçersiz değer ve eski
 
 test('SSRF korumasını kapatan geliştirme anahtarı üretimde reddedilir', () => {
   assert.match(ac({ HC_INTEGRATION_ALLOW_PRIVATE: 'true' }), /HC_INTEGRATION_ALLOW_PRIVATE/);
+});
+
+// ── Render hataları (kök neden) ─────────────────────────────────
+// 1) "HC_FCM_SERVICE_ACCOUNT zorunludur": Render'da servis hesabı Secret
+//    File olarak eklenmişti; kod yalnız ortam DEĞERİNİ okuyordu. Artık
+//    HC_FCM_SERVICE_ACCOUNT_FILE ile dosya yolu desteklenir.
+test('FCM Secret File (HC_FCM_SERVICE_ACCOUNT_FILE) üretimde kabul edilir; eksik dosya açıkça reddedilir', () => {
+  const k = mkdtempSync(join(tmpdir(), 'hc-yap-'));
+  const yol = join(k, 'firebase-servis-hesabi.json');
+  writeFileSync(yol, FCM_HESAP());
+  const ok = ac({ HC_FCM_SERVICE_ACCOUNT: '', HC_FCM_SERVICE_ACCOUNT_FILE: yol });
+  assert.match(ok, /ACILDI/);
+  assert.doesNotMatch(ok, /PRIVATE KEY/);
+  assert.match(ac({ HC_FCM_SERVICE_ACCOUNT: '', HC_FCM_SERVICE_ACCOUNT_FILE: join(k, 'yok.json') }), /HC_FCM_SERVICE_ACCOUNT_FILE okunamadı.*ENOENT/);
+  assert.match(ac({ HC_FCM_SERVICE_ACCOUNT_FILE: yol }), /birlikte tanımlanamaz/);
+  assert.match(ac({ HC_FCM_SERVICE_ACCOUNT: '/etc/secrets/firebase.json' }), /HC_FCM_SERVICE_ACCOUNT_FILE kullanın/);
+  // İkisi de yoksa üretimde hâlâ ZORUNLU (push ürünün parçası) ve mesaj iki yolu da söyler.
+  const yok = ac({ HC_FCM_SERVICE_ACCOUNT: '' });
+  assert.match(yok, /HC_FCM_SERVICE_ACCOUNT zorunludur/);
+  assert.match(yok, /HC_FCM_SERVICE_ACCOUNT_FILE/);
+  // Proje eşleşmesi dosya yolunda da denetlenir.
+  const yanlis = join(k, 'baska.json');
+  writeFileSync(yanlis, FCM_HESAP('baska-proje'));
+  assert.match(ac({ HC_FCM_SERVICE_ACCOUNT: '', HC_FCM_SERVICE_ACCOUNT_FILE: yanlis }), /Firebase projesiyle/);
+});
+
+// 2) "HC_SMS_PROVIDER log ya da webhook olmalıdır": üretimde değişken
+//    TANIMSIZ bırakıldığında boş değer "geçersiz" sayılıyordu; oysa admin
+//    panelindeki entegrasyon da gönderim yoludur (DEPLOY.md). Tanımsız artık
+//    izinli (gönderimler admin entegrasyonuna gider, yoksa FAILED + OTP 503);
+//    log hâlâ YASAK, geçersiz değer hâlâ REDDEDİLİR.
+test('SMS/e-posta sağlayıcısı üretimde tanımsız bırakılabilir; log ve geçersiz değer reddedilir', () => {
+  const r = ac({ HC_SMS_PROVIDER: '', HC_SMS_WEBHOOK_URL: '', HC_SMS_WEBHOOK_TOKEN: '', HC_EMAIL_PROVIDER: '', HC_EMAIL_WEBHOOK_URL: '', HC_EMAIL_WEBHOOK_TOKEN: '' });
+  assert.match(r, /ACILDI/);
+  assert.match(ac({ HC_SMS_PROVIDER: 'log' }), /log kullanılamaz/);
+  assert.match(ac({ HC_EMAIL_PROVIDER: 'log' }), /log kullanılamaz/);
+  assert.match(ac({ HC_SMS_PROVIDER: 'twilio' }), /HC_SMS_PROVIDER geçersiz \("twilio"\)/);
+  assert.match(ac({ HC_SMS_PROVIDER: 'webhook', HC_SMS_WEBHOOK_URL: '' }), /HC_SMS_WEBHOOK_URL zorunludur/);
+  assert.match(ac({ HC_SMS_PROVIDER: 'webhook', HC_SMS_WEBHOOK_URL: 'http://sms.example/x' }), /https olmalıdır/);
+  assert.match(ac({ HC_SMS_PROVIDER: 'webhook', HC_SMS_WEBHOOK_TOKEN: '' }), /HC_SMS_WEBHOOK_TOKEN zorunludur/);
 });

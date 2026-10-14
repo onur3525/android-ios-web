@@ -24,6 +24,13 @@ info:
     - Teklif geri çekilemez ve değiştirilemez.
     - İletişim açılmadan kişisel bilgiler MASKELİDİR ve mesajlaşma kapalıdır.
     - İletişim açılınca iki taraf için AYNI ANDA açılır.
+
+    DOSYA ADRESLERİ (14 Eki)
+    - Yanıtlar dosya REFERANSINI aynen taşır; görüntülenebilir dosyalar için
+      yanına aynı sırada imzalı (1 saat) GET adresi eklenir:
+      photoPaths → photoUrls, fotograflar → fotografAdresleri,
+      fotografRef → fotografUrl, mesaj storageRef → storageUrl.
+      Depolama kapalıysa ya da dosya atılmışsa öğe null olur.
     - E-posta hiçbir zaman karşı tarafa gösterilmez.
     - Yalnızca Hizmet Alan, Hizmet Veren'i 1-5 yıldız ve yorumla değerlendirir.
     - Her ilan için yalnızca 1 değerlendirme; kullanıcı silemez/değiştiremez.
@@ -395,6 +402,14 @@ components:
             - LISTING_EXPIRED
             - ADMIN_LISTING_REMOVED
             - BENEFIT_GRANTED
+            # Bul akışı (Doğrudan Teklif İste) — 14 Eki: ilan kodlarından AYRI
+            - TALEP_REQUEST
+            - TALEP_OFFER
+            - TALEP_ACCEPTED
+            - TALEP_MESSAGE
+        target:
+          type: [string, 'null']
+          description: Açılacak içerik türü (ilan · is · teklif · talep · mesaj); push verisindeki `hedef` ile aynı.
         status: { $ref: '#/components/schemas/NotificationStatus' }
         listingId: { type: [string, 'null'] }
         offerId: { type: [string, 'null'] }
@@ -408,6 +423,7 @@ components:
     Conflict:        { description: CONFLICT / DUPLICATE_OPERATION / STATE_CONFLICT, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
     BusinessRule:    { description: BUSINESS_RULE_VIOLATION, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
     RateLimited:     { description: RATE_LIMITED,            content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    ExternalService: { description: EXTERNAL_SERVICE_ERROR,  content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
 
 # ═══════════════════════════════════════════════════════════════════
 #  YOLLAR
@@ -465,12 +481,16 @@ paths:
       summary: SMS kodu iste
       description: |
         ⚠ Yeniden gönderme 60 saniye. Cevap NÖTRDÜR — numaranın kayıtlı olup olmadığı sızdırılmaz.
+        503: SMS gönderim yolu yok (numaraya bakılmadan) ya da REGISTER/PHONE_CHANGE
+        kodu sağlayıcıya iletilemedi. FORGOT/LOGIN/ROLE_ADD'de iletim hatası nötr
+        yanıtı değiştirmez (outbound_messages'ta FAILED kaydedilir).
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
+        '503': { $ref: '#/components/responses/ExternalService' }
 
   /auth/logout:
     post:

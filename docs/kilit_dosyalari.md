@@ -5,7 +5,17 @@ Depoda henüz `backend/package-lock.json` ve `pubspec.lock` **yok**. Bu ortamda
 ağ politikasınca kapalı (HTTP 403). Elle yazılmış ya da tahmini kilit dosyası
 eklenmedi — yanlış bir kilit, olmamasından daha kötüdür.
 
-Bir kez, ağa açık bir makinede üretip depoya eklenmeli:
+Bir kez, ağa açık bir makinede üretip depoya eklenmeli. (14 Eki denetimi:
+bu ortamda `registry.npmjs.org` DNS ile çözülemedi — ENOTFOUND; yine
+üretilemedi.)
+
+**En kolay yol (backend):** `.github/workflows/backend.yml` kilit yoksa
+`npm install` ile kayıt defterinden GERÇEKTEN çözülen `package-lock.json`'u
+`backend-package-lock` adlı ürün (artifact) olarak saklar. Actions →
+ilgili koşu → Artifacts'tan indirip `backend/package-lock.json` olarak
+işleyin.
+
+Ya da elle:
 
 ## Backend
 
@@ -23,6 +33,15 @@ bağımlılıkları da sabitler. Kilit eklendikten sonra:
 - Sürüm yükseltme: `npm install pg@<sürüm> --package-lock-only`, testler, sonra commit.
 
 ## Flutter
+
+**En kolay yol:** `.github/workflows/flutter-ci.yml` (analyze-test işi) kilit
+depoda yoksa `flutter pub get` ile pub.dev'den çözülen `pubspec.lock`'u ve
+onu üreten Flutter/Dart sürümünü (`flutter-surumu.json`) `flutter-pubspec-lock`
+ürünü olarak saklar. Actions → koşu → Artifacts'tan indirip depo köküne
+`pubspec.lock` olarak işleyin. (14 Eki: bu ortamda Flutter SDK yok;
+`pub.dev` ve `storage.googleapis.com` ağ politikasınca 403.)
+
+Ya da elle:
 
 ```bash
 flutter pub get          # pubspec.lock üretir

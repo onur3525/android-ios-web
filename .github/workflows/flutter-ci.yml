@@ -26,7 +26,26 @@ jobs:
           channel: stable
           cache: true
       - run: flutter --version
+      # Kilit depoda yoksa `flutter pub get` pub.dev'den GERÇEKTEN çözülen
+      # pubspec.lock üretir; o dosya (ve hangi Flutter/Dart sürümüyle
+      # üretildiği) indirilebilir ürün olarak saklanır. İndirip depo köküne
+      # `pubspec.lock` olarak işleyin (docs/kilit_dosyalari.md). Kilit
+      # depodaysa bu adımlar atlanır ve `pub get` kilide UYAR.
+      - id: kilit
+        run: |
+          if [ -f pubspec.lock ]; then echo "uretildi=0" >> "$GITHUB_OUTPUT"; else echo "uretildi=1" >> "$GITHUB_OUTPUT"; fi
       - run: flutter pub get
+      - name: Üretilen kilit dosyasını sakla
+        if: steps.kilit.outputs.uretildi == '1'
+        run: flutter --version --machine > flutter-surumu.json
+      - if: steps.kilit.outputs.uretildi == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-pubspec-lock
+          path: |
+            pubspec.lock
+            flutter-surumu.json
+          retention-days: 30
       # Bağımlılık çözümü raporu: firebase_core / firebase_messaging / firebase_auth sürümleri
       - run: flutter pub deps --style=compact | grep -E "firebase_(core|auth|messaging)" || true
       - name: flutter analyze

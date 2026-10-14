@@ -26,9 +26,12 @@ Kullanıcı API'si (`/api/v1`) + Admin API'si (`/admin/v1`) + Admin paneli (`/ad
 | `HC_FIREBASE_PROJECT_ID` | hayır | varsayılan `hizmetcep-fe036`; Firebase ID token'ının `aud`/`iss` denetimi |
 | `HC_FIREBASE_WEB_API_KEY` | önerilir | AÇIK web API anahtarı; Firebase'e bağlı hesapta şifrenin kaynağı Firebase olur: giriş, şifre doğrulama (hesap silme adımı), rol ekleme ve şifre değiştirme Firebase'e doğrulatılır; uygulama içi şifre değişikliği Firebase şifresini de günceller (yazılamazsa iki kaynak da değişmez, 503). Tanımsızsa yalnız yerel özet kullanılır |
 | `HC_JWT_SECRET` | canlıda | ≥32 karakter; kullanıcı erişim token'larını imzalar |
-| `HC_SMS_PROVIDER` / `HC_EMAIL_PROVIDER` | canlıda | `webhook` (canlı) · `log` yalnız geliştirme, canlıda reddedilir |
+| `HC_SMS_PROVIDER` / `HC_EMAIL_PROVIDER` | hayır | `webhook` (canlı) · tanımsız = yalnız admin panelindeki etkin entegrasyon (o da yoksa gönderim FAILED, OTP isteği 503) · `log` yalnız geliştirme, canlıda reddedilir |
+| `HC_FCM_SERVICE_ACCOUNT` / `HC_FCM_SERVICE_ACCOUNT_FILE` | canlıda (yalnız biri) | servis hesabı JSON'u (düz/base64) ya da JSON dosya yolu (Render Secret File: `/etc/secrets/<ad>`) |
 | `HC_SMS_WEBHOOK_URL` / `HC_EMAIL_WEBHOOK_URL` | webhook ise | https; gerçek SMS/e-posta sağlayıcısına köprü |
 | `HC_SMS_WEBHOOK_TOKEN` / `HC_EMAIL_WEBHOOK_TOKEN` | webhook ise | Bearer anahtarı (yalnız sunucuda) |
+
+Tam örnek: `.env.example` (gerçek değer içermez). Render adımları: DEPLOY.md → "Render kurulumu".
 
 ## Komutlar
 

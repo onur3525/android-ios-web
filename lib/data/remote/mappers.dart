@@ -1,4 +1,5 @@
 import '../models/account.dart';
+import 'gorsel_adresi.dart';
 import '../models/chat.dart';
 import '../models/listing.dart';
 import '../models/notification.dart';
@@ -53,7 +54,8 @@ abstract final class Mappers {
         location: j['location'] as String,
         desc: (j['description'] ?? j['desc'] ?? '') as String,
         status: listingStatus((j['status'] ?? 'OPEN') as String),
-        photoPaths: ((j['photoPaths'] ?? const []) as List).cast<String>(),
+        // Görüntüleme için imzalı adres (varsa) — bkz. gorsel_adresi.dart.
+        photoPaths: gorselYollari(j['photoPaths'], j['photoUrls']),
         // ⚠ ALAN YOKSA `null` KALIR: seçim yapılmamış demektir ve
         // bilinmeyen bir değer gelirse de `null` döner (uygulama
         // çökmez, yalnız etiket gösterilmez).
@@ -160,7 +162,7 @@ abstract final class Mappers {
         id: j['id'] as String,
         senderId: (j['senderId'] ?? '') as String,
         text: j['text'] as String?,
-        imagePath: j['storageRef'] as String?,
+        imagePath: gorselYolu(j['storageRef'], j['storageUrl']),
         status: messageStatus((j['status'] ?? 'SENT') as String),
       );
 
@@ -210,7 +212,32 @@ abstract final class Mappers {
       );
 
   // ── bildirim ──
-  static NotifType notifType(String s) => switch (s) {
+  /// Sunucu bildirim kodu → tür.
+  ///
+  /// ⚠ BUL AKIŞI AYRI KODLARLA GELİR (14 Eki): `TALEP_*`. Eskiden talep
+  /// bildirimleri ilan kodlarıyla (`NEW_OFFER`…) yazılıyordu; uygulama
+  /// onları İLAN bildirimi sanıp talep kimliğiyle ilan ekranını açıyordu
+  /// ("alakasız ekran"). Eski kayıtlar için [hedef] (`target`/push
+  /// `hedef`) `talep` ise ilan kodu talep türüne çevrilir.
+  static NotifType notifType(String s, [String? hedef]) {
+    if (hedef == 'talep') {
+      switch (s) {
+        case 'NEW_OFFER':
+          return NotifType.teklifVerildi;
+        case 'OFFER_SELECTED':
+          return NotifType.teklifSecildi;
+        case 'NEW_MESSAGE':
+          return NotifType.teklifYeniMesaj;
+      }
+    }
+    return _notifKodu(s);
+  }
+
+  static NotifType _notifKodu(String s) => switch (s) {
+        'TALEP_REQUEST' => NotifType.teklifTalebiGeldi,
+        'TALEP_OFFER' => NotifType.teklifVerildi,
+        'TALEP_ACCEPTED' => NotifType.teklifSecildi,
+        'TALEP_MESSAGE' => NotifType.teklifYeniMesaj,
         'NEW_OFFER' => NotifType.newOffer,
         'OFFER_SELECTED' => NotifType.offerSelected,
         'REFUND' => NotifType.refund,
@@ -227,7 +254,7 @@ abstract final class Mappers {
   static AppNotification notification(Map<String, dynamic> j) => AppNotification(
         id: j['id'] as String,
         userId: (j['userId'] ?? '') as String,
-        type: notifType((j['type'] ?? '') as String),
+        type: notifType((j['type'] ?? '') as String, j['target'] as String?),
         title: (j['title'] ?? '') as String,
         body: (j['body'] ?? '') as String,
         refId: j['refId'] as String?,

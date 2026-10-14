@@ -7,6 +7,7 @@ import '../models/teklif_talebi.dart';
 import '../ports/teklif_talebi_port.dart';
 import 'api_client.dart';
 import 'api_error_mapper.dart';
+import 'gorsel_adresi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// TEKLİF TALEBİ — GERÇEK API PORTU (`/api/v1/teklif-talepleri`)
@@ -211,7 +212,8 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
             ? IletisimTercihi.telefonGoster
             : IletisimTercihi.yalnizMesaj,
         createdAt: _zaman(j['createdAt']),
-        fotograflar: ((j['fotograflar'] as List?) ?? const []).map((e) => '$e').toList(),
+        // Görüntüleme için imzalı adres (varsa) — bkz. gorsel_adresi.dart.
+        fotograflar: gorselYollari(j['fotograflar'], j['fotografAdresleri']),
         isZamani: IsZamani.koddan(j['isZamani'] as String?),
         durum: _durum(j['durum'] as String?),
         teklifFiyati: (j['teklifFiyati'] as num?)?.toInt(),
@@ -225,7 +227,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
                   gonderenId: '${m['gonderenId'] ?? ''}',
                   zaman: _zaman(m['createdAt']),
                   metin: m['metin'] as String?,
-                  fotografYolu: m['fotografRef'] as String?,
+                  fotografYolu: gorselYolu(m['fotografRef'], m['fotografUrl']),
                   durum: m['okundu'] == true ? TeklifMesajDurumu.okundu : TeklifMesajDurumu.iletildi,
                 ))
             .toList(),

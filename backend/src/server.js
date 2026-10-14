@@ -7,6 +7,7 @@
 //     özel başlık çapraz kaynaklı isteklerde ön kontrol gerektirir;
 //     çerez ayrıca SameSite=Strict)
 // ═══════════════════════════════════════════════════════════════
+import { gorselAdresleriEkle } from './gorsel_adresleri.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
@@ -139,7 +140,10 @@ export function uygulamaKur(db) {
         ctx.body = await govdeOku(req, fotoYolu ? 8 * 1024 * 1024 : undefined);
       }
 
-      const sonuc = await bulunan.isleyici(ctx);
+      let sonuc = await bulunan.isleyici(ctx);
+      // Kullanıcı API'si: dosya referanslarının yanına imzalı görüntüleme
+      // adresi eklenir (ilan/talep/sohbet fotoğrafları; bkz. gorsel_adresleri.js).
+      if (sonuc !== undefined && yol.startsWith('/api/v1/')) sonuc = await gorselAdresleriEkle(db, sonuc);
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};
       if (sonuc === undefined) return jsonGonder(res, 204, undefined, baslik);
       return jsonGonder(res, 200, sonuc, baslik);
@@ -195,6 +199,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const hub = gercekZamanliKur(sunucu, db);
   sunucu.listen(config.port, () => {
     console.log(`HizmetCep backend dinliyor: :${config.port} (veritabanı: ${config.veritabani.surucu}, örnek: ${olaylar.ornekId})`);
+    // Ortamda SMS/e-posta sağlayıcısı yoksa açıkça uyarılır (admin
+    // entegrasyonu da etkin değilse gönderimler FAILED düşer). Sır yazılmaz.
+    for (const [ad, s] of [['SMS', config.sms], ['EMAIL', config.eposta]]) {
+      if (s.ad === 'yok') console.warn(`UYARI: HC_${ad}_PROVIDER tanımsız — ${ad} gönderimi yalnız admin panelindeki etkin entegrasyonla yapılır; o da yoksa gönderimler FAILED kaydedilir.`);
+    }
   });
 
   // Düzgün kapanış (ölçek küçültme / yeni sürüm): önce hazır değil de,

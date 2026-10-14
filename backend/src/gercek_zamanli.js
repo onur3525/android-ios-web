@@ -13,6 +13,7 @@
 // Kullanıcının oturumları iptal edilince (askı/ban/şifre) açık soketleri
 // de kapatılır. Çerçeve boyutu sınırlı (maxPayload).
 // ═══════════════════════════════════════════════════════════════
+import { gorselAdresleriEkle } from './gorsel_adresleri.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { olaylar } from './olaylar.js';
 import { kullaniciCoz } from './routes/kullanici.js';
@@ -203,6 +204,8 @@ export function gercekZamanliKur(sunucu, db) {
     const m = await db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId).catch(() => null);
     if (!m) return;
     const veri = { id: m.id, offerId: m.offer_id, senderId: m.sender_id, text: m.text, storageRef: m.storage_ref, status: m.read_at ? 'READ' : 'DELIVERED', createdAt: m.created_at };
+    // Fotoğraflı mesajda imzalı görüntüleme adresi (HTTP yanıtıyla aynı).
+    await gorselAdresleriEkle(db, veri);
     for (const b of alicilar) b.olay('message.new', veri);
   });
   olaylar.on('message.read', ({ offerId, readerId }) => {

@@ -62,3 +62,10 @@ bool yerelVarMi(String yol) => _uzakMi(yol) || File(yol).existsSync();
 
 /// Dosyanın bayt boyutu — yükleme öncesi `sizeBytes` için.
 Future<int> yerelBoyut(String yol) => File(yol).length();
+
+/// Mobilde dosya yolu zaten kalıcıdır; olduğu gibi döner
+/// (web karşılığı için bkz. `yerel_gorsel_web.dart`).
+Future<String> kaliciYerelYol(String yol, {String? tur}) async => yol;
+
+/// Mobilde seçici boyutu DEĞİŞMEZ (web karşılığı 1280).
+const double? kaliciGorselEnFazlaGenislik = null;

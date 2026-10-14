@@ -168,4 +168,65 @@ void main() {
       }
     });
   });
+
+  group('6 — MASAÜSTÜ GÖRÜNÜM VE SAYFA YENİLEME (14 Eki)', () {
+    // KULLANICI BULGUSU: telefonun tarayıcısında "Masaüstü sitesi"
+    // seçilince (1) talep fotoğrafı "HTTP request failed … blob:" hatası
+    // verdi — sayfa yeniden yüklendiği için `blob:` adresi ölmüştü;
+    // (2) dar yan sütunda "Mesajlaşma" kelimesi ortadan bölündü.
+
+    test('deneme modunda seçilen fotoğraf kalıcı biçime çevrilir', () {
+      final secici = _kodu('lib/screens/widgets/photo_picker.dart');
+      expect(
+          secici.contains(
+              'yerel = await kaliciYerelYol(p.localPath, tur: p.contentType);'),
+          isTrue);
+      expect(secici.contains('p.storageRef = yerel;'), isTrue);
+      expect(secici.contains('p.storageRef = p.localPath;'), isFalse,
+          reason: 'web\'de sayfayla ölen blob adresi kayda yazılıyor');
+      final sohbet = _kodu('lib/screens/widgets/sohbet_fotograf_akisi.dart');
+      expect(sohbet.contains('kaliciYerelYol(yol)'), isTrue);
+    });
+
+    test('web köprüsü data: adresini çizer; mobil yol aynen kalır', () {
+      final web = _kodu('lib/core/platform/yerel_gorsel_web.dart');
+      expect(web.contains("yol.startsWith('data:')"), isTrue);
+      expect(web.contains('Image.memory('), isTrue);
+      expect(web.contains("base64Encode(b)"), isTrue);
+      final io = _kodu('lib/core/platform/yerel_gorsel_io.dart');
+      expect(
+          io.contains(
+              'Future<String> kaliciYerelYol(String yol, {String? tur}) async => yol;'),
+          isTrue);
+    });
+
+    test('dar alanda iletişim kutuları alt alta, etiket bölünmez', () {
+      final d = _kodu('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(RegExp(r'_IletisimCifti\(').allMatches(d).length, 3,
+          reason: 'iki çağrı + sınıf kurucusu');
+      expect(d.contains('kutu.maxWidth >= _yanYanaEnAz'), isTrue);
+      final k = _kodu('lib/screens/widgets/detay_karti_parcalari.dart');
+      expect(k.contains('fit: BoxFit.scaleDown'), isTrue);
+      expect(k.contains('softWrap: false'), isTrue);
+    });
+  });
+
+  group('7 — DETAY EKRANLARI MASAÜSTÜNDE DE TEK SÜTUN (14 Eki)', () {
+    test('düzen yan yana çizmez; masaüstünde ortalı tek sütun', () {
+      // ⚠ KULLANICI KARARI: "Masaüstü görünümde yan yana olmamalı —
+      // sayfa tek sütun olsun." Kural ortak widget'ta; iki detay ekranı
+      // (ilan ve Bul akışı) birlikte uyar.
+      final k = _kodu('lib/ui/masaustu_detay.dart');
+      expect(k.contains('Row('), isFalse, reason: 'iki kolon geri gelmiş');
+      expect(k.contains('maxWidth: IcerikGenisligi.liste'), isTrue);
+      expect(k.contains('children: [ana, SizedBox(height: aralik), yan]'),
+          isTrue);
+      for (final yol in [
+        'lib/screens/job_detail_screen.dart',
+        'lib/screens/teklif_talebi_detay_screen.dart',
+      ]) {
+        expect(_kodu(yol).contains('MasaustuDetay('), isTrue, reason: yol);
+      }
+    });
+  });
 }

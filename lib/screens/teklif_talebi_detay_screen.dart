@@ -421,7 +421,10 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
             RefPageTitle('Teklif Talebi', geriDugmesi: false),
             const SizedBox(height: 12),
 
-            // ── ⚠ MASAÜSTÜ WEB: ANA İÇERİK + SAĞ YAN PANEL ──
+            // ── ⚠ ANA İÇERİK + YARDIMCI BÖLÜM — HER EKRANDA TEK SÜTUN
+            // (14 Eki, kullanıcı kararı: masaüstünde yan yana olmaz;
+            // bkz. `MasaustuDetay`). Aşağıdaki "SOL/SAĞ" ifadeleri eski
+            // iki kolonlu düzeni anlatır; bugün "üst/alt" demektir. ──
             //
             // `job_detail_screen` ile AYNI yapı ve AYNI eşik
             // (`MasaustuDetay`). İki akışın detay ekranları bu depoda
@@ -779,12 +782,8 @@ class _KarsiTarafBilgisi extends StatelessWidget {
             const _IletisimKapandiNotu(),
             const SizedBox(height: 8),
           ],
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: IletisimKutusu(
+          _IletisimCifti(
+                  sol: IletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
                     // ⚠ KİLİTLİYKEN `deger: null` — Mesajlaşma
@@ -801,10 +800,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                         ? () => _telefonAra(context, hizmetAlan?.phone)
                         : null,
                   ),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: IletisimKutusu(
+                  sag: IletisimKutusu(
                     ikon: 'assets/svg/ic_chat.svg',
                     etiket: 'Mesajlaşma',
                     deger: iletisim ? 'Mesaj yaz' : null,
@@ -816,9 +812,6 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                         ? () => _sohbeteGit(context, talep.hizmet)
                         : null,
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       );
@@ -916,10 +909,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
           const _IletisimKapandiNotu(),
           const SizedBox(height: 8),
         ],
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        _IletisimCifti(
               // ── ⚠ DÜZELTİLDİ — kullanıcı bulgusu: bu kutu HER
               // ZAMAN kilitliydi ("hizmet verenin telefonu hiç
               // paylaşılmıyor" sabit kararı vardı). Hizmet verenin
@@ -929,12 +919,11 @@ class _KarsiTarafBilgisi extends StatelessWidget {
               // kullanılıyor) — teklif geldiğinde (`acik`) hizmet
               // verenin telefonu da diğer bilgileriyle (ad, avatar)
               // AYNI anda, koşulsuz açılır.
-              Builder(builder: (context) {
+              sol: Builder(builder: (context) {
                 final hizmetVeren = context
                     .read<AuthController>()
                     .accountById(talep.saglayiciId);
-                return Expanded(
-                  child: IletisimKutusu(
+                return IletisimKutusu(
                     ikon: 'assets/svg/ic_phone_f.svg',
                     etiket: 'Telefon',
                     deger: iletisim
@@ -945,12 +934,9 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     onTap: iletisim
                         ? () => _telefonAra(context, hizmetVeren?.phone)
                         : null,
-                  ),
                 );
               }),
-              const SizedBox(width: 11),
-              Expanded(
-                child: IletisimKutusu(
+              sag: IletisimKutusu(
                   ikon: 'assets/svg/ic_chat.svg',
                   etiket: 'Mesajlaşma',
                   deger: iletisim ? 'Mesaj yaz' : null,
@@ -962,9 +948,6 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                       ? () => _sohbeteGit(context, talep.hizmet)
                       : null,
                 ),
-              ),
-            ],
-          ),
         ),
 
         // ⚠ DIŞ ÇERÇEVE KALDIRILDI (kullanıcı bulgusu) — `YorumKarti`
@@ -1519,6 +1502,42 @@ class _SonlananTeklif extends StatelessWidget {
               style: refText(
                   size: RF.s135, weight: RF.w500, color: RC.textSoft)),
         ],
+      );
+}
+
+/// Telefon + Mesajlaşma kutuları.
+///
+/// ⚠ DAR ALANDA ALT ALTA (14 Eki, kullanıcı bulgusu): masaüstü
+/// görünümde bu kutular dar YAN SÜTUNA düşüyor ve yan yana sıkışınca
+/// "Mesajlaşma" kelimesi ortadan bölünüyordu. Genişlik yetiyorsa (mobil
+/// görünüm) bugünkü gibi YAN YANA ve eşit yükseklikte; yetmiyorsa alt
+/// alta, tam genişlikte.
+class _IletisimCifti extends StatelessWidget {
+  const _IletisimCifti({required this.sol, required this.sag});
+
+  final Widget sol;
+  final Widget sag;
+
+  /// İki kutunun yan yana rahat sığdığı en dar genişlik.
+  static const double _yanYanaEnAz = 380;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, kutu) => kutu.maxWidth >= _yanYanaEnAz
+            ? IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: sol),
+                    const SizedBox(width: 11),
+                    Expanded(child: sag),
+                  ],
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [sol, const SizedBox(height: 8), sag],
+              ),
       );
 }
 

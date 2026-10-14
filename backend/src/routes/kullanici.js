@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 import { sifreDogrulaAsenkron, sifreOzetleAsenkron } from '../auth.js';
-import { gonder } from '../bildirim.js';
+import { gonder, kanalHazir } from '../bildirim.js';
 import { config, uretim } from '../config.js';
 import { simdi } from '../db.js';
 import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
@@ -90,6 +90,8 @@ export function kullaniciGorunumu(u, saglayici, fotograflar = null) {
 }
 
 // ── OTP ─────────────────────────────────────────────────────
+const smsYok = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama kodu şu anda gönderilemiyor. Lütfen daha sonra tekrar deneyin.');
+
 async function otpUret(db, tel, amac, ip) {
   await otpIpSiniri.denetle(db, ip);
   const son = await db.prepare(
@@ -104,7 +106,19 @@ async function otpUret(db, tel, amac, ip) {
   await db.prepare(
     `INSERT INTO otp_codes (id, phone, purpose, code_hash, expires_at, attempts, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)`,
   ).run(randomUUID(), tel, amac, otpOzet(tel, amac, kod), new Date(Date.now() + OTP_SURESI).toISOString(), simdi());
-  await gonder(db, { kanal: 'SMS', hedef: `+90${tel}`, sablon: 'OTP', degerler: { KOD: kod }, gizliGovde: true });
+  const g = await gonder(db, { kanal: 'SMS', hedef: `+90${tel}`, sablon: 'OTP', degerler: { KOD: kod }, gizliGovde: true });
+  if (g.status !== 'SENT') {
+    // Kod kullanıcıya ULAŞMADI: kayıt geri alınır (60 sn bekleme/saatlik
+    // sınır boşa harcanmasın). Neden outbound_messages'ta FAILED durur.
+    await db.prepare('DELETE FROM otp_codes WHERE phone = ? AND purpose = ? AND consumed_at IS NULL AND code_hash = ?')
+      .run(tel, amac, otpOzet(tel, amac, kod));
+    // Kayıtlı OLMAYAN numara için yapılan amaçlarda (REGISTER/PHONE_CHANGE)
+    // hata açıkça döner. FORGOT/LOGIN/ROLE_ADD yanıtı NÖTR kalır: aksi hâlde
+    // "503 = numara kayıtlı" diye kayıt bilgisi sızardı. (Sağlayıcı hiç
+    // yapılandırılmamışsa rota numaraya bakmadan önce 503 döner.)
+    if (amac === 'REGISTER' || amac === 'PHONE_CHANGE') throw smsYok();
+    return null;
+  }
   return kod; // yalnız testlerde kullanılır; yanıta ASLA yazılmaz
 }
 
@@ -245,6 +259,9 @@ export function kullaniciRotalar(r, db) {
     const tel = telefon(ctx.body.phone);
     const amac = String(ctx.body.purpose ?? '');
     if (!['REGISTER', 'LOGIN', 'FORGOT', 'PHONE_CHANGE', 'ROLE_ADD'].includes(amac)) throw hata.dogrulama('Geçersiz amaç');
+    // Gönderim yolu hiç yoksa (üretimde sağlayıcı tanımsız + admin
+    // entegrasyonu kapalı) numaraya BAKMADAN açıkça reddedilir.
+    if (!(await kanalHazir(db, 'SMS'))) throw smsYok();
     const var_ = await db.prepare('SELECT id FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
     if ((amac === 'REGISTER' || amac === 'PHONE_CHANGE') && var_) throw hata.cakisma('Bu telefon numarası kayıtlı');
     // FORGOT/LOGIN: numara kayıtlı değilse de AYNI yanıt (kayıt bilgisi sızmaz),

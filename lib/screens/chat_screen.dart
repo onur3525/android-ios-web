@@ -723,10 +723,10 @@ Future<void> _ara(BuildContext context, String ham) async {
 /// · SUNUCU REFERANSI (`storageRef`) — karşı taraftan gelen mesajda
 ///   `Mappers.chatMessage` bu alanı doldurur.
 ///
-/// ⚠ REFERANS ÇÖZÜMLEME YAPILMADI. `StorageApi.resolve` ucu tanımlı
-/// ama YANIT BİÇİMİ sözleşmede belirsiz (hangi alan URL taşıyor
-/// yazılı değil). Uydurma bir alan adı okumak yerine referans
-/// çözülemediğinde nötr bir yer tutucu çizilir — bkz. rapor.
+/// ⚠ REFERANS ÇÖZÜMLEME (14 Eki): sunucu mesajın yanına imzalı
+/// `storageUrl` ekler; `Mappers.message` görüntüleme yolu olarak onu
+/// verir (tek kaynak: `data/remote/gorsel_adresi.dart`). Adres yoksa
+/// (depolama kapalı) referans kalır ve nötr yer tutucu çizilir.
 class _SohbetFotografi extends StatelessWidget {
   const _SohbetFotografi({required this.yol, required this.benim});
 

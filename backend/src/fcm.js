@@ -1,8 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // FCM SUNUCU GÖNDERİMİ (HTTP v1) — mevcut push_tokens + notifications
 //
-// Kimlik: Firebase SERVİS HESABI yalnız ortam değişkeninden okunur
-//   HC_FCM_SERVICE_ACCOUNT  — servis hesabı JSON'u (düz ya da base64)
+// Kimlik: Firebase SERVİS HESABI yalnız sunucu ortamından okunur (biri):
+//   HC_FCM_SERVICE_ACCOUNT       — servis hesabı JSON'u (düz ya da base64)
+//   HC_FCM_SERVICE_ACCOUNT_FILE  — JSON dosya yolu (Render Secret File)
 // Koda, Git'e ve Flutter'a GİRMEZ. Tanımlı değilse gönderim kapalıdır;
 // uygulama içi bildirimler aynen çalışır.
 //
@@ -19,9 +20,9 @@
 // Veri biçimi Flutter `push_kapisi.dart` ile aynı: data = {type, hedef, id}.
 // ═══════════════════════════════════════════════════════════════
 import { createSign } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import { config } from './config.js';
 import { simdi } from './db.js';
+import { servisHesabiOku } from './servis_hesabi.js';
 
 const KAPSAM = 'https://www.googleapis.com/auth/firebase.messaging';
 const AZAMI_DENEME = 5;
@@ -30,17 +31,16 @@ const GERI_DENEME_ARALIGI = 60 * 1000;
 const TUR_BOYU = 500;
 const ESZAMANLI = 10; // tek turda aynı anda işlenen bildirim (FCM HTTP çağrıları paralel)
 
+// Okuma/doğrulama config.js ile AYNI kaynaktan (servis_hesabi.js); ortam
+// değeri ya da Secret File. Dosya her çağrıda yeniden okunmasın diye
+// kaynak anahtarına göre önbelleğe alınır (değişken değişirse yenilenir).
+let hesapOnbellegi = null; // { anahtar, hesap }
 function servisHesabi() {
-  const ham = (process.env.HC_FCM_SERVICE_ACCOUNT || (() => {
-      try { return readFileSync('/etc/secrets/firebase-service-account.json', 'utf8'); }
-      catch { return ''; }
-    })() || '').trim();
-  if (!ham) return null;
-  let metin = ham;
-  if (!ham.startsWith('{')) metin = Buffer.from(ham, 'base64').toString('utf8');
-  const j = JSON.parse(metin);
-  if (!j.client_email || !j.private_key || !j.project_id) throw new Error('HC_FCM_SERVICE_ACCOUNT eksik alan içeriyor');
-  return j;
+  const anahtar = `${process.env.HC_FCM_SERVICE_ACCOUNT || ''}\u0000${process.env.HC_FCM_SERVICE_ACCOUNT_FILE || ''}`;
+  if (hesapOnbellegi && hesapOnbellegi.anahtar === anahtar) return hesapOnbellegi.hesap;
+  const s = servisHesabiOku(process.env);
+  hesapOnbellegi = { anahtar, hesap: s ? s.hesap : null };
+  return hesapOnbellegi.hesap;
 }
 
 let onbellek = null; // { jeton, bitis }
@@ -131,8 +131,9 @@ export function fcmEtkin() {
  * girmeyen hizmet bildirimleri (ör. ilan süresinin dolması) her zaman gider.
  */
 export function pushIzniVar(u, tur) {
-  if (tur === 'NEW_OFFER' || tur === 'OFFER_SELECTED') return u.notif_offer !== 0;
-  if (tur === 'NEW_MESSAGE' || tur === 'CONTACT_OPENED') return u.notif_message !== 0;
+  // TALEP_* = Bul akışı (Doğrudan Teklif İste); aynı üç anahtara bağlıdır.
+  if (['NEW_OFFER', 'OFFER_SELECTED', 'TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED'].includes(tur)) return u.notif_offer !== 0;
+  if (['NEW_MESSAGE', 'CONTACT_OPENED', 'TALEP_MESSAGE'].includes(tur)) return u.notif_message !== 0;
   if (tur === 'ANNOUNCEMENT') return u.notif_announcement !== 0;
   return true;
 }

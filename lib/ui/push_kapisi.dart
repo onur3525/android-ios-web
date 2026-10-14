@@ -9,6 +9,9 @@ import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api_config.dart';
+import '../data/remote/mappers.dart';
+import '../domain/bildirim_rolu.dart';
+import '../screens/notifications_screen.dart';
 import 'gezgin.dart';
 
 /// ═══════════════════════════════════════════════════════════════
@@ -23,8 +26,9 @@ import 'gezgin.dart';
 ///   · Çıkış: jeton sunucudan silinir ve cihazda geçersiz kılınır.
 ///   · Önde gelen bildirim: Bildirimler listesi ve rozet tazelenir
 ///     (iOS'ta sistem bildirimi de gösterilir).
-///   · Bildirime dokunma: güvenli hedef tablosuyla MEVCUT rotalara gidilir
-///     (rota korumaları — rol, taraf denetimi — aynen geçerli).
+///   · Bildirime dokunma: uygulama içi bildirim kartıyla AYNI yönlendirme
+///     (`NotificationsScreen.hedefeGit`); olmazsa güvenli hedef tablosuyla
+///     MEVCUT rotalara gidilir (rota korumaları — rol, taraf — aynen).
 ///
 /// ⚠ JETON KALICI DEPOLAMAYA YAZILMAZ (yalnız bellekte). Firebase SDK'nın
 /// kendi iç kaydı dışında uygulama jetonu saklamaz.
@@ -170,6 +174,33 @@ class _PushKapisiState extends State<PushKapisi> {
     // Oturum henüz yüklenmediyse (soğuk açılış) giriş sonrasına ertelenir.
     if (_auth?.currentAccount == null) {
       _bekleyenAcilis = veri;
+      return;
+    }
+    // ⚠ TEK KAYNAK (14 Eki): uygulama içi bildirim kartıyla AYNI
+    // yönlendirme (`NotificationsScreen.hedefeGit`) — tür + kimlikten
+    // ilgili içerik (teklif bölümüne odaklanma, sohbet, doğru tarafın
+    // ekranı). Orada gidilecek yer bulunamazsa (veri henüz yüklenmedi,
+    // tür eşlenmedi) güvenli hedef tablosu (`pushRotasi`) kullanılır.
+    final id = veri['id'];
+    final hedef = veri['hedef'];
+    final tur = Mappers.notifType(
+        '${veri['type'] ?? ''}', hedef is String ? hedef : null);
+    final baglam = gezginAnahtari.currentContext;
+    final bildirimId = veri['bildirimId'];
+    if (baglam != null && bildirimId is String && _kimlikDeseni.hasMatch(bildirimId)) {
+      // Dokunulan bildirim okundu sayılır (kartla aynı davranış).
+      unawaited(baglam.read<NotificationController>().markRead(bildirimId));
+    }
+    // ⚠ ROL: uygulama içi liste etkin role göre süzülür; push ise her
+    // rolde gelebilir. Bildirimin rolü etkin rolden farklıysa ortak
+    // yönlendirme KULLANILMAZ — rota tablosundaki RoleGuard devreye girer.
+    final rol = bildirimRolu(tur);
+    final rolUygun = rol == null || rol == _auth?.activeRole;
+    if (baglam != null &&
+        rolUygun &&
+        id is String &&
+        _kimlikDeseni.hasMatch(id) &&
+        NotificationsScreen.hedefeGit(baglam, tur, id)) {
       return;
     }
     gezginAnahtari.currentState?.pushNamed(pushRotasi(veri));
