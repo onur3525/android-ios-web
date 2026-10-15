@@ -32,10 +32,16 @@ import { uygulamaIciBildir } from './ilan.js';
 import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, sifreDogruMu } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
+import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
-const SILME_SURESI_GUN = 30; // Flutter metni: "30 gün içinde kalıcı olarak silinecektir"
+// Silme talebinden sonraki bekleme (talep bu sürede geri çekilebilir). Süre
+// dolunca silme, zamanlayıcının bir sonraki turunda uygulanır; zamanlayıcı
+// yalnız sunucu ayaktayken çalışır (Render ücretsiz planında sunucu uyurken
+// iş de bekler, ilk uyanışta yetişir). Uygulama ekranı gün sayısı vaat ETMEZ
+// ("Silme talebiniz değerlendirmede"); gecikmeler Admin → Silme Kuyrukları'nda.
+const SILME_SURESI_GUN = 30;
 const kural = (kod, m) => new ApiHatasi(409, kod, m);
 
 /**
@@ -584,7 +590,9 @@ export function sohbetTalepRotalar(r, db) {
  * anonim). KASITLI OLARAK SAKLANANLAR (yasal/güvenlik gerekçesi):
  *   · legal_acceptances — sözleşme/aydınlatma onayının ispatı
  *   · audit_log, user_status_history — yönetici işlemlerinin hesap
- *     verebilirliği (değiştirilemez tablolar)
+ *     verebilirliği (silinemez). İçlerindeki kişisel değerler maskelenir
+ *     (denetim_anonimlestirme.js); işlem, zaman, yönetici, hedef kalır.
+ *     Saklama süresi henüz belirlenmedi (işletmeci/hukuk kararı).
  *   · account_requests satırı — silme talebinin ne zaman alınıp
  *     uygulandığının kaydı (gerekçe metni silinir)
  * Karşı tarafın KENDİ yazdığı mesajlar onun verisidir, silinmez.
@@ -598,8 +606,11 @@ export async function silmeTalepleriniIsle(db) {
     await db.tx(async () => {
       // Firebase kimlik kaydı (telefon/e-posta kopyası) da silinir — uid
       // aşağıda NULL yapılmadan önce kuyruğa yazılır (bkz. firebase_silme.js).
-      const fb = await db.prepare('SELECT firebase_uid, phone FROM users WHERE id = ?').get(a.user_id);
+      const fb = await db.prepare('SELECT firebase_uid, phone, name, email FROM users WHERE id = ?').get(a.user_id);
       await firebaseSilmeKuyrugunaEkle(db, fb?.firebase_uid);
+      // Yönetici kayıtlarındaki kişisel değerler (ad/telefon/e-posta/metin)
+      // kullanıcı satırı anonimleşmeden ÖNCE, bilinen değerlerle maskelenir.
+      await yoneticiKayitlariniAnonimlestir(db, { id: a.user_id, ad: fb?.name, telefon: fb?.phone, eposta: fb?.email }, z);
       await kisiselIcerigiTemizle(db, a.user_id, fb?.phone, z);
       await db.prepare(
         // firebase_uid de SİLİNİR: kişiye bağlanabilen bir kimliktir ve

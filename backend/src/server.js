@@ -25,6 +25,7 @@ import { gercekZamanliKur } from './gercek_zamanli.js';
 import { olaylar } from './olaylar.js';
 import { fotoGonder, varlikGonder } from './katalog_foto.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
+import { silmeKuyruklariRotalar } from './routes/silme_kuyruklari.js';
 import { kullaniciRotalar } from './routes/kullanici.js';
 import { ilanRotalar, suresiDolanlariIsle } from './routes/ilan.js';
 import { silmeTalepleriniIsle, sohbetTalepRotalar, talepSureleriniIsle } from './routes/sohbet_talep.js';
@@ -77,6 +78,7 @@ export function uygulamaKur(db) {
   publicRotalar(r, db);
   adminRotalar(r, db);
   adminKullaniciRotalar(r, db);
+  silmeKuyruklariRotalar(r, db);
 
   return async (req, res) => {
     const istekId = istekKimligi();

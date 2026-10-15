@@ -473,6 +473,12 @@ paths:
         gönderir; sunucu token'ı Google'ın açık sertifikalarıyla doğrular,
         doğrulanmış telefon/e-postayla hesabı eşleştirir ve HizmetCep
         oturumu açar. Hesap yoksa 404; askı/ban/dondurma kuralları aynen.
+        ⚠ İPTAL DENETİMİ (15 Eki): şifre sıfırlama/değiştirme ya da telefon
+        değişikliğinden ÖNCE kimlik doğrulaması yapılmış belge (auth_time) 401
+        AUTH_REVOKED ile reddedilir. Servis hesabı varsa Firebase kaydı da
+        okunur (Admin SDK checkRevoked ile aynı): devre dışı/silinmiş kullanıcı
+        ya da Firebase'de iptal edilmiş belge reddedilir; Firebase'e
+        ulaşılamazsa 503.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -526,6 +532,10 @@ paths:
     post:
       tags: [Auth]
       summary: Şifre değiştir
+      description: |
+        Başarıda sunucu oturumları kapatılır (şifre değiştirmede işlemi yapan
+        oturum hariç) ve Firebase yenileme belirteçleri iptal edilir; işlem
+        öncesi Firebase belgeleriyle yeni oturum açılamaz (AUTH_REVOKED).
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -539,6 +549,10 @@ paths:
       summary: Şifre sıfırlamayı tamamla
       description: |
         ⚠ Şifre unutma akışının SON adımı. Paket 1/2'de kaldırılan /listings/{id}/complete ile İLGİSİZDİR.
+        Başarıda bütün sunucu oturumları kapatılır; Firebase şifresi ve yenileme
+        belirteçlerinin iptali AYNI Firebase çağrısında yapılır (yapılamazsa 503,
+        yerel şifre değişmez). İşlem öncesi Firebase belgeleriyle yeni oturum
+        açılamaz (AUTH_REVOKED).
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -725,6 +739,10 @@ paths:
         `currentPassword` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD ve
         telefon kanıtı tüketilmez. Başarıda bu oturum dışındaki oturumlar
         kapatılır (PHONE_CHANGED). Ortak şifre deneme sınırı: 15 dakikada 10.
+        Firebase'e bağlı hesapta `firebaseIdToken` hesabın Firebase kullanıcısına
+        ait olmalı (aksi hâlde 400 PHONE_PROOF_INVALID); sunucu kodu yolunda
+        numara Firebase'e sunucuca yazılır, yazılamazsa 503 ve numara değişmez.
+        Başarıda Firebase yenileme belirteçleri de iptal edilir.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }

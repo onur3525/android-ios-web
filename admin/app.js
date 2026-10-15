@@ -35,6 +35,7 @@ const MENU = [
   ['hesaptalepleri', 'Gelen Talepler', ['super_admin', 'moderator', 'readonly']],
   ['geribildirim', 'Uygulama Geri Bildirimleri', ['super_admin', 'moderator', 'readonly']],
   ['entegrasyonlar', 'Entegrasyonlar', ['super_admin', 'operations']],
+  ['silmekuyruklari', 'Silme Kuyrukları', ['super_admin', 'operations']],
   ['yoneticiler', 'Yöneticiler', ['super_admin']],
   ['denetim', 'Denetim Kaydı', ['super_admin']],
 ];
@@ -459,6 +460,42 @@ SAYFALAR.denetim = async () => h('div', {}, h('h2', {}, 'Denetim Kaydı'), h('p'
   tablo([{ baslik: 'Tarih', deger: (x) => tarih(x.createdAt) }, { baslik: 'Admin', deger: (x) => x.admin ?? 'sistem' }, { baslik: 'İşlem', deger: (x) => x.action },
     { baslik: 'Hedef', deger: (x) => `${x.targetType ?? ''} ${x.targetId ?? ''}` }, { baslik: 'Gerekçe', deger: (x) => x.reason ?? '—' },
     { baslik: 'Değişiklik', deger: (x) => (x.before || x.after ? `${JSON.stringify(x.before)} → ${JSON.stringify(x.after)}` : '—') }], await api('/audit-log?limit=300')));
+
+// ── Silme Kuyrukları (15 Eki güvenlik denetimi) ───────────────
+// Hesap silmede Firebase kaydı ve dosyalar kuyrukla silinir. Kimlikler
+// özetlenmiş gelir (Firebase uid'si ve dosya anahtarı gösterilmez).
+const KUYRUK_DURUM = { BEKLIYOR: 'Bekliyor', BASARISIZ: 'Başarısız (yeniden denenecek)', DENEME_TUKENDI: 'Deneme hakkı tükendi', UZUN_SURELI_HATA: 'Uzun süredir başarısız' };
+SAYFALAR.silmekuyruklari = async () => {
+  const d = await api('/deletion-queues');
+  const sayilar = (c) => Object.entries(c).map(([k, v]) => `${KUYRUK_DURUM[k] ?? k}: ${v}`).join(' · ') || 'Kuyruk boş';
+  const yenidenDene = (kuyruk, id) => async (e) => {
+    e?.stopPropagation?.();
+    const neden = await gerekceIle('Yeniden dene', 'Yeniden dene', 'Başarısız silme işi bir sonraki turda (en geç 1 dakika) yeniden denenir. İşlem denetim kaydına yazılır.');
+    if (!neden) return;
+    const r = await guvenli(() => api('/deletion-queues/retry', { yontem: 'POST', govde: { queue: kuyruk, id, reason: neden } }));
+    if (r) { bildir(`${r.retried} iş yeniden denemeye alındı`); yenile(); }
+  };
+  const kolonlar = (kuyruk) => [
+    { baslik: 'Kimlik (özet)', deger: (x) => x.id }, ...(kuyruk === 'files' ? [{ baslik: 'Tür', deger: (x) => x.tur }] : []),
+    { baslik: 'Durum', deger: (x) => KUYRUK_DURUM[x.durum] ?? x.durum }, { baslik: 'Deneme', deger: (x) => x.deneme },
+    { baslik: 'Son hata', deger: (x) => x.sonHata ?? '—' }, { baslik: 'Sonraki deneme', deger: (x) => (x.sonrakiDeneme ? tarih(x.sonrakiDeneme) : '—') },
+    { baslik: '', deger: (x) => (x.deneme > 0 ? h('button', { class: 'btn', onclick: yenidenDene(kuyruk, x.id) }, 'Yeniden dene') : '') },
+  ];
+  const a = d.accountDeletions;
+  return h('div', {}, h('h2', {}, 'Silme Kuyrukları'),
+    h('p', { class: 'not' }, 'Zamanlayıcı yalnız sunucu çalışırken işler. Sunucu uykudaysa (Render ücretsiz planı) süresi dolan silmeler ilk uyanışta uygulanır.'),
+    h('div', { class: 'kart' }, alanlarListesi([
+      ['Bekleyen silme talebi', a.pending], ['Süresi geçmiş, uygulanmamış', a.overdue], ['En eski gecikme', a.oldestOverdueAt ? tarih(a.oldestOverdueAt) : '—'],
+    ])),
+    h('h3', {}, 'Firebase kimlik kayıtları'),
+    h('p', { class: 'not' }, `${d.firebase.configured ? 'Servis hesabı yapılandırılmış.' : '⚠ Servis hesabı yapılandırılmamış: kayıtlar silinemez, kuyrukta bekler.'} ${sayilar(d.firebase.counts)}. Hatalı işler artan aralıkla (en fazla 24 saatte bir) süresiz yeniden denenir.`),
+    d.firebase.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('firebase', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo(kolonlar('firebase'), d.firebase.items),
+    h('h3', {}, 'Dosyalar'),
+    h('p', { class: 'not' }, `${d.files.configured ? 'Depo yapılandırılmış.' : '⚠ Depo yapılandırılmamış: dosyalar silinemez, kuyrukta bekler.'} ${sayilar(d.files.counts)}. En fazla ${d.files.maxAttempts} deneme; tükenen iş yalnız buradan yeniden denenir.`),
+    d.files.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('files', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo(kolonlar('files'), d.files.items));
+};
 
 // ── Entegrasyonlar ────────────────────────────────────────────
 SAYFALAR.entegrasyonlar = async () => {

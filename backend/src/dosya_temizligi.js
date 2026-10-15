@@ -17,9 +17,11 @@
 //   · İDEMPOTENT: deleted_at dolu kayıt yeniden işlenmez; depoda zaten
 //     olmayan nesne (404) başarı sayılır.
 //   · HATA SESSİZ KALMAZ: başarısız deneme delete_attempts/delete_error'a
-//     ve denetim kaydına yazılır, sonraki turda yeniden denenir (en fazla
-//     AZAMI_DENEME). Ana işlem (ilan/hesap silme) hiçbir zaman bu yüzden
-//     başarısız olmaz.
+//     ve denetim kaydına yazılır; artan aralıkla (1 dk → en fazla 6 sa,
+//     delete_next_at) yeniden denenir, en fazla AZAMI_DENEME kez. Tükenen
+//     kayıt yönetici panelinde (Silme Kuyrukları) görünür ve oradan yeniden
+//     denemeye alınabilir. Ana işlem (ilan/hesap silme) hiçbir zaman bu
+//     yüzden başarısız olmaz.
 // ═══════════════════════════════════════════════════════════════
 import { denetimYaz } from './audit.js';
 import { simdi } from './db.js';
@@ -27,6 +29,7 @@ import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 
 const KULLANICI_ANAHTARI = /^u\/([0-9a-f-]{36})\/[0-9a-f-]{36}\.(jpg|png|webp|heic)$/;
 export const AZAMI_DENEME = 10;
+const AZAMI_ARALIK_DK = 6 * 60;
 const TUR_BOYU = 100;
 
 /** Sahibine ait kayıtları silme kuyruğuna alır. Başka kullanıcının dosyası işaretlenemez. */
@@ -80,8 +83,9 @@ export async function dosyaTemizliginiIsle(db, { silici } = {}) {
   const kuyruk = await db.prepare(
     `SELECT ref, owner_id, delete_attempts FROM storage_objects
       WHERE status = 'DISCARDED' AND deleted_at IS NULL AND delete_attempts < ?
+        AND (delete_next_at IS NULL OR delete_next_at <= ?)
       ORDER BY created_at LIMIT ${TUR_BOYU}`,
-  ).all(AZAMI_DENEME);
+  ).all(AZAMI_DENEME, simdi());
   let silinen = 0;
   for (const o of kuyruk) {
     const m = KULLANICI_ANAHTARI.exec(o.ref);
@@ -93,11 +97,13 @@ export async function dosyaTemizliginiIsle(db, { silici } = {}) {
     let tamam = false; let hataMetni = null;
     try { tamam = await sil(o.ref); } catch (e) { hataMetni = String(e?.message ?? e).slice(0, 300); }
     if (tamam) {
-      await db.prepare('UPDATE storage_objects SET deleted_at = ?, delete_error = NULL WHERE ref = ?').run(simdi(), o.ref);
+      await db.prepare('UPDATE storage_objects SET deleted_at = ?, delete_error = NULL, delete_next_at = NULL WHERE ref = ?').run(simdi(), o.ref);
       silinen++;
     } else {
       const hataNotu = hataMetni ?? 'depo silme isteği başarısız';
-      await db.prepare('UPDATE storage_objects SET delete_attempts = delete_attempts + 1, delete_error = ? WHERE ref = ?').run(hataNotu, o.ref);
+      const aralikDk = Math.min(2 ** o.delete_attempts, AZAMI_ARALIK_DK);
+      await db.prepare('UPDATE storage_objects SET delete_attempts = delete_attempts + 1, delete_error = ?, delete_next_at = ? WHERE ref = ?')
+        .run(hataNotu, new Date(Date.now() + aralikDk * 60_000).toISOString(), o.ref);
       await denetimYaz(db, { adminId: null, islem: 'storage.delete.failed', hedefTur: 'storage_object', hedefId: o.ref, sonra: { deneme: o.delete_attempts + 1, hata: hataNotu } }).catch(() => {});
     }
   }

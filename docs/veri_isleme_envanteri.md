@@ -22,7 +22,7 @@ Hazırlanma: 15 Ekim 2026 (güvenlik denetimi, karar 7). Bu belge **yalnız kayn
 - Kaldırılan / anonimleşen: ad, telefon, e-posta, şifre, Firebase kimliği (Firebase'den silme kuyruğu ile), profil fotoğrafları ve kullanıcının bütün dosyaları (R2 silme kuyruğu), adres, hizmet veren profili, bildirim jetonları, bildirimler, uygulama geri bildirimi, OTP kayıtları, oturum kayıtları (IP/cihaz), kişinin yazdığı mesaj ve talep mesajları, ilan açıklaması/konumu/fotoğrafları, teklif notları, talep açıklaması/fotoğrafları, teklif açıklaması, red gerekçesi, yorum metinleri, silinen hizmet veren hakkındaki yorumlar (yayından kalkar), destek talebi konu/mesajı ve destek yanıtları, giden ileti kayıtlarındaki adres ve içerik, hesap taleplerinin gerekçe metni.
 - **Gerekçeyle saklananlar:**
   - Yasal onay kayıtları (`legal_acceptances`): sözleşme ve aydınlatma metni onayının ispatı.
-  - Yönetici denetim kaydı (`audit_log`) ve hesap durum geçmişi (`user_status_history`): yönetici işlemlerinin hesap verebilirliği. Bu tablolar değiştirilemez; içlerindeki önceki/sonraki değer alanları kişisel veri içerebilir. **Saklama süresi henüz tanımlı değil**, belirlenmesi önerilir.
+  - Yönetici denetim kaydı (`audit_log`) ve hesap durum geçmişi (`user_status_history`): yönetici işlemlerinin hesap verebilirliği; silinemez. Hesap silinince bu kayıtlardaki ad, telefon, e-posta ve kişinin yazdığı metin maskelenir (`backend/src/denetim_anonimlestirme.js`); işlem türü, zaman, yönetici, yöneticinin IP'si, hedef türü/kimliği ve durum geçişleri kalır. Hesabın durum gerekçesi ile kişinin ilan/yorumlarının kaldırma gerekçeleri de maskelenir. **Saklama süresi henüz tanımlı değil** (bkz. 5. bölüm).
   - Hesap silme talebinin kendisi (`account_requests`): talebin ne zaman alındığı ve uygulandığının kaydı.
   - Yıldız puanları ve iş satırları (kimlik numarası, tarih, durum): karşı tarafın geçmişi ve puan bütünlüğü için; kişiye bağlanamaz (hesap satırı anonim).
   - Karşı tarafın kendi yazdığı mesajlar: o kişinin verisidir.
@@ -41,3 +41,16 @@ Hazırlanma: 15 Ekim 2026 (güvenlik denetimi, karar 7). Bu belge **yalnız kayn
 3. Firebase: proje bölgesi (Firestore/Storage kullanılmıyor; Authentication bölgesizdir), etkin giriş yöntemleri, SMS bölge politikası.
 4. Yönetici panelinde etkin SMS/e-posta entegrasyonunun hangi sağlayıcı olduğu ve konumu.
 5. Sağlayıcılarla veri işleme sözleşmelerinin (DPA) kabul edildiği.
+
+## 5. Karar bekleyen saklama noktaları (süre uydurulmamıştır)
+
+| Kayıt | Silmeden sonra kalan | Neden tutuluyor | Karar verilmesi gereken |
+|---|---|---|---|
+| `audit_log` | İşlem, zaman, yönetici, yönetici IP'si, hedef kimliği, maskelenmiş gerekçe ve değerler | Yönetici işlemlerinin hesap verebilirliği, güvenlik olay incelemesi | Saklama süresi; süre sonunda tamamen silinmesi mi yoksa yalnız özet sayımların tutulması mı |
+| `user_status_history` | Eski/yeni durum, zaman, yönetici, maskelenmiş gerekçe | Askı/ban kararlarının ispatı ve itirazlar | Saklama süresi |
+| `legal_acceptances` | Sözleşme/aydınlatma sürümü, özet, platform, zaman | Onayın ispatı | Saklama süresi (sözleşme ilişkisinin bitişinden itibaren) |
+| `account_requests` | Talep ve uygulama zamanı (gerekçe metni silinir) | Silme talebinin ne zaman alınıp uygulandığının ispatı | Saklama süresi |
+| Anonim iş satırları ve yıldız puanları | Kimlik numaraları, tarih, durum, puan | Karşı tarafın geçmişi, puan bütünlüğü | Kişiye bağlanamaz; süre gerekip gerekmediği |
+| Render yedekleri ve sunucu günlükleri | Silinen verinin kopyası, yedek süresi boyunca | Sağlayıcı özelliği | Yedek/günlük saklama süresinin panelden doğrulanması ve aydınlatma metnine yazılması |
+
+Bu sürelerin hukukçuyla belirlenmesi, ardından süresi dolan kayıtları silen bir bakım işinin eklenmesi gerekir. Değiştirilemezlik tetikleyicileri bugün silmeye izin vermez; süre kararı verildiğinde yalnız süresi dolmuş kayıtların silinmesine izin veren bir göç eklenmelidir.

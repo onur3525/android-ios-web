@@ -145,13 +145,62 @@ async function yonetimIstegi(islem, govde) {
     signal: AbortSignal.timeout(10000),
   });
   const j = await r.json().catch(() => ({}));
-  return { ok: r.ok, durum: r.status, kod: String(j?.error?.message ?? '') };
+  return { ok: r.ok, durum: r.status, kod: String(j?.error?.message ?? ''), veri: j };
 }
 
-/** Firebase kullanıcısının şifresini (mevcut şifre olmadan) ayarlar; başarısızsa fırlatır. */
-export async function firebaseSifreAyarla(uid, yeni) {
-  const r = await yonetimIstegi('update', { localId: uid, password: yeni });
+/** Sunucunun Firebase kullanıcılarını yönetebilir olup olmadığı (servis hesabı ya da test kancası). */
+export function firebaseYonetimiHazir() {
+  return !!yonetimTestGondericisi || !!ortamServisHesabi();
+}
+
+/**
+ * Firebase kullanıcısının şifresini (mevcut şifre olmadan) ayarlar; başarısızsa
+ * fırlatır. `gecerlilikSn` verilirse AYNI çağrıda yenileme belirteçleri de
+ * iptal edilir (bkz. firebaseOturumlariniIptalEt) — şifre ile iptal ayrışmaz.
+ */
+export async function firebaseSifreAyarla(uid, yeni, { gecerlilikSn } = {}) {
+  const r = await yonetimIstegi('update', { localId: uid, password: yeni, ...(gecerlilikSn ? { validSince: String(gecerlilikSn) } : {}) });
   if (!r.ok) throw new Error(`Firebase şifresi ayarlanamadı (HTTP ${r.durum})`);
+}
+
+// ── ⚠ FIREBASE OTURUM İPTALİ (15 Eki güvenlik denetimi) ──
+//
+// Firebase Admin SDK'nın `revokeRefreshTokens(uid)` yöntemi Identity
+// Toolkit'e `accounts:update { localId, validSince: <şimdi, saniye> }` gönderir;
+// `verifyIdToken(token, checkRevoked=true)` ise `accounts:lookup` ile kullanıcıyı
+// okuyup `disabled` ve `auth_time < validSince` durumunda belgeyi reddeder.
+// Backend'in tek bağımlılığı `pg` olduğu için (npm paketi kurulmaz) AYNI REST
+// çağrıları servis hesabıyla doğrudan yapılır; davranış birebir aynıdır.
+
+/** Kullanıcının bütün Firebase yenileme belirteçlerini iptal eder; başarısızsa fırlatır. */
+export async function firebaseOturumlariniIptalEt(uid, gecerlilikSn) {
+  const r = await yonetimIstegi('update', { localId: uid, validSince: String(gecerlilikSn) });
+  if (!r.ok) throw new Error(`Firebase oturumları iptal edilemedi (HTTP ${r.durum})`);
+}
+
+/** Firebase kullanıcısının telefonunu (E.164) ayarlar; başarısızsa fırlatır. */
+export async function firebaseTelefonAyarla(uid, e164) {
+  const r = await yonetimIstegi('update', { localId: uid, phoneNumber: e164 });
+  if (!r.ok) throw new Error(`Firebase telefonu güncellenemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 40)}` : ''})`);
+}
+
+/**
+ * Firebase kullanıcı kaydı: { validSince (saniye|null), disabled, phoneNumber }.
+ * Kullanıcı yoksa null; ağ/sağlayıcı hatasında fırlatır.
+ */
+export async function firebaseKullaniciBilgisi(uid) {
+  const r = await yonetimIstegi('lookup', { localId: [uid] });
+  if (!r.ok) {
+    if (r.kod.startsWith('USER_NOT_FOUND')) return null;
+    throw new Error(`Firebase kullanıcısı okunamadı (HTTP ${r.durum})`);
+  }
+  const k = r.veri?.users?.[0];
+  if (!k) return null;
+  const vs = Number(k.validSince);
+  return {
+    validSince: Number.isFinite(vs) && vs > 0 ? vs : null, disabled: k.disabled === true, phoneNumber: k.phoneNumber ?? null,
+    email: k.email ?? null, saglayicilar: Array.isArray(k.providerUserInfo) ? k.providerUserInfo.map((p) => p.providerId) : [],
+  };
 }
 
 /** Firebase kullanıcısını siler. Zaten yoksa başarı sayılır; başka hatada fırlatır. */

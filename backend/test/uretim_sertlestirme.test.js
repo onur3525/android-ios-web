@@ -201,6 +201,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     ['GET', '/admin/v1/support/tickets', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/feedback', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/integrations', ['super_admin', 'operations']],
+    ['GET', '/admin/v1/deletion-queues', ['super_admin', 'operations']],
     ['GET', '/admin/v1/admins', ['super_admin']],
     ['GET', '/admin/v1/audit-log', ['super_admin']],
   ];
