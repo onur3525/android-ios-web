@@ -204,10 +204,10 @@ class ProfileScreen extends StatelessWidget {
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pdoc.svg',
           iconBg: const Color(0xFFE2F7FA),
-          title: 'Kullanım Koşulları',
+          title: 'Kullanım Sözleşmesi',
           subtitle: 'Uygulama kullanım koşullarını inceleyin.',
           onTap: () => Navigator.pushNamed(c, '/legal',
-              arguments: {'slug': 'terms', 'title': 'Kullanım Koşulları'}),
+              arguments: {'slug': 'terms', 'title': 'Kullanım Sözleşmesi'}),
         ),
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pshield.svg',

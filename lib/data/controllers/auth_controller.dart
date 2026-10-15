@@ -73,8 +73,6 @@ class AuthController extends BaseController {
     Set<String> serviceDistricts = const {},
     /// Sözleşme + gizlilik onayı — ZORUNLU.
     bool termsAccepted = false,
-    /// "18 yaşından büyüğüm" beyanı — ZORUNLU (15 Eki).
-    bool ageConfirmed = false,
     /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
 
@@ -95,7 +93,6 @@ class AuthController extends BaseController {
         otpCode: otpCode, name: name, email: email,
         categories: categories, serviceDistricts: serviceDistricts,
         termsAccepted: termsAccepted,
-        ageConfirmed: ageConfirmed,
         emailVerified: emailVerified,
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,

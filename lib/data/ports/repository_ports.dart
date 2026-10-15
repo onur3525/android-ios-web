@@ -99,12 +99,9 @@ abstract class AuthPort extends ChangeNotifier {
     // Bu üç alan HizmetCep'in kayıt kurallarının parçasıdır ve
     // domain → port → controller → UI zincirinin TAMAMINDA taşınır.
 
-    /// Kullanım Sözleşmesi + Gizlilik Politikası onayı (ZORUNLU).
+    /// Kullanım Sözleşmesi onayı (ZORUNLU). 18 yaş koşulu sözleşmenin
+    /// 4. maddesindedir; ayrı yaş beyanı alınmaz (16 Eki).
     bool termsAccepted,
-
-    /// "18 yaşından büyüğüm" beyanı (ZORUNLU, 15 Eki işletmeci kararı).
-    /// Doğum tarihi toplanmaz; beyan sunucuda zorunludur.
-    bool ageConfirmed,
 
     /// Yalnız gerçek doğrulama tamamlanınca true olur.
     bool emailVerified,

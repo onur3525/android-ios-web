@@ -331,26 +331,18 @@ class ApiAuthPort extends AuthPort {
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
     bool termsAccepted = false,
-    bool ageConfirmed = false,
     bool emailVerified = false,
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async {
-    // ⚠ Sözleşme onayı ve 18 yaş beyanı SUNUCUDA da doğrulanır (15 Eki;
+    // ⚠ Sözleşme onayı SUNUCUDA da doğrulanır (15 Eki;
     // önceden sunucu onayı denetlemiyordu). Buradaki erken çıkış
     // kullanıcıya hızlı geri bildirim içindir.
     if (!termsAccepted) {
       return (
         account: null,
         error: const ValidationError(
-            'Kullanım sözleşmesi ve gizlilik politikası onayı zorunludur'),
-      );
-    }
-    if (!ageConfirmed) {
-      return (
-        account: null,
-        error: const ValidationError(
-            'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir'),
+            'Kullanım Sözleşmesi onayı zorunludur'),
       );
     }
     // otpVerified mock akışının kalıntısıdır; sunucu OTP kodunu kendi doğrular.
@@ -359,8 +351,7 @@ class ApiAuthPort extends AuthPort {
         email: email, role: role, otpCode: otpCode,
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
         firebaseIdToken: kayitYetkisi,
-        termsAccepted: termsAccepted,
-        ageConfirmed: ageConfirmed);
+        termsAccepted: termsAccepted);
     if (err != null) {
       return (account: null, error: err);
     }

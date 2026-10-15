@@ -123,9 +123,12 @@ void main() {
     });
 
     test('gerçek onay kutusu + mavi yasal bağlantılar', () {
-      expect(src.contains('RefAgreeRow'), isTrue);
-      expect(src.contains("'slug': 'terms'"), isTrue);
-      expect(src.contains("'slug': 'privacy'"), isTrue);
+      // 16 Eki: satır tek kaynağa taşındı (`KullanimSozlesmesiOnayi`).
+      expect(src.contains('KullanimSozlesmesiOnayi('), isTrue);
+      final o = read('lib/ui/kullanim_sozlesmesi_onayi.dart');
+      expect(o.contains('RefAgreeRow('), isTrue);
+      expect(o.contains("'slug': 'terms'"), isTrue);
+      expect(o.contains("'slug': 'privacy'"), isTrue);
     });
 
     // ⚠ "veya" ayırıcısı + Google düğmesi KALDIRILDI (ürün kararı:

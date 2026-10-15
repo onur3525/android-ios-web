@@ -31,6 +31,7 @@ import '../data/remote/api_config.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/alt_panel.dart';
+import '../ui/kullanim_sozlesmesi_onayi.dart';
 import '../ui/panel_rotasi.dart';
 
 /// Kayıt Adım 1 — HTML kayıt formlarının birebir karşılığı.
@@ -113,9 +114,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Set<String> _provDistricts = {}; // sağlayıcı ilçeleri
   bool _agree = false;
 
-  /// "18 yaşından büyüğüm" beyanı (15 Eki, işletmeci kararı: asgari yaş 18).
-  /// Doğum tarihi istenmez; beyan sunucuda da zorunludur.
-  bool _yas = false;
 
   /// Seçili il — sunucudan gelen aktif iller arasından seçilir.
   /// ⚠ HARD-CODE DEĞİLDİR; tek il varsa kendiliğinden seçilir.
@@ -727,7 +725,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   /// Gönderim koşulu: zorunlu alanlar TAMAM **ve** sözleşme onaylı.
-  bool get _formTamam => _alanlarTamam && _agree && _yas;
+  bool get _formTamam => _alanlarTamam && _agree;
 
   /// ZORUNLU ALANLAR TAMAM MI? (sözleşme HARİÇ)
   ///
@@ -804,11 +802,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_agree) {
       sysToastErr(context, SysKind.genericError,
           extra: 'Devam etmek için sözleşmeyi onaylayınız');
-      return;
-    }
-    if (!_yas) {
-      sysToastErr(context, SysKind.genericError,
-          extra: 'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir');
       return;
     }
     setState(() => _busy = true);
@@ -894,8 +887,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // verilmiyor (varsayılan false).
                 // Sözleşme onayı domain katmanına İLETİLİR:
                 // yalnız UI kontrolüne güvenilmez.
-                termsAccepted: _agree,
-                ageConfirmed: _yas);
+                termsAccepted: _agree);
             if (!otpContext.mounted) {
               return;
             }
@@ -1800,11 +1792,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       (x) => Validators.passwordRepeat(x, _pass.text)),
                 ),
                 const SizedBox(height: 8),
-                // `.rg-agree` — GERÇEK onay kutusu + mavi yasal bağlantılar
+                // `.rg-agree` — KULLANIM SÖZLEŞMESİ ONAYI (tek kaynak:
+                // `ui/kullanim_sozlesmesi_onayi.dart`). 16 Eki: ayrı 18 yaş
+                // kutusu kaldırıldı — yaş koşulu sözleşmenin 4. maddesinde.
                 ValueListenableBuilder<bool>(
-                  key: _sozlesmeKaydirKey,
                   valueListenable: _alanlarGecerli,
-                  builder: (_, alanlarTamam, __) => RefAgreeRow(
+                  builder: (_, alanlarTamam, __) => KullanimSozlesmesiOnayi(
+                  key: _sozlesmeKaydirKey,
                   // ⚠ Zorunlu alanlar bitmeden işaretlenemez.
                   enabled: alanlarTamam,
                   value: _agree,
@@ -1818,44 +1812,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     setState(() => _agree = v);
                     _tazele();
                   },
-                  parts: [
-                    (
-                      text: 'Kullanım sözleşmesi',
-                      onTap: () => Navigator.pushNamed(context, '/legal',
-                          arguments: {
-                            'slug': 'terms',
-                            'title': 'Kullanım Koşulları'
-                          }),
-                    ),
-                    (text: ' ve ', onTap: null),
-                    (
-                      text: 'gizlilik politikasını',
-                      onTap: () => Navigator.pushNamed(context, '/legal',
-                          arguments: {
-                            'slug': 'privacy',
-                            'title': 'Gizlilik Politikası'
-                          }),
-                    ),
-                    (text: ' okudum, kabul ediyorum.', onTap: null),
-                  ],
-                  ),
-                ),
-                // ── 18 YAŞ BEYANI (15 Eki, işletmeci kararı) ──
-                // Sözleşme onayıyla AYNI bileşen ve AYNI kural: zorunlu
-                // alanlar bitmeden işaretlenemez. Ayrı satır: yaş bir
-                // beyandır, sözleşme onayının içine gömülmez.
-                ValueListenableBuilder<bool>(
-                  valueListenable: _alanlarGecerli,
-                  builder: (_, alanlarTamam, __) => RefAgreeRow(
-                    enabled: alanlarTamam,
-                    value: _yas,
-                    onChanged: (v) {
-                      setState(() => _yas = v);
-                      _tazele();
-                    },
-                    parts: const [
-                      (text: '18 yaşını doldurduğumu beyan ederim.', onTap: null),
-                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
