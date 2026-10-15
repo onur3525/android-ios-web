@@ -187,9 +187,18 @@ void main() {
         'lib/screens/chat_screen.dart',
       ]) {
         expect(_kod(yol).contains('TelefonBicimlendirici.gruplu') ||
-            _kod(yol).contains('Validators.phoneLocal'), isTrue,
+            _kod(yol).contains('Validators.phoneLocal') ||
+            // ⚠ 15 Eki: Profil gösterimi ortak `telefonGoster`e taşındı
+            // (kenar çubuğu da kullanıyor); işlevin kendisi aşağıda denetlenir.
+            _kod(yol).contains('telefonGoster('), isTrue,
             reason: '$yol: telefon gösterim biçimi değişmiş');
       }
+      // Ortak gösterim işlevi de aynı gruplu biçimi kullanmalı.
+      final ortak = _kod('lib/core/telefon_bicimi.dart');
+      final i = ortak.indexOf('String telefonGoster(');
+      expect(i, isNot(-1));
+      expect(ortak.substring(i).contains('TelefonBicimlendirici.gruplu(d)'), isTrue,
+          reason: 'telefonGoster gruplu biçimi kullanmıyor');
     });
   });
 }
