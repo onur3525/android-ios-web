@@ -26,26 +26,43 @@ class MyAreasScreen extends StatefulWidget {
 class _MyAreasScreenState extends State<MyAreasScreen> {
   final _search = TextEditingController();
   Set<String> _selected = {};
-  bool _loaded = false;
   bool _saving = false;
   String? _error;
 
+  /// ── ⚠ KAYITLI BÖLGELER GÖRÜNÜR (16 Eki, kullanıcı bulgusu) ──
+  ///
+  /// Kayıtta seçilen ilçeler bu ekranda işaretli gelmiyordu: il ve
+  /// seçim ekran açılırken BİR KEZ okunuyordu. Bölge ağacı ya da hesap o
+  /// an hazır değilse il "Seçiniz", liste "İlçe bulunamadı" kalıyor ve
+  /// veri sonradan gelse de ekran yenilenmiyordu. Ayrıca birden çok il
+  /// varken varsayılan il kayıtlı ilçelerin ili olmayabiliyordu.
+  ///
+  /// Artık kullanıcı dokunana kadar seçim HESAPTAN, il de kayıtlı
+  /// ilçelerin bulunduğu ilden (`ilceleriIcerenIl`) her çizimde eşitlenir.
+  /// Kullanıcı bir değişiklik yaptığında onun seçimi korunur.
+  bool _secimDegisti = false;
+  bool _ilDegisti = false;
+
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_loaded) {
-      return;
+  void initState() {
+    super.initState();
+    // Bölge ağacı yüklenmemişse (açılışta ağ hatası) yeniden istenir;
+    // yüklüyse `load` hiçbir şey yapmaz.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<RegionController>().load();
+      }
+    });
+  }
+
+  /// Kullanıcı dokunmadıysa seçimi ve ili kayıtlı veriden eşitler.
+  void _kayitliyaEsitle(RegionController r, ProfileController p) {
+    if (!_secimDegisti) {
+      _selected = {...p.districts};
     }
-    _loaded = true;
-    // Mevcut kayıtlar yüklenir.
-    _selected = {...context.read<ProfileController>().districts};
-    // ⚠ İL ARTIK SEÇİLEBİLİR (Rol Değiştir sayfasıyla AYNI kural).
-    //
-    // Bu ekran ili salt okunur gösteriyordu; Rol Değiştir sayfasında
-    // ise il seçilebiliyordu. İki ekran aynı bilgiyi farklı kuralla
-    // yönetiyordu — biri güncellenince diğeri geride kalıyordu.
-    final r = context.read<RegionController>();
-    _il = r.soleCityName ?? r.cityName;
+    if (!_ilDegisti) {
+      _il = r.ilceleriIcerenIl(_selected) ?? r.soleCityName ?? r.cityName;
+    }
   }
 
   /// Hizmet verilen İL — TEK seçim. Değişirse ilçeler temizlenir.
@@ -59,9 +76,10 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
 
   /// Tüm ilçeler seçili mi?
   /// GETTER build sırasında da callback'ten de çağrılabilir → read kullanılır.
-  bool get _allSelected =>
-      _selected.length ==
-      context.read<RegionController>().districtsOf(_il).length;
+  bool get _allSelected {
+    final ds = context.read<RegionController>().districtsOf(_il);
+    return ds.isNotEmpty && ds.every(_selected.contains);
+  }
 
   List<String> get _visible {
     final q = _search.text.trim().toLowerCase();
@@ -180,6 +198,8 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
     }
     // ⚠ İl değişince ilçe seçimi SIFIRLANIR: başka ilin ilçeleri
     setState(() {
+      _ilDegisti = true;
+      _secimDegisti = true;
       _il = yeni;
       _selected = {};
     });
@@ -187,6 +207,7 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
 
   void _toggle(String d) {
     setState(() {
+      _secimDegisti = true;
       if (_selected.contains(d)) {
         _selected.remove(d);
       } else {
@@ -198,11 +219,14 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
 
   void _selectAll() => setState(() {
         // CALLBACK: watch kullanılamaz.
-        _selected = {...context.read<RegionController>().districts};
+        // ⚠ SEÇİLİ İLİN tüm ilçeleri (varsayılan ilin değil).
+        _secimDegisti = true;
+        _selected = {...context.read<RegionController>().districtsOf(_il)};
         _error = null;
       });
 
   void _clearAll() => setState(() {
+        _secimDegisti = true;
         _selected.clear();
         _error = null;
       });
@@ -236,6 +260,10 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ⚠ WATCH: bölge ağacı ya da hesap sonradan gelirse ekran yenilenir.
+    final bolge = context.watch<RegionController>();
+    _kayitliyaEsitle(bolge, context.watch<ProfileController>());
+    final bolgeYukleniyor = !bolge.hasData && bolge.isBusy('regions');
 
     return Scaffold(
               // ⚠ PANELDE ZEMİN SAYDAM: `Scaffold` beyaz boyadığı için
@@ -415,7 +443,14 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
                       bottom: Radius.circular(RR.r15)),
                 ),
                 padding: const EdgeInsets.fromLTRB(15, 0, 15, 8),
-                child: _visible.isEmpty
+                child: bolgeYukleniyor
+                ? const Center(child: CircularProgressIndicator())
+                : !bolge.hasData
+                ? Center(
+                    child: SysState(SysKind.serverUnreachable,
+                        onAction: bolge.retry),
+                  )
+                : _visible.isEmpty
                 ? const Center(
                     child: SysState(SysKind.empty,
                         title: 'İlçe bulunamadı',
