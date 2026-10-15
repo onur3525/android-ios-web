@@ -21,7 +21,9 @@ test('izinli köken: ön kontrol 204 + izinler, gerçek istekte köken yansıtı
   assert.equal(on.headers.get('access-control-allow-origin'), 'https://hizmetcep.com');
   assert.match(on.headers.get('access-control-allow-headers'), /Authorization/);
   assert.match(on.headers.get('access-control-allow-headers'), /Idempotency-Key/);
-  assert.equal(on.headers.get('access-control-allow-credentials'), null);
+  assert.match(on.headers.get('access-control-allow-headers'), /X-HC-Web/);
+  // Web oturum yenileme çerezi için (yalnız izin listesindeki kökene).
+  assert.equal(on.headers.get('access-control-allow-credentials'), 'true');
   const g = await fetch(taban + '/api/v1/categories', { headers: { Origin: 'https://hizmetcep.com' } });
   assert.equal(g.status, 200);
   assert.equal(g.headers.get('access-control-allow-origin'), 'https://hizmetcep.com');
@@ -32,6 +34,7 @@ test('izinsiz köken ve admin yolu: CORS başlığı YOK', async () => {
   for (const o of ['https://kotu.example', 'https://onur3525.github.io', 'null']) {
     const r = await fetch(taban + '/api/v1/categories', { headers: { Origin: o } });
     assert.equal(r.headers.get('access-control-allow-origin'), null, o);
+    assert.equal(r.headers.get('access-control-allow-credentials'), null, o);
   }
   const on = await fetch(taban + '/api/v1/categories', { method: 'OPTIONS', headers: { Origin: 'https://kotu.example' } });
   assert.equal(on.headers.get('access-control-allow-origin'), null);

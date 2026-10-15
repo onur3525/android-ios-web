@@ -83,20 +83,23 @@ export function uygulamaKur(db) {
     const yol = url.pathname;
     const cerezler = [];
     // ── CORS (yalnız kullanıcı API'si ve gerçek zamanlı yol) ──
-    // İzin listesindeki tam köken yansıtılır; kimlik çerezle değil Bearer
-    // ile taşındığı için Allow-Credentials VERİLMEZ. Admin yolları kapsam dışı.
+    // İzin listesindeki tam köken yansıtılır ('*' yok). Kimlik Bearer ile
+    // taşınır; YALNIZ web istemcisinin oturum yenileme çerezi (hc_rt,
+    // HttpOnly) için Allow-Credentials verilir — bu da yalnız izin
+    // listesindeki kökenlere. Admin yolları kapsam dışı.
     const corsYolu = yol.startsWith('/api/v1/') || yol.startsWith('/socket.io/');
     const koken = req.headers.origin;
     const corsIzinli = corsYolu && typeof koken === 'string' && config.corsKokenleri.includes(koken);
     if (corsIzinli) {
       res.setHeader('Access-Control-Allow-Origin', koken);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Vary', 'Origin');
     }
     if (req.method === 'OPTIONS' && corsYolu) {
       if (corsIzinli) {
         res.writeHead(204, {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key, X-HC-Web',
           'Access-Control-Max-Age': '600',
         });
       } else {

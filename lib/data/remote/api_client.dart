@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
@@ -37,6 +38,12 @@ class ApiClient {
 
   final void Function()? onSessionExpired;
 
+  /// WEB OTURUMU (15 Eki): yenileme token'ı sunucunun koyduğu HttpOnly
+  /// çerezdedir (JavaScript okuyamaz). İstekler `X-HC-Web: 1` başlığıyla
+  /// gider; yenileme gövdesiz yapılır (sekmeler arası ortak, hep güncel
+  /// çerez kullanılır). Mobilde false: davranış AYNEN.
+  final bool cerezliOturum;
+
   ApiClient({
     http.Client? httpClient,
     TokenStore? tokenStore,
@@ -45,7 +52,9 @@ class ApiClient {
     OnlineChecker? onlineChecker,
     String? baseUrl,
     this.onSessionExpired,
-  })  : // ── ⚠ SERTİFİKA SABİTLEME ──
+    bool? cerezliOturum,
+  })  : cerezliOturum = cerezliOturum ?? kIsWeb,
+        // ── ⚠ SERTİFİKA SABİTLEME ──
         //
         // Pin verilmişse istekler sabitlemeli istemciden geçer; pin
         // yoksa davranış DEĞİŞMEZ (normal sistem doğrulaması).
@@ -134,6 +143,7 @@ class ApiClient {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
+      if (cerezliOturum) 'X-HC-Web': '1',
     };
     final token = await tokens.accessToken();
     if (token != null) {
@@ -262,16 +272,28 @@ class ApiClient {
     });
   }
 
+  /// WEB AÇILIŞI: bellekte token yokken oturumu HttpOnly çerezle sürdürür
+  /// (sayfa yenilendi / sekme yeniden açıldı). Başarıda token'lar belleğe
+  /// alınır. Mobilde ya da çerez geçersizse false.
+  Future<bool> cerezleOturumuSurdur() =>
+      cerezliOturum ? _refreshOnce() : Future.value(false);
+
   Future<bool> _doRefresh() async {
-    final rt = await tokens.refreshToken();
-    if (rt == null) {
+    // Web: token gövdede gönderilmez; sunucu çerezden okur. Bellekteki eski
+    // bir kopya (başka sekme döndürmüş olabilir) yeniden kullanım sayılırdı.
+    final rt = cerezliOturum ? null : await tokens.refreshToken();
+    if (rt == null && !cerezliOturum) {
       return false;
     }
     try {
       final res = await _http
           .post(Uri.parse('$baseUrl/auth/refresh'),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'refreshToken': rt}))
+              headers: {
+                'Content-Type': 'application/json',
+                if (cerezliOturum) 'X-HC-Web': '1',
+              },
+              body: jsonEncode(
+                  rt == null ? <String, String>{} : {'refreshToken': rt}))
           .timeout(ApiConfig.receiveTimeout);
       if (res.statusCode < 200 || res.statusCode >= 300) {
         return false;

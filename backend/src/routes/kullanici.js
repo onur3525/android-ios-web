@@ -17,7 +17,7 @@ import { simdi } from '../db.js';
 import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
-import { ApiHatasi, HizSiniri, hata, istemciIp } from '../http.js';
+import { ApiHatasi, HizSiniri, cerez, cerezleriOku, hata, istemciIp } from '../http.js';
 import { jwtDogrula, jwtImzala } from '../jwt.js';
 import { olaylar } from '../olaylar.js';
 import { firebaseSifreDegistir, firebaseSifreDogrula, firebaseTokenDogrula } from '../firebase_token.js';
@@ -160,6 +160,35 @@ async function oturumVer(db, kullaniciId, req) {
     istemciIp(req), String(req.headers['user-agent'] ?? '').slice(0, 200));
   return { accessToken: erisimTokeni(kullaniciId, jti), refreshToken: yenileme };
 }
+// ── WEB OTURUMU: HttpOnly YENİLEME ÇEREZİ (15 Eki) ──
+// Web istemcisi (X-HC-Web: 1) yenileme token'ını KALICI depoya yazmaz
+// (güvenlik turu M-05); oturumun sayfa yenilenince/sekme kapanınca
+// sürmesi için sunucu token'ı JavaScript'in okuyamadığı bir çereze koyar.
+//   · HttpOnly + Secure; yalnız /api/v1/auth yoluna gider.
+//   · SameSite=None: test sitesi (github.io) ile API farklı sitelerde.
+//     CSRF koruması: çerez YALNIZ X-HC-Web başlığıyla kabul edilir; özel
+//     başlık CORS ön kontrolünü zorunlu kılar ve yalnız izin listesindeki
+//     kökenler geçer. Yanıtı da yalnız onlar okuyabilir.
+//   · Mobil istemci (başlıksız) davranışı AYNEN: çerez yazılmaz/okunmaz.
+const YENILEME_CEREZI = 'hc_rt';
+const yenilemeCerezAyari = { secure: true, path: '/api/v1/auth', sameSite: 'None' };
+const webIstemcisi = (req) => req.headers['x-hc-web'] === '1';
+function yenilemeCereziYaz(ctx, rt) {
+  if (webIstemcisi(ctx.req)) {
+    ctx.cerezEkle(cerez(YENILEME_CEREZI, rt, { ...yenilemeCerezAyari, maxAgeSn: Math.floor(config.yenilemeSuresi / 1000) }));
+  }
+}
+function yenilemeCereziSil(ctx) {
+  if (webIstemcisi(ctx.req)) {
+    ctx.cerezEkle(cerez(YENILEME_CEREZI, '', { ...yenilemeCerezAyari, maxAgeSn: 0 }));
+  }
+}
+/** Oturum yanıtı: web istemcisine yenileme çerezi de yazılır. */
+function oturumYaniti(ctx, oturum) {
+  yenilemeCereziYaz(ctx, oturum.refreshToken);
+  return oturum;
+}
+
 function erisimTokeni(kullaniciId, jti) {
   return jwtImzala({ sub: kullaniciId, jti, exp: Math.floor((Date.now() + config.erisimSuresi) / 1000) });
 }
@@ -340,7 +369,7 @@ export function kullaniciRotalar(r, db) {
     ).run(id, tel, mail, isim, await sifreOzetleAsenkron(sifre),
       kanit.yuk?.email_verified === true && String(kanit.yuk.email || '').toLowerCase() === mail ? 1 : 0,
       rol, rol, z, z, kanit.uid);
-    return oturumVer(db, id, ctx.req);
+    return oturumYaniti(ctx, await oturumVer(db, id, ctx.req));
   });
 
   // ── GİRİŞ ──
@@ -366,12 +395,24 @@ export function kullaniciRotalar(r, db) {
     }
     durumKapisi(u);
     await db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(u.id);
-    return oturumVer(db, u.id, ctx.req);
+    return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req));
   });
 
   // ── YENİLEME (rotasyon + yeniden kullanım tespiti) ──
   r.post('/api/v1/auth/refresh', async (ctx) => {
-    const rt = String(ctx.body.refreshToken ?? '');
+    try {
+      return oturumYaniti(ctx, await yenile(ctx));
+    } catch (e) {
+      // Geçersiz/iptal edilmiş çerez tarayıcıda kalmasın.
+      if (e instanceof ApiHatasi && e.durum === 401) yenilemeCereziSil(ctx);
+      throw e;
+    }
+  });
+  async function yenile(ctx) {
+    // Web: token gövdede DEĞİL çerezde gelir (sekmeler arası ortak ve hep
+    // güncel; eski bir bellek kopyası yeniden kullanım sayılmaz).
+    const rt = String(ctx.body.refreshToken ?? '')
+      || (webIstemcisi(ctx.req) ? String(cerezleriOku(ctx.req)[YENILEME_CEREZI] ?? '') : '');
     const o = rt ? await db.prepare('SELECT * FROM user_sessions WHERE refresh_hash = ?').get(ozet(rt)) : null;
     if (!o) throw hata.kimlik();
     if (o.revoked_at) {
@@ -399,7 +440,7 @@ export function kullaniciRotalar(r, db) {
       ).run(yeniJti, u.id, ozet(yeni), o.created_at, z, o.expires_at, ctx.ip, o.user_agent);
     });
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
-  });
+  }
 
   // ── FIREBASE İLE OTURUM ──
   // Firebase kimliği doğrular (telefon OTP ya da e-posta/şifre); HizmetCep
@@ -434,11 +475,12 @@ export function kullaniciRotalar(r, db) {
     await db.prepare(`UPDATE users SET firebase_uid = ?, email_verified = CASE WHEN ? THEN TRUE ELSE email_verified END,
                         failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?`)
       .run(yuk.sub, epostaDogru ? 1 : 0, simdi(), u.id);
-    return oturumVer(db, u.id, ctx.req);
+    return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req));
   });
 
   r.post('/api/v1/auth/logout', korumali(async (ctx) => {
     await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'LOGOUT' WHERE id = ?`).run(simdi(), ctx.kOturum.id);
+    yenilemeCereziSil(ctx);
     // Bu oturumla açılmış gerçek zamanlı bağlantı da kapanır.
     await olaylar.yayinla('user.sessions.revoked', { userId: ctx.kullanici.id, oturumId: ctx.kOturum.id });
     return undefined;
