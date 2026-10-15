@@ -132,9 +132,17 @@ void main() {
           reason: 'context guard setState sonrasında olmalı');
     });
 
-    test('job_detail: toast öncesi context guard', () {
+    test('job_detail: async sonrası toast guard içinde', () {
+      // 15 Eki: hizmet verenin "İletişimi Aç" akışı kaldırıldı (iletişimi
+      // ilan sahibi açar); ekranda kalan tek async → toast akışı teklif
+      // gönderimidir ve State guard'ı ardından toast gösterir.
       final k = _oku('lib/screens/job_detail_screen.dart');
-      expect(k.contains('if (!context.mounted) {'), isTrue);
+      expect(k.contains('.openShared('), isFalse);
+      final i = k.indexOf('.placeOffer(');
+      final iGuard = k.indexOf('if (!mounted) {', i);
+      final iToast = k.indexOf("sysToastOk(context, 'Teklifiniz gönderildi')", i);
+      expect(iGuard, greaterThan(i));
+      expect(iToast, greaterThan(iGuard));
     });
 
     test('Scrollable.ensureVisible öncesi c.mounted', () {
