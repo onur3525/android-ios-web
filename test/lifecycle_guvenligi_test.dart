@@ -133,11 +133,18 @@ void main() {
     });
 
     test('job_detail: async sonrası toast guard içinde', () {
-      // 15 Eki: hizmet verenin "İletişimi Aç" akışı kaldırıldı (iletişimi
-      // ilan sahibi açar); ekranda kalan tek async → toast akışı teklif
-      // gönderimidir ve State guard'ı ardından toast gösterir.
+      // 16 Eki: hizmet verenin "İletişimi Aç" akışı geri geldi (iki taraf
+      // açar). İki async → toast akışı da guard'lı: iletişim açma
+      // (State + context guard) ve teklif gönderimi (State guard).
       final k = _oku('lib/screens/job_detail_screen.dart');
-      expect(k.contains('.openShared('), isFalse);
+      final a = k.indexOf('.openShared(mine.id, actorId: me.id)');
+      expect(a, greaterThan(0));
+      final aMounted = k.indexOf('if (!mounted) {', a);
+      final aContext = k.indexOf('if (!context.mounted) {', a);
+      final aToast = k.indexOf("sysToastOk(context, 'İletişim bilgileri açıldı')", a);
+      expect(aMounted, greaterThan(a));
+      expect(aContext, greaterThan(aMounted));
+      expect(aToast, greaterThan(aContext));
       final i = k.indexOf('.placeOffer(');
       final iGuard = k.indexOf('if (!mounted) {', i);
       final iToast = k.indexOf("sysToastOk(context, 'Teklifiniz gönderildi')", i);

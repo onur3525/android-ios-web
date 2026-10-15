@@ -135,16 +135,13 @@ void main() {
   });
 
   group('Ortak iletişim (tek tüketim)', () {
-    test('⚠ 15 Eki: hizmet veren tek taraflı AÇAMAZ; ilan sahibi açınca iki taraf için açılır', () async {
+    test('⚠ 16 Eki: hizmet veren de açar; açılınca iki taraf için açıktır', () async {
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
       final o = offerCtl.myOfferFor(l.id, p1)!;
-      expect(await contactCtl.openShared(o.id, actorId: p1), isA<UnauthorizedError>());
-      expect(contactCtl.isOpen(o.id), isFalse, reason: 'müşterinin numarası onun onayı olmadan açılmaz');
-
-      expect(await contactCtl.openShared(o.id, actorId: cust), isNull); // müşteri açtı
+      expect(await contactCtl.openShared(o.id, actorId: p1), isNull); // usta açtı
       expect(contactCtl.isOpen(o.id), isTrue);
-      expect(await contactCtl.openShared(o.id, actorId: p1), isNull); // açıkken durum → no-op
+      expect(await contactCtl.openShared(o.id, actorId: cust), isNull); // açıkken → no-op
       expect(contactCtl.isOpen(o.id), isTrue);
     });
 
