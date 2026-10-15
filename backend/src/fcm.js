@@ -86,7 +86,10 @@ export function mesajGovdesi(n) {
   return {
     notification: { title: n.title, body: n.body },
     data,
-    android: { priority: 'HIGH' },
+    // 16 Eki: durum çubuğunda ve bildirim başlığında beyaz kare yerine
+    // HizmetCep logosu (tek renk, `res/drawable-*/ic_stat_hizmetcep.png`;
+    // manifestte de varsayılan). Renk marka mavisi (`hc_blue`).
+    android: { priority: 'HIGH', notification: { icon: 'ic_stat_hizmetcep', color: '#1D6BE3' } },
     apns: { payload: { aps: { sound: 'default' } } },
   };
 }

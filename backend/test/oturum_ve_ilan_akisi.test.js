@@ -135,6 +135,11 @@ test('yeni ilan: kategorisi ve ilçesi eşleşen hizmet verene bildirim + push k
   const govde = mesajGovdesi(b);
   assert.ok(govde.notification.title && govde.notification.body, 'bildirim yükü: uygulama kapalıyken de sistem bildirimi gösterilir');
   assert.deepEqual([govde.data.hedef, govde.data.id], ['is', l.json.id]);
+  // 16 Eki: örnekteki metin; adres paylaşılmaz; durum çubuğunda logo.
+  assert.equal(govde.notification.title, 'Yeni bir hizmet talebi var!');
+  assert.equal(govde.notification.body, `"${hiz}" için yeni bir ilan yayınlandı. Hemen göz at!`);
+  assert.ok(!govde.notification.body.includes(ilce) && !govde.notification.body.includes('İzmir'), 'bildirimde adres yok');
+  assert.deepEqual(govde.android.notification, { icon: 'ic_stat_hizmetcep', color: '#1D6BE3' });
   assert.equal((await bildirimleri(kategoriSecen.id)).length, 1, 'kategorinin tamamını seçen de alır');
   for (const u of [baskaIlce, baskaHizmet, kurulmamis, alan]) assert.equal((await bildirimleri(u.id)).length, 0, u.id);
 
