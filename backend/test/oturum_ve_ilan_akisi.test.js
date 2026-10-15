@@ -66,18 +66,32 @@ test('web: iki sekme aynı çerezle aynı anda yenilerse ikisi de oturumda kalı
   assert.equal(Number((await db.prepare('SELECT COUNT(*) n FROM user_sessions WHERE user_id = ? AND revoked_at IS NULL').get(k.id)).n), 1);
 });
 
-test('mobil: yanıtı kaybolan yenileme 60 sn içinde tekrarlanabilir; pay dışında tekrar kullanım bütün oturumları kapatır', async () => {
+test('mobil: eski belirteç NE ZAMAN tekrarlanırsa tekrarlansın oturum sürer; süre kullanımla uzar; çıkıştan sonra reddedilir', async () => {
   const k = await kisi('5410000002', 'CUSTOMER');
   const y1 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } });
   assert.equal(y1.durum, 200);
-  // İstemci yanıtı alamadı, eski belirteçle yeniden denedi.
+  // Uygulama yanıtı alamadan kapandı; 3 gün sonra eski belirteçle açıldı.
+  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE user_id = ? AND revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 3 * 86_400_000).toISOString(), k.id);
   const y2 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } });
-  assert.equal(y2.durum, 200);
+  assert.equal(y2.durum, 200, 'mobilde şifre istenmez');
   assert.equal((await istek('/api/v1/users/me', { token: y2.json.accessToken })).durum, 200);
-  // Saldırgan aynı eski belirteci 2 dk sonra kullanırsa: tespit + bütün oturumlar.
-  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE user_id = ? AND revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 120_000).toISOString(), k.id);
+  assert.equal(await db.prepare(`SELECT 1 FROM user_sessions WHERE user_id = ? AND revoke_reason = 'REUSE_DETECTED'`).get(k.id), undefined);
+  const aktif = await db.prepare('SELECT expires_at FROM user_sessions WHERE user_id = ? AND revoked_at IS NULL').get(k.id);
+  assert.ok(Date.parse(aktif.expires_at) > Date.now() + 29 * 86_400_000, 'oturum süresi kullanımla yenilendi');
+  // Çıkış yapılınca soy kapanır: eski ya da yeni belirteç oturum açamaz.
+  assert.equal((await istek('/api/v1/auth/logout', { yontem: 'POST', token: y2.json.accessToken })).durum, 204);
+  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: y2.json.refreshToken } })).durum, 401);
   assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } })).durum, 401);
-  assert.equal((await istek('/api/v1/users/me', { token: y2.json.accessToken })).durum, 401);
+});
+
+test('web: pay (60 sn) dışında döndürülmüş çerezin tekrar kullanımı bütün oturumları kapatır', async () => {
+  const k = await kisi('5410000004', 'CUSTOMER', WEB);
+  const rt = cerez(k.cerezler);
+  const y1 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(rt)}` } });
+  assert.equal(y1.durum, 200);
+  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE user_id = ? AND revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 120_000).toISOString(), k.id);
+  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(rt)}` } })).durum, 401);
+  assert.equal((await istek('/api/v1/users/me', { token: y1.json.accessToken })).durum, 401);
 });
 
 test('pay başka cihazın oturumunu döndürmez (aynı soy + aynı cihaz şartı)', async () => {

@@ -507,13 +507,14 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  /// "Bağlanılıyor" ekranının beklediği iş: sunucu uyanana kadar (en çok
-  /// 90 sn) oturum yeniden denenir; sonra rol paneline (çift rolde hizmet
-  /// veren önce — `_hatirlananHedef` ile aynı kural) ya da ana sayfaya.
+  /// "Bağlanılıyor" ekranının beklediği iş: cihazda oturum jetonu durdukça
+  /// sunucuya ulaşılana kadar oturum yeniden denenir (kesin kural, 15 Eki:
+  /// çıkış yapılmadan şifre istenmez — süre sınırı yok). Sonra rol paneline
+  /// (çift rolde hizmet veren önce — `_hatirlananHedef` ile aynı kural);
+  /// sunucu oturumu kesin reddederse (jeton silinir) ana sayfaya.
   static Future<({String rota, String? argRota, Object? arg})> _oturumuBekle(
       AuthController auth) async {
-    final bitis = DateTime.now().add(const Duration(seconds: 90));
-    while (auth.currentAccount == null && DateTime.now().isBefore(bitis)) {
+    while (auth.currentAccount == null) {
       try {
         await auth.restoreSession().timeout(const Duration(seconds: 20));
       } catch (_) {}
@@ -528,7 +529,7 @@ class _SplashScreenState extends State<SplashScreen> {
       } catch (_) {
         break;
       }
-      await Future<void>.delayed(const Duration(seconds: 2));
+      await Future<void>.delayed(const Duration(seconds: 3));
     }
     final acc = auth.currentAccount;
     if (acc == null) {

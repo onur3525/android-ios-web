@@ -89,8 +89,10 @@ test('giriş + yenileme rotasyonu; eski yenileme token\'ı tekrar kullanılırsa
   assert.equal(g.durum, 200);
   const y1 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: g.json.refreshToken } });
   assert.equal(y1.durum, 200);
-  // Eşzamanlı yenileme payı (60 sn) dışında: döndürme 2 dk önce olmuş gibi.
-  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 120_000).toISOString());
+  // Mobilde aynı cihazın gecikmiş tekrarı oturumu sürdürür (15 Eki); eski
+  // belirteç BAŞKA bir cihazdan gelirse (halef bu cihaza ait değil) tespit
+  // kuralı aynen işler.
+  await db.prepare(`UPDATE user_sessions SET user_agent = 'baska-cihaz' WHERE revoked_at IS NULL`).run();
   const tekrar = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: g.json.refreshToken } });
   assert.equal(tekrar.durum, 401);
   // yeniden kullanım tespit edildi → yeni token da geçersiz

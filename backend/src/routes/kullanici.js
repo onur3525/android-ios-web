@@ -558,7 +558,14 @@ export function kullaniciRotalar(r, db) {
     // sonraki kısa pay içinde (aynı oturum soyu, aynı cihaz) bu bir hırsızlık
     // değil yarıştır: soyun güncel halkası döndürülür. Pay dışında tespit
     // kuralı aynen sürer.
-    if (o.revoked_at && o.revoke_reason === 'ROTATED' && Date.now() - Date.parse(o.revoked_at) < YENILEME_YARIS_PAYI_MS) {
+    // ⚠ MOBİL: SÜRE PAYI YOK (15 Eki, kullanıcı kesin kuralı: "çıkış
+    // yapılmadan asla şifre istenmeyecek, cihaz hatırlanacak"). Mobil
+    // istemci yanıtı kaybolan ya da uygulama kapanırken yarım kalan
+    // yenilemeyi ne zaman tekrarlarsa tekrarlasın, aynı cihazın oturum soyu
+    // sürer. Soy kapatılmışsa (çıkış, şifre/telefon değişikliği, askı)
+    // halef yoktur ve yenileme reddedilir. Web'de 60 sn payı aynen.
+    const mobil = !webIstemcisi(ctx.req);
+    if (o.revoked_at && o.revoke_reason === 'ROTATED' && (mobil || Date.now() - Date.parse(o.revoked_at) < YENILEME_YARIS_PAYI_MS)) {
       const halef = await db.prepare(
         `SELECT * FROM user_sessions WHERE user_id = ? AND created_at = ? AND revoked_at IS NULL
            AND (user_agent IS NOT DISTINCT FROM ?) ORDER BY last_used DESC LIMIT 1`,
@@ -571,6 +578,8 @@ export function kullaniciRotalar(r, db) {
       if (o.revoke_reason === 'ROTATED') await oturumlariIptal(db, o.user_id, 'REUSE_DETECTED');
       throw hata.kimlik();
     }
+    // Mobil oturum süresi kullanımla uzar (aşağıda): açık tutulan uygulama
+    // 30 günde bir yeniden giriş istemez.
     if (Date.parse(o.expires_at) < Date.now()) throw hata.kimlik('Oturum süresi doldu');
     const u = await db.prepare('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL').get(o.user_id);
     if (!u || u.frozen_at) throw hata.kimlik();
@@ -590,7 +599,8 @@ export function kullaniciRotalar(r, db) {
       await db.prepare(
         `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).run(yeniJti, u.id, ozet(yeni), o.created_at, z, o.expires_at, ctx.ip, o.user_agent);
+      ).run(yeniJti, u.id, ozet(yeni), o.created_at, z,
+        mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent);
     });
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
   }

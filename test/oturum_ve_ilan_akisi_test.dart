@@ -43,7 +43,8 @@ void main() {
       expect(sp.contains('pushReplacementNamed(BaglaniyorEkrani.rota)'), isTrue);
       // Sunucu jetonu reddederse beklemek bırakılır (sonsuz bekleme yok).
       expect(sp.contains('if (await TokenStore().refreshToken() == null) {'), isTrue);
-      expect(sp.contains('const Duration(seconds: 90)'), isTrue);
+      // Kesin kural: jeton durdukça süre sınırı olmadan beklenir.
+      expect(sp.contains('while (auth.currentAccount == null) {'), isTrue);
     });
   });
 

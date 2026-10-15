@@ -191,6 +191,13 @@ class ApiClient {
             body: body, query: query, idempotencyKey: idempotencyKey,
             expectList: expectList, isRetryOfAuth: true);
       }
+      // ⚠ KESİN KURAL (15 Eki): oturum YALNIZ sunucu yenilemeyi açıkça
+      // reddederse (çıkış, şifre/telefon değişikliği, askı) kapanır. Ağ
+      // hatası, zaman aşımı ya da uyuyan sunucu jetonları SİLMEZ; istek
+      // ağ hatası olarak döner, oturum bir sonraki denemede sürer.
+      if (!_sonYenilemeReddedildi) {
+        throw ApiFailure(networkError(), 0, 'NETWORK', null);
+      }
       await _forceLogout();
     }
 
@@ -278,7 +285,11 @@ class ApiClient {
   Future<bool> cerezleOturumuSurdur() =>
       cerezliOturum ? _refreshOnce() : Future.value(false);
 
+  /// Son yenileme sunucu tarafından KESİN reddedildi mi (401/403)?
+  bool _sonYenilemeReddedildi = false;
+
   Future<bool> _doRefresh() async {
+    _sonYenilemeReddedildi = false;
     // Web: token gövdede gönderilmez; sunucu çerezden okur. Bellekteki eski
     // bir kopya (başka sekme döndürmüş olabilir) yeniden kullanım sayılırdı.
     final rt = cerezliOturum ? null : await tokens.refreshToken();
@@ -296,6 +307,7 @@ class ApiClient {
                   rt == null ? <String, String>{} : {'refreshToken': rt}))
           .timeout(ApiConfig.receiveTimeout);
       if (res.statusCode < 200 || res.statusCode >= 300) {
+        _sonYenilemeReddedildi = res.statusCode == 401 || res.statusCode == 403;
         // ⚠ WEB: sunucu çerezi KESİN reddettiyse (401) oturum izi silinir;
         // açılış artık sunucuyu beklemez. Ağ/uyku hatası izi SİLMEZ.
         if (cerezliOturum && res.statusCode == 401) {
