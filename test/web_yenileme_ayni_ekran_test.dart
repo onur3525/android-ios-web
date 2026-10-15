@@ -27,7 +27,11 @@ void main() {
 
   test('açık ekran adı sekme deposuna yazılır (yalnız web)', () {
     final k = _kod('lib/ui/global_web_kabugu.dart');
-    expect(k.contains("if (kIsWeb && yeni != null && yeni.startsWith('/') && yeni != '/') {"), isTrue);
+    expect(k.contains("yeni != null &&"), isTrue);
+    expect(k.contains("yeni.startsWith('/') &&"), isTrue);
+    expect(k.contains("yeni != '/' &&"), isTrue);
+    // ⚠ 15 Eki: geçici "Bağlanılıyor" ekranı saklanmaz.
+    expect(k.contains("yeni != '/baglaniyor') {"), isTrue);
     expect(k.contains('sekmeYaz(kSekmeRota, yeni);'), isTrue);
   });
 

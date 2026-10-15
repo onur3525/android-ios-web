@@ -190,9 +190,14 @@ void main() {
             _kod(yol).contains('Validators.phoneLocal') ||
             // ⚠ 15 Eki: Profil gösterimi ortak `telefonGoster`e taşındı
             // (kenar çubuğu da kullanıyor); işlevin kendisi aşağıda denetlenir.
-            _kod(yol).contains('telefonGoster('), isTrue,
+            _kod(yol).contains('telefonGoster(') ||
+            // Sohbet numarayı göstermez, yalnız "Ara" düğmesi vardır;
+            // normalleştirme ortak `telefonuAra` içinde (aşağıda denetlenir).
+            _kod(yol).contains('telefonuAra('), isTrue,
             reason: '$yol: telefon gösterim biçimi değişmiş');
       }
+      expect(_kod('lib/core/telefon_arama.dart')
+          .contains("Validators.phoneLocal(ham ?? '')"), isTrue);
       // Ortak gösterim işlevi de aynı gruplu biçimi kullanmalı.
       final ortak = _kod('lib/core/telefon_bicimi.dart');
       final i = ortak.indexOf('String telefonGoster(');

@@ -16,6 +16,9 @@ String _kod(String p) => const LineSplitter()
 const _kokEkranlar = {
   'home_screen.dart',
   'splash_screen.dart',
+  // Web açılışında sunucu beklenirken gösterilen geçici ekran (15 Eki);
+  // splash gibi geri dönülecek yer yoktur, iş bitince kendisi yönlendirir.
+  'baglaniyor_screen.dart',
   'jobs_screen.dart',
   'my_listings_screen.dart',
   'profile_screen.dart',
