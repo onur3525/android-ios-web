@@ -74,10 +74,20 @@ abstract final class DomainConfig {
   /// daha fazla yükleyebilir. Amaç tek seferlik kazayı engellemek.
   static const int maxTopup = 10000;
 
+  /// Paylaşılan bağlantı (16 Eki, kullanıcı kararı): hizmetcep.com henüz
+  /// yayında olmadığı için test/canlı deneme sürümleri (mobil + web) TEST
+  /// ADRESİNİ paylaşır; yalnız production web derlemesi (`APP_ENV=production`)
+  /// hizmetcep.com'u paylaşır. Değer derleme anında seçilir — production
+  /// çıktısına test adresi girmez (web-production.yml denetimi).
+  static const String paylasimAdresi =
+      String.fromEnvironment('APP_ENV') == 'production'
+          ? 'https://hizmetcep.com'
+          : 'https://onur3525.github.io/android-ios-web/';
+
   /// Uygulamayı Paylaş metni (tek merkez).
   static const String shareText =
       'HizmetCep ile İzmir\'de güvenilir ustalara ücretsiz ilan verin, '
-      'dakikalar içinde teklif alın! İndirmek için: https://hizmetcep.com';
+      'dakikalar içinde teklif alın! İndirmek için: $paylasimAdresi';
 
   /// İlan yayın süresi: her ilan yayınlandığı andan itibaren 30 SAAT aktiftir
   /// (expiresAt = createdAt + listingLifetime).
