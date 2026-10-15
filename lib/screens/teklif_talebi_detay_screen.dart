@@ -344,7 +344,13 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     // ⚠ TARAF DENETİMİ: talebin tarafı olmayan biri (ör. web'de adres
     // çubuğuna `/talep/<id>` yazan) talebi hiç görmez — mevcut "Talep
     // bulunamadı" ekranı gösterilir. Taraflar için ekran AYNEN.
-    if (t == null || me == null || !t.tarafMi(me.id)) {
+    // ⚠ SİLİNEN TALEP HİZMET ALANA HİÇBİR EKRANDA GÖRÜNMEZ (16 Eki):
+    // listeler zaten süzüyordu; bildirimden ya da adres çubuğundan
+    // açılırsa da "Talep bulunamadı" gösterilir.
+    if (t == null ||
+        me == null ||
+        !t.tarafMi(me.id) ||
+        (me.id == t.hizmetAlanId && t.hizmetAlanSildi)) {
       return const Scaffold(
         backgroundColor: RC.white,
         body: SafeArea(child: Center(child: Text('Talep bulunamadı'))),

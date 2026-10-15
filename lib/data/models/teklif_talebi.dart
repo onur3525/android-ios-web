@@ -146,15 +146,25 @@ class TeklifTalebi {
   /// henüz seçmemiştir (`teklifGeldi`). Seçildikten sonra ortada bir
   /// İŞ vardır.
   ///
-  /// ⚠ `reddedildi` VE `suresiDoldu` DA KAPSAM DIŞI: ikisi de
-  /// sonuçlanmış kayıttır. "Açık" olan yalnız yukarıdaki ikisidir.
+  /// (Eski kural: `reddedildi` ve `suresiDoldu` kapsam dışıydı — 16 Eki
+  /// kullanıcı isteğiyle değişti, aşağıya bkz.)
   ///
   /// ⚠ EKRANLAR KENDİ KOŞULUNU YAZMAZ — `Listing.isTamamlanmisIs`
   /// ile aynı desen. İki ekran ayrı koşul yazsaydı biri güncellenip
   /// öteki eskide kalırdı.
+  ///
+  /// ── ⚠ 16 Eki KULLANICI İSTEĞİ: REDDEDİLEN / SÜRESİ DOLAN DA SİLİNİR ──
+  /// "Teklif talebini silebilmek için sağ üst köşede 3 nokta olsun,
+  /// silme nedeni seçilerek talep silinsin, hiçbir ekranda görünmesin."
+  /// Reddedilmiş ya da süresi dolmuş talep de hizmet alanın listesinde
+  /// kalıyordu ve kaldırılamıyordu. Artık yalnız İŞE DÖNÜŞMÜŞ talep
+  /// (seçildi / tamamlandı — yorum ve puan ona bağlı) silinemez; sunucu
+  /// da aynı kuralı uygular (`/sil` → SECILDI/TAMAMLANDI 409). Zaten
+  /// silinmiş talepte menü çizilmez.
   bool get silinebilir =>
-      durum == TeklifTalebiDurumu.beklemede ||
-      durum == TeklifTalebiDurumu.teklifGeldi;
+      !hizmetAlanSildi &&
+      durum != TeklifTalebiDurumu.secildi &&
+      durum != TeklifTalebiDurumu.tamamlandi;
 
   /// İsteği gönderen hizmet alanın hesap id'si.
   final String hizmetAlanId;
