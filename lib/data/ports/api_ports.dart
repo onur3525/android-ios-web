@@ -259,13 +259,22 @@ class ApiAuthPort extends AuthPort {
   }
 
   @override
-  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod) async {
+  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod,
+      {String? mevcutSifre}) async {
     final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod, mevcutKullanici: true);
     final tel = r.idToken == null ? null : FirebaseKimlik.i.tokenTelefonu(r.idToken!);
     if (r.error != null || tel == null) {
       return r.error ?? const ValidationError('Doğrulama tamamlanamadı');
     }
-    return repo.changePhoneFirebase(tel, r.idToken!);
+    final err = await repo.changePhoneFirebase(tel, r.idToken!, mevcutSifre: mevcutSifre);
+    // ⚠ Sunucu bütün Firebase oturumlarını iptal etti (bu cihazınki dahil):
+    // verilen özel belgeyle bu cihaz yeniden bağlanır (15 Eki).
+    final ozel = repo.firebaseOzelBelgesi;
+    repo.firebaseOzelBelgesi = null;
+    if (err == null && ozel != null) {
+      await FirebaseKimlik.i.ozelBelgeyleBaglan(ozel);
+    }
+    return err;
   }
 
   @override
@@ -322,13 +331,14 @@ class ApiAuthPort extends AuthPort {
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
     bool termsAccepted = false,
+    bool ageConfirmed = false,
     bool emailVerified = false,
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async {
-    // ⚠ Sözleşme onayı SUNUCUDA da doğrulanır; istemci kontrolü tek
-    // savunma değildir. Burada erken çıkış kullanıcıya hızlı geri
-    // bildirim içindir.
+    // ⚠ Sözleşme onayı ve 18 yaş beyanı SUNUCUDA da doğrulanır (15 Eki;
+    // önceden sunucu onayı denetlemiyordu). Buradaki erken çıkış
+    // kullanıcıya hızlı geri bildirim içindir.
     if (!termsAccepted) {
       return (
         account: null,
@@ -336,12 +346,21 @@ class ApiAuthPort extends AuthPort {
             'Kullanım sözleşmesi ve gizlilik politikası onayı zorunludur'),
       );
     }
+    if (!ageConfirmed) {
+      return (
+        account: null,
+        error: const ValidationError(
+            'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir'),
+      );
+    }
     // otpVerified mock akışının kalıntısıdır; sunucu OTP kodunu kendi doğrular.
     final err = await repo.register(
         phone: phone, password: pass, name: name,
         email: email, role: role, otpCode: otpCode,
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
-        firebaseIdToken: kayitYetkisi);
+        firebaseIdToken: kayitYetkisi,
+        termsAccepted: termsAccepted,
+        ageConfirmed: ageConfirmed);
     if (err != null) {
       return (account: null, error: err);
     }
@@ -436,8 +455,16 @@ class ApiAuthPort extends AuthPort {
     return null;
   }
   @override
-  Future<DomainError?> changePassword(String current, String next) =>
-      repo.changePassword(current, next);
+  Future<DomainError?> changePassword(String current, String next) async {
+    final err = await repo.changePassword(current, next);
+    // ⚠ Şifre değişince Firebase bütün oturumları (bu cihazınki dahil) iptal
+    // eder; bu cihaz YENİ şifreyle yeniden bağlanır, eski oturumlar
+    // açılamaz (15 Eki). Firebase oturumu yoksa bir şey yapılmaz.
+    if (err == null) {
+      await FirebaseKimlik.i.yeniSifreyleYenidenBaglan(next);
+    }
+    return err;
+  }
 
   @override
   Future<DomainError?> verifyPassword(String password) =>

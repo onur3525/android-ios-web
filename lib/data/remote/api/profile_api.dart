@@ -49,11 +49,14 @@ class ProfileApi {
           body: {'newEmail': newEmail},
           idempotencyKey: ApiClient.newIdempotencyKey());
 
+  /// ⚠ 15 Eki: sunucu `currentPassword`ı ZORUNLU doğrular.
   Future<Map<String, dynamic>> changePhone(
-          {required String newPhone, required String otpCode, String? firebaseIdToken}) =>
+          {required String newPhone, required String otpCode, String? firebaseIdToken,
+          String? currentPassword}) =>
       c.post('/profiles/me/phone/change', body: {
         'newPhone': newPhone, 'otpCode': otpCode,
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
+        if (currentPassword != null) 'currentPassword': currentPassword,
       });
 
   /// TEK adres: kayıt yoksa sunucu null döner.

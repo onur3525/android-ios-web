@@ -35,6 +35,7 @@ const MENU = [
   ['hesaptalepleri', 'Gelen Talepler', ['super_admin', 'moderator', 'readonly']],
   ['geribildirim', 'Uygulama Geri Bildirimleri', ['super_admin', 'moderator', 'readonly']],
   ['entegrasyonlar', 'Entegrasyonlar', ['super_admin', 'operations']],
+  ['silmekuyruklari', 'Silme Kuyrukları', ['super_admin', 'operations']],
   ['yoneticiler', 'Yöneticiler', ['super_admin']],
   ['denetim', 'Denetim Kaydı', ['super_admin']],
 ];
@@ -153,8 +154,18 @@ SAYFALAR.ilan = async (id) => {
     l.review ? h('div', { class: 'kart' }, h('h3', {}, 'Değerlendirme'), alanlarListesi([['Puan', l.review.stars], ['Yorum', l.review.text], ['Durum', rozet(l.review.status)]])) : null);
 };
 
+// ⚠ ÖZEL YAZIŞMA GEREKÇEYLE AÇILIR (15 Eki): sunucu `reason` ister ve
+// denetim kaydına yazar. Gerekçe girilmezse içerik istenmez.
+// Gerekçe adres satırında DEĞİL başlıkta gider: sunucu/proxy erişim
+// günlüklerine (adres + sorgu) kişisel bilgi içerebilecek metin yazılmasın.
+const gerekceBasligi = (neden) => ({ 'X-HC-Reason': encodeURIComponent(neden) });
+const yazismaGerekcesi = () => gerekceIle('Yazışmayı görüntüle', 'Görüntüle',
+  'Kullanıcıların özel yazışması yalnız şikâyet, güvenlik veya destek gerekçesiyle açılır. Gerekçe ve görüntüleme denetim kaydına yazılır.');
+
 SAYFALAR.sohbet = async (offerId) => {
-  const m = await api(`/chats/${offerId}/messages`);
+  const neden = await yazismaGerekcesi();
+  if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için yazışma açılmadı.');
+  const m = await api(`/chats/${offerId}/messages`, { basliklar: gerekceBasligi(neden) });
   return h('div', {}, h('h2', {}, 'Sohbet (salt okunur)'), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     m.length ? m.map((x) => h('div', { class: 'mesaj' }, h('div', { class: 'ust' }, h('span', {}, x.senderId), h('span', {}, tarih(x.createdAt))), x.text ?? '[görsel]')) : h('p', { class: 'not' }, 'Mesaj yok.'));
 };
@@ -166,7 +177,9 @@ SAYFALAR.teklifler = () => tekliflerSayfasi(ben.role);
 SAYFALAR.talepler = () => teklifTalepleriSayfasi(ben.role);
 
 SAYFALAR.talep = async (id) => {
-  const t = await api(`/teklif-talepleri/${id}`);
+  const neden = await yazismaGerekcesi();
+  if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için talep açılmadı.');
+  const t = await api(`/teklif-talepleri/${id}`, { basliklar: gerekceBasligi(neden) });
   return h('div', {}, h('h2', {}, `Talep ${t.talepNo}`), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     h('div', { class: 'kart' }, alanlarListesi([
       ['Talep eden', h('a', { href: `#/kullanici/${t.hizmetAlanId}` }, 'profil')], ['Hizmet veren', h('a', { href: `#/kullanici/${t.saglayiciId}` }, t.saglayiciAdi)],
@@ -450,6 +463,46 @@ SAYFALAR.denetim = async () => h('div', {}, h('h2', {}, 'Denetim Kaydı'), h('p'
   tablo([{ baslik: 'Tarih', deger: (x) => tarih(x.createdAt) }, { baslik: 'Admin', deger: (x) => x.admin ?? 'sistem' }, { baslik: 'İşlem', deger: (x) => x.action },
     { baslik: 'Hedef', deger: (x) => `${x.targetType ?? ''} ${x.targetId ?? ''}` }, { baslik: 'Gerekçe', deger: (x) => x.reason ?? '—' },
     { baslik: 'Değişiklik', deger: (x) => (x.before || x.after ? `${JSON.stringify(x.before)} → ${JSON.stringify(x.after)}` : '—') }], await api('/audit-log?limit=300')));
+
+// ── Silme Kuyrukları (15 Eki güvenlik denetimi) ───────────────
+// Hesap silmede Firebase kaydı ve dosyalar kuyrukla silinir. Kimlikler
+// özetlenmiş gelir (Firebase uid'si ve dosya anahtarı gösterilmez).
+const KUYRUK_DURUM = { BEKLIYOR: 'Bekliyor', BASARISIZ: 'Başarısız (yeniden denenecek)', DENEME_TUKENDI: 'Deneme hakkı tükendi', UZUN_SURELI_HATA: 'Uzun süredir başarısız' };
+SAYFALAR.silmekuyruklari = async () => {
+  const d = await api('/deletion-queues');
+  const sayilar = (c) => Object.entries(c).map(([k, v]) => `${KUYRUK_DURUM[k] ?? k}: ${v}`).join(' · ') || 'Kuyruk boş';
+  const yenidenDene = (kuyruk, id) => async (e) => {
+    e?.stopPropagation?.();
+    const neden = await gerekceIle('Yeniden dene', 'Yeniden dene', 'Başarısız silme işi bir sonraki turda (en geç 1 dakika) yeniden denenir. İşlem denetim kaydına yazılır.');
+    if (!neden) return;
+    const r = await guvenli(() => api('/deletion-queues/retry', { yontem: 'POST', govde: { queue: kuyruk, id, reason: neden } }));
+    if (r) { bildir(`${r.retried} iş yeniden denemeye alındı`); yenile(); }
+  };
+  const kolonlar = (kuyruk) => [
+    { baslik: 'Kimlik (özet)', deger: (x) => x.id }, ...(kuyruk === 'files' ? [{ baslik: 'Tür', deger: (x) => x.tur }] : []),
+    { baslik: 'Durum', deger: (x) => KUYRUK_DURUM[x.durum] ?? x.durum }, { baslik: 'Deneme', deger: (x) => x.deneme },
+    { baslik: 'Son hata', deger: (x) => x.sonHata ?? '—' }, { baslik: 'Sonraki deneme', deger: (x) => (x.sonrakiDeneme ? tarih(x.sonrakiDeneme) : '—') },
+    { baslik: '', deger: (x) => (x.deneme > 0 ? h('button', { class: 'btn', onclick: yenidenDene(kuyruk, x.id) }, 'Yeniden dene') : '') },
+  ];
+  const a = d.accountDeletions;
+  return h('div', {}, h('h2', {}, 'Silme Kuyrukları'),
+    h('p', { class: 'not' }, 'Zamanlayıcı yalnız sunucu çalışırken işler. Sunucu uykudaysa (Render ücretsiz planı) süresi dolan silmeler ilk uyanışta uygulanır.'),
+    h('div', { class: 'kart' }, alanlarListesi([
+      ['Bekleyen silme talebi', a.pending], ['Süresi geçmiş, uygulanmamış', a.overdue], ['En eski gecikme', a.oldestOverdueAt ? tarih(a.oldestOverdueAt) : '—'],
+    ])),
+    h('h3', {}, 'Firebase kimlik kayıtları'),
+    h('p', { class: 'not' }, `${d.firebase.configured ? 'Servis hesabı yapılandırılmış.' : '⚠ Servis hesabı yapılandırılmamış: kayıtlar silinemez, kuyrukta bekler.'} ${sayilar(d.firebase.counts)}. Hatalı işler artan aralıkla (en fazla 24 saatte bir) süresiz yeniden denenir.`),
+    d.firebase.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('firebase', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo(kolonlar('firebase'), d.firebase.items),
+    h('h3', {}, 'Dosyalar'),
+    h('p', { class: 'not' }, `${d.files.configured ? 'Depo yapılandırılmış.' : '⚠ Depo yapılandırılmamış: dosyalar silinemez, kuyrukta bekler.'} ${sayilar(d.files.counts)}. En fazla ${d.files.maxAttempts} deneme; tükenen iş yalnız buradan yeniden denenir.`),
+    d.files.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('files', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo(kolonlar('files'), d.files.items),
+    h('h3', {}, 'Firebase işlemleri (oturum iptali / telefon eşitleme)'),
+    h('p', { class: 'not' }, `${d.firebaseOps.configured ? 'Servis hesabı yapılandırılmış.' : '⚠ Servis hesabı yapılandırılmamış: işlemler kuyrukta bekler.'} ${sayilar(d.firebaseOps.counts)}. Firebase'e yazılamayan oturum iptali ve telefon eşitlemesi buradan tamamlanır; eski belgeyle oturum açılması sunucuda zaten engellidir.`),
+    d.firebaseOps.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('firebase_ops', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo([{ baslik: 'İşlem', deger: (x) => (x.islem === 'REVOKE' ? 'Oturum iptali' : 'Telefon eşitleme') }, ...kolonlar('firebase_ops')], d.firebaseOps.items));
+};
 
 // ── Entegrasyonlar ────────────────────────────────────────────
 SAYFALAR.entegrasyonlar = async () => {

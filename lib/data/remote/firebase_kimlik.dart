@@ -154,19 +154,31 @@ class FirebaseKimlik {
     }
     try {
       UserCredential sonuc;
+      final u = a.currentUser;
+      // ── ⚠ TELEFON DEĞİŞİMİ: NUMARA AÇIK FIREBASE KULLANICISINA BAĞLANIR ──
+      //
+      // (15 Eki güvenlik denetimi) Web'de `confirm()` yeni numarayla AYRI bir
+      // Firebase kullanıcısı açıyor, hesabın Firebase kaydındaki numara eski
+      // kalıyordu. Web'de de doğrulama kimliğinden kimlik bilgisi üretilip
+      // `updatePhoneNumber` yapılır; sunucu belgede hesabın uid'sini ister.
+      if (mevcutKullanici && u != null) {
+        final kimlik = b.onay != null
+            ? PhoneAuthProvider.credential(
+                verificationId: b.onay!.verificationId, smsCode: kod.trim())
+            : (b.otomatik ??
+                PhoneAuthProvider.credential(
+                    verificationId: b.dogrulamaId ?? '', smsCode: kod.trim()));
+        await u.updatePhoneNumber(kimlik);
+        final t = await u.getIdToken(true);
+        _bekleyen.remove(id);
+        if (t != null) _tokenTelefonu[t] = b.telefon;
+        return (idToken: t, error: null);
+      }
       if (b.onay != null) {
         sonuc = await b.onay!.confirm(kod.trim());
       } else {
         final kimlik = b.otomatik ??
             PhoneAuthProvider.credential(verificationId: b.dogrulamaId ?? '', smsCode: kod.trim());
-        final u = a.currentUser;
-        if (mevcutKullanici && u != null) {
-          await u.updatePhoneNumber(kimlik);
-          final t = await u.getIdToken(true);
-          _bekleyen.remove(id);
-          if (t != null) _tokenTelefonu[t] = b.telefon;
-          return (idToken: t, error: null);
-        }
         sonuc = await a.signInWithCredential(kimlik);
       }
       final t = await sonuc.user?.getIdToken(true);
@@ -241,6 +253,34 @@ class FirebaseKimlik {
       final u = (await _auth())?.currentUser;
       if (u != null && u.providerData.any((p) => p.providerId == 'password')) {
         await u.updatePassword(yeniSifre);
+      }
+    } catch (_) {}
+  }
+
+  /// Şifre değişikliğinden sonra (Firebase bütün oturumları iptal etti) açık
+  /// Firebase kullanıcısını YENİ şifreyle yeniden bağlar. Firebase oturumu
+  /// yoksa ya da e-posta/şifre kimliği yoksa bir şey yapmaz; hata sessizdir
+  /// (sunucu oturumu sürer, Firebase gerektiren işlem yeniden giriş ister).
+  Future<void> yeniSifreyleYenidenBaglan(String yeniSifre) async {
+    try {
+      final a = await _auth();
+      final u = a?.currentUser;
+      final email = u?.email;
+      if (a == null || u == null || email == null ||
+          !u.providerData.any((p) => p.providerId == 'password')) {
+        return;
+      }
+      await a.signInWithEmailAndPassword(email: email, password: yeniSifre);
+    } catch (_) {}
+  }
+
+  /// Telefon değişikliğinden sonra sunucunun verdiği kısa ömürlü özel
+  /// belgeyle (iptal sınırından sonra üretilmiş) Firebase'e yeniden bağlanır.
+  Future<void> ozelBelgeyleBaglan(String belge) async {
+    try {
+      final a = await _auth();
+      if (a != null) {
+        await a.signInWithCustomToken(belge);
       }
     } catch (_) {}
   }

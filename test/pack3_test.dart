@@ -60,7 +60,7 @@ void main() {
 
     test('yalnız taraflar erişebilir; yabancı offerId+taraf doğrulamasına takılır', () async {
       final t = await teklifliIlan();
-      await contactCtl.openShared(t.offerId, actorId: p1);
+      await contactCtl.openShared(t.offerId, actorId: cust);
       final ctl = chatCtl();
       expect((await ctl.sendDelivered(t.offerId, senderId: stranger, text: 'x')).error,
           isA<UnauthorizedError>());
@@ -130,19 +130,20 @@ void main() {
 
     test('iletişim açılınca KARŞI tarafa; süre dolunca ilan sahibine', () async {
       final t = await teklifliIlan();
-      await contactCtl.openShared(t.offerId, actorId: p1); // usta açtı
-      expect(notifs.forUser(cust).map((n) => n.type),
+      // ⚠ 15 Eki: iletişimi YALNIZ ilan sahibi açar (backend ile aynı).
+      await contactCtl.openShared(t.offerId, actorId: cust); // müşteri açtı
+      expect(notifs.forUser(p1).map((n) => n.type),
           contains(NotifType.contactOpened));
       expect(
-          notifs.forUser(p1).where((n) => n.type == NotifType.contactOpened),
+          notifs.forUser(cust).where((n) => n.type == NotifType.contactOpened),
           isEmpty); // açan tarafa gitmez
       // Backend gibi YALNIZ İLK açmada: ikinci açma bildirimi tekrarlamaz.
       await contactCtl.openShared(t.offerId, actorId: cust);
       expect(
-          notifs.forUser(cust).where((n) => n.type == NotifType.contactOpened),
+          notifs.forUser(p1).where((n) => n.type == NotifType.contactOpened),
           hasLength(1));
       expect(
-          notifs.forUser(p1).where((n) => n.type == NotifType.contactOpened),
+          notifs.forUser(cust).where((n) => n.type == NotifType.contactOpened),
           isEmpty);
 
       // ListingExpiryService bir PORT bekler (MockOfferPort), controller değil.

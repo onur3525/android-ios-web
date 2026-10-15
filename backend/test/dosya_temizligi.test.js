@@ -107,7 +107,12 @@ test('depo silme başarısız: ana işlem etkilenmez, deneme ve hata kaydı tutu
   let k = await kayit(r);
   assert.equal(k.delete_attempts, 1); assert.ok(k.delete_error); assert.equal(k.deleted_at, null);
   assert.ok(await db.prepare(`SELECT 1 FROM audit_log WHERE action = 'storage.delete.failed' AND target_id = ?`).get(r));
+  // Artan aralık (15 Eki): sonraki deneme ileri tarihte; zamanı gelmeden denenmez.
+  assert.ok(new Date(k.delete_next_at) > new Date(), 'sonraki deneme ileri tarihte');
   siliciBasarili = true;
+  await dosyaTemizliginiIsle(db, { silici });
+  assert.equal((await kayit(r)).deleted_at, null, 'aralık dolmadan yeniden denenmez');
+  await db.prepare('UPDATE storage_objects SET delete_next_at = ? WHERE ref = ?').run('2000-01-01T00:00:00.000Z', r);
   await dosyaTemizliginiIsle(db, { silici });
   k = await kayit(r);
   assert.ok(k.deleted_at); assert.equal(k.delete_error, null);

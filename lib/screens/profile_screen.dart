@@ -9,17 +9,11 @@ import '../data/models/account.dart';
 import '../data/services/share_service.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/destek_merkezi_paneli.dart';
 import 'nav_actions.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../data/models/support_info.dart';
-import '../data/remote/api/legal_api.dart';
-import '../data/remote/api_client.dart';
-import '../data/remote/api_config.dart';
 import 'role_switch_screen.dart';
 import '../data/repositories/oturum_tercihi.dart';
-import '../core/baglanti_modu.dart';
 import 'widgets/profil_fotografi.dart';
-import '../ui/destek_talebi_formu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// PROFİL — referans `vProfileCust()` / `vProfileProv()`
@@ -260,110 +254,10 @@ class ProfileScreen extends StatelessWidget {
         ),
       ];
 
-  /// Referans `supportSheet()` — alt panel.
-  /// Referans `supportSheet()` — DESTEK MERKEZİ
-  ///
-  /// Açıklama ve e-posta HARD-CODE DEĞİLDİR: `SupportInfo` modelinden
-  /// gelir (admin panel / remote config / API). Mock modda örnek veri
-  /// kullanılır. E-posta altı çizili ve tıklanabilir; `mailto:` ile
-  /// cihazın varsayılan e-posta uygulaması açılır.
-  Future<void> _destekSheet(BuildContext c) async {
-    final bilgi = await _destekBilgisi(c);
-    if (!c.mounted) {
-      return;
-    }
-    await RefBottomSheet.goster<void>(
-      c,
-      title: 'Destek Merkezi',
-      // `.rs-body` — referansta destek paneli ortalanmış ikon + başlık
-      // + açıklama düzenindedir (`supportSheet`).
-      child: RefSheetBody(
-        ikon: 'assets/svg/ic_phead.svg',
-        ikonZemin: const Color(0xFFF3E9FD),
-        baslik: 'Size nasıl yardımcı olabiliriz?',
-        aciklama: bilgi.description,
-        // ── ADRES VURGULU KUTUDA ──
-        //
-        // ⚠ Önceki hâl adresi düz bir bağlantı satırıydı; metnin
-        // devamı gibi görünüyor, dokunulabilir olduğu anlaşılmıyordu.
-        // Artık kendi kutusunda, ikonla birlikte ve tıklanınca
-        // e-posta uygulamasını açıyor.
-        // ⚠ E-posta kutusu AYNEN durur; altına Talep Gönder formu eklenir
-        // (web paneliyle ORTAK bileşen — `destek_talebi_formu.dart`).
-        altKisim: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RefTap(
-              onTap: () => _mailAc(c, bilgi.email),
-              borderRadius: BorderRadius.circular(RR.r12),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 13, horizontal: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E9FD),
-                  borderRadius: BorderRadius.circular(RR.r12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const RefSvg('assets/svg/ic_mail.svg',
-                        size: 18, color: Color(0xFF7C3AED)),
-                    const SizedBox(width: 9),
-                    Flexible(
-                      child: Text(
-                        bilgi.email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: refText(
-                            size: RF.s145,
-                            weight: RF.w700,
-                            color: const Color(0xFF7C3AED)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const DestekTalebiFormu(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Destek içeriğini getirir.
-  ///
-  /// API modunda sunucudan okunur; mock modda veya hata durumunda
-  /// `SupportInfo.fallback` kullanılır (ekran ASLA boş kalmaz).
-  Future<SupportInfo> _destekBilgisi(BuildContext c) async {
-    if (!ApiConfig.useRealApi) {
-      return SupportInfo.fallback;
-    }
-    try {
-      final j = await LegalApi(c.read<ApiClient>()).one('support');
-      return SupportInfo.fromJson(j);
-    } catch (_) {
-      return SupportInfo.fallback;
-    }
-  }
-
-  /// `mailto:` ile varsayılan e-posta uygulamasını açar.
-  Future<void> _mailAc(BuildContext c, String adres) async {
-    final uri = Uri(scheme: 'mailto', path: adres);
-    try {
-      final ok = await launchUrl(uri, mode: acilisModu());
-      if (!ok && c.mounted) {
-        sysToastErr(c, SysKind.genericError,
-            extra: 'E-posta uygulaması bulunamadı: $adres');
-      }
-    } catch (_) {
-      if (c.mounted) {
-        sysToastErr(c, SysKind.genericError,
-            extra: 'E-posta uygulaması açılamadı: $adres');
-      }
-    }
-  }
+  /// Referans `supportSheet()` — DESTEK MERKEZİ. Web kenar çubuğuyla AYNI
+  /// tek kaynak panel (`destek_merkezi_paneli.dart`, 15 Eki): talep formu
+  /// yok, e-postaya dokununca e-posta uygulaması doğrudan açılır.
+  Future<void> _destekSheet(BuildContext c) => destekMerkeziPaneliniAc(c);
 
   Future<void> _paylas(BuildContext c) async {
     final ok = await ShareService().shareApp();

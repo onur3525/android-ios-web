@@ -25,6 +25,7 @@ import { gercekZamanliKur } from './gercek_zamanli.js';
 import { olaylar } from './olaylar.js';
 import { fotoGonder, varlikGonder } from './katalog_foto.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
+import { silmeKuyruklariRotalar } from './routes/silme_kuyruklari.js';
 import { kullaniciRotalar } from './routes/kullanici.js';
 import { ilanRotalar, suresiDolanlariIsle } from './routes/ilan.js';
 import { silmeTalepleriniIsle, sohbetTalepRotalar, talepSureleriniIsle } from './routes/sohbet_talep.js';
@@ -34,6 +35,8 @@ import { pushKuyrugunuIsle } from './fcm.js';
 import { publicRotalar } from './routes/public.js';
 import { destekRotalar } from './routes/destek.js';
 import { kayitBakimi } from './bakim.js';
+import { firebaseSilmeKuyrugunuIsle } from './firebase_silme.js';
+import { firebaseIslemKuyrugunuIsle } from './firebase_islemleri.js';
 import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
 
 const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
@@ -76,6 +79,7 @@ export function uygulamaKur(db) {
   publicRotalar(r, db);
   adminRotalar(r, db);
   adminKullaniciRotalar(r, db);
+  silmeKuyruklariRotalar(r, db);
 
   return async (req, res) => {
     const istekId = istekKimligi();
@@ -191,6 +195,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['hesap_silme', silmeTalepleriniIsle],
     ['dosya_temizligi', dosyaTemizliginiIsle],
     ['kayit_bakimi', kayitBakimi],
+    ['firebase_silme', firebaseSilmeKuyrugunuIsle],
+    ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.

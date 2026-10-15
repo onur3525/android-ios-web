@@ -439,6 +439,10 @@ paths:
       summary: Kayıt (Ad, Soyad, Telefon, E-posta, Şifre + adres)
       description: |
         ⚠ Kayıt sonrası SMS doğrulaması yapılır; e-posta doğrulaması YAPILMAZ (§4).
+        ⚠ 15 Eki: `termsAccepted: true` (Kullanım Koşulları + Gizlilik Politikası onayı) ve
+        `ageConfirmed: true` (18 yaş beyanı; doğum tarihi toplanmaz) ZORUNLUDUR; yoksa
+        400 TERMS_REQUIRED / AGE_REQUIRED. Yayındaki terms ve privacy sürümleri onay kaydına
+        (`legal_acceptances`, sürüm + SHA-256 + `platform`) yazılır.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '201': { description: Başarılı }
@@ -469,6 +473,12 @@ paths:
         gönderir; sunucu token'ı Google'ın açık sertifikalarıyla doğrular,
         doğrulanmış telefon/e-postayla hesabı eşleştirir ve HizmetCep
         oturumu açar. Hesap yoksa 404; askı/ban/dondurma kuralları aynen.
+        ⚠ İPTAL DENETİMİ (15 Eki): şifre sıfırlama/değiştirme ya da telefon
+        değişikliğinden ÖNCE kimlik doğrulaması yapılmış belge (auth_time) 401
+        AUTH_REVOKED ile reddedilir. Servis hesabı varsa Firebase kaydı da
+        okunur (Admin SDK checkRevoked ile aynı): devre dışı/silinmiş kullanıcı
+        ya da Firebase'de iptal edilmiş belge reddedilir; Firebase'e
+        ulaşılamazsa 503.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -509,6 +519,8 @@ paths:
       summary: Şifre doğrulama (adım yükseltme)
       description: |
         Hesap silme gibi kritik işlemlerden önce yeniden kimlik doğrulama (§20).
+        Kullanıcı başına 15 dakikada en çok 10 deneme (telefon değiştirme ve
+        silme talebiyle ortak sayaç); aşılırsa 429.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -520,6 +532,10 @@ paths:
     post:
       tags: [Auth]
       summary: Şifre değiştir
+      description: |
+        Başarıda sunucu oturumları kapatılır (şifre değiştirmede işlemi yapan
+        oturum hariç) ve Firebase yenileme belirteçleri iptal edilir; işlem
+        öncesi Firebase belgeleriyle yeni oturum açılamaz (AUTH_REVOKED).
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -533,6 +549,10 @@ paths:
       summary: Şifre sıfırlamayı tamamla
       description: |
         ⚠ Şifre unutma akışının SON adımı. Paket 1/2'de kaldırılan /listings/{id}/complete ile İLGİSİZDİR.
+        Başarıda bütün sunucu oturumları kapatılır; Firebase şifresi ve yenileme
+        belirteçlerinin iptali AYNI Firebase çağrısında yapılır (yapılamazsa 503,
+        yerel şifre değişmez). İşlem öncesi Firebase belgeleriyle yeni oturum
+        açılamaz (AUTH_REVOKED).
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -715,6 +735,18 @@ paths:
     post:
       tags: [Profile]
       summary: Telefon değişimi — yeni numara + 6 haneli SMS
+      description: |
+        `currentPassword` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD ve
+        telefon kanıtı tüketilmez. Başarıda bu oturum dışındaki oturumlar
+        kapatılır (PHONE_CHANGED). Ortak şifre deneme sınırı: 15 dakikada 10.
+        Firebase'e bağlı hesapta `firebaseIdToken` hesabın Firebase kullanıcısına
+        ait olmalı (aksi hâlde 400 PHONE_PROOF_INVALID); sunucu kodu yolunda
+        numara Firebase'e sunucuca yazılır, yazılamazsa 503 ve numara değişmez.
+        Başarıda Firebase yenileme belirteçleri de iptal edilir; servis hesabı
+        varsa yanıt `firebaseCustomToken` (5 dk geçerli, iptal sınırından sonra
+        üretilmiş Firebase özel belgesi) taşır — işlemi yapan cihaz
+        `signInWithCustomToken` ile yeniden bağlanır. Yarım kalan değişiklikte
+        Firebase numarası arka planda hesabın numarasına eşitlenir.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -817,6 +849,7 @@ paths:
       summary: Hesap silme talebi
       description: |
         ⚠ Silme nedeniyle para/hak iadesi YAPILMAZ; finansal kayıtlar silinmez (§20).
+        `password` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '200': { description: Başarılı }
@@ -1053,6 +1086,8 @@ paths:
       summary: İletişimi aç
       description: |
         ⚠ İKİ TARAF İÇİN AYNI ANDA açılır ve SÜRESİZDİR (§8).
+        ⚠ YALNIZ İLAN SAHİBİ açar (15 Eki): hizmet veren açmaya çalışırsa 403
+        FORBIDDEN; iletişim zaten açıksa iki taraf da durumu (open: true) alır.
         ⚠ İDEMPOTENT: tekrar istek hata üretmez; sunucu COMMUNICATION_ALREADY_OPEN döner ve bu BİR HATA DEĞİLDİR (§10).
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
@@ -1499,6 +1534,11 @@ paths:
         SameSite=None, Path=/api/v1/auth). Çerez başlıksız kabul edilmez (CSRF).
         Geçersiz çerez ve çıkış (`/auth/logout`) çerezi siler. Mobil istemci
         (başlıksız) davranışı değişmez.
+        FIREBASE UZLAŞTIRMASI (15 Eki): Firebase'e bağlı hesapta Firebase kaydı
+        en çok 5 dakikada bir okunur; Firebase'de dışarıda yapılmış iptal
+        (e-postayla şifre sıfırlama, konsoldan iptal) yerel sınırdan yeniyse o
+        andan önce açılmış bütün oturumlar kapanır ve yenileme 401 döner.
+        Firebase'e ulaşılamazsa yenileme engellenmez.
       responses:
         '200': { description: '{ accessToken, refreshToken }' }
         '401': { $ref: '#/components/responses/Unauthorized' }

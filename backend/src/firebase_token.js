@@ -9,8 +9,9 @@
 //   · exp gelecekte · iat/auth_time geçmişte · sub boş değil
 // Sertifikalar Cache-Control süresi kadar önbelleğe alınır.
 // ═══════════════════════════════════════════════════════════════
-import { createVerify } from 'node:crypto';
+import { createSign, createVerify } from 'node:crypto';
 import { config } from './config.js';
+import { googleErisimJetonu, ortamServisHesabi } from './servis_hesabi.js';
 
 const SERTIFIKA_ADRESI = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 let onbellek = { sertifikalar: null, bitis: 0 };
@@ -116,4 +117,123 @@ export async function firebaseSifreDegistir(email, mevcut, yeni) {
   });
   if (!d.ok) throw new Error(`Firebase şifresi güncellenemedi (HTTP ${d.status})`);
   return true;
+}
+
+// ── FIREBASE KİMLİK YÖNETİMİ (servis hesabıyla, 15 Eki güvenlik denetimi) ──
+//
+// İki iş için gerekir ve ikisi de kullanıcının mevcut Firebase şifresini
+// BİLMEDEN yapılmak zorundadır:
+//   · Telefonla şifre sıfırlama: Firebase'e bağlı hesapta giriş şifreyi
+//     Firebase'den doğrular. Sıfırlama yalnız yerel özeti değiştirirse YENİ
+//     şifre reddedilir, ESKİ şifre çalışmaya devam eder (ele geçirilmiş
+//     hesabı kurtarmak için yapılan sıfırlama işe yaramaz).
+//   · Hesap silme: Firebase'deki kimlik (telefon, e-posta) üçüncü taraf
+//     kopyasıdır; yerelde anonimleştirilen hesabın Firebase kaydı da silinir.
+const KIMLIK_KAPSAMI = 'https://www.googleapis.com/auth/identitytoolkit';
+let yonetimTestGondericisi = null;
+/** Yalnız testler: Identity Toolkit yönetim çağrısını değiştirir. */
+export function firebaseYonetimTestGondericisi(f) { yonetimTestGondericisi = f; }
+
+async function yonetimIstegi(islem, govde) {
+  if (yonetimTestGondericisi) return yonetimTestGondericisi(islem, govde);
+  const sh = ortamServisHesabi();
+  if (!sh) throw new Error('Firebase servis hesabı yapılandırılmamış');
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(config.firebaseProjeId)}/accounts:${islem}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await googleErisimJetonu(sh, KIMLIK_KAPSAMI)}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(govde),
+    signal: AbortSignal.timeout(10000),
+  });
+  const j = await r.json().catch(() => ({}));
+  return { ok: r.ok, durum: r.status, kod: String(j?.error?.message ?? ''), veri: j };
+}
+
+/** Sunucunun Firebase kullanıcılarını yönetebilir olup olmadığı (servis hesabı ya da test kancası). */
+export function firebaseYonetimiHazir() {
+  return !!yonetimTestGondericisi || !!ortamServisHesabi();
+}
+
+/**
+ * Firebase kullanıcısının şifresini (mevcut şifre olmadan) ayarlar; başarısızsa
+ * fırlatır. `gecerlilikSn` verilirse AYNI çağrıda yenileme belirteçleri de
+ * iptal edilir (bkz. firebaseOturumlariniIptalEt) — şifre ile iptal ayrışmaz.
+ */
+export async function firebaseSifreAyarla(uid, yeni, { gecerlilikSn } = {}) {
+  const r = await yonetimIstegi('update', { localId: uid, password: yeni, ...(gecerlilikSn ? { validSince: String(gecerlilikSn) } : {}) });
+  if (!r.ok) throw new Error(`Firebase şifresi ayarlanamadı (HTTP ${r.durum})`);
+}
+
+// ── ⚠ FIREBASE OTURUM İPTALİ (15 Eki güvenlik denetimi) ──
+//
+// Firebase Admin SDK'nın `revokeRefreshTokens(uid)` yöntemi Identity
+// Toolkit'e `accounts:update { localId, validSince: <şimdi, saniye> }` gönderir;
+// `verifyIdToken(token, checkRevoked=true)` ise `accounts:lookup` ile kullanıcıyı
+// okuyup `disabled` ve `auth_time < validSince` durumunda belgeyi reddeder.
+// Backend'in tek bağımlılığı `pg` olduğu için (npm paketi kurulmaz) AYNI REST
+// çağrıları servis hesabıyla doğrudan yapılır; davranış birebir aynıdır.
+
+/** Kullanıcının bütün Firebase yenileme belirteçlerini iptal eder; başarısızsa fırlatır. */
+export async function firebaseOturumlariniIptalEt(uid, gecerlilikSn) {
+  const r = await yonetimIstegi('update', { localId: uid, validSince: String(gecerlilikSn) });
+  if (!r.ok) throw new Error(`Firebase oturumları iptal edilemedi (HTTP ${r.durum})`);
+}
+
+/** Firebase kullanıcısının telefonunu (E.164) ayarlar; başarısızsa fırlatır. */
+export async function firebaseTelefonAyarla(uid, e164) {
+  const r = await yonetimIstegi('update', { localId: uid, phoneNumber: e164 });
+  if (!r.ok) throw new Error(`Firebase telefonu güncellenemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 40)}` : ''})`);
+}
+
+/**
+ * Firebase kullanıcı kaydı: { validSince (saniye|null), disabled, phoneNumber }.
+ * Kullanıcı yoksa null; ağ/sağlayıcı hatasında fırlatır.
+ */
+export async function firebaseKullaniciBilgisi(uid) {
+  const r = await yonetimIstegi('lookup', { localId: [uid] });
+  if (!r.ok) {
+    if (r.kod.startsWith('USER_NOT_FOUND')) return null;
+    throw new Error(`Firebase kullanıcısı okunamadı (HTTP ${r.durum})`);
+  }
+  const k = r.veri?.users?.[0];
+  if (!k) return null;
+  const vs = Number(k.validSince);
+  return {
+    validSince: Number.isFinite(vs) && vs > 0 ? vs : null, disabled: k.disabled === true, phoneNumber: k.phoneNumber ?? null,
+    email: k.email ?? null, saglayicilar: Array.isArray(k.providerUserInfo) ? k.providerUserInfo.map((p) => p.providerId) : [],
+    // Firebase'in kaydettiği son şifre değişikliği (ms) — e-posta bağlantısıyla
+    // sıfırlama dahil; sunucu bu değişiklikten haberdar edilmez.
+    sifreGuncellemeMs: Number(k.passwordUpdatedAt) > 0 ? Number(k.passwordUpdatedAt) : null,
+  };
+}
+
+/** Firebase kullanıcısını siler. Zaten yoksa başarı sayılır; başka hatada fırlatır. */
+export async function firebaseKullaniciSil(uid) {
+  const r = await yonetimIstegi('delete', { localId: uid });
+  if (r.ok || r.kod.startsWith('USER_NOT_FOUND')) return;
+  throw new Error(`Firebase kullanıcısı silinemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 60)}` : ''})`);
+}
+
+// ── ÖZEL KİMLİK BELGESİ (Firebase Admin SDK `createCustomToken` ile aynı) ──
+//
+// Telefon değişikliğinde sunucu kullanıcının BÜTÜN Firebase oturumlarını
+// iptal eder; işlemi yapan cihazın Firebase oturumu da kapanırdı (sonraki
+// e-posta değişikliği gibi Firebase işlemleri yeniden giriş isterdi). Sunucu
+// yalnız o cihaza, iptalden SONRA, kısa ömürlü bir özel belge verir; istemci
+// `signInWithCustomToken` ile yeni (iptal sınırından sonraki) oturum açar.
+// Biçim Firebase belgelerindeki gibidir: servis hesabıyla RS256 imzalı JWT,
+// iss = sub = servis hesabı, aud = Identity Toolkit, uid, en çok 1 saat.
+const OZEL_BELGE_AUD = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
+let ozelBelgeTestUreticisi = null;
+/** Yalnız testler: özel belge üretimini değiştirir. */
+export function firebaseOzelBelgeTestUreticisi(f) { ozelBelgeTestUreticisi = f; }
+
+/** Servis hesabı yoksa null. Süre: 5 dakika. */
+export function firebaseOzelBelge(uid) {
+  if (ozelBelgeTestUreticisi) return ozelBelgeTestUreticisi(uid);
+  const sh = ortamServisHesabi();
+  if (!sh) return null;
+  const an = Math.floor(Date.now() / 1000);
+  const b64 = (x) => Buffer.from(JSON.stringify(x)).toString('base64url');
+  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, sub: sh.client_email, aud: OZEL_BELGE_AUD, iat: an, exp: an + 300, uid })}`;
+  return `${govde}.${createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url')}`;
 }

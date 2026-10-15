@@ -27,7 +27,7 @@ async function istek(yol, { yontem = 'GET', govde, token } = {}) {
 async function kisi(tel, rol) {
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   return { token: r.json.accessToken, id: me.json.id };
 }
@@ -168,9 +168,9 @@ test('yasal kabul: yalnız kabul isteyen + yayındaki sürüm; sürüm değişin
 });
 
 test('hesap silme: 30 gün sonra kişisel veri anonimleşir, oturum kapanır; iptal edilebilir', async () => {
-  const r = await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: yabanci.token, govde: { reason: 'Artık kullanmıyorum' } });
+  const r = await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: yabanci.token, govde: { reason: 'Artık kullanmıyorum', password: 'sifre1234' } });
   assert.equal(r.json.status, 'PENDING');
-  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: yabanci.token, govde: {} })).durum, 409);
+  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: yabanci.token, govde: { password: 'sifre1234' } })).durum, 409);
   await db.prepare(`UPDATE account_requests SET scheduled_for = ? WHERE id = ?`).run('2000-01-01T00:00:00.000Z', r.json.id);
   assert.equal(await silmeTalepleriniIsle(db), 1);
   const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(yabanci.id);

@@ -4,10 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// WEB KENAR ÇUBUĞU — DESTEK MERKEZİ PANELİ + ÇİZGİ İKONLAR
 ///
-/// ⚠ ANDROID KİLİTLİ: `profile_screen.dart` bu turda DEĞİŞMEDİ. Destek
-/// paneli web için ayrı dosyada (`lib/ui/web_destek_paneli.dart`)
-/// tanımlı; iki tanımın ayrışmaması aşağıdaki PARİTE testleriyle
-/// kilitli.
+/// Destek paneli 15 Eki'den beri TEK KAYNAK (`destek_merkezi_paneli.dart`):
+/// mobil profil ekranı ve web kenar çubuğu aynı paneli açar (kullanıcı
+/// kararı: "Android'deki gibi görünmeli ve tepki vermeli").
 void main() {
   String oku(String p) => File(p).readAsStringSync();
 
@@ -23,35 +22,43 @@ void main() {
           reason: 'alakasız Profil sayfasına yönlendirme geri gelmiş');
     });
 
-    test('PARİTE: web paneli Android paneliyle BİREBİR aynı içerik', () {
-      final android = oku('lib/screens/profile_screen.dart');
-      final web = oku('lib/ui/web_destek_paneli.dart');
-      const ortak = <String>[
+    test('TEK KAYNAK: mobil ve web AYNI paneli açar; ikinci tanım yok', () {
+      final p = oku('lib/screens/profile_screen.dart');
+      expect(p.contains('onTap: () => _destekSheet(c)'), isTrue);
+      expect(p.contains('destekMerkeziPaneliniAc(c)'), isTrue);
+      expect(oku('lib/ui/web_destek_paneli.dart').contains('destekMerkeziPaneliniAc(c)'), isTrue);
+      for (final yol in ['lib/screens/profile_screen.dart', 'lib/ui/web_destek_paneli.dart']) {
+        final k = oku(yol);
+        expect(k.contains('RefSheetBody('), isFalse, reason: '$yol: ikinci panel tanımı');
+        expect(k.contains('DestekTalebiFormu'), isFalse, reason: yol);
+      }
+    });
+
+    test('panel içeriği: başlık, açıklama, e-posta kutusu; talep formu yok', () {
+      final d = oku('lib/ui/destek_merkezi_paneli.dart');
+      for (final parca in const [
         "title: 'Destek Merkezi'",
         "ikon: 'assets/svg/ic_phead.svg'",
         'ikonZemin: const Color(0xFFF3E9FD)',
         "baslik: 'Size nasıl yardımcı olabiliriz?'",
         'aciklama: bilgi.description',
         "RefSvg('assets/svg/ic_mail.svg'",
-        'Color(0xFF7C3AED)',
         "LegalApi(c.read<ApiClient>()).one('support')",
         'SupportInfo.fallback',
-        "Uri(scheme: 'mailto', path: adres)",
-        "'E-posta uygulaması bulunamadı: \$adres'",
-        "'E-posta uygulaması açılamadı: \$adres'",
-      ];
-      for (final parca in ortak) {
-        expect(android.contains(parca), isTrue,
-            reason: 'Android panelinde yok: $parca');
-        expect(web.contains(parca), isTrue,
-            reason: 'web paneli Android panelinden ayrışmış: $parca');
+        'onTap: () => epostaUygulamasiniAc(c, bilgi.email)',
+      ]) {
+        expect(d.contains(parca), isTrue, reason: parca);
       }
+      expect(d.contains('DestekTalebiFormu'), isFalse);
     });
 
-    test('Android profil ekranı kendi panelini açmaya devam eder', () {
-      final p = oku('lib/screens/profile_screen.dart');
-      expect(p.contains('onTap: () => _destekSheet(c)'), isTrue);
-      expect(p.contains('webDestekPaneliniAc'), isFalse);
+    test('e-posta: alıcısı dolu mailto, web\'de aynı sekmede (boş sekme yok)', () {
+      final e = oku('lib/core/eposta_acma.dart');
+      expect(e.contains("Uri(scheme: 'mailto', path: adres)"), isTrue);
+      expect(e.contains("webOnlyWindowName: kIsWeb ? '_self' : null"), isTrue);
+      expect(e.contains('mode: acilisModu()'), isTrue);
+      expect(e.contains("'E-posta uygulaması bulunamadı: \$adres'"), isTrue);
+      expect(e.contains("'E-posta uygulaması açılamadı: \$adres'"), isTrue);
     });
   });
 

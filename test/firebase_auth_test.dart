@@ -73,7 +73,10 @@ void main() {
     test('API modu: Firebase kanıtı sunucuya gider; oturum sunucudan', () {
       final p = _kod('lib/data/ports/api_ports.dart');
       expect(p.contains('return repo.firebaseOturum(r.idToken!);'), isTrue);
-      expect(p.contains('firebaseIdToken: kayitYetkisi);'), isTrue);
+      expect(p.contains('firebaseIdToken: kayitYetkisi,'), isTrue);
+      // 15 Eki: koşul onayı ve 18 yaş beyanı da sunucuya gider.
+      expect(p.contains('termsAccepted: termsAccepted,'), isTrue);
+      expect(p.contains('ageConfirmed: ageConfirmed);'), isTrue);
       expect(p.contains('FirebaseKimlik.i.sifreSifirlamaEpostasi(email)'), isTrue);
     });
 

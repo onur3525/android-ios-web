@@ -96,6 +96,8 @@ class MockAuthPort extends AuthPort {
     Set<String> serviceDistricts = const {},
     /// Sözleşme + gizlilik onayı — ZORUNLU.
     bool termsAccepted = false,
+    /// 18 yaş beyanı — mock (demo) depoda tutulmaz; ekran ve sunucu zorunlu tutar.
+    bool ageConfirmed = false,
     /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
     String? kayitYetkisi,
@@ -128,7 +130,8 @@ class MockAuthPort extends AuthPort {
 
   @override
   Future<DomainError?> telefonDegisimiDogrula(
-          String challengeId, String kod) =>
+          String challengeId, String kod, {String? mevcutSifre}) =>
+      // Mock (demo) depo şifreyi ekranın panelinde zaten doğruladı.
       repo.telefonDegisimiDogrula(challengeId, kod);
 
   @override
@@ -709,8 +712,8 @@ class MockContactPort extends ContactPort {
   @override
   Future<DomainError?> refresh(String offerId) async => null;
 
-  /// KURAL: İletişim iki taraf için aynı anda açılır; bloke TEK KEZ
-  /// tüketilir. Yetkisiz aktör hiçbir durum değişikliği oluşturmaz.
+  /// KURAL: İletişim iki taraf için aynı anda açılır; YALNIZ ilan sahibi
+  /// açar (15 Eki). Yetkisiz aktör hiçbir durum değişikliği oluşturmaz.
   @override
   Future<DomainError?> openShared(String offerId, {required String actorId}) async {
     final o = offers.byId(offerId);
@@ -764,6 +767,17 @@ class MockContactPort extends ContactPort {
     //
     // ⚠ `open` İDEMPOTENTTİR: ikinci çağrıda `false` döner ve
     // sessizce başarı sayılır — çift açma hatası üretmez.
+    //
+    // ⚠ PAYLAŞIM ONAYI İLAN SAHİBİNDE (15 Eki güvenlik denetimi) — backend
+    // ile aynı: açık iletişim herkese durum olarak döner; KAPALIYSA yalnız
+    // ilan sahibi açar (hizmet alanın telefonu onun işlemi olmadan
+    // paylaşılmaz).
+    if (contacts.isOpen(offerId)) {
+      return null;
+    }
+    if (actorId != l.ownerId) {
+      return const UnauthorizedError('İletişimi yalnızca ilan sahibi açabilir');
+    }
     if (!contacts.open(offerId)) {
       return null;
     }

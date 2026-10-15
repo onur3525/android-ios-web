@@ -74,17 +74,17 @@ void main() {
     });
   });
 
-  group('YERLEŞİM — Android ve web AYNI form', () {
-    test('iki panel de ortak bileşeni çizer, e-posta kutusu korunur', () {
+  group('YERLEŞİM — Destek Merkezi panelinde form YOK (15 Eki kararı)', () {
+    test('mobil ve web paneli formu çizmez; e-posta kutusu korunur', () {
       for (final yol in [
         'lib/screens/profile_screen.dart',
         'lib/ui/web_destek_paneli.dart',
+        'lib/ui/destek_merkezi_paneli.dart',
       ]) {
-        final k = _kod(yol);
-        expect(k.contains('const DestekTalebiFormu(),'), isTrue, reason: yol);
-        expect(k.contains("Uri(scheme: 'mailto', path: adres)"), isTrue,
-            reason: '$yol: e-posta kutusu kaldırılmamalı');
+        expect(_kod(yol).contains('DestekTalebiFormu'), isFalse, reason: yol);
       }
+      expect(_kod('lib/ui/destek_merkezi_paneli.dart').contains('epostaUygulamasiniAc(c, bilgi.email)'), isTrue,
+          reason: 'e-posta kutusu kaldırılmamalı');
     });
 
     test('mock/demo derlemesinde ve oturumsuz kullanıcıda form çizilmez', () {

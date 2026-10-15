@@ -27,10 +27,11 @@ const { ozelAdresMi, disAdresSorunu, guvenliIstek, guvenliLookup } = await impor
 let db, sunucu, taban;
 const adminCerez = {};
 
-async function istek(yol, { yontem = 'GET', govde, token, rol } = {}) {
+async function istek(yol, { yontem = 'GET', govde, token, rol, gerekce } = {}) {
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
+      ...(gerekce ? { 'X-HC-Reason': encodeURIComponent(gerekce) } : {}),
       ...(govde ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(yol.startsWith('/admin/') ? { 'X-HC-Admin': '1', Cookie: adminCerez[rol ?? 'super_admin'] ?? '' } : {}),
@@ -47,7 +48,7 @@ async function kisi(tel, rol) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   return { token: r.json.accessToken, refresh: r.json.refreshToken, id: me.json.id };
@@ -201,6 +202,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     ['GET', '/admin/v1/support/tickets', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/feedback', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/integrations', ['super_admin', 'operations']],
+    ['GET', '/admin/v1/deletion-queues', ['super_admin', 'operations']],
     ['GET', '/admin/v1/admins', ['super_admin']],
     ['GET', '/admin/v1/audit-log', ['super_admin']],
   ];
@@ -240,6 +242,42 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   // CSRF: özel başlık olmadan yazma reddedilir.
   const csrf = await fetch(`${taban}/admin/v1/support/tickets/${randomUUID()}/close`, { method: 'POST', headers: { Cookie: adminCerez.super_admin, 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(csrf.status, 403);
+});
+
+test('yönetici yazışma görüntüleme gerekçe ister ve gerekçe denetime yazılır; iletişimsiz rol telefonla arayamaz', async () => {
+  const sahip = await kisi('5340000093', 'CUSTOMER');
+  const usta = await kisi('5340000094', 'PROVIDER');
+  const l = await istek('/api/v1/listings', { yontem: 'POST', token: sahip.token, govde: { title: hiz, location: 'Konak', description: 'banyo tadilatı yapılacak' } });
+  const o = await istek('/api/v1/offers', { yontem: 'POST', token: usta.token, govde: { listingId: l.json.id, amountTl: 800, note: '' } });
+  assert.equal(o.durum, 200, JSON.stringify(o.json));
+  const yol = `/admin/v1/chats/${o.json.id}/messages`;
+  const gerekcesiz = await istek(yol, { rol: 'moderator' });
+  assert.equal(gerekcesiz.durum, 400);
+  assert.equal((await istek(yol, { rol: 'moderator', gerekce: 'abc' })).durum, 400, 'kısa gerekçe');
+  assert.equal((await istek(`${yol}?reason=${encodeURIComponent('Şikâyet #12 incelemesi')}`, { rol: 'moderator' })).durum, 400, 'adres satırındaki gerekçe kabul edilmez (günlüğe düşer)');
+  assert.equal((await istek(yol, { rol: 'moderator', gerekce: 'Şikâyet #12 incelemesi' })).durum, 200);
+  const kayit = await db.prepare(`SELECT reason FROM audit_log WHERE action = 'chat.messages.view' AND target_id = ? ORDER BY created_at DESC`).get(o.json.id);
+  assert.equal(kayit.reason, 'Şikâyet #12 incelemesi');
+  assert.equal((await istek(yol, { rol: 'readonly', gerekce: 'yetkisiz deneme' })).durum, 403, 'gerekçe yetkinin yerini tutmaz');
+
+  // Talep detayı da aynı kurala bağlı.
+  const t = await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: sahip.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'mutfak musluğu damlatıyor', iletisimTercihi: 'yalnizMesaj' } });
+  assert.equal(t.durum, 200, JSON.stringify(t.json));
+  assert.equal((await istek(`/admin/v1/teklif-talepleri/${t.json.id}`, { rol: 'super_admin' })).durum, 400);
+  assert.equal((await istek(`/admin/v1/teklif-talepleri/${t.json.id}`, { rol: 'super_admin', gerekce: 'Destek talebi kontrolü' })).durum, 200);
+
+  // readonly: maskeli liste; telefon/e-postayla arama SONUÇ VERMEZ (kayıt var mı sorgusu kapalı).
+  const ro = await istek('/admin/v1/users?q=5340000093', { rol: 'readonly' });
+  assert.equal(ro.durum, 200);
+  assert.equal(ro.json.total, 0);
+  const roEposta = await istek(`/admin/v1/users?q=${encodeURIComponent('k5340000093@ornek.com')}`, { rol: 'readonly' });
+  assert.equal(roEposta.json.total, 0);
+  const roAd = await istek(`/admin/v1/users?q=${encodeURIComponent('Kişi 93')}`, { rol: 'readonly' });
+  assert.ok(roAd.json.total >= 1, 'adla arama sürer');
+  assert.ok(roAd.json.items.every((u) => u.phone.includes('*')), 'readonly maskeli görür');
+  const mod = await istek('/admin/v1/users?q=5340000093', { rol: 'moderator' });
+  assert.equal(mod.json.total, 1);
+  assert.equal(mod.json.items[0].phone, '5340000093');
 });
 
 test('SMS/E-posta kayıtları: iletişim bilgisi yalnız yetkili role açık, operations maskeli görür', async () => {
@@ -319,7 +357,7 @@ test('Gelen Talepler: kullanıcı başına hız sınırı; kapatma', async () =>
 test('hesap silme firebase_uid\'yi temizler: aynı Firebase kimliğiyle yeni hesap çakışmaz', async () => {
   const u = await kisi('5340000071', 'CUSTOMER');
   await db.prepare('UPDATE users SET firebase_uid = ? WHERE id = ?').run('fb-uid-silinecek', u.id);
-  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: u.token, govde: {} });
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: u.token, govde: { password: 'sifre1234' } });
   await db.prepare(`UPDATE account_requests SET scheduled_for = ? WHERE user_id = ?`).run('2000-01-01T00:00:00.000Z', u.id);
   await silmeTalepleriniIsle(db);
   const s = await db.prepare('SELECT firebase_uid, deleted_at, email FROM users WHERE id = ?').get(u.id);

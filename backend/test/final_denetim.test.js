@@ -46,7 +46,7 @@ async function kisi(tel, rol) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234', name: 'Deneme Kişi', email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Deneme Kişi', email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   return { token: r.json.accessToken, refresh: r.json.refreshToken, id: me.json.id };
@@ -87,7 +87,7 @@ async function ilanVeTeklif(sahip, ...ustalar) {
 test('ReDoS: çok uzun e-posta olay döngüsünü kilitlemez (oturumsuz kayıt ucu)', async () => {
   const kotu = `a@${'.'.repeat(400_000)}@`;
   const t0 = Date.now();
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: '5370000001', password: 'sifre1234', name: 'Ad Soyad', email: kotu, role: 'CUSTOMER', otpCode: '123456' } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: '5370000001', password: 'sifre1234', name: 'Ad Soyad', email: kotu, role: 'CUSTOMER', otpCode: '123456' } });
   assert.equal(r.durum, 400);
   assert.ok(Date.now() - t0 < 2000, `yanıt ${Date.now() - t0} ms sürdü (önceden dakikalar)`);
 });
@@ -161,12 +161,28 @@ test('eşzamanlı iletişim açma: 500 yok, kayıt ve bildirim TEK', async () =>
   const { teklifler: [o] } = await ilanVeTeklif(sahip, u1);
   const sonuc = await Promise.all([
     istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: sahip.token }),
-    istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token }),
+    istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: sahip.token }),
     istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: sahip.token }),
   ]);
   for (const r of sonuc) assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM contacts WHERE offer_id = ?').get(o.id)).n, 1);
   assert.equal((await db.prepare(`SELECT COUNT(*) n FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).n, 1);
+});
+
+test('iletişim paylaşımı: yalnız ilan sahibi açar; hizmet veren tek taraflı açamaz', async () => {
+  const sahip = await kisi('5370000025', 'CUSTOMER');
+  const u1 = await kisi('5370000026', 'PROVIDER');
+  const { teklifler: [o] } = await ilanVeTeklif(sahip, u1);
+  const red = await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token });
+  assert.equal(red.durum, 403);
+  assert.equal(red.json.error.code, 'FORBIDDEN');
+  assert.equal(await db.prepare('SELECT 1 FROM contacts WHERE offer_id = ?').get(o.id), undefined, 'paylaşım açılmadı');
+  assert.equal((await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: sahip.token })).durum, 200);
+  // Açıldıktan sonra hizmet verenin sorgusu durumu döner (yeni paylaşım yok).
+  const sonra = await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token });
+  assert.equal(sonra.durum, 200);
+  assert.equal(sonra.json.open, true);
+  assert.equal((await db.prepare(`SELECT user_id FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).user_id, u1.id);
 });
 
 test('eşzamanlı çift teklif ve çift yorum: 500 değil anlamlı hata, kayıt TEK', async () => {
@@ -198,7 +214,7 @@ test('aynı OTP eşzamanlı iki kayıtta kullanılamaz', async () => {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: '5370000051', purpose: 'REGISTER' } });
   const kod = globalThis.__sonOtp;
-  const kayit = (mail) => istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: '5370000051', password: 'sifre1234', name: 'Ad Soyad', email: mail, role: 'CUSTOMER', otpCode: kod } });
+  const kayit = (mail) => istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: '5370000051', password: 'sifre1234', name: 'Ad Soyad', email: mail, role: 'CUSTOMER', otpCode: kod } });
   const r = await Promise.all([kayit('x1@ornek.com'), kayit('x2@ornek.com')]);
   assert.equal(r.filter((x) => x.durum === 200).length, 1);
   for (const x of r) assert.ok(x.durum < 500, `${x.durum} ${JSON.stringify(x.json)}`);

@@ -43,7 +43,7 @@ before(async () => {
   await new Promise((ok) => sunucu.listen(0, ok));
   taban = `http://127.0.0.1:${sunucu.address().port}`;
   assert.equal((await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: TEL, purpose: 'REGISTER' } })).durum, 204);
-  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: TEL, password: 'sifre1234', name: 'Foto Deneme', email: 'foto@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
+  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Foto Deneme', email: 'foto@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(k.durum, 200, JSON.stringify(k.json));
   token = k.json.accessToken;
   kullaniciId = (await istek('/api/v1/users/me')).json.id;

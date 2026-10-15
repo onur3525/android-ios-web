@@ -36,7 +36,7 @@ async function kullaniciOlustur(tel, rol) {
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const r = await istek('/api/v1/auth/register', {
     yontem: 'POST',
-    govde: { phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp },
+    govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Kişi ${tel.slice(-2)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp },
   });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });

@@ -41,6 +41,8 @@ export function jsonGonder(res, durum, govde, ekBaslik = {}) {
   const metin = govde === undefined ? '' : JSON.stringify(govde);
   res.writeHead(durum, {
     ...GUVENLIK_BASLIKLARI,
+    // HSTS yalnız HTTPS'in zorunlu olduğu ortamda (üretim: Secure çerez kuralıyla aynı).
+    ...(config.cerezSecure ? { 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' } : {}),
     ...(metin ? { 'Content-Type': 'application/json; charset=utf-8' } : {}),
     ...ekBaslik,
   });
@@ -71,7 +73,9 @@ export function cerezleriOku(req) {
   const out = {};
   for (const p of (req.headers.cookie || '').split(';')) {
     const i = p.indexOf('=');
-    if (i > 0) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim());
+    if (i <= 0) continue;
+    // Bozuk yüzde kodlaması (ör. `%E0%A4%A`) tüm isteği 500'e düşürmesin: o çerez yok sayılır.
+    try { out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim()); } catch { /* geçersiz çerez */ }
   }
   return out;
 }
@@ -222,7 +226,11 @@ export class Yonlendirici {
       yolVar = true;
       if (r.yontem !== yontem) continue;
       const params = {};
-      r.anahtarlar.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
+      try {
+        r.anahtarlar.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
+      } catch {
+        throw hata.dogrulama('Geçersiz adres'); // bozuk yüzde kodlaması: 500 değil 400
+      }
       return { isleyici: r.isleyici, params };
     }
     return yolVar ? 'YONTEM' : null;

@@ -61,10 +61,10 @@ after(async () => {
 let erisim, yenileme, kullaniciId;
 
 test('kayıt: OTP olmadan reddedilir, doğru OTP ile hesap + oturum', async () => {
-  const yanlis = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: '000000' } });
+  const yanlis = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: '000000' } });
   assert.equal(yanlis.durum, 400);
   const kod = await otpAl(TEL, 'REGISTER');
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: kod } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: kod } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.ok(r.json.accessToken && r.json.refreshToken);
   erisim = r.json.accessToken;

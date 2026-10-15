@@ -213,7 +213,9 @@ void main() {
 
   group('5 — ŞİFRE DOĞRULAMA PANELİ', () {
     // Hesap silmeden önceki şifre paneli standardın DIŞINDAYDI.
-    final a = _kod('lib/screens/account_settings_screen.dart');
+    // ⚠ 15 Eki: panel ortak dosyaya taşındı (hesap silme + telefon
+    // değiştirme); kurallar orada denetlenir.
+    final a = _kod('lib/ui/sifre_dogrulama_paneli.dart');
 
     test('değer değişince uyarı düşer', () {
       expect(a.contains('hataNot.value = null;'), isTrue);

@@ -163,6 +163,10 @@ const YETKI = {
   // rollerle aynı; yanıt/kapatma yalnız kullanıcıyla yazışabilen roller.
   'support.tickets.read': ['super_admin', 'moderator', 'readonly'],
   'support.tickets.write': ['super_admin', 'moderator'],
+  // Hesap silme kuyrukları (Firebase kaydı, dosyalar): teknik izleme ve
+  // yeniden deneme. Kişisel veri göstermez (kimlikler özetlenmiş).
+  'deletion.queues.read': ['super_admin', 'operations'],
+  'deletion.queues.retry': ['super_admin', 'operations'],
   'admins.manage': ['super_admin'],
   'audit.read': ['super_admin'],
 };
