@@ -44,13 +44,40 @@ Hazırlanma: 15 Ekim 2026 (güvenlik denetimi, karar 7). Bu belge **yalnız kayn
 
 ## 5. Karar bekleyen saklama noktaları (süre uydurulmamıştır)
 
-| Kayıt | Silmeden sonra kalan | Neden tutuluyor | Karar verilmesi gereken |
-|---|---|---|---|
-| `audit_log` | İşlem, zaman, yönetici, yönetici IP'si, hedef kimliği, maskelenmiş gerekçe ve değerler | Yönetici işlemlerinin hesap verebilirliği, güvenlik olay incelemesi | Saklama süresi; süre sonunda tamamen silinmesi mi yoksa yalnız özet sayımların tutulması mı |
-| `user_status_history` | Eski/yeni durum, zaman, yönetici, maskelenmiş gerekçe | Askı/ban kararlarının ispatı ve itirazlar | Saklama süresi |
-| `legal_acceptances` | Sözleşme/aydınlatma sürümü, özet, platform, zaman | Onayın ispatı | Saklama süresi (sözleşme ilişkisinin bitişinden itibaren) |
-| `account_requests` | Talep ve uygulama zamanı (gerekçe metni silinir) | Silme talebinin ne zaman alınıp uygulandığının ispatı | Saklama süresi |
-| Anonim iş satırları ve yıldız puanları | Kimlik numaraları, tarih, durum, puan | Karşı tarafın geçmişi, puan bütünlüğü | Kişiye bağlanamaz; süre gerekip gerekmediği |
-| Render yedekleri ve sunucu günlükleri | Silinen verinin kopyası, yedek süresi boyunca | Sağlayıcı özelliği | Yedek/günlük saklama süresinin panelden doğrulanması ve aydınlatma metnine yazılması |
+Aşağıdaki sürelerin hiçbiri kodda belirlenmemiştir; her biri hukuki karar gerektirir. Kod bugün bu kayıtları **süresiz** tutar (yedekler ve sunucu günlükleri hariç; onların süresi sağlayıcı ayarına bağlıdır ve panelde doğrulanmadı).
 
-Bu sürelerin hukukçuyla belirlenmesi, ardından süresi dolan kayıtları silen bir bakım işinin eklenmesi gerekir. Değiştirilemezlik tetikleyicileri bugün silmeye izin vermez; süre kararı verildiğinde yalnız süresi dolmuş kayıtların silinmesine izin veren bir göç eklenmelidir.
+### 5.1 Yönetici denetim kaydı (`audit_log`)
+- Hesap silindikten sonra kalan: işlem türü, zaman, işlemi yapan yönetici, yöneticinin IP adresi, hedef türü ve kimliği, maskelenmiş gerekçe ve değerler.
+- Neden tutuluyor: yönetici işlemlerinin hesap verebilirliği, güvenlik olayı incelemesi, itirazlar.
+- Karar bekleyen: saklama süresi; süre dolunca kaydın tamamen mi silineceği, yoksa yalnız sayımların mı tutulacağı; yönetici IP adresinin ne kadar tutulacağı.
+
+### 5.2 Hesap durum geçmişi (`user_status_history`)
+- Kalan: eski ve yeni durum, zaman, yönetici, maskelenmiş gerekçe.
+- Neden: askıya alma ve ban kararlarının ispatı, itirazlar.
+- Karar bekleyen: saklama süresi.
+
+### 5.3 Yasal onaylar (`legal_acceptances`)
+- Kalan: belge türü, sürüm, metin özeti (SHA-256), platform, onay zamanı. Kişiye bağlantı yalnız anonimleştirilmiş hesap kimliği üzerinden.
+- Neden: sözleşme ve aydınlatma metni onayının ispatı.
+- Karar bekleyen: saklama süresi ve başlangıç anı (onay mı, sözleşme ilişkisinin bitişi mi).
+
+### 5.4 Silme talepleri (`account_requests`)
+- Kalan: talep türü, durum, talep, planlanan ve tamamlanma zamanı. Gerekçe metni silinir.
+- Neden: silme talebinin ne zaman alınıp uygulandığının ispatı.
+- Karar bekleyen: saklama süresi.
+
+### 5.5 Anonim iş verileri
+- Kalan: ilan, teklif, teklif talebi, mesaj ve yorum satırlarının kimlikleri, tarihleri, durumları, tutarları, yıldız puanları. Metinler ve dosyalar kaldırılır; satırlar anonim hesaba bağlıdır.
+- Neden: karşı tarafın iş geçmişi, puan ortalamasının bütünlüğü, istatistik.
+- Karar bekleyen: bu verinin kişisel veri sayılıp sayılmadığı (karşı tarafın kendi kaydıyla birlikte dolaylı tanıma mümkün olabilir) ve saklama süresi.
+
+### 5.6 Sunucu günlükleri
+- Uygulama kendi günlüğüne kişisel veri yazmamaya çalışır: hata metinleri kısaltılır, OTP ve şifre yazılmaz, üretimde "log" bildirim sağlayıcısı engellidir. Yöneticinin yazışma görüntüleme gerekçesi artık adres satırında değil başlıkta gider (erişim günlüğüne düşmez).
+- Render'ın HTTP erişim günlükleri istemci IP adresini ve istek yolunu (kimlik numaraları dahil) içerir. Saklama süresi ve erişim yetkisi panelde doğrulanmadı.
+- Karar bekleyen: günlük saklama süresi; günlüklere kimlerin erişebileceği; aydınlatma metnine yazılması.
+
+### 5.7 Yedekler
+- Render PostgreSQL yedekleri silinen hesabın verisini yedek süresi boyunca içerir; Cloudflare R2'de nesne sürümleme açıksa silinen dosyaların eski sürümleri kalabilir. İkisi de panelde doğrulanmadı.
+- Karar bekleyen: yedek saklama süresi; yedekten geri yükleme yapılırsa silinmiş hesapların yeniden silinmesi prosedürü; aydınlatma metnine yazılması.
+
+Süre kararları verildiğinde: süresi dolan kayıtları silen bir bakım işi eklenmeli; değiştirilemezlik tetikleyicileri yalnız süresi dolmuş kayıtların silinmesine izin verecek biçimde bir göçle güncellenmelidir.

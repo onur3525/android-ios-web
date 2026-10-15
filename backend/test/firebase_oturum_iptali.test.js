@@ -12,7 +12,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { createSign, generateKeyPairSync } from 'node:crypto';
+import { createSign, createVerify, generateKeyPairSync } from 'node:crypto';
 
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
@@ -21,6 +21,7 @@ const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { testSertifikaGetiricisi, firebaseYonetimTestGondericisi } = await import('../src/firebase_token.js');
 const { olaylar } = await import('../src/olaylar.js');
+const { firebaseIslemKuyrugunuIsle } = await import('../src/firebase_islemleri.js');
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const KID = 'iptal-anahtar';
@@ -87,6 +88,9 @@ async function kod(tel, amac) {
 }
 /** Firebase'e bağlı hesap + iki sunucu oturumu (iki cihaz). */
 async function hesap(tel, uid) {
+  // Bu dosya çok sayıda Firebase oturumu açar: IP başına giriş/OTP sınırı
+  // kurulumu engellemesin (sınırların kendisi başka dosyalarda sınanır).
+  await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'giris_ip:%' OR key LIKE 'otp_ip:%'`).run();
   fbKullanicilar.set(uid, { validSince: null, disabled: false, phoneNumber: `+90${tel}` });
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: {
     termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'İptal Deneme',
@@ -230,4 +234,155 @@ test('telefon değişikliği (istemcide Firebase oturumu yok): yeni numarayla a�
     newPhone: '5390000011', currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000011' }) } });
   assert.equal(r2.durum, 400);
   assert.ok(fbKullanicilar.has(h.uid), 'bağlı kayıt silinmedi');
+});
+
+// ═════ E-POSTA BAĞLANTISIYLA ŞİFRE SIFIRLAMA (Firebase'de, sunucu habersiz) ═════
+const yenile = (rt) => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: rt } });
+const kontrolSifirla = (tel) => db.prepare('UPDATE users SET firebase_checked_at = NULL WHERE phone = ?').run(tel);
+
+test('e-postayla sıfırlama: sonraki yenilemede eski sunucu oturumları kapanır, eski belge reddedilir, yeni şifreyle açılan oturum kalır', async () => {
+  const h = await hesap('5390000020', 'fb-eposta-1');
+  // Firebase sıfırlamada belirteçleri kendisi iptal eder ve kayda yazar (gerçek alanlar: validSince, passwordUpdatedAt).
+  const vs = an() + 1;
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, passwordUpdatedAt: String(vs * 1000) });
+  await kontrolSifirla(h.tel);
+  let yayin = null;
+  olaylar.once('user.sessions.revoked', (d) => (yayin = d));
+  const r = await yenile(h.a.refreshToken);
+  assert.equal(r.durum, 401, 'sıfırlama öncesi oturum yenilenemez');
+  assert.equal((await istek('/api/v1/users/me', { token: h.b.accessToken })).durum, 401, 'diğer oturum da kapandı');
+  assert.ok(yayin, 'soketleri kapatan olay yayınlandı');
+  const u = await db.prepare('SELECT firebase_valid_since, password_hash FROM users WHERE phone = ?').get(h.tel);
+  assert.equal(Number(u.firebase_valid_since), vs);
+  assert.ok(u.password_hash.startsWith('firebase-disi$'), 'yedek doğrulama eski şifreyi kabul etmez');
+  assert.equal((await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: h.tel, password: 'sifre1234' } })).durum, 401, 'eski şifre (yerel yedek) geçersiz');
+  assert.equal((await firebaseOturumu(h.uid, h.tel, { auth_time: an() - 30 })).durum, 401, 'sıfırlama öncesi Firebase belgesi');
+  const yeni = await firebaseOturumu(h.uid, h.tel, { auth_time: vs, iat: vs });
+  assert.equal(yeni.durum, 200, JSON.stringify(yeni.json));
+  await kontrolSifirla(h.tel);
+  assert.equal((await yenile(yeni.json.refreshToken)).durum, 200, 'sıfırlama sonrası oturum yenilenir');
+});
+
+test('uzlaştırma: en çok 5 dakikada bir okunur; Firebase\'e ulaşılamazsa yenileme engellenmez; devre dışı kullanıcının oturumları kapanır', async () => {
+  const h = await hesap('5390000021', 'fb-eposta-2');
+  await kontrolSifirla(h.tel);
+  const ilk = await yenile(h.a.refreshToken);
+  assert.equal(ilk.durum, 200);
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: an() + 1 });
+  const ikinci = await yenile(ilk.json.refreshToken);
+  assert.equal(ikinci.durum, 200, 'aralık dolmadan yeniden okunmaz');
+  yonetimDurumu = 'kapali';
+  try {
+    await kontrolSifirla(h.tel);
+    assert.equal((await yenile(ikinci.json.refreshToken)).durum, 200 /* fail-open */);
+  } finally { yonetimDurumu = 'normal'; }
+  const u = await db.prepare('SELECT firebase_checked_at FROM users WHERE phone = ?').get(h.tel);
+  assert.ok(u.firebase_checked_at, 'deneme zamanı kaydedildi (bir sonraki aralıkta yine denenir)');
+  // Devre dışı bırakılmış Firebase kullanıcısı.
+  const h2 = await hesap('5390000022', 'fb-eposta-3');
+  fbKullanicilar.get(h2.uid).disabled = true;
+  await kontrolSifirla(h2.tel);
+  assert.equal((await yenile(h2.a.refreshToken)).durum, 401);
+  assert.equal((await istek('/api/v1/users/me', { token: h2.b.accessToken })).durum, 401);
+});
+
+test('sunucunun kendi iptali uzlaştırmada "dış değişiklik" sayılmaz: şifre değiştiren cihazın oturumu yenilenmeye devam eder', async () => {
+  const h = await hesap('5390000023', 'fb-eposta-4');
+  assert.equal((await istek('/api/v1/auth/password/change', { yontem: 'POST', token: h.a.accessToken, govde: { currentPassword: 'sifre1234', newPassword: 'Degisti2026' } })).durum, 204);
+  await kontrolSifirla(h.tel);
+  assert.equal((await yenile(h.a.refreshToken)).durum, 200);
+  assert.equal((await yenile(h.b.refreshToken)).durum, 401);
+});
+
+// ═════ YARIM KALAN İŞLEMLER — KALICI KUYRUK ═════
+const kuyruk = (tel) => db.prepare('SELECT q.* FROM firebase_islem_kuyrugu q JOIN users u ON u.id = q.user_id WHERE u.phone = ? ORDER BY q.islem').all(tel);
+
+test('Firebase iptali başarısızsa işlem tamamlanır, yerel sınır hemen geçerli olur, iptal kuyrukta yeniden denenir ve hata kaydedilir', async () => {
+  const h = await hesap('5390000030', 'fb-kuyruk-1');
+  yonetimDurumu = 'kapali';
+  try {
+    assert.equal((await istek('/api/v1/auth/password/change', { yontem: 'POST', token: h.a.accessToken, govde: { currentPassword: 'sifre1234', newPassword: 'Degisti2026' } })).durum, 204);
+    assert.equal((await firebaseOturumu(h.uid, h.tel, { auth_time: an() - 30 })).durum, 401, 'yerel sınır Firebase\'den bağımsız');
+    let q = await kuyruk(h.tel);
+    assert.deepEqual(q.map((x) => x.islem), ['REVOKE']);
+    const deger = Number(q[0].deger);
+    assert.ok(Math.abs(deger - an()) <= 5);
+    await db.prepare('UPDATE firebase_islem_kuyrugu SET sonraki_deneme = ?').run('2000-01-01T00:00:00.000Z');
+    await firebaseIslemKuyrugunuIsle(db);
+    q = await kuyruk(h.tel);
+    assert.equal(q[0].deneme, 1);
+    assert.ok(q[0].son_hata.includes('HTTP 503'));
+    assert.ok(new Date(q[0].sonraki_deneme) > new Date(), 'artan aralıkla ertelendi');
+  } finally { yonetimDurumu = 'normal'; }
+  await db.prepare('UPDATE firebase_islem_kuyrugu SET sonraki_deneme = ?').run('2000-01-01T00:00:00.000Z');
+  // Bu arada daha yeni bir iptal oldu: eski kuyruk değeri sınırı GERİ ALMAZ.
+  const yeniSinir = an() + 100;
+  await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE phone = ?').run(yeniSinir, h.tel);
+  await firebaseIslemKuyrugunuIsle(db);
+  assert.equal(fbKullanicilar.get(h.uid).validSince, yeniSinir, 'gönderilen değer güncel sınırdan küçük olamaz');
+  assert.deepEqual(await kuyruk(h.tel), [], 'başarıda satır silinir');
+});
+
+test('telefon değişikliği yarıda kalırsa (istemci Firebase\'i değiştirdi, sunucu reddetti) Firebase numarası hesabın numarasına geri eşitlenir; başarıda iş boşa yazmaz', async () => {
+  const h = await hesap('5390000031', 'fb-kuyruk-2');
+  const baskasi = await hesap('5390000032', 'fb-kuyruk-3');
+  // İstemci updatePhoneNumber yaptı, ama numara başka hesapta kayıtlı → 409.
+  fbKullanicilar.get(h.uid).phoneNumber = `+90${baskasi.tel}`;
+  const r = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
+    newPhone: baskasi.tel, currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h.uid, phone_number: `+90${baskasi.tel}` }) } });
+  assert.equal(r.durum, 409);
+  assert.deepEqual((await kuyruk(h.tel)).map((x) => x.islem), ['SYNC_PHONE']);
+  await firebaseIslemKuyrugunuIsle(db);
+  assert.equal(fbKullanicilar.get(h.uid).phoneNumber, `+90${h.tel}`, 'Firebase numarası hesabınkine döndü');
+  assert.deepEqual(await kuyruk(h.tel), []);
+
+  // Yanlış şifrede de aynı kurtarma.
+  fbKullanicilar.get(h.uid).phoneNumber = '+905390000033';
+  const y = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
+    newPhone: '5390000033', currentPassword: 'yanlis999', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000033' }) } });
+  assert.equal(y.json.error.code, 'WRONG_PASSWORD');
+  await firebaseIslemKuyrugunuIsle(db);
+  assert.equal(fbKullanicilar.get(h.uid).phoneNumber, `+90${h.tel}`);
+
+  // Başarı: Firebase zaten yeni numarada; kuyruk okur, YAZMAZ.
+  fbKullanicilar.get(h.uid).phoneNumber = '+905390000034';
+  assert.equal((await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
+    newPhone: '5390000034', currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000034' }) } })).durum, 200);
+  cagrilar.length = 0;
+  await firebaseIslemKuyrugunuIsle(db);
+  assert.equal(cagrilar.filter((c) => c.islem === 'update' && c.govde.phoneNumber).length, 0, 'eşit numara yeniden yazılmaz');
+  assert.equal(fbKullanicilar.get(h.uid).phoneNumber, '+905390000034');
+});
+
+// ═════ İŞLEMİ YAPAN CİHAZ: ÖZEL BELGEYLE YENİDEN BAĞLANMA ═════
+test('telefon değişikliği yanıtı, servis hesabıyla imzalı kısa ömürlü Firebase özel belgesi taşır (createCustomToken biçimi)', async () => {
+  const anahtar = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const eski = process.env.HC_FCM_SERVICE_ACCOUNT;
+  process.env.HC_FCM_SERVICE_ACCOUNT = JSON.stringify({ type: 'service_account', project_id: 'hizmetcep-fe036', client_email: 'test-sa@hizmetcep-fe036.iam.gserviceaccount.com', private_key: anahtar.privateKey.export({ type: 'pkcs8', format: 'pem' }) });
+  try {
+    const h = await hesap('5390000040', 'fb-ozel-1');
+    fbKullanicilar.get(h.uid).phoneNumber = '+905390000041';
+    const r = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
+      newPhone: '5390000041', currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000041' }) } });
+    assert.equal(r.durum, 200, JSON.stringify(r.json));
+    const [b, g, imza] = r.json.firebaseCustomToken.split('.');
+    assert.ok(createVerify('RSA-SHA256').update(`${b}.${g}`).verify(anahtar.publicKey, Buffer.from(imza, 'base64url')), 'servis hesabıyla imzalı');
+    const yuk = JSON.parse(Buffer.from(g, 'base64url').toString());
+    assert.equal(yuk.uid, h.uid);
+    assert.equal(yuk.iss, 'test-sa@hizmetcep-fe036.iam.gserviceaccount.com');
+    assert.equal(yuk.sub, yuk.iss);
+    assert.equal(yuk.aud, 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit');
+    assert.equal(yuk.exp - yuk.iat, 300);
+    const sinir = Number((await db.prepare('SELECT firebase_valid_since FROM users WHERE id = (SELECT id FROM users WHERE phone = ?)').get('5390000041')).firebase_valid_since);
+    assert.ok(yuk.iat >= sinir, 'özel belge iptal sınırından sonra üretildi (bu cihazın yeni oturumu iptale takılmaz)');
+  } finally {
+    if (eski === undefined) delete process.env.HC_FCM_SERVICE_ACCOUNT; else process.env.HC_FCM_SERVICE_ACCOUNT = eski;
+  }
+  // Servis hesabı yoksa alan hiç dönmez (sözleşme eklemelidir).
+  const h2 = await hesap('5390000042', 'fb-ozel-2');
+  fbKullanicilar.get(h2.uid).phoneNumber = '+905390000043';
+  const r2 = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h2.a.accessToken, govde: {
+    newPhone: '5390000043', currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h2.uid, phone_number: '+905390000043' }) } });
+  assert.equal(r2.durum, 200);
+  assert.equal('firebaseCustomToken' in r2.json, false);
 });

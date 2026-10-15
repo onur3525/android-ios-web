@@ -13,6 +13,8 @@
 //     (zamanlayıcı yalnız sunucu ayaktayken çalışır; Render ücretsiz
 //     planında sunucu uyurken iş de bekler, ilk uyanışta yetişir);
 //   · başarısız işi gerekçeyle yeniden denemeye alır (denetim kaydına yazılır).
+//   · Firebase işlem kuyruğunu (yarım kalan oturum iptali / telefon
+//     eşitlemesi) da aynı kurallarla gösterir.
 // ═══════════════════════════════════════════════════════════════
 import { createHash } from 'node:crypto';
 import { yetkiIste } from '../auth.js';
@@ -54,6 +56,16 @@ async function dosyaSatirlari(db) {
   }));
 }
 
+// Firebase işlem kuyruğu (oturum iptali / telefon eşitleme — firebase_islemleri.js).
+async function firebaseIslemSatirlari(db) {
+  return (await db.prepare('SELECT * FROM firebase_islem_kuyrugu ORDER BY created_at').all()).map((s) => ({
+    id: ozetKimlik(`${s.user_id}|${s.islem}`),
+    islem: s.islem,
+    durum: s.deneme === 0 ? 'BEKLIYOR' : (s.deneme >= FIREBASE_UZUN_SURELI_DENEME ? 'UZUN_SURELI_HATA' : 'BASARISIZ'),
+    deneme: s.deneme, sonHata: hataKisa(s.son_hata), sonrakiDeneme: s.sonraki_deneme, olusturma: s.created_at,
+  }));
+}
+
 const say = (satirlar) => satirlar.reduce((a, s) => ({ ...a, [s.durum]: (a[s.durum] ?? 0) + 1 }), {});
 
 export function silmeKuyruklariRotalar(r, db) {
@@ -66,10 +78,12 @@ export function silmeKuyruklariRotalar(r, db) {
     const bekleyen = await db.prepare(`SELECT COUNT(*) AS n FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING'`).get();
     const firebase = await firebaseSatirlari(db);
     const dosyalar = await dosyaSatirlari(db);
+    const islemler = await firebaseIslemSatirlari(db);
     return {
       accountDeletions: { pending: Number(bekleyen.n), overdue: Number(gecikmis.n), oldestOverdueAt: gecikmis.en_eski ?? null },
       firebase: { configured: firebaseYonetimiHazir(), counts: say(firebase), items: firebase, longFailureAfter: FIREBASE_UZUN_SURELI_DENEME },
       files: { configured: !!(await depolamaAyari(db)), counts: say(dosyalar), items: dosyalar, maxAttempts: DOSYA_AZAMI_DENEME },
+      firebaseOps: { configured: firebaseYonetimiHazir(), counts: say(islemler), items: islemler, longFailureAfter: FIREBASE_UZUN_SURELI_DENEME },
     };
   });
 
@@ -93,6 +107,11 @@ export function silmeKuyruklariRotalar(r, db) {
         if (id && ozetKimlik(o.ref) !== id) continue;
         // Hata metni korunur (başarıyla silinince temizlenir).
         n += (await db.prepare('UPDATE storage_objects SET delete_attempts = 0, delete_next_at = NULL WHERE ref = ?').run(o.ref)).changes;
+      }
+    } else if (kuyruk === 'firebase_ops') {
+      for (const s of await db.prepare('SELECT user_id, islem FROM firebase_islem_kuyrugu WHERE deneme > 0').all()) {
+        if (id && ozetKimlik(`${s.user_id}|${s.islem}`) !== id) continue;
+        n += (await db.prepare('UPDATE firebase_islem_kuyrugu SET sonraki_deneme = ? WHERE user_id = ? AND islem = ?').run(z, s.user_id, s.islem)).changes;
       }
     } else {
       throw hata.dogrulama('Geçersiz kuyruk');

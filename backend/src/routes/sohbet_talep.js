@@ -46,11 +46,13 @@ const kural = (kod, m) => new ApiHatasi(409, kod, m);
 
 /**
  * Yönetici özel yazışmayı GEREKÇEYLE açar (15 Eki güvenlik denetimi, karar 6):
- * yetki (messages.read) tek başına yetmez; her görüntülemenin nedeni
- * (`?reason=`, en az 5 karakter) denetim kaydına yazılır.
+ * yetki (messages.read) tek başına yetmez; her görüntülemenin nedeni (en az
+ * 5 karakter) denetim kaydına yazılır. Gerekçe `X-HC-Reason` başlığında
+ * (URI kodlu) gelir — adres satırında giderse erişim günlüklerine düşerdi.
  */
 function goruntulemeGerekcesi(ctx) {
-  const v = String(ctx.query.get('reason') ?? '').trim();
+  let v = '';
+  try { v = decodeURIComponent(String(ctx.req.headers['x-hc-reason'] ?? '')).trim(); } catch { v = ''; }
   if (v.length < 5) throw hata.dogrulama('Görüntüleme gerekçesi en az 5 karakter olmalıdır');
   return v.slice(0, 500);
 }

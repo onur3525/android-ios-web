@@ -742,7 +742,11 @@ paths:
         Firebase'e bağlı hesapta `firebaseIdToken` hesabın Firebase kullanıcısına
         ait olmalı (aksi hâlde 400 PHONE_PROOF_INVALID); sunucu kodu yolunda
         numara Firebase'e sunucuca yazılır, yazılamazsa 503 ve numara değişmez.
-        Başarıda Firebase yenileme belirteçleri de iptal edilir.
+        Başarıda Firebase yenileme belirteçleri de iptal edilir; servis hesabı
+        varsa yanıt `firebaseCustomToken` (5 dk geçerli, iptal sınırından sonra
+        üretilmiş Firebase özel belgesi) taşır — işlemi yapan cihaz
+        `signInWithCustomToken` ile yeniden bağlanır. Yarım kalan değişiklikte
+        Firebase numarası arka planda hesabın numarasına eşitlenir.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -1530,6 +1534,11 @@ paths:
         SameSite=None, Path=/api/v1/auth). Çerez başlıksız kabul edilmez (CSRF).
         Geçersiz çerez ve çıkış (`/auth/logout`) çerezi siler. Mobil istemci
         (başlıksız) davranışı değişmez.
+        FIREBASE UZLAŞTIRMASI (15 Eki): Firebase'e bağlı hesapta Firebase kaydı
+        en çok 5 dakikada bir okunur; Firebase'de dışarıda yapılmış iptal
+        (e-postayla şifre sıfırlama, konsoldan iptal) yerel sınırdan yeniyse o
+        andan önce açılmış bütün oturumlar kapanır ve yenileme 401 döner.
+        Firebase'e ulaşılamazsa yenileme engellenmez.
       responses:
         '200': { description: '{ accessToken, refreshToken }' }
         '401': { $ref: '#/components/responses/Unauthorized' }

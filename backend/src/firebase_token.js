@@ -9,7 +9,7 @@
 //   · exp gelecekte · iat/auth_time geçmişte · sub boş değil
 // Sertifikalar Cache-Control süresi kadar önbelleğe alınır.
 // ═══════════════════════════════════════════════════════════════
-import { createVerify } from 'node:crypto';
+import { createSign, createVerify } from 'node:crypto';
 import { config } from './config.js';
 import { googleErisimJetonu, ortamServisHesabi } from './servis_hesabi.js';
 
@@ -200,6 +200,9 @@ export async function firebaseKullaniciBilgisi(uid) {
   return {
     validSince: Number.isFinite(vs) && vs > 0 ? vs : null, disabled: k.disabled === true, phoneNumber: k.phoneNumber ?? null,
     email: k.email ?? null, saglayicilar: Array.isArray(k.providerUserInfo) ? k.providerUserInfo.map((p) => p.providerId) : [],
+    // Firebase'in kaydettiği son şifre değişikliği (ms) — e-posta bağlantısıyla
+    // sıfırlama dahil; sunucu bu değişiklikten haberdar edilmez.
+    sifreGuncellemeMs: Number(k.passwordUpdatedAt) > 0 ? Number(k.passwordUpdatedAt) : null,
   };
 }
 
@@ -208,4 +211,29 @@ export async function firebaseKullaniciSil(uid) {
   const r = await yonetimIstegi('delete', { localId: uid });
   if (r.ok || r.kod.startsWith('USER_NOT_FOUND')) return;
   throw new Error(`Firebase kullanıcısı silinemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 60)}` : ''})`);
+}
+
+// ── ÖZEL KİMLİK BELGESİ (Firebase Admin SDK `createCustomToken` ile aynı) ──
+//
+// Telefon değişikliğinde sunucu kullanıcının BÜTÜN Firebase oturumlarını
+// iptal eder; işlemi yapan cihazın Firebase oturumu da kapanırdı (sonraki
+// e-posta değişikliği gibi Firebase işlemleri yeniden giriş isterdi). Sunucu
+// yalnız o cihaza, iptalden SONRA, kısa ömürlü bir özel belge verir; istemci
+// `signInWithCustomToken` ile yeni (iptal sınırından sonraki) oturum açar.
+// Biçim Firebase belgelerindeki gibidir: servis hesabıyla RS256 imzalı JWT,
+// iss = sub = servis hesabı, aud = Identity Toolkit, uid, en çok 1 saat.
+const OZEL_BELGE_AUD = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
+let ozelBelgeTestUreticisi = null;
+/** Yalnız testler: özel belge üretimini değiştirir. */
+export function firebaseOzelBelgeTestUreticisi(f) { ozelBelgeTestUreticisi = f; }
+
+/** Servis hesabı yoksa null. Süre: 5 dakika. */
+export function firebaseOzelBelge(uid) {
+  if (ozelBelgeTestUreticisi) return ozelBelgeTestUreticisi(uid);
+  const sh = ortamServisHesabi();
+  if (!sh) return null;
+  const an = Math.floor(Date.now() / 1000);
+  const b64 = (x) => Buffer.from(JSON.stringify(x)).toString('base64url');
+  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, sub: sh.client_email, aud: OZEL_BELGE_AUD, iat: an, exp: an + 300, uid })}`;
+  return `${govde}.${createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url')}`;
 }

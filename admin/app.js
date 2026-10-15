@@ -156,13 +156,16 @@ SAYFALAR.ilan = async (id) => {
 
 // ⚠ ÖZEL YAZIŞMA GEREKÇEYLE AÇILIR (15 Eki): sunucu `reason` ister ve
 // denetim kaydına yazar. Gerekçe girilmezse içerik istenmez.
+// Gerekçe adres satırında DEĞİL başlıkta gider: sunucu/proxy erişim
+// günlüklerine (adres + sorgu) kişisel bilgi içerebilecek metin yazılmasın.
+const gerekceBasligi = (neden) => ({ 'X-HC-Reason': encodeURIComponent(neden) });
 const yazismaGerekcesi = () => gerekceIle('Yazışmayı görüntüle', 'Görüntüle',
   'Kullanıcıların özel yazışması yalnız şikâyet, güvenlik veya destek gerekçesiyle açılır. Gerekçe ve görüntüleme denetim kaydına yazılır.');
 
 SAYFALAR.sohbet = async (offerId) => {
   const neden = await yazismaGerekcesi();
   if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için yazışma açılmadı.');
-  const m = await api(`/chats/${offerId}/messages?reason=${encodeURIComponent(neden)}`);
+  const m = await api(`/chats/${offerId}/messages`, { basliklar: gerekceBasligi(neden) });
   return h('div', {}, h('h2', {}, 'Sohbet (salt okunur)'), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     m.length ? m.map((x) => h('div', { class: 'mesaj' }, h('div', { class: 'ust' }, h('span', {}, x.senderId), h('span', {}, tarih(x.createdAt))), x.text ?? '[görsel]')) : h('p', { class: 'not' }, 'Mesaj yok.'));
 };
@@ -176,7 +179,7 @@ SAYFALAR.talepler = () => teklifTalepleriSayfasi(ben.role);
 SAYFALAR.talep = async (id) => {
   const neden = await yazismaGerekcesi();
   if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için talep açılmadı.');
-  const t = await api(`/teklif-talepleri/${id}?reason=${encodeURIComponent(neden)}`);
+  const t = await api(`/teklif-talepleri/${id}`, { basliklar: gerekceBasligi(neden) });
   return h('div', {}, h('h2', {}, `Talep ${t.talepNo}`), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     h('div', { class: 'kart' }, alanlarListesi([
       ['Talep eden', h('a', { href: `#/kullanici/${t.hizmetAlanId}` }, 'profil')], ['Hizmet veren', h('a', { href: `#/kullanici/${t.saglayiciId}` }, t.saglayiciAdi)],
@@ -494,7 +497,11 @@ SAYFALAR.silmekuyruklari = async () => {
     h('h3', {}, 'Dosyalar'),
     h('p', { class: 'not' }, `${d.files.configured ? 'Depo yapılandırılmış.' : '⚠ Depo yapılandırılmamış: dosyalar silinemez, kuyrukta bekler.'} ${sayilar(d.files.counts)}. En fazla ${d.files.maxAttempts} deneme; tükenen iş yalnız buradan yeniden denenir.`),
     d.files.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('files', null) }, 'Başarısızların tümünü yeniden dene') : null,
-    tablo(kolonlar('files'), d.files.items));
+    tablo(kolonlar('files'), d.files.items),
+    h('h3', {}, 'Firebase işlemleri (oturum iptali / telefon eşitleme)'),
+    h('p', { class: 'not' }, `${d.firebaseOps.configured ? 'Servis hesabı yapılandırılmış.' : '⚠ Servis hesabı yapılandırılmamış: işlemler kuyrukta bekler.'} ${sayilar(d.firebaseOps.counts)}. Firebase'e yazılamayan oturum iptali ve telefon eşitlemesi buradan tamamlanır; eski belgeyle oturum açılması sunucuda zaten engellidir.`),
+    d.firebaseOps.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('firebase_ops', null) }, 'Başarısızların tümünü yeniden dene') : null,
+    tablo([{ baslik: 'İşlem', deger: (x) => (x.islem === 'REVOKE' ? 'Oturum iptali' : 'Telefon eşitleme') }, ...kolonlar('firebase_ops')], d.firebaseOps.items));
 };
 
 // ── Entegrasyonlar ────────────────────────────────────────────

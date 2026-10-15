@@ -191,4 +191,14 @@ test('silme kuyrukları: yalnız yetkili rol görür; kimlikler özetli; bekleye
   assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM firebase_silme_kuyrugu WHERE sonraki_deneme <= ?').get(simdi())).n, 2);
   assert.equal((await istek('/admin/v1/deletion-queues/retry', { yontem: 'POST', rol: 'operations', govde: { queue: 'yok', reason: 'deneme gerekçesi' } })).durum, 400);
   await db.prepare('DELETE FROM account_requests WHERE id = ?').run(gecikmis);
+
+  // Firebase işlem kuyruğu (yarım kalan oturum iptali / telefon eşitleme) aynı ekranda.
+  await db.prepare(`INSERT INTO firebase_islem_kuyrugu (user_id, islem, deger, deneme, son_hata, sonraki_deneme, created_at) VALUES (?, 'REVOKE', 1, 2, 'Firebase oturumları iptal edilemedi (HTTP 503)', '2999-01-01T00:00:00.000Z', ?)`).run(k.id, simdi());
+  const o = await istek('/admin/v1/deletion-queues', { rol: 'super_admin' });
+  assert.deepEqual(o.json.firebaseOps.counts, { BASARISIZ: 1 });
+  assert.equal(o.json.firebaseOps.items[0].islem, 'REVOKE');
+  assert.equal(o.ham.includes(k.id), false, 'kullanıcı kimliği görünmez');
+  const yo = await istek('/admin/v1/deletion-queues/retry', { yontem: 'POST', rol: 'operations', govde: { queue: 'firebase_ops', id: o.json.firebaseOps.items[0].id, reason: 'Google kesintisi bitti' } });
+  assert.equal(yo.json.retried, 1);
+  assert.ok(new Date((await db.prepare('SELECT sonraki_deneme FROM firebase_islem_kuyrugu WHERE user_id = ?').get(k.id)).sonraki_deneme) <= new Date());
 });

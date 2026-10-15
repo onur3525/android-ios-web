@@ -257,6 +257,34 @@ class FirebaseKimlik {
     } catch (_) {}
   }
 
+  /// Şifre değişikliğinden sonra (Firebase bütün oturumları iptal etti) açık
+  /// Firebase kullanıcısını YENİ şifreyle yeniden bağlar. Firebase oturumu
+  /// yoksa ya da e-posta/şifre kimliği yoksa bir şey yapmaz; hata sessizdir
+  /// (sunucu oturumu sürer, Firebase gerektiren işlem yeniden giriş ister).
+  Future<void> yeniSifreyleYenidenBaglan(String yeniSifre) async {
+    try {
+      final a = await _auth();
+      final u = a?.currentUser;
+      final email = u?.email;
+      if (a == null || u == null || email == null ||
+          !u.providerData.any((p) => p.providerId == 'password')) {
+        return;
+      }
+      await a.signInWithEmailAndPassword(email: email, password: yeniSifre);
+    } catch (_) {}
+  }
+
+  /// Telefon değişikliğinden sonra sunucunun verdiği kısa ömürlü özel
+  /// belgeyle (iptal sınırından sonra üretilmiş) Firebase'e yeniden bağlanır.
+  Future<void> ozelBelgeyleBaglan(String belge) async {
+    try {
+      final a = await _auth();
+      if (a != null) {
+        await a.signInWithCustomToken(belge);
+      }
+    } catch (_) {}
+  }
+
   /// Yeni adrese doğrulama bağlantısı gönderir; adres BAĞLANTI tıklanınca
   /// değişir ve sonraki girişte backend hesabına işlenir.
   Future<DomainError?> epostaDegistir(String yeni) async {

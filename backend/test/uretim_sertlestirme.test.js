@@ -27,10 +27,11 @@ const { ozelAdresMi, disAdresSorunu, guvenliIstek, guvenliLookup } = await impor
 let db, sunucu, taban;
 const adminCerez = {};
 
-async function istek(yol, { yontem = 'GET', govde, token, rol } = {}) {
+async function istek(yol, { yontem = 'GET', govde, token, rol, gerekce } = {}) {
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
+      ...(gerekce ? { 'X-HC-Reason': encodeURIComponent(gerekce) } : {}),
       ...(govde ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(yol.startsWith('/admin/') ? { 'X-HC-Admin': '1', Cookie: adminCerez[rol ?? 'super_admin'] ?? '' } : {}),
@@ -252,17 +253,18 @@ test('yönetici yazışma görüntüleme gerekçe ister ve gerekçe denetime yaz
   const yol = `/admin/v1/chats/${o.json.id}/messages`;
   const gerekcesiz = await istek(yol, { rol: 'moderator' });
   assert.equal(gerekcesiz.durum, 400);
-  assert.equal((await istek(`${yol}?reason=abc`, { rol: 'moderator' })).durum, 400, 'kısa gerekçe');
-  assert.equal((await istek(`${yol}?reason=${encodeURIComponent('Şikâyet #12 incelemesi')}`, { rol: 'moderator' })).durum, 200);
+  assert.equal((await istek(yol, { rol: 'moderator', gerekce: 'abc' })).durum, 400, 'kısa gerekçe');
+  assert.equal((await istek(`${yol}?reason=${encodeURIComponent('Şikâyet #12 incelemesi')}`, { rol: 'moderator' })).durum, 400, 'adres satırındaki gerekçe kabul edilmez (günlüğe düşer)');
+  assert.equal((await istek(yol, { rol: 'moderator', gerekce: 'Şikâyet #12 incelemesi' })).durum, 200);
   const kayit = await db.prepare(`SELECT reason FROM audit_log WHERE action = 'chat.messages.view' AND target_id = ? ORDER BY created_at DESC`).get(o.json.id);
   assert.equal(kayit.reason, 'Şikâyet #12 incelemesi');
-  assert.equal((await istek(`${yol}?reason=${encodeURIComponent('yetkisiz deneme')}`, { rol: 'readonly' })).durum, 403, 'gerekçe yetkinin yerini tutmaz');
+  assert.equal((await istek(yol, { rol: 'readonly', gerekce: 'yetkisiz deneme' })).durum, 403, 'gerekçe yetkinin yerini tutmaz');
 
   // Talep detayı da aynı kurala bağlı.
   const t = await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: sahip.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'mutfak musluğu damlatıyor', iletisimTercihi: 'yalnizMesaj' } });
   assert.equal(t.durum, 200, JSON.stringify(t.json));
   assert.equal((await istek(`/admin/v1/teklif-talepleri/${t.json.id}`, { rol: 'super_admin' })).durum, 400);
-  assert.equal((await istek(`/admin/v1/teklif-talepleri/${t.json.id}?reason=${encodeURIComponent('Destek talebi kontrolü')}`, { rol: 'super_admin' })).durum, 200);
+  assert.equal((await istek(`/admin/v1/teklif-talepleri/${t.json.id}`, { rol: 'super_admin', gerekce: 'Destek talebi kontrolü' })).durum, 200);
 
   // readonly: maskeli liste; telefon/e-postayla arama SONUÇ VERMEZ (kayıt var mı sorgusu kapalı).
   const ro = await istek('/admin/v1/users?q=5340000093', { rol: 'readonly' });

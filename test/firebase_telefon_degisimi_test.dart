@@ -19,4 +19,14 @@ void main() {
         reason: 'web doğrulama kimliğinden kimlik bilgisi üretilir');
     expect('await u.updatePhoneNumber(kimlik);'.allMatches(k).length, 1);
   });
+
+  test('işlemi yapan cihaz Firebase\'e yeniden bağlanır: şifrede yeni şifreyle, telefonda özel belgeyle', () {
+    expect(k.contains('await a.signInWithEmailAndPassword(email: email, password: yeniSifre);'), isTrue);
+    expect(k.contains('await a.signInWithCustomToken(belge);'), isTrue);
+    final p = File('lib/data/ports/api_ports.dart').readAsStringSync();
+    expect(p.contains('await FirebaseKimlik.i.yeniSifreyleYenidenBaglan(next);'), isTrue);
+    expect(p.contains('await FirebaseKimlik.i.ozelBelgeyleBaglan(ozel);'), isTrue);
+    final r = File('lib/data/remote/repositories/api_repositories.dart').readAsStringSync();
+    expect(r.contains("res!['firebaseCustomToken']"), isTrue);
+  });
 }

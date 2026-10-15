@@ -266,7 +266,15 @@ class ApiAuthPort extends AuthPort {
     if (r.error != null || tel == null) {
       return r.error ?? const ValidationError('Doğrulama tamamlanamadı');
     }
-    return repo.changePhoneFirebase(tel, r.idToken!, mevcutSifre: mevcutSifre);
+    final err = await repo.changePhoneFirebase(tel, r.idToken!, mevcutSifre: mevcutSifre);
+    // ⚠ Sunucu bütün Firebase oturumlarını iptal etti (bu cihazınki dahil):
+    // verilen özel belgeyle bu cihaz yeniden bağlanır (15 Eki).
+    final ozel = repo.firebaseOzelBelgesi;
+    repo.firebaseOzelBelgesi = null;
+    if (err == null && ozel != null) {
+      await FirebaseKimlik.i.ozelBelgeyleBaglan(ozel);
+    }
+    return err;
   }
 
   @override
@@ -447,8 +455,16 @@ class ApiAuthPort extends AuthPort {
     return null;
   }
   @override
-  Future<DomainError?> changePassword(String current, String next) =>
-      repo.changePassword(current, next);
+  Future<DomainError?> changePassword(String current, String next) async {
+    final err = await repo.changePassword(current, next);
+    // ⚠ Şifre değişince Firebase bütün oturumları (bu cihazınki dahil) iptal
+    // eder; bu cihaz YENİ şifreyle yeniden bağlanır, eski oturumlar
+    // açılamaz (15 Eki). Firebase oturumu yoksa bir şey yapılmaz.
+    if (err == null) {
+      await FirebaseKimlik.i.yeniSifreyleYenidenBaglan(next);
+    }
+    return err;
+  }
 
   @override
   Future<DomainError?> verifyPassword(String password) =>

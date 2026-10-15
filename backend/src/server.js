@@ -36,6 +36,7 @@ import { publicRotalar } from './routes/public.js';
 import { destekRotalar } from './routes/destek.js';
 import { kayitBakimi } from './bakim.js';
 import { firebaseSilmeKuyrugunuIsle } from './firebase_silme.js';
+import { firebaseIslemKuyrugunuIsle } from './firebase_islemleri.js';
 import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
 
 const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
@@ -195,6 +196,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['dosya_temizligi', dosyaTemizliginiIsle],
     ['kayit_bakimi', kayitBakimi],
     ['firebase_silme', firebaseSilmeKuyrugunuIsle],
+    ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.

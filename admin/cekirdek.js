@@ -50,11 +50,11 @@ let oturumDustu = () => {};
 export function oturumDusunce(f) { oturumDustu = f; }
 
 /** API çağrısı; REAUTH_REQUIRED gelirse TOTP sorar ve isteği tekrarlar. */
-export async function api(yol, { yontem = 'GET', govde, tekrar = true } = {}) {
+export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar = {} } = {}) {
   const r = await fetch(`/admin/v1${yol}`, {
     method: yontem,
     credentials: 'same-origin',
-    headers: { ...(govde !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(yontem !== 'GET' ? { 'X-HC-Admin': '1' } : {}) },
+    headers: { ...(govde !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(yontem !== 'GET' ? { 'X-HC-Admin': '1' } : {}), ...basliklar },
     body: govde !== undefined ? JSON.stringify(govde) : undefined,
   });
   if (r.status === 204) return null;
@@ -63,7 +63,7 @@ export async function api(yol, { yontem = 'GET', govde, tekrar = true } = {}) {
   const kod = j?.error?.code ?? 'HATA';
   if (kod === 'REAUTH_REQUIRED' && tekrar) {
     const kodGirildi = await yenidenDogrula();
-    if (kodGirildi) return api(yol, { yontem, govde, tekrar: false });
+    if (kodGirildi) return api(yol, { yontem, govde, tekrar: false, basliklar });
   }
   if (r.status === 401 && !yol.startsWith('/auth/')) oturumDustu();
   throw new ApiHata(r.status, kod, j?.error?.message ?? 'İşlem başarısız');

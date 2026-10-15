@@ -136,15 +136,23 @@ class ApiAuthRepository extends ChangeNotifier {
               phone: phone, otpCode: '', newPassword: newPass, firebaseIdToken: idToken)))
           .$2;
 
+  /// Telefon değişikliğinden sonra sunucunun verdiği kısa ömürlü Firebase
+  /// özel belgesi (15 Eki): sunucu bütün Firebase oturumlarını iptal eder;
+  /// bu cihaz `signInWithCustomToken` ile yeniden bağlanır. Okuyan temizler.
+  String? firebaseOzelBelgesi;
+
   Future<DomainError?> changePhoneFirebase(String newPhone, String idToken,
       {String? mevcutSifre}) async {
+    firebaseOzelBelgesi = null;
     final (res, err) = await _guard(() => _profile.changePhone(
         newPhone: newPhone, otpCode: '', firebaseIdToken: idToken,
         currentPassword: mevcutSifre));
     if (err != null) {
       return err;
     }
-    currentAccount = Mappers.account(res!);
+    final ozel = res!['firebaseCustomToken'];
+    firebaseOzelBelgesi = ozel is String && ozel.isNotEmpty ? ozel : null;
+    currentAccount = Mappers.account(res);
     notifyListeners();
     return null;
   }

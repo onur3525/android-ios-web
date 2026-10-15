@@ -22,8 +22,9 @@ import { jwtDogrula, jwtImzala } from '../jwt.js';
 import { olaylar } from '../olaylar.js';
 import {
   firebaseKullaniciBilgisi, firebaseKullaniciSil, firebaseOturumlariniIptalEt, firebaseSifreAyarla, firebaseSifreDegistir, firebaseSifreDogrula,
-  firebaseTelefonAyarla, firebaseTokenDogrula, firebaseYonetimiHazir,
+  firebaseOzelBelge, firebaseTelefonAyarla, firebaseTokenDogrula, firebaseYonetimiHazir,
 } from '../firebase_token.js';
+import { firebaseIslemiKuyrugaEkle } from '../firebase_islemleri.js';
 
 const OTP_SURESI = 3 * 60 * 1000;
 const OTP_DENEME = 5;
@@ -302,22 +303,80 @@ export async function firebaseBelgesiIptalDenetimi(db, u, yuk, { durum = 401 } =
 /**
  * Hesabın Firebase oturumlarını kapatır: yerel geçerlilik sınırı HER ZAMAN
  * yazılır; Firebase'deki yenileme belirteçleri servis hesabı varsa iptal
- * edilir. Firebase'e ulaşılamazsa ana işlem geri alınmaz (yerel sınır yeni
- * sunucu oturumunu zaten engeller); hata günlüğe yazılır. Dönen değer:
- * true (Firebase'de iptal edildi) · false (Firebase'e yazılamadı) · null
- * (Firebase'e bağlı değil ya da servis hesabı yok).
+ * edilir. Firebase'e yazılamazsa (ya da servis hesabı yoksa) ana işlem geri
+ * alınmaz — yerel sınır yeni sunucu oturumunu zaten engeller — ve iptal
+ * KALICI kuyruğa (firebase_islem_kuyrugu, REVOKE) yazılıp arka planda
+ * tamamlanır. Dönen değer: 'tamam' · 'kuyrukta' · null (Firebase'e bağlı değil).
  */
 export async function firebaseOturumlariniKapat(db, u, gecerlilikSn = Math.floor(Date.now() / 1000), { firebaseYazildi = false } = {}) {
-  await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ?').run(gecerlilikSn, u.id);
-  if (firebaseYazildi) return true;
-  if (!u.firebase_uid || !firebaseYonetimiHazir()) return null;
-  try {
-    await firebaseOturumlariniIptalEt(u.firebase_uid, gecerlilikSn);
-    return true;
-  } catch (e) {
-    console.error(`firebase_oturum_iptali: ${String(e?.message ?? '').slice(0, 120)}`);
-    return false;
+  // Sınır geriye gitmez (eşzamanlı iki işlemde küçük olan büyüğü ezmesin).
+  await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
+    .run(gecerlilikSn, u.id, gecerlilikSn);
+  if (!u.firebase_uid) return null;
+  if (firebaseYazildi) return 'tamam';
+  if (firebaseYonetimiHazir()) {
+    try {
+      await firebaseOturumlariniIptalEt(u.firebase_uid, gecerlilikSn);
+      return 'tamam';
+    } catch (e) {
+      console.error(`firebase_oturum_iptali: ${String(e?.message ?? '').slice(0, 120)}`);
+    }
   }
+  await firebaseIslemiKuyrugaEkle(db, u.id, 'REVOKE', gecerlilikSn);
+  return 'kuyrukta';
+}
+
+// ── ⚠ FIREBASE'DE DIŞARIDA YAPILAN DEĞİŞİKLİKLERİN UZLAŞTIRILMASI (15 Eki) ──
+//
+// E-posta bağlantısıyla şifre sıfırlama tamamen Firebase'de olur (Firebase'in
+// sayfası); sunucu haberdar edilmez. Firebase bu değişiklikte kullanıcının
+// yenileme belirteçlerini kendisi iptal eder ve kaydına `validSince`
+// (tokensValidAfterTime) ile `passwordUpdatedAt` yazar — Firebase Admin
+// `getUser` / Identity Toolkit `accounts:lookup` ile okunabilen GERÇEK alanlar.
+// Sunucu her oturum yenilemesinde (erişim belirteci 15 dk) kaydı en çok 5
+// dakikada bir okur. Firebase sınırı yerel sınırdan YENİYSE (dışarıda iptal:
+// e-postayla sıfırlama, konsoldan iptal, Firebase'de şifre değişikliği):
+//   · o andan ÖNCE açılmış bütün sunucu oturumları kapatılır (yenileme
+//     reddedilir, soketler kapanır), sonradan yeni şifreyle açılanlar kalır;
+//   · yerel sınır Firebase'inkine çekilir (eski belgeyle oturum açılmaz);
+//   · iptal bir şifre değişikliğinden geldiyse yerel şifre özeti
+//     kullanılamaz yapılır — Firebase'e ulaşılamadığında yedek doğrulama
+//     ESKİ şifreyi kabul etmesin; Firebase yeni şifreyi doğrulayınca özet
+//     yeniden eşitlenir (sifreDogruMu).
+// Devre dışı bırakılmış Firebase kullanıcısının bütün oturumları kapanır.
+// Firebase'e ulaşılamazsa yenileme ENGELLENMEZ (bir sonraki yenilemede yine
+// denenir); Google kesintisi bütün kullanıcıları çıkış yaptırmasın.
+const UZLASTIRMA_ARALIGI_MS = 5 * 60_000;
+export async function firebaseDisDegisiklikleriniUzlastir(db, u) {
+  if (!u.firebase_uid || !firebaseYonetimiHazir()) return;
+  const son = u.firebase_checked_at ? Date.parse(u.firebase_checked_at) : 0;
+  if (Date.now() - son < UZLASTIRMA_ARALIGI_MS) return;
+  await db.prepare('UPDATE users SET firebase_checked_at = ? WHERE id = ?').run(simdi(), u.id);
+  let k;
+  try {
+    k = await firebaseKullaniciBilgisi(u.firebase_uid);
+  } catch (e) {
+    console.error(`firebase_uzlastirma: ${String(e?.message ?? '').slice(0, 120)}`);
+    return;
+  }
+  if (!k) return;
+  if (k.disabled) {
+    await oturumlariIptal(db, u.id, 'FIREBASE_DISABLED');
+    return;
+  }
+  const yerel = Number(u.firebase_valid_since ?? 0);
+  if (!k.validSince || k.validSince <= yerel) return;
+  const sinirIso = new Date(k.validSince * 1000).toISOString();
+  const sifreDegisti = k.sifreGuncellemeMs != null && k.sifreGuncellemeMs >= (k.validSince - 5) * 1000;
+  await db.tx(async () => {
+    await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'FIREBASE_REVOKED' WHERE user_id = ? AND revoked_at IS NULL AND created_at < ?`)
+      .run(simdi(), u.id, sinirIso);
+    await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ?').run(k.validSince, u.id);
+    if (sifreDegisti) {
+      await db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(`firebase-disi$${randomUUID()}`, simdi(), u.id);
+    }
+  });
+  await olaylar.yayinla('user.sessions.revoked', { userId: u.id, haric: null });
 }
 
 /**
@@ -499,6 +558,9 @@ export function kullaniciRotalar(r, db) {
     const u = await db.prepare('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL').get(o.user_id);
     if (!u || u.frozen_at) throw hata.kimlik();
     durumKapisi(u);
+    // Firebase'de dışarıda yapılan şifre sıfırlama / iptal (bkz. yukarı).
+    await firebaseDisDegisiklikleriniUzlastir(db, u);
+    if ((await db.prepare('SELECT revoked_at FROM user_sessions WHERE id = ?').get(o.id))?.revoked_at) throw hata.kimlik('Oturum sonlandırılmış');
     const yeniJti = randomUUID();
     const yeni = randomBytes(32).toString('base64url');
     const z = simdi();
@@ -720,6 +782,23 @@ export function kullaniciRotalar(r, db) {
   }));
 
   r.post('/api/v1/profiles/me/phone/change', korumali(async (ctx) => {
+    // ── ⚠ YARIM KALAN DEĞİŞİKLİĞİN KURTARILMASI (15 Eki) ──
+    // İstemci Firebase'deki numarayı istekten ÖNCE değiştirir
+    // (`updatePhoneNumber`); sunucu da bazı yollarda Firebase'e yazar. İstek
+    // bundan sonra herhangi bir nedenle başarısız olursa (yanlış şifre,
+    // kayıtlı numara, veritabanı hatası) Firebase'deki numara yeni, hesaptaki
+    // eski kalırdı. Firebase'e bağlı hesapta her sonuçta SYNC_PHONE kuyruğa
+    // yazılır: Firebase numarası hesabın GÜNCEL numarasına eşitlenir (zaten
+    // eşitse dokunulmaz). Başarıda da yazılır: istemcinin yeniden denemesiyle
+    // kuyruğun yarışında bile iki sistem hesap kaydında birleşir.
+    const u0 = ctx.kullanici;
+    try {
+      return await telefonDegistir(ctx);
+    } finally {
+      if (u0.firebase_uid) await firebaseIslemiKuyrugaEkle(db, u0.id, 'SYNC_PHONE').catch(() => {});
+    }
+  }));
+  async function telefonDegistir(ctx) {
     const yeni = telefon(ctx.body.newPhone);
     // ── ⚠ YENİDEN KİMLİK DOĞRULAMA (15 Eki güvenlik denetimi, karar 2) ──
     // Yalnız oturum + yeni numaraya gelen kod yetmez: çalınmış bir oturumla
@@ -779,8 +858,13 @@ export function kullaniciRotalar(r, db) {
     await oturumlariIptal(db, ctx.kullanici.id, 'PHONE_CHANGED', ctx.kOturum.id);
     await firebaseOturumlariniKapat(db, u0);
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
-    return kullaniciGorunumu(u, await saglayiciProfili(db, u.id));
-  }));
+    // ── İŞLEMİ YAPAN CİHAZIN FIREBASE OTURUMU (15 Eki) ──
+    // İptal bu cihazın Firebase oturumunu da kapattı. İptal sınırından SONRA
+    // üretilen kısa ömürlü özel belgeyle (Admin SDK createCustomToken ile
+    // aynı biçim) istemci yeniden bağlanır; eski oturumlar açılamaz.
+    const ozel = u0.firebase_uid ? firebaseOzelBelge(u0.firebase_uid) : null;
+    return { ...kullaniciGorunumu(u, await saglayiciProfili(db, u.id)), ...(ozel ? { firebaseCustomToken: ozel } : {}) };
+  }
 
   // ── E-POSTA DEĞİŞTİRME (Firebase kaynaklı, karar: 6 Eki) ──
   //
