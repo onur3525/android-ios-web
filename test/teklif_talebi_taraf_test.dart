@@ -43,8 +43,10 @@ void main() {
 
   test('detay ekranı taraf olmayana talebi göstermez', () {
     final k = _kod('lib/screens/teklif_talebi_detay_screen.dart');
-    expect(k.contains('if (t == null || me == null || !t.tarafMi(me.id)) {'),
-        isTrue);
+    // 16 Eki: taraf denetimi korunur; hizmet alanın SİLDİĞİ talep de ona
+    // gösterilmez.
+    expect(k.contains('!t.tarafMi(me.id) ||'), isTrue);
+    expect(k.contains('(me.id == t.hizmetAlanId && t.hizmetAlanSildi)'), isTrue);
   });
 
   test('sohbet ekranı taraf olmayana mesajları göstermez, okundu koymaz', () {
