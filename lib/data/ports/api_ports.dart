@@ -591,15 +591,13 @@ class ApiListingPort extends ListingPort {
     required String desc,
     List<String>? photoPaths,
     IsZamani? isZamani,
-    // ⚠ API MODUNDA HENÜZ SUNUCUYA İLETİLMİYOR: `ApiListingRepository.
-    // create()`in bu alanı desteklediği DOĞRULANMADI — backend
-    // sözleşmesi UYDURULMADI. Parametre yalnız arayüz UYUMU için
-    // burada; gerçek entegrasyon backend hazır olunca eklenir.
+    // 16 Eki: sunucuya iletilir (backend 022: listings.iletisim_tercihi).
     IletisimTercihi? iletisimTercihi,
   }) async {
     final (l, err) = await repo.create(
         title: title, location: location, description: desc,
-        photoRefs: photoPaths ?? const [], isZamani: isZamani);
+        photoRefs: photoPaths ?? const [], isZamani: isZamani,
+        iletisimTercihi: iletisimTercihi ?? IletisimTercihi.telefonGoster);
     return (listing: l, error: err);
   }
 

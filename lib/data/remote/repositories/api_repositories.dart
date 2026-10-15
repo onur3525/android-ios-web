@@ -8,6 +8,7 @@ import '../../models/account.dart';
 import '../../models/provider_approval.dart';
 import '../../models/listing.dart';
 import '../../models/offer.dart';
+import '../../models/teklif_talebi.dart' show IletisimTercihi;
 import '../api/auth_api.dart';
 import '../api/contact_api.dart';
 import '../api/listing_api.dart';
@@ -423,10 +424,12 @@ class ApiListingRepository extends ChangeNotifier {
     required String title, required String location,
     required String description, List<String> photoRefs = const [],
     IsZamani? isZamani,
+    IletisimTercihi iletisimTercihi = IletisimTercihi.telefonGoster,
   }) async {
     final (res, err) = await _guard(() => _api.create(
         title: title, location: location, description: description,
-        photoRefs: photoRefs, isZamani: isZamani));
+        photoRefs: photoRefs, isZamani: isZamani,
+        iletisimTercihi: iletisimTercihi));
     if (err != null) {
       return (null, err);
     }

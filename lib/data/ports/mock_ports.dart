@@ -712,8 +712,8 @@ class MockContactPort extends ContactPort {
   @override
   Future<DomainError?> refresh(String offerId) async => null;
 
-  /// KURAL: İletişim iki taraf için aynı anda açılır; YALNIZ ilan sahibi
-  /// açar (15 Eki). Yetkisiz aktör hiçbir durum değişikliği oluşturmaz.
+  /// KURAL: İletişim iki taraf için aynı anda açılır; teklifin İKİ TARAFI
+  /// da açabilir (16 Eki). Yetkisiz aktör hiçbir durum değişikliği oluşturmaz.
   @override
   Future<DomainError?> openShared(String offerId, {required String actorId}) async {
     final o = offers.byId(offerId);
@@ -768,15 +768,10 @@ class MockContactPort extends ContactPort {
     // ⚠ `open` İDEMPOTENTTİR: ikinci çağrıda `false` döner ve
     // sessizce başarı sayılır — çift açma hatası üretmez.
     //
-    // ⚠ PAYLAŞIM ONAYI İLAN SAHİBİNDE (15 Eki güvenlik denetimi) — backend
-    // ile aynı: açık iletişim herkese durum olarak döner; KAPALIYSA yalnız
-    // ilan sahibi açar (hizmet alanın telefonu onun işlemi olmadan
-    // paylaşılmaz).
+    // ⚠ 16 Eki: iki taraf da açar (backend ile aynı). Taraf denetimi
+    // yukarıdadır.
     if (contacts.isOpen(offerId)) {
       return null;
-    }
-    if (actorId != l.ownerId) {
-      return const UnauthorizedError('İletişimi yalnızca ilan sahibi açabilir');
     }
     if (!contacts.open(offerId)) {
       return null;

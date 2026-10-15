@@ -4,6 +4,7 @@ import '../models/chat.dart';
 import '../models/listing.dart';
 import '../models/notification.dart';
 import '../models/offer.dart';
+import '../models/teklif_talebi.dart' show IletisimTercihi;
 import '../models/review.dart';
 
 abstract final class Mappers {
@@ -60,6 +61,10 @@ abstract final class Mappers {
         // bilinmeyen bir değer gelirse de `null` döner (uygulama
         // çökmez, yalnız etiket gösterilmez).
         isZamani: IsZamani.koddan(j['workTiming'] as String?),
+        // 16 Eki: alan yoksa (eski sunucu) telefon görünür — önceki davranış.
+        iletisimTercihi: j['iletisimTercihi'] == 'yalnizMesaj'
+            ? IletisimTercihi.yalnizMesaj
+            : IletisimTercihi.telefonGoster,
         createdAt: _date(j['createdAt']),
       )..selectedOfferId = j['selectedOfferId'] as String?;
 
