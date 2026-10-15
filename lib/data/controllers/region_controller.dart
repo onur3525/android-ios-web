@@ -91,6 +91,26 @@ class RegionController extends BaseController {
     return tree.cityByName(city)?.districtNames ?? const [];
   }
 
+  /// ── ⚠ KAYITLI İLÇELERİN İLİ — TEK KAYNAK ──
+  ///
+  /// Hizmet veren kayıtta il + ilçe seçer; sunucuda yalnız ilçeler
+  /// saklanır. Hizmet Bölgelerim ve Rol Değiştir ekranları kayıtlı
+  /// ilçelerin hangi ilde olduğunu BURADAN bulur; aksi hâlde birden çok
+  /// il varken il "Seçiniz" kalıyor, ilçe listesi boş görünüyordu.
+  /// Eşleşme yoksa `null` döner (çağıran varsayılana düşer).
+  String? ilceleriIcerenIl(Iterable<String> ilceler) {
+    if (ilceler.isEmpty) {
+      return null;
+    }
+    for (final c in tree.cities) {
+      final ds = c.districtNames;
+      if (ilceler.any(ds.contains)) {
+        return c.name;
+      }
+    }
+    return null;
+  }
+
   /// Varsayılan ilin ilçeleri (geriye dönük uyumluluk).
   List<String> get districts => districtsOf(null);
 

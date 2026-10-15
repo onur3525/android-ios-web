@@ -56,9 +56,12 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     _bolgeler = {...?acc?.serviceDistricts};
     // Kayıtlı adres varsa o ilden başlanır; yoksa tek il ise o seçilir.
     final r = context.read<RegionController>();
-    _il = acc?.address?.city.isNotEmpty == true
-        ? acc!.address!.city
-        : r.soleCityName ?? r.cityName;
+    // ⚠ Kayıtlı hizmet ilçeleri varsa onların ili önce gelir (Hizmet
+    // Bölgelerim ile aynı kaynak: `ilceleriIcerenIl`).
+    _il = r.ilceleriIcerenIl(_bolgeler) ??
+        (acc?.address?.city.isNotEmpty == true
+            ? acc!.address!.city
+            : r.soleCityName ?? r.cityName);
   }
 
   Role get _hedef => context.read<AuthController>().activeRole == Role.provider
