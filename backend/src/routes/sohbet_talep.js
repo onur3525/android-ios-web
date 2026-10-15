@@ -31,6 +31,7 @@ import { olaylar } from '../olaylar.js';
 import { uygulamaIciBildir } from './ilan.js';
 import { kullaniciCoz, oturumlariIptal } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
+import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
@@ -560,6 +561,10 @@ export async function silmeTalepleriniIsle(db) {
   ).all(z);
   for (const a of bekleyen) {
     await db.tx(async () => {
+      // Firebase kimlik kaydı (telefon/e-posta kopyası) da silinir — uid
+      // aşağıda NULL yapılmadan önce kuyruğa yazılır (bkz. firebase_silme.js).
+      const fb = await db.prepare('SELECT firebase_uid FROM users WHERE id = ?').get(a.user_id);
+      await firebaseSilmeKuyrugunaEkle(db, fb?.firebase_uid);
       await db.prepare(
         // firebase_uid de SİLİNİR: kişiye bağlanabilen bir kimliktir ve
         // tekil dizinde (deleted_at'tan bağımsız) tutulduğu için kalırsa

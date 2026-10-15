@@ -20,7 +20,7 @@ import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { ApiHatasi, HizSiniri, cerez, cerezleriOku, hata, istemciIp } from '../http.js';
 import { jwtDogrula, jwtImzala } from '../jwt.js';
 import { olaylar } from '../olaylar.js';
-import { firebaseSifreDegistir, firebaseSifreDogrula, firebaseTokenDogrula } from '../firebase_token.js';
+import { firebaseSifreAyarla, firebaseSifreDegistir, firebaseSifreDogrula, firebaseTokenDogrula } from '../firebase_token.js';
 
 const OTP_SURESI = 3 * 60 * 1000;
 const OTP_DENEME = 5;
@@ -510,6 +510,18 @@ export function kullaniciRotalar(r, db) {
     await telefonKaniti(db, ctx.body, tel, ['FORGOT']);
     const u = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
     if (!u) throw new ApiHatasi(400, 'OTP_INVALID', 'Doğrulama kodu hatalı');
+    // ── ⚠ FIREBASE ŞİFRESİ DE SIFIRLANIR (15 Eki güvenlik denetimi) ──
+    // Firebase'e bağlı hesapta giriş şifreyi Firebase'den doğrular
+    // (`sifreDogruMu`, aynı koşul). Yalnız yerel özet değişirse yeni şifre
+    // reddedilir, ESKİ şifre çalışmaya devam ederdi. Firebase güncellenemezse
+    // yerel şifre de DEĞİŞMEZ (iki kaynak ayrışmaz; şifre değiştirmeyle aynı).
+    if (u.firebase_uid && u.email && config.firebaseWebApiKey) {
+      try {
+        await firebaseSifreAyarla(u.firebase_uid, yeni);
+      } catch {
+        throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Şifre şu anda sıfırlanamıyor. Lütfen daha sonra tekrar deneyin.');
+      }
+    }
     await db.prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(yeni), simdi(), u.id);
     await oturumlariIptal(db, u.id, 'PASSWORD_RESET');
     return undefined;

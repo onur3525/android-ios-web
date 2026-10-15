@@ -11,6 +11,7 @@
 // ⚠ Hata mesajlarına ve günlüğe dosya İÇERİĞİ / anahtar YAZILMAZ; yalnız
 // değişken adı, dosya yolu ve eksik alan adı yazılır.
 // ═══════════════════════════════════════════════════════════════
+import { createSign } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const ALANLAR = ['project_id', 'client_email', 'private_key'];
@@ -62,4 +63,44 @@ export function servisHesabiOku(env = process.env) {
     throw new Error('HC_FCM_SERVICE_ACCOUNT bir dosya yolu gibi görünüyor; dosya için HC_FCM_SERVICE_ACCOUNT_FILE kullanın.');
   }
   return { hesap: servisHesabiCoz(deger, 'HC_FCM_SERVICE_ACCOUNT'), kaynak: 'ortam' };
+}
+
+// ── ORTAK: ORTAMDAKİ SERVİS HESABI + GOOGLE ERİŞİM ANAHTARI ──
+// FCM ve Firebase kimlik yönetimi (şifre sıfırlama, hesap silme) AYNI servis
+// hesabını kullanır; okuma ve anahtar alma tek yerde (önceden fcm.js içindeydi).
+
+let hesapOnbellegi = null; // { anahtar, hesap }
+/** Ortamdaki servis hesabı (önbellekli); tanımsızsa null, hatalıysa fırlatır. */
+export function ortamServisHesabi() {
+  const anahtar = `${process.env.HC_FCM_SERVICE_ACCOUNT || ''}\u0000${process.env.HC_FCM_SERVICE_ACCOUNT_FILE || ''}`;
+  if (hesapOnbellegi && hesapOnbellegi.anahtar === anahtar) return hesapOnbellegi.hesap;
+  const s = servisHesabiOku(process.env);
+  hesapOnbellegi = { anahtar, hesap: s ? s.hesap : null };
+  return hesapOnbellegi.hesap;
+}
+
+const jetonOnbellegi = new Map(); // kapsam → { jeton, bitis }
+/** Önbellekteki erişim anahtarını atar (401: anahtar geçersiz/iptal edilmiş). */
+export function googleErisimJetonunuAt(kapsam) {
+  for (const k of jetonOnbellegi.keys()) if (k.endsWith(`|${kapsam}`)) jetonOnbellegi.delete(k);
+}
+
+/** Servis hesabıyla OAuth2 erişim anahtarı (JWT bearer). Kapsam başına önbellekli. */
+export async function googleErisimJetonu(sh, kapsam) {
+  const k = `${sh.client_email}|${kapsam}`;
+  const o = jetonOnbellegi.get(k);
+  if (o && o.bitis > Date.now() + 60_000) return o.jeton;
+  const an = Math.floor(Date.now() / 1000);
+  const b64 = (x) => Buffer.from(JSON.stringify(x)).toString('base64url');
+  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, scope: kapsam, aud: 'https://oauth2.googleapis.com/token', iat: an, exp: an + 3600 })}`;
+  const imza = createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url');
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${govde}.${imza}` }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error(`Google erişim anahtarı alınamadı (HTTP ${r.status})`);
+  const j = await r.json();
+  jetonOnbellegi.set(k, { jeton: j.access_token, bitis: Date.now() + (j.expires_in ?? 3600) * 1000 });
+  return j.access_token;
 }

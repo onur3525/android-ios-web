@@ -14,6 +14,7 @@ const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { config } = await import('../src/config.js');
 const { sifreDogrula } = await import('../src/auth.js');
+const { firebaseYonetimTestGondericisi } = await import('../src/firebase_token.js');
 
 let db, sunucu, taban;
 const asilFetch = globalThis.fetch;
@@ -139,4 +140,40 @@ test('Firebase\'e bağlı OLMAYAN hesap: davranış aynen (yalnız yerel özet, 
   assert.equal(cagrilar.length, 0);
   assert.ok(sifreDogrula('Degisti2026', await yerelOzet(h.id)));
   assert.ok(simdi());
+});
+
+test('telefonla şifre sıfırlama Firebase şifresini de değiştirir: yeni şifre girer, ESKİ şifre artık girmez', async () => {
+  // Güvenlik denetimi (15 Eki): sıfırlama yalnız yerel özeti değiştiriyordu; giriş
+  // Firebase'e baktığı için eski şifre çalışmaya devam ediyor, yenisi reddediliyordu.
+  const h = await hesap('5350000005');
+  const uid = (await db.prepare('SELECT firebase_uid FROM users WHERE id = ?').get(h.id)).firebase_uid;
+  const yonetim = [];
+  firebaseYonetimTestGondericisi(async (islem, govde) => {
+    yonetim.push({ islem, govde });
+    if (islem === 'update' && govde.localId === uid) { fb.set(h.email, govde.password); return { ok: true, durum: 200, kod: '' }; }
+    return { ok: false, durum: 400, kod: 'USER_NOT_FOUND' };
+  });
+  try {
+    await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', h.tel);
+    await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: h.tel, purpose: 'FORGOT' } });
+    const r = await istek('/api/v1/auth/forgot/complete', { yontem: 'POST', govde: { phone: h.tel, otpCode: globalThis.__sonOtp, newPassword: 'Sifirlandi26' } });
+    assert.equal(r.durum, 204, JSON.stringify(r.json));
+    assert.deepEqual(yonetim.map((y) => y.islem), ['update']);
+    assert.equal((await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: h.tel, password: 'Sifirlandi26' } })).durum, 200);
+    assert.equal((await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: h.tel, password: 'sifre1234' } })).durum, 401, 'eski şifre çalışmamalı');
+  } finally { firebaseYonetimTestGondericisi(null); }
+});
+
+test('telefonla şifre sıfırlama: Firebase güncellenemezse 503, yerel şifre de DEĞİŞMEZ', async () => {
+  const h = await hesap('5350000006');
+  const once = await yerelOzet(h.id);
+  firebaseYonetimTestGondericisi(async () => ({ ok: false, durum: 500, kod: 'INTERNAL' }));
+  try {
+    await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', h.tel);
+    await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: h.tel, purpose: 'FORGOT' } });
+    const r = await istek('/api/v1/auth/forgot/complete', { yontem: 'POST', govde: { phone: h.tel, otpCode: globalThis.__sonOtp, newPassword: 'Sifirlandi26' } });
+    assert.equal(r.durum, 503);
+    assert.equal(await yerelOzet(h.id), once);
+    assert.equal((await istek('/api/v1/users/me', { token: h.token })).durum, 200, 'oturumlar iptal edilmemeli');
+  } finally { firebaseYonetimTestGondericisi(null); }
 });

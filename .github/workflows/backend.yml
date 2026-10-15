@@ -58,3 +58,13 @@ jobs:
           HC_TEST_DB: postgres
           HC_DATABASE_URL: postgres://hc:hc_test_only@localhost:5432/hizmetcep_test
         run: npm test
+      # ── GÜVENLİK (15 Eki denetimi) ──
+      # Bağımlılık denetimi: bilinen YÜKSEK/KRİTİK açık varsa iş kırmızı olur.
+      - name: npm audit (üretim bağımlılıkları)
+        run: npm audit --omit=dev --audit-level=high
+      # Gizli bilgi taraması: depoya özel anahtar, parolalı veritabanı adresi,
+      # bulut erişim anahtarı vb. girmişse iş kırmızı olur (eşleşen değer
+      # günlüğe YAZILMAZ; yalnız dosya ve satır).
+      - name: Gizli bilgi taraması
+        working-directory: .
+        run: node .github/scripts/gizli_tarama.mjs

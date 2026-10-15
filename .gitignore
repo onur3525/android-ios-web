@@ -1,0 +1,24 @@
+# ── GİZLİ BİLGİLER DEPOYA GİRMEZ (15 Eki güvenlik denetimi) ──
+# Kök .gitignore yoktu; backend/ ve android/ dışındaki klasörlerde bir
+# ortam dosyası ya da anahtar yanlışlıkla işlenebilirdi.
+.env
+.env.*
+!**/.env.example
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+key.properties
+!**/key.properties.example
+*service-account*.json
+*servis-hesabi*.json
+*firebase-adminsdk*.json
+*.dump
+
+# ── Derleme ve araç çıktıları ──
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+node_modules/

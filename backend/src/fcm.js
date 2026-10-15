@@ -19,10 +19,9 @@
 //   · Günlüğe jeton, servis hesabı ya da erişim anahtarı YAZILMAZ.
 // Veri biçimi Flutter `push_kapisi.dart` ile aynı: data = {type, hedef, id}.
 // ═══════════════════════════════════════════════════════════════
-import { createSign } from 'node:crypto';
 import { config } from './config.js';
 import { simdi } from './db.js';
-import { servisHesabiOku } from './servis_hesabi.js';
+import { googleErisimJetonu, googleErisimJetonunuAt, ortamServisHesabi } from './servis_hesabi.js';
 
 const KAPSAM = 'https://www.googleapis.com/auth/firebase.messaging';
 const AZAMI_DENEME = 5;
@@ -34,32 +33,10 @@ const ESZAMANLI = 10; // tek turda aynı anda işlenen bildirim (FCM HTTP çağr
 // Okuma/doğrulama config.js ile AYNI kaynaktan (servis_hesabi.js); ortam
 // değeri ya da Secret File. Dosya her çağrıda yeniden okunmasın diye
 // kaynak anahtarına göre önbelleğe alınır (değişken değişirse yenilenir).
-let hesapOnbellegi = null; // { anahtar, hesap }
-function servisHesabi() {
-  const anahtar = `${process.env.HC_FCM_SERVICE_ACCOUNT || ''}\u0000${process.env.HC_FCM_SERVICE_ACCOUNT_FILE || ''}`;
-  if (hesapOnbellegi && hesapOnbellegi.anahtar === anahtar) return hesapOnbellegi.hesap;
-  const s = servisHesabiOku(process.env);
-  hesapOnbellegi = { anahtar, hesap: s ? s.hesap : null };
-  return hesapOnbellegi.hesap;
-}
-
-let onbellek = null; // { jeton, bitis }
-async function erisimJetonu(sh) {
-  if (onbellek && onbellek.bitis > Date.now() + 60_000) return onbellek.jeton;
-  const an = Math.floor(Date.now() / 1000);
-  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-  const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, scope: KAPSAM, aud: 'https://oauth2.googleapis.com/token', iat: an, exp: an + 3600 })}`;
-  const imza = createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url');
-  const r = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${govde}.${imza}` }),
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!r.ok) throw new Error(`FCM erişim anahtarı alınamadı (HTTP ${r.status})`);
-  const j = await r.json();
-  onbellek = { jeton: j.access_token, bitis: Date.now() + (j.expires_in ?? 3600) * 1000 };
-  return onbellek.jeton;
-}
+// Servis hesabı ve erişim anahtarı ortak (servis_hesabi.js): FCM ve Firebase
+// kimlik yönetimi aynı hesabı kullanır.
+const servisHesabi = ortamServisHesabi;
+const erisimJetonu = (sh) => googleErisimJetonu(sh, KAPSAM);
 
 /** Tek jetona gönderir → 'ok' | 'gecersiz' | 'gecici'. */
 export async function fcmGonder(sh, jeton, mesaj) {
@@ -95,7 +72,7 @@ export function fcmHataSinifi(durum, j) {
   const kod = detaylar.map((d) => d?.errorCode).find(Boolean) ?? j?.error?.status ?? '';
   const jetonAlani = detaylar.some((d) => Array.isArray(d?.fieldViolations)
     && d.fieldViolations.some((v) => v?.field === 'message.token'));
-  if (durum === 401) { onbellek = null; return 'gecici'; }
+  if (durum === 401) { googleErisimJetonunuAt(KAPSAM); return 'gecici'; }
   if (durum === 404 || kod === 'UNREGISTERED') return 'gecersiz';
   if (kod === 'SENDER_ID_MISMATCH' && (durum === 400 || durum === 403)) return 'gecersiz';
   if (durum === 400 && kod === 'INVALID_ARGUMENT' && jetonAlani) return 'gecersiz';

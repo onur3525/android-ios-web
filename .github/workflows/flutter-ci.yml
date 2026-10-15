@@ -48,6 +48,9 @@ jobs:
           retention-days: 30
       # Bağımlılık çözümü raporu: firebase_core / firebase_messaging / firebase_auth sürümleri
       - run: flutter pub deps --style=compact | grep -E "firebase_(core|auth|messaging)" || true
+      # Gizli bilgi taraması (15 Eki güvenlik denetimi; backend iş akışında da var).
+      - name: Gizli bilgi taraması
+        run: node .github/scripts/gizli_tarama.mjs
       - name: flutter analyze
         # Bulgular GitHub uyarısı (annotation) olarak da yazılır: günlük
         # indirilemediğinde neden okunabilsin. Kural ve çıkış kodu AYNEN.

@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { createVerify } from 'node:crypto';
 import { config } from './config.js';
+import { googleErisimJetonu, ortamServisHesabi } from './servis_hesabi.js';
 
 const SERTIFIKA_ADRESI = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 let onbellek = { sertifikalar: null, bitis: 0 };
@@ -116,4 +117,46 @@ export async function firebaseSifreDegistir(email, mevcut, yeni) {
   });
   if (!d.ok) throw new Error(`Firebase şifresi güncellenemedi (HTTP ${d.status})`);
   return true;
+}
+
+// ── FIREBASE KİMLİK YÖNETİMİ (servis hesabıyla, 15 Eki güvenlik denetimi) ──
+//
+// İki iş için gerekir ve ikisi de kullanıcının mevcut Firebase şifresini
+// BİLMEDEN yapılmak zorundadır:
+//   · Telefonla şifre sıfırlama: Firebase'e bağlı hesapta giriş şifreyi
+//     Firebase'den doğrular. Sıfırlama yalnız yerel özeti değiştirirse YENİ
+//     şifre reddedilir, ESKİ şifre çalışmaya devam eder (ele geçirilmiş
+//     hesabı kurtarmak için yapılan sıfırlama işe yaramaz).
+//   · Hesap silme: Firebase'deki kimlik (telefon, e-posta) üçüncü taraf
+//     kopyasıdır; yerelde anonimleştirilen hesabın Firebase kaydı da silinir.
+const KIMLIK_KAPSAMI = 'https://www.googleapis.com/auth/identitytoolkit';
+let yonetimTestGondericisi = null;
+/** Yalnız testler: Identity Toolkit yönetim çağrısını değiştirir. */
+export function firebaseYonetimTestGondericisi(f) { yonetimTestGondericisi = f; }
+
+async function yonetimIstegi(islem, govde) {
+  if (yonetimTestGondericisi) return yonetimTestGondericisi(islem, govde);
+  const sh = ortamServisHesabi();
+  if (!sh) throw new Error('Firebase servis hesabı yapılandırılmamış');
+  const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(config.firebaseProjeId)}/accounts:${islem}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await googleErisimJetonu(sh, KIMLIK_KAPSAMI)}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(govde),
+    signal: AbortSignal.timeout(10000),
+  });
+  const j = await r.json().catch(() => ({}));
+  return { ok: r.ok, durum: r.status, kod: String(j?.error?.message ?? '') };
+}
+
+/** Firebase kullanıcısının şifresini (mevcut şifre olmadan) ayarlar; başarısızsa fırlatır. */
+export async function firebaseSifreAyarla(uid, yeni) {
+  const r = await yonetimIstegi('update', { localId: uid, password: yeni });
+  if (!r.ok) throw new Error(`Firebase şifresi ayarlanamadı (HTTP ${r.durum})`);
+}
+
+/** Firebase kullanıcısını siler. Zaten yoksa başarı sayılır; başka hatada fırlatır. */
+export async function firebaseKullaniciSil(uid) {
+  const r = await yonetimIstegi('delete', { localId: uid });
+  if (r.ok || r.kod.startsWith('USER_NOT_FOUND')) return;
+  throw new Error(`Firebase kullanıcısı silinemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 60)}` : ''})`);
 }
