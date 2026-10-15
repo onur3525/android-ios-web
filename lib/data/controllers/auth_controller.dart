@@ -153,15 +153,39 @@ class AuthController extends BaseController {
       runAction('switchRole', () => _auth.switchRole(role));
 
   /// Eksik rolü hesaba ekler ve aktif role geçer.
+  ///
+  /// [rolEklemeDogrulamaIster] true ise [sifre] ve [telefonKaniti]
+  /// (`rolEklemeKodDogrula` sonucu) verilmelidir.
   Future<DomainError?> addRole(
     Role role, {
     Set<String>? categories,
     Set<String>? serviceDistricts,
+    String? sifre,
+    String? telefonKaniti,
   }) =>
       runAction(
           'addRole',
           () => _auth.addRole(role,
-              categories: categories, serviceDistricts: serviceDistricts));
+              categories: categories,
+              serviceDistricts: serviceDistricts,
+              sifre: sifre,
+              telefonKaniti: telefonKaniti));
+
+  /// Rol eklemek için şifre + SMS doğrulaması gerekiyor mu (API modu)?
+  bool get rolEklemeDogrulamaIster => _auth.rolEklemeDogrulamaIster;
+
+  /// Rol ekleme SMS'ini hesabın kayıtlı telefonuna gönderir.
+  Future<({String? challengeId, String? hata})> rolEklemeKodGonder() async {
+    final r = await _auth.rolEklemeKodGonder();
+    return (challengeId: r.challengeId, hata: r.error?.message);
+  }
+
+  /// Kodu doğrular; başarıda `addRole`a verilecek telefon kanıtı döner.
+  Future<({String? kanit, String? hata})> rolEklemeKodDogrula(
+      String challengeId, String kod) async {
+    final r = await _auth.rolEklemeKodDogrula(challengeId, kod);
+    return (kanit: r.kanit, hata: r.error?.message);
+  }
 
   Future<DomainError?> changePassword(String current, String next) =>
       runAction('changePassword', () => _auth.changePassword(current, next));

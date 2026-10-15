@@ -49,8 +49,11 @@ class AuthApi {
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
       });
 
-  Future<void> addRole({required String role, required String password, required String otpCode}) =>
-      c.post('/auth/roles/add', body: {'role': role, 'password': password, 'otpCode': otpCode});
+  /// Rol ekleme: şifre + YENİ telefon doğrulamasının Firebase kanıtı.
+  /// Sunucu kanıtın telefonla, bu oturum açıldıktan sonra ve son
+  /// 10 dakikada alınmış olmasını şart koşar (bkz. openapi roles/add).
+  Future<void> addRole({required String role, required String password, required String firebaseIdToken}) =>
+      c.post('/auth/roles/add', body: {'role': role, 'password': password, 'firebaseIdToken': firebaseIdToken});
 
   Future<List<dynamic>> sessions() => c.getList('/auth/sessions');
   Future<void> revokeSession(String jti) => c.post('/auth/sessions/$jti/revoke');

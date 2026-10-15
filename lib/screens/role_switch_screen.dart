@@ -5,10 +5,13 @@ import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/models/account.dart';
+import '../domain/form_mesajlari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import '../ui/alt_panel.dart';
+import '../ui/panel_rotasi.dart';
+import 'otp_screen.dart';
 
 /// ROL DEĞİŞTİR
 ///
@@ -313,10 +316,28 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     final acc = auth.currentAccount;
 
     if (acc != null && !_rolVar(acc, hedef)) {
+      // ⚠ API MODU: sunucu rol eklemeden önce şifre ve kayıtlı telefona
+      // gönderilen YENİ bir SMS doğrulaması ister. Mock modda gerekmez.
+      String? sifre;
+      String? kanit;
+      if (auth.rolEklemeDogrulamaIster) {
+        final d = await _rolEklemeDogrula(auth, acc.phone);
+        if (!mounted) {
+          return;
+        }
+        if (d == null) {
+          setState(() => _busy = false);
+          return;
+        }
+        sifre = d.sifre;
+        kanit = d.kanit;
+      }
       final ekleErr = await auth.addRole(
         hedef,
         categories: hedef == Role.provider ? _kategoriler : null,
         serviceDistricts: hedef == Role.provider ? _bolgeler : null,
+        sifre: sifre,
+        telefonKaniti: kanit,
       );
       if (!mounted) {
         return;
@@ -347,6 +368,151 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
       hedef == Role.provider ? '/provider/jobs' : '/customer/listings',
       (r) => false,
     );
+  }
+
+  /// ROL EKLEME DOĞRULAMASI (yalnız API modu).
+  ///
+  /// Sıra: şifre (sunucuda doğrulanır; yanlışsa SMS harcanmaz) →
+  /// kayıtlı telefona SMS → kod doğrulama ekranı. Başarıda şifre ve
+  /// telefon kanıtı döner; kullanıcı vazgeçerse `null`.
+  Future<({String sifre, String kanit})?> _rolEklemeDogrula(
+      AuthController auth, String telefon) async {
+    final sifre = await _sifreAl(auth);
+    if (sifre == null || !mounted) {
+      return null;
+    }
+    final ch = await auth.rolEklemeKodGonder();
+    if (!mounted) {
+      return null;
+    }
+    if (ch.hata != null || ch.challengeId == null) {
+      sysToastErr(context, SysKind.genericError,
+          extra: ch.hata ?? FormMesaj.otpGonderilemedi);
+      return null;
+    }
+    var challengeId = ch.challengeId!;
+    String? kanit;
+    await Navigator.push(
+      context,
+      panelRotasi<void>(
+        settings: const RouteSettings(name: '/dogrulama'),
+        builder: (_) => OtpScreen(
+          phone: telefon,
+          purpose: OtpPurpose.rolEkleme,
+          // ⚠ EKRAN KODU DOĞRULAMAZ: Firebase doğrular, kanıtı sunucu
+          // ayrıca denetler.
+          dogrula: (kod) async {
+            final r = await auth.rolEklemeKodDogrula(challengeId, kod);
+            if (r.kanit == null) {
+              return r.hata ?? 'Doğrulama kodu hatalı';
+            }
+            kanit = r.kanit;
+            return null;
+          },
+          yenidenGonder: () async {
+            final y = await auth.rolEklemeKodGonder();
+            if (y.hata != null || y.challengeId == null) {
+              return y.hata ?? FormMesaj.otpGonderilemedi;
+            }
+            challengeId = y.challengeId!;
+            return null;
+          },
+          onVerified: (c, _) => Navigator.of(c).pop(),
+        ),
+      ),
+    );
+    final k = kanit;
+    return k == null ? null : (sifre: sifre, kanit: k);
+  }
+
+  /// Şifre paneli — şifre sunucuda doğrulanır (`verifyPassword`);
+  /// doğruysa panel kapanır ve şifre döner. Ekran şifreyi SAKLAMAZ.
+  Future<String?> _sifreAl(AuthController auth) async {
+    final ctl = TextEditingController();
+    final hataNot = ValueNotifier<String?>(null);
+    final doluNot = ValueNotifier<bool>(false);
+    final mesgulNot = ValueNotifier<bool>(false);
+    String? dogrulanan;
+    try {
+      await RefBottomSheet.goster<void>(
+        context,
+        title: 'Kimliğinizi Doğrulayın',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Hesabınıza yeni rol eklemek için şifrenizi girin. Ardından '
+              'kayıtlı telefonunuza doğrulama kodu gönderilecek.',
+              style: refText(
+                  size: RF.s135,
+                  weight: RF.w400,
+                  color: RC.textDark,
+                  height: RF.lh155),
+            ),
+            const SizedBox(height: 14),
+            ValueListenableBuilder<String?>(
+              valueListenable: hataNot,
+              builder: (_, hata, __) => TextField(
+                controller: ctl,
+                obscureText: true,
+                textCapitalization: TextCapitalization.none,
+                autofocus: true,
+                onChanged: (_) {
+                  if (hataNot.value != null) {
+                    hataNot.value = null;
+                  }
+                  doluNot.value = ctl.text.trim().isNotEmpty;
+                },
+                decoration: InputDecoration(
+                  hintText: 'Şifreniz',
+                  errorText: hata,
+                  errorMaxLines: 2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Builder(
+              builder: (c) => ValueListenableBuilder<bool>(
+                valueListenable: doluNot,
+                builder: (_, dolu, __) => ValueListenableBuilder<bool>(
+                  valueListenable: mesgulNot,
+                  builder: (_, mesgul, __) => RefPrimaryButton(
+                    'Devam Et',
+                    busy: mesgul,
+                    onPressed: !dolu || mesgul
+                        ? null
+                        : () async {
+                            mesgulNot.value = true;
+                            final err = await auth.verifyPassword(ctl.text);
+                            mesgulNot.value = false;
+                            if (err != null) {
+                              hataNot.value = err.message;
+                              return;
+                            }
+                            dogrulanan = ctl.text;
+                            if (c.mounted) {
+                              Navigator.of(c).pop();
+                            }
+                          },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      // Panel kapanma animasyonu bitene kadar dinleyiciler ağaçta
+      // kalabilir; bırakma bir sonraki kareye ertelenir.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ctl.dispose();
+        hataNot.dispose();
+        doluNot.dispose();
+        mesgulNot.dispose();
+      });
+    }
+    return dogrulanan;
   }
 }
 

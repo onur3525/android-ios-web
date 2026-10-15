@@ -271,12 +271,6 @@ class ApiAuthPort extends AuthPort {
     return (account: repo.currentAccount, error: null);
   }
 
-    /// API modunda ikinci rol ekleme sunucuda şifre + OTP ister
-  /// (`ApiAuthRepository.addRole(role, password, otpCode)`).
-  ///
-  /// Bu port imzası UI'ın kullandığı sözleşmedir; API modunda kullanıcı
-  /// doğrulama adımından geçmeden rol eklenemeyeceği için burada
-  /// yönlendirici hata döner. Mock modda rol doğrudan eklenir.
   /// ⚠ `switchRole` GERİ EKLENDİ.
   ///
   /// Generic `requestOtp` silinirken bu override yanlışlıkla aynı
@@ -287,14 +281,61 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<DomainError?> switchRole(Role role) => repo.switchRole(role);
 
+  /// ROL EKLEME — sunucu şifre ve YENİ telefon doğrulaması ister.
+  ///
+  /// Kod hesabın KAYITLI telefonuna Firebase ile gönderilir; dönen ID
+  /// token sunucuya kanıt olarak gider. Sunucu kanıtın telefonla, bu
+  /// oturum açıldıktan sonra ve yakın zamanda alındığını denetler.
+  @override
+  bool get rolEklemeDogrulamaIster => true;
+
+  @override
+  Future<({String? challengeId, DomainError? error})> rolEklemeKodGonder() async {
+    final tel = repo.currentAccount?.phone ?? '';
+    if (tel.isEmpty) {
+      return (challengeId: null, error: const ValidationError('Hesapta kayıtlı telefon yok'));
+    }
+    final r = await FirebaseKimlik.i.kodGonder(tel);
+    return (challengeId: r.id, error: r.error);
+  }
+
+  @override
+  Future<({String? kanit, DomainError? error})> rolEklemeKodDogrula(
+      String challengeId, String kod) async {
+    final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod);
+    return (kanit: r.idToken, error: r.error);
+  }
+
   @override
   Future<DomainError?> addRole(
     Role role, {
     Set<String>? categories,
     Set<String>? serviceDistricts,
-  }) async =>
-      const ValidationError(
+    String? sifre,
+    String? telefonKaniti,
+  }) async {
+    if (sifre == null || sifre.isEmpty || telefonKaniti == null) {
+      return const ValidationError(
           'Rol eklemek için şifre ve SMS doğrulaması gerekir.');
+    }
+    final hata = await repo.addRole(role, sifre, telefonKaniti);
+    if (hata != null) {
+      return hata;
+    }
+    // Hizmet veren bilgileri rol eklendikten SONRA yazılır (kayıt
+    // akışıyla aynı sıra: sunucu profil ucu rolü arar).
+    if (role == Role.provider && categories != null && serviceDistricts != null) {
+      final profilHatasi =
+          await repo.saveProviderProfile(categories, serviceDistricts);
+      if (profilHatasi != null) {
+        return ValidationError(
+            'Hizmet veren rolü eklendi ancak hizmet kategorileri ve ilçeleri '
+            'kaydedilemedi (${profilHatasi.message}). Profilinizden '
+            'yeniden kaydedin.');
+      }
+    }
+    return null;
+  }
   @override
   Future<DomainError?> changePassword(String current, String next) =>
       repo.changePassword(current, next);

@@ -154,6 +154,8 @@ class MockAuthPort extends AuthPort {
     Role role, {
     Set<String>? categories,
     Set<String>? serviceDistricts,
+    String? sifre,
+    String? telefonKaniti,
   }) async =>
       repo.addRole(role,
           categories: categories, serviceDistricts: serviceDistricts);

@@ -152,11 +152,30 @@ abstract class AuthPort extends ChangeNotifier {
   Future<DomainError?> switchRole(Role role);
 
   /// İkinci rolü aynı hesaba ekler (eksik rol tamamlama akışı).
+  ///
+  /// [sifre] ve [telefonKaniti] yalnız [rolEklemeDogrulamaIster] true
+  /// olan uygulamada (API) kullanılır: sunucu şifreyi ve YENİ bir
+  /// telefon doğrulamasının kanıtını (Firebase ID token) ister.
   Future<DomainError?> addRole(
     Role role, {
     Set<String>? categories,
     Set<String>? serviceDistricts,
+    String? sifre,
+    String? telefonKaniti,
   });
+
+  /// Rol eklemeden önce şifre + SMS doğrulaması gerekiyor mu?
+  /// Mock (bellek içi) uygulamada gerekmez; API'de sunucu ister.
+  bool get rolEklemeDogrulamaIster => false;
+
+  /// Rol ekleme için hesabın kayıtlı telefonuna SMS kodu gönderir.
+  Future<({String? challengeId, DomainError? error})> rolEklemeKodGonder() async =>
+      (challengeId: null, error: const ValidationError('Bu işlem için doğrulama gerekmiyor'));
+
+  /// Kodu doğrular; başarıda sunucuya gidecek telefon kanıtını döner.
+  Future<({String? kanit, DomainError? error})> rolEklemeKodDogrula(
+          String challengeId, String kod) async =>
+      (kanit: null, error: const ValidationError('Bu işlem için doğrulama gerekmiyor'));
   Future<DomainError?> changePassword(String current, String next);
 
   /// ŞİFRE DOĞRULAMA — KRİTİK İŞLEM KAPISI.

@@ -23,7 +23,11 @@ enum OtpPurpose {
   ///
   /// ⚠ OTURUM AÇMAZ: kod yalnız telefon sahipliğini doğrular,
   /// ardından kısa ömürlü kurtarma yetkisi üretilir.
-  hesapKurtarma('ACCOUNT_RECOVERY');
+  hesapKurtarma('ACCOUNT_RECOVERY'),
+
+  /// ROL EKLEME — oturum açıkken hesaba ikinci rol eklenmeden önce
+  /// kayıtlı telefonun YENİDEN doğrulanması (sunucu şartı).
+  rolEkleme('ROLE_ADD');
 
   final String api;
   const OtpPurpose(this.api);
