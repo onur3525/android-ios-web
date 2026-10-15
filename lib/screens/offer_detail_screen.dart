@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/validators.dart';
+import '../core/telefon_arama.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/tutar_bicimi.dart';
@@ -29,7 +29,6 @@ import 'widgets/profil_avatari.dart';
 import 'widgets/durum_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import '../core/baglanti_modu.dart';
 
 /// Müşteri — Teklif / Teklif Veren Profili (HTML vOffer):
 /// usta kartı (ad, doğrulanmış rozeti, puan), teklif tutarı+notu,
@@ -425,7 +424,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                       // Referans: `<a href="tel:...">` — açıkken numara
                       // TIKLANABİLİR ve altı çizilidir.
                       altiCizili: open,
-                      onTap: open ? () => _telefonAra(context, prov?.phone) : null,
+                      onTap: open ? () => telefonuAra(context, prov?.phone) : null,
                     ),
                   ),
                   const SizedBox(width: 11), // gap:11px
@@ -1076,17 +1075,3 @@ String _telefonGoster(String? ham) {
   return TelefonBicimlendirici.gruplu(d);
 }
 
-/// `<a href="tel:...">` karşılığı — telefon uygulamasını açar.
-Future<void> _telefonAra(BuildContext context, String? ham) async {
-  final d = Validators.phoneLocal(ham ?? '');
-  if (d.isEmpty) {
-    return;
-  }
-  final uri = Uri.parse('tel:$d');
-  final acildi = await launchUrl(uri, mode: acilisModu());
-  // ⚠ Sahte başarı YOK: arama uygulaması açılamazsa kullanıcı uyarılır.
-  if (!acildi && context.mounted) {
-    sysToastErr(context, SysKind.genericError,
-        extra: 'Arama uygulaması açılamadı');
-  }
-}

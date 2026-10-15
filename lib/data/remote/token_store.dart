@@ -1,6 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../core/sekme_durumu.dart';
+
+/// ── ⚠ OTURUM İZİ (yalnız web, 15 Eki) ──
+///
+/// Web'de token tarayıcı deposuna YAZILMAZ (aşağıdaki not); oturum
+/// HttpOnly çerezle sürer ve JavaScript çerezi göremez. Açılışta sunucu
+/// uykudaysa (Render ücretsiz planı, 30–60 sn) uygulama "oturum yok"
+/// sanıp kullanıcıyı ana sayfaya atıyordu. Bu iz yalnız "bu tarayıcıda
+/// açık bir oturum vardı" bilgisidir — GİZLİ DEĞİLDİR, token içermez.
+/// Açılış iz varsa sunucuyu bekler. Giriş/yenilemede yazılır; çıkışta ve
+/// sunucu çerezi reddedince silinir. Mobilde hiçbir şey yazılmaz.
+const String kOturumIzi = 'hc.oturumIzi';
+
+bool oturumIziVar() => kaliciOku(kOturumIzi) == '1';
+
 /// Token deposu — Keychain (iOS) / EncryptedSharedPreferences (Android).
 /// Tokenlar DÜZ METİN veya SharedPreferences içinde TUTULMAZ.
 ///
@@ -73,6 +88,7 @@ class TokenStore {
     _cachedAccess = access;
     if (!_kalici) {
       _bellekRefresh = refresh;
+      kaliciYaz(kOturumIzi, '1');
       return;
     }
     await _s.write(key: _access, value: access);
@@ -83,6 +99,7 @@ class TokenStore {
     _cachedAccess = null;
     _bellekRefresh = null;
     if (!_kalici) {
+      kaliciYaz(kOturumIzi, '0');
       // Eski sürümlerden kalmış olabilecek web kayıtlarını da temizle.
       try {
         await _s.delete(key: _access);

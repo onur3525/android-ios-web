@@ -296,6 +296,11 @@ class ApiClient {
                   rt == null ? <String, String>{} : {'refreshToken': rt}))
           .timeout(ApiConfig.receiveTimeout);
       if (res.statusCode < 200 || res.statusCode >= 300) {
+        // ⚠ WEB: sunucu çerezi KESİN reddettiyse (401) oturum izi silinir;
+        // açılış artık sunucuyu beklemez. Ağ/uyku hatası izi SİLMEZ.
+        if (cerezliOturum && res.statusCode == 401) {
+          await tokens.clear();
+        }
         return false;
       }
       // Aynı UTF-8 kuralı refresh cevabı için de geçerlidir.

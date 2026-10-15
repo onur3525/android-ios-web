@@ -451,8 +451,21 @@ void main() {
     // Grup düzeyindeki okuma TÜM test dosyasının yüklenmesini engelliyordu.)
 
     test('oturum geri yükleme TEK yerden', () {
-      expect(mKod.contains('ports.auth.restoreSession()'), isFalse,
-          reason: 'main() içinde ikinci restoreSession geri gelmiş');
+      // ⚠ 15 Eki: main()'deki TEK istisna web açılışıdır (`kIsWeb` dalı;
+      // web'de splash yok, oturum çerezle orada yenilenir ve sunucu
+      // uykudaysa yeniden denenir). Mobil yol için kural AYNEN geçerli:
+      // web dalı DIŞINDA restoreSession çağrısı olamaz.
+      final webBas = mKod.indexOf('acilisRotasi() async {');
+      final webSon = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
+      expect(webBas, greaterThan(0));
+      expect(webSon, greaterThan(webBas));
+      expect(mKod.lastIndexOf('if (kIsWeb) {', webBas), greaterThan(0));
+      var i = mKod.indexOf('.restoreSession()');
+      while (i != -1) {
+        expect(i > webBas && i < webSon, isTrue,
+            reason: 'main() içinde web açılışı dışında restoreSession var');
+        i = mKod.indexOf('.restoreSession()', i + 1);
+      }
       expect(sp.contains('await auth.restoreSession().timeout('), isTrue);
       expect(sp.contains('refreshBadge(me.id)'), isTrue);
     });

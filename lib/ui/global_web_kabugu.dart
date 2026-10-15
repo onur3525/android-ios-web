@@ -324,7 +324,13 @@ class AktifRota extends NavigatorObserver {
     // deposuna yazılır; "Masaüstü sitesi" geçişi/yenileme sonrası açılış
     // buraya döner (bkz. main.dart `kSekmeRota`). Adsız rotada (diyalog,
     // alt panel) son adlı rota korunur.
-    if (kIsWeb && yeni != null && yeni.startsWith('/') && yeni != '/') {
+    // ⚠ '/baglaniyor' YAZILMAZ: geçici bekleme ekranıdır; yenilemede ona
+    // dönülürse bekleyen iş olmadığından doğrudan ana sayfaya düşülürdü.
+    if (kIsWeb &&
+        yeni != null &&
+        yeni.startsWith('/') &&
+        yeni != '/' &&
+        yeni != '/baglaniyor') {
       // Argüman (ör. yasal metnin slug/başlığı) JSON'a çevrilebiliyorsa
       // birlikte saklanır; çevrilemiyorsa (nesne argüman) rota YAZILMAZ —
       // argümansız açılınca yanlış ekran çizmektense son güvenli rota kalır.

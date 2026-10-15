@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
+import '../core/telefon_arama.dart';
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/chat_controller.dart';
@@ -13,14 +14,11 @@ import '../data/models/chat.dart';
 import '../domain/failures.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../core/validators.dart';
 import '../domain/config.dart';
 import 'widgets/sohbet_fotograf_akisi.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/olcu.dart';
 import '../domain/sohbet_okunmamis.dart';
-import '../core/baglanti_modu.dart';
 
 /// Sohbet (HTML vChat): balonlar, mesaj durumları
 /// (Gönderiliyor / Gönderildi / Okundu / Gönderilemedi + Tekrar Gönder),
@@ -280,7 +278,7 @@ class _ChatScreenState extends State<ChatScreen>
                 // ⚠ İletişim AÇILMADAN görünmez: numara zaten yok.
                 if (telefon.isNotEmpty)
                   RefTap(
-                    onTap: () => _ara(context, telefon),
+                    onTap: () => telefonuAra(context, telefon),
                     borderRadius: BorderRadius.circular(RR.r10),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -696,21 +694,6 @@ class _KonusmaListesi extends StatelessWidget {
         },
       ),
     );
-  }
-}
-
-/// `<a href="tel:...">` karşılığı — telefon uygulamasını açar.
-Future<void> _ara(BuildContext context, String ham) async {
-  final d = Validators.phoneLocal(ham);
-  if (d.isEmpty) {
-    return;
-  }
-  final acildi = await launchUrl(Uri.parse('tel:$d'),
-      mode: acilisModu());
-  // ⚠ Sahte başarı YOK: arama uygulaması açılamazsa kullanıcı uyarılır.
-  if (!acildi && context.mounted) {
-    sysToastErr(context, SysKind.genericError,
-        extra: 'Arama uygulaması açılamadı');
   }
 }
 

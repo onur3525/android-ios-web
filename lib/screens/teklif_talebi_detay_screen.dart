@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/telefon_bicimi.dart';
+import '../core/telefon_arama.dart';
 import '../core/tutar_bicimi.dart';
 import '../domain/hizmet_alan_ozeti.dart';
 import '../domain/kullanici_konumu.dart';
@@ -43,7 +43,6 @@ import 'widgets/ilan_baslik_satiri.dart';
 import 'widgets/ilan_no_etiketi.dart';
 import 'widgets/durum_seridi.dart';
 import '../core/platform/yerel_gorsel.dart';
-import '../core/baglanti_modu.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -797,7 +796,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                         : 'Kilitli',
                     kilitli: !telefonAcik,
                     onTap: telefonAcik
-                        ? () => _telefonAra(context, hizmetAlan?.phone)
+                        ? () => telefonuAra(context, hizmetAlan?.phone)
                         : null,
                   ),
                   sag: IletisimKutusu(
@@ -932,7 +931,7 @@ class _KarsiTarafBilgisi extends StatelessWidget {
                     not: iletisim ? null : 'Kilitli',
                     kilitli: !iletisim,
                     onTap: iletisim
-                        ? () => _telefonAra(context, hizmetVeren?.phone)
+                        ? () => telefonuAra(context, hizmetVeren?.phone)
                         : null,
                 );
               }),
@@ -1023,16 +1022,6 @@ class _KarsiTarafBilgisi extends StatelessWidget {
     return TelefonBicimlendirici.gruplu(d);
   }
 
-  Future<void> _telefonAra(BuildContext context, String? ham) async {
-    final d = Validators.phoneLocal(ham ?? '');
-    if (d.isEmpty) return;
-    final uri = Uri.parse('tel:$d');
-    final acildi = await launchUrl(uri, mode: acilisModu());
-    if (!acildi && context.mounted) {
-      sysToastErr(context, SysKind.genericError,
-          extra: 'Arama uygulaması açılamadı');
-    }
-  }
 }
 
 // ⚠ YEREL `IletisimKutusu` SINIFI SİLİNDİ (12 Eyl).

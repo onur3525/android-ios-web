@@ -21,6 +21,7 @@ import 'screens/my_reviews_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/profile_info_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/baglaniyor_screen.dart';
 import 'screens/provider_status_screen.dart';
 import 'core/offline_banner.dart';
 import 'core/boot_log.dart';
@@ -83,6 +84,7 @@ import 'data/repositories/incelenen_ilan_store.dart';
 import 'ui/global_web_kabugu.dart';
 import 'ui/panel_rotasi.dart';
 import 'ui/gezgin.dart';
+import 'data/remote/token_store.dart' show oturumIziVar;
 import 'ui/web_header.dart' show masaustuNav;
 import 'ui/yasal_kabul_kapisi.dart';
 import 'ui/push_kapisi.dart';
@@ -515,19 +517,12 @@ Future<void> main() async {
 
   String? ilkRota;
   if (kIsWeb) {
-    try {
-      // ⚠ BÜTÇELİ: güvenli depo okuması web'de IndexedDB açılışı ve
-      // WebCrypto anahtar türetmesi demek. Askıda kalırsa kullanıcı
-      // beyaz ekranda bekler; süre dolunca (aşağıda) anonim açılışa
-      // düşülür. Oturum varsa ilk API çağrısında zaten geri yüklenir.
-      await ports.auth
-          .restoreSession()
-          // ⚠ 1200 → 8000 ms (15 Eki): web oturumu artık çerezle sunucudan
-          // yenileniyor; Render uykudan uyanırken 1,2 sn aşılıyor ve
-          // oturumlu kullanıcı ana sayfaya düşüyordu. Bekleme süresince
-          // `index.html` açılış ekranı görünür.
-          .timeout(const Duration(milliseconds: 8000));
+    // ── ⚠ AÇILIŞ ROTASI (oturum geri yüklendikten SONRA hesaplanır) ──
+    // `ilkRota` ve argümanlı kayıtlı ekran. Gecikmeli açılışta
+    // (`BaglaniyorEkrani`) da AYNI hesap kullanılır; ikinci kopya yok.
+    Future<({String rota, String? argRota, Object? arg})> acilisRotasi() async {
       final acc = ports.auth.currentAccount;
+      String rota;
       if (acc != null) {
         // ── ⚠ YENİLEMEDE ROL KORUNUR (15 Eki) ──
         // İŞ KURALI (splash ile aynı): YENİ AÇILIŞTA çift rollü kullanıcı
@@ -546,11 +541,11 @@ Future<void> main() async {
         if (acc.activeRole != hedefRol) {
           await ports.auth.switchRole(hedefRol);
         }
-        ilkRota = hedefRol == Role.provider
+        rota = hedefRol == Role.provider
             ? '/provider/jobs'
             : '/customer/listings';
       } else {
-        ilkRota = '/home';
+        rota = '/home';
       }
       // ⚠ Yenileme öncesi AÇIK EKRAN varsa oraya dönülür. Oturumluysa her
       // ekran; oturumsuzsa yalnız oturum gerektirmeyen ekranlar. Rota
@@ -560,19 +555,68 @@ Future<void> main() async {
           (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
         final argHam = sekmeOku(kSekmeRotaArg);
         if (argHam == null) {
-          ilkRota = kayitli;
-        } else {
-          // Argümanlı ekran: ana ekran üzerine, ilk kareden sonra AYNI
-          // argümanla açılır (geri tuşu da doğal çalışır).
-          Object? arg;
-          try {
-            arg = jsonDecode(argHam);
-          } catch (_) {}
-          if (arg != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) =>
-                gezginAnahtari.currentState?.pushNamed(kayitli, arguments: arg));
-          }
+          return (rota: kayitli, argRota: null, arg: null);
         }
+        // Argümanlı ekran: ana ekran üzerine, ilk kareden sonra AYNI
+        // argümanla açılır (geri tuşu da doğal çalışır).
+        Object? arg;
+        try {
+          arg = jsonDecode(argHam);
+        } catch (_) {}
+        if (arg != null) {
+          return (rota: rota, argRota: kayitli, arg: arg);
+        }
+      }
+      return (rota: rota, argRota: null, arg: null);
+    }
+
+    // ⚠ BÜTÇELİ: oturum web'de çerezle sunucudan yenilenir. Sunucu
+    // uyanıkken 1 sn sürmez; bekleme dolarsa (aşağıda) karar oturum
+    // izine göre verilir.
+    final geriYukleme = ports.auth.restoreSession();
+    // Bekleme dolduktan sonra gelen hata yakalanmamış sayılmasın.
+    geriYukleme.ignore();
+    try {
+      // ⚠ 1200 → 2500 ms (15 Eki): web'de açılış ekranı yok (beyaz
+      // sayfa); uzun bekleme yapılmaz. Süre dolarsa oturum izi olan
+      // kullanıcı "Bağlanılıyor" ekranında sunucuyu bekler (aşağıda).
+      await geriYukleme.timeout(const Duration(milliseconds: 2500));
+      final r = await acilisRotasi();
+      ilkRota = r.rota;
+      if (r.argRota != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => gezginAnahtari
+            .currentState
+            ?.pushNamed(r.argRota!, arguments: r.arg));
+      }
+    } on TimeoutException {
+      // ── ⚠ SUNUCU UYKUDA (15 Eki, kullanıcı bulgusu) ──
+      // "1. girişimde ana sayfaya, 2. girişimde rol ekranıma gidiyor":
+      // ücretsiz plandaki sunucu 30–60 sn'de uyanıyor. Bu tarayıcıda açık
+      // bir oturum izi varsa ana sayfaya ATILMAZ; "Bağlanılıyor" ekranı
+      // sunucuyu bekler, sonra aynı açılış hesabıyla yönlendirir. İz
+      // yoksa (ziyaretçi) beklenmez, ana sayfa açılır.
+      if (oturumIziVar()) {
+        BootLog.olay('WEB_BOOT_BEKLE');
+        BaglaniyorEkrani.bekleyen = () async {
+          final bitis = DateTime.now().add(const Duration(seconds: 90));
+          try {
+            await geriYukleme;
+          } catch (_) {}
+          // Uyanma sırasında istek zaman aşımına uğrayabilir; iz durdukça
+          // (sunucu çerezi reddetmedikçe) kısa aralıkla yeniden denenir.
+          while (ports.auth.currentAccount == null &&
+              oturumIziVar() &&
+              DateTime.now().isBefore(bitis)) {
+            await Future<void>.delayed(const Duration(seconds: 2));
+            try {
+              await ports.auth.restoreSession();
+            } catch (_) {}
+          }
+          return acilisRotasi();
+        }();
+        ilkRota = BaglaniyorEkrani.rota;
+      } else {
+        ilkRota = '/home';
       }
     } catch (e) {
       // ⚠ HATA AÇILIŞI KİLİTLEMEZ: oturum çözülemezse anonim açılış.
@@ -687,6 +731,8 @@ class HizmetCepApp extends StatelessWidget {
         initialRoute: ilkRota,
         routes: {
           '/home': (_) => const HomeScreen(),
+          // Yalnız web: sunucu uykudayken oturumlu açılış (bkz. main()).
+          BaglaniyorEkrani.rota: (_) => const BaglaniyorEkrani(),
 
 
           // ── Ortak (her iki rol) ──

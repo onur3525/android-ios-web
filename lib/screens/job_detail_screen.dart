@@ -8,6 +8,7 @@ import '../domain/form_mesajlari.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
+import '../core/telefon_arama.dart';
 import '../core/theme.dart';
 import '../core/tutar_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
@@ -34,14 +35,12 @@ import '../ui/masaustu_detay.dart';
 import '../data/controllers/incelenen_ilan_controller.dart';
 import 'chat_screen.dart';
 import '../core/validators.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/telefon_bicimi.dart';
 import 'widgets/detay_karti_parcalari.dart';
 import 'widgets/teklif_tutar_karti.dart';
 import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/yanlis_taraf_kapisi.dart';
 import '../core/platform/yerel_gorsel.dart';
-import '../core/baglanti_modu.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not);
@@ -734,7 +733,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                           : 'Kilitli',
                       kilitli: !telefonAcik,
                       onTap: telefonAcik
-                          ? () => _telefonAra(context, owner?.phone)
+                          ? () => telefonuAra(context, owner?.phone)
                           : null,
                     ),
                   ),
@@ -876,24 +875,4 @@ String maskeliAd(String ad) {
 // çıkarırdı — bu depoda aynı şey `tl()` ile yaşandı ve kusur dört
 // tur boyunca ekran ekran dolaştı.
 
-/// `.pl-own` — ilan sahibi kartı.
-/// `<a href="tel:...">` karşılığı — telefon uygulamasını açar.
-///
-/// ⚠ `offer_detail_screen` içinde aynı adlı bir yardımcı vardır; ikisi
-/// de dosyaya ÖZELDİR (alt çizgiyle başlar) ve birbirini görmez.
-/// Ortaklaştırmak yerine kopyalanmıştır: davranış üç satırdır ve
-/// paylaşılan bir yardımcı için ayrı dosya açmak fazla gelirdi.
-Future<void> _telefonAra(BuildContext context, String? ham) async {
-  final d = Validators.phoneLocal(ham ?? '');
-  if (d.isEmpty) {
-    return;
-  }
-  final uri = Uri.parse('tel:$d');
-  final acildi = await launchUrl(uri, mode: acilisModu());
-  // ⚠ Sahte başarı YOK: arama uygulaması açılamazsa kullanıcı uyarılır.
-  if (!acildi && context.mounted) {
-    sysToastErr(context, SysKind.genericError,
-        extra: 'Arama uygulaması açılamadı');
-  }
-}
 
