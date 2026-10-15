@@ -1124,7 +1124,9 @@ paths:
       description: |
         ⚠ Yalnız PUBLISHED kayıtlar döner; ortalama ve dağılım onlardan hesaplanır (§14).
         ⚠ "Değerlendirmelerim" ekranı da BU UCU kullanır — kendi kimliğini verir. Ayrı bir /reviews/me ucu AÇILMAZ (§27).
-      parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
+        ⚠ `limit` verilmezse en fazla 100 kayıt döner (sayfalamasız okuyan istemciler için); sayfalama `cursor` + `limit` ile.
+        ⚠ Yazar adı KISA biçimde ("Ad S.") döner; tam soyad gönderilmez.
+        `reviews` alanı geçiş köprüsüdür: `items` ile aynı kayıtlar, ek alanlar olmadan.
       responses:
         '200':
           description: Özet + sayfalı liste
@@ -1146,10 +1148,24 @@ paths:
                     additionalProperties: { type: integer }
                   items:
                     type: array
-                    items: { $ref: '#/components/schemas/Review' }
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/Review' }
+                        - type: object
+                          properties:
+                            author:
+                              type: object
+                              properties: { name: { type: string, description: 'Kısa ad ("Ad S.")' } }
+                            listing:
+                              type: object
+                              description: Yorumun ait olduğu hizmet (ilan başlığı ya da teklif talebindeki hizmet).
+                              properties: { title: { type: string }, category: { type: string } }
                   nextCursor:
                     type: [string, 'null']
                     description: Son sayfada `null`.
+                  reviews:
+                    type: array
+                    items: { $ref: '#/components/schemas/Review' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 

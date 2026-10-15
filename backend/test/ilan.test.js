@@ -115,6 +115,42 @@ test('seçim: yalnız sahip; diğer teklifler kapanır; değerlendirme bir kez',
   assert.equal((await istek(`/api/v1/listings/${ilan.id}/review`, { yontem: 'POST', token: musteri.token, govde: { stars: 4, text: 'tekrar' } })).durum, 409);
   const liste = await istek(`/api/v1/providers/${usta.id}/reviews`, { token: usta2.token });
   assert.equal(liste.json.average, 5);
+  // "Müşteri Yorumları" ekranının sözleşmesi: dağılım + satır + imleç.
+  assert.deepEqual(liste.json.distribution, { 1: 0, 2: 0, 3: 0, 4: 0, 5: 1 });
+  assert.equal(liste.json.items.length, 1);
+  const satir = liste.json.items[0];
+  assert.equal(satir.stars, 5);
+  assert.equal(satir.text, 'Çok memnun kaldım');
+  assert.equal(satir.reviewId, satir.id);
+  assert.equal(satir.author.name, 'Kişi 0.', 'yazar tam soyadıyla gitmez');
+  assert.equal(satir.listing.title, hizmet);
+  assert.equal(liste.json.nextCursor, null);
+  assert.equal(liste.json.reviews.length, 1, 'eski `reviews` alanı korunur');
+});
+
+test('hizmet veren yorumları: imleçli sayfalama, geçersiz limit/cursor 400', async () => {
+  const z = ['2026-01-03T00:00:00.000Z', '2026-01-02T00:00:00.000Z', '2026-01-02T00:00:00.000Z'];
+  const yildiz = [4, 2, 4];
+  for (let i = 0; i < 3; i++) {
+    await db.prepare(`INSERT INTO reviews (id, provider_id, author_id, stars, text, status, created_at, published_at) VALUES (?, ?, ?, ?, ?, 'PUBLISHED', ?, ?)`)
+      .run(randomUUID(), usta2.id, musteri.id, yildiz[i], `yorum ${i}`, z[i], z[i]);
+  }
+  const s1 = await istek(`/api/v1/providers/${usta2.id}/reviews?limit=2`, { token: usta2.token });
+  assert.equal(s1.durum, 200, JSON.stringify(s1.json));
+  assert.equal(s1.json.count, 3);
+  assert.deepEqual(s1.json.distribution, { 1: 0, 2: 1, 3: 0, 4: 2, 5: 0 });
+  assert.equal(s1.json.items.length, 2);
+  assert.equal(s1.json.items[0].text, 'yorum 0');
+  assert.ok(s1.json.nextCursor);
+  const s2 = await istek(`/api/v1/providers/${usta2.id}/reviews?limit=2&cursor=${s1.json.nextCursor}`, { token: usta2.token });
+  assert.equal(s2.json.items.length, 1);
+  assert.equal(s2.json.nextCursor, null);
+  const hepsi = [...s1.json.items, ...s2.json.items].map((y) => y.id);
+  assert.equal(new Set(hepsi).size, 3, 'aynı tarihli kayıtlar atlanmaz/tekrarlanmaz');
+  assert.equal(s2.json.items[0].listing.title, '');
+  assert.equal((await istek(`/api/v1/providers/${usta2.id}/reviews?limit=0`, { token: usta2.token })).durum, 400);
+  assert.equal((await istek(`/api/v1/providers/${usta2.id}/reviews?cursor=bozuk`, { token: usta2.token })).durum, 400);
+  await db.prepare('DELETE FROM reviews WHERE provider_id = ?').run(usta2.id);
 });
 
 test('süre dolumu: 30 saat sonra kapanır, teklif verilemez, sahibine bir kez bildirim', async () => {

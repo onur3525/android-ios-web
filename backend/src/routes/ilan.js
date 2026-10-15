@@ -29,6 +29,7 @@ const teklifSiniri = new HizSiniri('teklif_ver', 120, 60 * 60 * 1000);
 // Hizmet veren dizini toplu kazınmasın diye (kullanıcı başına).
 const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
 import { kullaniciCoz } from './kullanici.js';
+import { kisaAd } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushKuyrugunuIsle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
@@ -468,12 +469,64 @@ export function ilanRotalar(r, db) {
     return ilk;
   }));
 
+  // ── HİZMET VERENİN YORUMLARI ──
+  //
+  // ⚠ SÖZLEŞME (15 Eki): "Müşteri Yorumları" ekranı OpenAPI'deki biçimi
+  // (`distribution`, `items`, `nextCursor`) bekliyordu; uç yalnız
+  // `average`, `count`, `reviews` döndürdüğü için ekranda ortalama
+  // görünüyor, dağılım sıfır ve liste boş kalıyordu. Alanlar EKLENDİ;
+  // `reviews` (yorum deposu kullanır) aynen korunur.
+  //
+  // ⚠ YAZAR ADI KISA ("Ad S.") gider — tam soyad ağda da açılmaz; istemci
+  // aynı kısaltmayı uyguladığı için görünüm değişmez.
+  // ⚠ `limit` verilmezse eskisi gibi 100 kayıt döner (yorum deposu
+  // sayfalamasız okur); sayfalama `cursor` + `limit` ile yapılır.
   r.get('/api/v1/providers/:id/reviews', korumali(async (ctx) => {
-    const liste = await db.prepare(
-      `SELECT * FROM reviews WHERE provider_id = ? AND status = 'PUBLISHED' ORDER BY created_at DESC LIMIT ?`,
-    ).all(ctx.params.id, Math.min(Number(ctx.query.get('limit') ?? 100), 200));
+    const ham = ctx.query.get('limit');
+    const limit = ham == null ? 100 : Number(ham);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw hata.dogrulama('limit 1–100 arasında olmalı');
+    let imlec = null;
+    const imlecHam = ctx.query.get('cursor');
+    if (imlecHam != null) {
+      try { imlec = JSON.parse(Buffer.from(imlecHam, 'base64url').toString('utf8')); } catch { imlec = null; }
+      if (!Array.isArray(imlec) || imlec.length !== 2 || imlec.some((v) => typeof v !== 'string')) {
+        throw hata.dogrulama('Geçersiz cursor');
+      }
+    }
+    const satirlar = await db.prepare(
+      `SELECT r.*, a.name yazar_adi, l.title ilan_basligi, t.hizmet talep_hizmeti, t.kategori talep_kategorisi
+         FROM reviews r
+         LEFT JOIN users a ON a.id = r.author_id
+         LEFT JOIN listings l ON l.id = r.listing_id
+         LEFT JOIN teklif_talepleri t ON t.id = r.talep_id
+        WHERE r.provider_id = ? AND r.status = 'PUBLISHED'
+          ${imlec ? 'AND (r.created_at < ? OR (r.created_at = ? AND r.id < ?))' : ''}
+        ORDER BY r.created_at DESC, r.id DESC LIMIT ?`,
+    ).all(ctx.params.id, ...(imlec ? [imlec[0], imlec[0], imlec[1]] : []), limit + 1);
+    const devam = satirlar.length > limit;
+    const liste = devam ? satirlar.slice(0, limit) : satirlar;
+    const son = liste[liste.length - 1];
     const ort = await db.prepare(`SELECT AVG(stars) a, COUNT(*) n FROM reviews WHERE provider_id = ? AND status = 'PUBLISHED'`).get(ctx.params.id);
-    return { average: ort.n ? Number(Number(ort.a).toFixed(2)) : null, count: ort.n, reviews: liste.map(yorumGorunumu) };
+    const dagilim = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const d of await db.prepare(
+      `SELECT stars, COUNT(*) n FROM reviews WHERE provider_id = ? AND status = 'PUBLISHED' GROUP BY stars`,
+    ).all(ctx.params.id)) dagilim[d.stars] = d.n;
+    return {
+      average: ort.n ? Number(Number(ort.a).toFixed(2)) : null,
+      count: ort.n,
+      distribution: dagilim,
+      items: liste.map((y) => {
+        const baslik = y.ilan_basligi ?? y.talep_hizmeti ?? '';
+        return {
+          ...yorumGorunumu(y),
+          reviewId: y.id,
+          author: { name: kisaAd(y.yazar_adi ?? '') },
+          listing: { title: baslik, category: y.ilan_basligi != null ? baslik : (y.talep_kategorisi ?? baslik) },
+        };
+      }),
+      nextCursor: devam ? Buffer.from(JSON.stringify([son.created_at, son.id])).toString('base64url') : null,
+      reviews: liste.map(yorumGorunumu),
+    };
   }));
 
   // ── BİLDİRİMLER ──
