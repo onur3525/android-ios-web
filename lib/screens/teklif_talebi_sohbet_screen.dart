@@ -137,20 +137,27 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-              child: Row(
+              // ── ⚠ BAŞLIK EKRANA ORTALI (15 Eki, kullanıcı bulgusu) ──
+              // "Başlık sağa kaymış, ortalı olmalı." Başlık `Row` içinde
+              // okun sağında kalan alanın ortasına düşüyordu; sağda öğe
+              // olmadığından ok genişliği kadar sağa kayıyordu. Başlık
+              // artık iki yandan eşit boşlukla (ok 38 + 8) TÜM satırın
+              // ortasında; geri oku yerinde, solda.
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  const RefBackButton(),
-                  const SizedBox(width: 8),
-                  // ⚠ BAŞLIK ORTALI — `chat_screen.dart` ile AYNI
-                  // kural (16 Eyl, kullanıcı isteği). İki mesajlaşma
-                  // ekranı ayrışamaz.
-                  Expanded(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 46),
                     child: Text(widget.baslik,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: refText(
                             size: RF.s16, weight: RF.w700, color: RC.text)),
+                  ),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: RefBackButton(),
                   ),
                 ],
               ),
