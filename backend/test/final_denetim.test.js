@@ -396,3 +396,18 @@ test('PostgreSQL sürücüsü (sahte havuz): iş kilidi ayrı bağlantıda oturu
   // veritabaniAc import'u yalnız modülün yüklendiğini doğrular.
   assert.equal(typeof veritabaniAc, 'function');
 });
+
+test('16 Eki: teklifi seçilen ilan silinmez; hizmet veren seçilen ilanı tekliflerinde görür', async () => {
+  const sahip = await kisi('5370000029', 'CUSTOMER');
+  const u1 = await kisi('5370000030', 'PROVIDER');
+  const { l, teklifler: [o] } = await ilanVeTeklif(sahip, u1);
+  assert.equal((await istek(`/api/v1/listings/${l.id}/selected-offer`, { yontem: 'PUT', token: sahip.token, govde: { offerId: o.id } })).durum, 200);
+  const sil = await istek(`/api/v1/listings/${l.id}`, { yontem: 'DELETE', token: sahip.token, govde: { reason: 'deneme' } });
+  assert.equal(sil.durum, 409);
+  assert.equal((await db.prepare('SELECT status FROM listings WHERE id = ?').get(l.id)).status, 'ACTIVE');
+  const benim = await istek('/api/v1/offers/my', { token: u1.token });
+  const k = benim.json.find((x) => x.id === o.id);
+  assert.equal(k.status, 'SELECTED');
+  assert.equal(k.listing.id, l.id, 'seçilen ilan teklifle birlikte gelir');
+  assert.equal(k.listing.selectedOfferId, o.id);
+});

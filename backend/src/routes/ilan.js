@@ -312,6 +312,9 @@ export function ilanRotalar(r, db) {
     const l = await ilanGetir(ctx.params.id);
     if (l.owner_id !== ctx.kullanici.id) throw hata.bulunamadi('İlan bulunamadı');
     if (l.status !== 'ACTIVE') throw kural('INVALID_STATE', 'Bu ilan zaten kapalı');
+    // ⚠ 16 Eki (kullanıcı kuralı): teklifi seçilmiş ilan SİLİNMEZ — iş
+    // tamamlanmıştır; hizmet verenin kazandığı iş, yorum ve geçmiş ona bağlı.
+    if (l.selected_offer_id) throw kural('INVALID_STATE', 'Teklif seçilen ilan silinemez');
     const neden = ctx.body.reason ? String(ctx.body.reason).trim().slice(0, 500) : null;
     const z = simdi();
     await db.tx(async () => {
@@ -367,9 +370,25 @@ export function ilanRotalar(r, db) {
     return teklifGorunumu(await db.prepare('SELECT * FROM offers WHERE id = ?').get(id));
   }));
 
-  r.get('/api/v1/offers/my', korumali(async (ctx) =>
-    (await db.prepare('SELECT * FROM offers WHERE provider_id = ? ORDER BY created_at DESC').all(ctx.kullanici.id)).map(teklifGorunumu),
-  ));
+  // ── ⚠ TEKLİFLERİM İLANIYLA BİRLİKTE (16 Eki, kullanıcı bulgusu) ──
+  // Hizmet verenin ilan listesi yalnız AÇIK ilanlardan (/listings/available)
+  // geliyordu; teklifi SEÇİLEN ilan oradan düştüğü için Kazandığım
+  // kartında "İlan kaldırıldı" yazıyor, ilan açılamıyordu. Her teklif
+  // kendi ilanının görünümünü (`listing`) taşır — hizmet veren teklif
+  // verdiği ilanı her durumda görebilir (GET /listings/:id ile aynı kural).
+  r.get('/api/v1/offers/my', korumali(async (ctx) => {
+    const teklifler = await db.prepare('SELECT * FROM offers WHERE provider_id = ? ORDER BY created_at DESC').all(ctx.kullanici.id);
+    const ilanlar = new Map();
+    const kimlikler = [...new Set(teklifler.map((o) => o.listing_id))];
+    for (let i = 0; i < kimlikler.length; i += 500) {
+      const parca = kimlikler.slice(i, i + 500);
+      for (const l of await db.prepare(`SELECT * FROM listings WHERE id IN (${parca.map(() => '?').join(', ')})`).all(...parca)) ilanlar.set(l.id, l);
+    }
+    return teklifler.map((o) => {
+      const l = ilanlar.get(o.listing_id);
+      return { ...teklifGorunumu(o), ...(l ? { listing: ilanGorunumu(l) } : {}) };
+    });
+  }));
 
   r.put('/api/v1/listings/:id/selected-offer', korumali(async (ctx) => {
     const l = await ilanGetir(ctx.params.id);

@@ -358,13 +358,28 @@ class ApiListingRepository extends ChangeNotifier {
     aktar(j['id'] as String,
         ham.map((e) => Mappers.offer(e as Map<String, dynamic>)).toList());
   }
+  /// ── ⚠ TEKLİF VERDİĞİM İLANLAR (16 Eki, kullanıcı bulgusu) ──
+  /// Hizmet verenin listesi yalnız açık ilanlardan gelir; teklifi seçilen
+  /// ilan oradan düşünce Kazandığım kartı "İlan kaldırıldı" gösteriyor ve
+  /// ilan açılamıyordu. `/offers/my` her teklifin ilanını taşır; bunlar
+  /// burada AYRI tutulur (açık ilan listesi yenilenince silinmez).
+  /// `main()` bağlar: `ApiOfferRepository.ilanlariAktar`.
+  final Map<String, Listing> _teklifIlanlari = {};
+
+  void teklifIlanlariniAl(List<Listing> ilanlar) {
+    _teklifIlanlari
+      ..clear()
+      ..addEntries(ilanlar.map((l) => MapEntry(l.id, l)));
+    notifyListeners();
+  }
+
   Listing? byId(String id) {
     for (final l in _cache) {
       if (l.id == id) {
         return l;
       }
     }
-    return null;
+    return _teklifIlanlari[id];
   }
 
   void _merge(List<dynamic> rows) {
@@ -504,14 +519,25 @@ class ApiOfferRepository extends ChangeNotifier {
       _cache.remove(id);
     }
     _benimkiler.clear();
+    final ilanlar = <Listing>[];
     for (final e in rows!) {
-      final o = Mappers.offer(e as Map<String, dynamic>);
+      final j = e as Map<String, dynamic>;
+      final o = Mappers.offer(j);
       _cache[o.id] = o;
       _benimkiler.add(o.id);
+      final l = j['listing'];
+      if (l is Map<String, dynamic>) {
+        ilanlar.add(Mappers.listing(l));
+      }
     }
+    ilanlariAktar?.call(ilanlar);
     notifyListeners();
     return null;
   }
+
+  /// Teklif verdiğim ilanlar ilan deposuna aktarılır (bkz.
+  /// `ApiListingRepository.teklifIlanlariniAl`). `main()` bağlar.
+  void Function(List<Listing> ilanlar)? ilanlariAktar;
 
   Future<(Offer?, DomainError?)> create({
     required String listingId, required int amountTl, required String note,
