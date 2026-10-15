@@ -8,7 +8,7 @@ import '../ui/ref_tokens.dart';
 ///
 /// Kullanıcı bulgusu: "1. girişimde ana kayıt sayfasına, 2. girişimde
 /// kayıtlı olduğum rol ekranına yönlendiriyor." Sunucu (Render ücretsiz
-/// planı) uykudayken oturum 8 sn içinde yenilenemiyor ve açılış ana
+/// planı) uykudayken oturum kısa bekleme içinde yenilenemiyor ve açılış ana
 /// sayfaya düşüyordu.
 ///
 /// Bu tarayıcıda oturum izi varsa `main()` bu ekranı açar ve oturum
