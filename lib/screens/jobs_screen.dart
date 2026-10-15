@@ -210,12 +210,19 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// ── ⚠ ÖNCE TEKLİFLERİM, SONRA İLANLAR (16 Eki, kullanıcı bulgusu) ──
+  ///
+  /// "Yeni işler" teklif verdiğim ilanları `teklifVermedim` ile gizler;
+  /// bu süzgeç teklif listesine dayanır. Önceden ilanlar ÖNCE yükleniyordu:
+  /// ilk açılışta teklifler henüz gelmemişken teklif verdiğim ilan bir an
+  /// listede görünüp teklifler gelince kayboluyordu (mobil ve web). Teklifler
+  /// önce yüklenince ilan listeye hiç düşmez.
   Future<void> _refresh() async {
-    await context.read<ListingController>().loadAvailable();
+    await context.read<OfferController>().loadMine();
     if (!mounted) {
       return;
     }
-    await context.read<OfferController>().loadMine();
+    await context.read<ListingController>().loadAvailable();
   }
 
   @override
