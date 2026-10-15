@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../domain/form_mesajlari.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +17,6 @@ import '../ui/web_panel.dart';
 import 'nav_actions.dart';
 import '../core/geri.dart';
 import '../ui/panel_rotasi.dart';
-import 'widgets/profil_fotografi.dart';
 
 /// Profil Bilgileri (HTML pinfo): ad, e-posta, profil fotoğrafı;
 /// telefon değişikliği SMS DOĞRULAMALI (OTP ekranı yeniden kullanılır).
@@ -451,43 +449,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               const RefSubtitle(
                   'Profil bilgilerinizi görüntüleyebilir ve '
                   'güncelleyebilirsiniz.'),
-              // ── ⚠ PROFİL FOTOĞRAFI BURAYA TAŞINDI ──
-              //
-              // Fotoğraf seçici yalnız Profil ekranındaki avatarda
-              // vardı. Masaüstü web'de kenar çubuğu gelince o ekran
-              // gereksizleşti (menüsü çubukta zaten var) ama fotoğrafa
-              // ulaşmanın tek yolu orasıydı.
-              //
-              // Ad, soyad, e-posta ve telefon zaten burada
-              // düzenleniyor; fotoğraf da buraya aittir.
-              //
-              // ⚠ ORTAK BİLEŞEN (`widgets/profil_fotografi.dart`):
-              // Profil ekranı da AYNI sınıfı kullanır, kopyalanmadı.
-              Consumer<AuthController>(
-                builder: (_, auth, __) {
-                  final acc = auth.currentAccount;
-                  // ── ⚠ YALNIZ WEB: ORTALI AVATAR, KAMERA ROZETİ YOK ──
-                  //
-                  // Sütun `CrossAxisAlignment.stretch` olduğu için bileşen
-                  // satır genişliğine yayılıyor, avatar sola yaslanıyor ve
-                  // kamera rozeti (`Positioned(right: 0)`) satırın sağ
-                  // kenarına yapışıyordu. Web'de bileşen `Center` ile kendi
-                  // 96 px genişliğine döner ve rozet çizilmez (kullanıcı
-                  // kararı). Fotoğraf menüsü avatara dokununca açılır.
-                  //
-                  // ⚠ MOBİL KİLİTLİ: `kIsWeb` false iken ağaç BİREBİR
-                  // önceki hâlidir (sarmalayıcı yok, rozet açık).
-                  final foto = ProfilFotografi(
-                    ad: acc?.name ?? '',
-                    fotoYolu: acc?.photoPath ?? '',
-                    kameraRozeti: !kIsWeb,
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6, bottom: 14),
-                    child: kIsWeb ? Center(child: foto) : foto,
-                  );
-                },
-              ),
+              // ⚠ FOTOĞRAF YOK (16 Eki, kullanıcı kararı): bu ekranda profil
+              // fotoğrafı ve kamera simgesi gösterilmez; yalnız dört alan.
             ],
 
             // ⚠ Alt başlıkla ilk alan arasındaki boşluk da etiketten

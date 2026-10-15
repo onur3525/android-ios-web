@@ -43,12 +43,10 @@ void main() {
     expect(find.text('G'), findsOneWidget);
   });
 
-  test('Profil Bilgilerim: rozet ve ortalama YALNIZ web', () {
+  test('Profil Bilgilerim: fotoğraf ve kamera simgesi YOK (16 Eki, mobil + web)', () {
     final k = File('lib/screens/profile_info_screen.dart').readAsStringSync();
-    expect(k.contains('kameraRozeti: !kIsWeb'), isTrue,
-        reason: 'rozet mobilde de kapanmış olabilir');
-    expect(k.contains('child: kIsWeb ? Center(child: foto) : foto'), isTrue,
-        reason: 'ortalama mobile de uygulanmış olabilir');
+    expect(k.contains('ProfilFotografi('), isFalse);
+    expect(k.contains('kameraRozeti'), isFalse);
   });
 
   test('Profil ekranı rozet anahtarını KULLANMAZ (mobil aynen)', () {
