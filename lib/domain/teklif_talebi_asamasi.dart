@@ -101,7 +101,10 @@ const String kTalepMesajlasmaKapandi =
     'Teklifin süresi doldu; mesajlaşma kapandı.';
 
 bool talepIletisimAcikMi(TeklifTalebi t) =>
-    t.teklifTarihi != null && t.durum != TeklifTalebiDurumu.suresiDoldu;
+    t.teklifTarihi != null &&
+    t.durum != TeklifTalebiDurumu.suresiDoldu &&
+    // ⚠ 15 Eki: hizmet alan talebi sildiyse iletişim kapanır (sunucu aynı).
+    !t.hizmetAlanSildi;
 
 /// [hepsi] içinden kazanılmış/tamamlanmış talepler.
 List<TeklifTalebi> kazanilanTalepler(List<TeklifTalebi> hepsi) =>

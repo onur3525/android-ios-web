@@ -101,10 +101,10 @@ async function gorunurluk(db, u, x) {
   // 4) Teklif talebi (iletişim kuralı istemcideki `talepIletisimAcikMi` ile aynı).
   await talepSureleriniIsle(db);
   for (const t of await db.prepare(
-    `SELECT hizmet_alan_id, saglayici_id, teklif_tarihi, durum, iletisim_tercihi FROM teklif_talepleri
+    `SELECT hizmet_alan_id, saglayici_id, teklif_tarihi, durum, iletisim_tercihi, silindi_at FROM teklif_talepleri
       WHERE (hizmet_alan_id = ? AND saglayici_id = ?) OR (hizmet_alan_id = ? AND saglayici_id = ?)`,
   ).all(x.id, u.id, u.id, x.id)) {
-    const iletisim = t.teklif_tarihi != null && t.durum !== 'SURESI_DOLDU';
+    const iletisim = t.teklif_tarihi != null && t.durum !== 'SURESI_DOLDU' && !t.silindi_at;
     if (t.hizmet_alan_id === x.id) {
       musteri = true;
       mahalle = true;

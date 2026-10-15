@@ -118,6 +118,40 @@ test('teklif talebi: teklif 30 saatte süresi doluyor; usta yalnız beklemedeyke
   }
 });
 
+test('teklif talebi: hizmet alan siler — gerekçe ne olursa olsun listesinden kalkar, usta iptal görür', async () => {
+  const yeni = async () => (await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'banyo bataryası değişecek', iletisimTercihi: 'telefonGoster' } })).json.id;
+  const alanListesi = async () => (await istek('/api/v1/teklif-talepleri', { token: alan.token })).json.map((x) => x.id);
+  // Beklemedeyken, gerekçeli
+  const a = await yeni();
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${a}/sil`, { yontem: 'POST', token: usta.token, govde: {} })).durum, 403, 'usta silemez');
+  const s1 = await istek(`/api/v1/teklif-talepleri/${a}/sil`, { yontem: 'POST', token: alan.token, govde: { gerekce: 'Dışarıdan biri ile anlaştım' } });
+  assert.equal(s1.durum, 200, JSON.stringify(s1.json));
+  assert.equal(s1.json.durum, 'REDDEDILDI');
+  assert.ok(s1.json.silindiAt);
+  assert.ok(!(await alanListesi()).includes(a), 'silinen talep hizmet alan listesinde kaldı');
+  const ustaKaydi = (await istek('/api/v1/teklif-talepleri', { token: usta.token })).json.find((x) => x.id === a);
+  assert.ok(ustaKaydi?.silindiAt, 'usta talebi iptal edilmiş olarak görmeli');
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${a}/teklif`, { yontem: 'POST', token: usta.token, govde: { fiyat: 300 } })).durum, 409);
+  // Teklif geldikten sonra, gerekçesiz; mesajlaşma kapanır, telefon gizlenir
+  const b = await yeni();
+  await istek(`/api/v1/teklif-talepleri/${b}/teklif`, { yontem: 'POST', token: usta.token, govde: { fiyat: 700 } });
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${b}/sil`, { yontem: 'POST', token: alan.token, govde: {} })).durum, 200);
+  assert.ok(!(await alanListesi()).includes(b));
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${b}/mesajlar`, { yontem: 'POST', token: usta.token, govde: { metin: 'merhaba' } })).durum, 409);
+  // Önceden reddedilmiş/süresi dolmuş talep de silinip listeden kalkar
+  const c = await yeni();
+  await istek(`/api/v1/teklif-talepleri/${c}/reddet`, { yontem: 'POST', token: alan.token, govde: {} });
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${c}/sil`, { yontem: 'POST', token: alan.token, govde: { gerekce: 'Diğer: taşındım' } })).durum, 200);
+  assert.ok(!(await alanListesi()).includes(c));
+  // Kabul edilmiş iş silinemez
+  const d = await yeni();
+  await istek(`/api/v1/teklif-talepleri/${d}/teklif`, { yontem: 'POST', token: usta.token, govde: { fiyat: 800 } });
+  await istek(`/api/v1/teklif-talepleri/${d}/sec`, { yontem: 'POST', token: alan.token });
+  const s4 = await istek(`/api/v1/teklif-talepleri/${d}/sil`, { yontem: 'POST', token: alan.token, govde: {} });
+  assert.equal(s4.durum, 409);
+  assert.ok((await alanListesi()).includes(d));
+});
+
 test('yasal kabul: yalnız kabul isteyen + yayındaki sürüm; sürüm değişince yeniden istenir', async () => {
   const z = simdi();
   await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'kvkk', 1, 'metin bir', 'aaa', '2026-10-01', 'PUBLISHED', ?)`).run(randomUUID(), z);

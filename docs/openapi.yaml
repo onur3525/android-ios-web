@@ -1654,6 +1654,26 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /teklif-talepleri/{talepId}/sil:
+    parameters:
+      - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [TeklifTalepleri]
+      summary: Hizmet alan talebi siler
+      description: |
+        Gövde { gerekce? }. Gerekçe ne olursa olsun talep hizmet alanın listesinden
+        kalkar (`GET /teklif-talepleri` döndürmez) ve `silindiAt` dolar; kayıt kalıcı
+        silinmez. Açık talep (BEKLEMEDE/TEKLIF_GELDI) REDDEDILDI olur ve mesajlaşma
+        kapanır; hizmet veren talebi `silindiAt` ile "iptal edildi" görür.
+        Yalnız hizmet alan (403); SECILDI/TAMAMLANDI silinemez (409 INVALID_STATE).
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
   /teklif-talepleri/{talepId}/tamamla:
     parameters:
       - { name: talepId, in: path, required: true, schema: { type: string, format: uuid } }

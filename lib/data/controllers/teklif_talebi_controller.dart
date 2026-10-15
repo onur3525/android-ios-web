@@ -123,6 +123,10 @@ class TeklifTalebiController extends BaseController {
       runAction('teklif-sec-$id', () => _port.secToVer(id));
   Future<DomainError?> reddet(String id, {String? gerekce}) =>
       runAction('teklif-reddet-$id', () => _port.reddet(id, gerekce: gerekce));
+
+  /// Hizmet alan talebi siler — gerekçe ne olursa olsun listesinden kalkar.
+  Future<DomainError?> sil(String id, {String? gerekce}) =>
+      runAction('talep-sil-$id', () => _port.sil(id, gerekce: gerekce));
   Future<DomainError?> tamamla(String id) =>
       runAction('teklif-tamamla-$id', () => _port.tamamla(id));
 

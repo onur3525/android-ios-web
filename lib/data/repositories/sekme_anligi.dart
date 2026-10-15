@@ -130,6 +130,7 @@ Map<String, dynamic> talepJson(TeklifTalebi t) => {
       'iletisimTercihi': t.iletisimTercihi.name, 'createdAt': _t(t.createdAt), 'fotograflar': t.fotograflar,
       'isZamani': t.isZamani?.name, 'durum': t.durum.name, 'teklifFiyati': t.teklifFiyati,
       'teklifAciklamasi': t.teklifAciklamasi, 'teklifTarihi': _t(t.teklifTarihi), 'redGerekcesi': t.redGerekcesi,
+      'silindiAt': _t(t.silindiAt),
       'mesajlar': [
         for (final m in t.mesajlar)
           {'id': m.id, 'gonderenId': m.gonderenId, 'zaman': _t(m.zaman), 'metin': m.metin, 'fotografYolu': m.fotografYolu, 'durum': m.durum.name},
@@ -154,6 +155,7 @@ TeklifTalebi talepCoz(Map<String, dynamic> j) => TeklifTalebi(
       teklifAciklamasi: j['teklifAciklamasi'] as String?,
       teklifTarihi: _d(j['teklifTarihi']),
       redGerekcesi: j['redGerekcesi'] as String?,
+      silindiAt: _d(j['silindiAt']),
       mesajlar: [
         for (final m in ((j['mesajlar'] as List?) ?? const []).whereType<Map<String, dynamic>>())
           TeklifMesaj(

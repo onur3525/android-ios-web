@@ -90,7 +90,9 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
   @override
   List<TeklifTalebi> byHizmetAlan(String hizmetAlanId) {
     _gerekirseTazele();
-    return _onbellek.values.where((t) => t.hizmetAlanId == hizmetAlanId).toList()
+    return _onbellek.values
+        .where((t) => t.hizmetAlanId == hizmetAlanId && !t.hizmetAlanSildi)
+        .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -159,6 +161,10 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
       _yaz(() => _c.post('/teklif-talepleri/$id/reddet', body: {if (gerekce != null) 'gerekce': gerekce}));
 
   @override
+  Future<DomainError?> sil(String id, {String? gerekce}) =>
+      _yaz(() => _c.post('/teklif-talepleri/$id/sil', body: {if (gerekce != null) 'gerekce': gerekce}));
+
+  @override
   Future<DomainError?> tamamla(String id) => _yaz(() => _c.post('/teklif-talepleri/$id/tamamla'));
 
   @override
@@ -220,6 +226,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
         teklifAciklamasi: j['teklifAciklamasi'] as String?,
         teklifTarihi: j['teklifTarihi'] == null ? null : _zaman(j['teklifTarihi']),
         redGerekcesi: j['redGerekcesi'] as String?,
+        silindiAt: j['silindiAt'] == null ? null : _zaman(j['silindiAt']),
         mesajlar: ((j['mesajlar'] as List?) ?? const [])
             .whereType<Map<String, dynamic>>()
             .map((m) => TeklifMesaj(

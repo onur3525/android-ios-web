@@ -110,6 +110,7 @@ class TeklifTalebi {
     this.teklifTarihi,
     List<TeklifMesaj>? mesajlar,
     this.redGerekcesi,
+    this.silindiAt,
   }) : mesajlar = mesajlar ?? [];
 
   final String id;
@@ -207,6 +208,13 @@ class TeklifTalebi {
   /// içindeki "İlanı neden siliyorsunuz?" akışıyla AYNI desen).
   /// Yönetim/denetim amaçlı tutulur; hizmet verene GÖSTERİLMEZ.
   String? redGerekcesi;
+
+  /// ── ⚠ HİZMET ALAN TALEBİ SİLDİ (15 Eki) ──
+  /// Doluysa talep hizmet alanın listesinde GÖRÜNMEZ; hizmet veren
+  /// "İptal edildi" görür ve mesajlaşma kapanır. Kayıt kalıcı silinmez.
+  DateTime? silindiAt;
+
+  bool get hizmetAlanSildi => silindiAt != null;
 
   /// Hizmet verenin sunduğu fiyat — YALNIZ `teklifGeldi` ve sonrası
   /// durumlarda dolu.

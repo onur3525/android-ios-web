@@ -204,16 +204,6 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     sysToastOk(context, 'Teklif kabul edildi — iş tamamlandı.');
   }
 
-  Future<void> _reddet(TeklifTalebi t, {String? gerekce}) async {
-    final err = await context
-        .read<TeklifTalebiController>()
-        .reddet(t.id, gerekce: gerekce);
-    if (!mounted) return;
-    if (err != null) {
-      sysToastErr(context, SysKind.genericError, extra: err.message);
-    }
-  }
-
   // ── ⚠ "3 NOKTA → TALEBİ SİL" — `listing_detail_screen.dart`daki
   // "İlanı neden siliyorsunuz?" DESENİYLE AYNI (bottom sheet menü →
   // onay → hazır gerekçe listesi → "Diğer" ise serbest metin).
@@ -318,9 +308,20 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
       gerekce = 'Diğer: ${metin.trim()}';
     }
 
-    await _reddet(t, gerekce: gerekce);
+    // ── ⚠ SİLME AYRI İŞLEM (15 Eki, kullanıcı bulgusu) ──
+    // Eskiden `_reddet` çağrılıyordu: talep "Reddedildi" olarak listede
+    // kalıyor, ekran da açık kalıyordu. Artık gerekçe ne olursa olsun
+    // talep silinir, hizmet alanın listesinden kalkar ve ekran kapanır.
+    final err = await context
+        .read<TeklifTalebiController>()
+        .sil(t.id, gerekce: gerekce);
     if (!mounted) return;
+    if (err != null) {
+      sysToastErr(context, SysKind.genericError, extra: err.message);
+      return;
+    }
     sysToastOk(context, 'Talep silindi.');
+    Navigator.of(context).maybePop();
   }
 
   Future<void> _tamamla(TeklifTalebi t) async {
@@ -1144,7 +1145,11 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
           // `else if` okuyan kişiye "burada bir şey olmalıydı" dedirtir.
           ] else if (talep.durum == TeklifTalebiDurumu.reddedildi) ...[
             const SizedBox(height: 16),
-            Text('Hizmet alan bu teklifi reddetti.',
+            // ⚠ 15 Eki: hizmet alan talebi SİLDİYSE iptal metni.
+            Text(
+                talep.hizmetAlanSildi
+                    ? 'Hizmet alan bu talebi iptal etti.'
+                    : 'Hizmet alan bu teklifi reddetti.',
                 style: refText(
                     size: RF.s135, weight: RF.w500, color: RC.textSoft)),
           ] else if (talep.durum == TeklifTalebiDurumu.suresiDoldu) ...[
@@ -1155,6 +1160,13 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
           ],
         ],
       );
+    }
+
+    // ⚠ 15 Eki: hizmet alan talebi teklif VERİLMEDEN sildiyse form
+    // çizilmez (sunucu da teklifi 409 ile reddeder).
+    if (talep.hizmetAlanSildi) {
+      return Text('Hizmet alan bu talebi iptal etti.',
+          style: refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
     }
 
     // ── TEKLİF VERME FORMU ──

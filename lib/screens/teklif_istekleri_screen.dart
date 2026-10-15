@@ -100,7 +100,8 @@ class _TalepKarti extends StatelessWidget {
   Widget build(BuildContext context) {
     final acik = talep.teklifTarihi != null;
     final hizmetAlanAdi = hizmetAlan?.name ?? 'Hizmet Alan';
-    final (metin, renk) = _durumGoster(talep.durum);
+    final (metin, renk) =
+        _durumGoster(talep.durum, iptal: talep.hizmetAlanSildi);
 
     return RefTap(
       onTap: () => Navigator.push<void>(
@@ -284,7 +285,10 @@ class _TalepKarti extends StatelessWidget {
 
 
 
-  (String, Color) _durumGoster(TeklifTalebiDurumu d) => switch (d) {
+  // ⚠ 15 Eki: hizmet alanın SİLDİĞİ talep "İptal edildi" görünür
+  // (`TeklifTalebi.hizmetAlanSildi`); öteki durumlar aynen.
+  (String, Color) _durumGoster(TeklifTalebiDurumu d, {bool iptal = false}) =>
+      iptal ? ('İptal edildi', HC.grey) : switch (d) {
         TeklifTalebiDurumu.beklemede => ('Yanıt bekliyor', RC.blue),
         TeklifTalebiDurumu.teklifGeldi => ('Teklif verildi', HC.green),
         TeklifTalebiDurumu.secildi => ('İş aktif', HC.green),

@@ -49,6 +49,8 @@ export function talepGorunumu(t, mesajlar = [], degerlendirme = null) {
     fotograflar: JSON.parse(t.fotograflar_json), iletisimTercihi: t.iletisim_tercihi, isZamani: t.is_zamani,
     durum: t.durum, teklifFiyati: t.teklif_fiyati, teklifAciklamasi: t.teklif_aciklamasi,
     teklifTarihi: t.teklif_tarihi, redGerekcesi: t.red_gerekcesi, createdAt: t.created_at,
+    // Hizmet alan talebi sildiyse dolu (15 Eki); hizmet veren "iptal edildi" görür.
+    silindiAt: t.silindi_at ?? null,
     mesajlar: mesajlar.map((m) => ({ id: m.id, gonderenId: m.gonderen_id, metin: m.metin, fotografRef: m.fotograf_ref, createdAt: m.created_at, okundu: !!m.read_at })),
     // Talebin değerlendirmesi (yoksa null): istemci "Değerlendirme Yapıldı"
     // durumunu yeniden girişten sonra da doğru gösterir.
@@ -207,8 +209,10 @@ export function sohbetTalepRotalar(r, db) {
     // `ApiTeklifTalebiPort`) role göre süzer — rol değişince yeniden çekmez.
     const liste = await db.prepare(
       `SELECT t.*, s.name saglayici_adi FROM teklif_talepleri t JOIN users s ON s.id = t.saglayici_id
-        WHERE t.hizmet_alan_id = ? OR t.saglayici_id = ? ORDER BY t.created_at DESC`,
-    ).all(u.id, u.id);
+        WHERE (t.hizmet_alan_id = ? OR t.saglayici_id = ?)
+          AND NOT (t.hizmet_alan_id = ? AND t.silindi_at IS NOT NULL)
+        ORDER BY t.created_at DESC`,
+    ).all(u.id, u.id, u.id); // ⚠ hizmet alanın SİLDİĞİ talep kendi listesine dönmez
     const out = await talepleriTopluTamamla(liste);
     return out;
   }));
@@ -307,6 +311,31 @@ export function sohbetTalepRotalar(r, db) {
     return talepTam(await talepGetir(t.id, ctx.kullanici));
   }));
 
+  // ── HİZMET ALAN TALEBİ SİLER (15 Eki, kullanıcı bulgusu) ──
+  // "Talebi Sil" eskiden /reddet çağırıyordu: talep "Reddedildi" olarak
+  // listede kalıyordu ve gelen teklifi reddetmekten ayırt edilemiyordu.
+  // Silme hangi gerekçeyle olursa olsun talebi hizmet alanın listesinden
+  // kaldırır. Kayıt kalıcı silinmez (hizmet verenin geçmişi, mesajlar);
+  // açıksa (BEKLEMEDE/TEKLIF_GELDI) kapanır, mesajlaşma kapanır.
+  // Kabul edilmiş/tamamlanmış iş silinemez.
+  r.post('/api/v1/teklif-talepleri/:id/sil', korumali(async (ctx) => {
+    const t = await talepGetir(ctx.params.id, ctx.kullanici);
+    if (ctx.kullanici.id !== t.hizmet_alan_id) throw hata.yetki('Talebi yalnız hizmet alan silebilir');
+    const g = ctx.body.gerekce ? String(ctx.body.gerekce).trim().slice(0, 500) : null;
+    const z = simdi();
+    const s = await db.prepare(
+      `UPDATE teklif_talepleri
+          SET durum = CASE WHEN durum IN ('BEKLEMEDE', 'TEKLIF_GELDI') THEN 'REDDEDILDI' ELSE durum END,
+              reddeden_id = CASE WHEN durum IN ('BEKLEMEDE', 'TEKLIF_GELDI') THEN ? ELSE reddeden_id END,
+              red_gerekcesi = COALESCE(?, red_gerekcesi),
+              silindi_at = COALESCE(silindi_at, ?),
+              updated_at = ?
+        WHERE id = ? AND durum NOT IN ('SECILDI', 'TAMAMLANDI')`,
+    ).run(ctx.kullanici.id, g, z, z, t.id);
+    if (s.changes !== 1) throw kural('INVALID_STATE', 'Kabul edilmiş iş silinemez');
+    return talepTam(await talepGetir(t.id, ctx.kullanici));
+  }));
+
   r.post('/api/v1/teklif-talepleri/:id/tamamla', korumali(async (ctx) => {
     const t = await talepGetir(ctx.params.id, ctx.kullanici);
     if (t.durum === 'TAMAMLANDI') return talepTam(t);
@@ -323,6 +352,7 @@ export function sohbetTalepRotalar(r, db) {
     // Teklifin süresi dolunca iletişim kapanır (ürün kararı, 11 Eki);
     // `talepGetir` süre taramasını önce yaptığı için durum günceldir.
     if (t.durum === 'SURESI_DOLDU') throw kural('INVALID_STATE', 'Teklifin süresi doldu; mesajlaşma kapandı.');
+    if (t.silindi_at) throw kural('INVALID_STATE', 'Talep silindi; mesajlaşma kapandı.');
     const metin = ctx.body.metin == null ? null : String(ctx.body.metin).trim();
     const ref = ctx.body.fotografRef == null ? null : String(ctx.body.fotografRef);
     if (!metin && !ref) throw hata.dogrulama('Boş mesaj gönderilemez');

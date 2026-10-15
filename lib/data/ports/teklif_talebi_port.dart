@@ -43,6 +43,11 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
       {required int fiyat, required String aciklama});
   Future<DomainError?> secToVer(String id);
   Future<DomainError?> reddet(String id, {String? gerekce});
+
+  /// ⚠ HİZMET ALAN TALEBİ SİLER (15 Eki): gerekçe ne olursa olsun talep
+  /// hizmet alanın listesinden kalkar (`byHizmetAlan` döndürmez); açıksa
+  /// kapanır. Kabul edilmiş/tamamlanmış iş silinemez.
+  Future<DomainError?> sil(String id, {String? gerekce});
   Future<DomainError?> tamamla(String id);
 
   /// ⚠ Yalnız `teklifTarihi` dolduktan SONRA gerçek gönderim yapar
@@ -219,6 +224,15 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
     // ⚠ `NotifType.teklifReddedildi` SİLİNMEDİ: geçmişte gönderilmiş
     // bildirimler hâlâ o türle kayıtlı ve yönlendirmesi duruyor.
     _repo.reddet(id, gerekce: gerekce);
+    return null;
+  }
+
+  @override
+  Future<DomainError?> sil(String id, {String? gerekce}) async {
+    // Bildirim gönderilmez — red/iptal kuralıyla AYNI (12 Eyl kararı).
+    if (!_repo.sil(id, gerekce: gerekce)) {
+      return const ValidationError('Kabul edilmiş iş silinemez.');
+    }
     return null;
   }
 

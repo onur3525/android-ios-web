@@ -49,7 +49,9 @@ class TeklifTalebiRepository extends ChangeNotifier {
   /// Bir hizmet alanın GÖNDERDİĞİ tüm talepler — en yeni üstte.
   List<TeklifTalebi> byHizmetAlan(String hizmetAlanId) {
     _suresiDolanlariUygula();
-    return _items.values.where((t) => t.hizmetAlanId == hizmetAlanId).toList()
+    return _items.values
+        .where((t) => t.hizmetAlanId == hizmetAlanId && !t.hizmetAlanSildi)
+        .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -135,6 +137,28 @@ class TeklifTalebiRepository extends ChangeNotifier {
       ..durum = TeklifTalebiDurumu.reddedildi
       ..redGerekcesi = gerekce;
     notifyListeners();
+  }
+
+  /// ⚠ HİZMET ALAN TALEBİ SİLER (15 Eki) — sunucudaki `/sil` ile aynı
+  /// kural: açık talep (beklemede/teklif geldi) reddedildi olur; her
+  /// durumda `silindiAt` dolar ve talep hizmet alanın listesinden kalkar.
+  /// Kabul edilmiş/tamamlanmış iş silinemez (false).
+  bool sil(String id, {String? gerekce}) {
+    final t = _items[id];
+    if (t == null ||
+        t.durum == TeklifTalebiDurumu.secildi ||
+        t.durum == TeklifTalebiDurumu.tamamlandi) {
+      return false;
+    }
+    if (t.durum == TeklifTalebiDurumu.beklemede ||
+        t.durum == TeklifTalebiDurumu.teklifGeldi) {
+      t.durum = TeklifTalebiDurumu.reddedildi;
+    }
+    t
+      ..redGerekcesi = gerekce ?? t.redGerekcesi
+      ..silindiAt ??= DateTime.now();
+    notifyListeners();
+    return true;
   }
 
   /// İş tamamlandı — hizmet verenin profili SİSTEMDEN GİZLENMEZ,
