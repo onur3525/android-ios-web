@@ -8,6 +8,7 @@ enum NotifType {
   accountStatus,   // Hesap onay durumu değişti (hizmet verene)
   categoryRequest, // Kategori talebi karara bağlandı (hizmet verene)
   announcement,    // Yönetici duyurusu (toplu bildirim)
+  newListing,      // Yeni iş ilanı — eşleşen hizmet verene (15 Eki)
   // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — YENİ TÜRLER ──
   //
   // Mevcut türlerle KARIŞTIRILMADI: bu akış `Offer`/`Listing`den

@@ -48,6 +48,22 @@ export const teklifGorunumu = (o) => ({
   id: o.id, listingId: o.listing_id, providerId: o.provider_id, amountTl: o.amount_tl,
   note: o.note, status: o.status, createdAt: o.created_at,
 });
+/** İlanların teklifleri (ilan kimliği → teklif görünümleri); YALNIZ ilan sahibine verilir. */
+async function ilanTeklifleri(db, ilanIdleri) {
+  const m = new Map();
+  if (!ilanIdleri.length) return m;
+  for (let i = 0; i < ilanIdleri.length; i += 500) {
+    const parca = ilanIdleri.slice(i, i + 500);
+    for (const o of await db.prepare(
+      `SELECT * FROM offers WHERE listing_id IN (${parca.map(() => '?').join(', ')}) ORDER BY created_at`,
+    ).all(...parca)) {
+      if (!m.has(o.listing_id)) m.set(o.listing_id, []);
+      m.get(o.listing_id).push(teklifGorunumu(o));
+    }
+  }
+  return m;
+}
+
 const yorumGorunumu = (y) => ({
   id: y.id, listingId: y.listing_id ?? '', offerId: y.offer_id ?? '', talepId: y.talep_id,
   providerId: y.provider_id, authorId: y.author_id, stars: y.stars, text: y.text,
@@ -74,6 +90,47 @@ export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, ref
   // DIŞINDA tetiklenir (bkz. db.commitSonrasi). Böylece yeni satır görünür
   // olur ve iş isteğin bağlantısını kullanmaz.
   if (fcmEtkin()) db.commitSonrasi(() => { pushKuyrugunuIsle(db, { sureMs: 5_000 }).catch(() => {}); });
+}
+
+// ── ⚠ YENİ İLAN → EŞLEŞEN HİZMET VERENLERE BİLDİRİM (15 Eki, kullanıcı isteği) ──
+//
+// Önceden yeni ilan için hiçbir bildirim üretilmiyordu; hizmet veren ilanı
+// ancak listeyi kendisi yenileyince görüyordu. Eşleşme kuralı istemcinin
+// "doğrudan" eşleşmesiyle (`eslestirme.dart` dogrudanEslesir) AYNI:
+//   · seçim = ilan başlığı, ya da ikisi aynı ana kategoride ve biri ana
+//     kategorinin kendisi (kategori seçen o kategorinin hizmet ilanlarını,
+//     hizmet seçen kategori başlıklı ilanları alır);
+//   · hizmet bölgesi seçilmemişse ya da ilçelerinden biri konumda geçiyorsa.
+// Kategori seçimi yapılmamış (kurulumu bitmemiş) hizmet verene gönderilmez.
+// İlan sahibi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar hariç. Push
+// tercihi "Yeni teklifler" anahtarına bağlıdır (fcm.js pushIzniVar).
+const YENI_ILAN_AZAMI_ALICI = 1000;
+export async function yeniIlaniBildir(db, l) {
+  const katalog = await db.prepare(
+    `SELECT s.name hizmet, c.name kategori FROM services s JOIN categories c ON c.id = s.category_id
+      WHERE s.deleted_at IS NULL AND c.deleted_at IS NULL`,
+  ).all();
+  const kategoriler = new Set((await db.prepare('SELECT name FROM categories WHERE deleted_at IS NULL').all()).map((k) => k.name));
+  const hizmetKategorisi = new Map(katalog.map((r) => [r.hizmet, r.kategori]));
+  const ana = (ad) => (kategoriler.has(ad) ? ad : hizmetKategorisi.get(ad) ?? ad);
+  const eslesir = (secim) => secim === l.title
+    || (ana(secim) === ana(l.title) && (kategoriler.has(secim) || kategoriler.has(l.title)));
+  const adaylar = await db.prepare(
+    `SELECT u.id, p.categories_json, p.districts_json FROM users u JOIN provider_profiles p ON p.user_id = u.id
+      WHERE u.roles LIKE '%PROVIDER%' AND u.status = 'ACTIVE' AND u.deleted_at IS NULL AND u.frozen_at IS NULL AND u.id <> ?`,
+  ).all(l.owner_id);
+  const liste = (v) => { try { const x = JSON.parse(v); return Array.isArray(x) ? x.filter((y) => typeof y === 'string') : []; } catch { return []; } };
+  let n = 0;
+  for (const a of adaylar) {
+    if (n >= YENI_ILAN_AZAMI_ALICI) break;
+    const kat = liste(a.categories_json);
+    if (!kat.length || !kat.some(eslesir)) continue;
+    const ilceler = liste(a.districts_json);
+    if (ilceler.length && !ilceler.some((d) => d && l.location.includes(d))) continue;
+    await uygulamaIciBildir(db, a.id, 'NEW_LISTING', 'Yeni iş ilanı', `"${l.title}" için yeni bir ilan yayınlandı (${l.location}).`, l.id, 'is');
+    n++;
+  }
+  return n;
 }
 
 /** Süresi dolan açık ilanları kapatır; sahibine bir kez bildirir (idempotent). */
@@ -148,7 +205,7 @@ export function ilanRotalar(r, db) {
     await dosyalariDogrula(db, foto, ctx.kullanici.id, 'listing-photo');
     const id = randomUUID();
     const z = new Date();
-    const { kayit } = await idemOlustur(db, ILAN_IDEM, ctx.kullanici.id, anahtar, ozet, () => db.tx(async () => {
+    const { kayit, yeni: yeniIlan } = await idemOlustur(db, ILAN_IDEM, ctx.kullanici.id, anahtar, ozet, () => db.tx(async () => {
       await dosyalariBagla(db, foto, ctx.kullanici.id);
       const no = await db.prepare(`UPDATE counters SET value = value + 1 WHERE name = 'ilan_no' RETURNING value`).get();
       await db.prepare(
@@ -159,12 +216,18 @@ export function ilanRotalar(r, db) {
         z.toISOString(), new Date(z.getTime() + ILAN_OMRU_MS).toISOString(), z.toISOString(), anahtar, anahtar ? ozet : null);
       return db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
     }));
+    // Eşleşen hizmet verenlere bildirim (uygulama içi + push; uygulama
+    // kapalıyken de telefona düşer). Hatası ilanı geri almaz.
+    if (yeniIlan) await yeniIlaniBildir(db, kayit).catch((e) => console.error('yeni_ilan_bildirimi', e?.message));
     return ilanGorunumu(kayit);
   }));
 
   r.get('/api/v1/listings/my', korumali(async (ctx) => {
     await suresiDolanlariIsle(db);
-    return (await db.prepare(`SELECT * FROM listings WHERE owner_id = ? ORDER BY created_at DESC`).all(ctx.kullanici.id)).map(ilanGorunumu);
+    const ilanlar = await db.prepare(`SELECT * FROM listings WHERE owner_id = ? ORDER BY created_at DESC`).all(ctx.kullanici.id);
+    // İlanlarım listesindeki teklif sayıları ve rozetler için (tek sorgu).
+    const teklifler = await ilanTeklifleri(db, ilanlar.map((l) => l.id));
+    return ilanlar.map((l) => ({ ...ilanGorunumu(l), offers: teklifler.get(l.id) ?? [] }));
   }));
 
   r.get('/api/v1/listings/available', korumali(async (ctx) => {
@@ -216,7 +279,10 @@ export function ilanRotalar(r, db) {
   r.get('/api/v1/listings/:id', korumali(async (ctx) => {
     const l = await ilanGetir(ctx.params.id);
     const u = ctx.kullanici;
-    if (l.owner_id === u.id) return ilanGorunumu(l);
+    // ⚠ İLAN SAHİBİ TEKLİFLERİ DE ALIR (15 Eki): istemci teklifleri ilan
+    // detayından okur (`lastDetailOffers`), ama sunucu göndermiyordu; API
+    // modunda hizmet alan gelen teklifleri hiç göremiyordu (web ve mobil).
+    if (l.owner_id === u.id) return { ...ilanGorunumu(l), offers: await ilanTeklifleri(db, [l.id]).then((m) => m.get(l.id) ?? []) };
     // Hizmet veren: açık ilanı görür; teklif verdiği ilanı her durumda görür.
     if (u.roles.split(',').includes('PROVIDER')) {
       const teklifi = await db.prepare('SELECT 1 FROM offers WHERE listing_id = ? AND provider_id = ?').get(l.id, u.id);

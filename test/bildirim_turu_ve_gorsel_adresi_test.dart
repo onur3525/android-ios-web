@@ -34,6 +34,8 @@ void main() {
       expect(Mappers.notifType('OFFER_SELECTED', 'is'), NotifType.offerSelected);
       expect(Mappers.notifType('NEW_MESSAGE', 'mesaj'), NotifType.newMessage);
       expect(Mappers.notifType('BILINMEYEN'), NotifType.unknown);
+      expect(Mappers.notifType('NEW_LISTING'), NotifType.newListing,
+          reason: 'yeni iş ilanı bildirimi (15 Eki) hizmet verenin iş ekranını açar');
     });
 
     test('liste yanıtındaki target okunur', () {

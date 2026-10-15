@@ -18,7 +18,8 @@ import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
 import '../core/boot_log.dart';
-import '../data/repositories/oturum_tercihi.dart';
+import '../data/remote/token_store.dart';
+import 'baglaniyor_screen.dart';
 import '../core/baglanti_modu.dart';
 
 // ═══════════════════════════════════════════════════════════════
@@ -426,6 +427,13 @@ class _SplashScreenState extends State<SplashScreen> {
       //
       // ⚠ WEB VE MOBİL AYNI: ayrı hedef tutmak, iki tarafın açılışını
       // ayrıştırırdı.
+      if (_oturumBekle) {
+        BootLog.olay('NAVIGATION_START', BaglaniyorEkrani.rota);
+        BaglaniyorEkrani.bekleyen = _oturumuBekle(context.read<AuthController>());
+        Navigator.of(context).pushReplacementNamed(BaglaniyorEkrani.rota);
+        _navSonrasiKareyiBekle(BaglaniyorEkrani.rota);
+        return;
+      }
       const anonimHedef = '/home';
       BootLog.olay('NAVIGATION_START', anonimHedef);
       Navigator.of(context).pushReplacementNamed(anonimHedef);
@@ -483,6 +491,61 @@ class _SplashScreenState extends State<SplashScreen> {
     BootLog.olay('NATIVE_BOOT_READY_SENT');
   }
 
+  /// Bkz. `_boot`: kısa bütçede oturum çözülemedi ama cihazda jeton var.
+  bool _oturumBekle = false;
+
+  /// Cihazda (güvenli depoda) yenileme jetonu var mı? Okuma askıda kalırsa
+  /// ya da hata verirse `false` (açılış kilitlenmez).
+  Future<bool> _cihazdaOturumVar() async {
+    try {
+      final rt = await TokenStore()
+          .refreshToken()
+          .timeout(const Duration(milliseconds: 800), onTimeout: () => null);
+      return rt != null && rt.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// "Bağlanılıyor" ekranının beklediği iş: sunucu uyanana kadar (en çok
+  /// 90 sn) oturum yeniden denenir; sonra rol paneline (çift rolde hizmet
+  /// veren önce — `_hatirlananHedef` ile aynı kural) ya da ana sayfaya.
+  static Future<({String rota, String? argRota, Object? arg})> _oturumuBekle(
+      AuthController auth) async {
+    final bitis = DateTime.now().add(const Duration(seconds: 90));
+    while (auth.currentAccount == null && DateTime.now().isBefore(bitis)) {
+      try {
+        await auth.restoreSession().timeout(const Duration(seconds: 20));
+      } catch (_) {}
+      if (auth.currentAccount != null) {
+        break;
+      }
+      // Sunucu oturumu kesin reddettiyse jeton silinmiştir: beklemek boşuna.
+      try {
+        if (await TokenStore().refreshToken() == null) {
+          break;
+        }
+      } catch (_) {
+        break;
+      }
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    final acc = auth.currentAccount;
+    if (acc == null) {
+      return (rota: '/home', argRota: null, arg: null);
+    }
+    final hedefRol =
+        acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+    if (acc.activeRole != hedefRol) {
+      await auth.switchRole(hedefRol);
+    }
+    return (
+      rota: hedefRol == Role.provider ? '/provider/jobs' : '/customer/listings',
+      argRota: null,
+      arg: null,
+    );
+  }
+
   /// Cihaz hatırlıyorsa gidilecek rol paneli, yoksa `null`.
   ///
   /// ⚠ İKİ KOŞUL BİRLİKTE ARANIR:
@@ -510,10 +573,14 @@ class _SplashScreenState extends State<SplashScreen> {
     // tarayıcı uygulaması devreye girer. `localStorage`a elle jeton
     // yazılmadı.
     //
-    // ⚠ MOBİL DEĞİŞMEZ: `kIsWeb` değilse tercih kapısı aynen işler.
-    if (!kIsWeb && !await OturumTercihi().hatirlaniyor) {
-      return null;
-    }
+    // ── ⚠ MOBİLDE DE TERCİH KAPISI KALDIRILDI (15 Eki, kullanıcı kararı) ──
+    // "Aynı cihazla girişte oturum kapanmadığı sürece tekrar giriş bilgisi
+    // istenmesin." Tercih bayrağı yalnız giriş ekranında yazılıyordu; kayıt
+    // dışı akışlar (ör. ilan verirken kayıt) yazmıyordu ve bayrak okuması
+    // ilk açılışta 400 ms'yi aşınca "hatırlamıyor" sayılıyordu — oturum
+    // geçerliyken kullanıcı ana sayfaya düşüp yeniden giriş yapıyordu.
+    // Tek ölçüt artık GERÇEK oturumdur; çıkış jetonları sildiği için
+    // çıkış yapan kullanıcı otomatik girmez.
     if (!mounted) {
       return null;
     }
@@ -673,6 +740,14 @@ class _SplashScreenState extends State<SplashScreen> {
     } catch (_) {
       BootLog.olay('SESSION_RESTORE_SPLASH_END',
           'fail:${kOturum.elapsedMilliseconds}ms');
+    }
+    // ── ⚠ MOBİL: SUNUCU UYKUDAYKEN OTURUM KAYBOLMAZ (15 Eki) ──
+    // Kısa bütçe (1,2 sn) dolup oturum çözülemediyse ama cihazda oturum
+    // jetonu VARSA kullanıcı ana sayfaya atılmaz; "Bağlanılıyor" ekranı
+    // sunucuyu bekler (web'deki çözümle aynı ekran). Jeton yoksa ya da
+    // sunucu oturumu reddederse (jeton silinir) normal açılış.
+    if (!kIsWeb && ApiConfig.useRealApi && auth.currentAccount == null) {
+      _oturumBekle = await _cihazdaOturumVar();
     }
 
     final acc = auth.currentAccount;

@@ -116,6 +116,8 @@ class NotificationsScreen extends StatefulWidget {
       // ⚠ İKİ BİLDİRİM AYNI `refId`yi TAŞIR (ilan id'si) ama AYRI
       // TARAFA gider. Aynı `case` kutusunda toplanmaları bu farkı
       // gizliyordu.
+      // Yeni iş ilanı (15 Eki) — hizmet verenin iş ekranı (teklif verir).
+      case NotifType.newListing:
       case NotifType.offerSelected:
         if (gecerli) {
           Navigator.push(
@@ -285,6 +287,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             'assets/svg/ic_nchat.svg',
             const Color(0xFFEAF1FB),
             RC.blue
+          ),
+        NotifType.newListing => (
+            'assets/svg/ic_ndoc.svg',
+            const Color(0xFFE7F8EC),
+            HC.green
           ),
         NotifType.listingExpired => (
             'assets/svg/ic_clock.svg',

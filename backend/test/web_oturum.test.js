@@ -85,6 +85,8 @@ test('döndürülmüş çerezin yeniden kullanımı: 401, çerez silinir, bütü
   const eski = deger(rtCerezi(r.cerezler));
   const y1 = await istek('/api/v1/auth/refresh', { govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(eski)}` } });
   assert.equal(y1.durum, 200);
+  // Eşzamanlı yenileme payı (60 sn) dışında: döndürme 2 dk önce olmuş gibi.
+  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 120_000).toISOString());
   const y2 = await istek('/api/v1/auth/refresh', { govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(eski)}` } });
   assert.equal(y2.durum, 401);
   assert.match(rtCerezi(y2.cerezler) ?? '', /Max-Age=0/);

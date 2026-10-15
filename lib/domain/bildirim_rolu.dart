@@ -47,6 +47,7 @@ Role? bildirimRolu(NotifType tur) => switch (tur) {
       NotifType.teklifSecildi => Role.provider,
       NotifType.teklifReddedildi => Role.provider,
       NotifType.teklifSuresiDoldu => Role.provider,
+      NotifType.newListing => Role.provider,
 
       // ── HER İKİ ROL ──
       //

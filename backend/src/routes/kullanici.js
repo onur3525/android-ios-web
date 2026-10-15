@@ -181,6 +181,7 @@ async function oturumVer(db, kullaniciId, req) {
 //     kökenler geçer. Yanıtı da yalnız onlar okuyabilir.
 //   · Mobil istemci (başlıksız) davranışı AYNEN: çerez yazılmaz/okunmaz.
 const YENILEME_CEREZI = 'hc_rt';
+const YENILEME_YARIS_PAYI_MS = 60_000;
 const yenilemeCerezAyari = { secure: true, path: '/api/v1/auth', sameSite: 'None' };
 const webIstemcisi = (req) => req.headers['x-hc-web'] === '1';
 function yenilemeCereziYaz(ctx, rt) {
@@ -546,8 +547,24 @@ export function kullaniciRotalar(r, db) {
     // güncel; eski bir bellek kopyası yeniden kullanım sayılmaz).
     const rt = String(ctx.body.refreshToken ?? '')
       || (webIstemcisi(ctx.req) ? String(cerezleriOku(ctx.req)[YENILEME_CEREZI] ?? '') : '');
-    const o = rt ? await db.prepare('SELECT * FROM user_sessions WHERE refresh_hash = ?').get(ozet(rt)) : null;
+    let o = rt ? await db.prepare('SELECT * FROM user_sessions WHERE refresh_hash = ?').get(ozet(rt)) : null;
     if (!o) throw hata.kimlik();
+    // ── ⚠ EŞZAMANLI YENİLEME PAYI (15 Eki, kullanıcı bulgusu: "kapatıp açınca
+    // yeniden giriş istiyor") ──
+    // Aynı tarayıcıda iki sekme / kısayol + sekme açılışta AYNI çerezle
+    // birlikte yeniler, ya da mobilde yanıt yolda kaybolup istek tekrarlanır.
+    // İkinci istek az önce döndürülmüş belirteci taşır ve "tekrar kullanım"
+    // sayılıp kullanıcının BÜTÜN oturumları kapatılıyordu. Döndürmeden
+    // sonraki kısa pay içinde (aynı oturum soyu, aynı cihaz) bu bir hırsızlık
+    // değil yarıştır: soyun güncel halkası döndürülür. Pay dışında tespit
+    // kuralı aynen sürer.
+    if (o.revoked_at && o.revoke_reason === 'ROTATED' && Date.now() - Date.parse(o.revoked_at) < YENILEME_YARIS_PAYI_MS) {
+      const halef = await db.prepare(
+        `SELECT * FROM user_sessions WHERE user_id = ? AND created_at = ? AND revoked_at IS NULL
+           AND (user_agent IS NOT DISTINCT FROM ?) ORDER BY last_used DESC LIMIT 1`,
+      ).get(o.user_id, o.created_at, o.user_agent);
+      if (halef) o = halef;
+    }
     if (o.revoked_at) {
       // İptal edilmiş yenileme token'ı tekrar kullanıldı → çalınmış olabilir:
       // kullanıcının BÜTÜN oturumları kapatılır.

@@ -342,6 +342,22 @@ class ApiListingRepository extends ChangeNotifier {
 
   final List<Listing> _cache = [];
   List<Listing> get all => List.unmodifiable(_cache);
+
+  /// İlan sahibine gelen teklifler (sunucu `offers` alanını YALNIZ ilan
+  /// sahibine gönderir, 15 Eki). Teklif deposuna aktarılır; hizmet alan
+  /// gelen teklifleri ilan detayında ve İlanlarım'da böyle görür.
+  /// `main()` bağlar: `ApiOfferRepository.ilanTeklifleriniAl`.
+  void Function(String listingId, List<Offer> teklifler)? teklifleriAktar;
+
+  void _teklifleriAyikla(Map<String, dynamic> j) {
+    final ham = j['offers'];
+    final aktar = teklifleriAktar;
+    if (ham is! List || aktar == null) {
+      return;
+    }
+    aktar(j['id'] as String,
+        ham.map((e) => Mappers.offer(e as Map<String, dynamic>)).toList());
+  }
   Listing? byId(String id) {
     for (final l in _cache) {
       if (l.id == id) {
@@ -355,6 +371,9 @@ class ApiListingRepository extends ChangeNotifier {
     _cache
       ..clear()
       ..addAll(rows.map((e) => Mappers.listing(e as Map<String, dynamic>)));
+    for (final e in rows) {
+      _teklifleriAyikla(e as Map<String, dynamic>);
+    }
     notifyListeners();
   }
 
@@ -392,6 +411,7 @@ class ApiListingRepository extends ChangeNotifier {
     lastDetailOffers = ((res['offers'] ?? const []) as List)
         .map((e) => Mappers.offer(e as Map<String, dynamic>))
         .toList();
+    _teklifleriAyikla(res);
     notifyListeners();
     return null;
   }
@@ -441,7 +461,22 @@ class ApiOfferRepository extends ChangeNotifier {
   ApiOfferRepository(this._api);
 
   final Map<String, Offer> _cache = {};
+
+  /// `/offers/my`den gelen (hizmet verenin KENDİ) teklif kimlikleri:
+  /// `loadMine` yalnız bunları yeniler, ilan sahibinin ilanlarından gelen
+  /// teklifleri silmez.
+  final Set<String> _benimkiler = {};
   Offer? byId(String id) => _cache[id];
+
+  /// İlan sahibinin ilanına gelen teklifler (ilan detayı / İlanlarım).
+  /// O ilanın önbellekteki teklifleri sunucunun güncel listesiyle değişir.
+  void ilanTeklifleriniAl(String listingId, List<Offer> teklifler) {
+    final yeni = {for (final o in teklifler) o.id: o};
+    _cache.removeWhere((id, o) =>
+        o.listingId == listingId && !yeni.containsKey(id) && !_benimkiler.contains(id));
+    _cache.addAll(yeni);
+    notifyListeners();
+  }
   List<Offer> forListing(String listingId) =>
       _cache.values.where((o) => o.listingId == listingId).toList();
   List<Offer> byProvider(String providerId) =>
@@ -465,10 +500,14 @@ class ApiOfferRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    _cache.clear();
+    for (final id in _benimkiler) {
+      _cache.remove(id);
+    }
+    _benimkiler.clear();
     for (final e in rows!) {
       final o = Mappers.offer(e as Map<String, dynamic>);
       _cache[o.id] = o;
+      _benimkiler.add(o.id);
     }
     notifyListeners();
     return null;
@@ -485,6 +524,7 @@ class ApiOfferRepository extends ChangeNotifier {
     }
     final o = Mappers.offer(res!);
     _cache[o.id] = o;
+    _benimkiler.add(o.id);
     notifyListeners();
     return (o, null);
   }
@@ -492,20 +532,15 @@ class ApiOfferRepository extends ChangeNotifier {
   /// ⚠ NİHAİ UÇ İLANA AİTTİR: seçim, ilanın `selectedOffer` alanını
   /// yazar. Bu yüzden `listingId` de gerekir (OpenAPI:
   /// `PUT /listings/{listingId}/selected-offer`).
-  Future<DomainError?> select(String listingId, String offerId) =>
-      _mutate(() => _api.select(listingId,
-          offerId: offerId,
-          idempotencyKey: ApiClient.newIdempotencyKey()));
-
-  Future<DomainError?> _mutate(Future<Map<String, dynamic>> Function() fn) async {
-    final (res, err) = await _guard(fn);
-    if (err != null) {
-      return err;
-    }
-    final o = Mappers.offer(res!);
-    _cache[o.id] = o;
-    notifyListeners();
-    return null;
+  ///
+  /// ⚠ YANIT İLANDIR, TEKLİF DEĞİL (15 Eki): sunucu güncel ilanı döndürür;
+  /// eskiden teklif gibi çözülmeye çalışılıyor ve tür hatası veriyordu.
+  /// Teklif durumları (seçilen SELECTED, diğerleri CLOSED) ardından ilan
+  /// detayının teklif listesiyle tazelenir (`OfferController.selectOffer`).
+  Future<DomainError?> select(String listingId, String offerId) async {
+    final (_, err) = await _guard(() => _api.select(listingId,
+        offerId: offerId, idempotencyKey: ApiClient.newIdempotencyKey()));
+    return err;
   }
 }
 

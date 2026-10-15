@@ -900,6 +900,9 @@ paths:
       summary: İlan oluştur
       description: |
         ⚠ 1 ilan = 1 kategori/hizmet (§1). Oluşturulan ilan 30 saat aktiftir; süre `expiresAt` alanından takip edilir — istemci saatinden DEĞİL.
+        Yeni ilan, kategorisi (doğrudan eşleşme) ve hizmet bölgesi eşleşen
+        hizmet verenlere `NEW_LISTING` bildirimi (uygulama içi + push, hedef
+        `is`) üretir (15 Eki). Aynı anahtarla tekrar bildirim üretmez.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '201': { description: Başarılı }
@@ -912,6 +915,8 @@ paths:
     get:
       tags: [Listings]
       summary: İlanlarım
+      description: |
+        Her ilanda `offers` (gelen teklifler) da döner (15 Eki).
       parameters: [{ $ref: '#/components/parameters/Cursor' }, { $ref: '#/components/parameters/Limit' }]
       responses:
         '200': { description: Başarılı }
@@ -936,6 +941,9 @@ paths:
     get:
       tags: [Listings]
       summary: İlan detayı
+      description: |
+        İlan sahibine `offers` (gelen tekliflerin tamamı) da döner (15 Eki);
+        hizmet verene teklif listesi verilmez.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -1534,6 +1542,10 @@ paths:
         SameSite=None, Path=/api/v1/auth). Çerez başlıksız kabul edilmez (CSRF).
         Geçersiz çerez ve çıkış (`/auth/logout`) çerezi siler. Mobil istemci
         (başlıksız) davranışı değişmez.
+        EŞZAMANLI YENİLEME PAYI (15 Eki): döndürülmüş belirteç 60 sn içinde
+        aynı cihazdan yeniden gelirse (iki sekme, kaybolan yanıt) oturum
+        soyunun güncel halkası döndürülür; pay dışında tekrar kullanım bütün
+        oturumları kapatır.
         FIREBASE UZLAŞTIRMASI (15 Eki): Firebase'e bağlı hesapta Firebase kaydı
         en çok 5 dakikada bir okunur; Firebase'de dışarıda yapılmış iptal
         (e-postayla şifre sıfırlama, konsoldan iptal) yerel sınırdan yeniyse o

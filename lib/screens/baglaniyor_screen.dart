@@ -4,7 +4,7 @@ import '../ui/gezgin.dart';
 import '../ui/ref_tokens.dart';
 
 /// ═══════════════════════════════════════════════════════════════
-/// BAĞLANILIYOR — SUNUCU UYKUDAYKEN OTURUMLU AÇILIŞ (yalnız web, 15 Eki)
+/// BAĞLANILIYOR — SUNUCU UYKUDAYKEN OTURUMLU AÇILIŞ (web + mobil, 15 Eki)
 ///
 /// Kullanıcı bulgusu: "1. girişimde ana kayıt sayfasına, 2. girişimde
 /// kayıtlı olduğum rol ekranına yönlendiriyor." Sunucu (Render ücretsiz
@@ -16,7 +16,9 @@ import '../ui/ref_tokens.dart';
 /// AYNI hesaptan çıkan rotaya geçilir; oturum gerçekten bittiyse ana
 /// sayfaya.
 ///
-/// ⚠ MOBİLDE AÇILMAZ: `main()` bu rotayı yalnız `kIsWeb` dalında seçer.
+/// MOBİL (15 Eki): uygulama açılışında sunucu kısa bütçede yanıt vermezse
+/// ama cihazda oturum jetonu varsa `SplashScreen` de bu ekranı açar
+/// (`_oturumuBekle`); kullanıcı yeniden giriş ekranına düşmez.
 /// ═══════════════════════════════════════════════════════════════
 class BaglaniyorEkrani extends StatefulWidget {
   const BaglaniyorEkrani({super.key});

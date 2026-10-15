@@ -279,6 +279,7 @@ abstract final class Mappers {
         'ACCOUNT_STATUS' => NotifType.accountStatus,
         'CATEGORY_REQUEST' => NotifType.categoryRequest,
         'ANNOUNCEMENT' => NotifType.announcement,
+        'NEW_LISTING' => NotifType.newListing,
         // BİLİNMEYEN tip uygulamayı çökertmez ve yanlış tipe eşlenmez.
         _ => NotifType.unknown,
       };
