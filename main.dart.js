@@ -265358,7 +265358,7 @@
             case 0:
               // Function start
               $async$goto = 3;
-              return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.ListingController).loadAvailable$0(), $async$_jobs_screen$_refresh$0);
+              return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.OfferController).loadMine$0(), $async$_jobs_screen$_refresh$0);
             case 3:
               // returning from await.
               if ($async$self._framework$_element == null) {
@@ -265367,7 +265367,7 @@
                 break;
               }
               $async$goto = 4;
-              return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.OfferController).loadMine$0(), $async$_jobs_screen$_refresh$0);
+              return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.ListingController).loadAvailable$0(), $async$_jobs_screen$_refresh$0);
             case 4:
               // returning from await.
             case 1:
