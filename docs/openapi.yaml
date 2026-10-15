@@ -439,6 +439,10 @@ paths:
       summary: Kayıt (Ad, Soyad, Telefon, E-posta, Şifre + adres)
       description: |
         ⚠ Kayıt sonrası SMS doğrulaması yapılır; e-posta doğrulaması YAPILMAZ (§4).
+        ⚠ 15 Eki: `termsAccepted: true` (Kullanım Koşulları + Gizlilik Politikası onayı) ve
+        `ageConfirmed: true` (18 yaş beyanı; doğum tarihi toplanmaz) ZORUNLUDUR; yoksa
+        400 TERMS_REQUIRED / AGE_REQUIRED. Yayındaki terms ve privacy sürümleri onay kaydına
+        (`legal_acceptances`, sürüm + SHA-256 + `platform`) yazılır.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '201': { description: Başarılı }
@@ -509,6 +513,8 @@ paths:
       summary: Şifre doğrulama (adım yükseltme)
       description: |
         Hesap silme gibi kritik işlemlerden önce yeniden kimlik doğrulama (§20).
+        Kullanıcı başına 15 dakikada en çok 10 deneme (telefon değiştirme ve
+        silme talebiyle ortak sayaç); aşılırsa 429.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -715,6 +721,10 @@ paths:
     post:
       tags: [Profile]
       summary: Telefon değişimi — yeni numara + 6 haneli SMS
+      description: |
+        `currentPassword` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD ve
+        telefon kanıtı tüketilmez. Başarıda bu oturum dışındaki oturumlar
+        kapatılır (PHONE_CHANGED). Ortak şifre deneme sınırı: 15 dakikada 10.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -817,6 +827,7 @@ paths:
       summary: Hesap silme talebi
       description: |
         ⚠ Silme nedeniyle para/hak iadesi YAPILMAZ; finansal kayıtlar silinmez (§20).
+        `password` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD.
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '200': { description: Başarılı }
@@ -1053,6 +1064,8 @@ paths:
       summary: İletişimi aç
       description: |
         ⚠ İKİ TARAF İÇİN AYNI ANDA açılır ve SÜRESİZDİR (§8).
+        ⚠ YALNIZ İLAN SAHİBİ açar (15 Eki): hizmet veren açmaya çalışırsa 403
+        FORBIDDEN; iletişim zaten açıksa iki taraf da durumu (open: true) alır.
         ⚠ İDEMPOTENT: tekrar istek hata üretmez; sunucu COMMUNICATION_ALREADY_OPEN döner ve bu BİR HATA DEĞİLDİR (§10).
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:

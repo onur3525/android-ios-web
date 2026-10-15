@@ -50,7 +50,7 @@ async function istek(yol, { yontem = 'POST', govde, token } = {}) {
 /** Sunucu OTP yoluyla (test kancası) hizmet alan hesabı açar → erişim token'ı. */
 async function hizmetAlan(tel) {
   assert.equal((await istek('/api/v1/auth/otp/request', { govde: { phone: tel, purpose: 'REGISTER' } })).durum, 204);
-  const r = await istek('/api/v1/auth/register', { govde: { phone: tel, password: 'GucluSifre12', name: 'Rol Deneme', email: `r${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: 'Rol Deneme', email: `r${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   return r.json.accessToken;
 }
@@ -186,7 +186,7 @@ test('kayıt davranışı DEĞİŞMEDİ: yakın doğrulama şartı yalnız rol e
   // Kayıtta auth_time/sign_in_provider aranmaz (önceki davranış).
   const tel = '5421110006';
   const r = await istek('/api/v1/auth/register', { govde: {
-    phone: tel, password: 'GucluSifre12', name: 'Kayit Deneme', email: 'kd@ornek.com', role: 'CUSTOMER',
+    termsAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: 'Kayit Deneme', email: 'kd@ornek.com', role: 'CUSTOMER',
     firebaseIdToken: belge({ sub: 'fb-rol-6', phone_number: `+90${tel}`, auth_time: an() - 50 * 60, firebase: undefined }),
   } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));

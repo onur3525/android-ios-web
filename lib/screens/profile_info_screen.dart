@@ -13,6 +13,7 @@ import 'otp_screen.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/sifre_dogrulama_paneli.dart';
 import '../ui/web_panel.dart';
 import 'nav_actions.dart';
 import '../core/geri.dart';
@@ -322,6 +323,16 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       // ⚠ MEVCUT NUMARA BU AŞAMADA DEĞİŞMEZ. Challenge YENİ numaraya
       // bağlanır; doğrulama başarılı olduğunda benzersizlik yeniden
       // denetlenir ve bağlama tek adımda yapılır (Y6).
+      //
+      // ⚠ YENİDEN KİMLİK DOĞRULAMA (güvenlik denetimi, karar 2): kod
+      // gönderilmeden önce mevcut şifre sorulur; sunucu da doğrular.
+      final sifre = await sifreIleDogrula(context,
+          aciklama: 'Telefon numaranızı değiştirmeden önce güvenlik için '
+              'şifrenizi girin.',
+          renk: RC.blue);
+      if (sifre == null || !mounted) {
+        return;
+      }
       final ch = await context
           .read<AuthController>()
           .telefonDegisimiKodGonder(newPhone);
@@ -348,7 +359,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
             // challenge'ın içinden gelir (Y4): kullanıcı alanı
             dogrula: (kod) => context
                 .read<AuthController>()
-                .telefonDegisimiDogrula(challengeId, kod),
+                .telefonDegisimiDogrula(challengeId, kod,
+                    mevcutSifre: sifre),
             // ⚠ AKIŞA ÖZEL: yeni DEĞİŞİKLİK challenge'ı üretilir.
             yenidenGonder: () async {
               final y = await context

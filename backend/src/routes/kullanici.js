@@ -31,6 +31,12 @@ const girisIpSiniri = new HizSiniri('giris_ip', 30, 15 * 60 * 1000);
 // Rol ekleme: kullanıcı başına 15 dakikada en çok 5 deneme (şifre denemesi
 // bu uçtan sınırsız yapılamasın).
 const rolEklemeSiniri = new HizSiniri('rol_ekleme', 5, 15 * 60 * 1000);
+// Oturumla yapılan şifre denetimleri (şifre doğrulama, telefon değiştirme,
+// hesap silme talebi): kullanıcı başına 15 dakikada en çok 10 deneme —
+// çalınmış oturumla şifre tahmini sınırlanır. İstemci tek işlemde iki kez
+// sorar (önce doğrulama, sonra işlemin kendisi). Sayaç şifre denetiminden
+// ÖNCE işler.
+export const kritikIslemSiniri = new HizSiniri('kritik_islem', 10, 15 * 60 * 1000);
 
 const ozet = (v) => createHash('sha256').update(v).digest('hex');
 const otpOzet = (telefon, amac, kod) => ozet(`${config.jwtSirri}|${telefon}|${amac}|${kod}`);
@@ -234,7 +240,7 @@ async function saglayiciProfili(db, kullaniciId) {
  * Firebase doğrularsa yerel özet de eşitlenir (Firebase kesintisinde yedek
  * doğrulama eski şifreyi kabul etmesin).
  */
-async function sifreDogruMu(db, u, sifre) {
+export async function sifreDogruMu(db, u, sifre) {
   const fb = u.firebase_uid && u.email ? await firebaseSifreDogrula(u.email, sifre).catch(() => null) : null;
   if (fb === null) return await sifreDogrulaAsenkron(sifre, u.password_hash);
   if (fb === true && !await sifreDogrulaAsenkron(sifre, u.password_hash)) {
@@ -354,6 +360,12 @@ export function kullaniciRotalar(r, db) {
     const isim = adSoyad(ctx.body.name);
     const mail = eposta(ctx.body.email);
     const rol = rolDogrula(ctx.body.role);
+    // ── ⚠ ONAY VE YAŞ SUNUCUDA ZORUNLU (15 Eki, işletmeci kararı) ──
+    // Uygulama "sözleşme onayı sunucuda da doğrulanır" diyordu ama sunucu
+    // onayı hiç denetlemeden terms_accepted=TRUE yazıyordu. Asgari yaş 18:
+    // doğum tarihi istenmez, kullanıcının beyanı alınır ve zamanı saklanır.
+    if (ctx.body.termsAccepted !== true) throw new ApiHatasi(400, 'TERMS_REQUIRED', 'Kullanım koşulları ve gizlilik politikası onayı zorunludur');
+    if (ctx.body.ageConfirmed !== true) throw new ApiHatasi(400, 'AGE_REQUIRED', 'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir');
     const kanit = await telefonKaniti(db, ctx.body, tel, ['REGISTER']);
     if (kanit.uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(kanit.uid)) {
       throw hata.cakisma('Bu doğrulama başka bir hesaba bağlı');
@@ -364,11 +376,23 @@ export function kullaniciRotalar(r, db) {
     const z = simdi();
     await db.prepare(
       `INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role,
-                          status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid)
-       VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?)`,
+                          status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid, age_confirmed_at)
+       VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?, ?)`,
     ).run(id, tel, mail, isim, await sifreOzetleAsenkron(sifre),
       kanit.yuk?.email_verified === true && String(kanit.yuk.email || '').toLowerCase() === mail ? 1 : 0,
-      rol, rol, z, z, kanit.uid);
+      rol, rol, z, z, kanit.uid, z);
+    // Kayıt ekranında bağlantısı verilen belgelerin (Kullanım Koşulları,
+    // Gizlilik Politikası) YAYINDAKİ sürümleri onaylandı olarak kaydedilir:
+    // hangi metnin onaylandığı (sürüm + SHA-256) sonradan kanıtlanabilir.
+    // Onay isteyen diğer belgeler girişteki onay akışında istenir.
+    const pl = ['android', 'ios', 'web'].includes(ctx.body.platform) ? ctx.body.platform : null;
+    for (const v of await db.prepare(
+      `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
+        WHERE v.slug IN ('terms', 'privacy') AND v.status = 'PUBLISHED' AND d.active = TRUE`,
+    ).all()) {
+      await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(randomUUID(), id, v.slug, v.id, v.version, v.sha256, pl, z);
+    }
     return oturumYaniti(ctx, await oturumVer(db, id, ctx.req));
   });
 
@@ -528,6 +552,7 @@ export function kullaniciRotalar(r, db) {
   });
 
   r.post('/api/v1/auth/verify-password', korumali(async (ctx) => {
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
     if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
     return undefined;
   }));
@@ -637,9 +662,20 @@ export function kullaniciRotalar(r, db) {
 
   r.post('/api/v1/profiles/me/phone/change', korumali(async (ctx) => {
     const yeni = telefon(ctx.body.newPhone);
+    // ── ⚠ YENİDEN KİMLİK DOĞRULAMA (15 Eki güvenlik denetimi, karar 2) ──
+    // Yalnız oturum + yeni numaraya gelen kod yetmez: çalınmış bir oturumla
+    // numara değiştirilip "şifremi unuttum" ile hesap ele geçirilebilirdi.
+    // Mevcut şifre, telefon kanıtı TÜKETİLMEDEN önce denetlenir (yanlış
+    // şifre kodu harcamaz). Mevcut kontroller (kanıt, benzersizlik) aynen.
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.currentPassword ?? '')))) {
+      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
+    }
     await telefonKaniti(db, ctx.body, yeni, ['PHONE_CHANGE']);
     if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND deleted_at IS NULL').get(yeni)) throw hata.cakisma('Bu telefon numarası kayıtlı');
     await db.prepare('UPDATE users SET phone = ?, phone_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), ctx.kullanici.id);
+    // Diğer cihazlardaki oturumlar kapanır (bu oturum açık kalır).
+    await oturumlariIptal(db, ctx.kullanici.id, 'PHONE_CHANGED', ctx.kOturum.id);
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
     return kullaniciGorunumu(u, await saglayiciProfili(db, u.id));
   }));

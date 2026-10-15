@@ -153,8 +153,15 @@ SAYFALAR.ilan = async (id) => {
     l.review ? h('div', { class: 'kart' }, h('h3', {}, 'Değerlendirme'), alanlarListesi([['Puan', l.review.stars], ['Yorum', l.review.text], ['Durum', rozet(l.review.status)]])) : null);
 };
 
+// ⚠ ÖZEL YAZIŞMA GEREKÇEYLE AÇILIR (15 Eki): sunucu `reason` ister ve
+// denetim kaydına yazar. Gerekçe girilmezse içerik istenmez.
+const yazismaGerekcesi = () => gerekceIle('Yazışmayı görüntüle', 'Görüntüle',
+  'Kullanıcıların özel yazışması yalnız şikâyet, güvenlik veya destek gerekçesiyle açılır. Gerekçe ve görüntüleme denetim kaydına yazılır.');
+
 SAYFALAR.sohbet = async (offerId) => {
-  const m = await api(`/chats/${offerId}/messages`);
+  const neden = await yazismaGerekcesi();
+  if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için yazışma açılmadı.');
+  const m = await api(`/chats/${offerId}/messages?reason=${encodeURIComponent(neden)}`);
   return h('div', {}, h('h2', {}, 'Sohbet (salt okunur)'), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     m.length ? m.map((x) => h('div', { class: 'mesaj' }, h('div', { class: 'ust' }, h('span', {}, x.senderId), h('span', {}, tarih(x.createdAt))), x.text ?? '[görsel]')) : h('p', { class: 'not' }, 'Mesaj yok.'));
 };
@@ -166,7 +173,9 @@ SAYFALAR.teklifler = () => tekliflerSayfasi(ben.role);
 SAYFALAR.talepler = () => teklifTalepleriSayfasi(ben.role);
 
 SAYFALAR.talep = async (id) => {
-  const t = await api(`/teklif-talepleri/${id}`);
+  const neden = await yazismaGerekcesi();
+  if (!neden) return h('p', { class: 'not' }, 'Gerekçe girilmediği için talep açılmadı.');
+  const t = await api(`/teklif-talepleri/${id}?reason=${encodeURIComponent(neden)}`);
   return h('div', {}, h('h2', {}, `Talep ${t.talepNo}`), h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     h('div', { class: 'kart' }, alanlarListesi([
       ['Talep eden', h('a', { href: `#/kullanici/${t.hizmetAlanId}` }, 'profil')], ['Hizmet veren', h('a', { href: `#/kullanici/${t.saglayiciId}` }, t.saglayiciAdi)],

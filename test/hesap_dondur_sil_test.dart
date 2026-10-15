@@ -109,8 +109,13 @@ void main() {
     test('2. aşama: ŞİFRE DOĞRULAMASI', () {
       expect(a.contains('final dogrulandi = await _sifreDogrula();'), isTrue);
       expect(a.contains('Future<bool> _sifreDogrula() async {'), isTrue);
-      expect(a.contains('.verifyPassword(ctl.text)'), isTrue);
-      expect(a.contains('obscureText: true'), isTrue);
+      // ⚠ 15 Eki: panel ortak dosyaya taşındı (telefon değiştirme de
+      // kullanıyor); doğrulama aynı ve şifre sunucuya da gidiyor.
+      final panel = _kod('lib/ui/sifre_dogrulama_paneli.dart');
+      expect(a.contains('sifreIleDogrula('), isTrue);
+      expect(panel.contains('.verifyPassword(ctl.text)'), isTrue);
+      expect(panel.contains('obscureText: true'), isTrue);
+      expect(a.contains('requestDeletion(password: _dogrulananSifre)'), isTrue);
     });
 
     test('3. aşama: son kesin onay', () {
@@ -173,7 +178,7 @@ void main() {
 
     test('⚠ SİLME AKIŞI BOZULMADI', () {
       // Kaldırılan yalnız EKRANDA BELİREN YAZI; işlemin kendisi aynı.
-      expect(a.contains('requestDeletion()'), isTrue,
+      expect(a.contains('requestDeletion('), isTrue,
           reason: 'silme talebi çağrısı kalkmış');
       expect(a.contains('oturumuKapat(context)'), isTrue,
           reason: 'oturum kapatma kalkmış');

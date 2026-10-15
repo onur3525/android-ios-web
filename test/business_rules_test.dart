@@ -91,13 +91,13 @@ void main() {
       expect(offerCtl.myOfferFor(l.id, p1)!.note, 'Aynı gün gelebilirim.');
     });
 
-    test('⚠ İLETİŞİM AÇMA ÜCRETSİZ VE KOŞULSUZ', () async {
+    test('⚠ İLETİŞİM AÇMA ÜCRETSİZ; ilan sahibi doğrudan açar', () async {
       final l = await yeniIlan();
       await offerCtl.placeOffer(
           listingId: l.id, providerId: p1, amount: 900, note: 'n');
       final o = offerCtl.myOfferFor(l.id, p1)!;
-      // Hiçbir ön koşul yok: doğrudan açılır.
-      expect(await contactCtl.openShared(o.id, actorId: p1), isNull);
+      // Ücret/bloke ön koşulu yok: ilan sahibi doğrudan açar.
+      expect(await contactCtl.openShared(o.id, actorId: cust), isNull);
       expect(contactCtl.isOpen(o.id), isTrue);
     });
 
@@ -135,15 +135,17 @@ void main() {
   });
 
   group('Ortak iletişim (tek tüketim)', () {
-    test('taraflardan biri açınca iki taraf için açılır; bloke BİR KEZ tüketilir', () async {
+    test('⚠ 15 Eki: hizmet veren tek taraflı AÇAMAZ; ilan sahibi açınca iki taraf için açılır', () async {
       final l = await yeniIlan();
       await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
       final o = offerCtl.myOfferFor(l.id, p1)!;
-      expect(await contactCtl.openShared(o.id, actorId: p1), isNull); // usta açtı
-      expect(contactCtl.isOpen(o.id), isTrue);
+      expect(await contactCtl.openShared(o.id, actorId: p1), isA<UnauthorizedError>());
+      expect(contactCtl.isOpen(o.id), isFalse, reason: 'müşterinin numarası onun onayı olmadan açılmaz');
 
-      expect(await contactCtl.openShared(o.id, actorId: cust), isNull); // müşteri tekrar → no-op
-      expect(contactCtl.isOpen(o.id), isTrue); // ikinci çağrı no-op
+      expect(await contactCtl.openShared(o.id, actorId: cust), isNull); // müşteri açtı
+      expect(contactCtl.isOpen(o.id), isTrue);
+      expect(await contactCtl.openShared(o.id, actorId: p1), isNull); // açıkken durum → no-op
+      expect(contactCtl.isOpen(o.id), isTrue);
     });
 
     test('müşteri (ilan sahibi) de açabilir; ücret ustanın blokesinden', () async {
@@ -354,7 +356,7 @@ void main() {
       // Bedel sağlayıcının BLOKESİNDEN tüketildi.
       // Hizmet alandan HİÇBİR ücret alınmadı.
 
-      // İkinci açma ücretsizdir (idempotent).
+      // İkinci açma ücretsizdir (idempotent); açıkken usta da durumu alır.
       expect(await contactCtl.openShared(o.id, actorId: p1), isNull);
     });
 
@@ -382,7 +384,7 @@ void main() {
       await offerCtl.placeOffer(listingId: la.id, providerId: p1, amount: 900, note: 'a');
       await offerCtl.placeOffer(listingId: lb.id, providerId: p1, amount: 700, note: 'b');
       final ob = offerCtl.myOfferFor(lb.id, p1)!;
-      await contactCtl.openShared(ob.id, actorId: p1);
+      await contactCtl.openShared(ob.id, actorId: cust);
       await listingCtl.delete(la.id, actorId: cust);
       expect(offerCtl.myOfferFor(lb.id, p1)!.id, ob.id);
       expect(contactCtl.isOpen(ob.id), isTrue);

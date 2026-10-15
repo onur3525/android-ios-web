@@ -29,7 +29,7 @@ const mesajSiniri = new HizSiniri('mesaj', 60, 60 * 1000);
 const talepOlusturSiniri = new HizSiniri('teklif_talebi', 30, 60 * 60 * 1000);
 import { olaylar } from '../olaylar.js';
 import { uygulamaIciBildir } from './ilan.js';
-import { kullaniciCoz, oturumlariIptal } from './kullanici.js';
+import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, sifreDogruMu } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
@@ -37,6 +37,17 @@ import { dosyalariBagla } from './depolama_entegrasyon.js';
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
 const SILME_SURESI_GUN = 30; // Flutter metni: "30 gün içinde kalıcı olarak silinecektir"
 const kural = (kod, m) => new ApiHatasi(409, kod, m);
+
+/**
+ * Yönetici özel yazışmayı GEREKÇEYLE açar (15 Eki güvenlik denetimi, karar 6):
+ * yetki (messages.read) tek başına yetmez; her görüntülemenin nedeni
+ * (`?reason=`, en az 5 karakter) denetim kaydına yazılır.
+ */
+function goruntulemeGerekcesi(ctx) {
+  const v = String(ctx.query.get('reason') ?? '').trim();
+  if (v.length < 5) throw hata.dogrulama('Görüntüleme gerekçesi en az 5 karakter olmalıdır');
+  return v.slice(0, 500);
+}
 
 const mesajGorunumu = (m) => ({
   id: m.id, offerId: m.offer_id, senderId: m.sender_id, text: m.text, storageRef: m.storage_ref,
@@ -426,6 +437,14 @@ export function sohbetTalepRotalar(r, db) {
     // ⚠ ATOMİK: "önce SELECT sonra INSERT" eşzamanlı iki istekte İKİ bekleyen
     // talep üretebiliyordu. Kısmi TEKİL dizin (account_requests_tek_silme)
     // ikinciyi veritabanında reddeder; yanıt eskisiyle aynı (CONFLICT).
+    //
+    // ⚠ ŞİFRE SUNUCUDA DA DOĞRULANIR (15 Eki güvenlik denetimi): önceden
+    // şifre yalnız istemcide ayrı bir uçla soruluyordu; doğrudan bu uca
+    // gelen istek (çalınmış oturum) şifresiz silme talebi açabiliyordu.
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) {
+      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
+    }
     const id = randomUUID();
     const z = new Date();
     try {
@@ -519,17 +538,19 @@ export function sohbetTalepRotalar(r, db) {
 
   r.get('/admin/v1/teklif-talepleri/:id', async (ctx) => {
     yetkiIste(ctx.admin, 'messages.read');
+    const neden = goruntulemeGerekcesi(ctx);
     const t = await db.prepare(`SELECT t.*, s.name saglayici_adi FROM teklif_talepleri t JOIN users s ON s.id = t.saglayici_id WHERE t.id = ?`).get(ctx.params.id);
     if (!t) throw hata.bulunamadi('Talep bulunamadı');
-    await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'talep.messages.view', hedefTur: 'teklif_talebi', hedefId: t.id });
+    await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'talep.messages.view', hedefTur: 'teklif_talebi', hedefId: t.id, gerekce: neden });
     return talepGorunumu(t, await db.prepare('SELECT * FROM teklif_mesajlari WHERE talep_id = ? ORDER BY created_at').all(t.id));
   });
 
   r.get('/admin/v1/chats/:offerId/messages', async (ctx) => {
     yetkiIste(ctx.admin, 'messages.read');
+    const neden = goruntulemeGerekcesi(ctx);
     const o = await db.prepare('SELECT * FROM offers WHERE id = ?').get(ctx.params.offerId);
     if (!o) throw hata.bulunamadi('Sohbet bulunamadı');
-    await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'chat.messages.view', hedefTur: 'offer', hedefId: o.id });
+    await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'chat.messages.view', hedefTur: 'offer', hedefId: o.id, gerekce: neden });
     return (await db.prepare('SELECT * FROM messages WHERE offer_id = ? ORDER BY created_at').all(o.id)).map(mesajGorunumu);
   });
 
@@ -552,7 +573,21 @@ export function sohbetTalepRotalar(r, db) {
 /**
  * Süresi gelen hesap silme taleplerini uygular: kişisel veri ANONİMLEŞTİRİLİR
  * (ad, telefon, e-posta, şifre), oturumlar kapanır, kayıt silinmiş işaretlenir.
- * İlan/teklif/yorum geçmişi bütünlük için kalır, kişiye bağlanamaz.
+ *
+ * ── ⚠ İLİŞKİLİ SİSTEMLERDEKİ KİŞİSEL VERİ (15 Eki güvenlik denetimi, karar 4) ──
+ * Önceden yalnız hesap satırı, adres, profil, push jetonu ve destek talebi
+ * temizleniyordu; kişinin yazdığı mesajlar, ilan açıklaması/konumu, teklif
+ * notları, talepler, yorumlar, bildirimler ve oturum IP'leri kalıyordu.
+ * Artık kişinin YAZDIĞI serbest metin ve dosya başvuruları kaldırılır.
+ * Satırlar (kimlik numaraları, tarihler, yıldız puanı, durum) karşı tarafın
+ * geçmişi ve sayaç bütünlüğü için kalır; kişiye bağlanamaz (kullanıcı satırı
+ * anonim). KASITLI OLARAK SAKLANANLAR (yasal/güvenlik gerekçesi):
+ *   · legal_acceptances — sözleşme/aydınlatma onayının ispatı
+ *   · audit_log, user_status_history — yönetici işlemlerinin hesap
+ *     verebilirliği (değiştirilemez tablolar)
+ *   · account_requests satırı — silme talebinin ne zaman alınıp
+ *     uygulandığının kaydı (gerekçe metni silinir)
+ * Karşı tarafın KENDİ yazdığı mesajlar onun verisidir, silinmez.
  */
 export async function silmeTalepleriniIsle(db) {
   const z = simdi();
@@ -563,8 +598,9 @@ export async function silmeTalepleriniIsle(db) {
     await db.tx(async () => {
       // Firebase kimlik kaydı (telefon/e-posta kopyası) da silinir — uid
       // aşağıda NULL yapılmadan önce kuyruğa yazılır (bkz. firebase_silme.js).
-      const fb = await db.prepare('SELECT firebase_uid FROM users WHERE id = ?').get(a.user_id);
+      const fb = await db.prepare('SELECT firebase_uid, phone FROM users WHERE id = ?').get(a.user_id);
       await firebaseSilmeKuyrugunaEkle(db, fb?.firebase_uid);
+      await kisiselIcerigiTemizle(db, a.user_id, fb?.phone, z);
       await db.prepare(
         // firebase_uid de SİLİNİR: kişiye bağlanabilen bir kimliktir ve
         // tekil dizinde (deleted_at'tan bağımsız) tutulduğu için kalırsa
@@ -586,8 +622,52 @@ export async function silmeTalepleriniIsle(db) {
       // Hesabın bütün kullanıcı dosyaları fiziksel silme kuyruğuna.
       await hesapDosyalariniIsaretle(db, a.user_id);
       await oturumlariIptal(db, a.user_id, 'DELETED');
+      // Oturum satırları IP ve cihaz bilgisi taşır: iptalden sonra silinir.
+      await db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(a.user_id);
       await db.prepare(`UPDATE account_requests SET status = 'COMPLETED', completed_at = ? WHERE id = ?`).run(z, a.id);
     });
   }
   return bekleyen.length;
+}
+
+const KALDIRILDI = '[Hesap silindiği için içerik kaldırıldı]';
+
+/**
+ * Silinen hesabın ilişkili tablolardaki kişisel içeriği (bkz.
+ * silmeTalepleriniIsle). Aynı işlem (tx) içinde çağrılır.
+ */
+async function kisiselIcerigiTemizle(db, id, eskiTelefon, z) {
+  const c = (sql, ...p) => db.prepare(sql).run(...p);
+  // İlan mesajları ve talep mesajları: kişinin yazdığı metin ve ek dosya.
+  await c('UPDATE messages SET text = ?, storage_ref = NULL WHERE sender_id = ?', KALDIRILDI, id);
+  await c('UPDATE teklif_mesajlari SET metin = ?, fotograf_ref = NULL WHERE gonderen_id = ?', KALDIRILDI, id);
+  // İlanlar: açıklama, konum ve fotoğraflar kaldırılır; açık ilan kapanır.
+  await c(
+    `UPDATE listings SET description = ?, location = '-', photo_refs_json = '[]',
+            status = CASE WHEN status = 'ACTIVE' THEN 'USER_DELETED' ELSE status END,
+            delete_reason = CASE WHEN status = 'ACTIVE' THEN 'ACCOUNT_DELETED' ELSE delete_reason END,
+            updated_at = ? WHERE owner_id = ?`, KALDIRILDI, z, id);
+  // Teklifler: not kaldırılır; açık teklif kapanır.
+  await c(`UPDATE offers SET note = ?, status = CASE WHEN status = 'ACTIVE' THEN 'CLOSED' ELSE status END, updated_at = ? WHERE provider_id = ?`, KALDIRILDI, z, id);
+  // Teklif talepleri (iki taraf da olabilir): kişinin yazdığı alanlar
+  // kaldırılır; mesajlaşma kapanır (silindi_at).
+  await c(`UPDATE teklif_talepleri SET aciklama = ?, fotograflar_json = '[]', silindi_at = COALESCE(silindi_at, ?), updated_at = ? WHERE hizmet_alan_id = ?`, KALDIRILDI, z, z, id);
+  await c('UPDATE teklif_talepleri SET teklif_aciklamasi = ? WHERE saglayici_id = ? AND teklif_aciklamasi IS NOT NULL', KALDIRILDI, id);
+  await c('UPDATE teklif_talepleri SET silindi_at = COALESCE(silindi_at, ?), updated_at = ? WHERE saglayici_id = ?', z, z, id);
+  await c('UPDATE teklif_talepleri SET red_gerekcesi = NULL WHERE reddeden_id = ?', id);
+  // Yorumlar: kişinin yazdığı metin kaldırılır (yıldız, hizmet verenin puan
+  // bütünlüğü için anonim kalır); silinen hizmet veren HAKKINDAKİ yorumlar
+  // da yayından kalkar.
+  await c('UPDATE reviews SET text = ? WHERE author_id = ?', KALDIRILDI, id);
+  await c(`UPDATE reviews SET text = ?, status = 'ADMIN_DELETED', removed_reason = COALESCE(removed_reason, 'ACCOUNT_DELETED'), removed_at = COALESCE(removed_at, ?) WHERE provider_id = ?`, KALDIRILDI, z, id);
+  // Bildirimler, uygulama geri bildirimi, OTP kayıtları: tümüyle silinir.
+  await c('DELETE FROM notifications WHERE user_id = ?', id);
+  await c('DELETE FROM app_feedback WHERE user_id = ?', id);
+  if (eskiTelefon) await c('DELETE FROM otp_codes WHERE phone = ?', eskiTelefon);
+  // Destek yanıtları (kişiye yazılmış, adını içerebilir) ve giden ileti
+  // kayıtları (telefon/e-posta adresi ve içerik).
+  await c(`UPDATE support_ticket_replies SET body = ? WHERE ticket_id IN (SELECT id FROM support_tickets WHERE user_id = ?)`, KALDIRILDI, id);
+  await c(`UPDATE outbound_messages SET target = '-', subject = NULL, body = ? WHERE user_id = ?`, KALDIRILDI, id);
+  // Hesap taleplerinin serbest metin gerekçesi.
+  await c('UPDATE account_requests SET reason = NULL WHERE user_id = ?', id);
 }

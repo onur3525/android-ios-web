@@ -113,6 +113,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Set<String> _provDistricts = {}; // sağlayıcı ilçeleri
   bool _agree = false;
 
+  /// "18 yaşından büyüğüm" beyanı (15 Eki, işletmeci kararı: asgari yaş 18).
+  /// Doğum tarihi istenmez; beyan sunucuda da zorunludur.
+  bool _yas = false;
+
   /// Seçili il — sunucudan gelen aktif iller arasından seçilir.
   /// ⚠ HARD-CODE DEĞİLDİR; tek il varsa kendiliğinden seçilir.
   String? _city;
@@ -723,7 +727,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   /// Gönderim koşulu: zorunlu alanlar TAMAM **ve** sözleşme onaylı.
-  bool get _formTamam => _alanlarTamam && _agree;
+  bool get _formTamam => _alanlarTamam && _agree && _yas;
 
   /// ZORUNLU ALANLAR TAMAM MI? (sözleşme HARİÇ)
   ///
@@ -800,6 +804,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_agree) {
       sysToastErr(context, SysKind.genericError,
           extra: 'Devam etmek için sözleşmeyi onaylayınız');
+      return;
+    }
+    if (!_yas) {
+      sysToastErr(context, SysKind.genericError,
+          extra: 'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir');
       return;
     }
     setState(() => _busy = true);
@@ -885,7 +894,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // verilmiyor (varsayılan false).
                 // Sözleşme onayı domain katmanına İLETİLİR:
                 // yalnız UI kontrolüne güvenilmez.
-                termsAccepted: _agree);
+                termsAccepted: _agree,
+                ageConfirmed: _yas);
             if (!otpContext.mounted) {
               return;
             }
@@ -1828,6 +1838,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     (text: ' okudum, kabul ediyorum.', onTap: null),
                   ],
+                  ),
+                ),
+                // ── 18 YAŞ BEYANI (15 Eki, işletmeci kararı) ──
+                // Sözleşme onayıyla AYNI bileşen ve AYNI kural: zorunlu
+                // alanlar bitmeden işaretlenemez. Ayrı satır: yaş bir
+                // beyandır, sözleşme onayının içine gömülmez.
+                ValueListenableBuilder<bool>(
+                  valueListenable: _alanlarGecerli,
+                  builder: (_, alanlarTamam, __) => RefAgreeRow(
+                    enabled: alanlarTamam,
+                    value: _yas,
+                    onChanged: (v) {
+                      setState(() => _yas = v);
+                      _tazele();
+                    },
+                    parts: const [
+                      (text: '18 yaşını doldurduğumu beyan ederim.', onTap: null),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),

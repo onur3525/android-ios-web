@@ -71,7 +71,7 @@ async function hesap(tel, { firebase = true } = {}) {
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const email = `k${tel}@ornek.com`;
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234', name: 'Kişi', email, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Kişi', email, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   if (firebase) {
@@ -101,7 +101,7 @@ test('Firebase\'den e-postayla sıfırlanan şifre: giriş, şifre doğrulama (h
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: h.tel, purpose: 'ROLE_ADD' } });
   assert.equal((await istek('/api/v1/auth/roles/add', { yontem: 'POST', token: h.token, govde: { role: 'PROVIDER', password: 'YeniSifre99', otpCode: globalThis.__sonOtp } })).durum, 204);
   // Hesap silme talebi akışı (Flutter: şifre doğrula → talep) uçtan uca geçer.
-  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: h.token, govde: {} })).durum, 200);
+  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: h.token, govde: { password: 'YeniSifre99' } })).durum, 200);
 });
 
 test('uygulama içi şifre değiştirme Firebase şifresini de değiştirir; yeni şifreyle giriş olur, eskiyle olmaz', async () => {

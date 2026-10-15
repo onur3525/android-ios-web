@@ -10,9 +10,12 @@ class AccountApi {
       c.post('/profiles/me/freeze',
           body: {if (reason != null && reason.isNotEmpty) 'reason': reason});
 
-  Future<Map<String, dynamic>> requestDeletion({String? reason}) =>
-      c.post('/profiles/me/deletion-request',
-          body: {if (reason != null && reason.isNotEmpty) 'reason': reason});
+  /// ⚠ 15 Eki: sunucu mevcut şifreyi yeniden doğrular (`password`).
+  Future<Map<String, dynamic>> requestDeletion({String? reason, String? password}) =>
+      c.post('/profiles/me/deletion-request', body: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+        if (password != null) 'password': password,
+      });
 
   Future<Map<String, dynamic>> cancelDeletion() =>
       c.delete('/profiles/me/deletion-request');

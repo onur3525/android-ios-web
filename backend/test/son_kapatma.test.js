@@ -49,7 +49,7 @@ async function kisi(tel, rol, { kategoriler, ilceler, adres } = {}) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234', name: `Usta ${tel.slice(-3)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Usta ${tel.slice(-3)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   const k = { token: r.json.accessToken, refresh: r.json.refreshToken, id: me.json.id, tel };
@@ -235,13 +235,13 @@ test('dondurma GERÇEK durum: oturum/yenileme geçersiz, aramada yok, push yok; 
 // ═════ SİLME TALEBİ EŞZAMANLILIĞI ═════
 test('eşzamanlı 5 silme talebi: tek bekleyen kayıt (veritabanı tekil dizini)', async () => {
   const k = await kisi('5380000051', 'CUSTOMER');
-  const r = await Promise.all(Array.from({ length: 5 }, () => istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: {} })));
+  const r = await Promise.all(Array.from({ length: 5 }, () => istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: { password: 'sifre1234' } })));
   assert.equal(r.filter((x) => x.durum === 200).length, 1);
   for (const x of r.filter((y) => y.durum !== 200)) assert.equal(x.json.error.code, 'CONFLICT');
   assert.equal((await db.prepare(`SELECT COUNT(*) n FROM account_requests WHERE user_id = ? AND type = 'DELETION' AND status = 'PENDING'`).get(k.id)).n, 1);
   await assert.rejects(db.prepare(`INSERT INTO account_requests (id, user_id, type, status, created_at) VALUES (?, ?, 'DELETION', 'PENDING', ?)`).run(randomUUID(), k.id, simdi()), 'DB düzeyinde de engelli');
   await istek('/api/v1/profiles/me/deletion-request', { yontem: 'DELETE', token: k.token });
-  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: {} })).durum, 200, 'iptal sonrası yeni talep');
+  assert.equal((await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: { password: 'sifre1234' } })).durum, 200, 'iptal sonrası yeni talep');
 });
 
 // ═════ IDEMPOTENCY ═════
@@ -404,7 +404,7 @@ test('hesap silme: destek talebi konu/mesajı anonimleşir, açık talep kapanı
   const k = await kisi('5380000121', 'CUSTOMER');
   const t = await istek('/api/v1/support/tickets', { yontem: 'POST', token: k.token, govde: { subject: 'Adresim Bornova 12. sokak', message: 'Telefonum 05321234567, beni arayın lütfen.' } });
   assert.equal(t.durum, 200);
-  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: {} });
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: k.token, govde: { password: 'sifre1234' } });
   await db.prepare('UPDATE account_requests SET scheduled_for = ? WHERE user_id = ?').run('2000-01-01T00:00:00.000Z', k.id);
   await silmeTalepleriniIsle(db);
   const r = await db.prepare('SELECT subject, message, status, ticket_no FROM support_tickets WHERE id = ?').get(t.json.id);

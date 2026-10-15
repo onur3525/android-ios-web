@@ -15,6 +15,7 @@ import '../data/remote/api_error_mapper.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
+import '../ui/sifre_dogrulama_paneli.dart';
 import '../data/repositories/oturum_tercihi.dart';
 import '../data/remote/api_config.dart';
 
@@ -215,7 +216,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // ⚠ MOCK MODDA AĞ ÇAĞRISI YAPILMAZ — akış aynen yürür.
       if (ApiConfig.useRealApi) {
         final api = AccountApi(context.read<ApiClient>());
-        await api.requestDeletion();
+        await api.requestDeletion(password: _dogrulananSifre);
       }
       if (!mounted) {
         return;
@@ -826,112 +827,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     await _requestDeletion();
   }
 
-  /// ŞİFRE DOĞRULAMA PANELİ.
+  /// ŞİFRE DOĞRULAMA — ortak panel (`ui/sifre_dogrulama_paneli.dart`).
   ///
   /// ⚠ Hesap silme doğrulamasız yapılmaz: açık bırakılmış bir
-  /// telefonda üç dokunuşla hesap kapatılabilirdi.
-  ///
-  /// Doğrulama kararı sunucunundur (`AuthController.verifyPassword`);
-  /// ekran şifreyi SAKLAMAZ, yalnız iletir.
+  /// telefonda üç dokunuşla hesap kapatılabilirdi. Doğrulanan şifre silme
+  /// talebiyle sunucuya da gider; sunucu yeniden doğrular (15 Eki).
+  String? _dogrulananSifre;
+
   Future<bool> _sifreDogrula() async {
-    final ctl = TextEditingController();
-    final hataNot = ValueNotifier<String?>(null);
-    // ⚠ Alan dolu mu? Düğmenin aktifliği buna bağlı.
-    final doluNot = ValueNotifier<bool>(false);
-    var dogru = false;
-    try {
-      await RefBottomSheet.goster<void>(
-        context,
-        title: 'Kimliğinizi Doğrulayın',
-        child: StatefulBuilder(
-          builder: (c, yenile) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Hesabınızı silmeden önce güvenlik için şifrenizi '
-                'girin.',
-                style: refText(
-                    size: RF.s135,
-                    weight: RF.w400,
-                    color: RC.textDark,
-                    height: RF.lh155),
-              ),
-              const SizedBox(height: 14),
-              // ── ⚠ ORTAK FORM STANDARDI ──
-              //
-              // İki ihlal vardı:
-              ValueListenableBuilder<String?>(
-                valueListenable: hataNot,
-                builder: (_, hata, __) => TextField(
-                  controller: ctl,
-                  obscureText: true,
-                  // ⚠ Şifrede baş harf büyütülmez.
-                  textCapitalization: TextCapitalization.none,
-                  autofocus: true,
-                  onChanged: (_) {
-                    if (hataNot.value != null) {
-                      hataNot.value = null;
-                    }
-                    doluNot.value = ctl.text.trim().isNotEmpty;
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Şifreniz',
-                    errorText: hata,
-                    errorMaxLines: 2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ValueListenableBuilder<bool>(
-                valueListenable: doluNot,
-                builder: (_, dolu, __) => OutlinedButton(
-                onPressed: !dolu
-                    ? null
-                    : () async {
-                  final err = await c
-                      .read<AuthController>()
-                      .verifyPassword(ctl.text);
-                  if (err != null) {
-                    hataNot.value = err.message;
-                    return;
-                  }
-                  dogru = true;
-                  if (c.mounted) {
-                    Navigator.of(c).pop();
-                  }
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: HC.red,
-                  side: const BorderSide(color: HC.red, width: 1.4),
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(RR.r12),
-                  ),
-                ),
-                child: Text('Doğrula',
-                    style: refText(
-                        size: RF.s14, weight: RF.w700, color: HC.red)),
-              )),
-            ],
-          ),
-        ),
-      );
-    } finally {
-      // ⚠ NOTIFIER'LAR BİR SONRAKİ KAREDE BIRAKILIR.
-      //
-      // Panel kapanma animasyonu sürerken `ValueListenableBuilder`
-      // öğeleri hâlâ ağaçta ve bu notifier'ları dinliyor olabilir.
-      // Hemen `dispose` çağrılınca dinleyicisi olan bir nesne
-      // kapatılıyor ve ağaç yıkımı sırasında çerçeve doğrulaması
-      // patlıyordu (`_dependents.isEmpty`).
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ctl.dispose();
-        hataNot.dispose();
-        doluNot.dispose();
-      });
-    }
-    return dogru;
+    _dogrulananSifre = await sifreIleDogrula(
+      context,
+      aciklama: 'Hesabınızı silmeden önce güvenlik için şifrenizi girin.',
+    );
+    return _dogrulananSifre != null;
   }
 
   Widget _bildirimKarti() {

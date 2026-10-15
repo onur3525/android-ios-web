@@ -102,6 +102,10 @@ abstract class AuthPort extends ChangeNotifier {
     /// Kullanım Sözleşmesi + Gizlilik Politikası onayı (ZORUNLU).
     bool termsAccepted,
 
+    /// "18 yaşından büyüğüm" beyanı (ZORUNLU, 15 Eki işletmeci kararı).
+    /// Doğum tarihi toplanmaz; beyan sunucuda zorunludur.
+    bool ageConfirmed,
+
     /// Yalnız gerçek doğrulama tamamlanınca true olur.
     bool emailVerified,
 
@@ -137,7 +141,12 @@ abstract class AuthPort extends ChangeNotifier {
 
   /// Doğrulama başarılıysa yeni numarayı tek adımda bağlar.
   /// ⚠ Numara challenge'ın İÇİNDEN gelir (Y4).
-  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod);
+  ///
+  /// ⚠ [mevcutSifre] (15 Eki): sunucu numara değişiminde MEVCUT ŞİFREYİ de
+  /// doğrular — çalınmış oturumla numara değiştirip şifre sıfırlayarak hesap
+  /// ele geçirilemesin. Ekran şifreyi ortak panelle (`sifreIleDogrula`) alır.
+  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod,
+      {String? mevcutSifre});
 
   /// HESAP KURTARMA — telefona kod gönderir (nötr cevap).
   Future<({String challengeId})> hesapKurtarmaKodGonder(String phone);

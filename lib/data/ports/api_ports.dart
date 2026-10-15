@@ -259,13 +259,14 @@ class ApiAuthPort extends AuthPort {
   }
 
   @override
-  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod) async {
+  Future<DomainError?> telefonDegisimiDogrula(String challengeId, String kod,
+      {String? mevcutSifre}) async {
     final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod, mevcutKullanici: true);
     final tel = r.idToken == null ? null : FirebaseKimlik.i.tokenTelefonu(r.idToken!);
     if (r.error != null || tel == null) {
       return r.error ?? const ValidationError('Doğrulama tamamlanamadı');
     }
-    return repo.changePhoneFirebase(tel, r.idToken!);
+    return repo.changePhoneFirebase(tel, r.idToken!, mevcutSifre: mevcutSifre);
   }
 
   @override
@@ -322,13 +323,14 @@ class ApiAuthPort extends AuthPort {
     Set<String> categories = const {},
     Set<String> serviceDistricts = const {},
     bool termsAccepted = false,
+    bool ageConfirmed = false,
     bool emailVerified = false,
     String? kayitYetkisi,
     String? taslakKimligi,
   }) async {
-    // ⚠ Sözleşme onayı SUNUCUDA da doğrulanır; istemci kontrolü tek
-    // savunma değildir. Burada erken çıkış kullanıcıya hızlı geri
-    // bildirim içindir.
+    // ⚠ Sözleşme onayı ve 18 yaş beyanı SUNUCUDA da doğrulanır (15 Eki;
+    // önceden sunucu onayı denetlemiyordu). Buradaki erken çıkış
+    // kullanıcıya hızlı geri bildirim içindir.
     if (!termsAccepted) {
       return (
         account: null,
@@ -336,12 +338,21 @@ class ApiAuthPort extends AuthPort {
             'Kullanım sözleşmesi ve gizlilik politikası onayı zorunludur'),
       );
     }
+    if (!ageConfirmed) {
+      return (
+        account: null,
+        error: const ValidationError(
+            'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir'),
+      );
+    }
     // otpVerified mock akışının kalıntısıdır; sunucu OTP kodunu kendi doğrular.
     final err = await repo.register(
         phone: phone, password: pass, name: name,
         email: email, role: role, otpCode: otpCode,
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
-        firebaseIdToken: kayitYetkisi);
+        firebaseIdToken: kayitYetkisi,
+        termsAccepted: termsAccepted,
+        ageConfirmed: ageConfirmed);
     if (err != null) {
       return (account: null, error: err);
     }

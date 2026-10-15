@@ -354,6 +354,13 @@ export function ilanRotalar(r, db) {
     if (l.status === 'ADMIN_REMOVED' || l.status === 'USER_DELETED') throw kural('LISTING_REMOVED', 'İlan yayından kaldırılmış');
     const var_ = await db.prepare('SELECT * FROM contacts WHERE offer_id = ?').get(o.id);
     if (var_) return { open: true, contactOpenAt: var_.opened_at };
+    // ── ⚠ PAYLAŞIM ONAYI İLAN SAHİBİNDE (15 Eki güvenlik denetimi, karar 5) ──
+    // Kullanım Koşulları: telefon/e-posta paylaşımı tarafların onayına
+    // bağlıdır. Hizmet veren teklif vererek KENDİ bilgisini paylaşmayı
+    // kabul eder; hizmet alanın telefonu ise yalnız onun açık işlemiyle
+    // paylaşılır. Önceden hizmet veren tek taraflı açabiliyor ve müşterinin
+    // numarasını onun onayı olmadan görüyordu.
+    if (ctx.kullanici.id !== l.owner_id) throw hata.yetki('İletişimi yalnızca ilan sahibi açabilir');
     const z = simdi();
     let eklendi = false;
     await db.tx(async () => {
@@ -362,8 +369,7 @@ export function ilanRotalar(r, db) {
       const ek = await db.prepare('INSERT INTO contacts (offer_id, opened_by, opened_at) VALUES (?, ?, ?) ON CONFLICT (offer_id) DO NOTHING').run(o.id, ctx.kullanici.id, z);
       eklendi = ek.changes === 1;
       if (!eklendi) return;
-      const karsi = ctx.kullanici.id === o.provider_id ? l.owner_id : o.provider_id;
-      await uygulamaIciBildir(db, karsi, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
+      await uygulamaIciBildir(db, o.provider_id, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
     });
     if (!eklendi) {
       const c = await db.prepare('SELECT opened_at FROM contacts WHERE offer_id = ?').get(o.id);

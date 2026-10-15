@@ -73,7 +73,7 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   /// Teklif notu — İSTEĞE BAĞLI.
   final _note = TextEditingController();
   String? _amtError, _formError;
-  bool _busyOffer = false, _busyContact = false;
+  bool _busyOffer = false;
 
   /// PLATFORM ONAY DURUMU — teklif formu gösterilmeden ÖNCE okunur.
   /// Onaysız hizmet veren 403 beklemez; durumunu baştan görür.
@@ -767,44 +767,24 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                 );
               }(),
 
-              // ⚠ "İletişimi Aç" düğmesi YALNIZ kapalıyken ve teklif
-              // aktifken görünür.
+              // ── ⚠ İLETİŞİMİ HİZMET ALAN AÇAR (15 Eki güvenlik denetimi) ──
+              //
+              // Kullanım Koşulları: telefon paylaşımı tarafların onayına
+              // bağlıdır. Hizmet veren teklif vererek kendi bilgisini
+              // paylaşmayı kabul eder; hizmet alanın numarası YALNIZ onun
+              // işlemiyle açılır (sunucu hizmet verenin açma isteğini 403
+              // ile reddeder). Eski "İletişimi Aç" düğmesinin yerinde
+              // yalnız açıklama durur.
               if (!contactCtl.isOpen(mine.id) &&
                   mine.status == OfferStatus.active) ...[
                 const SizedBox(height: 10),
-                SysButton('İletişimi Aç',
-                    busy: _busyContact,
-                    onPressed: () async {
-                      if (_busyContact) {
-                        return;
-                      }
-                      setState(() => _busyContact = true);
-                      final err = await context
-                          .read<ContactController>()
-                          .openShared(mine.id, actorId: me.id);
-                      // ⚠ İKİ AYRI DENETİM: `setState` STATE'in
-                      // mounted'ını, toast ise `context`'in canlı
-                      // olmasını gerektirir.
-                      if (!mounted) {
-                        return;
-                      }
-                      setState(() => _busyContact = false);
-                      if (!context.mounted) {
-                        return;
-                      }
-                      if (err != null) {
-                        sysToastErr(context, SysKind.genericError,
-                            extra: err.message);
-                      } else {
-                        // ⚠ ÜCRET İMASI KALDIRILDI (16 Eyl): metin
-                        // "ücret blokenizden kullanıldı" diyordu.
-                        // Uygulama 29 Ağu'dan beri iki taraf için de
-                        // TAMAMEN ÜCRETSİZ; kullanıcıya para kesildiği
-                        // söyleniyordu. Davranış değişmedi, yalnız
-                        // yanlış cümle düzeltildi.
-                        sysToastOk(context, 'İletişim bilgileri açıldı');
-                      }
-                    }),
+                Text(
+                  'İletişim bilgileri, hizmet alan iletişimi açtığında '
+                  'görünür.',
+                  textAlign: TextAlign.center,
+                  style: refText(
+                      size: RF.s125, weight: RF.w400, color: RC.textSoft),
+                ),
               ],
               // ── ⚠ İLETİŞİM AÇILDIYSA HİZMET VERENİN AKIŞI BİTER ──
               //

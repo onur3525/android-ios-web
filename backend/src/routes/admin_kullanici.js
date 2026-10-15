@@ -46,16 +46,25 @@ export function adminKullaniciRotalar(r, db) {
     const ofset = Math.max(Number(ctx.query.get('offset') ?? 0), 0);
     const kosul = ['deleted_at IS NULL'];
     const p = [];
+    // ⚠ İLETİŞİM YETKİSİ TEK KAYNAK (15 Eki güvenlik denetimi, karar 6):
+    // rol listesi burada ayrıca yazılmaz (auth.js YETKI tablosu).
+    const iletisimGor = yetkiliMi(ctx.admin.role, 'users.contact.read');
     if (ara) {
-      kosul.push('(lower(name) LIKE ? OR phone LIKE ? OR lower(email) LIKE ?)');
-      p.push(`%${ara}%`, `%${ara.replace(/\D/g, '') || ara}%`, `%${ara}%`);
+      // İletişim yetkisi olmayan rol telefon/e-postayla ARAYAMAZ: maskeli
+      // listede bile "bu numara kayıtlı mı?" sorusunun cevabını alırdı.
+      if (iletisimGor) {
+        kosul.push('(lower(name) LIKE ? OR phone LIKE ? OR lower(email) LIKE ?)');
+        p.push(`%${ara}%`, `%${ara.replace(/\D/g, '') || ara}%`, `%${ara}%`);
+      } else {
+        kosul.push('lower(name) LIKE ?');
+        p.push(`%${ara}%`);
+      }
     }
     if (durum) {
       if (!['ACTIVE', 'SUSPENDED', 'BANNED'].includes(durum)) throw hata.dogrulama('Geçersiz durum');
       kosul.push('status = ?');
       p.push(durum);
     }
-    const iletisimGor = ['super_admin', 'moderator'].includes(ctx.admin.role);
     const satirlar = await db.prepare(
       `SELECT * FROM users WHERE ${kosul.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     ).all(...p, limit, ofset);

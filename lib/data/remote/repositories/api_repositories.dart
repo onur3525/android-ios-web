@@ -15,6 +15,7 @@ import '../api/offer_api.dart';
 import '../api/profile_api.dart';
 import '../api/storage_api.dart';
 import '../../../core/platform/yerel_gorsel.dart';
+import '../../../core/boot.dart' show currentPlatform;
 import '../api_client.dart';
 import '../api_error_mapper.dart';
 import '../mappers.dart';
@@ -94,11 +95,16 @@ class ApiAuthRepository extends ChangeNotifier {
     required String phone, required String password, required String name,
     required String email, required Role role, required String otpCode,
     String? firebaseIdToken,
+    required bool termsAccepted,
+    required bool ageConfirmed,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
           email: email, role: Mappers.roleApi(role), otpCode: otpCode,
           firebaseIdToken: firebaseIdToken,
+          termsAccepted: termsAccepted,
+          ageConfirmed: ageConfirmed,
+          platform: currentPlatform(),
         ));
     if (err != null) {
       return err;
@@ -130,9 +136,11 @@ class ApiAuthRepository extends ChangeNotifier {
               phone: phone, otpCode: '', newPassword: newPass, firebaseIdToken: idToken)))
           .$2;
 
-  Future<DomainError?> changePhoneFirebase(String newPhone, String idToken) async {
-    final (res, err) = await _guard(
-        () => _profile.changePhone(newPhone: newPhone, otpCode: '', firebaseIdToken: idToken));
+  Future<DomainError?> changePhoneFirebase(String newPhone, String idToken,
+      {String? mevcutSifre}) async {
+    final (res, err) = await _guard(() => _profile.changePhone(
+        newPhone: newPhone, otpCode: '', firebaseIdToken: idToken,
+        currentPassword: mevcutSifre));
     if (err != null) {
       return err;
     }

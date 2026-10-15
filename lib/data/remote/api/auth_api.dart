@@ -17,10 +17,18 @@ class AuthApi {
     required String role,
     required String otpCode,
     String? firebaseIdToken,
+    // ⚠ 15 Eki: sunucu ikisini de ZORUNLU tutar (koşul onayı + 18 yaş
+    // beyanı); yalnız gerçek `true` kabul edilir.
+    required bool termsAccepted,
+    required bool ageConfirmed,
+    String? platform,
   }) =>
       c.post('/auth/register', body: {
         'phone': phone, 'password': password, 'name': name,
         'email': email, 'role': role, 'otpCode': otpCode,
+        'termsAccepted': termsAccepted,
+        'ageConfirmed': ageConfirmed,
+        if (platform != null) 'platform': platform,
         // Firebase telefon doğrulamasının kanıtı (sunucu doğrular).
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
       });
