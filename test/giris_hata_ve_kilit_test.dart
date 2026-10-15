@@ -223,17 +223,19 @@ void main() {
 
       //
       // ⚠ KULLANICI KARARI (1 Eki): giriş ekranında demo hesap bilgisi
-      // GÖSTERİLMEZ — kutu kaldırıldı (bkz. `demo_hesap_ozetleri.dart`).
-      // Kutu olmadığı için yanlış kimlik gösterme riski de yok; kalan
-      // sözleşme tohumlanan hesabın kimliğidir. Test adı iz için
-      // korunur.
+      // GÖSTERİLMEZ — kutu kaldırıldı. Test adı iz için korunur.
       expect(l.contains('Test girişi —'), isFalse,
           reason: 'kaldırılan demo hesap kutusu geri gelmiş');
       expect(l.contains("'test@hizmetcep.com'"), isFalse);
 
-      // Tohumlanan hesapla eşleşme.
-      expect(r.contains("email: 'test@hizmetcep.com'"), isTrue);
-      expect(r.contains("phone: '5321112233'"), isTrue);
+      // ⚠ 15 Eki (canlı hazırlığı): demo hesap uygulama kaynağında da
+      // YOK; test hesabı yalnız `test/support/test_config.dart`ta.
+      expect(r.contains("email: 'test@hizmetcep.com'"), isFalse);
+      expect(r.contains("phone: '5321112233'"), isFalse);
+      final t = File('test/support/test_config.dart').readAsStringSync();
+      expect(t.contains("const String kTestEmail = 'test@hizmetcep.com';"),
+          isTrue);
+      expect(t.contains("const String kTestPhone = '5321112233';"), isTrue);
     });
 
     test('kutuda yazan TELEFON + şifre ile de giriş yapılır', () {

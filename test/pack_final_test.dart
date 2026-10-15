@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hizmetcep/core/test_modu.dart';
 import 'package:hizmetcep/core/sys_state.dart';
 import 'package:hizmetcep/data/models/listing.dart';
 import 'package:hizmetcep/data/repositories/auth_repository.dart';
@@ -86,15 +85,24 @@ void main() {
       expect(auth.girisEposta(kTestEmail, 'yepyeni1'), isNull);
     });
 
-    test('Mock OTP: debug derlemede doğru kod kabul, yanlış kod ret', () async {
+    test('Mock OTP: test doğrulayıcısıyla doğru kod kabul, yanlış kod ret', () async {
       final svc = MockOtpService();
-      // ⚠ 30 Eyl: bu satır OTP yerine ŞİFREYİ (kTestPass) deniyordu;
-      // şifre 16 Ağu'da değişince iddia sessizce yanlış hâle gelmişti.
-      // Doğru girdi test OTP'sidir; kapı artık `TestModu.etkin`.
-      expect(await svc.verify(kTestPhone, kTestOtp), TestModu.etkin);
-      expect(await svc.verify('5321112233', '000000'), isFalse);
-      // Release güvenlik kuralı: verify TestModu.etkin && kod eşitliği ister;
-      // release derlemede (mobil ve web) test kodu KABUL EDİLMEZ.
+      expect(await svc.verify(kTestPhone, kTestOtp), isTrue);
+      expect(await svc.verify(kTestPhone, '000000'), isFalse);
+    });
+
+    // ⚠ 15 Eki (canlı hazırlığı): uygulama kodu KENDİ BAŞINA hiçbir
+    // kodu kabul etmez ve hiçbir hesap tohumlamaz. Test kancaları
+    // sökülünce davranış uygulamadakiyle aynıdır.
+    test('test kancaları yokken: OTP her kodu reddeder, hesap defteri boş', () async {
+      testOrtaminiSok();
+      addTearDown(testOrtaminiKur);
+      final svc = MockOtpService();
+      expect(await svc.verify(kTestPhone, kTestOtp), isFalse);
+      expect(await svc.verify(kTestPhone, '000000'), isFalse);
+      final auth = AuthRepository();
+      expect(auth.accounts, isEmpty);
+      expect(auth.girisEposta(kTestEmail, kTestPass), isA<AuthFailedError>());
     });
   });
 

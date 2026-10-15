@@ -1,6 +1,7 @@
 // 15 Eki — GERÇEK API MODUNDA KAYIT KODU
 //
-//   · "Geliştirme sürümü test kodu: 123456" yalnız TEST MODU + MOCK'ta görünür.
+//   · Sabit test kodu ve "Geliştirme sürümü test kodu" ipucu kaynakta YOK
+//     (canlı hazırlığı); hiçbir derlemede gösterilmez veya kabul edilmez.
 //   · API modunda kod Firebase ile gönderilir/doğrulanır; sunucu kanıtı
 //     ayrıca doğrular. Sabit kod bu yolda HİÇ kullanılmaz.
 //   · Kod gönderilemezse doğrulama adımına geçilmez; "Kodu Tekrar Gönder"
@@ -17,19 +18,15 @@ String _kod(String yol) => File(yol)
     .join('\n');
 
 void main() {
-  test('test kodu ipucu yalnız test modu + mock', () {
+  test('OTP ekranında test kodu ipucu YOK; sabit kod YOK', () {
     final o = _kod('lib/screens/otp_screen.dart');
-    expect(
-        RegExp(r'if \(TestModu\.etkin && !ApiConfig\.useRealApi\)')
-            .allMatches(o)
-            .length,
-        2);
+    expect(o.contains('test kodu'), isFalse);
+    expect(o.contains('123456'), isFalse);
+    expect(o.contains('TestModu'), isFalse);
     final s = _kod('lib/data/services/otp_service.dart');
-    expect(s.contains('return TestModu.etkin && code == _debugCode;'), isTrue);
-    expect(
-        _kod('lib/core/test_modu.dart')
-            .contains('static const bool etkin = !kReleaseMode'),
-        isTrue);
+    expect(s.contains('123456'), isFalse);
+    expect(s.contains('if (kReleaseMode || d == null) {'), isTrue);
+    expect(File('lib/core/test_modu.dart').existsSync(), isFalse);
   });
 
   test('kayıt ekranı: kod gönderilemezse doğrulama ekranı açılmaz', () {

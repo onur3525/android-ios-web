@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/data/remote/api/category_api.dart';
 import 'package:hizmetcep/screens/category_ui.dart';
-import 'package:hizmetcep/data/repositories/demo_hesap_ozetleri.dart';
 import 'package:hizmetcep/domain/password_hasher.dart';
 
 import 'support/test_config.dart';
@@ -84,7 +83,7 @@ void main() {
         expect(f.readAsStringSync().contains(kTestPass), isFalse, reason: f.path);
       }
     });
-    test('demo hesabın özeti test şifresiyle eşleşir (OTP/kayıt akışı için)', () {
+    test('test hesabının özeti test şifresiyle eşleşir (yalnız test fikstürü)', () {
       expect(PasswordHasher.verify(kTestPass, kDemoMusteriTuz, kDemoMusteriOzet), isTrue);
     });
   });

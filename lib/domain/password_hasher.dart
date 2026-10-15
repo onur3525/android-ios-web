@@ -37,7 +37,7 @@ abstract final class PasswordHasher {
   static String hash(String password, String salt) {
     // ⚠ ÖLÇÜM — YALNIZ DEBUG (`BootLog.olc` release'de doğrudan işi
     // çalıştırır). Tur sayısı, algoritma ve dönüş değeri AYNIDIR;
-    // burada yalnız süre kaydedilir. Açılışta `_seedDemo` bu yolu
+    // burada yalnız süre kaydedilir. Kayıt ve giriş bu yolu
     // kullandığı için ölçüm noktası buraya kondu.
     final ozet = BootLog.olc(
         'PBKDF2', () => _pbkdf2(password, salt, _turSayisi, _uzunluk));

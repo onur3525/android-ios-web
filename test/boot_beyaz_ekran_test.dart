@@ -340,7 +340,6 @@ void main() {
         'ENSURE_INITIALIZED_END',
         'BUILD_PORTS_START',
         'BUILD_PORTS_END',
-        'SEED_DEMO',
         'RUN_APP_CALL',
       ]) {
         expect(m.contains(e), isTrue, reason: '$e main.dart\'ta yok');
@@ -416,85 +415,31 @@ void main() {
 
     final mKod = kodu(m);
 
-    test('demo tohumlama runApp\'i BEKLETMEZ', () {
-      // PBKDF2 (20.000 tur) ilk kareyi geciktiriyordu.
-      // ⚠ İmza genişledi: tohumlama artık depoları da alıyor
-      // (demo ilan/teklif senaryosu için). Çağrının VARLIĞI ve
-      // post-frame'e alınmış olması aynen kilitli.
-      // ⚠ GÜNCEL KARAR (canlı hazırlığı): demo tohumlama KAPATILDI —
-      // `buildPorts` onu hiç çağırmaz. Fonksiyon silinmedi; geri
-      // açılırsa yine ilk kareden SONRA çalışır.
-      expect(mKod.contains('demoTohumla(authRepo'), isFalse,
-          reason: 'demo tohumlama yeniden çağrılmış');
-      final iFn = m.indexOf('void demoTohumla(');
-      final iSeed = m.indexOf('void _seedDemo(', iFn);
-      expect(iFn, greaterThan(0));
-      expect(m.substring(iFn, iSeed).contains('addPostFrameCallback'), isTrue);
-      // Doğrudan çağrı geri gelmemeli.
+    // ⚠ 15 Eki (canlı hazırlığı): demo hesap/ilan tohumlaması
+    // kaynaktan TAMAMEN kaldırıldı — açılışta bekletecek tohum yok.
+    test('demo tohumlama kaynakta YOK (runApp öncesi de sonrası da)', () {
+      for (final iz in const [
+        'demoTohumla',
+        '_seedDemo',
+        '_tohumlandi',
+        "BootLog.olc('SEED_DEMO'",
+      ]) {
+        expect(mKod.contains(iz), isFalse, reason: iz);
+      }
       final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
       expect(iRun, greaterThan(0));
-      expect(mKod.substring(0, iRun).contains('_seedDemo(authRepo)'), isFalse,
-          reason: 'tohumlama yine runApp öncesine alınmış');
     });
 
-    test('⚠ DEMO SENARYOSU YALNIZ DEBUG KAPISININ ARKASINDA', () {
-      // ⚠ EN ÖNEMLİ KİLİT: mağazaya giden release paketinde uydurma
-      // ilan ÜRETİLMEZ. Çağrı `kDebugMode` bloğunun içinde olmalı.
-      //
-      // ⚠ GÜNCEL DURUM DAHA SIKI: tohumlama hiçbir derlemede
-      // çağrılmıyor. Kural: çağrı ya YOK ya da `kDebugMode` bloğunun
-      // içinde. `_seedDemo` yalnız `demoTohumla` içinden çağrılır.
-      final j = mKod.indexOf('demoTohumla(authRepo');
-      if (j >= 0) {
-        final i = mKod.lastIndexOf('if (kDebugMode) {', j);
-        expect(i, greaterThan(0), reason: 'debug kapısı kalkmış');
-        expect(j - i, lessThan(200),
-            reason: 'çağrı debug bloğunun içinde değil');
+    test('demo senaryo verisi (ilan, teklif, usta) kaynakta YOK', () {
+      for (final iz in const [
+        "title: 'Kombi Bakımı'",
+        "title: 'Petek Temizliği'",
+        "phone: '5559998877'",
+        "phone: '5507654321'",
+        "'Kombi Servis'",
+      ]) {
+        expect(mKod.contains(iz), isFalse, reason: iz);
       }
-      final iFn = mKod.indexOf('void demoTohumla(');
-      final iSeed = mKod.indexOf('void _seedDemo(');
-      for (final e in RegExp(r'_seedDemo\(auth').allMatches(mKod)) {
-        expect(e.start > iFn && e.start < iSeed, isTrue,
-            reason: '_seedDemo demoTohumla dışından çağrılıyor');
-      }
-    });
-
-    test('⚠ TAMAMLANMIŞ demo işlerde ZİNCİR TAM', () {
-      // ⚠ Kullanıcının bildirdiği hatanın kaynağı buydu: tohum
-      // ilanı `completed` yapıyor ama teklifi SEÇİLİ işaretlemiyordu.
-      // `selectedOfferId` boş kalınca ekran "iletişim açılmamış"
-      // sayıyor ve tamamlanan işte "İletişimi Aç" düğmesi çıkıyordu.
-      //
-      // Tamamlanmış işte dördü birden yazılı olmalı.
-      expect(mKod.contains('teklif.status = OfferStatus.selected'), isTrue);
-      expect(mKod.contains('ilan.selectedOfferId = teklif.id'), isTrue);
-      expect(mKod.contains('contacts?.open(teklif.id)'), isTrue,
-          reason: 'iletişim kaydı yazılmamış');
-    });
-
-    test('demo senaryosu: iki ilan + iki teklif', () {
-      expect(mKod.contains("title: 'Kombi Bakımı'"), isTrue);
-      expect(mKod.contains("title: 'Petek Temizliği'"), isTrue);
-      // İki farklı hizmet verenden teklif.
-      expect(mKod.contains("phone: '5559998877'"), isTrue,
-          reason: 'ikinci demo usta yok — teklif karşılaştırması olmaz');
-      // Açık ilana (ilanA) iki ayrı ustadan teklif; üçüncü
-      // `offers.create` geçmiş işler yardımcısındadır (`gecmisIs`).
-      expect('listingId: ilanA.id'.allMatches(mKod).length, 2);
-      expect('offers.create('.allMatches(mKod).length, 3);
-      // ⚠ Ücretsiz model: bloke/cüzdan hareketi YOK.
-      expect('wallets.block('.allMatches(mKod).length, 0);
-    });
-
-    test('demo VERİSİ kaldırılmadı', () {
-      expect(m.contains('void _seedDemo('), isTrue);
-      expect(m.contains("phone: '5507654321'"), isTrue);
-      expect(m.contains("'Kombi Servis'"), isTrue);
-      expect(m.contains('setAddressFor'), isTrue);
-    });
-
-    test('tohumlama TEK kez çalışır', () {
-      expect(m.contains('bool _tohumlandi = false;'), isTrue);
     });
 
     test('tokenizer runApp\'i BEKLETMEZ', () {
@@ -544,25 +489,15 @@ void main() {
   group('SEED YARIŞI', () {
     final m = read('lib/main.dart');
 
-    test('tohumlama açılış kararından ÖNCE kaydedilir', () {
-      // Post-frame geri çağrıları KAYIT SIRASINA göre işlenir.
-      // `demoTohumla` buildPorts sırasında (runApp öncesi),
-      // `_bootGuvenli` ise SplashScreen.initState'te kaydedilir.
-      //
-      // ⚠ GÜNCEL: tohumlama çağrılmadığı için yarış da yok. Çağrı geri
-      // açılırsa kayıt runApp'ten ÖNCE olmalı.
+    test('açılış kararıyla yarışacak tohumlama YOK', () {
+      // ⚠ 15 Eki: demo tohumlama kaldırıldı; yarış koşulu da yok.
       final mKod = m
           .split('\n')
           .where((l) =>
               !l.trimLeft().startsWith('//') && !l.trimLeft().startsWith('///'))
           .join('\n');
-      final iSeed = mKod.indexOf('demoTohumla(authRepo');
-      final iRun = mKod.indexOf("BootLog.olay('RUN_APP_CALL')");
-      expect(iRun, greaterThan(0));
-      if (iSeed >= 0) {
-        expect(iSeed, lessThan(iRun),
-            reason: 'tohumlama kaydı runApp SONRASINA kaymış');
-      }
+      expect(mKod.contains('demoTohumla('), isFalse);
+      expect(mKod.indexOf("BootLog.olay('RUN_APP_CALL')"), greaterThan(0));
     });
 
     test('ilk yüzey seed verisine İHTİYAÇ DUYMAZ', () {

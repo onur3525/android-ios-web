@@ -9,8 +9,6 @@ import 'package:uuid/uuid.dart';
 import '../../domain/failures.dart';
 import '../../domain/password_hasher.dart';
 import '../models/account.dart';
-import 'demo_hesap_ozetleri.dart';
-import '../../core/test_modu.dart';
 
 /// Hesap defteri + oturum. Backend geldiğinde API'si korunarak
 class AuthRepository extends ChangeNotifier {
@@ -19,12 +17,10 @@ class AuthRepository extends ChangeNotifier {
   final List<Account> accounts = [];
   Account? currentAccount;
 
-  /// [seedTestAccount] yalnız debug/test ortamında true olmalıdır;
-  /// release derlemede test hesabı OLUŞMAZ.
   /// ⚠ DOĞRULAMANIN AUTHORITATIVE NOKTASI BURASIDIR.
   ///
   /// Kodu ekran değil bu servis doğrular. Mock modda
-  /// `MockOtpService` (debug'da sabit kod), API modunda sunucu ucu.
+  /// `MockOtpService` (varsayılan kapalı), API modunda sunucu ucu.
   final OtpService _otp;
 
   /// Üretilmiş challenge'lar — kimlikle saklanır.
@@ -67,43 +63,42 @@ class AuthRepository extends ChangeNotifier {
   /// Başka kullanıcıya uygulanamaz, ikinci kez kullanılamaz.
   final Map<String, ({String userId, DateTime bitis})> _kurtarmaYetkileri = {};
 
+  /// ⚠ CANLI HAZIRLIĞI (15 Eki): kaynakta DEMO/TEST HESABI YOKTUR.
+  ///
+  /// Uygulama her modda BOŞ hesap defteriyle başlar. Testlerin ihtiyaç
+  /// duyduğu hesap `test/flutter_test_config.dart` içinde bu kancaya
+  /// takılır; uygulama kodu kancaya DOKUNMAZ ve release derlemede
+  /// takılmış olsa bile çalışmaz.
+  @visibleForTesting
+  static void Function(AuthRepository repo)? testTohumu;
+
+  /// [seedTestAccount]: `false` verilirse testin taktığı tohum da
+  /// uygulanmaz (boş defter isteyen testler için).
   AuthRepository({
-    bool seedTestAccount = TestModu.etkin,
+    bool seedTestAccount = true,
     OtpService? otpService,
     Duration yetkiOmru = const Duration(minutes: 10),
     DateTime Function()? nowProvider,
   })  : _otp = otpService ?? MockOtpService(),
         _yetkiOmru = yetkiOmru,
         _now = nowProvider ?? DateTime.now {
-    if (seedTestAccount) {
-      // ⚠ DEMO ŞİFRE ŞİFRE KURALINA UYAR (16 Ağu).
-      //
-      // Eski değer `123456` idi: 6 hane, yeni asgari 8'in ALTINDA.
-      // Giriş ekranı şifrede yalnız DOLULUK aradığı için çalışmaya
-      // devam ediyordu (o kural bilinçli — kural değişince eski
-      // şifreli kullanıcı kendi hesabından kilitlenmesin diye).
-      // Ama demo hesabın kurala uymaması, kuralı kâğıt üstünde
-      // bırakıyordu: ekipteki herkes 6 haneyle çalışmaya devam ederdi.
-      //
-      // Yeni değer 8 hane ve doğrulayıcının üç zayıflık denetiminden
-      // de geçiyor (ardışık değil, tekrar değil, yaygın değil).
-      // Prototip test hesabı (532 111 22 33). ⚠ ŞİFRE KAYNAKTA YOK:
-      // yalnız önceden hesaplanmış tuz+özet tutulur.
-      // ⚠ KURUCU `buildPorts` İÇİNDE, YANİ `runApp`'TEN ÖNCE ÇALIŞIR.
-      // Burada PBKDF2 hesaplansaydı ilk Flutter karesi o kadar
-      _seed(hazirTuz: kDemoMusteriTuz, hazirOzet: kDemoMusteriOzet,
-          phone: '5321112233', pass: '',
-          roles: {Role.customer}, name: 'Onur Bütün',
-          // ⚠ Demo hesabın e-postası da doldurulur: profil ekranı
-          // gerçek veriyle denenebilsin, boş alan yüzünden e-posta
-          // kuralları test dışı kalmasın.
-          // ⚠ GİRİŞ ARTIK E-POSTA İLE: demo hesabın adresi giriş
-          // ekranındaki test bilgisiyle AYNI olmak zorunda.
-          email: 'test@hizmetcep.com',
-          // Kayıt sırasında girilmiş adres — Adreslerim ekranı dolu açılır.
-          ilce: 'Karşıyaka', mahalle: 'İmbatlı');
+    final tohum = testTohumu;
+    if (seedTestAccount && !kReleaseMode && tohum != null) {
+      tohum(this);
     }
   }
+
+  /// Doğrulanmış, kayıt akışını tamamlamış bir hesabı doğrudan ekler.
+  /// YALNIZ test tohumu içindir.
+  @visibleForTesting
+  void testHesabiEkle({required String phone, required String pass,
+          required Set<Role> roles,
+          String name = '', String email = '',
+          String ilce = '', String mahalle = '',
+          String? hazirTuz, String? hazirOzet}) =>
+      _seed(phone: phone, pass: pass, roles: roles, name: name,
+          email: email, ilce: ilce, mahalle: mahalle,
+          hazirTuz: hazirTuz, hazirOzet: hazirOzet);
 
   void _seed({required String phone, required String pass, required Set<Role> roles,
       String name = '', String email = '',
@@ -800,8 +795,7 @@ class AuthRepository extends ChangeNotifier {
     ///
     /// Normal kayıt bu parametreleri VERMEZ; o yolda tuz rastgele
     /// üretilir ve PBKDF2 hesaplanır. Burada amaç açılış yolundan
-    /// 20.000 turluk hesabı çıkarmaktır (bkz.
-    /// `demo_hesap_ozetleri.dart`).
+    /// 20.000 turluk hesabı çıkarmaktır (testlerde kullanılır).
     ///
     /// İkisi BİRLİKTE verilmelidir; yalnız biri verilirse yok sayılır
     /// ve normal hesaplama yapılır — yanlış eşleşmiş tuz/özet çifti

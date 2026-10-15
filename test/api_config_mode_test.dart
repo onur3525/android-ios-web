@@ -84,7 +84,8 @@ void main() {
   group('Codemagic — mock build sözleşmesi', () {
     final yaml = File('codemagic.yaml').readAsStringSync();
 
-    test('debug APK MOCK modda derlenir', () {
+    // ⚠ 15 Eki (canlı hazırlığı): test APK'ları gerçek API'ye bağlanır.
+    test('debug APK GERÇEK API modunda derlenir; hiçbir derleme mock değil', () {
       final i = yaml.indexOf('name: Debug APK');
       expect(i, greaterThan(0), reason: 'Debug APK adımı yok');
       final blok = yaml.pencere(i, 500);
@@ -92,9 +93,21 @@ void main() {
           .firstMatch(blok)
           ?.group(1);
       expect(komut, isNotNull, reason: 'build komutu bulunamadı');
-      expect(komut!.contains('--dart-define=DATA_SOURCE=mock'), isTrue,
-          reason: 'mock olmadan APK backend bekler ve splash uzar');
+      expect(komut!.contains('--dart-define=DATA_SOURCE=api'), isTrue);
+      expect(
+          komut.contains(
+              '--dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1'),
+          isTrue);
       expect(komut.contains('--debug'), isTrue);
+      expect(yaml.contains('DATA_SOURCE=mock'), isFalse,
+          reason: 'Codemagic derlemelerinden biri mock veriyle paketleniyor');
+      final ci = File('.github/workflows/flutter-ci.yml').readAsStringSync();
+      expect(ci.contains('DATA_SOURCE=mock'), isFalse,
+          reason: 'CI APK\'sı mock veriyle paketleniyor');
+      expect(
+          ci.contains(
+              'flutter build apk --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1'),
+          isTrue);
     });
   });
 }

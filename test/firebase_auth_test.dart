@@ -62,8 +62,10 @@ void main() {
   });
 
   group('MİMARİ KİLİTLER', () {
-    test('mock/demo OTP akışı DEĞİŞMEDİ (123456 yalnız test modunda)', () {
-      expect(_kod('lib/data/services/otp_service.dart').contains('return TestModu.etkin && code == _debugCode;'), isTrue);
+    test('mock OTP sabit kod içermez ve varsayılan olarak her kodu reddeder', () {
+      final o = _kod('lib/data/services/otp_service.dart');
+      expect(o.contains('123456'), isFalse);
+      expect(o.contains('if (kReleaseMode || d == null) {'), isTrue);
       // Mock port Firebase'i HİÇ kullanmaz.
       expect(_kod('lib/data/ports/mock_ports.dart').contains('FirebaseKimlik'), isFalse);
     });

@@ -14,7 +14,7 @@
 #
 # RELEASE GÜVENCELERİ (kodda zaten zorlanıyor, burada ek denetim):
 #   · kReleaseMode → veri kaynağı her zaman gerçek API (mock imkânsız),
-#     test modu/test OTP kapalı (lib/core/test_modu.dart), teşhis bayrakları
+#     sabit test OTP kodu ve demo hesap kaynakta YOK, teşhis bayrakları
 #     kapalı (lib/core/teshis.dart).
 #   · API_BASE_URL https zorunlu, WebSocket wss zorunlu (api_config.dart).
 #   · STORAGE_HOSTS boşsa release'te yükleme adresleri REDDEDİLİR

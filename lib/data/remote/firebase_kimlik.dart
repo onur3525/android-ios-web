@@ -18,7 +18,7 @@ import '../../domain/failures.dart';
 ///     backend'de kalır (source of truth).
 ///   · İstemcide gizli anahtar YOK (Admin SDK yalnız gerekirse sunucuda).
 ///
-/// YALNIZ API MODUNDA kullanılır; mock/demo modu (OTP 123456) aynen.
+/// YALNIZ API MODUNDA kullanılır; mock modda sabit kod YOKTUR.
 /// Arayüz DEĞİŞMEZ: mevcut ekranlar aynı port yöntemlerini çağırır.
 /// ═══════════════════════════════════════════════════════════════
 class FirebaseKimlik {

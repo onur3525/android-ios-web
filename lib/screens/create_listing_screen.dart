@@ -106,7 +106,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   String? _kayitYetkisi;
 
   /// API modunda kodu gönderir; hata varsa kullanıcıya gösterilecek
-  /// metni döner. Mock modda bir şey yapmaz (yerel test kodu).
+  /// metni döner. Mock modda bir şey yapmaz.
   Future<String?> _kayitKoduGonder() async {
     if (!ApiConfig.useRealApi) {
       return null;
@@ -640,9 +640,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     //   · API modunda ayrı bir doğrulama ucu YOKTUR; kodu kayıt ucu
     //     doğrular. İstemci yalnız uzunluğu bakar, sonucu sunucudan
     //     bekler ve hatayı bu ekranda gösterir.
-    //   · Mock modda yerel doğrulama çalışır ve YALNIZ debug
-    //     derlemede geçer (`MockOtpService.verify` release'te her
-    //     zaman false döner).
+    //   · Mock modda yerel doğrulama çalışır; sabit kod YOKTUR
+    //     (`MockOtpService` varsayılan olarak her kodu reddeder).
     // ⚠ API MODU (15 Eki): kod Firebase'de doğrulanır; dönen kayıt
     // yetkisi sunucuya gider ve sunucu onu ayrıca doğrular. Sabit test
     // kodu bu yolda HİÇ kullanılmaz.
@@ -978,7 +977,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                           veri: _otp,
                           onDegisti: () => setState(() {}),
                           // API modunda gerçek yeniden gönderim; mock'ta
-                          // yalnız sayaç (yerel test kodu).
+                          // yalnız sayaç.
                           yenidenGonder: ApiConfig.useRealApi
                               ? _kayitKoduGonder
                               : null),

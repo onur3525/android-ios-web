@@ -246,30 +246,54 @@ void main() {
       expect(t.contains('encryptedSharedPreferences: true'), isTrue);
     });
 
-    // ⚠ 30 Eyl (H-01): kapı `kDebugMode` DEĞİL `TestModu.etkin`.
-    // `TestModu` release'te hiçbir koşulda açılmaz (mobil ve web).
-    // Web DEBUG derlemesinde (Pages demo sitesi) kullanıcı kararıyla
-    // açıktır; `HC_TEST_MODU=false` ile kapatılabilir.
-    test('test OTP kodu YALNIZ test modunda geçerli', () {
+    // ⚠ 15 Eki (canlı hazırlığı): sabit OTP kodu, ipucu metni ve demo
+    // hesap kaynaktan TAMAMEN kaldırıldı. Bu testler geri gelmelerini
+    // engeller. Test fikstürleri yalnız `test/support/test_config.dart`.
+    test('kaynakta sabit OTP kodu ve ipucu metni YOK', () {
+      final hepsi = _libDosyalari().map(_kod).join('\n');
+      expect(hepsi.contains('123456'), isFalse);
+      expect(hepsi.contains('_debugCode'), isFalse);
+      expect(hepsi.contains('test kodu'), isFalse);
+      expect(hepsi.contains('TestModu'), isFalse);
+      expect(File('lib/core/test_modu.dart').existsSync(), isFalse);
+    });
+
+    test('mock OTP varsayılan KAPALI; release\'te test kancası yok sayılır', () {
       final o = _kod('lib/data/services/otp_service.dart');
-      expect(o.contains('return TestModu.etkin && code == _debugCode;'),
-          isTrue);
-    });
-
-    test('test hesabı YALNIZ test modunda seed edilir', () {
-      final a = _kod('lib/data/repositories/auth_repository.dart');
-      expect(a.contains('bool seedTestAccount = TestModu.etkin'), isTrue);
-    });
-
-    // ⚠ 1 Eki (kullanıcı kararı): web DEBUG derlemesinde de varsayılan
-    // açık (Pages demo sitesi). Release'te İMKÂNSIZ kuralı değişmedi.
-    test('test modu: release\'te imkânsız; web debug\'da varsayılan açık', () {
-      final k = _kod('lib/core/test_modu.dart');
       expect(
-          k.contains(
-              'static const bool etkin = !kReleaseMode && (!kIsWeb || _webIstegi);'),
+          o.contains('if (kReleaseMode || d == null) {\n      return false;'),
           isTrue);
-      expect(k.contains("bool.fromEnvironment('HC_TEST_MODU', defaultValue: true)"), isTrue);
+    });
+
+    test('kaynakta demo/test hesabı YOK', () {
+      final hepsi = _libDosyalari().map(_kod).join('\n');
+      for (final iz in [
+        '5321112233',
+        '5507654321',
+        'test@hizmetcep.com',
+        'hc-Demo-7Kq2xVw9',
+        'hc-demo-musteri',
+        'hc-demo-usta',
+        'kDemo',
+        'demoTohumla',
+        '_seedDemo',
+      ]) {
+        expect(hepsi.contains(iz), isFalse, reason: iz);
+      }
+      expect(File('lib/data/repositories/demo_hesap_ozetleri.dart').existsSync(),
+          isFalse);
+      final a = _kod('lib/data/repositories/auth_repository.dart');
+      expect(
+          a.contains('if (seedTestAccount && !kReleaseMode && tohum != null) {'),
+          isTrue);
+    });
+
+    test('test kancalarını uygulama kodu KURMAZ', () {
+      for (final f in _libDosyalari()) {
+        final k = _kod(f);
+        expect(k.contains('testDogrulayici ='), isFalse, reason: f);
+        expect(k.contains('testTohumu ='), isFalse, reason: f);
+      }
     });
 
     test('release derlemede mock veri kaynağı İMKÂNSIZ', () {

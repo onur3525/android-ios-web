@@ -18,7 +18,7 @@ import 'package:flutter/foundation.dart';
 /// ── TEK BAŞLANGIÇ (EPOCH) ──
 ///
 /// ⚠ ÖNCEKİ HÂLDE KRONOMETRE `SplashScreen.initState` İÇİNDE
-/// BAŞLIYORDU. Bu yüzden `main()` girişi, `buildPorts`, `_seedDemo`
+/// BAŞLIYORDU. Bu yüzden `main()` girişi, `buildPorts`
 /// ve `runApp` — yani açılışın EN ŞÜPHELİ penceresi — ölçümün
 /// TAMAMEN DIŞINDA kalıyordu.
 ///

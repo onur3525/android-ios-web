@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/sys_state.dart';
-import '../data/remote/api_config.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
 import '../core/geri.dart';
-import '../core/test_modu.dart';
 
 /// OTP amacı — sunucu bu değere göre kod üretir ve doğrular.
 enum OtpPurpose {
@@ -399,22 +397,6 @@ class _OtpScreenState extends State<OtpScreen> {
                           ),
                         ),
                       ),
-
-                    // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
-                    if (TestModu.etkin && !ApiConfig.useRealApi)
-                      RefInfoBox(
-                        mavi: true,
-                        margin: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          'Geliştirme sürümü test kodu: 123456',
-                          style: refText(
-                            size: RF.s135,
-                            weight: RF.w400,
-                            color: RC.textDark,
-                            height: RF.lh150,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
         icerik: SafeArea(
@@ -525,22 +507,6 @@ class _OtpScreenState extends State<OtpScreen> {
                         child: Text(
                           'Numaranız doğrulanmadan hesabınız aktif '
                           'edilmez.',
-                          style: refText(
-                            size: RF.s135,
-                            weight: RF.w400,
-                            color: RC.textDark,
-                            height: RF.lh150,
-                          ),
-                        ),
-                      ),
-
-                    // Sabit test kodu YALNIZ debug + mock modda geçerlidir.
-                    if (TestModu.etkin && !ApiConfig.useRealApi)
-                      RefInfoBox(
-                        mavi: true,
-                        margin: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          'Geliştirme sürümü test kodu: 123456',
                           style: refText(
                             size: RF.s135,
                             weight: RF.w400,

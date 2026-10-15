@@ -78,11 +78,11 @@ workflows:
         script: flutter test
 
       - name: Debug APK
-        # ⚠ MOCK ZORUNLU: `--dart-define` verilmezse `ApiConfig.mode`
-        # gerçek API'ye düşer ve açılış var olmayan backend'i bekler
-        # (config + connectivity + session). Gerçek cihazda splash
-        # uzuyor ve fail-safe sonrası spinner görünüyordu.
-        script: flutter build apk --debug --dart-define=DATA_SOURCE=mock
+        # ⚠ 15 Eki (canlı hazırlığı): test APK'ları da test sitesi gibi
+        # GERÇEK backend'e (Render) bağlanır; dağıtılan hiçbir pakette
+        # mock veri, demo hesap veya sabit OTP kodu yoktur. Render'ın
+        # soğuk başlangıcında ilk açılış birkaç saniye uzayabilir.
+        script: flutter build apk --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
     artifacts:
       - build/**/outputs/**/*.apk
@@ -135,7 +135,7 @@ workflows:
           grep -A 2 'EnableImpeller' "$M"
 
       - name: Debug APK (Impeller kapalı)
-        script: flutter build apk --debug --dart-define=DATA_SOURCE=mock
+        script: flutter build apk --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
       - name: APK'yı TEŞHİS olarak adlandır
         script: |
@@ -188,7 +188,7 @@ workflows:
           echo "Impeller varsayılan (ayar yok) ✓"
 
       - name: Profile APK
-        script: flutter build apk --profile --dart-define=DATA_SOURCE=mock
+        script: flutter build apk --profile --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
       - name: APK'yı TEŞHİS olarak adlandır
         script: |
@@ -240,7 +240,7 @@ workflows:
           grep -A 2 'EnableImpeller' "$M"
 
       - name: Profile APK (Impeller kapalı)
-        script: flutter build apk --profile --dart-define=DATA_SOURCE=mock
+        script: flutter build apk --profile --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
       - name: APK'yı TEŞHİS olarak adlandır
         script: |
@@ -283,7 +283,7 @@ workflows:
       - name: Debug APK (E1)
         script: |
           flutter build apk --debug \\
-            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 \\
             --dart-define=FOCUS_LOG=true
 
       - name: APK'yı TEŞHİS olarak adlandır
@@ -323,7 +323,7 @@ workflows:
       - name: Debug APK (E2)
         script: |
           flutter build apk --debug \\
-            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 \\
             --dart-define=FOCUS_LOG=true \\
             --dart-define=NO_ONCHANGED=true
 
@@ -364,7 +364,7 @@ workflows:
       - name: Debug APK (E3)
         script: |
           flutter build apk --debug \\
-            --dart-define=DATA_SOURCE=mock \\
+            --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 \\
             --dart-define=FOCUS_LOG=true \\
             --dart-define=STATIC_REGION=true
 
@@ -574,7 +574,7 @@ workflows:
       - name: Simülatör derlemesi (imzasız)
         script: |
           flutter build ios --debug --simulator \
-            --dart-define=DATA_SOURCE=mock
+            --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
     artifacts:
       - build/ios/iphonesimulator/*.app
@@ -710,7 +710,7 @@ workflows:
         # günlükte görünür ve W2 paketi ona göre yapılır.
         script: |
           flutter build web --release \
-            --dart-define=DATA_SOURCE=mock
+            --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1
 
     artifacts:
       - build/web/**

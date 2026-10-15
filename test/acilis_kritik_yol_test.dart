@@ -15,7 +15,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/data/models/account.dart';
 import 'package:hizmetcep/data/repositories/auth_repository.dart';
-import 'package:hizmetcep/data/repositories/demo_hesap_ozetleri.dart';
 import 'package:hizmetcep/domain/password_hasher.dart';
 
 String _kod(String yol) {
@@ -62,17 +61,28 @@ void main() {
   });
 
   group('AÇILIŞ YOLUNDA PBKDF2 YOK', () {
-    test('AuthRepository KURUCUSU hash hesaplamaz', () {
+    test('AuthRepository KURUCUSU hash hesaplamaz ve hesap tohumlamaz', () {
       // Kurucu `buildPorts` içinde, yani `runApp`'ten ÖNCE çalışır.
+      // ⚠ 15 Eki: uygulamada tohum YOK; yalnız testin taktığı kanca.
       final a = _kod('lib/data/repositories/auth_repository.dart');
-      final i = a.indexOf('_seed(hazirTuz: kDemoMusteriTuz');
-      expect(i, greaterThan(0), reason: 'tohum hazır özete bağlı değil');
+      final i = a.indexOf('  AuthRepository({');
+      final j = a.indexOf('void testHesabiEkle(', i);
+      expect(i, greaterThan(0));
+      expect(j, greaterThan(i));
+      final kurucu = a.substring(i, j);
+      expect(kurucu.contains('PasswordHasher'), isFalse);
+      expect(kurucu.contains('_seed('), isFalse);
+      // Testin tohumu da hazır özet kullanır (her testte 20.000 tur yok).
+      final t = File('test/support/test_config.dart').readAsStringSync();
+      expect(t.contains('hazirTuz: kDemoMusteriTuz,'), isTrue);
     });
 
-    test('demo usta kaydı da hazır özet kullanır', () {
+    test('main.dart demo hesap/ilan tohumlamaz', () {
       final m = _kod('lib/main.dart');
-      expect(m.contains('hazirTuz: kDemoUstaTuz, hazirOzet: kDemoUstaOzet'),
-          isTrue);
+      expect(m.contains('hazirTuz'), isFalse);
+      expect(m.contains('demoTohumla'), isFalse);
+      expect(m.contains('_seedDemo'), isFalse);
+      expect(m.contains("BootLog.olc('SEED_DEMO'"), isFalse);
     });
 
     test('hazır özet verilmeyince davranış AYNI (gerçek kayıt bozulmaz)', () {
@@ -93,24 +103,10 @@ void main() {
       expect(auth.currentAccount, isNotNull);
     });
 
-    test('binding YOKKEN de tohumlama çöker DEĞİL, senkron çalışır', () {
-      // ⚠ `buildPorts` widget olmayan birim testlerinden de çağrılır.
-      // Orada `WidgetsBinding.instance` hata atar; tohumlama bunu
-      // yakalayıp doğrudan çalışmalıdır (di_and_guard_test bunu
-      // yakalamıştı).
-      final m = _kod('lib/main.dart');
-      expect(m.contains('} on FlutterError {'), isTrue,
-          reason: 'binding yokluğu karşılanmıyor');
-      final i = m.indexOf('} on FlutterError {');
-      final govde = m.substring(i, i + 200);
-      expect(govde.contains("BootLog.olc('SEED_DEMO'"), isTrue,
-          reason: 'yedek yolda tohumlama yapılmıyor');
-    });
-
-    test('hazır özetle kurulan hesap normal yoldan giriş yapar', () {
+    test('hazır özetle kurulan test hesabı normal yoldan giriş yapar', () {
       final auth = AuthRepository();
       expect(auth.girisEposta(kTestEmail, kTestPass), isNull,
-          reason: 'demo müşteri giriş yapamıyor');
+          reason: 'test müşterisi giriş yapamıyor');
       expect(auth.currentAccount, isNotNull);
     });
 

@@ -9,7 +9,7 @@
 ///
 /// ⚠ Bir tur `girisTelefonDogrula` kodu HİÇ okumuyordu; sonra yalnız
 /// "6 hane mi" diye bakıyordu. İkisi de güvenlik denetimi DEĞİLDİR:
-/// depoyu doğrudan çağıran herhangi bir kod `123456` yerine `000000`
+/// depoyu doğrudan çağıran herhangi bir kod rastgele altı hane
 /// yazıp oturum açabilirdi.
 ///
 /// ## KURALLAR
