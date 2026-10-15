@@ -53,9 +53,17 @@ jobs:
       # Analyze başarısız olsa da testler ÇALIŞIR (kullanıcı kararı, 3 Eki):
       # analyze kuralı (--no-fatal-infos) AYNEN geçerli ve iş yine kırmızı
       # olur; yalnız test paketinin gerçek durumu görülebilsin diye.
+      # Makine çıktısı ayrıca işlenir: başarısız testlerin adı ve hata
+      # mesajı GitHub uyarısı (annotation) olarak yazılır; günlük
+      # indirilemediğinde de neden okunabilir. Sonuç (çıkış kodu) AYNEN.
       - name: flutter test
         if: always()
-        run: flutter test --reporter expanded
+        run: |
+          set +e
+          flutter test --machine > test-sonuc.jsonl
+          durum=$?
+          node .github/scripts/test_hatalari.mjs test-sonuc.jsonl
+          exit $durum
 
   android-debug:
     runs-on: ubuntu-24.04
