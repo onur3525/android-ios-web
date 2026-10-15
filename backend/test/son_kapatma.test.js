@@ -384,6 +384,9 @@ test('push: HC_PUSH_PARALEL=3 yuva, 3 eşzamanlı çalıştırıcı, 1200 bildir
   try {
     const k = await kisi('5380000111', 'CUSTOMER');
     await db.prepare(`INSERT INTO push_tokens (token, user_id, platform, created_at, last_seen) VALUES (?, ?, 'android', ?, ?)`).run('yuva-jeton-xxxxxxxxxxxxxxxxxxxxx', k.id, simdi(), simdi());
+    // Bu dosyanın önceki testlerinin kuyrukta bıraktığı bildirimler (ör. yeni
+    // ilan bildirimleri) sayımı karıştırmasın: yalnız bu testin 1200 satırı.
+    await db.prepare(`UPDATE notifications SET push_status = 'SKIPPED' WHERE push_status IS NULL`).run();
     const z = simdi();
     for (let i = 0; i < 1200; i++) {
       await db.prepare(`INSERT INTO notifications (id, user_id, type, title, body, ref_id, created_at) VALUES (?, ?, 'NEW_MESSAGE', 'x', 'y', ?, ?)`).run(randomUUID(), k.id, randomUUID(), z);

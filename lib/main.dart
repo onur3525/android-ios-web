@@ -199,12 +199,17 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     final client = ApiClient(onSessionExpired: onSessionExpired);
     // ⚠ `apiClient` provider ağacına konur: bazı ekranlar port katmanı
     // dışında doğrudan *Api sınıfı kurar.
-    final offersPort = ApiOfferPort(ApiOfferRepository(OfferApi(client)));
+    final offerRepo = ApiOfferRepository(OfferApi(client));
+    final offersPort = ApiOfferPort(offerRepo);
+    // İlan sahibine gelen teklifler ilan uçlarından gelir; teklif deposuna
+    // aktarılır (15 Eki: hizmet alan teklifleri görmüyordu).
+    final listingRepo = ApiListingRepository(ListingApi(client))
+      ..teklifleriAktar = offerRepo.ilanTeklifleriniAl;
     // Gerçek zamanlı mesajlaşma: /ws namespace, access token ile kimlik.
     final ws = WsClient(WsAuth(client.tokens));
     return AppPorts(
       auth: ApiAuthPort(ApiAuthRepository(client, AuthApi(client), ProfileApi(client))),
-      listings: ApiListingPort(ApiListingRepository(ListingApi(client))),
+      listings: ApiListingPort(listingRepo),
       offers: offersPort,
       contact: ApiContactPort(ApiContactRepository(ContactApi(client))),
       chat: ApiChatPort(ApiChatRepository(ChatApi(client), ws: ws)),
@@ -731,7 +736,7 @@ class HizmetCepApp extends StatelessWidget {
         initialRoute: ilkRota,
         routes: {
           '/home': (_) => const HomeScreen(),
-          // Yalnız web: sunucu uykudayken oturumlu açılış (bkz. main()).
+          // Sunucu uykudayken oturumlu açılış: web (bkz. main()) ve mobil (SplashScreen).
           BaglaniyorEkrani.rota: (_) => const BaglaniyorEkrani(),
 
 

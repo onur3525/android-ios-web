@@ -112,4 +112,26 @@ void main() {
     expect(store.access, isNull);
   });
 
+
+  test('⚠ KESİN KURAL: yenileme ağ hatasıyla başarısızsa oturum KAPANMAZ, jetonlar kalır', () async {
+    final store = FakeTokenStore(access: 'eski', refresh: 'RT');
+    var loggedOut = false;
+    final c = ApiClient(
+      onlineChecker: () async => true,
+      baseUrl: 'https://x/api/v1',
+      tokenStore: store,
+      onSessionExpired: () => loggedOut = true,
+      httpClient: MockClient.streaming((req, _) async {
+        if (req.url.path.endsWith('/auth/refresh')) {
+          // Sunucu uyuyor / ağ geçidi hatası: oturumu REDDETMEDİ.
+          return http.StreamedResponse(Stream.value(utf8.encode('{}')), 503);
+        }
+        return http.StreamedResponse(
+            Stream.value(utf8.encode('{"error":{"code":"UNAUTHORIZED","message":"süre doldu"}}')), 401);
+      }),
+    );
+    await expectLater(c.get('/users/me'), throwsA(isA<ApiFailure>()));
+    expect(loggedOut, isFalse, reason: 'çıkış yapılmadan şifre istenmez');
+    expect(store.refresh, 'RT');
+  });
 }

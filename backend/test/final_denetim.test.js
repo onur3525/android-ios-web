@@ -202,12 +202,16 @@ test('eşzamanlı çift teklif ve çift yorum: 500 değil anlamlı hata, kayıt 
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM reviews WHERE offer_id = ?').get(oid)).n, 1);
 });
 
-test('aynı yenileme token\'ı eşzamanlı iki kez: yalnız BİR yeni oturum', async () => {
+test('aynı yenileme token\'ı eşzamanlı iki kez: oturum soyu TEK kalır, kullanıcı çıkış yapmaz', async () => {
+  // 15 Eki: iki sekme / yanıtı kaybolan istek aynı belirteçle yeniler. Pay
+  // içinde ikinci istek soyun güncel halkasını döndürür (bkz. kullanici.js);
+  // iki ayrı oturum açılmaz ve bütün oturumlar kapatılmaz.
   const k = await kisi('5370000041', 'CUSTOMER');
   const r = await Promise.all([1, 2].map(() => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } })));
-  assert.ok(r.filter((x) => x.durum === 200).length <= 1, 'iki istek de yeni oturum almamalı');
+  for (const x of r) assert.ok(x.durum === 200 || x.durum === 401, `${x.durum}`);
   const aktif = await db.prepare('SELECT COUNT(*) n FROM user_sessions WHERE user_id = ? AND revoked_at IS NULL').get(k.id);
-  assert.ok(aktif.n <= 1, `aktif oturum ${aktif.n}`);
+  assert.equal(Number(aktif.n), 1, `aktif oturum ${aktif.n}`);
+  assert.equal(await db.prepare(`SELECT 1 FROM user_sessions WHERE user_id = ? AND revoke_reason = 'REUSE_DETECTED'`).get(k.id), undefined);
 });
 
 test('aynı OTP eşzamanlı iki kayıtta kullanılamaz', async () => {

@@ -60,6 +60,7 @@ void main() {
         NotifType.teklifSecildi,
         NotifType.teklifReddedildi,
         NotifType.teklifSuresiDoldu,
+        NotifType.newListing, // yeni iş ilanı (15 Eki)
       ]) {
         expect(bildirimRolu(t), Role.provider, reason: '$t');
       }

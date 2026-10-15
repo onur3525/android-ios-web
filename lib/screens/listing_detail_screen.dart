@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'widgets/ilan_no_etiketi.dart';
 import 'widgets/ilan_baslik_satiri.dart';
 
@@ -36,13 +37,51 @@ class ListingDetailScreen extends StatefulWidget {
   State<ListingDetailScreen> createState() => _ListingDetailScreenState();
 }
 
-class _ListingDetailScreenState extends State<ListingDetailScreen> {
+class _ListingDetailScreenState extends State<ListingDetailScreen>
+    with WidgetsBindingObserver {
   bool _busy = false;
+
+  // ── ⚠ GELEN TEKLİFLER KENDİLİĞİNDEN GÖRÜNÜR (15 Eki) ──
+  // Ekran açıkken 30 sn'de bir ve uygulama/sekme öne gelince ilan ve
+  // teklifleri tazelenir; uygulama açıkken gelen teklif bildirimi de
+  // ilanı yeniler (`PushKapisi`).
+  Timer? _zamanlayici;
+  bool _yenileniyor = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    _zamanlayici =
+        Timer.periodic(const Duration(seconds: 30), (_) => _sessizYenile());
+  }
+
+  @override
+  void dispose() {
+    _zamanlayici?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _sessizYenile();
+    }
+  }
+
+  Future<void> _sessizYenile() async {
+    if (_yenileniyor || _busy || !mounted) {
+      return;
+    }
+    _yenileniyor = true;
+    try {
+      await _refresh();
+    } catch (_) {
+    } finally {
+      _yenileniyor = false;
+    }
   }
 
   /// İlan detayı ve teklifleri yeniden yüklenir (açılış + işlem sonrası).
