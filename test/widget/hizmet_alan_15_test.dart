@@ -486,18 +486,19 @@ void main() {
 
   test('13 — destek içeriği admin kontrollü, e-posta tıklanabilir', () {
     expect(File('lib/data/models/support_info.dart').existsSync(), isTrue);
-    final p = read('lib/screens/profile_screen.dart');
+    // Panel 15 Eki'den beri tek kaynak (mobil + web).
+    final p = read('lib/ui/destek_merkezi_paneli.dart');
     // İçerik SUNUCUDAN gelir (admin yönetir), koda gömülü değildir.
     expect(p.contains('SupportInfo'), isTrue);
     // Adres gerçekten e-posta uygulamasını açar.
-    expect(p.contains("scheme: 'mailto'"), isTrue);
+    expect(read('lib/core/eposta_acma.dart').contains("scheme: 'mailto'"), isTrue);
 
     // ⚠ GÖRSEL KARAR DEĞİŞTİ: altı çizili düz bağlantı yerine
     // KENDİ KUTUSUNDA, ikonlu ve dokunulabilir bir alan kullanılır —
     // düz metinde tıklanabilir olduğu anlaşılmıyordu.
     //
     // Test tıklanabilirliği ARAR, biçimi dayatmaz.
-    expect(p.contains('_mailAc(c, bilgi.email)'), isTrue,
+    expect(p.contains('epostaUygulamasiniAc(c, bilgi.email)'), isTrue,
         reason: 'adres dokunulabilir olmalı');
     expect(p.contains('RefTap('), isTrue);
   });
