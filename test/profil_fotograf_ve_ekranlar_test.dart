@@ -109,6 +109,9 @@ void main() {
       expect(p.contains('_pickPhoto'), isFalse);
       expect(p.contains('ImagePicker'), isFalse);
       expect(p.contains('image_picker'), isFalse);
+      // 16 Eki: ortak fotoğraf bileşeni ve kamera simgesi de yok.
+      expect(p.contains('ProfilFotografi('), isFalse);
+      expect(p.contains('kameraRozeti'), isFalse);
     });
 
     test('dört alan yerinde kaldı', () {
