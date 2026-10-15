@@ -83,6 +83,7 @@ import 'data/repositories/incelenen_ilan_store.dart';
 import 'ui/global_web_kabugu.dart';
 import 'ui/panel_rotasi.dart';
 import 'ui/gezgin.dart';
+import 'ui/web_header.dart' show masaustuNav;
 import 'ui/yasal_kabul_kapisi.dart';
 import 'ui/push_kapisi.dart';
 import 'core/sekme_durumu.dart';
@@ -517,15 +518,31 @@ Future<void> main() async {
     try {
       // ⚠ BÜTÇELİ: güvenli depo okuması web'de IndexedDB açılışı ve
       // WebCrypto anahtar türetmesi demek. Askıda kalırsa kullanıcı
-      // beyaz ekranda bekler; 1200 ms sonra anonim açılışa düşülür.
-      // Oturum varsa ilk API çağrısında zaten geri yüklenir.
+      // beyaz ekranda bekler; süre dolunca (aşağıda) anonim açılışa
+      // düşülür. Oturum varsa ilk API çağrısında zaten geri yüklenir.
       await ports.auth
           .restoreSession()
-          .timeout(const Duration(milliseconds: 1200));
+          // ⚠ 1200 → 8000 ms (15 Eki): web oturumu artık çerezle sunucudan
+          // yenileniyor; Render uykudan uyanırken 1,2 sn aşılıyor ve
+          // oturumlu kullanıcı ana sayfaya düşüyordu. Bekleme süresince
+          // `index.html` açılış ekranı görünür.
+          .timeout(const Duration(milliseconds: 8000));
       final acc = ports.auth.currentAccount;
       if (acc != null) {
-        final hedefRol =
-            acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+        // ── ⚠ YENİLEMEDE ROL KORUNUR (15 Eki) ──
+        // İŞ KURALI (splash ile aynı): YENİ AÇILIŞTA çift rollü kullanıcı
+        // hizmet veren panelinde açılır. Ama bu kural her yenilemede de
+        // uygulanıyordu: hizmet alan rolünde "Masaüstü sitesi"ne geçen ya
+        // da F5 yapan kullanıcı rolü değişmiş hâlde, kaldığı ekranla
+        // uyuşmayan bir sayfaya düşüyordu. Sekmede kayıtlı ekran varsa bu
+        // bir YENİLEMEDİR: o anki rol aynen korunur.
+        final yenileme = sekmeOku(kSekmeRota) != null &&
+            acc.roles.contains(acc.activeRole);
+        final hedefRol = yenileme
+            ? acc.activeRole
+            : (acc.roles.contains(Role.provider)
+                ? Role.provider
+                : Role.customer);
         if (acc.activeRole != hedefRol) {
           await ports.auth.switchRole(hedefRol);
         }
@@ -673,7 +690,16 @@ class HizmetCepApp extends StatelessWidget {
 
 
           // ── Ortak (her iki rol) ──
-          '/profile': (_) => RoleGuard(builder: (_) => const ProfileScreen()),
+          // ── ⚠ MASAÜSTÜ WEB'DE PROFİL = PROFİL BİLGİLERİM (15 Eki) ──
+          // Profil sayfasının menüsü kenar çubuğunda zaten var; masaüstü
+          // düzeninde aynı liste sağda ikinci kez çiziliyordu ("ekranlar
+          // karışıyor"). Karar TEK YERDE, rotada: sekme, yenilemede geri
+          // açılış ve derin bağlantı aynı sonucu verir. Telefon ve dar
+          // web'de (`masaustuNav` false) ekran AYNEN `ProfileScreen`.
+          '/profile': (_) => RoleGuard(
+              builder: (c) => masaustuNav(c)
+                  ? const ProfileInfoScreen()
+                  : const ProfileScreen()),
 
           '/notifications': (_) =>
               RoleGuard(builder: (_) => const NotificationsScreen()),

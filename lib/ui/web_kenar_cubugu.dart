@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/telefon_bicimi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../domain/profil_menusu.dart';
@@ -260,7 +261,10 @@ class _Kimlik extends StatelessWidget {
             children: [
               // ⚠ MEVCUT AVATAR BİLEŞENİ: fotoğraf varsa onu, yoksa
               // baş harfi çizer. İkinci bir avatar mantığı yazılmadı.
-              RefBasHarfAvatar(ad: acc.name, cap: 64),
+              // ⚠ FOTOĞRAF VERİLMİYORDU (15 Eki): kart yalnız baş harf
+              // çiziyordu; Profil sayfasında fotoğraf vardı.
+              RefBasHarfAvatar(
+                  ad: acc.name, fotoYolu: acc.photoPath, cap: 64),
               const SizedBox(height: 10),
               Text(acc.name,
                   maxLines: 1,
@@ -270,7 +274,8 @@ class _Kimlik extends StatelessWidget {
                       refText(size: RF.s16, weight: RF.w700, color: RC.text)),
               const SizedBox(height: 6),
               _KimlikSatiri(
-                  ikon: 'assets/svg/ic_phone.svg', metin: acc.phone),
+                  ikon: 'assets/svg/ic_phone.svg',
+                  metin: telefonGoster(acc.phone)),
               const SizedBox(height: 4),
               _KimlikSatiri(
                   ikon: 'assets/svg/ic_mail.svg', metin: acc.email),

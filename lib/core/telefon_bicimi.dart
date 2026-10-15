@@ -204,3 +204,18 @@ class TelefonBicimlendirici extends TextInputFormatter {
   /// Doğrulama tarafıyla aynı kaynağı kullandığını gösterir.
   static String yerel(String v) => Validators.phoneLocal(v);
 }
+
+
+/// ── ⚠ TELEFON GÖSTERİMİ — TEK KAYNAK (15 Eki) ──
+///
+/// Kayıtlı numara kullanıcıya baştaki `0` ile ve 4-3-2-2 gruplanmış
+/// gösterilir: `0532 123 45 67`. Önce yalnız Profil ekranında (özel
+/// `_telefonGoster`) vardı; masaüstü kenar çubuğu numarayı ham yazıyordu
+/// ("5555631993"). İki yer artık bunu çağırır.
+String telefonGoster(String? ham) {
+  final d = Validators.phoneLocal(ham ?? '');
+  if (d.isEmpty) {
+    return 'Telefon eklenmedi';
+  }
+  return TelefonBicimlendirici.gruplu(d);
+}

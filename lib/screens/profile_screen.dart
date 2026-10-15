@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
-import '../core/validators.dart';
 import '../core/oturum_temizligi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
@@ -105,7 +104,7 @@ class ProfileScreen extends StatelessWidget {
           _ProfilKarti(
             ad: acc?.name ?? '',
             fotoYolu: acc?.photoPath ?? '',
-            telefon: _telefonGoster(acc?.phone),
+            telefon: telefonGoster(acc?.phone),
             eposta: (acc?.email ?? '').trim().isEmpty
                 ? 'E-posta eklenmedi'
                 : acc!.email,
@@ -532,16 +531,4 @@ class _Satir extends StatelessWidget {
 /// fotoğraf seçme işlevini çağırır. Kaynak GALERİdir (kamera açılmaz).
 
 
-/// Telefon gösterimi: `0532 123 45 67`.
-///
-/// Model 10 hane saklar (`phoneFmt`); kullanıcıya baştaki `0` ile ve
-/// 4-3-2-2 gruplanmış hâli gösterilir.
-String _telefonGoster(String? ham) {
-  final d = Validators.phoneLocal(ham ?? '');
-  if (d.isEmpty) {
-    return 'Telefon eklenmedi';
-  }
-  // ⚠ TEK KURAL KAYNAĞI — alan içindeki gruplama ile AYNI.
-  // İki ayrı kopya vardı; biri değişince diğeri geride kalıyordu.
-  return TelefonBicimlendirici.gruplu(d);
-}
+// Telefon gösterimi ortak: `core/telefon_bicimi.dart` → `telefonGoster`.
