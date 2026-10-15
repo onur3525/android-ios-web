@@ -56,6 +56,15 @@ void main() {
       expect(j.contains('_zamanlayici?.cancel();'), isTrue);
     });
 
+    test('ilk açılışta teklif verdiğim ilan bir an görünüp kaybolmaz: '
+        'önce tekliflerim, sonra ilanlar yüklenir', () {
+      final j = _oku('lib/screens/jobs_screen.dart');
+      final iTeklif = j.indexOf('await context.read<OfferController>().loadMine();');
+      final iIlan = j.indexOf('await context.read<ListingController>().loadAvailable();');
+      expect(iTeklif, greaterThan(0));
+      expect(iIlan, greaterThan(iTeklif));
+    });
+
     test('uygulama açıkken gelen yeni ilan bildirimi listeyi tazeler', () {
       final p = _oku('lib/ui/push_kapisi.dart');
       expect(p.contains("tur == 'NEW_LISTING' && _auth?.activeRole == Role.provider"), isTrue);
