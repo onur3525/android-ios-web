@@ -65,6 +65,16 @@ class ApiAuthRepository extends ChangeNotifier {
 
   /// Profil + TEK adres. Adres ayrı uçtan gelir (GET /profiles/me/address);
   /// kayıt yoksa sunucu null döner ve hesabın adresi boş kalır.
+  /// KARŞI TARAF ÖZETİ — `GET /users/{id}/summary`. Yetki ve görünürlük
+  /// (tam ad, telefon) sunucuda belirlenir; ilişki yoksa hata döner.
+  Future<(Account?, DomainError?)> kisiOzeti(String id) async {
+    final (j, err) = await _guard(() => _profile.kisiOzeti(id));
+    if (err != null || j == null) {
+      return (null, err);
+    }
+    return (Mappers.kisiOzeti(j), null);
+  }
+
   Future<DomainError?> loadMe() async {
     final (me, err) = await _guard(() => _profile.me());
     if (err != null) {

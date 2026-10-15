@@ -23,12 +23,102 @@ import '../remote/api_error_mapper.dart';
 class ApiAuthPort extends AuthPort {
   final ApiAuthRepository repo;
   ApiAuthPort(this.repo) {
-    repo.addListener(notifyListeners);
+    repo.addListener(_repoDegisti);
   }
   @override
   void dispose() {
-    repo.removeListener(notifyListeners);
+    _kapandi = true;
+    repo.removeListener(_repoDegisti);
     super.dispose();
+  }
+
+  bool _kapandi = false;
+
+  /// Oturum sahibi değişince (çıkış / başka hesapla giriş) karşı taraf
+  /// özetleri SİLİNİR: bir kullanıcının gördüğü telefon/ad bir sonrakine
+  /// taşınmaz.
+  String? _ozetSahibi;
+  void _repoDegisti() {
+    final id = repo.currentAccount?.id;
+    if (id != _ozetSahibi) {
+      _ozetSahibi = id;
+      _ozetler.clear();
+      _ozetIsteniyor.clear();
+      _ozetHatasi.clear();
+    }
+    notifyListeners();
+  }
+
+  // ── KARŞI TARAF ÖZETLERİ (15 Eki) ──
+  //
+  // Ekranlar karşı tarafın adını, konumunu, fotoğrafını, iş sayısını ve
+  // telefonunu `accountById` ile EŞZAMANLI okur. API modunda bu bilgi
+  // sunucudan gelir: ilk okumada istek ARKA PLANDA başlatılır, yanıt
+  // gelince dinleyiciler uyarılır ve ekranlar kendiliğinden yeniden
+  // çizilir. Ekran kodu değişmez (tek kaynak).
+  //
+  // · Tazelik: özet [_ozetOmru] sonra okunursa arka planda yenilenir
+  //   (iletişim açılınca telefonun görünmesi için); eski değer bu sırada
+  //   gösterilir.
+  // · Hata (ilişki yok, hız sınırı, ağ): [_hataBekleme] boyunca yeniden
+  //   istenmez.
+  // · Aynı kişi için aynı anda tek istek.
+  static const _ozetOmru = Duration(seconds: 120);
+  static const _hataBekleme = Duration(seconds: 60);
+  final Map<String, ({Account hesap, DateTime zaman})> _ozetler = {};
+  final Set<String> _ozetIsteniyor = {};
+  final Map<String, DateTime> _ozetHatasi = {};
+
+  void _ozetGerekirseIste(String id) {
+    if (!repo.loggedIn || _ozetIsteniyor.contains(id)) {
+      return;
+    }
+    final simdi = DateTime.now();
+    final kayit = _ozetler[id];
+    if (kayit != null && simdi.difference(kayit.zaman) < _ozetOmru) {
+      return;
+    }
+    // ⚠ Hata sonrası (404, 429, ağ) eski kayıt olsa da beklenir: aksi
+    // hâlde her yeniden çizimde istek tekrarlanırdı.
+    final hata = _ozetHatasi[id];
+    if (hata != null && simdi.difference(hata) < _hataBekleme) {
+      return;
+    }
+    _ozetIsteniyor.add(id);
+    // ⚠ Çizim (build) sırasında çağrılır: istek bir sonraki olay
+    // döngüsünde başlar, dinleyiciler yalnız yanıt gelince uyarılır.
+    unawaited(Future<void>(() => _ozetGetir(id)));
+  }
+
+  /// İLETİŞİM / TEKLİF DEĞİŞTİ — telefonu henüz görünmeyen özetler
+  /// eskitilir; bir sonraki okumada sunucudan tazesi istenir (iletişim
+  /// açılınca telefonun beklemeden görünmesi için). İstek burada
+  /// BAŞLATILMAZ, dinleyiciler uyarılmaz. Son 10 sn'de alınmış özetler
+  /// dokunulmaz (bildirim fırtınasında istek yağmuru olmasın).
+  void karsiTarafOzetleriniEskit() {
+    final esik = DateTime.now().subtract(const Duration(seconds: 10));
+    final eski = DateTime.fromMillisecondsSinceEpoch(0);
+    for (final e in _ozetler.entries.toList()) {
+      if (e.value.hesap.phone.isEmpty && e.value.zaman.isBefore(esik)) {
+        _ozetler[e.key] = (hesap: e.value.hesap, zaman: eski);
+      }
+    }
+  }
+
+  Future<void> _ozetGetir(String id) async {
+    final sahip = _ozetSahibi;
+    final (hesap, _) = await repo.kisiOzeti(id);
+    _ozetIsteniyor.remove(id);
+    if (_kapandi || sahip != _ozetSahibi) {
+      return; // port kapandı ya da oturum değişti; yanıt artık geçersiz
+    }
+    if (hesap == null) {
+      _ozetHatasi[id] = DateTime.now();
+      return;
+    }
+    _ozetHatasi.remove(id);
+    _ozetler[id] = (hesap: hesap, zaman: DateTime.now());
+    notifyListeners();
   }
 
   @override
@@ -38,11 +128,20 @@ class ApiAuthPort extends AuthPort {
   @override
   Role get activeRole => repo.activeRole;
 
-  /// Başka kullanıcıların hesapları API modunda ayrı uçtan gelir;
-  /// bu pakette yalnız oturum sahibi önbellektedir.
+  /// Oturum sahibi doğrudan; başka kullanıcılar karşı taraf özetinden
+  /// (ilk okumada arka planda istenir, gelince ekran yenilenir).
   @override
-  Account? accountById(String id) =>
-      repo.currentAccount?.id == id ? repo.currentAccount : null;
+  Account? accountById(String id) {
+    if (id.isEmpty) {
+      return null;
+    }
+    final ben = repo.currentAccount;
+    if (ben?.id == id) {
+      return ben;
+    }
+    _ozetGerekirseIste(id);
+    return _ozetler[id]?.hesap;
+  }
 
   /// API modunda "Bul" ekranı hizmet verenleri SUNUCUDAN, ASENKRON
   /// çeker (`SaglayiciApi.ara` → `GET /providers/search`; bkz.

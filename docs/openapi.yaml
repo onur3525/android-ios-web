@@ -619,6 +619,55 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /users/{id}/summary:
+    get:
+      tags: [User]
+      summary: Karşı taraf özeti (ad, konum, fotoğraf, iş sayısı, koşullu telefon)
+      description: |
+        YALNIZ ilişkisi olan kullanıcıya döner; aksi hâlde 404 (varlık sızmaz).
+        İlişkiler: ilan–teklif (iki taraf), açık ilan akışı (hizmet veren → ilan
+        sahibi), teklif talebi (iki taraf), etkin hizmet veren (herkese açık
+        profil), yayımlanmış yorum yazarı.
+        Ad: tam / kısa ("Ad S.") / maskeli ("A** S****"); `nameMasked` true ise
+        tam değildir. Ad ilan akışında iletişim açılınca, teklif talebinde teklif
+        verilince tam olur.
+        Telefon (`phone`) yalnız: ilan akışında iletişim açıldıysa; teklif
+        talebinde iletişim açıkken (teklif verilmiş, süresi dolmamış) — hizmet
+        alanın telefonu ayrıca yalnız "telefonumu göster" seçiliyse. Aksi hâlde
+        null. Mahalle yalnız hizmet alan ilişkisinde döner; hizmet veren
+        profilinde boş. E-posta hiçbir durumda dönmez.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Başarılı
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  name: { type: string }
+                  nameMasked: { type: boolean }
+                  createdAt: { type: string, format: date-time }
+                  address:
+                    type: [object, 'null']
+                    properties:
+                      city: { type: string }
+                      district: { type: string }
+                      neighborhood: { type: string }
+                  photos:
+                    type: object
+                    properties:
+                      customer: { type: [string, 'null'] }
+                      provider: { type: [string, 'null'] }
+                  completedJobsAsProvider: { type: integer }
+                  completedJobsAsCustomer: { type: integer }
+                  phone: { type: [string, 'null'] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /profiles/me:
     patch:
       tags: [Profile]

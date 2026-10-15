@@ -141,6 +141,12 @@ class Account {
   /// döndürmelidir. Buradaki sayaç yerel köprüdür.
   int tamamlananIs;
 
+  /// HİZMET ALAN olarak tamamlanan iş sayısı — yalnız API modunda,
+  /// karşı taraf özetinden (`GET /users/{id}/summary`) gelir. Mock modda
+  /// türetme (`hizmetAlanTamamlananIs`) yeterlidir; kalıcı depoya
+  /// yazılmaz.
+  int tamamlananIsHizmetAlan = 0;
+
   /// Hesabın oluşturulduğu tarih — "kaç yıldır üye" gösterimi için
   /// (bkz. `data/repositories/teklif_talebi_repository.dart`'ta
   /// hizmet verene gösterilen talep kartı). Parametre verilmezse

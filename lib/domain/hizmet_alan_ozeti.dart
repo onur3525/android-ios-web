@@ -58,7 +58,16 @@ int hizmetAlanTamamlananIs(BuildContext c, String hizmetAlanId) {
       .byHizmetAlan(hizmetAlanId)
       .where((t) => t.durum == TeklifTalebiDurumu.tamamlandi)
       .length;
-  return ilanSayisi + talepSayisi;
+  final turetilen = ilanSayisi + talepSayisi;
+  // ⚠ API MODU: başkasının geçmişi bakan kişinin listelerinden
+  // hesaplanamaz; sunucunun saydığı değer (karşı taraf özeti) gelir.
+  // Mock modda bu alan 0'dır, türetme aynen geçerlidir.
+  final sunucudan = c
+          .watch<AuthController>()
+          .accountById(hizmetAlanId)
+          ?.tamamlananIsHizmetAlan ??
+      0;
+  return sunucudan > turetilen ? sunucudan : turetilen;
 }
 
 /// ⚠ "Ocak 2025'ten beri üye" — `intl` paketi PROJEDE HİÇ

@@ -362,6 +362,14 @@ Future<void> main() async {
   if (yorumPortu is ApiReviewPort && teklifTalebiPort is ApiTeklifTalebiPort) {
     yorumPortu.repo.talepCozucu = teklifTalebiPort.degerlendirme;
   }
+  // Karşı taraf özetleri (API modu): iletişim açılınca ya da talepte
+  // teklif verilince telefon/tam ad görünür hâle gelir; özetler eskitilir,
+  // ekran bir sonraki okumada sunucudan tazesini alır.
+  final authPortu = ports.auth;
+  if (authPortu is ApiAuthPort) {
+    ports.contact.addListener(authPortu.karsiTarafOzetleriniEskit);
+    teklifTalebiPort.addListener(authPortu.karsiTarafOzetleriniEskit);
+  }
   BootLog.olay('BUILD_PORTS_END');
 
   // ═══════════════════════════════════════════════════════════════

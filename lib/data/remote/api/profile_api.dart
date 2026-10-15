@@ -7,6 +7,11 @@ class ProfileApi {
 
   Future<Map<String, dynamic>> me() => c.get('/users/me');
 
+  /// KARŞI TARAF ÖZETİ — yalnız ilişkisi olan kullanıcı için döner (404).
+  /// Telefon ve tam ad sunucunun kurallarına göre gelir.
+  Future<Map<String, dynamic>> kisiOzeti(String id) =>
+      c.get('/users/${Uri.encodeComponent(id)}/summary');
+
   Future<Map<String, dynamic>> setActiveRole(String role) =>
       c.post('/users/me/active-role', body: {'role': role});
 

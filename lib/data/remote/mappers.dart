@@ -101,6 +101,38 @@ abstract final class Mappers {
 
   static Role role(String s) => s == 'PROVIDER' ? Role.provider : Role.customer;  static String roleApi(Role r) => r == Role.provider ? 'PROVIDER' : 'CUSTOMER';
 
+  /// KARŞI TARAF ÖZETİ → Account (yalnız gösterim alanları).
+  ///
+  /// ⚠ E-posta hiç gelmez; telefon yalnız sunucu izin verdiyse gelir,
+  /// aksi hâlde boş kalır (ekranlar boş telefonu "—"/kilitli gösterir).
+  static Account kisiOzeti(Map<String, dynamic> j) {
+    final a = Account(
+      id: j['id'] as String,
+      name: (j['name'] ?? '') as String,
+      email: '',
+      phone: (j['phone'] ?? '') as String,
+      passwordHash: '',
+      salt: '',
+      roles: {Role.customer},
+      tamamlananIs: (j['completedJobsAsProvider'] as num?)?.toInt() ?? 0,
+      kayitTarihi: j['createdAt'] is String
+          ? DateTime.tryParse(j['createdAt'] as String)
+          : null,
+    );
+    a.tamamlananIsHizmetAlan =
+        (j['completedJobsAsCustomer'] as num?)?.toInt() ?? 0;
+    final adres = j['address'];
+    if (adres is Map<String, dynamic>) {
+      a.address = address(adres);
+    }
+    final foto = j['photos'];
+    if (foto is Map) {
+      a.fotografAta(Role.customer, foto['customer'] is String ? foto['customer'] as String : '');
+      a.fotografAta(Role.provider, foto['provider'] is String ? foto['provider'] as String : '');
+    }
+    return a;
+  }
+
   /// Sunucudaki kullanıcı → Account. ŞİFRE ALANLARI BOŞ BIRAKILIR:
   /// istemci şifre hash'i tutmaz.
   static Account account(Map<String, dynamic> j) {
