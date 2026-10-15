@@ -299,7 +299,11 @@ class ApiAuthRepository extends ChangeNotifier {
   /// Uygulama açılışında: saklı token varsa oturumu geri yükler.
   Future<void> restoreSession() async {
     if (await _client.tokens.accessToken() == null) {
-      return;
+      // Web: sayfa yenilendi / sekme yeniden açıldı — bellekte token yok,
+      // oturum HttpOnly çerezle sürdürülür (çıkış yapılmadıysa).
+      if (!await _client.cerezleOturumuSurdur()) {
+        return;
+      }
     }
     await loadMe();
   }

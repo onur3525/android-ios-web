@@ -76,12 +76,12 @@ export function cerezleriOku(req) {
   return out;
 }
 
-export function cerez(ad, deger, { maxAgeSn, secure, path = '/' }) {
+export function cerez(ad, deger, { maxAgeSn, secure, path = '/', sameSite = 'Strict' }) {
   const parcalar = [
     `${ad}=${encodeURIComponent(deger)}`,
     `Path=${path}`,
     'HttpOnly',
-    'SameSite=Strict',
+    `SameSite=${sameSite}`,
   ];
   if (secure) parcalar.push('Secure');
   if (maxAgeSn !== undefined) parcalar.push(`Max-Age=${maxAgeSn}`);

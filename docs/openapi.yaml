@@ -1429,6 +1429,11 @@ paths:
       description: |
         Gövde { refreshToken }. Aynı yenileme jetonu ikinci kez kullanılırsa
         kullanıcının BÜTÜN oturumları kapanır. Dondurulmuş hesap yenileyemez.
+        WEB (X-HC-Web: 1): jeton gövdede gönderilmez; sunucunun giriş/kayıt/
+        yenileme yanıtında koyduğu `hc_rt` çerezinden okunur (HttpOnly, Secure,
+        SameSite=None, Path=/api/v1/auth). Çerez başlıksız kabul edilmez (CSRF).
+        Geçersiz çerez ve çıkış (`/auth/logout`) çerezi siler. Mobil istemci
+        (başlıksız) davranışı değişmez.
       responses:
         '200': { description: '{ accessToken, refreshToken }' }
         '401': { $ref: '#/components/responses/Unauthorized' }

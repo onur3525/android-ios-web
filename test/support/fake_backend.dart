@@ -39,9 +39,11 @@ class FakeBackend {
   final List<Map<String, String>> headers = [];
   FakeBackend(this.routes);
 
-  ApiClient client({FakeTokenStore? store, void Function()? onSessionExpired}) => ApiClient(
+  ApiClient client({FakeTokenStore? store, void Function()? onSessionExpired, bool cerezliOturum = false}) => ApiClient(
         // Test: MethodChannel'a gitmeden DAİMA çevrimiçi.
         onlineChecker: () async => true,
+        // Web oturumu (HttpOnly çerez) testleri için açıkça verilir.
+        cerezliOturum: cerezliOturum,
         baseUrl: 'https://test.local/api/v1',
         tokenStore: store ?? FakeTokenStore(access: 'AT', refresh: 'RT'),
         onSessionExpired: onSessionExpired,

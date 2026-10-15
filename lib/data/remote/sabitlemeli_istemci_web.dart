@@ -1,3 +1,4 @@
+import 'package:http/browser_client.dart';
 import 'package:http/http.dart' as http;
 
 // ⚠ WEB — TARAYICI.
@@ -11,7 +12,12 @@ import 'package:http/http.dart' as http;
 ///
 /// ⚠ GÜVENLİK SINIRI: web istemcisi MITM'e karşı yalnız tarayıcının
 /// kök sertifika deposu kadar korunur.
-http.Client sabitlemeliIstemci() => http.Client();
+///
+/// ⚠ KİMLİK BİLGİSİYLE (withCredentials): web oturumunun HttpOnly yenileme
+/// çerezi (hc_rt) yalnız böyle gönderilir/saklanır. Sunucu Allow-Credentials
+/// başlığını YALNIZ izin listesindeki kökenlere verir. Dosya yükleme
+/// (depoya imzalı PUT) bu istemciyi KULLANMAZ; çerez depoya gitmez.
+http.Client sabitlemeliIstemci() => BrowserClient()..withCredentials = true;
 
 /// ⚠ WEB'DE DENETLENECEK BİR ŞEY YOK: sabitleme yapılamadığı için
 /// pin zorunluluğu da anlamsızdır. Boş gövde BİLİNÇLİDİR — burada
