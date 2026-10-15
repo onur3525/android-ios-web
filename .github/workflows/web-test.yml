@@ -31,6 +31,16 @@ jobs:
       - name: Build Web
         run: flutter build web --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 --base-href "/android-ios-web/"
 
+      # Paylaşım önizlemesi (WhatsApp vb.) TEST adresini göstersin: kaynak
+      # index.html production adresini (hizmetcep.com) taşır; test yayınında
+      # bağlantı önizleme adresleri test adresine çevrilir (16 Eki).
+      - name: Paylaşım önizlemesi test adresine
+        run: |
+          set -eu
+          sed -i 's#https://hizmetcep.com/og-paylasim.png#https://onur3525.github.io/android-ios-web/og-paylasim.png#g; s#<meta property="og:url" content="https://hizmetcep.com/">#<meta property="og:url" content="https://onur3525.github.io/android-ios-web/">#' build/web/index.html
+          grep -q 'onur3525.github.io/android-ios-web/og-paylasim.png' build/web/index.html
+          grep -q 'og:url" content="https://onur3525.github.io/android-ios-web/"' build/web/index.html
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
