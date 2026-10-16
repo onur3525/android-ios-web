@@ -205,6 +205,9 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     // aktarılır (15 Eki: hizmet alan teklifleri görmüyordu).
     final listingRepo = ApiListingRepository(ListingApi(client))
       ..teklifleriAktar = offerRepo.ilanTeklifleriniAl;
+    // Teklif verdiğim ilanlar (seçilmiş olsa da) ilan deposunda bulunur
+    // (16 Eki: Kazandığım kartında "İlan kaldırıldı" görünüyordu).
+    offerRepo.ilanlariAktar = listingRepo.teklifIlanlariniAl;
     // Gerçek zamanlı mesajlaşma: /ws namespace, access token ile kimlik.
     final ws = WsClient(WsAuth(client.tokens));
     return AppPorts(
