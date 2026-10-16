@@ -255233,19 +255233,21 @@
       var _this = this,
         t1 = _this.role === B.Role_1 ? "PROVIDER" : "CUSTOMER",
         t2 = _this.firebaseIdToken,
-        t3 = A.currentPlatform(),
-        t4 = A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.Object);
-      t4.$indexSet(0, "phone", _this.phone);
-      t4.$indexSet(0, "password", _this.password);
-      t4.$indexSet(0, "name", _this.name);
-      t4.$indexSet(0, "email", _this.email);
-      t4.$indexSet(0, "role", t1);
-      t4.$indexSet(0, "otpCode", _this.otpCode);
-      t4.$indexSet(0, "termsAccepted", _this.termsAccepted);
-      t4.$indexSet(0, "platform", t3);
+        t3 = _this.termsAccepted,
+        t4 = A.currentPlatform(),
+        t5 = A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.Object);
+      t5.$indexSet(0, "phone", _this.phone);
+      t5.$indexSet(0, "password", _this.password);
+      t5.$indexSet(0, "name", _this.name);
+      t5.$indexSet(0, "email", _this.email);
+      t5.$indexSet(0, "role", t1);
+      t5.$indexSet(0, "otpCode", _this.otpCode);
+      t5.$indexSet(0, "termsAccepted", t3);
+      t5.$indexSet(0, "aydinlatmaAccepted", t3);
+      t5.$indexSet(0, "platform", t4);
       if (t2 != null)
-        t4.$indexSet(0, "firebaseIdToken", t2);
-      return _this.$this._api_repositories$_auth.c._send$4$body$idempotencyKey("POST", "/auth/register", t4, null);
+        t5.$indexSet(0, "firebaseIdToken", t2);
+      return _this.$this._api_repositories$_auth.c._send$4$body$idempotencyKey("POST", "/auth/register", t5, null);
     },
     $signature: 13
   };
