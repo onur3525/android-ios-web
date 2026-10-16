@@ -12,7 +12,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OTURUM_CEREZI, oturumCoz } from './auth.js';
+import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz } from './auth.js';
 import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
@@ -210,7 +210,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const uygulama = uygulamaKur(db);
   const sunucu = createServer((req, res) => {
     // Yük dengeleyici sağlık uçları (kimlik gerektirmez, veri sızdırmaz).
-    if (req.url === '/healthz') return jsonGonder(res, 200, { ok: true });
+    // `anahtar`: ana anahtarın tek yönlü parmak izi (bkz. auth.js
+    // anahtarParmakIzi) — bakım aracı canlıyla aynı anahtarı kullandığını
+    // doğrular. Anahtarın kendisi ya da çözülebilir bir bilgisi DEĞİLDİR.
+    if (req.url === '/healthz') return jsonGonder(res, 200, { ok: true, anahtar: anahtarParmakIzi() });
     if (req.url === '/readyz') {
       if (durum.kapaniyor) return jsonGonder(res, 503, { ok: false });
       return db.prepare('SELECT 1 AS ok').get()

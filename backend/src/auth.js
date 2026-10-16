@@ -81,6 +81,18 @@ export function sirSifrele(duz) {
   return `v1.${iv.toString('base64')}.${c.getAuthTag().toString('base64')}.${icerik.toString('base64')}`;
 }
 
+/**
+ * ── ANA ANAHTAR PARMAK İZİ (16 Eki) ──
+ * Ana anahtarın (HC_MASTER_KEY) kendisini değil, anahtarla üretilmiş tek
+ * yönlü bir HMAC'in ilk 16 hanesini verir. Amaç: sunucu dışında çalışan
+ * bakım aracının (GitHub Actions — admin MFA yenileme) kullandığı anahtarın
+ * canlı sunucununkiyle AYNI olduğunu doğrulamak; aksi hâlde yeni sır yine
+ * çözülemeyen bir anahtarla yazılırdı. Parmak izinden anahtar elde edilemez.
+ */
+export function anahtarParmakIzi(anahtar = config.anaAnahtar) {
+  return createHmac('sha256', anahtar).update('hizmetcep-ana-anahtar-parmak-izi-v1').digest('hex').slice(0, 16);
+}
+
 export function sirCoz(kayit) {
   const [s, iv, etiket, icerik] = String(kayit).split('.');
   if (s !== 'v1') throw new Error('Bilinmeyen sır biçimi');

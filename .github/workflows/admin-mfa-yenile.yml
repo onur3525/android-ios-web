@@ -1,0 +1,80 @@
+# ═══════════════════════════════════════════════════════════════
+# YÖNETİCİ MFA YENİLEME — ELLE, TEK SEFERLİK BAKIM İŞİ (16 Eki)
+#
+# Ne zaman: yönetim girişinde doğrulama kodundan sonra hata ve Render
+# günlüğünde "Unsupported state or unable to authenticate data" (TOTP sırrı
+# canlı ana anahtarla çözülemiyor). Kural ve güvenlik kontrolleri:
+# backend/src/bakim/admin_mfa_yenileme.js
+#
+# • Yalnız ELLE başlatılır (workflow_dispatch) ve yalnız main dalında.
+# • Önce mod=kontrol: hiçbir şey yazmaz, tüm denetimleri yapar.
+# • mod=uygula için onay metni birebir: YENILE onur_butun@hotmail.com
+# • Yalnız onur_butun@hotmail.com; anahtar DEĞİŞMEZ, MFA KAPATILMAZ,
+#   hesap SİLİNMEZ; eski şifreli değer veritabanında yedeklenir.
+# • Sırlar yalnız GitHub Secrets'tan gelir; günlüğe/ürüne (artifact)
+#   hiçbir sır yazılmaz, bu iş ürün yüklemez.
+#
+# Gerekli GitHub sırları (Settings → Secrets and variables → Actions):
+#   HC_URETIM_DATABASE_URL  Render PostgreSQL "External Database URL"
+#   HC_URETIM_MASTER_KEY    Render'daki HC_MASTER_KEY ile BİREBİR aynı
+#   HC_YENI_TOTP_SIRRI      Doğrulayıcı uygulamaya eklenen YENİ anahtar
+# İş bitince HC_YENI_TOTP_SIRRI silinmelidir.
+# ═══════════════════════════════════════════════════════════════
+name: admin-mfa-yenile
+on:
+  workflow_dispatch:
+    inputs:
+      mod:
+        description: 'kontrol (yazmaz) ya da uygula'
+        type: choice
+        options: [kontrol, uygula]
+        default: kontrol
+      onay:
+        description: 'Yalnız uygula için, birebir: YENILE onur_butun@hotmail.com'
+        required: false
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: admin-mfa-yenile
+  cancel-in-progress: false
+jobs:
+  yenile:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    # GitHub "Environment": Settings → Environments → admin-bakim altında
+    # onaylayıcı (required reviewers) eklenirse iş başlamadan onay bekler.
+    environment: admin-bakim
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Onay metni (yalnız uygula)
+        if: inputs.mod == 'uygula'
+        env:
+          ONAY: ${{ inputs.onay }}
+        working-directory: .
+        run: |
+          if [ "$ONAY" != "YENILE onur_butun@hotmail.com" ]; then
+            echo "::error::Onay metni eşleşmedi; hiçbir şey yapılmadı."
+            exit 1
+          fi
+      - name: Bağımlılıklar (yalnız üretim)
+        run: npm ci --omit=dev --ignore-scripts
+      - name: MFA yenileme
+        env:
+          HC_DATABASE_URL: ${{ secrets.HC_URETIM_DATABASE_URL }}
+          HC_MASTER_KEY: ${{ secrets.HC_URETIM_MASTER_KEY }}
+          HC_YENI_TOTP_SIRRI: ${{ secrets.HC_YENI_TOTP_SIRRI }}
+          HEDEF_EMAIL: onur_butun@hotmail.com
+          MOD: ${{ inputs.mod }}
+          SUNUCU_ADRESI: https://hizmetcep-backend.onrender.com
+          HC_SESSIZ: '1'
+        run: node --no-warnings scripts/admin_mfa_yenile.js
