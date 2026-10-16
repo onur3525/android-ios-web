@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/chat_controller.dart';
 import '../data/controllers/listing_controller.dart';
+import '../data/models/account.dart' show Role;
 import '../data/models/chat.dart';
 import '../domain/failures.dart';
 import '../ui/ref_tokens.dart';
@@ -667,8 +668,15 @@ class _KonusmaListesi extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Row(
                   children: [
-                    // ⚠ MEVCUT AVATAR BİLEŞENİ.
-                    RefBasHarfAvatar(ad: ad.isEmpty ? '?' : ad),
+                    // ⚠ MEVCUT AVATAR BİLEŞENİ. 16 Eki: sohbet yalnız
+                    // iletişim açıkken vardır; karşı tarafın profil
+                    // fotoğrafı (o taraftaki rolünün) görünür.
+                    RefBasHarfAvatar(
+                        ad: ad.isEmpty ? '?' : ad,
+                        fotoYolu: other?.fotografi(me.id == o.providerId
+                                ? Role.customer
+                                : Role.provider) ??
+                            ''),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
