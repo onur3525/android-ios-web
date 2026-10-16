@@ -58,6 +58,24 @@ function adminGorunumu(a) {
   return { id: a.id, email: a.email, name: a.name, role: a.role, active: a.active === 1, mfa: !!a.totp_secret_enc, createdAt: a.created_at };
 }
 
+/**
+ * ── ⚠ TOTP SIRRI ÇÖZÜLEMEZSE AÇIK HATA (16 Eki, kullanıcı bulgusu) ──
+ * Sır, sunucu ana anahtarıyla (HC_MASTER_KEY) şifreli saklanır. Yönetici
+ * başka bir anahtarla oluşturulduysa ya da anahtar sonradan değiştiyse
+ * çözme başarısız olur; bu önceden 500 "Beklenmeyen bir hata oluştu"
+ * dönüyordu ve neden anlaşılmıyordu. Artık sunucu günlüğüne neden yazılır
+ * ve kullanıcıya ne yapılacağı söylenir (scripts/admin_mfa_sifirla.js).
+ */
+function totpSirri(admin) {
+  try {
+    return sirCoz(admin.totp_secret_enc);
+  } catch (e) {
+    console.error('admin_mfa_sir_cozulemedi', admin.id, e?.message);
+    throw new ApiHatasi(409, 'MFA_SECRET_UNREADABLE',
+      'Doğrulama anahtarı sunucuda çözülemedi (sunucu ana anahtarı değişmiş olabilir). İki aşamalı doğrulamanın sunucuda sıfırlanması gerekir.');
+  }
+}
+
 export function adminRotalar(r, db) {
   const yaz = (ctx, d) => denetimYaz(db, { adminId: ctx.admin?.id, ip: ctx.ip, ...d });
 
@@ -101,7 +119,7 @@ export function adminRotalar(r, db) {
       await oturumKapat(db, ctx.token);
       throw hata.hiz('Hesap geçici olarak kilitli');
     }
-    if (!totpDogrula(sirCoz(c.admin.totp_secret_enc), ctx.body.code)) {
+    if (!totpDogrula(totpSirri(c.admin), ctx.body.code)) {
       // Hatalı TOTP de hesap başına sayılır (şifre hatalarıyla AYNI sayaç ve
       // kilit): eşik aşılınca hesap kilitlenir ve bu MFA oturumu kapanır.
       const n = (c.admin.failed_count ?? 0) + 1;
@@ -124,7 +142,7 @@ export function adminRotalar(r, db) {
 
   r.post('/admin/v1/auth/reauth', async (ctx) => {
     await girisSiniri.denetle(db, `reauth:${ctx.ip}`);
-    if (!totpDogrula(sirCoz(ctx.admin.totp_secret_enc), ctx.body.code)) {
+    if (!totpDogrula(totpSirri(ctx.admin), ctx.body.code)) {
       throw new ApiHatasi(401, 'AUTH_FAILED', 'Doğrulama kodu hatalı');
     }
     await yenidenDogrulandi(db, ctx.token);
