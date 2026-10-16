@@ -137,7 +137,8 @@ void main() {
     // kilitler; burada eski varlık iddiası tutulmaz.
 
     test('sözleşme kabul zorunluluğu korunur', () {
-      expect(src.contains('if (!_agree)'), isTrue);
+      // 16 Eki: iki zorunlu onay (Kullanım Sözleşmesi + Aydınlatma Metni).
+      expect(src.contains('if (!_agree || !_aydinlatma)'), isTrue);
     });
   });
 
