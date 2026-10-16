@@ -1,5 +1,6 @@
 import '../api_client.dart';
 import '../../models/listing.dart';
+import '../../models/teklif_talebi.dart' show IletisimTercihi;
 
 /// /listings uçları — 30 saat kuralı ve durum makinesi SUNUCUDA işler.
 class ListingApi {
@@ -20,6 +21,7 @@ class ListingApi {
     required String description,
     List<String> photoRefs = const [],
     IsZamani? isZamani,
+    IletisimTercihi iletisimTercihi = IletisimTercihi.telefonGoster,
   }) =>
       // Idempotency-Key: yanıt ağda kaybolursa yeniden deneme ikinci ilan açmaz.
       c.post('/listings', idempotencyKey: ApiClient.newIdempotencyKey(), body: {
@@ -31,6 +33,8 @@ class ListingApi {
         // yapılmadı" ile "boş gönderildi" arasında ayrım yapmasını
         // gerektirmez.
         if (isZamani != null) 'workTiming': isZamani.kod,
+        // 16 Eki: "numaramı gizle" seçimi sunucuya iletilir.
+        'iletisimTercihi': iletisimTercihi.name,
       });
 
   Future<Map<String, dynamic>> update(String id, {String? title, String? description}) =>

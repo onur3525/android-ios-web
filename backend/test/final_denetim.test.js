@@ -169,20 +169,36 @@ test('eşzamanlı iletişim açma: 500 yok, kayıt ve bildirim TEK', async () =>
   assert.equal((await db.prepare(`SELECT COUNT(*) n FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).n, 1);
 });
 
-test('iletişim paylaşımı: yalnız ilan sahibi açar; hizmet veren tek taraflı açamaz', async () => {
+test('16 Eki: iletişimi hizmet veren de açar; iki taraf birbirini görür; bildirim karşı tarafa', async () => {
   const sahip = await kisi('5370000025', 'CUSTOMER');
   const u1 = await kisi('5370000026', 'PROVIDER');
   const { teklifler: [o] } = await ilanVeTeklif(sahip, u1);
-  const red = await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token });
-  assert.equal(red.durum, 403);
-  assert.equal(red.json.error.code, 'FORBIDDEN');
-  assert.equal(await db.prepare('SELECT 1 FROM contacts WHERE offer_id = ?').get(o.id), undefined, 'paylaşım açılmadı');
+  const ac = await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token });
+  assert.equal(ac.durum, 200, JSON.stringify(ac.json));
+  assert.equal(ac.json.open, true);
+  assert.equal((await db.prepare(`SELECT user_id FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).user_id, sahip.id, 'açan hizmet veren → bildirim ilan sahibine');
+  const ustaGorur = await istek(`/api/v1/contact/${o.id}`, { yontem: 'GET', token: u1.token });
+  const sahipGorur = await istek(`/api/v1/contact/${o.id}`, { yontem: 'GET', token: sahip.token });
+  assert.ok(ustaGorur.json.counterpart.phone, 'hizmet veren, numarasını gizlemeyen hizmet alanın telefonunu görür');
+  assert.ok(sahipGorur.json.counterpart.phone, 'hizmet alan, hizmet verenin telefonunu görür');
+  // İkinci açma isteği yeni paylaşım/bildirim üretmez.
   assert.equal((await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: sahip.token })).durum, 200);
-  // Açıldıktan sonra hizmet verenin sorgusu durumu döner (yeni paylaşım yok).
-  const sonra = await istek(`/api/v1/offers/${o.id}/communication`, { yontem: 'POST', token: u1.token });
-  assert.equal(sonra.durum, 200);
-  assert.equal(sonra.json.open, true);
-  assert.equal((await db.prepare(`SELECT user_id FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).user_id, u1.id);
+  assert.equal(Number((await db.prepare(`SELECT COUNT(*) n FROM notifications WHERE type = 'CONTACT_OPENED' AND ref_id = ?`).get(o.id)).n), 1);
+});
+
+test('16 Eki: "Sadece Uygulama İçi Mesaj" seçen hizmet alanın telefonu hizmet verene gösterilmez', async () => {
+  const sahip = await kisi('5370000027', 'CUSTOMER');
+  const u1 = await kisi('5370000028', 'PROVIDER');
+  const l = await istek('/api/v1/listings', { yontem: 'POST', token: sahip.token, govde: { title: hiz, location: 'Konak', description: 'salon boyanacak acil iş', iletisimTercihi: 'yalnizMesaj' } });
+  assert.equal(l.durum, 200, JSON.stringify(l.json));
+  assert.equal(l.json.iletisimTercihi, 'yalnizMesaj');
+  const o = await istek('/api/v1/offers', { yontem: 'POST', token: u1.token, govde: { listingId: l.json.id, amountTl: 500, note: '' } });
+  assert.equal((await istek(`/api/v1/offers/${o.json.id}/communication`, { yontem: 'POST', token: u1.token })).durum, 200);
+  const ustaGorur = await istek(`/api/v1/contact/${o.json.id}`, { token: u1.token });
+  assert.equal(ustaGorur.json.open, true, 'mesajlaşma açık');
+  assert.equal(ustaGorur.json.counterpart.phone, null, 'gizli numara paylaşılmaz');
+  assert.ok((await istek(`/api/v1/contact/${o.json.id}`, { token: sahip.token })).json.counterpart.phone, 'hizmet verenin numarası görünür');
+  assert.equal((await istek('/api/v1/listings', { yontem: 'POST', token: sahip.token, govde: { title: hiz, location: 'Konak', description: 'salon boyanacak acil iş', iletisimTercihi: 'baska' } })).durum, 400);
 });
 
 test('eşzamanlı çift teklif ve çift yorum: 500 değil anlamlı hata, kayıt TEK', async () => {

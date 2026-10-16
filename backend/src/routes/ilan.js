@@ -43,6 +43,8 @@ export const ilanGorunumu = (l) => ({
   description: l.description, status: l.status, photoPaths: JSON.parse(l.photo_refs_json),
   workTiming: l.work_timing, createdAt: l.created_at, expiresAt: l.expires_at,
   selectedOfferId: l.selected_offer_id,
+  // 16 Eki: ilan sahibinin iletişim tercihi (telefonGoster | yalnizMesaj).
+  iletisimTercihi: l.iletisim_tercihi ?? 'telefonGoster',
 });
 export const teklifGorunumu = (o) => ({
   id: o.id, listingId: o.listing_id, providerId: o.provider_id, amountTl: o.amount_tl,
@@ -184,10 +186,12 @@ export function ilanRotalar(r, db) {
     const aciklama = String(ctx.body.description ?? '').trim();
     const foto = ctx.body.photoRefs ?? [];
     const zaman = ctx.body.workTiming ?? null;
+    // 16 Eki: "numaramı gizle" seçimi — yoksa telefon görünür (önceki davranış).
+    const tercih = ctx.body.iletisimTercihi ?? 'telefonGoster';
     // Idempotency: aynı anahtarla yeniden deneme ilk ilanı döndürür (sınır harcanmaz).
     const ILAN_IDEM = { tablo: 'listings', sahipSutun: 'owner_id' };
     const anahtar = idemAnahtari(ctx);
-    const ozet = govdeOzeti({ baslik, konum, aciklama, foto, zaman });
+    const ozet = govdeOzeti({ baslik, konum, aciklama, foto, zaman, tercih });
     const onceki = await oncekiKayit(db, ILAN_IDEM, ctx.kullanici.id, anahtar, ozet);
     if (onceki) return ilanGorunumu(onceki);
     await ilanSiniri.denetle(db, ctx.kullanici.id);
@@ -203,6 +207,7 @@ export function ilanRotalar(r, db) {
     if (aciklama.length > 2000) throw hata.dogrulama('Açıklama en fazla 2000 karakter olabilir');
     if (!Array.isArray(foto) || foto.length > 10 || foto.some((f) => typeof f !== 'string' || !/^[A-Za-z0-9/_.-]{1,200}$/.test(f))) throw hata.dogrulama('Geçersiz fotoğraf listesi');
     if (zaman !== null && !['NOW', 'THIS_WEEK', 'FLEXIBLE'].includes(zaman)) throw hata.dogrulama('Geçersiz iş zamanı');
+    if (!['telefonGoster', 'yalnizMesaj'].includes(tercih)) throw hata.dogrulama('Geçersiz iletişim tercihi');
     // Dosyalar İŞLEM DIŞINDA doğrulanır (depo okuması uzun işlem açmasın).
     await dosyalariDogrula(db, foto, ctx.kullanici.id, 'listing-photo');
     const id = randomUUID();
@@ -212,10 +217,10 @@ export function ilanRotalar(r, db) {
       const no = await db.prepare(`UPDATE counters SET value = value + 1 WHERE name = 'ilan_no' RETURNING value`).get();
       await db.prepare(
         `INSERT INTO listings (id, ilan_no, owner_id, title, location, description, photo_refs_json, work_timing,
-                               status, expiry_notified, created_at, expires_at, updated_at, idempotency_key, idem_hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', FALSE, ?, ?, ?, ?, ?)`,
+                               status, expiry_notified, created_at, expires_at, updated_at, idempotency_key, idem_hash, iletisim_tercihi)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', FALSE, ?, ?, ?, ?, ?, ?)`,
       ).run(id, String(no.value), ctx.kullanici.id, baslik, konum, aciklama, JSON.stringify(foto), zaman,
-        z.toISOString(), new Date(z.getTime() + ILAN_OMRU_MS).toISOString(), z.toISOString(), anahtar, anahtar ? ozet : null);
+        z.toISOString(), new Date(z.getTime() + ILAN_OMRU_MS).toISOString(), z.toISOString(), anahtar, anahtar ? ozet : null, tercih);
       return db.prepare('SELECT * FROM listings WHERE id = ?').get(id);
     }));
     // Eşleşen hizmet verenlere bildirim (uygulama içi + push; uygulama
@@ -414,7 +419,11 @@ export function ilanRotalar(r, db) {
     if (!c) return { contactOpenAt: null };
     const karsiId = ctx.kullanici.id === o.provider_id ? l.owner_id : o.provider_id;
     const k = await db.prepare('SELECT name, phone FROM users WHERE id = ?').get(karsiId);
-    return { open: true, contactOpenAt: c.opened_at, counterpart: { name: k.name, phone: k.phone } };
+    // 16 Eki: iletişimi kim açarsa açsın iki taraf birbirinin bilgisini
+    // görür; YALNIZ ilan sahibi "Sadece Uygulama İçi Mesaj" seçtiyse onun
+    // telefonu hizmet verene gösterilmez (mesajlaşma açık kalır).
+    const telefonGizli = karsiId === l.owner_id && l.iletisim_tercihi === 'yalnizMesaj';
+    return { open: true, contactOpenAt: c.opened_at, counterpart: { name: k.name, phone: telefonGizli ? null : k.phone } };
   }));
 
   r.post('/api/v1/offers/:offerId/communication', korumali(async (ctx) => {
@@ -422,13 +431,12 @@ export function ilanRotalar(r, db) {
     if (l.status === 'ADMIN_REMOVED' || l.status === 'USER_DELETED') throw kural('LISTING_REMOVED', 'İlan yayından kaldırılmış');
     const var_ = await db.prepare('SELECT * FROM contacts WHERE offer_id = ?').get(o.id);
     if (var_) return { open: true, contactOpenAt: var_.opened_at };
-    // ── ⚠ PAYLAŞIM ONAYI İLAN SAHİBİNDE (15 Eki güvenlik denetimi, karar 5) ──
-    // Kullanım Koşulları: telefon/e-posta paylaşımı tarafların onayına
-    // bağlıdır. Hizmet veren teklif vererek KENDİ bilgisini paylaşmayı
-    // kabul eder; hizmet alanın telefonu ise yalnız onun açık işlemiyle
-    // paylaşılır. Önceden hizmet veren tek taraflı açabiliyor ve müşterinin
-    // numarasını onun onayı olmadan görüyordu.
-    if (ctx.kullanici.id !== l.owner_id) throw hata.yetki('İletişimi yalnızca ilan sahibi açabilir');
+    // ── ⚠ İKİ TARAF DA AÇABİLİR (16 Eki, kullanıcı kararı) ──
+    // 15 Eki'de yalnız ilan sahibi açabiliyordu; kullanıcı iki tarafın da
+    // açabilmesini istedi. Hizmet alanın telefonu, ilanda "Sadece Uygulama
+    // İçi Mesaj" seçtiyse paylaşılmaz (GET /contact). Açan tarafın KARŞISINA
+    // bildirim gider.
+    const karsiTaraf = ctx.kullanici.id === l.owner_id ? o.provider_id : l.owner_id;
     const z = simdi();
     let eklendi = false;
     await db.tx(async () => {
@@ -437,7 +445,7 @@ export function ilanRotalar(r, db) {
       const ek = await db.prepare('INSERT INTO contacts (offer_id, opened_by, opened_at) VALUES (?, ?, ?) ON CONFLICT (offer_id) DO NOTHING').run(o.id, ctx.kullanici.id, z);
       eklendi = ek.changes === 1;
       if (!eklendi) return;
-      await uygulamaIciBildir(db, o.provider_id, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
+      await uygulamaIciBildir(db, karsiTaraf, 'CONTACT_OPENED', 'İletişim açıldı', `"${l.title}" ilanı için iletişim bilgileri paylaşıldı.`, o.id, 'mesaj');
     });
     if (!eklendi) {
       const c = await db.prepare('SELECT opened_at FROM contacts WHERE offer_id = ?').get(o.id);
