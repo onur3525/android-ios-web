@@ -89,6 +89,9 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   @override
   void initState() {
     super.initState();
+    // ⚠ Onay durumu daha önce yüklendiyse hemen kullanılır (16 Eki): ekran
+    // ilk çizimde bekleme göstermez; güncel durum yine aşağıda tazelenir.
+    _approval = context.read<ProfileController>().approval;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadApproval();
       // ⚠ İlan İNCELENDİ olarak işaretlenir; liste ekranında
@@ -796,10 +799,23 @@ class _JobDetailScreenState extends State<JobDetailScreen>
               // birbirine ulaşabilir. Geri çekme düğmesinin durması,
               // ücreti geri alınabilirmiş izlenimi veriyordu — oysa
               // tüketilmiş ücret İADE EDİLMEZ.
-            ] else
+            // ── ⚠ YALNIZ İLAN GERÇEKTEN KAPALIYSA (16 Eki, kullanıcı bulgusu) ──
+            // Önceden düz `else` idi: onay durumu henüz yüklenmemişken
+            // (ekran ilk açılış anı) form çizilmiyor ve açık ilanda bir an
+            // "Bu ilan teklif kabul etmiyor" görünüp sonra teklif alanları
+            // geliyordu. Onaysız hesapta da açık ilan için yanlış bu yazı
+            // çıkıyordu (orada `ProviderStatusCard` zaten durumu anlatır).
+            ] else if (!(l.status == ListingStatus.active &&
+                !l.isTamamlanmisIs))
               const SysEmpty(
                   title: 'Bu ilan teklif kabul etmiyor',
-                  desc: 'İlan kapanmış ya da bir teklif seçilmiş olabilir.'),
+                  desc: 'İlan kapanmış ya da bir teklif seçilmiş olabilir.')
+            else if (_approval == null)
+              // Onay durumu yüklenirken form alanı yerinde bekleme göstergesi.
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              ),
                   ]),
             ),
           ]),
