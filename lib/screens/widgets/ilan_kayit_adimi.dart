@@ -48,6 +48,9 @@ class KayitVerisi {
   String? mahalle;
   bool sozlesme = false;
 
+  /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
+  bool aydinlatma = false;
+
   /// ── SEÇİMDEN SONRA SIRADAKİ ALANA KAYDIRMA ──
   ///
   /// ⚠ İl/ilçe/mahalle satırları METİN ALANI DEĞİLDİR; `scrollPadding`
@@ -127,7 +130,7 @@ class KayitVerisi {
   bool get alanlarGecerli => alanlar.every((id) => _hata(id) == null);
 
   /// Kayıt tamamlanabilir mi?
-  bool get tamam => alanlarGecerli && sozlesme;
+  bool get tamam => alanlarGecerli && sozlesme && aydinlatma;
 
   String? get ilkEksik =>
       alanlar.cast<String?>().firstWhere((id) => _hata(id!) != null,
@@ -381,9 +384,14 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
       KullanimSozlesmesiOnayi(
         key: v.sozlesmeKaydirKey,
         enabled: v.alanlarGecerli,
-        value: v.sozlesme,
-        onChanged: (x) {
+        sozlesme: v.sozlesme,
+        aydinlatma: v.aydinlatma,
+        onSozlesme: (x) {
           v.sozlesme = x;
+          _degisti();
+        },
+        onAydinlatma: (x) {
+          v.aydinlatma = x;
           _degisti();
         },
       ),
