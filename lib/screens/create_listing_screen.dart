@@ -338,7 +338,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         kayitYetkisi: _kayitYetkisi,
         name: _kayit.adSoyad,
         email: _kayit.eposta.text.trim(),
-        termsAccepted: _kayit.sozlesme,
+        termsAccepted: _kayit.sozlesme && _kayit.aydinlatma,
       );
       if (!mounted) {
         return;

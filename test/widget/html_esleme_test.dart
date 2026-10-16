@@ -126,9 +126,10 @@ void main() {
       // 16 Eki: satır tek kaynağa taşındı (`KullanimSozlesmesiOnayi`).
       expect(src.contains('KullanimSozlesmesiOnayi('), isTrue);
       final o = read('lib/ui/kullanim_sozlesmesi_onayi.dart');
-      expect(o.contains('RefAgreeRow('), isTrue);
+      // 16 Eki: iki zorunlu onay — Kullanım Sözleşmesi ve Aydınlatma Metni.
       expect(o.contains("'slug': 'terms'"), isTrue);
-      expect(o.contains("'slug': 'privacy'"), isTrue);
+      expect(o.contains("'slug': 'kvkk'"), isTrue);
+      expect(o.contains('TapGestureRecognizer()'), isTrue);
     });
 
     // ⚠ "veya" ayırıcısı + Google düğmesi KALDIRILDI (ürün kararı:
@@ -136,7 +137,8 @@ void main() {
     // kilitler; burada eski varlık iddiası tutulmaz.
 
     test('sözleşme kabul zorunluluğu korunur', () {
-      expect(src.contains('if (!_agree)'), isTrue);
+      // 16 Eki: iki zorunlu onay (Kullanım Sözleşmesi + Aydınlatma Metni).
+      expect(src.contains('if (!_agree || !_aydinlatma)'), isTrue);
     });
   });
 

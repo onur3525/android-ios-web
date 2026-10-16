@@ -114,6 +114,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Set<String> _provDistricts = {}; // sağlayıcı ilçeleri
   bool _agree = false;
 
+  /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
+  bool _aydinlatma = false;
+
 
   /// Seçili il — sunucudan gelen aktif iller arasından seçilir.
   /// ⚠ HARD-CODE DEĞİLDİR; tek il varsa kendiliğinden seçilir.
@@ -725,7 +728,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   /// Gönderim koşulu: zorunlu alanlar TAMAM **ve** sözleşme onaylı.
-  bool get _formTamam => _alanlarTamam && _agree;
+  bool get _formTamam => _alanlarTamam && _agree && _aydinlatma;
 
   /// ZORUNLU ALANLAR TAMAM MI? (sözleşme HARİÇ)
   ///
@@ -799,7 +802,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!formOk || chips != null) {
       return;
     }
-    if (!_agree) {
+    if (!_agree || !_aydinlatma) {
       sysToastErr(context, SysKind.genericError,
           extra: 'Devam etmek için sözleşmeyi onaylayınız');
       return;
@@ -887,7 +890,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // verilmiyor (varsayılan false).
                 // Sözleşme onayı domain katmanına İLETİLİR:
                 // yalnız UI kontrolüne güvenilmez.
-                termsAccepted: _agree);
+                termsAccepted: _agree && _aydinlatma);
             if (!otpContext.mounted) {
               return;
             }
@@ -1801,15 +1804,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   key: _sozlesmeKaydirKey,
                   // ⚠ Zorunlu alanlar bitmeden işaretlenemez.
                   enabled: alanlarTamam,
-                  value: _agree,
+                  sozlesme: _agree,
+                  aydinlatma: _aydinlatma,
                   // ⚠ `_tazele()` ZORUNLU.
                   //
                   // "Devam Et" düğmesi `_formGecerli` bildirimini
                   // dinler; `setState` o bildirimi GÜNCELLEMEZ. Bu
                   // çağrı olmadan sözleşme işaretlense bile düğme
                   // pasif kalıyordu — 2. adıma hiç geçilemiyordu.
-                  onChanged: (v) {
+                  onSozlesme: (v) {
                     setState(() => _agree = v);
+                    _tazele();
+                  },
+                  onAydinlatma: (v) {
+                    setState(() => _aydinlatma = v);
                     _tazele();
                   },
                   ),
