@@ -127,7 +127,9 @@ export async function yeniIlaniBildir(db, l) {
     if (!kat.length || !kat.some(eslesir)) continue;
     const ilceler = liste(a.districts_json);
     if (ilceler.length && !ilceler.some((d) => d && l.location.includes(d))) continue;
-    await uygulamaIciBildir(db, a.id, 'NEW_LISTING', 'Yeni iş ilanı', `"${l.title}" için yeni bir ilan yayınlandı (${l.location}).`, l.id, 'is');
+    // 16 Eki (kullanıcı isteği): bildirim metni örnekteki gibi; ADRES
+    // BİLGİSİ bildirimde PAYLAŞILMAZ (kilit ekranında da görünür).
+    await uygulamaIciBildir(db, a.id, 'NEW_LISTING', 'Yeni bir hizmet talebi var!', `"${l.title}" için yeni bir ilan yayınlandı. Hemen göz at!`, l.id, 'is');
     n++;
   }
   return n;

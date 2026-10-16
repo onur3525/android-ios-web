@@ -59,6 +59,9 @@ void main() {
           .where((d) => d.path.split('/').last.startsWith('drawable'))
           .expand((d) => d.listSync().whereType<File>())
           .where((x) => x.path.endsWith('.png'))
+          // 16 Eki: bildirim simgesi (`ic_stat_hizmetcep`) splash rasteri
+          // DEĞİLDİR; Android onu yoğunluk kovalarında ister.
+          .where((x) => !x.path.split('/').last.startsWith('ic_stat_'))
           .toList();
       expect(rasterlar.length, 1,
           reason: 'splash rasteri tek kovada olmalı — bulunan: '

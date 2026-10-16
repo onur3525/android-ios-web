@@ -60,5 +60,14 @@
 
         </activity>
         <meta-data android:name="flutterEmbedding" android:value="2"/>
+        <!-- 16 Eki: bildirim simgesi — beyaz kare yerine HizmetCep logosu
+             (tek renk; Android durum çubuğu simgeyi tek renge boyar).
+             Sunucu yükü de aynı simgeyi ve rengi gönderir (backend/src/fcm.js). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_hizmetcep"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/hc_blue"/>
     </application>
 </manifest>
