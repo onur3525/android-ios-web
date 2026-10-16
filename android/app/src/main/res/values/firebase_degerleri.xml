@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  FIREBASE YEREL BAŞLATMA DEĞERLERİ (16 Eki, kullanıcı bulgusu)
+
+  Uygulama KAPALIYKEN gelen push bildirimleri telefonda hiç görünmüyordu
+  ("Bu uygulama henüz hiç bildirim almadı"). Neden: Firebase yalnız Dart
+  tarafında (lib/core/firebase/firebase_baslatici.dart) başlatılıyordu.
+  Uygulama kapalıyken bildirim gelince Android, Flutter'ı çalıştırmadan
+  Firebase'in yerel servisini açar; bu servis varsayılan Firebase
+  uygulamasını BU kaynaklardan kurar (google-services eklentisinin
+  ürettiği değerlerle aynı adlar). Kaynak yoksa servis başlatılamaz ve
+  bildirim düşer.
+
+  Değerler GİZLİ DEĞİLDİR: istemci yapılandırmasıdır, birebir aynısı
+  lib/core/push/firebase_secenekleri.dart ve android/app/google-services.json
+  içinde zaten bulunur. Servis hesabı ya da sunucu anahtarı BURADA YOKTUR.
+
+  Debug derlemesi (`com.hizmetcep.app.debug`) kendi uygulama kimliğini
+  src/debug/res/values/firebase_degerleri.xml ile ezer.
+  ═══════════════════════════════════════════════════════════════
+-->
+<resources>
+    <string name="google_app_id" translatable="false">1:262578778971:android:bba810a8706baec30b207e</string>
+    <string name="gcm_defaultSenderId" translatable="false">262578778971</string>
+    <string name="google_api_key" translatable="false">AIzaSyAJw5diwZbumEpM7SOFexa9ysFl6_oBbXo</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAJw5diwZbumEpM7SOFexa9ysFl6_oBbXo</string>
+    <string name="project_id" translatable="false">hizmetcep-fe036</string>
+    <string name="google_storage_bucket" translatable="false">hizmetcep-fe036.firebasestorage.app</string>
+</resources>

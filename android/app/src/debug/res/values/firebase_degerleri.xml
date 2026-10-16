@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug derlemesi (`com.hizmetcep.app.debug`) Firebase'de ayrı bir Android
+     uygulamasıdır; yerel başlatma onun kimliğini kullanır (Dart tarafındaki
+     `FirebaseSecenekleri.androidDebug` ile AYNI). Diğer değerler main'den gelir. -->
+<resources>
+    <string name="google_app_id" translatable="false">1:262578778971:android:21cd554a3ae33c500b207e</string>
+</resources>
