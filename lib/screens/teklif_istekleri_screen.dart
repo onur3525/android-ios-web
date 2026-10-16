@@ -11,6 +11,7 @@ import '../domain/kullanici_konumu.dart';
 import '../domain/teklif_talebi_asamasi.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import 'widgets/durum_rozeti.dart';
+import 'widgets/profil_avatari.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -120,8 +121,14 @@ class _TalepKarti extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── FOTOĞRAF — TEKLİF VERİLENE KADAR BUZLU ──
+            // 16 Eki (kullanıcı bulgusu): iletişim açılınca hizmet alanın
+            // profil fotoğrafı görünür (detay ekranıyla AYNI kural: `acik`).
+            // Fotoğraf yoksa baş harf; dokununca büyür (`ProfilAvatari`).
             acik
-                ? RefBasHarfAvatar(ad: hizmetAlanAdi)
+                ? ProfilAvatari(
+                    ad: hizmetAlanAdi,
+                    fotoYolu: hizmetAlan?.fotografi(Role.customer) ?? '',
+                    cap: 44)
                 : const RefSvg('assets/svg/ic_avlock.svg', size: 44),
             const SizedBox(width: 11),
 
