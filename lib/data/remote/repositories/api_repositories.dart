@@ -96,14 +96,12 @@ class ApiAuthRepository extends ChangeNotifier {
     required String email, required Role role, required String otpCode,
     String? firebaseIdToken,
     required bool termsAccepted,
-    required bool ageConfirmed,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
           email: email, role: Mappers.roleApi(role), otpCode: otpCode,
           firebaseIdToken: firebaseIdToken,
           termsAccepted: termsAccepted,
-          ageConfirmed: ageConfirmed,
           platform: currentPlatform(),
         ));
     if (err != null) {

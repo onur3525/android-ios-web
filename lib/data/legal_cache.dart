@@ -48,7 +48,7 @@ class LegalCache {
 /// slug değerleri backend'deki LEGAL_DOCUMENTS ile BİREBİR aynıdır.
 const List<({String slug, String title})> kLegalLinks = [
   (slug: 'support', title: 'Destek Merkezi'),
-  (slug: 'terms', title: 'Kullanım Koşulları'),
+  (slug: 'terms', title: 'Kullanım Sözleşmesi'),
   (slug: 'privacy', title: 'Gizlilik Politikası'),
   (slug: 'kvkk', title: 'KVKK Aydınlatma Metni'),
   (slug: 'membership', title: 'Üyelik Sözleşmesi'),

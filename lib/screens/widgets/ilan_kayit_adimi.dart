@@ -11,6 +11,7 @@ import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
 import 'region_picker.dart';
 import '../../ui/alt_panel.dart';
+import '../../ui/kullanim_sozlesmesi_onayi.dart';
 
 /// İLAN AKIŞI — ADIM 3: HİZMET ALAN KAYDI
 ///
@@ -375,7 +376,9 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
       //
       // İlerleme koşulu `tamam` (alanlarGecerli && sozlesme) zaten
       // yerinde; bu kilit onun ÖNÜNE eklenen ikinci savunmadır.
-      RefAgreeRow(
+      // 16 Eki: metin ve bağlantılar tek kaynaktan
+      // (`ui/kullanim_sozlesmesi_onayi.dart`) — Kayıt Ol ekranıyla aynı.
+      KullanimSozlesmesiOnayi(
         key: v.sozlesmeKaydirKey,
         enabled: v.alanlarGecerli,
         value: v.sozlesme,
@@ -383,24 +386,6 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
           v.sozlesme = x;
           _degisti();
         },
-        parts: [
-          (
-            text: 'Kullanım sözleşmesi',
-            onTap: () => Navigator.pushNamed(context, '/legal', arguments: {
-              'slug': 'terms',
-              'title': 'Kullanım Koşulları',
-            }),
-          ),
-          (text: ' ve ', onTap: null),
-          (
-            text: 'gizlilik politikasını',
-            onTap: () => Navigator.pushNamed(context, '/legal', arguments: {
-              'slug': 'privacy',
-              'title': 'Gizlilik Politikası',
-            }),
-          ),
-          (text: ' okudum, kabul ediyorum.', onTap: null),
-        ],
       ),
     ]);
   }

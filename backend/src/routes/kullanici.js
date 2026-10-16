@@ -470,12 +470,15 @@ export function kullaniciRotalar(r, db) {
     const isim = adSoyad(ctx.body.name);
     const mail = eposta(ctx.body.email);
     const rol = rolDogrula(ctx.body.role);
-    // ── ⚠ ONAY VE YAŞ SUNUCUDA ZORUNLU (15 Eki, işletmeci kararı) ──
+    // ── ⚠ SÖZLEŞME ONAYI SUNUCUDA ZORUNLU (15 Eki, işletmeci kararı) ──
     // Uygulama "sözleşme onayı sunucuda da doğrulanır" diyordu ama sunucu
-    // onayı hiç denetlemeden terms_accepted=TRUE yazıyordu. Asgari yaş 18:
-    // doğum tarihi istenmez, kullanıcının beyanı alınır ve zamanı saklanır.
-    if (ctx.body.termsAccepted !== true) throw new ApiHatasi(400, 'TERMS_REQUIRED', 'Kullanım koşulları ve gizlilik politikası onayı zorunludur');
-    if (ctx.body.ageConfirmed !== true) throw new ApiHatasi(400, 'AGE_REQUIRED', 'HizmetCep\'e yalnız 18 yaşını doldurmuş kişiler kayıt olabilir');
+    // onayı hiç denetlemeden terms_accepted=TRUE yazıyordu.
+    // ── 16 Eki: AYRI 18 YAŞ KUTUSU KALDIRILDI (Kullanım Sözleşmesi, B/2) ──
+    // 18 yaş koşulu artık Kullanım Sözleşmesi madde 4'te sözleşme hükmüdür:
+    // kullanıcı sözleşmeyi kabul ederek 18 yaşını doldurduğunu beyan eder.
+    // Ayrı `ageConfirmed` alanı istenmez (gönderilirse yok sayılır); beyanın
+    // zamanı (`age_confirmed_at`) sözleşme kabulüyle aynı andır.
+    if (ctx.body.termsAccepted !== true) throw new ApiHatasi(400, 'TERMS_REQUIRED', 'Kullanım Sözleşmesi onayı zorunludur');
     const kanit = await telefonKaniti(db, ctx.body, tel, ['REGISTER']);
     if (kanit.uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(kanit.uid)) {
       throw hata.cakisma('Bu doğrulama başka bir hesaba bağlı');

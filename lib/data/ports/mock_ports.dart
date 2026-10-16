@@ -96,8 +96,6 @@ class MockAuthPort extends AuthPort {
     Set<String> serviceDistricts = const {},
     /// Sözleşme + gizlilik onayı — ZORUNLU.
     bool termsAccepted = false,
-    /// 18 yaş beyanı — mock (demo) depoda tutulmaz; ekran ve sunucu zorunlu tutar.
-    bool ageConfirmed = false,
     /// Yalnız gerçek doğrulama tamamlanınca true.
     bool emailVerified = false,
     String? kayitYetkisi,

@@ -196,10 +196,10 @@ const List<ProfilMenuOgesi> _diger = [
     // tek renge boyanınca satırları kayboluyordu.
     ikon: 'assets/svg/ic_doc_cizgi.svg',
     ikonZemini: Color(0xFFE2F7FA),
-    baslik: 'Kullanım Koşulları',
+    baslik: 'Kullanım Sözleşmesi',
     altYazi: 'Uygulama kullanım koşullarını inceleyin.',
     rota: '/legal',
-    rotaArgumani: {'slug': 'terms', 'title': 'Kullanım Koşulları'},
+    rotaArgumani: {'slug': 'terms', 'title': 'Kullanım Sözleşmesi'},
   ),
   ProfilMenuOgesi(
     ikon: 'assets/svg/ic_pshield.svg',

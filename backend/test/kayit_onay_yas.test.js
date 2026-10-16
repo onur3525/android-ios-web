@@ -1,5 +1,7 @@
-// KAYIT — koşul onayı ve 18 yaş beyanı SUNUCUDA zorunlu (15 Eki, işletmeci kararı).
+// KAYIT — Kullanım Sözleşmesi onayı SUNUCUDA zorunlu (15 Eki, işletmeci kararı).
 // Önceden sunucu onayı hiç denetlemeden terms_accepted=TRUE yazıyordu.
+// 16 Eki: ayrı 18 yaş beyanı kaldırıldı — yaş koşulu Kullanım Sözleşmesi
+// madde 4'te; sözleşme kabulüyle beyan edilir.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -42,22 +44,23 @@ async function kayit(tel, ek) {
 }
 
 test('koşul onayı olmadan kayıt reddedilir', async () => {
-  const r = await kayit('5360000001', { ageConfirmed: true });
+  const r = await kayit('5360000001', {});
   assert.equal(r.durum, 400);
   assert.equal(r.json.error.code, 'TERMS_REQUIRED');
-  const r2 = await kayit('5360000001', { ageConfirmed: true, termsAccepted: 'true' });
+  const r2 = await kayit('5360000001', { termsAccepted: 'true' });
   assert.equal(r2.json.error.code, 'TERMS_REQUIRED', 'yalnız gerçek true kabul edilir');
 });
 
-test('18 yaş beyanı olmadan kayıt reddedilir; hesap açılmaz', async () => {
+test('16 Eki: ayrı yaş beyanı istenmez; sözleşme onayıyla kayıt olur, beyan zamanı onay anıdır', async () => {
   const r = await kayit('5360000002', { termsAccepted: true });
-  assert.equal(r.durum, 400);
-  assert.equal(r.json.error.code, 'AGE_REQUIRED');
-  assert.equal(await db.prepare('SELECT 1 FROM users WHERE phone = ?').get('5360000002'), undefined);
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  const u = await db.prepare('SELECT age_confirmed_at, created_at FROM users WHERE phone = ?').get('5360000002');
+  assert.ok(u.age_confirmed_at, 'sözleşme kabulüyle yaş beyanı zamanı kaydedilmeli');
+  assert.equal(String(u.age_confirmed_at), String(u.created_at));
 });
 
-test('onay ve beyanla kayıt: beyan zamanı ve yayındaki sürümlerin onayı kaydedilir', async () => {
-  const r = await kayit('5360000003', { termsAccepted: true, ageConfirmed: true });
+test('onayla kayıt: yayındaki sürümlerin onayı (sürüm + SHA-256) kaydedilir', async () => {
+  const r = await kayit('5360000003', { termsAccepted: true });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const u = await db.prepare('SELECT id, age_confirmed_at, terms_accepted FROM users WHERE phone = ?').get('5360000003');
   assert.ok(u.age_confirmed_at);

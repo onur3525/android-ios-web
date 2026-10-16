@@ -827,7 +827,7 @@ class AuthRepository extends ChangeNotifier {
       return (
         account: null,
         error: const ValidationError(
-            'Kullanım sözleşmesi ve gizlilik politikası onayı zorunludur'),
+            'Kullanım Sözleşmesi onayı zorunludur'),
       );
     }
     final p = _norm(phone);
