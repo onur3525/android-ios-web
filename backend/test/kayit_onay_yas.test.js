@@ -19,7 +19,7 @@ before(async () => {
   db = await testDb();
   await tohumla(db);
   // Yayında bir Kullanım Koşulları ve Gizlilik Politikası sürümü olsun.
-  for (const slug of ['terms', 'privacy']) {
+  for (const slug of ['terms', 'privacy', 'kvkk']) {
     await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at)
       VALUES (?, ?, 1, 'metin', ?, '2026-10-15', 'PUBLISHED', ?)`).run(randomUUID(), slug, `ozet-${slug}`, simdi());
   }
@@ -67,4 +67,12 @@ test('onayla kayıt: yayındaki sürümlerin onayı (sürüm + SHA-256) kaydedil
   const onaylar = await db.prepare('SELECT slug, version, sha256, platform FROM legal_acceptances WHERE user_id = ? ORDER BY slug').all(u.id);
   assert.deepEqual(onaylar.map((o) => [o.slug, Number(o.version), o.sha256, o.platform]),
     [['privacy', 1, 'ozet-privacy', 'android'], ['terms', 1, 'ozet-terms', 'android']]);
+});
+
+test('16 Eki: iki onaylı kayıt (aydinlatmaAccepted) Kullanım Sözleşmesi + Aydınlatma Metni onayı yazar; gizlilik yazılmaz', async () => {
+  const r = await kayit('5360000004', { termsAccepted: true, aydinlatmaAccepted: true });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  const u = await db.prepare('SELECT id FROM users WHERE phone = ?').get('5360000004');
+  const onaylar = await db.prepare('SELECT slug FROM legal_acceptances WHERE user_id = ? ORDER BY slug').all(u.id);
+  assert.deepEqual(onaylar.map((o) => o.slug), ['kvkk', 'terms']);
 });

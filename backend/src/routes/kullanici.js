@@ -499,10 +499,17 @@ export function kullaniciRotalar(r, db) {
     // hangi metnin onaylandığı (sürüm + SHA-256) sonradan kanıtlanabilir.
     // Onay isteyen diğer belgeler girişteki onay akışında istenir.
     const pl = ['android', 'ios', 'web'].includes(ctx.body.platform) ? ctx.body.platform : null;
+    // ── 16 Eki: KAYITTA İKİ ZORUNLU ONAY ──
+    // Yeni kayıt ekranında kullanıcı Kullanım Sözleşmesi ile KVKK
+    // Aydınlatma Metni'ni AYRI ayrı onaylar (`aydinlatmaAccepted`); kaydı
+    // onayladığı belgelere yazılır. Eski uygulama sürümlerinde tek onay
+    // satırı "Kullanım sözleşmesi ve gizlilik politikası" idi; onlarda
+    // önceki davranış (terms + privacy) korunur.
+    const onaylananlar = ctx.body.aydinlatmaAccepted === true ? ['terms', 'kvkk'] : ['terms', 'privacy'];
     for (const v of await db.prepare(
       `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
-        WHERE v.slug IN ('terms', 'privacy') AND v.status = 'PUBLISHED' AND d.active = TRUE`,
-    ).all()) {
+        WHERE v.slug IN (?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
+    ).all(...onaylananlar)) {
       await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         .run(randomUUID(), id, v.slug, v.id, v.version, v.sha256, pl, z);
     }
