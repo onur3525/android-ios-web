@@ -60,7 +60,7 @@ test('uygula: yalnız hedef hesap yenilenir; yedek, oturum kapatma, denetim; sı
   assert.ok(!JSON.stringify(s).includes(sir), 'düz sır dönüşte/mesajda yok');
 });
 
-test('güvenlik: izinsiz hesap, anahtar uyuşmazlığı, çözülebilen sır, geçersiz sır, eksik parmak izi → yazma yok', async () => {
+test('güvenlik: izinsiz hesap, anahtar uyuşmazlığı, geçersiz sır, eksik parmak izi → yazma yok', async () => {
   const { db, id, eski } = await kurulum();
   await assert.rejects(adminMfaYenile(db, { email: 'diger@hc.test', yeniSir: yeni(), mod: 'uygula', sunucuParmakIzi: oz() }), /izinli/);
   await assert.rejects(adminMfaYenile(db, { email: HEDEF, yeniSir: yeni(), mod: 'uygula', sunucuParmakIzi: '0000000000000000' }), /AYNI DEĞİL/);
@@ -68,9 +68,26 @@ test('güvenlik: izinsiz hesap, anahtar uyuşmazlığı, çözülebilen sır, ge
   await assert.rejects(adminMfaYenile(db, { email: HEDEF, yeniSir: 'KISA', mod: 'uygula', sunucuParmakIzi: oz() }), /geçersiz/);
   await assert.rejects(adminMfaYenile(db, { email: HEDEF, yeniSir: yeni(), mod: 'sil', sunucuParmakIzi: oz() }), /Mod/);
   assert.equal((await db.prepare('SELECT totp_secret_enc FROM admins WHERE id = ?').get(id)).totp_secret_enc, eski);
-  const saglam = await kurulum({ bozuk: false });
-  await assert.rejects(adminMfaYenile(saglam.db, { email: HEDEF, yeniSir: yeni(), mod: 'uygula', sunucuParmakIzi: oz() }), /çözülebiliyor/);
-  assert.equal(Number((await saglam.db.prepare('SELECT COUNT(*) n FROM admin_mfa_yedekleri').get()).n), 0);
+});
+
+test('kontrol modu: mevcut sır çözülebilse de veritabanına yazılmaz', async () => {
+  const { db, id, eski } = await kurulum({ bozuk: false });
+  const sonuc = await adminMfaYenile(db, {
+    email: HEDEF,
+    yeniSir: yeni(),
+    mod: 'kontrol',
+    sunucuParmakIzi: oz()
+  });
+
+  assert.equal(sonuc.durum, 'kontrol-tamam');
+  assert.equal(
+    (await db.prepare('SELECT totp_secret_enc FROM admins WHERE id = ?').get(id)).totp_secret_enc,
+    eski
+  );
+  assert.equal(
+    Number((await db.prepare('SELECT COUNT(*) n FROM admin_mfa_yedekleri').get()).n),
+    0
+  );
 });
 
 test('yeni sır biçimi', () => {
