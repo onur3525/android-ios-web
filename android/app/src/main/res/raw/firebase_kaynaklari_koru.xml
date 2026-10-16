@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release derlemesinde kaynak küçültme (shrinkResources) bu değerleri
+     kodda doğrudan başvuru görmediği için silebilir; Firebase onları adla
+     okur. Korunur. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/google_app_id,@string/gcm_defaultSenderId,@string/google_api_key,@string/google_crash_reporting_api_key,@string/project_id,@string/google_storage_bucket" />
