@@ -262160,7 +262160,7 @@
   };
   A._KonusmaListesi_build_closure.prototype = {
     call$2(_, i) {
-      var o, l, otherId, t2, other, ad, okunmamis, aktif, t3, t4, t5, _this = this, _null = null,
+      var o, l, otherId, t2, t3, other, t4, ad, okunmamis, aktif, t5, t6, _this = this, _null = null,
         t1 = _this.konusmalar;
       if (!(i >= 0 && i < t1.length))
         return A.ioore(t1, i);
@@ -262168,26 +262168,34 @@
       l = _this.listingCtl._listings.byId$1(o.listingId);
       t1 = _this.me.id;
       otherId = o.providerId;
-      if (t1 === otherId) {
-        t2 = l == null ? _null : l.ownerId;
-        otherId = t2 == null ? "" : t2;
+      t2 = t1 === otherId;
+      if (t2) {
+        t3 = l == null ? _null : l.ownerId;
+        otherId = t3 == null ? "" : t3;
       }
       other = _this.auth._auth.accountById$1(otherId);
-      t2 = other == null ? _null : other.name;
-      ad = B.JSString_methods.trim$0(t2 == null ? "" : t2);
-      t2 = o.id;
-      okunmamis = A.okunmamisSohbetMesaji(_this.chatCtl._chats.threadFor$1(t2), t1);
-      aktif = t2 === _this.$this.aktifId;
+      t3 = other == null;
+      t4 = t3 ? _null : other.name;
+      ad = B.JSString_methods.trim$0(t4 == null ? "" : t4);
+      t4 = o.id;
+      okunmamis = A.okunmamisSohbetMesaji(_this.chatCtl._chats.threadFor$1(t4), t1);
+      aktif = t4 === _this.$this.aktifId;
       t1 = aktif ? _null : new A._KonusmaListesi_build__closure(_this.context, o);
-      t2 = aktif ? B.Color_xQ2 : B.Color_wst;
-      t3 = ad.length === 0;
-      t4 = t3 ? "?" : ad;
-      t3 = t3 ? "Kullan\u0131c\u0131" : ad;
+      t4 = aktif ? B.Color_xQ2 : B.Color_wst;
+      t5 = ad.length === 0;
+      t6 = t5 ? "?" : ad;
+      if (t3)
+        t2 = _null;
+      else
+        t2 = (t2 ? B.Role_0 : B.Role_1) === B.Role_1 ? other._fotoVeren : other._fotoAlan;
+      if (t2 == null)
+        t2 = "";
+      t3 = t5 ? "Kullan\u0131c\u0131" : ad;
       t5 = type$.JSArray_Widget;
-      t3 = A._setArrayType([new A.RefBasHarfAvatar(t4, "", 44, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, aktif ? B.FontWeight_700 : B.FontWeight_600), _null, _null), 1)], t5);
+      t3 = A._setArrayType([new A.RefBasHarfAvatar(t6, t2, 44, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, aktif ? B.FontWeight_700 : B.FontWeight_600), _null, _null), 1)], t5);
       if (okunmamis > 0)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_8_null_null_null, new A.RefSayiRozeti(okunmamis, B.Color_wst, _null)], t5));
-      return new A.RefTap(A.ColoredBox$(new A.Padding(B.EdgeInsets_12_10_12_10, A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), _null), t2, true), t1, _null, _null, _null);
+      return new A.RefTap(A.ColoredBox$(new A.Padding(B.EdgeInsets_12_10_12_10, A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), _null), t4, true), t1, _null, _null, _null);
     },
     $signature: 96
   };
@@ -275599,33 +275607,41 @@
   };
   A._TalepKarti0.prototype = {
     build$1(context) {
-      var _0_0, t3, t4, t5, t6, t7, t8, _this = this, _null = null,
+      var _0_0, t4, t5, t6, t7, t8, _this = this, _null = null,
         t1 = _this.talep,
         acik = t1.teklifTarihi != null,
         t2 = _this.hizmetAlan,
-        hizmetAlanAdi = t2 == null ? _null : t2.name;
+        t3 = t2 == null,
+        hizmetAlanAdi = t3 ? _null : t2.name;
       if (hizmetAlanAdi == null)
         hizmetAlanAdi = "Hizmet Alan";
       _0_0 = _this._teklif_istekleri_screen$_durumGoster$2$iptal(t1.durum, t1.silindiAt != null);
-      t2 = A.BorderRadius$circular(13);
-      t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      t4 = acik ? new A.RefBasHarfAvatar(hizmetAlanAdi, "", 44, _null) : B.RefSvg_ffv;
-      t5 = acik ? hizmetAlanAdi : A.maskeliAd(hizmetAlanAdi);
+      t4 = A.BorderRadius$circular(13);
+      t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
+      if (acik) {
+        if (t3)
+          t2 = _null;
+        else
+          t2 = t2._fotoAlan;
+        t2 = new A.ProfilAvatari(hizmetAlanAdi, t2 == null ? "" : t2, 44, _null);
+      } else
+        t2 = B.RefSvg_ffv;
+      t3 = acik ? hizmetAlanAdi : A.maskeliAd(hizmetAlanAdi);
       t6 = t1.hizmetAlanId;
       t7 = type$.JSArray_Widget;
-      t5 = A._setArrayType([A.Text$(t5, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_3_null_null, A.Text$(t1.hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + A.hizmetAlanTamamlananIs(context, t6) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), B.SizedBox_null_3_null_null], t7);
+      t3 = A._setArrayType([A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_3_null_null, A.Text$(t1.hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + A.hizmetAlanTamamlananIs(context, t6) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), B.SizedBox_null_3_null_null], t7);
       if (A.kullaniciKonumu(context, t6, true) != null) {
         t6 = A.kullaniciKonumu(context, t6, true);
         t6.toString;
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t6, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null), 1)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null)], t7));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t6, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null), 1)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null)], t7));
       }
-      t5.push(B.SizedBox_null_8_null_null);
+      t3.push(B.SizedBox_null_8_null_null);
       t6 = A._setArrayType([new A.DurumRozeti(_0_0._0, _0_0._1, t1.durum === B.TeklifTalebiDurumu_0, _null)], t7);
       t8 = t1.saglayiciId;
       if (A.okunmamisMesajSayisi(t1, t8) > 0)
         B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_8_null_null_null, new A.Flexible(1, B.FlexFit_1, new A.YeniMesajSeridi(A.okunmamisMesajSayisi(t1, t8), _null), _null)], t7));
-      t5.push(A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null));
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t4, B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, A.Text$(A.kisaTarih(t1.createdAt), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), new A._TalepKarti_build_closure0(_this, context), t2, _null, _null);
+      t3.push(A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, _null));
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t2, B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, A.Text$(A.kisaTarih(t1.createdAt), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), new A._TalepKarti_build_closure0(_this, context), t4, _null, _null);
     },
     _teklif_istekleri_screen$_durumGoster$2$iptal(d, iptal) {
       var t1;
