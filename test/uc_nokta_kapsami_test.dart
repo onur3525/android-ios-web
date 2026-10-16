@@ -51,7 +51,7 @@ void main() {
     });
   });
 
-  group('2 — ⚠ KARARA BAĞLANMIŞ TALEP: SİLİNEMEZ', () {
+  group('2 — ⚠ İŞE DÖNÜŞMÜŞ TALEP SİLİNEMEZ; SONUÇLANMIŞ TALEP SİLİNİR', () {
     test('seçildi ve tamamlandı', () {
       // Seçildikten sonra ortada bir iş vardır; tamamlandıktan sonra
       // ise yorum ve puan bu kayda bağlıdır.
@@ -59,11 +59,22 @@ void main() {
       expect(_talep(TeklifTalebiDurumu.tamamlandi).silinebilir, isFalse);
     });
 
-    test('⚠ REDDEDİLDİ VE SÜRESİ DOLDU DA KAPSAM DIŞI', () {
-      // İkisi de sonuçlanmış kayıttır. "Açık" olan yalnız yukarıdaki
-      // iki durumdur.
-      expect(_talep(TeklifTalebiDurumu.reddedildi).silinebilir, isFalse);
-      expect(_talep(TeklifTalebiDurumu.suresiDoldu).silinebilir, isFalse);
+    test('⚠ 16 Eki: REDDEDİLDİ VE SÜRESİ DOLDU SİLİNEBİLİR', () {
+      // Kullanıcı isteği: reddedilen talep de üç noktadan silinip
+      // hiçbir ekranda görünmemeli. Sunucu `/sil` bu durumları kabul eder.
+      expect(_talep(TeklifTalebiDurumu.reddedildi).silinebilir, isTrue);
+      expect(_talep(TeklifTalebiDurumu.suresiDoldu).silinebilir, isTrue);
+    });
+
+    test('zaten silinmiş talepte menü yok', () {
+      final t = _talep(TeklifTalebiDurumu.reddedildi)
+        ..silindiAt = DateTime(2026, 10, 16);
+      expect(t.silinebilir, isFalse);
+    });
+
+    test('silinen talep hizmet alana detayda da gösterilmez', () {
+      final k = _kod('lib/screens/teklif_talebi_detay_screen.dart');
+      expect(k.contains('(me.id == t.hizmetAlanId && t.hizmetAlanSildi)'), isTrue);
     });
   });
 
