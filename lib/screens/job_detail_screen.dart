@@ -93,6 +93,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
     // ilk çizimde bekleme göstermez; güncel durum yine aşağıda tazelenir.
     _approval = context.read<ProfileController>().approval;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // ⚠ İLAN YEREL LİSTEDE YOKSA SUNUCUDAN ALINIR (16 Eki): bildirime
+      // dokunarak (uygulama kapalıyken) gelindiğinde "Yeni işler" listesi
+      // henüz yüklenmemiş olur; ilan bulunamadı denmesin.
+      final lc = context.read<ListingController>();
+      if (lc.byId(widget.listingId) == null) {
+        unawaited(lc.loadOne(widget.listingId));
+      }
       _loadApproval();
       // ⚠ İlan İNCELENDİ olarak işaretlenir; liste ekranında
       // başlığı koyu ağırlıktan normale döner.
@@ -184,6 +191,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       // ⚠ METİN GÖSTERİLMEZ (12 Eyl, kullanıcı kararı): sayfa
       // sessizce kapanır, kullanıcı geldiği yerde kalır.
       return const YanlisTarafKapisi();
+    }
+    // Sunucudan alınırken "bulunamadı" yerine bekleme göstergesi.
+    if (l == null && listingCtl.loading) {
+      return const Scaffold(
+        backgroundColor: RC.pageBg,
+        body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      );
     }
     if (l == null) {
       return Scaffold(

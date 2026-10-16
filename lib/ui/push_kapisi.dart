@@ -15,6 +15,7 @@ import '../data/remote/mappers.dart';
 import '../domain/bildirim_rolu.dart';
 import '../screens/notifications_screen.dart';
 import 'gezgin.dart';
+import 'global_web_kabugu.dart' show AktifRota;
 
 /// ═══════════════════════════════════════════════════════════════
 /// PUSH KAPISI — Firebase Cloud Messaging yaşam döngüsü (tek kaynak)
@@ -92,6 +93,9 @@ class _PushKapisiState extends State<PushKapisi> {
 
   @override
   void dispose() {
+    if (_rotaDinleniyor) {
+      AktifRota.ad.removeListener(_bekleyeniIsle);
+    }
     _auth?.removeListener(_oturumDegisti);
     super.dispose();
   }
@@ -122,11 +126,47 @@ class _PushKapisiState extends State<PushKapisi> {
     if (_basladi) {
       unawaited(_giris());
     }
+    _bekleyeniIsle();
+  }
+
+  // ── ⚠ SOĞUK AÇILIŞTA BİLDİRİM HEDEFİ (16 Eki, kullanıcı bulgusu) ──
+  //
+  // Uygulama kapalıyken gelen bildirime dokununca ilgili ekrana değil
+  // ana panele düşülüyordu. Neden: dokunulan bildirim, oturum yüklenir
+  // yüklenmez açılıyordu; ama o an açılış ekranı hâlâ ekrandaydı ve
+  // ardından rol paneline `pushNamedAndRemoveUntil` ile geçerken açılan
+  // hedef ekranı da siliyordu. Artık hedef, açılış/bağlanıyor ekranı
+  // bitip ilk gerçek ekran (rol paneli) geldikten SONRA açılır.
+  bool get _acilisTamam {
+    final r = AktifRota.ad.value;
+    return r != null && r != '/' && r != '/baglaniyor';
+  }
+
+  bool _rotaDinleniyor = false;
+
+  void _bekleyeniIsle() {
     final bekleyen = _bekleyenAcilis;
-    if (bekleyen != null) {
-      _bekleyenAcilis = null;
-      _acildi(bekleyen);
+    if (bekleyen == null || _auth?.currentAccount == null) {
+      return;
     }
+    if (!_acilisTamam) {
+      if (!_rotaDinleniyor) {
+        _rotaDinleniyor = true;
+        AktifRota.ad.addListener(_bekleyeniIsle);
+      }
+      return;
+    }
+    _bekleyenAcilis = null;
+    if (_rotaDinleniyor) {
+      _rotaDinleniyor = false;
+      AktifRota.ad.removeListener(_bekleyeniIsle);
+    }
+    // Rol paneli ilk karesini çizdikten sonra hedef üstüne açılır.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _acildi(bekleyen);
+      }
+    });
   }
 
   Future<void> _giris() async {
@@ -184,9 +224,11 @@ class _PushKapisiState extends State<PushKapisi> {
   }
 
   void _acildi(Map<String, dynamic> veri) {
-    // Oturum henüz yüklenmediyse (soğuk açılış) giriş sonrasına ertelenir.
-    if (_auth?.currentAccount == null) {
+    // Oturum henüz yüklenmediyse ya da açılış ekranı hâlâ duruyorsa
+    // (soğuk açılış) ilk gerçek ekrandan sonraya ertelenir.
+    if (_auth?.currentAccount == null || !_acilisTamam) {
       _bekleyenAcilis = veri;
+      _bekleyeniIsle();
       return;
     }
     // ⚠ TEK KAYNAK (14 Eki): uygulama içi bildirim kartıyla AYNI
