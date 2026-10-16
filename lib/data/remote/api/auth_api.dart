@@ -27,6 +27,10 @@ class AuthApi {
         'phone': phone, 'password': password, 'name': name,
         'email': email, 'role': role, 'otpCode': otpCode,
         'termsAccepted': termsAccepted,
+        // 16 Eki: kayıt ekranında iki zorunlu onay var; `termsAccepted` ancak
+        // Kullanım Sözleşmesi VE Aydınlatma Metni işaretliyse true olur.
+        // Sunucu onay kaydını bu iki belgeye yazar.
+        'aydinlatmaAccepted': termsAccepted,
         if (platform != null) 'platform': platform,
         // Firebase telefon doğrulamasının kanıtı (sunucu doğrular).
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,

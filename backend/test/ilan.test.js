@@ -104,6 +104,16 @@ test('iletişim: yalnız taraflar; ücretsiz açılır; karşı tarafa bildirim'
   assert.equal(durum.json.counterpart.phone, '5300000001');
 });
 
+test('16 Eki: panel ilan detayı iletişim tercihini ve iletişimi kimin açtığını gösterir', async () => {
+  const d = await istek(`/admin/v1/listings/${ilan.id}`);
+  assert.equal(d.durum, 200, JSON.stringify(d.json));
+  assert.equal(d.json.iletisimTercihi, 'telefonGoster');
+  const o = d.json.offers.find((x) => x.id === teklif.id);
+  assert.equal(o.contactOpenedBy, 'OWNER');
+  assert.ok(o.contactOpenedAt);
+  assert.ok(d.json.offers.filter((x) => x.id !== teklif.id).every((x) => x.contactOpenedAt === null));
+});
+
 test('seçim: yalnız sahip; diğer teklifler kapanır; değerlendirme bir kez', async () => {
   assert.equal((await istek(`/api/v1/listings/${ilan.id}/selected-offer`, { yontem: 'PUT', token: usta.token, govde: { offerId: teklif.id } })).durum, 403);
   const s = await istek(`/api/v1/listings/${ilan.id}/selected-offer`, { yontem: 'PUT', token: musteri.token, govde: { offerId: teklif.id } });

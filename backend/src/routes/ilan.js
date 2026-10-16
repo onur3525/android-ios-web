@@ -709,12 +709,21 @@ export function ilanRotalar(r, db) {
     if (!l) throw hata.bulunamadi('İlan bulunamadı');
     const sahip = await db.prepare('SELECT id, name, status FROM users WHERE id = ?').get(l.owner_id);
     const teklifler = await db.prepare(
-      `SELECT o.*, u.name provider_name FROM offers o JOIN users u ON u.id = o.provider_id WHERE o.listing_id = ? ORDER BY o.created_at`,
+      `SELECT o.*, u.name provider_name, c.opened_at iletisim_acilis, c.opened_by iletisim_acan
+         FROM offers o JOIN users u ON u.id = o.provider_id
+         LEFT JOIN contacts c ON c.offer_id = o.id
+        WHERE o.listing_id = ? ORDER BY o.created_at`,
     ).all(l.id);
     const yorum = await db.prepare('SELECT * FROM reviews WHERE listing_id = ?').get(l.id);
     return {
       ...ilanGorunumu(l), removedReason: l.removed_reason, removedAt: l.removed_at, deleteReason: l.delete_reason,
-      owner: sahip, offers: teklifler.map((o) => ({ ...teklifGorunumu(o), providerName: o.provider_name })),
+      owner: sahip,
+      // 16 Eki: iletişim iki taraftan açılabildiği için panel kimin açtığını gösterir.
+      offers: teklifler.map((o) => ({
+        ...teklifGorunumu(o), providerName: o.provider_name,
+        contactOpenedAt: o.iletisim_acilis ?? null,
+        contactOpenedBy: !o.iletisim_acan ? null : (o.iletisim_acan === l.owner_id ? 'OWNER' : (o.iletisim_acan === o.provider_id ? 'PROVIDER' : 'OTHER')),
+      })),
       review: yorum ? yorumGorunumu(yorum) : null,
     };
   });

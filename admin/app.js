@@ -142,6 +142,7 @@ SAYFALAR.ilan = async (id) => {
     h('div', { class: 'ust' }, h('h2', {}, `İlan ${l.ilanNo}`), l.status !== 'ADMIN_REMOVED' ? h('button', { class: 'btn tehlike', onclick: kaldir }, 'İlanı kaldır') : null),
     h('div', { class: 'kart' }, alanlarListesi([
       ['Hizmet', l.title], ['Konum', l.location], ['Açıklama', l.description], ['Durum', rozet(l.status)],
+      ['İletişim tercihi', l.iletisimTercihi === 'yalnizMesaj' ? 'Sadece uygulama içi mesaj (telefon gizli)' : 'Telefon + uygulama içi mesaj'],
       ['Sahip', h('a', { href: `#/kullanici/${l.owner.id}` }, `${l.owner.name} (${l.owner.status})`)],
       ['Fotoğraf', l.photoPaths.length ? `${l.photoPaths.length} adet` : 'yok'], ['Oluşturma', tarih(l.createdAt)], ['Bitiş', tarih(l.expiresAt)],
       ['Kaldırma gerekçesi', l.removedReason], ['Sahibin silme nedeni', l.deleteReason],
@@ -149,6 +150,9 @@ SAYFALAR.ilan = async (id) => {
     h('h3', {}, 'Teklifler'),
     tablo([{ baslik: 'Hizmet veren', deger: (o) => h('a', { href: `#/kullanici/${o.providerId}` }, o.providerName) },
       { baslik: 'Tutar (TL)', deger: (o) => o.amountTl }, { baslik: 'Not', deger: (o) => o.note }, { baslik: 'Durum', deger: (o) => rozet(o.status) },
+      { baslik: 'İletişim', deger: (o) => (o.contactOpenedAt
+        ? `Açık — ${({ OWNER: 'hizmet alan açtı', PROVIDER: 'hizmet veren açtı' })[o.contactOpenedBy] ?? 'açıldı'} (${tarih(o.contactOpenedAt)})`
+        : 'Kapalı') },
       { baslik: 'Sohbet', deger: (o) => h('a', { href: `#/sohbet/${o.id}` }, 'görüntüle') }], l.offers),
     h('p', { class: 'not' }, 'Teklif tutarı hizmet verenin müşteriye sunduğu bedeldir; HizmetCep ücret almaz.'),
     l.review ? h('div', { class: 'kart' }, h('h3', {}, 'Değerlendirme'), alanlarListesi([['Puan', l.review.stars], ['Yorum', l.review.text], ['Durum', rozet(l.review.status)]])) : null);

@@ -54,5 +54,8 @@ void main() {
     expect(_oku('lib/data/ports/api_ports.dart').contains('if (!termsAccepted) {'), isTrue);
     expect(_oku('lib/data/repositories/auth_repository.dart').contains('if (!termsAccepted) {'), isTrue);
     expect(_oku('backend/src/routes/kullanici.js').contains("ctx.body.termsAccepted !== true"), isTrue);
+    // İki onay sunucuya bildirilir; onay kaydı sözleşme + aydınlatma metnine yazılır.
+    expect(_oku('lib/data/remote/api/auth_api.dart').contains("'aydinlatmaAccepted': termsAccepted,"), isTrue);
+    expect(_oku('backend/src/routes/kullanici.js').contains("ctx.body.aydinlatmaAccepted === true ? ['terms', 'kvkk'] : ['terms', 'privacy']"), isTrue);
   });
 }
