@@ -196,3 +196,16 @@ test('5 yanlış şifre hesabı kilitler', async () => {
   const r = await istek('/admin/v1/auth/login', { yontem: 'POST', govde: { email: 'kilit@hc.test', password: SIFRE } });
   assert.equal(r.durum, 429);
 });
+
+test('16 Eki: TOTP sırrı çözülemezse 500 değil açık hata (MFA_SECRET_UNREADABLE)', async () => {
+  await db.prepare('DELETE FROM rate_limits').run(); // önceki testlerin giriş sınırı
+  // Başka bir ana anahtarla şifrelenmiş sırrı taklit eder (biçim doğru, içerik çözülemez).
+  const bozuk = 'v1.' + Buffer.alloc(12).toString('base64') + '.' + Buffer.alloc(16).toString('base64') + '.' + Buffer.from('xx').toString('base64');
+  await db.prepare(`INSERT INTO admins (id, email, name, role, password_hash, totp_secret_enc, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .run(randomUUID(), 'eski@hc.test', 'eski', 'super_admin', sifreOzetle(SIFRE), bozuk, simdi());
+  const a = await istek('/admin/v1/auth/login', { yontem: 'POST', govde: { email: 'eski@hc.test', password: SIFRE } });
+  assert.equal(a.durum, 200);
+  const b = await istek('/admin/v1/auth/mfa', { yontem: 'POST', govde: { code: '123456' }, cerez: a.setCookie.split(';')[0] });
+  assert.equal(b.durum, 409, JSON.stringify(b.json));
+  assert.equal(b.json.error.code, 'MFA_SECRET_UNREADABLE');
+});
