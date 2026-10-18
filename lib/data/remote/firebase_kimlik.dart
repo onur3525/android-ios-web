@@ -285,6 +285,31 @@ class FirebaseKimlik {
     } catch (_) {}
   }
 
+  /// Mevcut Firebase e-posta adresine doğrulama bağlantısı gönderir.
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String beklenenEposta) async {
+    final a = await _auth();
+    final u = a?.currentUser;
+    if (a == null || u == null || u.email == null ||
+        !u.providerData.any((p) => p.providerId == 'password')) {
+      return const ValidationError('Bu oturum bir e-posta adresine bağlı değil. Güvenlik için yeniden giriş yapın.');
+    }
+    try {
+      await u.reload();
+      final guncel = a.currentUser;
+      if (guncel == null || guncel.email == null ||
+          guncel.email!.trim().toLowerCase() != beklenenEposta.trim().toLowerCase()) {
+        return const ValidationError('Firebase hesabındaki e-posta mevcut profil adresiyle eşleşmiyor. Yeniden giriş yapın.');
+      }
+      if (guncel.emailVerified) {
+        return const ValidationError('Bu e-posta Firebase tarafından zaten doğrulanmış. Profilinizi yenileyin.');
+      }
+      await guncel.sendEmailVerification();
+      return null;
+    } catch (e) {
+      return _hata(e);
+    }
+  }
+
   /// Yeni adrese doğrulama bağlantısı gönderir; adres BAĞLANTI tıklanınca
   /// değişir ve sonraki girişte backend hesabına işlenir.
   Future<DomainError?> epostaDegistir(String yeni) async {
