@@ -235,6 +235,7 @@ class MockAuthPort extends AuthPort {
   }
 
   /// MOCK MODDA gerçek e-posta gönderimi yapılamaz; sahte başarı döndürme.
+  @override
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async =>
       const ValidationError('E-posta doğrulaması yalnız gerçek API modunda kullanılabilir.');
 
