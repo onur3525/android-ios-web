@@ -266,6 +266,24 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         text: Validators.phoneLocal(me.phone));
   }
 
+  Future<void> _yeniEpostaDogrulamaGonder() async {
+    if (_busy || !_epostaDegisti || _epostaHata != null) return;
+    setState(() => _busy = true);
+    final err = await context.read<ProfileController>().epostaDegisimiBaslat(
+          epostaNormalize(_email.text),
+        );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (err != null) {
+      sysToastErr(context, SysKind.genericError, extra: err.message);
+      return;
+    }
+    sysToastOk(
+      context,
+      'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.',
+    );
+  }
+
   Future<void> _save() async {
     if (_busy) {
       return;
@@ -539,6 +557,63 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               onEditingComplete: () => _fTelefon.requestFocus(),
               validator: (v) => _kural('eposta', _fEposta, v, Validators.email),
             ),
+
+            // E-POSTA DOĞRULAMA DURUMU — e-posta alanının hemen altında.
+            Builder(builder: (context) {
+              final hesap = context.watch<AuthController>().currentAccount;
+              final yeniAdresGirildi = _epostaDegisti;
+              final onayli = !yeniAdresGirildi && (hesap?.emailVerified ?? false);
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          onayli ? Icons.check_circle : Icons.info_outline,
+                          size: 18,
+                          color: onayli ? RC.success : RC.textMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            onayli ? 'E-posta onaylı ✓' : 'E-posta adresi onaylanmadı',
+                            style: refText(
+                              size: RF.s135,
+                              weight: RF.w500,
+                              color: onayli ? RC.success : RC.textMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!onayli && !yeniAdresGirildi)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _busy ? null : () => sysToastErr(
+                            context,
+                            SysKind.genericError,
+                            extra: 'Mevcut e-posta için doğrulama bağlantısı gönderen sunucu işlemi henüz mevcut değil.',
+                          ),
+                          icon: const Icon(Icons.mark_email_read_outlined, size: 18),
+                          label: const Text('E-posta Adresini Doğrula'),
+                        ),
+                      ),
+                    if (yeniAdresGirildi)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _busy ? null : _yeniEpostaDogrulamaGonder,
+                          icon: const Icon(Icons.outgoing_mail, size: 18),
+                          label: const Text('Yeni E-posta Adresini Doğrula'),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
 
             // ⚠ KAYIT EKRANIYLA AYNI KISIT.
             //
