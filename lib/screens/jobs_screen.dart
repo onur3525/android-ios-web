@@ -519,32 +519,6 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
         // ⚠ KENAR ÇUBUĞU `GlobalWebKabugu`DA ÇİZİLİR: burada da
         // çizilirse ekranda İKİ ÇUBUK olurdu.
         child: Column(children: [
-          // ── ⚠ SAYFA BAŞLIĞI ──
-          //
-          // Bu ekranın başlığı HİÇ YOKTU: kenar çubuğunda
-          // "Kazandığım" seçiliyken sağ tarafta hangi bölümde
-          // olunduğunu söyleyen bir şey bulunmuyordu. Öteki bölümler
-          // (`Bildirimler`, `Profil Bilgilerim`, `Hizmet
-          // Kategorilerim`) başlığını gösteriyor.
-          //
-          // ⚠ ORTAK BİLEŞEN, ORTAK ÖLÇÜ: `RefPageTitle` — 25 px,
-          // ortalı. Elle `Text` yazılsaydı boyut ayrışırdı.
-          //
-          // ⚠ AD KENAR ÇUBUĞUYLA AYNI: "Kazandığım" ve hizmet
-          // verende "İşlerim", hizmet alanda "İlanlarım" —
-          // `nav_actions.dart`taki etiketlerin birebir aynısı.
-          //
-          // ⚠ GERİ OKU YOK: bu bir bölüm, alt sayfa değil.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: RefPageTitle(
-              // ⚠ BU EKRAN YALNIZ HİZMET VERENE AİT: `custNavItems`
-              // burada `saglayici: true` ile kuruluyor, ayrı bir rol
-              // denetimi gerekmiyor.
-              widget.kazandigim ? 'Kazandığım' : 'İşlerim',
-              geriDugmesi: false,
-            ),
-          ),
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve
