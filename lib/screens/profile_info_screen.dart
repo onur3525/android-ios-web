@@ -266,6 +266,24 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         text: Validators.phoneLocal(me.phone));
   }
 
+  Future<void> _mevcutEpostaDogrulamaGonder() async {
+    if (_busy) return;
+    final mevcut = _hesap?.email.trim() ?? '';
+    if (mevcut.isEmpty || epostaNormalize(_email.text) != epostaNormalize(mevcut)) {
+      sysToastErr(context, SysKind.genericError, extra: 'Mevcut e-posta adresini geri yükleyin veya yeni adres doğrulamasını kullanın.');
+      return;
+    }
+    setState(() => _busy = true);
+    final err = await context.read<ProfileController>().mevcutEpostaDogrulamaGonder(mevcut);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (err != null) {
+      sysToastErr(context, SysKind.genericError, extra: err.message);
+      return;
+    }
+    sysToastOk(context, 'Doğrulama bağlantısı mevcut e-posta adresinize gönderildi. E-postanızdaki bağlantıyı açın.');
+  }
+
   Future<void> _yeniEpostaDogrulamaGonder() async {
     if (_busy || !_epostaDegisti || _epostaHata != null) return;
     setState(() => _busy = true);
@@ -592,9 +610,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
-                          // Mevcut e-posta için sunucu ucu henüz yok;
-                          // yanlış adrese mail gönderiyormuş gibi davranma.
-                          onPressed: null,
+                          onPressed: _busy ? null : _mevcutEpostaDogrulamaGonder,
                           icon: const Icon(Icons.mark_email_read_outlined, size: 18),
                           label: const Text('E-posta Adresini Doğrula'),
                         ),

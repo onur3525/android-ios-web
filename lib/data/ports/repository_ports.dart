@@ -208,6 +208,7 @@ abstract class AuthPort extends ChangeNotifier {
   /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ; bağlantı tıklanana
   /// kadar eski adres geçerlidir (iş kuralları §4).
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta);
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta);
   Future<ProviderApprovalState> providerApproval();
 
   /// TEK ADRES: kullanıcının en fazla bir adresi olur. Yalnız güncelleme

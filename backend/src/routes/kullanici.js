@@ -932,7 +932,13 @@ export function kullaniciRotalar(r, db) {
     const istenen = String(ctx.body.newEmail ?? '').trim().toLowerCase();
     if (istenen && istenen !== yeni) throw hata.durum('Doğrulanan adres istenen adresle aynı değil');
     if (yeni === String(u.email || '').toLowerCase()) {
-      return kullaniciGorunumu(u, await saglayiciProfili(db, u.id)); // zaten güncel
+      // Aynı adres Firebase'de doğrulanmışsa backend durumunu da eşitle.
+      if (!u.email_verified) {
+        await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+        const g = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+        return kullaniciGorunumu(g, await saglayiciProfili(db, g.id));
+      }
+      return kullaniciGorunumu(u, await saglayiciProfili(db, u.id));
     }
     if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(yeni, u.id)) {
       throw hata.cakisma('Bu e-posta adresi başka bir hesapta kayıtlı');
