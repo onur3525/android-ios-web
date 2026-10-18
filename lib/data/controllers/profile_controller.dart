@@ -38,6 +38,10 @@ class ProfileController extends BaseController {
       runAction('profile:email-change',
           () => _auth.epostaDegisimiBaslat(yeniEposta));
 
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) =>
+      runAction('profile:email-verify-current',
+          () => _auth.mevcutEpostaDogrulamaGonder(mevcutEposta));
+
   /// TEK ADRES — güncelleme. Ekleme/silme YOKTUR.
   Future<DomainError?> saveAddress({
     required String district,
