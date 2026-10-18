@@ -475,31 +475,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   child: tumunuOkundu,
                 ),
               ),
-          ] else
+          ] else if (tumunuOkundu != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Bildirimler',
-                      // ⚠ ORTALI: öteki sayfa başlıkları (`RefPageTitle`)
-                      // ortalı çiziliyor; bu ekran kendi başlığını
-                      // çizdiği için kuralın dışında kalmıştı. Sağdaki
-                      // "Tümünü okundu say" düğmesi yerinde kalır.
-                      textAlign: TextAlign.center,
-                      style: refText(
-                        size: RF.s25,
-                        weight: RF.w700,
-                        color: RC.text,
-                        letterSpacing: RF.lsM03,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10), // gap:10px
-                  // .nt-readall — okunmamış varken anlamlıdır.
-                  if (tumunuOkundu != null) tumunuOkundu,
-                ],
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: tumunuOkundu,
               ),
             ),
 
