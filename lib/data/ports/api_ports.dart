@@ -501,6 +501,10 @@ class ApiAuthPort extends AuthPort {
       FirebaseKimlik.i.epostaDegistir(yeniEposta);
 
   @override
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) =>
+      FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
+
+  @override
   Future<ProviderApprovalState> providerApproval() => repo.providerApproval();
 
   /// Şehir SUNUCUDAN gelen bölge ağacından alınır; sabit dosya kullanılmaz.
