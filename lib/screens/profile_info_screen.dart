@@ -592,11 +592,9 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
-                          onPressed: _busy ? null : () => sysToastErr(
-                            context,
-                            SysKind.genericError,
-                            extra: 'Mevcut e-posta için doğrulama bağlantısı gönderen sunucu işlemi henüz mevcut değil.',
-                          ),
+                          // Mevcut e-posta için sunucu ucu henüz yok;
+                          // yanlış adrese mail gönderiyormuş gibi davranma.
+                          onPressed: null,
                           icon: const Icon(Icons.mark_email_read_outlined, size: 18),
                           label: const Text('E-posta Adresini Doğrula'),
                         ),
