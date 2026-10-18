@@ -246451,6 +246451,8 @@
       t1 = type$.Animation_double;
       t1._as(animation);
       t1._as(secondaryAnimation);
+      if (B.Set_aTPai.contains$1(0, route._settings.name))
+        return child;
       egri = A.CurvedAnimation$(B.Cubic_ENF, animation, B.Cubic_ByQ);
       t2 = type$.Tween_Offset;
       return new A.FadeTransition(egri, false, A.SlideTransition$(child, new A._AnimatedEvaluation(t1._as(egri), new A.Tween(B.Offset_SfO, B.Offset_0_0, t2), t2._eval$1("_AnimatedEvaluation<Animatable.T>")), null, true), null);
@@ -311063,6 +311065,8 @@
     B.Set_WqFol = new A.ConstantStringSet(B.Object_javascript_0, 1, type$.ConstantStringSet_String);
     B.Object_qD1 = {click: 0, keyup: 1, keydown: 2, mouseup: 3, mousedown: 4, pointerdown: 5, pointerup: 6};
     B.Set_YLrVv = new A.ConstantStringSet(B.Object_qD1, 7, type$.ConstantStringSet_String);
+    B.Object_KGW = {"/customer/find-provider": 0, "/customer/listings": 1, "/provider/jobs": 2, "/provider/won": 3, "/notifications": 4, "/profile": 5};
+    B.Set_aTPai = new A.ConstantStringSet(B.Object_KGW, 6, type$.ConstantStringSet_String);
     B.Set_cWSfo = new A.GeneralConstantSet([B.TargetPlatform_0, B.TargetPlatform_2, B.TargetPlatform_1], type$.GeneralConstantSet_TargetPlatform);
     B.Set_empty0 = new A.ConstantStringSet(B.Object_empty, 0, A.findType("ConstantStringSet<Factory<OneSequenceGestureRecognizer>>"));
     B.Set_empty3 = new A.ConstantStringSet(B.Object_empty, 0, A.findType("ConstantStringSet<SemanticsTag>"));
