@@ -101,10 +101,21 @@ jobs:
           echo "APK: $APK"
           "$ANDROID_HOME"/build-tools/*/aapt dump badging "$APK" 2>/dev/null | head -1 || true
           "$(ls -d "$ANDROID_HOME"/build-tools/* | tail -1)"/apksigner verify --print-certs "$APK" | grep -E "SHA-1|SHA-256|DN" || true
+      # Yalnızca Flutter'ın standart tek APK çıktısını yayımla.
+      # Önceki glob hem apk/debug hem flutter-apk altındaki aynı APK'yı
+      # arşive koyarak iki kopya oluşturuyordu; mobil arşiv uygulamalarında
+      # açma sorunlarını önlemek için yolu açıkça belirtiyoruz.
+      - name: Tek APK dosyasını hazırla
+        run: |
+          test -s build/app/outputs/flutter-apk/app-debug.apk
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-debug.apk dist/HizmetCep-debug.apk
+          ls -lh dist/HizmetCep-debug.apk
       - uses: actions/upload-artifact@v6
         with:
-          name: android-debug-apk
-          path: build/app/outputs/**/*.apk
+          name: hizmetcep-debug-apk
+          path: dist/HizmetCep-debug.apk
+          if-no-files-found: error
           retention-days: 7
 
   web-debug:
