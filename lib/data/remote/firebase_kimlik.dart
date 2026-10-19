@@ -285,25 +285,48 @@ class FirebaseKimlik {
     } catch (_) {}
   }
 
-  /// Mevcut Firebase e-posta adresine doğrulama bağlantısı gönderir.
+  /// Firebase hesabındaki mevcut e-postayı doğrular veya telefon tabanlı
+  /// oturumda hedef e-posta için doğrulama/değişiklik akışını başlatır.
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String beklenenEposta) async {
     final a = await _auth();
-    final u = a?.currentUser;
-    if (a == null || u == null || u.email == null ||
-        !u.providerData.any((p) => p.providerId == 'password')) {
-      return const ValidationError('Bu oturum bir e-posta adresine bağlı değil. Güvenlik için yeniden giriş yapın.');
+    final ilk = a?.currentUser;
+    final hedef = beklenenEposta.trim().toLowerCase();
+
+    if (a == null || ilk == null) {
+      return const ValidationError('Güvenlik için lütfen yeniden giriş yapın.');
     }
+    if (hedef.isEmpty) {
+      return const ValidationError('Doğrulanacak e-posta adresi boş olamaz.');
+    }
+
     try {
-      await u.reload();
+      await ilk.reload();
       final guncel = a.currentUser;
-      if (guncel == null || guncel.email == null ||
-          guncel.email!.trim().toLowerCase() != beklenenEposta.trim().toLowerCase()) {
-        return const ValidationError('Firebase hesabındaki e-posta mevcut profil adresiyle eşleşmiyor. Yeniden giriş yapın.');
+      if (guncel == null) {
+        return const ValidationError('Oturum yenilenemedi. Lütfen yeniden giriş yapın.');
       }
-      if (guncel.emailVerified) {
-        return const ValidationError('Bu e-posta Firebase tarafından zaten doğrulanmış. Profilinizi yenileyin.');
+
+      final firebaseEposta = guncel.email?.trim().toLowerCase();
+      if (firebaseEposta != null &&
+          firebaseEposta.isNotEmpty &&
+          firebaseEposta != hedef) {
+        return const ValidationError(
+          'Firebase hesabındaki e-posta profil adresiyle eşleşmiyor. Önce e-posta değişikliği akışını tamamlayın.',
+        );
       }
-      await guncel.sendEmailVerification();
+
+      if (firebaseEposta == hedef) {
+        if (guncel.emailVerified) {
+          return const ValidationError(
+            'Bu e-posta Firebase tarafından zaten doğrulanmış. Profilinizi yenileyin.',
+          );
+        }
+        await guncel.sendEmailVerification();
+      } else {
+        // Telefon ile açılmış Firebase hesabında email null olabilir.
+        // Firebase doğrulama bağlantısı tıklanana kadar adresi değiştirmez.
+        await guncel.verifyBeforeUpdateEmail(hedef);
+      }
       return null;
     } catch (e) {
       return _hata(e);
