@@ -515,6 +515,9 @@ class ApiAuthPort extends AuthPort {
   }
 
   @override
+  Future<void> epostaOnayiniEsitle() => repo.epostaOnayiniEsitle();
+
+  @override
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async {
     final (gonderildi, err) = await repo.kurumsalEpostaGonder();
     if (err != null) {

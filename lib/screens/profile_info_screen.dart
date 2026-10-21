@@ -27,7 +27,8 @@ class ProfileInfoScreen extends StatefulWidget {
   State<ProfileInfoScreen> createState() => _ProfileInfoScreenState();
 }
 
-class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
+class _ProfileInfoScreenState extends State<ProfileInfoScreen>
+    with WidgetsBindingObserver {
   final _form = GlobalKey<FormState>();
   /// Ad ve Soyad AYRI alanlardır (tek "Ad Soyad" kutusu yanlıştı).
   ///
@@ -224,9 +225,41 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
     }
   }
 
+  /// ── ⚠ E-POSTA ONAYI EŞİTLEME (21 Eki, kullanıcı bulgusu) ──
+  ///
+  /// E-postadaki bağlantıya tıklanınca doğrulama Firebase'de olur; ekran
+  /// bunu bilmediği için "onaylanmadı" yazıp düğmeyi açık tutuyordu.
+  /// Ekran açılınca ve uygulamaya/sekmeye geri dönülünce hesap sunucuyla
+  /// eşitlenir. "Doğrula ve değiştir" tamamlandıysa alana yeni adres yazılır.
+  Future<void> _epostaOnayiniEsitle() async {
+    final once = context.read<AuthController>().currentAccount;
+    if (once == null || once.emailVerified) return;
+    await context.read<ProfileController>().epostaOnayiniEsitle();
+    if (!mounted) return;
+    final sonra = context.read<AuthController>().currentAccount;
+    if (sonra == null || !sonra.emailVerified) return;
+    setState(() {
+      _epostaGonderildi = false;
+      if (epostaNormalize(_email.text) == epostaNormalize(once.email)) {
+        _email.text = sonra.email;
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _epostaOnayiniEsitle();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _epostaOnayiniEsitle();
+    });
     _fAd.addListener(_adOdak);
     _fSoyad.addListener(_soyadOdak);
     // Alan odaktan çıkınca "terk edildi" sayılır; odağa dönünce uyarı
@@ -446,6 +479,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _email.dispose();
     _fAd.removeListener(_adOdak);
     _fSoyad.removeListener(_soyadOdak);

@@ -199,7 +199,7 @@ export async function firebaseKullaniciBilgisi(uid) {
   const vs = Number(k.validSince);
   return {
     validSince: Number.isFinite(vs) && vs > 0 ? vs : null, disabled: k.disabled === true, phoneNumber: k.phoneNumber ?? null,
-    email: k.email ?? null, saglayicilar: Array.isArray(k.providerUserInfo) ? k.providerUserInfo.map((p) => p.providerId) : [],
+    email: k.email ?? null, epostaDogrulandi: k.emailVerified === true, saglayicilar: Array.isArray(k.providerUserInfo) ? k.providerUserInfo.map((p) => p.providerId) : [],
     // Firebase'in kaydettiği son şifre değişikliği (ms) — e-posta bağlantısıyla
     // sıfırlama dahil; sunucu bu değişiklikten haberdar edilmez.
     sifreGuncellemeMs: Number(k.passwordUpdatedAt) > 0 ? Number(k.passwordUpdatedAt) : null,

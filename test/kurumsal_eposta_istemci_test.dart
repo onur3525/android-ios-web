@@ -74,6 +74,51 @@ void main() {
     expect(be.countOf('POST /auth/firebase/baglanti'), 0);
   });
 
+  test('21 Eki: eşitleme hesabı "onaylı" yapar; onaylı hesapta istek atılmaz', () async {
+    var onayli = false;
+    final be = FakeBackend({
+      'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/sync': (_) {
+        onayli = true;
+        return {...userJson(role: 'CUSTOMER'), 'emailVerified': true};
+      },
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
+    expect(port.currentAccount!.emailVerified, isFalse);
+    await port.epostaOnayiniEsitle();
+    expect(onayli, isTrue);
+    expect(port.currentAccount!.emailVerified, isTrue);
+    await port.epostaOnayiniEsitle();
+    expect(be.countOf('POST /profiles/me/email/sync'), 1);
+  });
+
+  test('21 Eki: bağlantıya zaten tıklandıysa (ALREADY_VERIFIED) hesap yenilenir, hata yok', () async {
+    final be = FakeBackend({
+      'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/verification': (_) =>
+          {'sent': false, 'reason': 'ALREADY_VERIFIED'},
+      'POST /profiles/me/email/sync': (_) =>
+          {...userJson(role: 'CUSTOMER'), 'emailVerified': true},
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
+    expect(await port.mevcutEpostaDogrulamaGonder('a@ornek.com'), isNull);
+    expect(port.currentAccount!.emailVerified, isTrue);
+    expect(be.countOf('POST /auth/firebase/baglanti'), 0);
+  });
+
+  test('Profil Bilgilerim açılınca ve geri dönülünce eşitlenir', () {
+    final s = _kod('lib/screens/profile_info_screen.dart');
+    expect(s.contains('with WidgetsBindingObserver'), isTrue);
+    expect(s.contains('WidgetsBinding.instance.addObserver(this);'), isTrue);
+    expect(s.contains('WidgetsBinding.instance.removeObserver(this);'), isTrue);
+    expect(s.contains('if (state == AppLifecycleState.resumed) {'), isTrue);
+    expect('_epostaOnayiniEsitle()'.allMatches(s).length, greaterThanOrEqualTo(3));
+  });
+
   test('kanal yoksa (sent:false) Firebase gönderimine düşülür', () {
     final p = _kod('lib/data/ports/api_ports.dart');
     expect('await repo.kurumsalEpostaGonder('.allMatches(p).length, 2);
