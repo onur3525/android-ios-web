@@ -436,7 +436,8 @@ export function ilanRotalar(r, db) {
         `UPDATE listings SET selected_offer_id = ?, updated_at = ? WHERE id = ? AND selected_offer_id IS NULL AND status = 'ACTIVE'`,
       ).run(o.id, z, l.id);
       if (sec.changes !== 1) throw kural('INVALID_STATE', 'Bu ilan için teklif zaten seçilmiş');
-      const t = await db.prepare(`UPDATE offers SET status = 'SELECTED', updated_at = ? WHERE id = ? AND status = 'ACTIVE'`).run(z, o.id);
+      // selected_at: seçim anı (Özet'teki seçilen teklif tutarı bu tarihe göre).
+      const t = await db.prepare(`UPDATE offers SET status = 'SELECTED', selected_at = ?, updated_at = ? WHERE id = ? AND status = 'ACTIVE'`).run(z, z, o.id);
       if (t.changes !== 1) throw kural('INVALID_STATE', 'Bu teklif artık geçerli değil');
       await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND id <> ? AND status = 'ACTIVE'`).run(z, l.id, o.id);
       await uygulamaIciBildir(db, o.provider_id, 'OFFER_SELECTED', 'Teklifiniz seçildi', `"${l.title}" ilanında teklifiniz seçildi.`, l.id, 'is');
@@ -783,6 +784,47 @@ export function ilanRotalar(r, db) {
       accountRequests: kullaniciYetkisi ? await seri('account_requests') : null,
       // Gelen Talepler (destek e-postaları + uygulama formu).
       supportTickets: yetkiliMi(ctx.admin.role, 'support.tickets.read') ? await seri('support_tickets') : null,
+    };
+  });
+
+  // ── ÖZET: TEKLİF TALEPLERİ VE SEÇİLEN TEKLİF TUTARI (21 Eki) ──
+  //
+  // Özet'teki tarih seçimine göre (from + days, panelin yerel gün başı):
+  //   · Teklif talepleri: dönemde AÇILAN taleplerin bugünkü durumlarına
+  //     göre sayısı; "iptal" = hizmet alanın talebi kaldırması (silindi_at).
+  //   · Seçilen teklif tutarı: dönemde SEÇİLEN tekliflerin toplamı — ilan
+  //     teklifleri (offers.selected_at) + kabul edilen teklif talepleri
+  //     (teklif_talepleri.secildi_at). Her seçim bir kez, seçildiği gün
+  //     sayılır; HizmetCep'in aracılık ettiği iş hacmini gösterir.
+  r.get('/admin/v1/stats/market', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const bas = Date.parse(String(ctx.query.get('from') ?? ''));
+    const gun = Number(ctx.query.get('days'));
+    if (!Number.isFinite(bas) || !Number.isInteger(gun) || gun < 1 || gun > 800) throw hata.dogrulama('Geçersiz tarih aralığı');
+    const ilk = new Date(bas).toISOString();
+    const son = new Date(bas + gun * 86_400_000).toISOString();
+    const durumlar = { BEKLEMEDE: 0, TEKLIF_GELDI: 0, SECILDI: 0, TAMAMLANDI: 0, REDDEDILDI: 0, SURESI_DOLDU: 0 };
+    let iptal = 0; let toplam = 0;
+    for (const x of await db.prepare(
+      `SELECT durum, CASE WHEN silindi_at IS NULL THEN 0 ELSE 1 END iptal, COUNT(*) n FROM teklif_talepleri
+        WHERE created_at >= ? AND created_at < ? GROUP BY durum, CASE WHEN silindi_at IS NULL THEN 0 ELSE 1 END`,
+    ).all(ilk, son)) {
+      const n = Number(x.n);
+      toplam += n;
+      if (Number(x.iptal) === 1) iptal += n; else if (x.durum in durumlar) durumlar[x.durum] += n;
+    }
+    const ilanT = await db.prepare('SELECT COUNT(*) n, COALESCE(SUM(amount_tl), 0) tl FROM offers WHERE selected_at >= ? AND selected_at < ?').get(ilk, son);
+    const talepT = await db.prepare('SELECT COUNT(*) n, COALESCE(SUM(teklif_fiyati), 0) tl FROM teklif_talepleri WHERE secildi_at >= ? AND secildi_at < ? AND teklif_fiyati IS NOT NULL').get(ilk, son);
+    const ilanTl = Number(ilanT.tl); const talepTl = Number(talepT.tl);
+    return {
+      from: ilk, days: gun,
+      teklifTalepleri: { total: toplam, byStatus: durumlar, cancelled: iptal },
+      selectedOffers: {
+        totalTl: ilanTl + talepTl,
+        count: Number(ilanT.n) + Number(talepT.n),
+        listingOffers: { count: Number(ilanT.n), totalTl: ilanTl },
+        teklifTalepleri: { count: Number(talepT.n), totalTl: talepTl },
+      },
     };
   });
 

@@ -187,6 +187,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     // [yöntem, yol, izinli roller]
     ['GET', '/admin/v1/stats', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/system/status', ['super_admin', 'moderator', 'readonly']],
+    ['GET', `/admin/v1/stats/market?from=${encodeURIComponent(new Date().toISOString())}&days=1`, ['super_admin', 'moderator', 'readonly']],
     ['GET', `/admin/v1/stats/period?from=${encodeURIComponent(new Date().toISOString())}&days=1`, ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/users', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/listings', ['super_admin', 'moderator', 'readonly']],
@@ -544,6 +545,46 @@ test('21 Eki: admin oturumu 5 dk hareketsizlikte kapanır; süre panele bildiril
   await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 6 * 60_000).toISOString(), id);
   assert.equal((await me()).status, 401);
   assert.equal((await me()).status, 401, 'kapanan oturum geri gelmez');
+});
+
+test('21 Eki: Özet — teklif talepleri durumları ve seçilen teklif tutarı (seçildiği gün, her seçim bir kez)', async () => {
+  const pazar = async () => (await istek(`/admin/v1/stats/market?from=${encodeURIComponent(new Date(Date.now() - 86_400_000).toISOString())}&days=2`, { rol: 'readonly' })).json;
+  const once = await pazar();
+  const alan = await kisi('5340000281', 'CUSTOMER');
+  const usta = await kisi('5340000282', 'PROVIDER');
+  const usta2 = await kisi('5340000283', 'PROVIDER');
+  // İlan teklifi 5.000 TL seçildi.
+  const l = await istek('/api/v1/listings', { yontem: 'POST', token: alan.token, govde: { title: hiz, location: 'Merkez, Buca / İzmir', description: 'boya badana işi var' } });
+  assert.equal(l.durum, 200, JSON.stringify(l.json));
+  const o = await istek('/api/v1/offers', { yontem: 'POST', token: usta.token, govde: { listingId: l.json.id, amountTl: 5000, note: 'teklif notu' } });
+  assert.equal(o.durum, 200, JSON.stringify(o.json));
+  const s1 = await istek(`/api/v1/listings/${l.json.id}/selected-offer`, { yontem: 'PUT', token: alan.token, govde: { offerId: o.json.id } });
+  assert.equal(s1.durum, 200, JSON.stringify(s1.json));
+  const ara = await pazar();
+  assert.equal(ara.selectedOffers.totalTl - once.selectedOffers.totalTl, 5000);
+  // Teklif talebi 3.000 TL kabul edildi → toplam 8.000 TL artar.
+  const t = await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'priz arızası var', iletisimTercihi: 'yalnizMesaj' } });
+  assert.equal(t.durum, 200, JSON.stringify(t.json));
+  await istek(`/api/v1/teklif-talepleri/${t.json.id}/teklif`, { yontem: 'POST', token: usta.token, govde: { fiyat: 3000, aciklama: 'teklif' } });
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${t.json.id}/sec`, { yontem: 'POST', token: alan.token })).durum, 200);
+  // Tamamlanması seçimi İKİNCİ kez saymaz.
+  await istek(`/api/v1/teklif-talepleri/${t.json.id}/tamamla`, { yontem: 'POST', token: alan.token });
+  // Seçilmeyen teklif tutara girmez; iptal edilen talep "iptal" sayılır.
+  const t2 = await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: usta2.id, kategori: kat, hizmet: hiz, aciklama: 'ikinci iş için', iletisimTercihi: 'yalnizMesaj' } });
+  await istek(`/api/v1/teklif-talepleri/${t2.json.id}/teklif`, { yontem: 'POST', token: usta2.token, govde: { fiyat: 9999, aciklama: 'pahalı' } });
+  await db.prepare('UPDATE teklif_talepleri SET silindi_at = ? WHERE id = ?').run(simdi(), t2.json.id);
+  const son = await pazar();
+  assert.equal(son.selectedOffers.totalTl - once.selectedOffers.totalTl, 8000, '5.000 + 3.000');
+  assert.equal(son.selectedOffers.count - once.selectedOffers.count, 2);
+  assert.equal(son.selectedOffers.listingOffers.totalTl - once.selectedOffers.listingOffers.totalTl, 5000);
+  assert.equal(son.selectedOffers.teklifTalepleri.totalTl - once.selectedOffers.teklifTalepleri.totalTl, 3000);
+  assert.equal(son.teklifTalepleri.total - once.teklifTalepleri.total, 2);
+  assert.equal(son.teklifTalepleri.byStatus.TAMAMLANDI - once.teklifTalepleri.byStatus.TAMAMLANDI, 1);
+  assert.equal(son.teklifTalepleri.cancelled - once.teklifTalepleri.cancelled, 1);
+  // Seçim tarihi dönem dışındaysa sayılmaz.
+  const gecmis = (await istek(`/admin/v1/stats/market?from=${encodeURIComponent(new Date(Date.now() - 10 * 86_400_000).toISOString())}&days=2`, { rol: 'readonly' })).json;
+  assert.equal(gecmis.selectedOffers.totalTl, 0);
+  assert.equal((await istek('/admin/v1/stats/market?from=x&days=1', { rol: 'readonly' })).durum, 400);
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {

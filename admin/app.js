@@ -22,7 +22,6 @@ let ben = null;
 
 const MENU = [
   ['ozet', 'Özet', ['super_admin', 'moderator', 'readonly']],
-  ['talepler', 'Teklif Talepleri', ['super_admin', 'moderator', 'readonly']],
   ['katalog', 'Kategori ve Hizmetler', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['bolgeler', 'İl / İlçe / Mahalle', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['yasal', 'Yasal Belgeler', ['super_admin', 'content', 'readonly']],
@@ -98,7 +97,7 @@ function girisEkrani(bilgi) {
 // düğmesi yoktur; Özet içinde açılır: menüde Özet seçili kalır, üstte
 // "‹ Özet" ile geri dönülür. (Menüsünde bu sayfa olan rolde — ör. operasyon
 // için Silme Kuyrukları — normal menü sayfası gibi davranır.)
-const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilanlar', 'ilan', 'sohbet', 'teklifler', 'silmekuyruklari', 'yorumlar']);
+const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilanlar', 'ilan', 'sohbet', 'teklifler', 'silmekuyruklari', 'yorumlar', 'talepler', 'talep']);
 
 function duzen(sayfa, icerik) {
   const menu = MENU.filter(([, , roller]) => roller.includes(ben.role));

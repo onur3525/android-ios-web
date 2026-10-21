@@ -313,7 +313,9 @@ export function sohbetTalepRotalar(r, db) {
     if (ctx.kullanici.id !== t.hizmet_alan_id) throw hata.yetki('Teklifi yalnız talep sahibi seçebilir');
     if (t.durum === 'SECILDI') return talepTam(t);
     if (t.durum !== 'TEKLIF_GELDI') throw kural('INVALID_STATE', 'Bu teklif seçilemez');
-    const g2 = await db.prepare(`UPDATE teklif_talepleri SET durum = 'SECILDI', updated_at = ? WHERE id = ? AND durum = 'TEKLIF_GELDI'`).run(simdi(), t.id);
+    // secildi_at: kabul anı (Özet'teki seçilen teklif tutarı bu tarihe göre).
+    const secim = simdi();
+    const g2 = await db.prepare(`UPDATE teklif_talepleri SET durum = 'SECILDI', secildi_at = ?, updated_at = ? WHERE id = ? AND durum = 'TEKLIF_GELDI'`).run(secim, secim, t.id);
     if (g2.changes !== 1) throw kural('INVALID_STATE', 'Bu teklif seçilemez');
     await uygulamaIciBildir(db, t.saglayici_id, 'TALEP_ACCEPTED', 'Teklifiniz kabul edildi', `"${t.hizmet}" teklifiniz kabul edildi.`, t.id, 'talep');
     return talepTam(await talepGetir(t.id, ctx.kullanici));
