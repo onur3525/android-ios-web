@@ -79,27 +79,10 @@ export function fcmHataSinifi(durum, j) {
   return 'gecici';
 }
 
-/**
- * FCM mesaj gövdesi (jeton hariç). Flutter `pushRotasi` biçimiyle aynı.
- *
- * ── ANDROID: YALNIZ VERİ (21 Eki) ──
- * FCM'nin kendi çizdiği Android bildiriminde renkli logo (büyük simge)
- * verilemiyor; Samsung uygulama simgesini kendisi eklediği için logo
- * yalnız orada görünüyordu, Xiaomi vb. markalarda tek renk küçük simge
- * kalıyordu. Android jetonlarına bildirim yükü YERİNE veri gönderilir
- * (`hcYerel=1`, başlık/metin `baslik`/`govde`) ve bildirimi uygulamanın
- * native alıcısı (`BildirimAlici.kt`) her markada aynı biçimde çizer.
- * iOS ve web gövdesi DEĞİŞMEDİ.
- */
-export function mesajGovdesi(n, platform) {
+/** FCM mesaj gövdesi (jeton hariç). Flutter `pushRotasi` biçimiyle aynı. */
+export function mesajGovdesi(n) {
   const data = { type: String(n.type), bildirimId: String(n.id) };
   if (n.push_target && n.ref_id) { data.hedef = n.push_target; data.id = String(n.ref_id); }
-  if (platform === 'android') {
-    return {
-      data: { ...data, hcYerel: '1', baslik: String(n.title ?? ''), govde: String(n.body ?? '') },
-      android: { priority: 'HIGH' },
-    };
-  }
   return {
     notification: { title: n.title, body: n.body },
     data,
@@ -240,15 +223,16 @@ async function birBildirimiIsle(db, n, gonder, sinir, geriDeneme) {
       return 0;
     }
     // Yalnız bildirimin SAHİBİNE ait jetonlar.
-    const jetonlar = await db.prepare('SELECT token, platform FROM push_tokens WHERE user_id = ?').all(n.user_id);
+    const jetonlar = await db.prepare('SELECT token FROM push_tokens WHERE user_id = ?').all(n.user_id);
     if (!jetonlar.length) {
       await db.prepare(`UPDATE notifications SET push_status = 'NO_TOKEN' WHERE id = ?`).run(n.id);
       return 0;
     }
+    const mesaj = mesajGovdesi(n);
     let basarili = 0; let gecici = 0;
-    for (const { token, platform } of jetonlar) {
+    for (const { token } of jetonlar) {
       let s = 'gecici';
-      try { s = await gonder(token, mesajGovdesi(n, platform)); } catch { s = 'gecici'; }
+      try { s = await gonder(token, mesaj); } catch { s = 'gecici'; }
       if (s === 'ok') basarili++;
       else if (s === 'gecersiz') await db.prepare('DELETE FROM push_tokens WHERE token = ? AND user_id = ?').run(token, n.user_id);
       else gecici++;
