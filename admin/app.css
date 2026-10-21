@@ -34,6 +34,9 @@ textarea { width:100%; min-height:90px; }
 .rozet.ACTIVE,.rozet.PUBLISHED,.rozet.SENT,.rozet.TAMAMLANDI,.rozet.aktif { background:#e3f5e8; color:var(--yesil); }
 .rozet.SUSPENDED,.rozet.PENDING,.rozet.DRAFT,.rozet.BEKLEMEDE { background:#fff4e0; color:var(--sari); }
 .rozet.BANNED,.rozet.FAILED,.rozet.ADMIN_REMOVED,.rozet.ADMIN_DELETED,.rozet.pasif { background:#fde8e8; color:var(--kirmizi); }
+.rozet.hk-FROZEN { background:#E0F2FE; color:#0369A1; }
+.rozet.hk-DELETION_PENDING { background:#fff4e0; color:var(--sari); }
+.rozet.hk-DELETED { background:#fde8e8; color:var(--kirmizi); }
 .alanlar { display:grid; grid-template-columns:180px 1fr; gap:6px 14px; }
 .alanlar dt { color:var(--gri); } .alanlar dd { margin:0; word-break:break-word; }
 .ust { display:flex; justify-content:space-between; align-items:center; gap:12px; }

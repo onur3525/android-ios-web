@@ -2,7 +2,7 @@
 // ÖZET EKRANI — yalnız MEVCUT admin API'leri (sahte/demo veri YOK)
 //
 // Kaynaklar: /stats · /stats/period · /users · /listings
-// · /account-requests · /integrations. Her bölüm bağımsız yüklenir;
+// · /account-closures · /integrations. Her bölüm bağımsız yüklenir;
 // yetkisi olmayan rol (403) o bölümde "yetki yok" görür, ekran çökmez.
 //
 // TARİH ARALIĞI (21 Eki): sağ üstteki seçim — Bugün / Bu hafta / Bu ay /
@@ -17,6 +17,7 @@
 // yetersiz" gösterilir. CSP: satır içi stil yok; grafik SVG öznitelikli.
 // ═══════════════════════════════════════════════════════════════
 import { api, h, rozet } from './cekirdek.js';
+import { kapatmaAdi, kapatmaDetayi, kapatmaDurumu, kapatmaTarihi } from './hesap_kapatma.js';
 
 const GUN = 86_400_000;
 const RENK = { mavi: '#2563EB', yesil: '#22C55E', mor: '#8B5CF6', turuncu: '#F97316', kirmizi: '#EF4444', gri: '#94A3B8' };
@@ -278,7 +279,7 @@ export async function ozetSayfasi() {
   const sorguBas = gunEkle(d.bas, d.gun - toplamGun);
   const [st, ku, il, gt, en, dn] = await Promise.all([
     al('/stats'), al('/users?limit=200'), al('/listings?limit=200'),
-    al('/account-requests'), al('/integrations'),
+    al('/account-closures'), al('/integrations'),
     al(`/stats/period?from=${encodeURIComponent(sorguBas.toISOString())}&days=${toplamGun}`),
   ]);
   if (st.e) throw st.e; // özet sayıları alınamıyorsa ekranın anlamı yok
@@ -374,12 +375,12 @@ export async function ozetSayfasi() {
         ['Durum', (l) => rozet(l.status)],
         ['Tarih', (l) => kisaTarih(l.createdAt)],
       ], ilanlar.slice(0, 5), (l) => (location.hash = `#/ilan/${l.id}`))),
-      bolum('Dondurma / Silme', 'silmekuyruklari', gt.e ? yuklenemedi(gt.e) : tablo([
-        ['Konu', (a) => (a.type === 'FREEZE' ? 'Hesap dondurma' : 'Hesap silme')],
-        ['Gönderen', (a) => a.name],
-        ['Tarih', (a) => kisaTarih(a.createdAt)],
-        ['Durum', (a) => rozet(a.status)],
-      ], gelen.slice(0, 5), (a) => (location.hash = `#/kullanici/${a.userId}`)))),
+      // 21 Eki: Hesabını Silenler ve Donduranlar (tek kaynak: hesap_kapatma.js).
+      bolum('Hesabını Silenler ve Donduranlar', 'silmekuyruklari', gt.e ? yuklenemedi(gt.e) : tablo([
+        ['Hesap', kapatmaAdi],
+        ['Durum', kapatmaDurumu],
+        ['Tarih', kapatmaTarihi],
+      ], gelen.slice(0, 5), kapatmaDetayi))),
 
     h('p', { class: 'not' }, 'HizmetCep ücretsizdir: ödeme, komisyon ya da abonelik verisi yoktur.'));
 }

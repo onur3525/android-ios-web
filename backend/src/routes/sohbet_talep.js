@@ -571,6 +571,43 @@ export function sohbetTalepRotalar(r, db) {
     return satir.map((a) => ({ ...talepGorunum(a), userId: a.user_id, name: a.name }));
   });
 
+  // ── HESABINI SİLENLER VE DONDURANLAR (21 Eki, kullanıcı kararı) ──
+  //
+  // Özet ve Silme Kuyrukları'ndaki liste (tek kaynak). Yalnız şu an anlamlı
+  // olanlar:
+  //   · FROZEN           — hesap ŞU AN dondurulmuş (en son dondurma kaydı).
+  //                        Kişi yeniden giriş yapıp hesabı etkinleştirince
+  //                        (users.frozen_at = NULL) listeden kendiliğinden çıkar.
+  //   · DELETION_PENDING — silme talebi, yasal süre dolmadı (kişi iptal
+  //                        ederse CANCELLED olur ve listeden çıkar).
+  //   · DELETED          — süre doldu, silindi. Kişisel veri (ad, telefon,
+  //                        e-posta, adres…) zaten anonimleştirildi
+  //                        (silmeTalepleriniIsle); kayıt yalnız hesabın
+  //                        silindiğini ve tarihlerini gösterir — ad DÖNMEZ.
+  r.get('/admin/v1/account-closures', async (ctx) => {
+    yetkiIste(ctx.admin, 'users.read');
+    const satir = await db.prepare(
+      `SELECT r.*, u.name, u.frozen_at, u.deleted_at
+         FROM account_requests r JOIN users u ON u.id = r.user_id
+        WHERE (r.type = 'DELETION' AND r.status IN ('PENDING', 'COMPLETED'))
+           OR (r.type = 'FREEZE' AND u.frozen_at IS NOT NULL AND u.deleted_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM account_requests r2 WHERE r2.user_id = r.user_id AND r2.type = 'FREEZE' AND r2.created_at > r.created_at))
+        ORDER BY r.created_at DESC LIMIT 500`,
+    ).all();
+    return satir.map((a) => {
+      const durum = a.type === 'FREEZE' ? 'FROZEN' : a.status === 'COMPLETED' ? 'DELETED' : 'DELETION_PENDING';
+      return {
+        id: a.id, userId: a.user_id, type: a.type, state: durum,
+        name: durum === 'DELETED' ? null : a.name,
+        reason: durum === 'DELETED' ? null : (a.reason ?? null),
+        requestedAt: a.created_at,
+        frozenAt: durum === 'FROZEN' ? a.frozen_at : null,
+        scheduledFor: a.scheduled_for ?? null,
+        deletedAt: durum === 'DELETED' ? (a.completed_at ?? a.deleted_at) : null,
+      };
+    });
+  });
+
   r.get('/admin/v1/users/:id/legal-acceptances', async (ctx) => {
     yetkiIste(ctx.admin, 'users.read');
     return (await db.prepare('SELECT * FROM legal_acceptances WHERE user_id = ? ORDER BY accepted_at DESC').all(ctx.params.id))

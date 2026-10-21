@@ -201,6 +201,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     ['GET', '/admin/v1/config/app', ['super_admin', 'operations', 'readonly']],
     ['GET', '/admin/v1/notifications/outbound', ['super_admin', 'moderator', 'operations']],
     ['GET', '/admin/v1/account-requests', ['super_admin', 'moderator', 'readonly']],
+    ['GET', '/admin/v1/account-closures', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/support/tickets', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/feedback', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/integrations', ['super_admin', 'operations']],
@@ -483,6 +484,36 @@ test('21 Eki: Sistem durumu detayı — alıcı/içerik dönmez; yetkiye göre e
   const salt = (await istek('/admin/v1/system/status', { rol: 'readonly' })).json;
   assert.equal(salt.integrations, null); assert.equal(salt.recentFailures, null);
   assert.ok(salt.delivery.email.FAILED >= 1, 'sayılar herkese');
+});
+
+test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, iptal eden çıkar, silinenin adı görünmez', async () => {
+  const liste = async () => (await istek('/admin/v1/account-closures', { rol: 'readonly' })).json;
+  const bul = async (u) => (await liste()).filter((k) => k.userId === u.id);
+  // Dondurma → listede; yeniden giriş (etkinleştirme) → listeden çıkar.
+  const d = await kisi('5340000271', 'CUSTOMER');
+  const fr = await istek('/api/v1/profiles/me/freeze', { yontem: 'POST', token: d.token, govde: { reason: 'ara veriyorum' } });
+  assert.equal(fr.durum, 200, JSON.stringify(fr.json));
+  const [f] = await bul(d);
+  assert.equal(f.state, 'FROZEN'); assert.equal(f.name, 'Kişi 71'); assert.equal(f.reason, 'ara veriyorum'); assert.ok(f.frozenAt && f.requestedAt);
+  await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'giris%'`).run();
+  const gr = await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: '5340000271', password: 'sifre1234' } });
+  assert.equal(gr.durum, 200, JSON.stringify(gr.json));
+  assert.deepEqual(await bul(d), [], 'etkinleştiren listeden çıkar');
+  // Silme talebi → "Silinecek"; iptal → çıkar.
+  const s1 = await kisi('5340000272', 'CUSTOMER');
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: s1.token, govde: { password: 'sifre1234' } });
+  const [p] = await bul(s1);
+  assert.equal(p.state, 'DELETION_PENDING'); assert.equal(p.name, 'Kişi 72'); assert.ok(p.scheduledFor);
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'DELETE', token: s1.token });
+  assert.deepEqual(await bul(s1), [], 'iptal eden çıkar');
+  // Süre dolunca silinir: kişisel bilgi yok, yalnız silindiği ve tarihleri.
+  const s2 = await kisi('5340000273', 'CUSTOMER');
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: s2.token, govde: { password: 'sifre1234', reason: 'gizli neden' } });
+  await db.prepare(`UPDATE account_requests SET scheduled_for = ? WHERE user_id = ?`).run('2000-01-01T00:00:00.000Z', s2.id);
+  await silmeTalepleriniIsle(db);
+  const [x] = await bul(s2);
+  assert.equal(x.state, 'DELETED'); assert.equal(x.name, null); assert.equal(x.reason, null); assert.ok(x.deletedAt && x.requestedAt);
+  assert.ok(!JSON.stringify(x).includes('Kişi 73') && !JSON.stringify(x).includes('5340000273'));
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {
