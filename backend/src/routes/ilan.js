@@ -37,6 +37,25 @@ import { dosyalariBagla } from './depolama_entegrasyon.js';
 export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
 const kural = (kod, mesaj) => new ApiHatasi(409, kod, mesaj);
 
+/**
+ * Sayfa → o sayfa açılınca okunmuş sayılan bildirim türleri (TEK KAYNAK).
+ * Her tür, bildirime dokununca açılan sayfayla aynıdır
+ * (lib/screens/notifications_screen.dart → hedefeGit):
+ *   ilan         hizmet alanın ilan sayfası (ref = ilan)
+ *   is           hizmet verenin iş sayfası (ref = ilan)
+ *   sohbet       ilan sohbeti (ref = teklif)
+ *   talep        doğrudan teklif talebi detayı (ref = talep)
+ *   talep-sohbet teklif talebi sohbeti (ref = talep)
+ */
+export const SAYFA_BILDIRIMLERI = Object.freeze({
+  ilan: { turler: ['NEW_OFFER', 'LISTING_EXPIRED'], teklifUzerinden: ['CONTACT_OPENED'] },
+  is: { turler: ['NEW_LISTING', 'OFFER_SELECTED'], teklifUzerinden: ['CONTACT_OPENED'] },
+  sohbet: { turler: ['NEW_MESSAGE'] },
+  talep: { turler: ['TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED'] },
+  'talep-sohbet': { turler: ['TALEP_MESSAGE'] },
+});
+const UUID_DESENI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ── Görünümler (Flutter mappers.dart ile birebir alan adları) ──
 export const ilanGorunumu = (l) => ({
   id: l.id, ilanNo: l.ilan_no, ownerId: l.owner_id, title: l.title, location: l.location,
@@ -641,6 +660,40 @@ export function ilanRotalar(r, db) {
   r.post('/api/v1/notifications/:id/read', korumali(async (ctx) => {
     const n = await db.prepare('UPDATE notifications SET read_at = ? WHERE id = ? AND user_id = ? AND read_at IS NULL').run(simdi(), ctx.params.id, ctx.kullanici.id);
     return { ok: true, changed: n.changes };
+  }));
+  // ── SAYFA GÖRÜLDÜ → O SAYFANIN BİLDİRİMLERİ OKUNDU (21 Eki) ──
+  //
+  // Kullanıcı bildirime dokunmadan ilgili sayfayı başka yoldan açtığında
+  // (ör. İlanlarım → ilan → teklifler) bildirim okunmamış kalıyordu.
+  // Sayfa açılınca istemci bunu çağırır; hangi sayfanın hangi bildirim
+  // türlerini "gördüğü" YALNIZ burada tanımlıdır (tek kaynak) ve her
+  // tür, bildirime dokununca açılan sayfayla eşleşir
+  // (NotificationsScreen.hedefeGit). Yalnız oturum sahibinin kendi
+  // bildirimleri değişir; türler role özgü olduğu için karşı rolün
+  // bildirimleri etkilenmez.
+  r.post('/api/v1/notifications/read-for-page', korumali(async (ctx) => {
+    const sayfa = SAYFA_BILDIRIMLERI[typeof ctx.body?.page === 'string' ? ctx.body.page : ''];
+    const ref = typeof ctx.body?.refId === 'string' ? ctx.body.refId.trim() : '';
+    if (!sayfa || !Object.hasOwn(SAYFA_BILDIRIMLERI, ctx.body.page)) throw hata.dogrulama('Geçersiz sayfa');
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(ref)) throw hata.dogrulama('Geçersiz kimlik');
+    const an = simdi();
+    const yer = sayfa.turler.map(() => '?').join(', ');
+    let degisen = (await db.prepare(
+      `UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL AND ref_id = ? AND type IN (${yer})`,
+    ).run(an, ctx.kullanici.id, ref, ...sayfa.turler)).changes;
+    // "İletişim açıldı" teklif kimliği taşır; ilan/iş sayfası o ilanın
+    // tekliflerine ait olanları da görmüş sayılır.
+    if (sayfa.teklifUzerinden && UUID_DESENI.test(ref)) {
+      const teklifler = (await db.prepare('SELECT id FROM offers WHERE listing_id = ?').all(ref)).map((o) => String(o.id));
+      if (teklifler.length) {
+        const ty = sayfa.teklifUzerinden.map(() => '?').join(', ');
+        const iy = teklifler.map(() => '?').join(', ');
+        degisen += (await db.prepare(
+          `UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL AND type IN (${ty}) AND ref_id IN (${iy})`,
+        ).run(an, ctx.kullanici.id, ...sayfa.teklifUzerinden, ...teklifler)).changes;
+      }
+    }
+    return { ok: true, changed: degisen };
   }));
   r.post('/api/v1/notifications/read-all', korumali(async (ctx) => {
     const n = await db.prepare('UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL').run(simdi(), ctx.kullanici.id);

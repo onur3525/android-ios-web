@@ -22,4 +22,8 @@ class NotificationController extends BaseController {
 
   Future<DomainError?> markAllRead(String userId) =>
       runAction('notif:read-all', () => _notifs.markAllRead(userId));
+
+  /// Sayfa görüldü (sessiz; bekleme göstergesi yok).
+  Future<DomainError?> sayfaGoruldu(String sayfa, String refId) =>
+      _notifs.sayfaGoruldu(sayfa, refId);
 }

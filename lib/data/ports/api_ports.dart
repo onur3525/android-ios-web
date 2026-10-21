@@ -835,6 +835,9 @@ class ApiNotificationPort extends NotificationPort {
   Future<DomainError?> markRead(String id) => repo.markRead(id);
   @override
   Future<DomainError?> markAllRead(String userId) => repo.markAllRead();
+  @override
+  Future<DomainError?> sayfaGoruldu(String sayfa, String refId) =>
+      repo.sayfaGoruldu(sayfa, refId);
 }
 
 /// Gerçek API üzerinden bölge verisi.

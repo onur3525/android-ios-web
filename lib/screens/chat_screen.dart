@@ -20,6 +20,7 @@ import 'widgets/sohbet_fotograf_akisi.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/olcu.dart';
 import '../domain/sohbet_okunmamis.dart';
+import '../ui/sayfa_bildirimleri.dart';
 
 /// Sohbet (HTML vChat): balonlar, mesaj durumları
 /// (Gönderiliyor / Gönderildi / Okundu / Gönderilemedi + Tekrar Gönder),
@@ -54,6 +55,8 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void initState() {
     super.initState();
+    // Bildirime dokunmadan açılsa da bu sayfanın bildirimleri okundu.
+    sayfaBildirimleriniOku(this, BildirimSayfasi.sohbet, widget.offerId);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // ⚠ Kare sonrası çalışır; bu arada oturum düşmüş olabilir.
       final me = context.read<AuthController>().currentAccount;
