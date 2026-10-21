@@ -83,8 +83,12 @@ export function kurumsalEposta({ konu, baslik, paragraflar = [], buton, not, des
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 6px;font-family:${YAZI};font-size:13px;line-height:1.5;color:${MARKA.soluk};">Düğme çalışmazsa bu bağlantıyı tarayıcınıza yapıştırın:</p>
-              <p style="margin:0 0 24px;font-family:${YAZI};font-size:13px;line-height:1.5;word-break:break-all;"><a href="${kacis(adres)}" target="_blank" style="color:${MARKA.mavi};text-decoration:underline;">${kacis(adres)}</a></p>` : '';
+              <!-- ⚠ 21 Eki (kullanıcı bulgusu): uzun bağlantı METİN olarak
+                   yazılmaz. Gmail uygulaması satır kırmayı (word-break)
+                   desteklemiyor; tek satırlık uzun adres e-postayı ekrandan
+                   genişletiyor, Gmail de bütün e-postayı küçültüyordu (yazı,
+                   düğme ve logo önizlemedekinden küçük görünüyordu). -->
+              <p style="margin:0 0 24px;font-family:${YAZI};font-size:13px;line-height:1.5;color:${MARKA.soluk};">Düğme çalışmazsa <a href="${kacis(adres)}" target="_blank" style="color:${MARKA.mavi};text-decoration:underline;">bu bağlantıya dokunun</a>.</p>` : '';
 
   const notKutusu = not ? `
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;">
