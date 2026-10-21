@@ -50,6 +50,20 @@ class ApiAuthRepository extends ChangeNotifier {
   ApiAuthRepository(this._client, this._auth, this._profile);
 
   /// Firebase özel belgesi (bkz. AuthApi.firebaseBaglanti).
+  /// Kurumsal doğrulama e-postası (21 Eki). `yeniEposta` verilirse yeni
+  /// adrese "doğrula ve değiştir" bağlantısı gider. Dönen `bool`: sunucu
+  /// e-postayı GÖNDERDİ mi (false = e-posta kanalı yok; çağıran Firebase'in
+  /// kendi gönderimini kullanır).
+  Future<(bool, DomainError?)> kurumsalEpostaGonder({String? yeniEposta}) async {
+    final (j, err) = await _guard(() => yeniEposta == null
+        ? _profile.epostaDogrulamaIste()
+        : _profile.epostaDegisimiIste(yeniEposta));
+    if (err != null) {
+      return (false, err);
+    }
+    return (j?['sent'] == true, null);
+  }
+
   Future<(String?, DomainError?)> firebaseBaglantiBelgesi() async {
     final (j, err) = await _guard(() => _auth.firebaseBaglanti());
     if (err != null) {

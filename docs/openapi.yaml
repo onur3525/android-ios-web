@@ -770,6 +770,39 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /profiles/me/email/verification:
+    post:
+      tags: [Profile]
+      summary: Mevcut e-posta için kurumsal doğrulama e-postası
+      description: |
+        21 Eki: bağlantıyı Firebase üretir (göndermez), e-posta HizmetCep
+        tasarımıyla sunucudan gider. E-posta kanalı ya da Firebase servis
+        hesabı yoksa hiçbir değişiklik yapılmadan `{ sent: false,
+        reason: CHANNEL_UNAVAILABLE }` döner; istemci Firebase'in kendi
+        gönderimini kullanır. Kritik işlem hız sınırı uygulanır.
+      responses:
+        '200': { description: '{ sent, email } ya da { sent:false, reason }' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Zaten doğrulanmış / Firebase kimliği yok / adres eşleşmiyor }
+        '502': { description: E-posta gönderilemedi }
+        '503': { description: Firebase bağlantısı üretilemedi }
+
+  /profiles/me/email/change-request:
+    post:
+      tags: [Profile]
+      summary: Yeni e-posta adresine kurumsal "doğrula ve değiştir" e-postası
+      description: |
+        Gövde `{ newEmail }`. Adres yalnız bağlantı tıklanınca değişir;
+        profil adresi bu çağrıyla DEĞİŞMEZ. Kanal yoksa `{ sent:false }`
+        (yukarıdaki gibi).
+      responses:
+        '200': { description: '{ sent, email } ya da { sent:false, reason }' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Adres başka hesapta kayıtlı / mevcut adresle aynı }
+        '502': { description: E-posta gönderilemedi }
+        '503': { description: Firebase bağlantısı üretilemedi }
+
   /profiles/me/email/change:
     post:
       tags: [Profile]

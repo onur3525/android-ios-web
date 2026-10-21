@@ -497,14 +497,35 @@ class ApiAuthPort extends AuthPort {
   @override
   /// Yeni adrese Firebase doğrulama bağlantısı; adres bağlantı tıklanınca
   /// değişir ve sonraki girişte sunucu hesabına işlenir.
-  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async =>
-      await _firebaseOturumuHazirla() ??
-      await FirebaseKimlik.i.epostaDegistir(yeniEposta);
+  ///
+  /// ⚠ 21 Eki: e-posta önce SUNUCUDAN, HizmetCep tasarımıyla gider
+  /// (bağlantıyı Firebase üretir). Sunucuda e-posta kanalı yoksa Firebase'in
+  /// kendi gönderimi kullanılır (eski yol, aynı bağlantı türü).
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async {
+    final (gonderildi, err) =
+        await repo.kurumsalEpostaGonder(yeniEposta: yeniEposta);
+    if (err != null) {
+      return err;
+    }
+    if (gonderildi) {
+      return null;
+    }
+    return await _firebaseOturumuHazirla() ??
+        await FirebaseKimlik.i.epostaDegistir(yeniEposta);
+  }
 
   @override
-  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async =>
-      await _firebaseOturumuHazirla() ??
-      await FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async {
+    final (gonderildi, err) = await repo.kurumsalEpostaGonder();
+    if (err != null) {
+      return err;
+    }
+    if (gonderildi) {
+      return null;
+    }
+    return await _firebaseOturumuHazirla() ??
+        await FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
+  }
 
   /// ── ⚠ FIREBASE OTURUMU YOKSA KURULUR (21 Eki, kullanıcı bulgusu) ──
   /// E-posta doğrulama bağlantısını Firebase gönderir ve açık Firebase

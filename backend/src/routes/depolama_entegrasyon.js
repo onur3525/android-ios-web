@@ -14,6 +14,7 @@ import { simdi } from '../db.js';
 import { ApiHatasi, hata } from '../http.js';
 import { kullaniciCoz } from './kullanici.js';
 import { disAdresSorunu, guvenliIstek } from '../ag_guvenligi.js';
+import { RESEND_ADRESI } from '../bildirim.js';
 
 import { ICERIK_UZANTI as ICERIK, TUR_SINIRI as TURLER } from '../depo_dogrulama.js';
 // Türler: ilan/mesaj/talep fotoğrafı ve profil fotoğrafı; 10 MB. SVG YOK.
@@ -60,7 +61,10 @@ export async function dosyalariBagla(db, refler, kullaniciId) {
 }
 
 const GIZLI_ALANLAR = { SMS: ['token'], EMAIL: ['token'], STORAGE: ['accessKeyId', 'secretAccessKey'], PUSH: ['serverKey'] };
-const SAGLAYICILAR = { SMS: ['webhook'], EMAIL: ['webhook'], STORAGE: ['s3'], PUSH: ['fcm'] };
+// 21 Eki: EMAIL için "resend" — kurumsal HTML e-postalar doğrudan Resend
+// API'siyle gider (adres sabit; panelden yalnız gönderen ve API anahtarı).
+const SAGLAYICILAR = { SMS: ['webhook'], EMAIL: ['webhook', 'resend'], STORAGE: ['s3'], PUSH: ['fcm'] };
+const GONDEREN = /^(?:[^<>\r\n"]{1,60} <[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>|[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+)$/;
 
 function entegrasyonGorunumu(x) {
   return {
@@ -70,8 +74,14 @@ function entegrasyonGorunumu(x) {
   };
 }
 
-function ayarDogrula(tur, config) {
+function ayarDogrula(tur, config, saglayici) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) throw hata.dogrulama('Geçersiz ayar');
+  if (tur === 'EMAIL' && saglayici === 'resend') {
+    const from = String(config.from ?? '').trim();
+    if (!GONDEREN.test(from)) throw hata.dogrulama('Gönderen "HizmetCep <bildirim@alanadiniz.com>" biçiminde olmalıdır');
+    // Adres sabittir; bağlantı testi de bu adresi kullanır.
+    return { url: RESEND_ADRESI, from };
+  }
   const https = (v, ad) => {
     if (typeof v !== 'string' || !v.startsWith('https://')) throw hata.dogrulama(`${ad} https ile başlamalıdır`);
     try { new URL(v); } catch { throw hata.dogrulama(`${ad} geçerli bir adres değil`); }
@@ -141,7 +151,7 @@ export function depolamaEntegrasyonRotalar(r, db) {
     const tur = ctx.body.type;
     const saglayici = ctx.body.provider;
     if (!SAGLAYICILAR[tur]?.includes(saglayici)) throw hata.dogrulama('Geçersiz tür ya da sağlayıcı');
-    const ayar = ayarDogrula(tur, ctx.body.config);
+    const ayar = ayarDogrula(tur, ctx.body.config, saglayici);
     const id = randomUUID();
     const z = simdi();
     await db.tx(async () => {
@@ -162,7 +172,7 @@ export function depolamaEntegrasyonRotalar(r, db) {
     yetkiIste(ctx.admin, 'integrations.write');
     const x = await getir(ctx.params.id);
     const d = {};
-    if (ctx.body.config !== undefined) d.config_json = JSON.stringify(ayarDogrula(x.type, ctx.body.config));
+    if (ctx.body.config !== undefined) d.config_json = JSON.stringify(ayarDogrula(x.type, ctx.body.config, x.provider));
     if (ctx.body.active !== undefined) {
       if (typeof ctx.body.active !== 'boolean') throw hata.dogrulama('active true/false olmalıdır');
       if (ctx.body.active && !x.secret_enc) throw hata.durum('Etkinleştirmeden önce gizli anahtarı girin');

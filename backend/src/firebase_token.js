@@ -237,3 +237,52 @@ export function firebaseOzelBelge(uid) {
   const govde = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: sh.client_email, sub: sh.client_email, aud: OZEL_BELGE_AUD, iat: an, exp: an + 300, uid })}`;
   return `${govde}.${createSign('RSA-SHA256').update(govde).sign(sh.private_key).toString('base64url')}`;
 }
+
+// ── ⚠ E-POSTA DOĞRULAMA BAĞLANTISI SUNUCUDA ÜRETİLİR (21 Eki) ──
+//
+// Kullanıcı isteği: e-postalar HizmetCep tasarımıyla gitsin. Firebase
+// e-postayı kendisi gönderirse yalnız kendi düz şablonunu kullanır.
+// `returnOobLink: true` ile (yalnız servis hesabıyla mümkün) Firebase
+// bağlantıyı GÖNDERMEZ, döndürür; e-postayı sunucu kurumsal kalıpla
+// yollar. Bağlantıya tıklanınca doğrulama yine Firebase'de olur ve
+// mevcut eşitleme yolu (oturum / email/change) aynen çalışır.
+// Admin SDK `generateEmailVerificationLink` /
+// `generateVerifyAndChangeEmailLink` ile aynı REST çağrılarıdır.
+
+/** Firebase'deki e-postayı (doğrulanmamış olarak) ayarlar. */
+export async function firebaseEpostaAyarla(uid, eposta) {
+  const r = await yonetimIstegi('update', { localId: uid, email: eposta, emailVerified: false });
+  if (r.ok) return;
+  if (r.kod.startsWith('EMAIL_EXISTS')) {
+    const e = new Error('EMAIL_EXISTS');
+    e.kod = 'EMAIL_EXISTS';
+    throw e;
+  }
+  throw new Error(`Firebase e-postası ayarlanamadı (HTTP ${r.durum})`);
+}
+
+function turkceBaglanti(adres) {
+  const u = new URL(adres);
+  if (!u.searchParams.has('lang')) u.searchParams.set('lang', 'tr');
+  return u.toString();
+}
+
+/**
+ * Doğrulama bağlantısı üretir (e-posta GÖNDERİLMEZ).
+ * `yeniEposta` verilirse "doğrula ve değiştir" bağlantısıdır.
+ */
+export async function firebaseEpostaBaglantisi(eposta, yeniEposta) {
+  const govde = yeniEposta
+    ? { requestType: 'VERIFY_AND_CHANGE_EMAIL', email: eposta, newEmail: yeniEposta, returnOobLink: true }
+    : { requestType: 'VERIFY_EMAIL', email: eposta, returnOobLink: true };
+  const r = await yonetimIstegi('sendOobCode', govde);
+  if (!r.ok || typeof r.veri?.oobLink !== 'string') {
+    if (r.kod.startsWith('EMAIL_EXISTS')) {
+      const e = new Error('EMAIL_EXISTS');
+      e.kod = 'EMAIL_EXISTS';
+      throw e;
+    }
+    throw new Error(`Firebase bağlantısı üretilemedi (HTTP ${r.durum}${r.kod ? ` ${r.kod.slice(0, 40)}` : ''})`);
+  }
+  return turkceBaglanti(r.veri.oobLink);
+}
