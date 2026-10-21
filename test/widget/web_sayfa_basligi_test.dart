@@ -17,11 +17,9 @@ void main() {
   const webBasliklari = <String, String>{
     'lib/screens/find_provider_screen.dart':
         "const RefPageTitle('Hizmet Veren Bul')",
-    // 21 Eki (kullanıcı kararı): İşlerim, Kazandığım, Bildirimler ve
-    // Profil sekmelerinin üst başlığı web ve mobilde KALDIRILDI (aşağıdaki
-    // ayrı teste bkz.). Hizmet alandaki "İlanlarım" başlığı kalır.
-    'lib/screens/my_listings_screen.dart':
-        "const RefPageTitle('İlanlarım', geriDugmesi: false)",
+    // 21 Eki (kullanıcı kararı): İşlerim, Kazandığım, Bildirimler, Profil
+    // ve hizmet alanın "İlanlarım" üst başlığı KALDIRILDI (aşağıdaki ayrı
+    // teste bkz.).
     'lib/screens/account_settings_screen.dart':
         "const RefPageTitle('Hesap Ayarları')",
     'lib/screens/legal_screen.dart':
@@ -46,6 +44,7 @@ void main() {
     expect(oku('lib/screens/notifications_screen.dart').contains("'Bildirimler',\n"), isFalse);
     expect(oku('lib/screens/profile_screen.dart').contains("RefPageTitle('Profil'"), isFalse);
     expect(oku('lib/screens/my_listings_screen.dart').contains("saglayici ? 'İşlerim'"), isFalse);
+    expect(oku('lib/screens/my_listings_screen.dart').contains("RefPageTitle('İlanlarım'"), isFalse);
   });
 
   test('zaten standart olanlar yerinde', () {

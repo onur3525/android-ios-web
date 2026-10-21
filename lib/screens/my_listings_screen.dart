@@ -191,12 +191,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
-          // sekme olduğu için geri oku YOK. Mobil ağaç değişmez.
-          // 21 Eki: hizmet verende "İşlerim" başlığı kaldırıldı (kullanıcı
-          // kararı); hizmet alandaki "İlanlarım" aynen.
-          if (kIsWeb && !saglayici)
-            const RefPageTitle('İlanlarım', geriDugmesi: false),
+          // ⚠ 21 Eki (kullanıcı kararı): üst başlık iki rolde de YOK —
+          // önce hizmet verenin "İşlerim"i, sonra hizmet alanın
+          // "İlanlarım"ı kaldırıldı. Bölüm adı alt bar / kenar çubuğunda
+          // seçili sekmeden belli.
           // .cust-tabs — rol duyarlı
           RefSegmentTabs(
             selected: _tab,
