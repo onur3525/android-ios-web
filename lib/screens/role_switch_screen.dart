@@ -5,13 +5,10 @@ import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/models/account.dart';
-import '../domain/form_mesajlari.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import '../ui/alt_panel.dart';
-import '../ui/panel_rotasi.dart';
-import 'otp_screen.dart';
 
 /// ROL DEĞİŞTİR
 ///
@@ -375,57 +372,16 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
 
   /// ROL EKLEME DOĞRULAMASI (yalnız API modu).
   ///
-  /// Sıra: şifre (sunucuda doğrulanır; yanlışsa SMS harcanmaz) →
-  /// kayıtlı telefona SMS → kod doğrulama ekranı. Başarıda şifre ve
-  /// telefon kanıtı döner; kullanıcı vazgeçerse `null`.
-  Future<({String sifre, String kanit})?> _rolEklemeDogrula(
+  /// ⚠ 21 Eki (kullanıcı kararı): telefon numarası ve SMS kodu
+  /// İSTENMEZ. Yalnız şifre sorulur (sunucuda doğrulanır); vazgeçilirse
+  /// `null`.
+  Future<({String sifre, String? kanit})?> _rolEklemeDogrula(
       AuthController auth, String telefon) async {
     final sifre = await _sifreAl(auth);
     if (sifre == null || !mounted) {
       return null;
     }
-    final ch = await auth.rolEklemeKodGonder();
-    if (!mounted) {
-      return null;
-    }
-    if (ch.hata != null || ch.challengeId == null) {
-      sysToastErr(context, SysKind.genericError,
-          extra: ch.hata ?? FormMesaj.otpGonderilemedi);
-      return null;
-    }
-    var challengeId = ch.challengeId!;
-    String? kanit;
-    await Navigator.push(
-      context,
-      panelRotasi<void>(
-        settings: const RouteSettings(name: '/dogrulama'),
-        builder: (_) => OtpScreen(
-          phone: telefon,
-          purpose: OtpPurpose.rolEkleme,
-          // ⚠ EKRAN KODU DOĞRULAMAZ: Firebase doğrular, kanıtı sunucu
-          // ayrıca denetler.
-          dogrula: (kod) async {
-            final r = await auth.rolEklemeKodDogrula(challengeId, kod);
-            if (r.kanit == null) {
-              return r.hata ?? 'Doğrulama kodu hatalı';
-            }
-            kanit = r.kanit;
-            return null;
-          },
-          yenidenGonder: () async {
-            final y = await auth.rolEklemeKodGonder();
-            if (y.hata != null || y.challengeId == null) {
-              return y.hata ?? FormMesaj.otpGonderilemedi;
-            }
-            challengeId = y.challengeId!;
-            return null;
-          },
-          onVerified: (c, _) => Navigator.of(c).pop(),
-        ),
-      ),
-    );
-    final k = kanit;
-    return k == null ? null : (sifre: sifre, kanit: k);
+    return (sifre: sifre, kanit: null);
   }
 
   /// Şifre paneli — şifre sunucuda doğrulanır (`verifyPassword`);
@@ -445,8 +401,7 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Hesabınıza yeni rol eklemek için şifrenizi girin. Ardından '
-              'kayıtlı telefonunuza doğrulama kodu gönderilecek.',
+              'Hesabınıza yeni rol eklemek için şifrenizi girin.',
               style: refText(
                   size: RF.s135,
                   weight: RF.w400,

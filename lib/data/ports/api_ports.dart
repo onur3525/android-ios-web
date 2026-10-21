@@ -423,11 +423,11 @@ class ApiAuthPort extends AuthPort {
     String? sifre,
     String? telefonKaniti,
   }) async {
-    if (sifre == null || sifre.isEmpty || telefonKaniti == null) {
-      return const ValidationError(
-          'Rol eklemek için şifre ve SMS doğrulaması gerekir.');
+    // 21 Eki (kullanıcı kararı): telefon/SMS doğrulaması istenmez; yalnız şifre.
+    if (sifre == null || sifre.isEmpty) {
+      return const ValidationError('Rol eklemek için şifrenizi girin.');
     }
-    final hata = await repo.addRole(role, sifre, telefonKaniti);
+    final hata = await repo.addRole(role, sifre);
     if (hata != null) {
       return hata;
     }

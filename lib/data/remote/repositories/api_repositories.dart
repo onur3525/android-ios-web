@@ -169,9 +169,9 @@ class ApiAuthRepository extends ChangeNotifier {
     return null;
   }
 
-  Future<DomainError?> addRole(Role role, String password, String firebaseIdToken) async {
+  Future<DomainError?> addRole(Role role, String password) async {
     final err = (await _guard(() => _auth.addRole(
-        role: Mappers.roleApi(role), password: password, firebaseIdToken: firebaseIdToken))).$2;
+        role: Mappers.roleApi(role), password: password))).$2;
     return err ?? await loadMe();
   }
 
