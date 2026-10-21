@@ -246,6 +246,39 @@ async function saglayiciProfili(db, kullaniciId) {
  * Firebase doğrularsa yerel özet de eşitlenir (Firebase kesintisinde yedek
  * doğrulama eski şifreyi kabul etmesin).
  */
+/**
+ * ── ⚠ FIREBASE'DE DOĞRULANMIŞ E-POSTAYI HESABA İŞLER — TEK KAYNAK (21 Eki) ──
+ *
+ * `k`: firebaseKullaniciBilgisi kaydı. Doğrulanmış adres profil adresiyle
+ * aynıysa yalnız onay işlenir. Farklıysa ("doğrula ve değiştir" tamamlandı)
+ * adres de değişir — başka hesapta kayıtlıysa DEĞİŞMEZ.
+ *
+ * ⚠ OTURUM KAPANMAZ (kullanıcı kuralı): Firebase adres değişikliğinde
+ * yenileme belirteçlerini iptal eder ve `validSince`'i ileri alır. Uzlaştırma
+ * bunu "dışarıda iptal" sanıp kullanıcının açık oturumlarını kapatıyordu
+ * (hesap açıkken e-posta değişince çıkış, yeniden şifre). Değişiklik burada
+ * işlenirken yerel sınır Firebase'inkine çekilir; uzlaştırma bunu yeni bir
+ * iptal saymaz. Eski Firebase belgeleriyle yeni oturum yine açılmaz.
+ * Dönen: güncel kullanıcı satırı (değişiklik yoksa aynı satır).
+ */
+export async function firebaseEpostasiniIsle(db, u, k) {
+  const fbEposta = String(k?.email || '').trim().toLowerCase();
+  if (!k?.epostaDogrulandi || !fbEposta) return u;
+  const mevcut = String(u.email || '').trim().toLowerCase();
+  if (fbEposta === mevcut) {
+    if (u.email_verified) return u;
+    await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+  } else {
+    if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;
+    await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
+    if (k.validSince) {
+      await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
+        .run(k.validSince, u.id, k.validSince);
+    }
+  }
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+}
+
 export async function sifreDogruMu(db, u, sifre) {
   let fb = u.firebase_uid && u.email ? await firebaseSifreDogrula(u.email, sifre).catch(() => null) : null;
   // ── ⚠ E-POSTASI FIREBASE'DE DEĞİŞMİŞ HESAP (21 Eki, kullanıcı bulgusu) ──
@@ -259,10 +292,7 @@ export async function sifreDogruMu(db, u, sifre) {
     const fbEposta = String(k?.email || '').trim().toLowerCase();
     if (fbEposta && fbEposta !== String(u.email).trim().toLowerCase()) {
       fb = await firebaseSifreDogrula(fbEposta, sifre).catch(() => null);
-      if (fb === true && k.epostaDogrulandi
-          && !(await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id))) {
-        await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
-      }
+      if (fb === true) await firebaseEpostasiniIsle(db, u, k);
     }
   }
   if (fb === null) return await sifreDogrulaAsenkron(sifre, u.password_hash);
@@ -387,6 +417,22 @@ export async function firebaseDisDegisiklikleriniUzlastir(db, u) {
   if (!k.validSince || k.validSince <= yerel) return;
   const sinirIso = new Date(k.validSince * 1000).toISOString();
   const sifreDegisti = k.sifreGuncellemeMs != null && k.sifreGuncellemeMs >= (k.validSince - 5) * 1000;
+  // ⚠ 21 Eki (kullanıcı kuralı): iptal bir E-POSTA DEĞİŞİKLİĞİNDEN geldiyse
+  // (şifre değişmedi, Firebase'de doğrulanmış yeni adres var) oturumlar
+  // KAPATILMAZ; adres hesaba işlenir ve yerel sınır ileri alınır.
+  const fbEposta = String(k.email || '').trim().toLowerCase();
+  if (!sifreDegisti && k.epostaDogrulandi && fbEposta) {
+    if (fbEposta !== String(u.email || '').trim().toLowerCase()) {
+      const g = await firebaseEpostasiniIsle(db, u, k);
+      if (String(g.email || '').toLowerCase() === fbEposta) return;
+    } else if (u.updated_at && Date.parse(u.updated_at) >= k.validSince * 1000) {
+      // Adres değişikliği hesaba ZATEN işlenmiş (eşitleme ucu ya da Firebase
+      // girişi, sınır ileri alınmadan): yine iptal sayılmaz, sınır çekilir.
+      await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
+        .run(k.validSince, u.id, k.validSince);
+      return;
+    }
+  }
   await db.tx(async () => {
     await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'FIREBASE_REVOKED' WHERE user_id = ? AND revoked_at IS NULL AND created_at < ?`)
       .run(simdi(), u.id, sinirIso);
@@ -975,17 +1021,7 @@ export function kullaniciRotalar(r, db) {
     if (!u.firebase_uid || !firebaseYonetimiHazir()) return u;
     let fb;
     try { fb = await firebaseKullaniciBilgisi(u.firebase_uid); } catch { return u; }
-    const fbEposta = String(fb?.email || '').trim().toLowerCase();
-    if (!fb?.epostaDogrulandi || !fbEposta) return u;
-    const mevcut = String(u.email || '').trim().toLowerCase();
-    if (fbEposta === mevcut) {
-      if (u.email_verified) return u;
-      await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
-    } else {
-      if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;
-      await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
-    }
-    return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    return firebaseEpostasiniIsle(db, u, fb);
   };
 
   r.post('/api/v1/profiles/me/email/sync', korumali(async (ctx) => {
