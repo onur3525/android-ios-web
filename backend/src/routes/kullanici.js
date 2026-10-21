@@ -23,6 +23,7 @@ import { olaylar } from '../olaylar.js';
 import {
   firebaseKullaniciBilgisi, firebaseKullaniciSil, firebaseOturumlariniIptalEt, firebaseSifreAyarla, firebaseSifreDegistir, firebaseSifreDogrula,
   firebaseOzelBelge, firebaseTelefonAyarla, firebaseTokenDogrula, firebaseYonetimiHazir,
+  firebaseEpostaAyarla, firebaseEpostaBaglantisi,
 } from '../firebase_token.js';
 import { firebaseIslemiKuyrugaEkle } from '../firebase_islemleri.js';
 
@@ -931,6 +932,74 @@ export function kullaniciRotalar(r, db) {
     if (!belge) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'E-posta doğrulaması şu anda başlatılamıyor. Lütfen daha sonra tekrar deneyin.');
     return { firebaseCustomToken: belge };
   }));
+
+  // ── ⚠ KURUMSAL DOĞRULAMA E-POSTASI (21 Eki, kullanıcı isteği) ──
+  //
+  // Bağlantıyı Firebase üretir (göndermez); e-posta HizmetCep
+  // tasarımıyla sunucudan gider. E-posta kanalı (admin entegrasyonu)
+  // ya da Firebase servis hesabı yoksa HİÇBİR değişiklik yapılmadan
+  // { sent:false } döner; istemci o zaman Firebase'in kendi gönderimini
+  // kullanır (eski davranış). Bağlantı kayda düz yazılmaz.
+  const epostaBaglantisiGonder = async (ctx, yeni) => {
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
+    const mevcut = String(u.email || '').trim().toLowerCase();
+    if (!yeni) {
+      if (!mevcut) throw hata.durum('Hesabınızda kayıtlı e-posta adresi yok');
+      if (u.email_verified) throw hata.durum('E-posta adresiniz zaten doğrulanmış');
+    } else {
+      if (yeni === mevcut) throw hata.durum('Yeni adres mevcut adresinizle aynı');
+      if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(yeni, u.id)) {
+        throw hata.cakisma('Bu e-posta adresi başka bir hesapta kayıtlı');
+      }
+    }
+    if (!u.firebase_uid) throw hata.durum('Hesabınız e-posta doğrulaması için henüz hazır değil. Çıkış yapıp yeniden giriş yapın.');
+    if (!firebaseYonetimiHazir() || !(await kanalHazir(db, 'EMAIL'))) return { sent: false, reason: 'CHANNEL_UNAVAILABLE' };
+
+    const baslatilamadi = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'E-posta doğrulaması şu anda başlatılamıyor. Lütfen daha sonra tekrar deneyin.');
+    let baglanti;
+    try {
+      const fb = await firebaseKullaniciBilgisi(u.firebase_uid);
+      if (!fb) throw hata.durum('Hesabınız e-posta doğrulaması için henüz hazır değil. Çıkış yapıp yeniden giriş yapın.');
+      const fbEposta = String(fb.email || '').trim().toLowerCase();
+      if (!yeni) {
+        if (fbEposta && fbEposta !== mevcut) {
+          throw hata.durum('Firebase hesabındaki e-posta profil adresiyle eşleşmiyor. Önce e-posta değişikliği akışını tamamlayın.');
+        }
+        if (!fbEposta) await firebaseEpostaAyarla(u.firebase_uid, mevcut);
+        baglanti = await firebaseEpostaBaglantisi(mevcut);
+      } else {
+        // Telefonla açılmış Firebase hesabında e-posta boş olabilir: önce
+        // mevcut adres (doğrulanmamış) yazılır; yeni adres yine yalnız
+        // bağlantı tıklanınca geçerli olur.
+        let kaynak = fbEposta;
+        if (!kaynak && mevcut) {
+          await firebaseEpostaAyarla(u.firebase_uid, mevcut);
+          kaynak = mevcut;
+        }
+        baglanti = kaynak
+          ? await firebaseEpostaBaglantisi(kaynak, yeni)
+          : (await firebaseEpostaAyarla(u.firebase_uid, yeni), await firebaseEpostaBaglantisi(yeni));
+      }
+    } catch (e) {
+      if (e instanceof ApiHatasi) throw e;
+      if (e?.kod === 'EMAIL_EXISTS') throw hata.cakisma('Bu e-posta adresi başka bir hesapta kayıtlı');
+      throw baslatilamadi();
+    }
+    const hedef = yeni || mevcut;
+    const g = await gonder(db, {
+      kullaniciId: u.id, kanal: 'EMAIL', hedef,
+      sablon: yeni ? 'EPOSTA_DEGISIKLIGI' : 'EPOSTA_DOGRULAMA',
+      degerler: { AD: u.name, EPOSTA: hedef, BAGLANTI: baglanti },
+      gizliGovde: true,
+    });
+    if (g.status !== 'SENT') throw new ApiHatasi(502, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.');
+    return { sent: true, email: hedef };
+  };
+
+  r.post('/api/v1/profiles/me/email/verification', korumali((ctx) => epostaBaglantisiGonder(ctx, null)));
+
+  r.post('/api/v1/profiles/me/email/change-request', korumali((ctx) => epostaBaglantisiGonder(ctx, eposta(ctx.body.newEmail))));
 
   r.post('/api/v1/profiles/me/email/change', korumali(async (ctx) => {
     const token = String(ctx.body.firebaseIdToken ?? '').trim();

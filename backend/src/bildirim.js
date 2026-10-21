@@ -16,10 +16,38 @@ import { config, uretim } from './config.js';
 import { simdi } from './db.js';
 import { etkinEntegrasyon } from './entegrasyon.js';
 import { guvenliIstek } from './ag_guvenligi.js';
+import { kurumsalEposta } from './eposta_tasarimi.js';
 
-/** Şablonlar: {NEDEN}, {ILAN}, {DESTEK}, {KOD} yer tutucuları. */
+/**
+ * Şablonlar: {NEDEN}, {ILAN}, {DESTEK}, {KOD}, {AD}, {EPOSTA}, {BAGLANTI}
+ * yer tutucuları. `sms` düz metindir (SMS ve e-postanın düz metin
+ * sürümü). `eposta` verilmişse e-posta o yapıyla, verilmemişse `konu` +
+ * `sms` metniyle aynı kurumsal kalıpta (eposta_tasarimi.js) çizilir.
+ */
 export const SABLONLAR = {
   OTP: { sms: 'HizmetCep doğrulama kodunuz: {KOD}. Kodu kimseyle paylaşmayın.' },
+  // ── 21 Eki: doğrulama e-postaları artık HizmetCep tasarımıyla gider
+  // (önceden Firebase'in düz şablonu). Bağlantıyı Firebase üretir. ──
+  EPOSTA_DOGRULAMA: {
+    konu: 'E-posta adresinizi doğrulayın',
+    sms: 'Merhaba {AD},\n\nHizmetCep hesabınızdaki {EPOSTA} adresini doğrulamak için bu bağlantıyı açın:\n{BAGLANTI}\n\nBu isteği siz yapmadıysanız bu e-postayı dikkate almayın.',
+    eposta: {
+      baslik: 'E-posta adresinizi doğrulayın',
+      paragraflar: ['Merhaba {AD},', 'HizmetCep hesabınızdaki {EPOSTA} adresini doğrulamak için aşağıdaki düğmeye dokunun.'],
+      buton: { metin: 'E-postamı Doğrula', adres: '{BAGLANTI}' },
+      not: 'Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın; hesabınızda herhangi bir değişiklik yapılmaz.',
+    },
+  },
+  EPOSTA_DEGISIKLIGI: {
+    konu: 'Yeni e-posta adresinizi doğrulayın',
+    sms: 'Merhaba {AD},\n\nHizmetCep hesabınızın e-posta adresini {EPOSTA} olarak değiştirmek için bu bağlantıyı açın:\n{BAGLANTI}\n\nBağlantıyı açana kadar mevcut adresiniz geçerli kalır. Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın.',
+    eposta: {
+      baslik: 'Yeni e-posta adresinizi doğrulayın',
+      paragraflar: ['Merhaba {AD},', 'HizmetCep hesabınızın e-posta adresini {EPOSTA} olarak değiştirmek için aşağıdaki düğmeye dokunun. Bağlantıyı açana kadar mevcut adresiniz geçerli kalır.'],
+      buton: { metin: 'Yeni Adresimi Doğrula', adres: '{BAGLANTI}' },
+      not: 'Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın; e-posta adresiniz değişmez.',
+    },
+  },
   HESAP_ASKIYA_ALINDI: {
     sms: 'Merhaba, hesabınız HizmetCep yönetimi tarafından askıya alınmıştır. İşlem nedeni: {NEDEN} Detaylı bilgi için: {DESTEK}',
     konu: 'Hesabınız askıya alındı',
@@ -51,6 +79,26 @@ function doldur(metin, degerler) {
   return metin.replace(/\{(\w+)\}/g, (_, k) => (degerler[k] ?? ''));
 }
 
+/** Şablonun e-posta içeriği (HTML + düz metin), kurumsal kalıpta. */
+export function epostaIcerigi(sablon, degerler = {}) {
+  const s = SABLONLAR[sablon];
+  const e = s.eposta;
+  return kurumsalEposta({
+    konu: s.konu ?? 'HizmetCep',
+    baslik: doldur(e?.baslik ?? s.konu ?? 'HizmetCep', degerler),
+    paragraflar: e
+      ? e.paragraflar.map((p) => doldur(p, degerler))
+      : doldur(s.sms, degerler).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
+    buton: e?.buton ? { metin: e.buton.metin, adres: doldur(e.buton.adres, degerler) } : undefined,
+    not: e?.not ? doldur(e.not, degerler) : undefined,
+    destek: degerler.DESTEK || undefined,
+  });
+}
+
+// Resend (https://resend.com) e-posta API'si — admin panelinden "resend"
+// sağlayıcısı seçildiğinde kullanılır. Adres SABİTTİR (panelden girilmez).
+export const RESEND_ADRESI = 'https://api.resend.com/emails';
+
 /**
  * Kanalın bir gönderim yolu var mı? (admin entegrasyonu etkin YA DA ortam
  * sağlayıcısı tanımlı). Numaradan bağımsızdır; yanıt kayıt bilgisi sızdırmaz.
@@ -60,9 +108,21 @@ export async function kanalHazir(db, kanal) {
   return (kanal === 'SMS' ? config.sms : config.eposta).ad !== 'yok';
 }
 
-async function saglayiciyaGonder(db, kanal, hedef, konu, govde) {
+async function saglayiciyaGonder(db, kanal, hedef, konu, govde, html) {
   // Admin panelinden etkinleştirilmiş entegrasyon ÖNCELİKLİ; yoksa ortam.
   const e = await etkinEntegrasyon(db, kanal === 'SMS' ? 'SMS' : 'EMAIL');
+  if (e && kanal === 'EMAIL' && e.provider === 'resend') {
+    // ⚠ Gönderen adres Resend'de doğrulanmış alan adından olmalıdır
+    // (ör. "HizmetCep <bildirim@hizmetcep.com>").
+    const r = await guvenliIstek(RESEND_ADRESI, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${e.secret.token}` },
+      body: JSON.stringify({ from: e.config.from, to: [hedef], subject: konu, html, text: govde }),
+      timeoutMs: 10_000,
+    });
+    if (r.status < 200 || r.status > 299) throw new Error(`resend ${r.status}: ${r.text.slice(0, 400)}`);
+    return { saglayici: 'resend', yanit: r.text.slice(0, 500) };
+  }
   const s = e ? { ad: 'webhook', url: e.config.url, anahtar: e.secret.token } : (kanal === 'SMS' ? config.sms : config.eposta);
   if (s.ad === 'yok') {
     // Üretimde ortam sağlayıcısı tanımsız ve admin entegrasyonu etkin değil.
@@ -76,7 +136,8 @@ async function saglayiciyaGonder(db, kanal, hedef, konu, govde) {
   const istek = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.anahtar}` },
-    body: JSON.stringify({ channel: kanal, to: hedef, subject: konu, text: govde }),
+    // `html` yalnız e-postada; köprü desteklemiyorsa `text`i kullanır.
+    body: JSON.stringify({ channel: kanal, to: hedef, subject: konu, text: govde, ...(html ? { html } : {}) }),
   };
   let durum; let metin;
   if (e) {
@@ -99,8 +160,19 @@ async function saglayiciyaGonder(db, kanal, hedef, konu, govde) {
  */
 export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler = {}, denetimRef, gizliGovde }) {
   const s = SABLONLAR[sablon];
-  const govde = doldur(s.sms, degerler);
-  const kayitGovdesi = gizliGovde ? doldur(s.sms, { ...degerler, KOD: '••••••' }) : govde;
+  let govde = doldur(s.sms, degerler);
+  let html;
+  if (kanal === 'EMAIL') {
+    // Alt bilgideki destek adresi: çağıran vermediyse kayıtlı olan.
+    if (!degerler.DESTEK) {
+      let d = null;
+      try { d = await db.prepare('SELECT email FROM support_info WHERE id = 1').get(); } catch { /* alt bilgisiz gider */ }
+      if (d?.email) degerler = { ...degerler, DESTEK: d.email };
+    }
+    ({ html, text: govde } = epostaIcerigi(sablon, degerler));
+  }
+  // ⚠ Kod ve doğrulama bağlantısı kayda ASLA düz yazılmaz.
+  const kayitGovdesi = gizliGovde ? doldur(s.sms, { ...degerler, KOD: '••••••', BAGLANTI: '••••••' }) : govde;
   const id = randomUUID();
   await db.prepare(
     `INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, audit_ref, created_at)
@@ -112,7 +184,7 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
     return { id, status: 'FAILED' };
   }
   try {
-    const r = await saglayiciyaGonder(db, kanal, hedef, s.konu, govde);
+    const r = await saglayiciyaGonder(db, kanal, hedef, s.konu, govde, html);
     await db.prepare(`UPDATE outbound_messages SET status = 'SENT', provider = ?, provider_response = ?, attempts = 1, sent_at = ? WHERE id = ?`)
       .run(r.saglayici, r.yanit, simdi(), id);
     return { id, status: 'SENT' };

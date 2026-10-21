@@ -24,6 +24,7 @@ import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
 import { olaylar } from './olaylar.js';
 import { fotoGonder, varlikGonder } from './katalog_foto.js';
+import { epostaVarligiGonder } from './eposta_tasarimi.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
 import { silmeKuyruklariRotalar } from './routes/silme_kuyruklari.js';
 import { kullaniciRotalar } from './routes/kullanici.js';
@@ -120,6 +121,9 @@ export function uygulamaKur(db) {
       // uygulama paketindeki katalog görselleri (beyaz listeli, salt okunur).
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
         return fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
+      }
+      if (req.method === 'GET' && yol.startsWith('/eposta-varlik/')) {
+        return epostaVarligiGonder(yol.slice('/eposta-varlik/'.length), res);
       }
       if (req.method === 'GET' && yol.startsWith('/katalog-varlik/')) {
         return varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res);

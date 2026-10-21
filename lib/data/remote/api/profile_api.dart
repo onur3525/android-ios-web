@@ -7,6 +7,17 @@ class ProfileApi {
 
   Future<Map<String, dynamic>> me() => c.get('/users/me');
 
+  /// ── KURUMSAL DOĞRULAMA E-POSTASI (21 Eki) ──
+  /// Sunucu bağlantıyı Firebase'e ürettirir ve e-postayı HizmetCep
+  /// tasarımıyla gönderir. Yanıt `{sent: true, email}`; e-posta kanalı
+  /// yoksa `{sent: false}` (istemci Firebase'in kendi gönderimine düşer).
+  Future<Map<String, dynamic>> epostaDogrulamaIste() =>
+      c.post('/profiles/me/email/verification');
+
+  Future<Map<String, dynamic>> epostaDegisimiIste(String yeniEposta) =>
+      c.post('/profiles/me/email/change-request',
+          body: {'newEmail': yeniEposta});
+
   /// KARŞI TARAF ÖZETİ — yalnız ilişkisi olan kullanıcı için döner (404).
   /// Telefon ve tam ad sunucunun kurallarına göre gelir.
   Future<Map<String, dynamic>> kisiOzeti(String id) =>

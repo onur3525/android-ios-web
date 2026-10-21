@@ -514,19 +514,23 @@ SAYFALAR.entegrasyonlar = async () => {
   const superMi = ben.role === 'super_admin';
   const ekle = async () => {
     const d = await form('Entegrasyon ekle', [
-      { ad: 'type', etiket: 'Tür', tur: 'select', deger: 'SMS', secenekler: [['SMS', 'SMS (HTTPS köprü)'], ['EMAIL', 'E-posta (HTTPS köprü)'], ['STORAGE', 'Dosya depolama (S3 uyumlu)']] },
-      { ad: 'url', etiket: 'SMS/E-posta: köprü adresi (https)' }, { ad: 'endpoint', etiket: 'Depolama: uç nokta (https)' },
+      { ad: 'type', etiket: 'Tür', tur: 'select', deger: 'SMS', secenekler: [['SMS', 'SMS (HTTPS köprü)'], ['EMAIL_RESEND', 'E-posta (Resend — kurumsal tasarım)'], ['EMAIL', 'E-posta (HTTPS köprü)'], ['STORAGE', 'Dosya depolama (S3 uyumlu)']] },
+      { ad: 'url', etiket: 'SMS/E-posta köprü: adres (https)' },
+      { ad: 'from', etiket: 'Resend: gönderen (ör. HizmetCep <bildirim@hizmetcep.com>)' },
+      { ad: 'endpoint', etiket: 'Depolama: uç nokta (https)' },
       { ad: 'bucket', etiket: 'Depolama: kova' }, { ad: 'region', etiket: 'Depolama: bölge (ör. auto, eu-central-1)' }], 'Ekle');
     if (!d) return;
     const govde = d.type === 'STORAGE'
       ? { type: 'STORAGE', provider: 's3', config: { endpoint: d.endpoint, bucket: d.bucket, region: d.region } }
-      : { type: d.type, provider: 'webhook', config: { url: d.url } };
+      : d.type === 'EMAIL_RESEND'
+        ? { type: 'EMAIL', provider: 'resend', config: { from: d.from } }
+        : { type: d.type, provider: 'webhook', config: { url: d.url } };
     if (await guvenli(() => api('/integrations', { yontem: 'POST', govde }))) { bildir('Eklendi (pasif). Gizli anahtarı girip etkinleştirin.'); yenile(); }
   };
   const sir = async (x) => {
     const alanlar = x.type === 'STORAGE'
       ? [{ ad: 'accessKeyId', etiket: 'Erişim anahtarı kimliği', tur: 'password', zorunlu: true }, { ad: 'secretAccessKey', etiket: 'Gizli erişim anahtarı', tur: 'password', zorunlu: true }]
-      : [{ ad: 'token', etiket: 'Köprü anahtarı (Bearer)', tur: 'password', zorunlu: true }];
+      : [{ ad: 'token', etiket: x.provider === 'resend' ? 'Resend API anahtarı (re_…)' : 'Köprü anahtarı (Bearer)', tur: 'password', zorunlu: true }];
     const d = await form('Gizli anahtarı değiştir', alanlar, 'Kaydet', { aciklama: 'Değer şifreli saklanır ve bir daha gösterilmez.' });
     if (d && await guvenli(() => api(`/integrations/${x.id}/secret`, { yontem: 'PUT', govde: d }))) { bildir('Kaydedildi'); yenile(); }
   };

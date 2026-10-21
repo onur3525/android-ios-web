@@ -193,6 +193,9 @@ export const config = {
   firebaseWebApiKey: (env.HC_FIREBASE_WEB_API_KEY || '').trim(),
   sms: saglayici('SMS'),
   eposta: saglayici('EMAIL'),
+  // E-postalardaki logo görsellerinin herkese açık kökü (21 Eki). Gizli
+  // değildir; varsayılan canlı sunucu adresidir.
+  epostaVarlikKoku: (env.HC_PUBLIC_BASE_URL || 'https://hizmetcep-backend.onrender.com').trim(),
   veritabani: veritabaniAyari(),
   anaAnahtar: anaAnahtar(),
   // Çerez Secure bayrağı: üretimde HER ZAMAN açık.

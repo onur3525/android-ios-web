@@ -22,6 +22,8 @@ COPY admin /app/admin
 # Admin önizlemesi için uygulama paketindeki katalog görselleri (salt okunur).
 COPY assets/categories /app/assets/categories
 COPY assets/svg/categories /app/assets/svg/categories
+# Kurumsal e-postalardaki logo (GET /eposta-varlik/…).
+COPY assets/logo/logo_mark.png assets/logo/wordmark.png /app/assets/logo/
 # Başlangıç verisi aktarımı (npm run seed) Flutter veri dosyalarını okur.
 COPY lib/data /app/lib/data
 COPY lib/screens/category_ui.dart /app/lib/screens/category_ui.dart
