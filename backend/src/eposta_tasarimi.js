@@ -114,12 +114,10 @@ export function kurumsalEposta({ konu, baslik, paragraflar = [], buton, not, des
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
           <tr>
             <td align="center" style="padding:0 0 20px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td valign="middle" style="padding-right:10px;"><img src="${kok}/eposta-varlik/logo_mark.png" width="30" height="37" alt="" style="display:block;border:0;"></td>
-                  <td valign="middle"><img src="${kok}/eposta-varlik/wordmark.png" width="150" height="36" alt="HizmetCep" style="display:block;border:0;font-family:${YAZI};font-size:24px;font-weight:800;color:${MARKA.mavi};"></td>
-                </tr>
-              </table>
+              <!-- 21 Eki (kullanıcı isteği): logo büyük ve net. Beyaz zemin
+                   GÖRSELİN İÇİNDE: koyu modda e-posta uygulaması zemini
+                   koyulaştırsa da logo okunur kalır. -->
+              <img src="${kok}/eposta-varlik/eposta_logo.png" width="280" height="76" alt="HizmetCep" style="display:block;border:0;width:280px;max-width:100%;height:auto;font-family:${YAZI};font-size:28px;font-weight:800;color:${MARKA.mavi};">
             </td>
           </tr>
           <tr>
@@ -168,7 +166,13 @@ export function kurumsalEposta({ konu, baslik, paragraflar = [], buton, not, des
 // (Dockerfile bunları /app/assets/logo altına kopyalar.)
 
 const LOGO_KOKU = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'assets', 'logo');
-const EPOSTA_VARLIKLARI = new Set(['logo_mark.png', 'wordmark.png']);
+const VARLIK_KOKU = join(dirname(fileURLToPath(import.meta.url)), '..', 'varliklar');
+// Eski iki dosya önceden gönderilmiş e-postalar için sunulmaya devam eder.
+const EPOSTA_VARLIKLARI = new Map([
+  ['eposta_logo.png', VARLIK_KOKU],
+  ['logo_mark.png', LOGO_KOKU],
+  ['wordmark.png', LOGO_KOKU],
+]);
 
 export async function epostaVarligiGonder(ad, res) {
   if (!EPOSTA_VARLIKLARI.has(ad)) {
@@ -176,7 +180,7 @@ export async function epostaVarligiGonder(ad, res) {
     return res.end('Bulunamadı');
   }
   try {
-    const icerik = await readFile(join(LOGO_KOKU, ad));
+    const icerik = await readFile(join(EPOSTA_VARLIKLARI.get(ad), ad));
     res.writeHead(200, {
       'Content-Type': 'image/png',
       'Cache-Control': 'public, max-age=86400',

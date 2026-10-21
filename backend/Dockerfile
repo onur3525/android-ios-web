@@ -17,6 +17,8 @@ RUN if [ -f package-lock.json ]; then npm ci --omit=dev; \
 COPY backend/src ./src
 COPY backend/migrations ./migrations
 COPY backend/scripts ./scripts
+# Kurumsal e-posta logosu (GET /eposta-varlik/eposta_logo.png).
+COPY backend/varliklar ./varliklar
 # Yönetim paneli (statik) aynı imajda, /admin altında sunulur.
 COPY admin /app/admin
 # Admin önizlemesi için uygulama paketindeki katalog görselleri (salt okunur).
