@@ -69,17 +69,5 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/hc_blue"/>
-        <!-- 21 Eki: HizmetCep sistem bildirimi her markada aynı görünüm
-             (renkli logo). Sunucu Android'e yalnız veri gönderir
-             (`hcYerel=1`); bildirimi BildirimAlici çizer. FlutterFire'ın
-             kendi alıcısı da aynı yayını almaya devam eder. -->
-        <receiver
-            android:name=".BildirimAlici"
-            android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

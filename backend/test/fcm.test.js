@@ -35,21 +35,9 @@ test('yalnız bildirim sahibinin bütün cihazlarına, Flutter biçiminde gönde
   await db.prepare(`UPDATE notifications SET push_status = NULL, push_claimed_at = NULL WHERE user_id = ?`).run(a); // anında tetikleme sonucunu sıfırla, işi doğrudan sına
   await pushGonderiminiIsle(db);
   assert.deepEqual(giden.map((g) => g.t).sort(), ['a-jeton-1-xxxxxxxxxxxxxxxxxxxx', 'a-jeton-2-xxxxxxxxxxxxxxxxxxxx']);
-  const mesajı = (t) => giden.find((g) => g.t === t).m;
-  // iOS: sistem bildirimi yükü (değişmedi).
-  const m = mesajı('a-jeton-2-xxxxxxxxxxxxxxxxxxxx');
+  const m = giden[0].m;
   assert.equal(m.notification.title, 'Yeni teklif');
   assert.equal(m.data.type, 'NEW_OFFER'); assert.equal(m.data.hedef, 'ilan'); assert.equal(m.data.id, ilanId);
-  // 21 Eki — Android: YALNIZ VERİ; bildirimi uygulama her markada aynı
-  // biçimde (renkli logo) çizer. Bildirim yükü olsaydı FCM kendisi çizerdi.
-  const a1 = mesajı('a-jeton-1-xxxxxxxxxxxxxxxxxxxx');
-  assert.equal(a1.notification, undefined, 'Android mesajında bildirim yükü yok');
-  assert.deepEqual(
-    [a1.data.hcYerel, a1.data.baslik, a1.data.govde, a1.data.type, a1.data.hedef, a1.data.id],
-    ['1', 'Yeni teklif', 'İlanınıza teklif geldi', 'NEW_OFFER', 'ilan', ilanId],
-  );
-  assert.equal(a1.android.priority, 'HIGH', 'uygulama kapalıyken de hemen teslim');
-  assert.ok(Object.values(a1.data).every((v) => typeof v === 'string'), 'FCM veri alanları metin olmalı');
   assert.equal((await durum(a)).push_status, 'SENT');
   // Tekrar işlemek ikinci gönderim yapmaz (idempotent)
   giden.length = 0; await pushGonderiminiIsle(db); assert.equal(giden.length, 0);
