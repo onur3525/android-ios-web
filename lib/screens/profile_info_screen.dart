@@ -9,6 +9,7 @@ import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/profile_controller.dart';
 import 'otp_screen.dart';
+import 'widgets/eposta_gonderildi_kutusu.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -123,8 +124,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
   /// Başarı uyarıları (`sysToastOk`) 9 Eyl'den beri bilerek çizilmiyor;
   /// bu yüzden doğrulama bağlantısı gönderildiğinde ekranda HİÇBİR şey
   /// değişmiyordu ve kullanıcı e-postanın gidip gitmediğini bilemiyordu.
-  /// Sonuç alt şerit olarak değil, düğmenin altında yazı olarak durur.
-  String? _epostaGonderimDurumu;
+  /// Sonuç alt şerit olarak değil, e-posta alanının altında yeşil kutu
+  /// (`EpostaGonderildiKutusu`, kullanıcının görseliyle birebir) olarak
+  /// durur; adres değişince kalkar.
+  bool _epostaGonderildi = false;
 
   /// ⚠ ALAN BAZLI YENİDEN DOĞRULAMA ANAHTARLARI.
   ///
@@ -289,9 +292,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    setState(() => _epostaGonderimDurumu =
-        'Doğrulama bağlantısı $mevcut adresine gönderildi. Gelen kutunuzu ve '
-        'istenmeyen (spam) klasörünü kontrol edin.');
+    setState(() => _epostaGonderildi = true);
   }
 
   Future<void> _yeniEpostaDogrulamaGonder() async {
@@ -306,10 +307,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    setState(() => _epostaGonderimDurumu =
-        'Doğrulama bağlantısı ${epostaNormalize(_email.text)} adresine '
-        'gönderildi. Gelen kutunuzu ve istenmeyen (spam) klasörünü kontrol '
-        'edin. Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.');
+    setState(() => _epostaGonderildi = true);
   }
 
   Future<void> _save() async {
@@ -576,7 +574,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               focusNode: _fEposta,
               // ⚠ `onChanged` doğrulama YAPMAZ.
               //
-              onChanged: (_) => setState(() => _epostaGonderimDurumu = null),
+              onChanged: (_) => setState(() => _epostaGonderildi = false),
               hint: 'E-posta',
               keyboardType: TextInputType.emailAddress,
                   // ⚠ E-postada baş harf büyütülmez.
@@ -616,6 +614,13 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                         ),
                       ],
                     ),
+                    // 21 Eki: kullanıcının görseliyle birebir — durum
+                    // satırının altında, düğmenin üstünde.
+                    if (_epostaGonderildi && !onayli) ...[
+                      const SizedBox(height: 10),
+                      const EpostaGonderildiKutusu(),
+                      const SizedBox(height: 4),
+                    ],
                     if (!onayli && !yeniAdresGirildi)
                       Align(
                         alignment: Alignment.centerLeft,
@@ -632,28 +637,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                           onPressed: _busy ? null : _yeniEpostaDogrulamaGonder,
                           icon: const Icon(Icons.outgoing_mail, size: 18),
                           label: const Text('Yeni E-posta Adresini Doğrula'),
-                        ),
-                      ),
-                    if (_epostaGonderimDurumu != null && !onayli)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.mark_email_unread_outlined,
-                                size: 18, color: RC.success),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                _epostaGonderimDurumu!,
-                                style: refText(
-                                  size: RF.s135,
-                                  weight: RF.w500,
-                                  color: RC.success,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                   ],
