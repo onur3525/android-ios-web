@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../firebase/firebase_baslatici.dart';
 import 'firebase_secenekleri.dart';
@@ -24,11 +25,46 @@ Future<void> pushArkaPlanMesaji(RemoteMessage mesaj) async {
 
 bool _basladi = false;
 
-Map<String, dynamic> _veri(RemoteMessage m) => {
-      ...m.data,
-      if (m.notification?.title != null) '_baslik': m.notification!.title,
-      if (m.notification?.body != null) '_govde': m.notification!.body,
-    };
+// 21 Eki: Android'e yalnız veri gelir (başlık/metin `baslik`/`govde`
+// alanlarında; sistem bildirimini native `BildirimAlici` çizer).
+Map<String, dynamic> _veri(RemoteMessage m) =>
+    _yerelVeri({...m.data, '_baslik': m.notification?.title, '_govde': m.notification?.body});
+
+Map<String, dynamic> _yerelVeri(Map<Object?, Object?> ham) {
+  final v = <String, dynamic>{};
+  ham.forEach((k, d) {
+    if (k is String && d != null) v[k] = d;
+  });
+  v['_baslik'] ??= v['baslik'];
+  v['_govde'] ??= v['govde'];
+  v.removeWhere((_, d) => d == null);
+  return v;
+}
+
+/// Android: native çizilen bildirime dokunma köprüsü (MainActivity).
+const MethodChannel _bildirimKanali = MethodChannel('hizmetcep/bildirim');
+
+Future<void> _androidBildirimKoprusu(void Function(Map<String, dynamic> veri) onAcildi) async {
+  if (defaultTargetPlatform != TargetPlatform.android) {
+    return;
+  }
+  try {
+    _bildirimKanali.setMethodCallHandler((c) async {
+      final a = c.arguments;
+      if (c.method == 'acildi' && a is Map) {
+        onAcildi(_yerelVeri(a));
+      }
+    });
+    final ilk = await _bildirimKanali.invokeMapMethod<String, Object?>('ilk');
+    if (ilk != null) {
+      onAcildi(_yerelVeri(ilk));
+    }
+  } on MissingPluginException {
+    // Köprü yoksa (eski native kabuk) yalnız FCM yolu çalışır.
+  } on PlatformException {
+    // aynı
+  }
+}
 
 Future<bool> pushBaslat({
   required void Function(Map<String, dynamic> veri) onMesaj,
@@ -60,6 +96,7 @@ Future<bool> pushBaslat({
     if (ilk != null) {
       onAcildi(_veri(ilk));
     }
+    await _androidBildirimKoprusu(onAcildi);
     _basladi = true;
     return true;
   } catch (e) {
