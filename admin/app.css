@@ -62,6 +62,24 @@ pre.govde { white-space:pre-wrap; background:#f7f8fa; padding:12px; border-radiu
 .oz-baslik p { margin:4px 0 0; color:var(--oz-soluk); font-size:14px; }
 .oz-tarih { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--oz-cizgi); border-radius:10px; padding:10px 14px; font-size:14px; color:var(--oz-yazi); white-space:nowrap; }
 .oz-tarih svg { color:var(--oz-soluk); }
+.oz-tarih-sar { position:relative; }
+button.oz-tarih { cursor:pointer; }
+button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB; }
+.oz-tarih-ok { color:var(--oz-soluk); font-size:12px; }
+.oz-tarih-menu { display:none; position:absolute; right:0; top:calc(100% + 6px); z-index:30; width:280px; max-width:calc(100vw - 32px); background:#fff; border:1px solid var(--oz-cizgi); border-radius:12px; box-shadow:0 10px 30px rgba(15,23,42,.12); padding:6px; }
+.oz-tarih-sar.acik .oz-tarih-menu { display:block; }
+.oz-tarih-secenek { display:block; width:100%; text-align:left; padding:9px 10px; border:0; border-radius:8px; background:none; color:var(--oz-yazi); cursor:pointer; font-size:14px; }
+.oz-tarih-secenek:hover { background:#F1F5F9; }
+.oz-tarih-secenek.secili { background:#EFF6FF; color:var(--oz-mavi); font-weight:600; }
+.oz-aralik { display:grid; gap:8px; border-top:1px solid var(--oz-cizgi); margin-top:6px; padding:10px 10px 6px; }
+.oz-aralik.secili .oz-aralik-baslik { color:var(--oz-mavi); }
+.oz-aralik-baslik { font-size:14px; font-weight:600; }
+.oz-aralik label { display:grid; gap:4px; font-size:12px; color:var(--oz-soluk); }
+.oz-aralik input { width:100%; box-sizing:border-box; color:var(--oz-yazi); }
+.oz-aralik-hata { margin:0; min-height:0; font-size:12px; color:var(--oz-kirmizi); }
+.oz-aralik-hata:empty { display:none; }
+.oz-aralik-uygula { border:0; border-radius:8px; padding:9px 12px; background:var(--oz-mavi); color:#fff; font-weight:600; cursor:pointer; }
+.oz-aralik-uygula:hover { background:#1D4ED8; }
 .oz-kart { background:#fff; border:1px solid var(--oz-cizgi); border-radius:14px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,.04); min-width:0; }
 .oz-kart h3 { margin:0; font-size:17px; font-weight:700; }
 .oz-kart-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; }

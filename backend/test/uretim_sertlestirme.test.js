@@ -186,6 +186,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   const MATRIS = [
     // [yöntem, yol, izinli roller]
     ['GET', '/admin/v1/stats', ['super_admin', 'moderator', 'readonly']],
+    ['GET', `/admin/v1/stats/period?from=${encodeURIComponent(new Date().toISOString())}&days=1`, ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/users', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/listings', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/offers', ['super_admin', 'moderator', 'readonly']],
@@ -438,6 +439,25 @@ test('SSRF: admin iç ağ adresiyle entegrasyon oluşturamaz/güncelleyemez; ba�
   const t = await istek(`/admin/v1/integrations/${e.json.id}/test`, { yontem: 'POST', govde: {} });
   assert.equal(t.json.ok, false);
   assert.match(t.json.message, /reddedildi/);
+});
+
+test('21 Eki: Özet tarih aralığı — günlük sayılar doğrudan veritabanından; aralık dışı sayılmaz; geçersiz aralık reddedilir', async () => {
+  const GUN = 86_400_000;
+  const bas = new Date(Date.now() - 2 * GUN - 60_000); // 3. dilim "şimdi"yi kapsar
+  const yol = (b, g) => `/admin/v1/stats/period?from=${encodeURIComponent(b.toISOString())}&days=${g}`;
+  const once = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
+  assert.equal(once.days, 3);
+  for (const k of ['users', 'listings', 'offers', 'teklifTalepleri', 'accountRequests']) assert.equal(once[k].length, 3, k);
+  await kisi('5340000099', 'CUSTOMER');
+  const sonra = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
+  assert.deepEqual(sonra.users.slice(0, 2), once.users.slice(0, 2), 'geçmiş günler değişmez');
+  assert.equal(sonra.users[2], once.users[2] + 1, 'yeni kayıt bugünün dilimine düşer');
+  // Aralık bitmişse sonradan gelen kayıt sayılmaz.
+  const gecmis = (await istek(yol(new Date(Date.now() - 10 * GUN), 2), { rol: 'readonly' })).json;
+  assert.deepEqual(gecmis.users, [0, 0], 'test kayıtlarının hepsi bugün açıldı');
+  for (const bozuk of [yol(bas, 0), yol(bas, 801), yol(bas, 1.5), '/admin/v1/stats/period?from=dun&days=1', '/admin/v1/stats/period?days=1']) {
+    assert.equal((await istek(bozuk, { rol: 'readonly' })).durum, 400, bozuk);
+  }
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {

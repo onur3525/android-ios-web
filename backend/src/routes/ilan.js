@@ -13,7 +13,7 @@
 // hizmet verenin müşteriye sunduğu bedeldir.
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
-import { yenidenDogrulamaIste, yetkiIste } from '../auth.js';
+import { yenidenDogrulamaIste, yetkiIste, yetkiliMi } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
 import { simdi, tekilIhlaliMi } from '../db.js';
@@ -735,6 +735,44 @@ export function ilanRotalar(r, db) {
       openTalepler: await say(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum IN ('BEKLEMEDE','TEKLIF_GELDI','SECILDI')`),
       pendingDeletions: await say(`SELECT COUNT(*) n FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING'`),
       failedNotifications: await say(`SELECT COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND template <> 'OTP' AND created_at > ?`, new Date(Date.now() - 7 * 86_400_000).toISOString()),
+    };
+  });
+
+  // ── ÖZET: SEÇİLEN TARİH ARALIĞI (21 Eki) ──
+  //
+  // Özet ekranındaki tarih seçimi (Bugün / Bu hafta / Bu ay / aralık)
+  // için GÜNLÜK sayılar. Liste uçlarının 200 kayıt sınırına takılmadan
+  // doğrudan veritabanından sayılır; sayı uydurulmaz.
+  //   from — panelin yerel gün başlangıcı (ISO), days — gün sayısı.
+  // Günler `from`dan itibaren 24 saatlik dilimlerdir (Türkiye'de yaz
+  // saati yok). Kullanıcı ve gelen talep sayıları `users.read` yetkisi
+  // ister; yetki yoksa null döner (ekranda "yetki yok").
+  r.get('/admin/v1/stats/period', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const bas = Date.parse(String(ctx.query.get('from') ?? ''));
+    const gun = Number(ctx.query.get('days'));
+    if (!Number.isFinite(bas) || !Number.isInteger(gun) || gun < 1 || gun > 800) throw hata.dogrulama('Geçersiz tarih aralığı');
+    const GUN_MS = 86_400_000;
+    const ilk = new Date(bas).toISOString();
+    const son = new Date(bas + gun * GUN_MS).toISOString();
+    const seri = async (tablo, ek = '') => {
+      const sayac = Array(gun).fill(0);
+      const satirlar = await db.prepare(`SELECT created_at t FROM ${tablo} WHERE created_at >= ? AND created_at < ?${ek}`).all(ilk, son);
+      for (const { t } of satirlar) {
+        const i = Math.floor(((t instanceof Date ? t.getTime() : Date.parse(t)) - bas) / GUN_MS);
+        if (i >= 0 && i < gun) sayac[i]++;
+      }
+      return sayac;
+    };
+    const kullaniciYetkisi = yetkiliMi(ctx.admin.role, 'users.read');
+    return {
+      from: ilk,
+      days: gun,
+      users: kullaniciYetkisi ? await seri('users', ' AND deleted_at IS NULL') : null,
+      listings: await seri('listings'),
+      offers: await seri('offers'),
+      teklifTalepleri: await seri('teklif_talepleri'),
+      accountRequests: kullaniciYetkisi ? await seri('account_requests') : null,
     };
   });
 
