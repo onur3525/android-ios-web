@@ -70,11 +70,11 @@ class ApiAuthRepository extends ChangeNotifier {
     return (j?['sent'] == true, null);
   }
 
-  /// Firebase'de doğrulanmış e-postayı hesaba işler (21 Eki). Hesap zaten
-  /// onaylıysa istek atılmaz; hata olursa mevcut durum korunur.
+  /// Firebase'de doğrulanmış e-postayı hesaba işler (21 Eki). Onaylı
+  /// hesapta da çalışır: adres değişikliği bağlantısı tıklandıysa yeni adres
+  /// gelir. Hata olursa mevcut durum korunur.
   Future<void> epostaOnayiniEsitle() async {
-    final once = currentAccount;
-    if (once == null || once.emailVerified) {
+    if (currentAccount == null) {
       return;
     }
     final (j, err) = await _guard(() => _profile.epostaOnayiniEsitle());
