@@ -247,7 +247,24 @@ async function saglayiciProfili(db, kullaniciId) {
  * doğrulama eski şifreyi kabul etmesin).
  */
 export async function sifreDogruMu(db, u, sifre) {
-  const fb = u.firebase_uid && u.email ? await firebaseSifreDogrula(u.email, sifre).catch(() => null) : null;
+  let fb = u.firebase_uid && u.email ? await firebaseSifreDogrula(u.email, sifre).catch(() => null) : null;
+  // ── ⚠ E-POSTASI FIREBASE'DE DEĞİŞMİŞ HESAP (21 Eki, kullanıcı bulgusu) ──
+  // "Doğrula ve değiştir" bağlantısı tıklanınca adres Firebase'de değişir;
+  // sunucu henüz eski adresi tutuyorsa Firebase şifre denetimi ESKİ adresle
+  // yapılıp reddediliyordu ve kullanıcı doğru şifreyle giriş yapamıyordu.
+  // Reddedilirse Firebase'deki güncel adresle bir kez daha denenir; o adres
+  // doğrulanmışsa (ve başka hesapta değilse) hesaba da işlenir.
+  if (fb === false && u.firebase_uid && firebaseYonetimiHazir()) {
+    const k = await firebaseKullaniciBilgisi(u.firebase_uid).catch(() => null);
+    const fbEposta = String(k?.email || '').trim().toLowerCase();
+    if (fbEposta && fbEposta !== String(u.email).trim().toLowerCase()) {
+      fb = await firebaseSifreDogrula(fbEposta, sifre).catch(() => null);
+      if (fb === true && k.epostaDogrulandi
+          && !(await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id))) {
+        await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
+      }
+    }
+  }
   if (fb === null) return await sifreDogrulaAsenkron(sifre, u.password_hash);
   if (fb === true && !await sifreDogrulaAsenkron(sifre, u.password_hash)) {
     await db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(sifre), simdi(), u.id);
