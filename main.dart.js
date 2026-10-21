@@ -254876,7 +254876,7 @@
     epostaOnayiniEsitle$0() {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$self = this, _0_0, j, acc, t1;
+        $async$returnValue, $async$self = this, _0_0, j;
       var $async$epostaOnayiniEsitle$0 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -254900,10 +254900,7 @@
                 $async$goto = 1;
                 break;
               }
-              acc = A.Mappers_account(j);
-              t1 = $async$self.currentAccount;
-              acc.address = t1 == null ? null : t1.address;
-              $async$self.currentAccount = acc;
+              $async$self._hesabiYaz$1(j);
               $async$self.notifyListeners$0();
             case 1:
               // return
@@ -255048,6 +255045,15 @@
           }
       });
       return A._asyncStartSync($async$kisiOzeti$1, $async$completer);
+    },
+    _hesabiYaz$1(j) {
+      var t1,
+        acc = A.Mappers_account(type$.Map_String_dynamic._as(j));
+      if (acc.address == null) {
+        t1 = this.currentAccount;
+        acc.address = t1 == null ? null : t1.address;
+      }
+      this.currentAccount = acc;
     },
     loadMe$0() {
       var $async$goto = 0,
@@ -255244,7 +255250,7 @@
               res.toString;
               ozel = J.$index$asx(res, "firebaseCustomToken");
               $async$self.firebaseOzelBelgesi = typeof ozel == "string" && ozel.length !== 0 ? ozel : null;
-              $async$self.currentAccount = A.Mappers_account(res);
+              $async$self._hesabiYaz$1(res);
               $async$self.notifyListeners$0();
               $async$returnValue = null;
               // goto return
@@ -255282,7 +255288,7 @@
                 break;
               }
               res.toString;
-              $async$self.currentAccount = A.Mappers_account(res);
+              $async$self._hesabiYaz$1(res);
               $async$self.notifyListeners$0();
               $async$returnValue = null;
               // goto return
@@ -255415,7 +255421,7 @@
                 break;
               }
               res.toString;
-              $async$self.currentAccount = A.Mappers_account(res);
+              $async$self._hesabiYaz$1(res);
               $async$self.notifyListeners$0();
               $async$returnValue = null;
               // goto return
@@ -255533,7 +255539,7 @@
                 break;
               }
               res.toString;
-              $async$self.currentAccount = A.Mappers_account(res);
+              $async$self._hesabiYaz$1(res);
               $async$self.notifyListeners$0();
               $async$returnValue = null;
               // goto return
