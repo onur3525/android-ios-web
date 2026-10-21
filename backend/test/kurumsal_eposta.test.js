@@ -78,6 +78,8 @@ test('şablon: logo, düğme, alt bilgi; girdi kaçışlanır; yalnız https ba�
   // 21 Eki: tek, büyük logo (beyaz zemin görselin içinde).
   assert.ok(x.html.includes('/eposta-varlik/eposta_logo.png'));
   assert.ok(x.html.includes('width="280"'));
+  // Beyaz görünüm: koyu moda çevirme isteyen istemcilere "yalnız açık" bildirilir.
+  assert.ok(x.html.includes('<meta name="color-scheme" content="light only">'));
   assert.ok(x.html.includes('E-postamı Doğrula'));
   assert.ok(x.html.includes('href="https://ornek.com/a?b=1&amp;c=2"'));
   assert.ok(x.html.includes('destek@hizmetcep.com'));

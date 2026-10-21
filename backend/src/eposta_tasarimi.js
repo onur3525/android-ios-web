@@ -102,8 +102,12 @@ export function kurumsalEposta({ konu, baslik, paragraflar = [], buton, not, des
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<meta name="supported-color-schemes" content="light">
+<!-- 21 Eki (kullanıcı isteği): her zaman BEYAZ görünüm. "light only"
+     Apple Mail ve Outlook'ta koyu moda çevrilmeyi engeller. Gmail
+     uygulaması bu işareti yok sayar ve rengi kendisi çevirir. -->
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<style>:root { color-scheme: light only; supported-color-schemes: light only; }</style>
 <title>${kacis(konu)}</title>
 </head>
 <body style="margin:0;padding:0;background:${MARKA.zemin};">
