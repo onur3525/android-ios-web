@@ -49,6 +49,22 @@ export class ApiHata extends Error {
 let oturumDustu = () => {};
 export function oturumDusunce(f) { oturumDustu = f; }
 
+// ── HAREKETSİZLİK KİLİDİ (21 Eki) ──
+// Sunucu oturumu son istekten `idleTimeoutSeconds` (5 dk) sonra kapatır.
+// Panel de son başarılı istekten itibaren aynı süreyi sayar; dolunca
+// ekrandaki veriyi bırakmadan giriş sayfasına döner.
+let sonIstek = Date.now();
+let bekci = null;
+export function hareketsizlikKilidi(sureSn, kilitle) {
+  clearInterval(bekci);
+  bekci = null;
+  if (!sureSn) return;
+  sonIstek = Date.now();
+  bekci = setInterval(() => {
+    if (Date.now() - sonIstek >= sureSn * 1000) { clearInterval(bekci); bekci = null; kilitle(); }
+  }, 5000);
+}
+
 /** API çağrısı; REAUTH_REQUIRED gelirse TOTP sorar ve isteği tekrarlar. */
 export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar = {} } = {}) {
   const r = await fetch(`/admin/v1${yol}`, {
@@ -57,6 +73,7 @@ export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar
     headers: { ...(govde !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(yontem !== 'GET' ? { 'X-HC-Admin': '1' } : {}), ...basliklar },
     body: govde !== undefined ? JSON.stringify(govde) : undefined,
   });
+  if (r.ok) sonIstek = Date.now();
   if (r.status === 204) return null;
   const j = await r.json().catch(() => null);
   if (r.ok) return j;

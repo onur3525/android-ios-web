@@ -203,7 +203,9 @@ export const config = {
   // CORS izin listesi (yalnız kullanıcı API'si). '*' YOK; tam köken eşleşmesi.
   // Üretim varsayılanı production web kökeni; geliştirmede boş (davranış aynı).
   corsKokenleri: corsKokenleri(),
-  adminOturumBosta: 30 * 60 * 1000, // 30 dk hareketsizlik
+  // 21 Eki (kullanıcı kararı): 30 dk çok uzundu — en çok 5 dk hareketsizlik.
+  // Panel de aynı süreyi /auth/me yanıtından alır ve ekranı kendisi kilitler.
+  adminOturumBosta: 5 * 60 * 1000, // 5 dk hareketsizlik
   adminOturumMutlak: 8 * 60 * 60 * 1000, // 8 saat
   yenidenDogrulamaSuresi: 5 * 60 * 1000, // kritik işlem için 5 dk
 };

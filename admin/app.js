@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 import {
   ApiHata, alanlarListesi, api, bildir, bilgiPenceresi, form, gerekceIle, guvenli, h,
-  oturumDusunce, rozet, tablo, tarih,
+  hareketsizlikKilidi, oturumDusunce, rozet, tablo, tarih,
 } from './cekirdek.js';
 import { ozetSayfasi } from './ozet.js';
 import { sistemSayfasi } from './sistem.js';
@@ -44,7 +44,17 @@ const MENU = [
 const DURUM_TR = { ACTIVE: 'Aktif', SUSPENDED: 'Askıda', BANNED: 'Banlı' };
 
 // ── Giriş ─────────────────────────────────────────────────────
-function girisEkrani() {
+/** Giriş yapıldı: 5 dk hareketsizlikte ekran kilitlenir (süre sunucudan). */
+function oturumBasladi() {
+  hareketsizlikKilidi(ben?.idleTimeoutSeconds, async () => {
+    ben = null;
+    await api('/auth/logout', { yontem: 'POST', govde: {} }).catch(() => {}); // sunucuda zaten kapanmış olabilir
+    girisEkrani('Hareketsizlik nedeniyle oturum kapandı. Yeniden giriş yapın.');
+  });
+}
+
+function girisEkrani(bilgi) {
+  hareketsizlikKilidi(0);
   const email = h('input', { type: 'email', class: 'genis', autocomplete: 'username', placeholder: 'E-posta' });
   const sifre = h('input', { type: 'password', class: 'genis', autocomplete: 'current-password', placeholder: 'Şifre' });
   const kod = h('input', { class: 'genis', inputmode: 'numeric', autocomplete: 'one-time-code', placeholder: '6 haneli kod' });
@@ -65,6 +75,7 @@ function girisEkrani() {
         kod.focus();
       } else {
         ben = await api('/auth/mfa', { yontem: 'POST', govde: { code: kod.value.trim() } });
+        oturumBasladi();
         location.hash = '#/ozet';
         cizim();
       }
@@ -78,7 +89,8 @@ function girisEkrani() {
   for (const g of [email, sifre, kod]) g.addEventListener('keydown', (e) => e.key === 'Enter' && gonder());
   // Giriş ekranında marka adı GÖSTERİLMEZ (kullanıcı kararı): nötr başlık.
   document.title = 'Yönetim Girişi';
-  kok.replaceChildren(h('div', { class: 'giris' }, h('h1', {}, 'Yönetim Girişi'), email, h('br'), h('br'), sifre, adim2, hata, h('br'), dugme));
+  kok.replaceChildren(h('div', { class: 'giris' }, h('h1', {}, 'Yönetim Girişi'),
+    bilgi ? h('p', { class: 'not' }, bilgi) : null, email, h('br'), h('br'), sifre, adim2, hata, h('br'), dugme));
   email.focus();
 }
 
@@ -116,7 +128,7 @@ async function cizim() {
 }
 const yenile = () => cizim();
 window.addEventListener('hashchange', cizim);
-oturumDusunce(() => { ben = null; girisEkrani(); });
+oturumDusunce(() => { ben = null; girisEkrani('Oturum süresi doldu. Yeniden giriş yapın.'); });
 
 // ── Özet ──────────────────────────────────────────────────────
 // Tasarım ve veri kaynakları: ozet.js (yalnız mevcut admin API'leri).
@@ -632,6 +644,7 @@ SAYFALAR.yoneticiler = async () => {
 (async () => {
   try {
     ben = await api('/auth/me');
+    oturumBasladi();
     cizim();
   } catch {
     girisEkrani();

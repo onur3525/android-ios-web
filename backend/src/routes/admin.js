@@ -137,7 +137,7 @@ export function adminRotalar(r, db) {
       secure: config.cerezSecure, maxAgeSn: Math.floor(config.adminOturumMutlak / 1000),
     }));
     await denetimYaz(db, { adminId: c.admin.id, islem: 'auth.login', ip: ctx.ip });
-    return adminGorunumu(c.admin);
+    return { ...adminGorunumu(c.admin), idleTimeoutSeconds: Math.floor(config.adminOturumBosta / 1000) };
   });
 
   r.post('/admin/v1/auth/reauth', async (ctx) => {
@@ -156,7 +156,8 @@ export function adminRotalar(r, db) {
     return { ok: true };
   });
 
-  r.get('/admin/v1/auth/me', (ctx) => adminGorunumu(ctx.admin));
+  // Hareketsizlik süresi panele de bildirilir (tek kaynak: config).
+  r.get('/admin/v1/auth/me', (ctx) => ({ ...adminGorunumu(ctx.admin), idleTimeoutSeconds: Math.floor(config.adminOturumBosta / 1000) }));
 
   // ── YÖNETİCİLER ──────────────────────────────────────────
   r.get('/admin/v1/admins', async (ctx) => {
