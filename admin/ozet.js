@@ -1,16 +1,23 @@
 // ═══════════════════════════════════════════════════════════════
 // ÖZET EKRANI — yalnız MEVCUT admin API'leri (sahte/demo veri YOK)
 //
-// Kaynaklar: /stats · /users · /listings · /offers · /teklif-talepleri
-// · /account-requests · /integrations. Her bölüm bağımsız yüklenir;
+// Kaynaklar: /stats · /stats/period · /users · /listings
+// · /account-closures · /integrations. Her bölüm bağımsız yüklenir;
 // yetkisi olmayan rol (403) o bölümde "yetki yok" görür, ekran çökmez.
 //
-// GÜNLÜK SAYILAR VE GRAFİKLER yalnız listeler 7 günlük pencereyi
+// TARİH ARALIĞI (21 Eki): sağ üstteki seçim — Bugün / Bu hafta / Bu ay /
+// Tarih aralığı. Dönem kartları bu seçime göre `/stats/period` ucundan
+// (doğrudan veritabanı sayımı) çizilir; dönem, eşit uzunluktaki bir önceki
+// dönemle karşılaştırılır. Üç grafik kartının her birinin kendi seçimi
+// vardır (Son 7 gün varsayılan; Bugün saat saat çizilir).
+//
+// "Son 7 gün · yeni kullanıcı" kartı yalnız listeler 7 günlük pencereyi
 // TAMAMEN kapsıyorsa çizilir (en eski kayıt pencereden eskiyse ya da
 // listenin tamamı alındıysa). Kapsam eksikse sayı UYDURULMAZ; "veri
 // yetersiz" gösterilir. CSP: satır içi stil yok; grafik SVG öznitelikli.
 // ═══════════════════════════════════════════════════════════════
 import { api, h, rozet } from './cekirdek.js';
+import { kapatmaPaneli } from './hesap_kapatma.js';
 
 const GUN = 86_400_000;
 const RENK = { mavi: '#2563EB', yesil: '#22C55E', mor: '#8B5CF6', turuncu: '#F97316', kirmizi: '#EF4444', gri: '#94A3B8' };
@@ -50,6 +57,80 @@ const kisaTarih = (v) => (v ? new Date(v).toLocaleDateString('tr-TR', { day: '2-
 const sayi = (v) => (Number.isFinite(v) ? v.toLocaleString('tr-TR') : '—');
 const gunBasi = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
+// ── TARİH ARALIĞI SEÇİMİ ──
+// Seçim sayfa oturumu boyunca hatırlanır (başka sayfaya gidip dönünce).
+let secim = { tur: 'bugun' };
+// Grafik kartlarının her biri kendi seçimini taşır (varsayılan: Son 7 gün).
+const grafikSecimi = { users: { tur: 'son7' }, listings: { tur: 'son7' }, offers: { tur: 'son7' } };
+const AZAMI_GUN = 366;
+const yerelGun = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const gunEkle = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const gunFarki = (a, b) => Math.round((yerelGun(b) - yerelGun(a)) / GUN);
+const girdiTarihi = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const girdidenTarih = (v) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v ?? ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const uzunTarih = (d) => d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+const SECENEKLER = [['bugun', 'Bugün'], ['hafta', 'Bu hafta'], ['ay', 'Bu ay']];
+const GRAFIK_SECENEKLERI = [['son7', 'Son 7 gün'], ...SECENEKLER];
+
+/** Seçimden dönem: başlangıç (yerel gün başı), gün sayısı, etiket. */
+function donem(x) {
+  const bugun = yerelGun(new Date());
+  if (x.tur === 'hafta') { const n = ((bugun.getDay() + 6) % 7) + 1; return { bas: gunEkle(bugun, -(n - 1)), gun: n, etiket: 'Bu hafta' }; }
+  if (x.tur === 'ay') return { bas: new Date(bugun.getFullYear(), bugun.getMonth(), 1), gun: bugun.getDate(), etiket: 'Bu ay' };
+  if (x.tur === 'aralik') return { bas: x.bas, gun: gunFarki(x.bas, x.bit) + 1, etiket: 'Tarih aralığı' };
+  if (x.tur === 'son7') return { bas: gunEkle(bugun, -6), gun: 7, etiket: 'Son 7 gün' };
+  return { bas: bugun, gun: 1, etiket: 'Bugün' };
+}
+
+function yenidenCiz() { window.dispatchEvent(new HashChangeEvent('hashchange')); }
+
+/**
+ * Tarih seçici — sağ üst (büyük) ve grafik kartları (küçük) aynı bileşeni
+ * kullanır. x: seçim, onSec: yeni seçimle çağrılır.
+ */
+function tarihSecici(x, onSec, { secenekler = SECENEKLER, kucuk = false } = {}) {
+  const d = donem(x);
+  const son = gunEkle(d.bas, d.gun - 1);
+  const aralikMetni = d.gun === 1 ? uzunTarih(d.bas) : `${uzunTarih(d.bas)} - ${uzunTarih(son)}`;
+  const metin = kucuk ? (x.tur === 'aralik' ? aralikMetni : d.etiket) : `${d.etiket} · ${aralikMetni}`;
+  const bugun = yerelGun(new Date());
+  const ilk = h('input', { type: 'date', max: girdiTarihi(bugun), value: girdiTarihi(d.bas), 'aria-label': 'Başlangıç tarihi' });
+  const sonGirdi = h('input', { type: 'date', max: girdiTarihi(bugun), value: girdiTarihi(son), 'aria-label': 'Bitiş tarihi' });
+  const hataYeri = h('p', { class: 'oz-aralik-hata', role: 'alert' });
+  const sar = h('div', { class: `oz-tarih-sar${kucuk ? ' kucuk' : ''}` });
+  const dugme = h('button', { type: 'button', class: kucuk ? 'oz-secim oz-secim-dugme' : 'oz-tarih', title: aralikMetni, 'aria-haspopup': 'true', 'aria-expanded': 'false' },
+    kucuk ? null : ikon('takvim', 18), h('span', {}, metin), h('span', { class: 'oz-tarih-ok', 'aria-hidden': 'true' }, '▾'));
+  const ac = (acik) => { sar.classList.toggle('acik', acik); dugme.setAttribute('aria-expanded', String(acik)); };
+  dugme.addEventListener('click', (e) => { e.stopPropagation(); ac(!sar.classList.contains('acik')); });
+  const disari = (e) => {
+    if (!sar.isConnected) { document.removeEventListener('click', disari); document.removeEventListener('keydown', kacis); return; }
+    if (!sar.contains(e.target)) ac(false);
+  };
+  const kacis = (e) => { if (e.key === 'Escape') ac(false); };
+  document.addEventListener('click', disari);
+  document.addEventListener('keydown', kacis);
+  const sec = (yeni) => { ac(false); onSec(yeni); };
+  const uygula = (e) => {
+    e.preventDefault();
+    const b = girdidenTarih(ilk.value); const t = girdidenTarih(sonGirdi.value);
+    let hataMetni = '';
+    if (!b || !t) hataMetni = 'Başlangıç ve bitiş tarihini seçin.';
+    else if (b > t) hataMetni = 'Başlangıç tarihi bitişten sonra olamaz.';
+    else if (t > bugun) hataMetni = 'Bitiş tarihi bugünden sonra olamaz.';
+    else if (gunFarki(b, t) + 1 > AZAMI_GUN) hataMetni = `En fazla ${AZAMI_GUN} gün seçilebilir.`;
+    hataYeri.textContent = hataMetni;
+    if (!hataMetni) sec({ tur: 'aralik', bas: b, bit: t });
+  };
+  sar.append(dugme, h('div', { class: 'oz-tarih-menu', role: 'menu' },
+    secenekler.map(([tur, ad]) => h('button', { type: 'button', role: 'menuitem', class: `oz-tarih-secenek${x.tur === tur ? ' secili' : ''}`, onclick: () => sec({ tur }) }, ad)),
+    h('form', { class: `oz-aralik${x.tur === 'aralik' ? ' secili' : ''}`, onsubmit: uygula },
+      h('div', { class: 'oz-aralik-baslik' }, 'Tarih aralığı'),
+      h('label', {}, 'Başlangıç', ilk), h('label', {}, 'Bitiş', sonGirdi),
+      hataYeri,
+      h('button', { type: 'submit', class: 'oz-aralik-uygula' }, 'Uygula'))));
+  return sar;
+}
+
 /** Liste 7 günlük pencereyi tamamen kapsıyor mu? (kayıtlar yeniden eskiye) */
 function kapsar(liste, toplam, alan = 'createdAt') {
   if (!liste) return false;
@@ -69,10 +150,6 @@ function gunluk(liste, alan = 'createdAt') {
   return sayac;
 }
 
-function gunEtiketleri() {
-  const b = gunBasi(Date.now());
-  return Array.from({ length: 8 }, (_, i) => new Date(b - (7 - i) * GUN).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }));
-}
 
 /** Kart başlığı + "Tümünü gör" bağlantısı. */
 function bolum(baslik, hedef, ...icerik) {
@@ -87,11 +164,11 @@ function yuklenemedi(e) {
 }
 
 /** Bugün kartı: bugünkü sayı + düne göre değişim (yalnız kapsam tamsa). */
-function bugunKarti(ad, ikonAd, renk, veri) {
+function bugunKarti(ad, ikonAd, renk, veri, karsilastirma = 'Düne göre') {
   const [bugun, dun] = veri ?? [null, null];
   let fark = null;
   if (bugun !== null && dun !== null) {
-    if (dun === 0) fark = null; // sıfıra göre yüzde anlamsız; yalnız "Düne göre" gösterilir
+    if (dun === 0) fark = null; // sıfıra göre yüzde anlamsız; yalnız karşılaştırma sayısı gösterilir
     else fark = `${bugun >= dun ? '↑' : '↓'} %${Math.abs(Math.round(((bugun - dun) / dun) * 100))}`;
   }
   return h('div', { class: 'oz-bugun' },
@@ -102,7 +179,7 @@ function bugunKarti(ad, ikonAd, renk, veri) {
       bugun === null
         ? h('div', { class: 'oz-alt' }, 'Veri yetersiz')
         : [fark ? h('div', { class: `oz-fark ${bugun >= dun ? 'artis' : 'azalis'}` }, fark) : null,
-          h('div', { class: 'oz-alt' }, `Düne göre: ${sayi(dun)}`)]));
+          h('div', { class: 'oz-alt' }, `${karsilastirma}: ${sayi(dun)}`)]));
 }
 
 function miniKart(ad, deger, ikonAd, renk) {
@@ -111,15 +188,16 @@ function miniKart(ad, deger, ikonAd, renk) {
     h('div', {}, h('div', { class: 'oz-etiket' }, ad), h('div', { class: 'oz-orta' }, sayi(deger))));
 }
 
-/** Çizgi grafik (SVG). seriler: [{ad, renk, degerler[8]}] */
-function grafik(seriler) {
+/** Çizgi grafik (SVG). seriler: [{ad, renk, degerler[]}], etiketler: gün adları. */
+function grafik(seriler, etiketler) {
+  const N = etiketler.length;
   const G = 320, Y = 150, sol = 28, alt = 22, ust = 8;
   const enCok = Math.max(1, ...seriler.flatMap((s) => s.degerler));
   const adim = Math.max(1, Math.ceil(enCok / 4));
   const tavan = adim * 4;
-  const x = (i) => sol + 6 + (i * (G - sol - 26)) / 7;
+  const x = (i) => sol + 6 + (N > 1 ? (i * (G - sol - 26)) / (N - 1) : (G - sol - 26) / 2);
   const y = (v) => ust + (Y - ust - alt) * (1 - v / tavan);
-  const k = svg('svg', { viewBox: `0 0 ${G} ${Y}`, class: 'oz-grafik', role: 'img', 'aria-label': 'Son 7 gün grafiği' });
+  const k = svg('svg', { viewBox: `0 0 ${G} ${Y}`, class: 'oz-grafik', role: 'img', 'aria-label': `${etiketler[0]} - ${etiketler[N - 1]} grafiği` });
   for (let i = 0; i <= 4; i++) {
     const v = i * adim;
     k.append(svg('line', { x1: sol, x2: G - 4, y1: y(v), y2: y(v), stroke: '#EEF1F6', 'stroke-width': 1 }));
@@ -127,7 +205,10 @@ function grafik(seriler) {
     t.textContent = String(v);
     k.append(t);
   }
-  gunEtiketleri().forEach((e, i) => {
+  // Uzun aralıkta etiketler seyreltilir (en çok ~8 etiket; son gün hep yazılır).
+  const seyrek = Math.max(1, Math.ceil(N / 8));
+  etiketler.forEach((e, i) => {
+    if ((N - 1 - i) % seyrek !== 0) return;
     const t = svg('text', { x: x(i), y: Y - 6, 'text-anchor': 'middle', 'font-size': 9, fill: '#94A3B8' });
     t.textContent = e;
     k.append(t);
@@ -135,19 +216,47 @@ function grafik(seriler) {
   for (const s of seriler) {
     const nokta = s.degerler.map((v, i) => `${x(i)},${y(v)}`).join(' ');
     if (seriler.length === 1) {
-      k.append(svg('polygon', { points: `${x(0)},${y(0)} ${nokta} ${x(7)},${y(0)}`, fill: s.renk, 'fill-opacity': 0.08 }));
+      k.append(svg('polygon', { points: `${x(0)},${y(0)} ${nokta} ${x(N - 1)},${y(0)}`, fill: s.renk, 'fill-opacity': 0.08 }));
     }
     k.append(svg('polyline', { points: nokta, fill: 'none', stroke: s.renk, 'stroke-width': 2 }));
-    s.degerler.forEach((v, i) => k.append(svg('circle', { cx: x(i), cy: y(v), r: 3, fill: s.renk })));
+    s.degerler.forEach((v, i) => k.append(svg('circle', { cx: x(i), cy: y(v), r: N > 31 ? 1.5 : 3, fill: s.renk })));
   }
   return k;
 }
 
-function grafikKarti(baslik, seriler, kapsamTam) {
-  return h('section', { class: 'oz-kart' },
-    h('div', { class: 'oz-kart-ust' }, h('h3', {}, baslik), h('span', { class: 'oz-secim' }, 'Son 7 gün')),
-    seriler.length > 1 ? h('div', { class: 'oz-lejant' }, seriler.map((s) => h('span', {}, h('i', { class: `oz-nokta ${s.sinif}` }), s.ad))) : null,
-    kapsamTam ? grafik(seriler) : h('p', { class: 'oz-bos' }, 'Grafik için yeterli kayıt alınamadı.'));
+/**
+ * Grafik kartı — kendi tarih seçimiyle (Son 7 gün / Bugün / Bu hafta /
+ * Bu ay / Tarih aralığı). Seçim değişince yalnız bu kart yeniden yüklenir.
+ * Bugün (tek gün) saat saat çizilir. anahtar: /stats/period alanı.
+ */
+function grafikKarti(baslik, anahtar, seri) {
+  const kart = h('section', { class: 'oz-kart' });
+  const govde = h('div', {});
+  const ciz = async () => {
+    const x = grafikSecimi[anahtar];
+    const d = donem(x);
+    kart.replaceChildren(
+      h('div', { class: 'oz-kart-ust' }, h('h3', {}, baslik),
+        tarihSecici(x, (yeni) => { grafikSecimi[anahtar] = yeni; ciz(); }, { secenekler: GRAFIK_SECENEKLERI, kucuk: true })),
+      govde);
+    govde.replaceChildren(h('p', { class: 'oz-bos' }, 'Yükleniyor…'));
+    const saatlik = d.gun === 1;
+    try {
+      const r = await api(`/stats/period?from=${encodeURIComponent(d.bas.toISOString())}&days=${d.gun}${saatlik ? '&unit=hour' : ''}`);
+      if (grafikSecimi[anahtar] !== x) return; // bu arada başka seçim yapıldı
+      const degerler = r[anahtar];
+      const etiketler = saatlik
+        ? Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`)
+        : Array.from({ length: d.gun }, (_, i) => gunEkle(d.bas, i).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }));
+      govde.replaceChildren(Array.isArray(degerler)
+        ? grafik([{ ...seri, degerler }], etiketler)
+        : h('p', { class: 'oz-bos' }, 'Bu grafik için yetkiniz yok.'));
+    } catch (e) {
+      if (grafikSecimi[anahtar] === x) govde.replaceChildren(yuklenemedi(e));
+    }
+  };
+  ciz();
+  return kart;
 }
 
 function tablo(kolonlar, satirlar, tikla, ekSinif = '') {
@@ -164,37 +273,29 @@ const ENTEGRASYON = { SMS: 'SMS', EMAIL: 'E-posta', STORAGE: 'Depolama' };
 export async function ozetSayfasi() {
   // Bütün kaynaklar paralel; her biri ayrı ayrı başarısız olabilir.
   const al = (yol) => api(yol).then((v) => ({ v }), (e) => ({ e }));
-  const [st, ku, il, te, ta, gt, en] = await Promise.all([
-    al('/stats'), al('/users?limit=200'), al('/listings?limit=200'), al('/offers'),
-    al('/teklif-talepleri'), al('/account-requests'), al('/integrations'),
+  // Seçili dönem + karşılaştırma için eşit uzunlukta önceki dönem.
+  const d = donem(secim);
+  const toplamGun = 2 * d.gun;
+  const sorguBas = gunEkle(d.bas, d.gun - toplamGun);
+  const [st, ku, il, en, dn] = await Promise.all([
+    al('/stats'), al('/users?limit=200'), al('/listings?limit=200'),
+    al('/integrations'),
+    al(`/stats/period?from=${encodeURIComponent(sorguBas.toISOString())}&days=${toplamGun}`),
   ]);
   if (st.e) throw st.e; // özet sayıları alınamıyorsa ekranın anlamı yok
 
   const s = st.v;
   const kullanicilar = ku.v?.items;
   const ilanlar = il.v?.items;
-  const teklifler = te.v;
-  const talepler = ta.v;
-  const gelen = gt.v;
 
-  const kapsam = {
-    kullanici: kapsar(kullanicilar, ku.v?.total),
-    ilan: kapsar(ilanlar, il.v?.total),
-    teklif: kapsar(teklifler, teklifler && teklifler.length < 200 ? teklifler.length : undefined),
-    talep: kapsar(talepler, talepler && talepler.length < 200 ? talepler.length : undefined),
-    gelen: kapsar(gelen, gelen && gelen.length < 500 ? gelen.length : undefined),
-  };
-  const gunler = {
-    kullanici: kapsam.kullanici ? gunluk(kullanicilar) : null,
-    ilan: kapsam.ilan ? gunluk(ilanlar) : null,
-    teklif: kapsam.teklif ? gunluk(teklifler) : null,
-    talep: kapsam.talep ? gunluk(talepler) : null,
-    gelen: kapsam.gelen ? gunluk(gelen) : null,
-  };
-  const bd = (g) => (g ? [g[7], g[6]] : null);
+  // "Son 7 gün · yeni kullanıcı" kartı (değişmedi): liste 7 günü kapsıyorsa.
+  const gunler = { kullanici: kapsar(kullanicilar, ku.v?.total) ? gunluk(kullanicilar) : null };
+  // Dönem toplamı ve önceki dönem (dizinin son `gun` günü / ondan önceki `gun` gün).
+  const topla = (a) => a.reduce((x, y) => x + y, 0);
+  const donemSay = (dizi) => (Array.isArray(dizi) ? [topla(dizi.slice(-d.gun)), topla(dizi.slice(-2 * d.gun, -d.gun))] : null);
+  const dv = dn.v ?? {};
+  const karsilastirma = d.gun > 1 ? 'Önceki döneme göre' : secim.tur === 'bugun' ? 'Düne göre' : 'Önceki güne göre';
 
-  const bas = new Date(gunBasi(Date.now()) - 7 * GUN).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
-  const son = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
 
   // ── Kullanıcı dağılımı (yalnız liste tamsa) ──
   const tamListe = kullanicilar && ku.v.total <= kullanicilar.length;
@@ -223,16 +324,16 @@ export async function ozetSayfasi() {
   return h('div', { class: 'oz' },
     h('div', { class: 'oz-baslik' },
       h('div', {}, h('h2', {}, 'Özet'), h('p', {}, 'Uygulamanın genel durumu ve son istatistikler')),
-      h('div', { class: 'oz-tarih' }, ikon('takvim', 18), `${bas} - ${son}`)),
+      tarihSecici(secim, (yeni) => { secim = yeni; yenidenCiz(); })),
 
     h('section', { class: 'oz-kart oz-bugun-sar' },
-      h('h3', {}, 'Bugün'),
+      h('h3', {}, d.etiket),
       h('div', { class: 'oz-bugun-izgara' },
-        bugunKarti('Yeni kullanıcı', 'kisi', 'mavi', bd(gunler.kullanici)),
-        bugunKarti('Yeni ilan', 'ilan', 'yesil', bd(gunler.ilan)),
-        bugunKarti('Yeni teklif', 'teklif', 'mor', bd(gunler.teklif)),
-        bugunKarti('Yeni teklif talebi', 'talep', 'turuncu', bd(gunler.talep)),
-        bugunKarti('Gelen talep', 'silme', 'kirmizi', bd(gunler.gelen)))),
+        bugunKarti('Yeni kullanıcı', 'kisi', 'mavi', donemSay(dv.users), karsilastirma),
+        bugunKarti('Yeni ilan', 'ilan', 'yesil', donemSay(dv.listings), karsilastirma),
+        bugunKarti('Yeni teklif', 'teklif', 'mor', donemSay(dv.offers), karsilastirma),
+        bugunKarti('Yeni teklif talebi', 'talep', 'turuncu', donemSay(dv.teklifTalepleri), karsilastirma),
+        bugunKarti('Gelen talep', 'talep', 'kirmizi', donemSay(dv.supportTickets), karsilastirma))),
 
     h('div', { class: 'oz-uclu' },
       bolum('Kullanıcılar', 'kullanicilar',
@@ -251,13 +352,13 @@ export async function ozetSayfasi() {
           miniKart('Açık ilan', s.activeListings, 'ilan', 'mavi'),
           miniKart('Son 24 saatte teklif', s.offersToday, 'teklif', 'mor'),
           miniKart('Süren teklif talebi', s.openTalepler, 'talep', 'turuncu'))),
-      bolum('Sistem Durumu', 'entegrasyonlar', h('ul', { class: 'oz-durum-liste' }, sistem),
+      bolum('Sistem Durumu', 'sistem', h('ul', { class: 'oz-durum-liste' }, sistem),
         en.e ? h('p', { class: 'oz-bos' }, 'Entegrasyon durumu için yetkiniz yok.') : null)),
 
     h('div', { class: 'oz-uclu' },
-      grafikKarti('Yeni Kullanıcılar', [{ ad: 'Yeni kullanıcı', renk: RENK.mavi, sinif: 'mavi', degerler: gunler.kullanici ?? [] }], kapsam.kullanici),
-      grafikKarti('Yeni İlanlar', [{ ad: 'Yeni ilan', renk: RENK.yesil, sinif: 'yesil', degerler: gunler.ilan ?? [] }], kapsam.ilan),
-      grafikKarti('Teklifler', [{ ad: 'Yeni teklif', renk: RENK.mor, sinif: 'mor', degerler: gunler.teklif ?? [] }], kapsam.teklif)),
+      grafikKarti('Yeni Kullanıcılar', 'users', { ad: 'Yeni kullanıcı', renk: RENK.mavi, sinif: 'mavi' }),
+      grafikKarti('Yeni İlanlar', 'listings', { ad: 'Yeni ilan', renk: RENK.yesil, sinif: 'yesil' }),
+      grafikKarti('Teklifler', 'offers', { ad: 'Yeni teklif', renk: RENK.mor, sinif: 'mor' })),
 
     h('div', { class: 'oz-uclu' },
       bolum('Son Kayıt Olan Kullanıcılar', 'kullanicilar', ku.e ? yuklenemedi(ku.e) : tablo([
@@ -273,12 +374,9 @@ export async function ozetSayfasi() {
         ['Durum', (l) => rozet(l.status)],
         ['Tarih', (l) => kisaTarih(l.createdAt)],
       ], ilanlar.slice(0, 5), (l) => (location.hash = `#/ilan/${l.id}`))),
-      bolum('Dondurma / Silme', 'hesaptalepleri/hesap', gt.e ? yuklenemedi(gt.e) : tablo([
-        ['Konu', (a) => (a.type === 'FREEZE' ? 'Hesap dondurma' : 'Hesap silme')],
-        ['Gönderen', (a) => a.name],
-        ['Tarih', (a) => kisaTarih(a.createdAt)],
-        ['Durum', (a) => rozet(a.status)],
-      ], gelen.slice(0, 5), (a) => (location.hash = `#/kullanici/${a.userId}`)))),
+      // 21 Eki: Hesabını Silenler ve Donduranlar (tek kaynak: hesap_kapatma.js).
+      // Tüm zamanlar: toplam sayılar + kaydırılabilir liste.
+      bolum('Hesabını Silenler ve Donduranlar', 'silmekuyruklari', kapatmaPaneli({ kompakt: true }))),
 
     h('p', { class: 'not' }, 'HizmetCep ücretsizdir: ödeme, komisyon ya da abonelik verisi yoktur.'));
 }

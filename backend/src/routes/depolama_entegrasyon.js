@@ -6,7 +6,7 @@
 // Bu, backend örneklerini durumsuz tutar (yatay ölçekleme).
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
-import { sirSifrele, yenidenDogrulamaIste, yetkiIste } from '../auth.js';
+import { sirCoz, sirSifrele, yenidenDogrulamaIste, yetkiIste } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { depolamaAyari, s3ImzaliAdres } from '../entegrasyon.js';
 import { olaylar } from '../olaylar.js';
@@ -66,10 +66,17 @@ const GIZLI_ALANLAR = { SMS: ['token'], EMAIL: ['token'], STORAGE: ['accessKeyId
 const SAGLAYICILAR = { SMS: ['webhook'], EMAIL: ['webhook', 'resend'], STORAGE: ['s3'], PUSH: ['fcm'] };
 const GONDEREN = /^(?:[^<>\r\n"]{1,60} <[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>|[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+)$/;
 
+function gelenAnahtarVar(x) {
+  if (!x.secret_enc) return false;
+  try { return !!JSON.parse(sirCoz(x.secret_enc)).webhookSecret; } catch { return false; }
+}
+
 function entegrasyonGorunumu(x) {
   return {
     id: x.id, type: x.type, provider: x.provider, active: x.active === 1, config: JSON.parse(x.config_json),
     secretSet: !!x.secret_enc, secretHint: x.secret_hint, lastTestAt: x.last_test_at,
+    // Resend: destek e-postalarını alan webhook'un imza anahtarı girildi mi?
+    ...(x.provider === 'resend' ? { inboundSecretSet: gelenAnahtarVar(x) } : {}),
     lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1, lastTestMessage: x.last_test_message, updatedAt: x.updated_at,
   };
 }
@@ -196,7 +203,10 @@ export function depolamaEntegrasyonRotalar(r, db) {
     yetkiIste(ctx.admin, 'integrations.secret');
     yenidenDogrulamaIste(ctx.oturum);
     const x = await getir(ctx.params.id);
-    const sir = {};
+    // Resend: gelen e-posta imza anahtarı ayrı uçtan girilir; API anahtarı
+    // değişince SİLİNMEZ.
+    const onceki = x.secret_enc ? (() => { try { return JSON.parse(sirCoz(x.secret_enc)); } catch { return {}; } })() : {};
+    const sir = x.provider === 'resend' && onceki.webhookSecret ? { webhookSecret: onceki.webhookSecret } : {};
     for (const alan of GIZLI_ALANLAR[x.type]) {
       const v = ctx.body[alan];
       if (typeof v !== 'string' || v.length < 8 || v.length > 4096) throw hata.dogrulama(`${alan} zorunludur (en az 8 karakter)`);
@@ -208,6 +218,26 @@ export function depolamaEntegrasyonRotalar(r, db) {
       await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'integration.secret.set', hedefTur: 'integration', hedefId: x.id, sonra: { hint: `••••${son}` } });
     });
     await olaylar.yayinla('integrations.changed', {}); // BÜTÜN örneklerde önbellek temizlenir
+    return entegrasyonGorunumu(await getir(x.id));
+  });
+
+  // ── DESTEK E-POSTALARI (21 Eki): Resend Receiving webhook imza anahtarı ──
+  // Resend › Webhooks › (email.received) › Signing secret ("whsec_…").
+  // API anahtarıyla AYNI şifreli kayıtta saklanır; düz değer geri dönmez.
+  r.put('/admin/v1/integrations/:id/inbound-secret', async (ctx) => {
+    yetkiIste(ctx.admin, 'integrations.secret');
+    yenidenDogrulamaIste(ctx.oturum);
+    const x = await getir(ctx.params.id);
+    if (x.provider !== 'resend') throw hata.dogrulama('Yalnız Resend e-posta entegrasyonu için');
+    const v = String(ctx.body.webhookSecret ?? '').trim();
+    if (!/^whsec_[A-Za-z0-9+/=]{16,200}$/.test(v)) throw hata.dogrulama('İmza anahtarı "whsec_" ile başlamalıdır');
+    if (!x.secret_enc) throw hata.durum('Önce Resend API anahtarını girin');
+    const sir = { ...JSON.parse(sirCoz(x.secret_enc)), webhookSecret: v };
+    await db.tx(async () => {
+      await db.prepare('UPDATE integrations SET secret_enc = ?, updated_at = ? WHERE id = ?').run(sirSifrele(JSON.stringify(sir)), simdi(), x.id);
+      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'integration.inbound_secret.set', hedefTur: 'integration', hedefId: x.id, sonra: { hint: `••••${v.slice(-4)}` } });
+    });
+    await olaylar.yayinla('integrations.changed', {});
     return entegrasyonGorunumu(await getir(x.id));
   });
 

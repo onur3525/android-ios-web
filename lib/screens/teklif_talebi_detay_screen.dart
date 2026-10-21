@@ -43,6 +43,7 @@ import 'widgets/ilan_baslik_satiri.dart';
 import 'widgets/ilan_no_etiketi.dart';
 import 'widgets/durum_seridi.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../ui/sayfa_bildirimleri.dart';
 
 /// TEKLİF TALEBİ DETAYI (Aşama E-L) — HEM hizmet alan HEM hizmet
 /// veren bu ekranı görür; ROL, gösterilen alanları ve aksiyonları
@@ -120,6 +121,8 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
   @override
   void initState() {
     super.initState();
+    // Bildirime dokunmadan açılsa da bu sayfanın bildirimleri okundu.
+    sayfaBildirimleriniOku(this, BildirimSayfasi.talep, widget.talepId);
     _tik = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });

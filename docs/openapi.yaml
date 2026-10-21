@@ -1348,6 +1348,30 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /notifications/read-for-page:
+    post:
+      tags: [Notifications]
+      summary: Sayfa görüldü — o sayfaya ait okunmamış bildirimler okundu
+      description: >
+        Kullanıcı ilgili sayfayı bildirime dokunmadan açtığında çağrılır.
+        page — ilan | is | sohbet | talep | talep-sohbet; refId — sayfanın
+        kimliği (ilan, teklif ya da talep). Yalnız oturum sahibinin, o sayfaya
+        ait türlerdeki bildirimleri değişir.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [page, refId]
+              properties:
+                page: { type: string, enum: [ilan, is, sohbet, talep, talep-sohbet] }
+                refId: { type: string }
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /notifications/read-all:
     post:
       tags: [Notifications]

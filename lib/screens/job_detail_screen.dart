@@ -41,6 +41,7 @@ import 'widgets/teklif_tutar_karti.dart';
 import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/yanlis_taraf_kapisi.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../ui/sayfa_bildirimleri.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not);
@@ -89,6 +90,8 @@ class _JobDetailScreenState extends State<JobDetailScreen>
   @override
   void initState() {
     super.initState();
+    // Bildirime dokunmadan açılsa da bu sayfanın bildirimleri okundu.
+    sayfaBildirimleriniOku(this, BildirimSayfasi.isEkrani, widget.listingId);
     // ⚠ Onay durumu daha önce yüklendiyse hemen kullanılır (16 Eki): ekran
     // ilk çizimde bekleme göstermez; güncel durum yine aşağıda tazelenir.
     _approval = context.read<ProfileController>().approval;

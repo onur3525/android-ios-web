@@ -7,6 +7,8 @@ import {
   oturumDusunce, rozet, tablo, tarih,
 } from './cekirdek.js';
 import { ozetSayfasi } from './ozet.js';
+import { sistemSayfasi } from './sistem.js';
+import { kapatmaPaneli } from './hesap_kapatma.js';
 import { kullanicilarSayfasi } from './kullanicilar.js';
 import { kullaniciDetaySayfasi } from './kullanici_detay.js';
 import { ilanlarSayfasi } from './ilanlar.js';
@@ -86,7 +88,8 @@ function duzen(sayfa, icerik) {
   return h('div', { class: 'duzen' },
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
-      menu.map(([k, ad]) => h('a', { class: sayfa === k ? 'secili' : '', href: `#/${k}` }, ad)),
+      // Sistem Durumu, Özet'in alt sayfasıdır: menüde Özet seçili kalır.
+      menu.map(([k, ad]) => h('a', { class: (sayfa === 'sistem' ? 'ozet' : sayfa) === k ? 'secili' : '', href: `#/${k}` }, ad)),
       h('div', { class: 'cikis' }, h('a', { onclick: cikis }, 'Çıkış'))),
     h('main', { class: 'icerik' }, icerik));
 }
@@ -118,6 +121,8 @@ oturumDusunce(() => { ben = null; girisEkrani(); });
 // ── Özet ──────────────────────────────────────────────────────
 // Tasarım ve veri kaynakları: ozet.js (yalnız mevcut admin API'leri).
 SAYFALAR.ozet = () => ozetSayfasi();
+// Özet → Sistem Durumu "Tümünü gör" (21 Eki): kartın ayrıntısı (sistem.js).
+SAYFALAR.sistem = () => sistemSayfasi();
 
 // ── Kullanıcılar ──────────────────────────────────────────────
 // Tasarım ve veri kaynakları: kullanicilar.js (yalnız mevcut admin API'leri).
@@ -401,28 +406,56 @@ SAYFALAR.gonderimler = async () => h('div', {}, h('h2', {}, 'SMS / E-posta Kayı
 const DESTEK_DURUM = { OPEN: 'Yanıt bekliyor', ANSWERED: 'Yanıtlandı', CLOSED: 'Kapandı' };
 const destekRozet = (v) => h('span', { class: `rozet ${v}`, title: v }, DESTEK_DURUM[v] ?? v);
 
-SAYFALAR.hesaptalepleri = async (sekme = 'destek', durum = '') => {
-  const sekmeler = h('div', { class: 'arac' },
-    h('a', { class: `btn${sekme === 'destek' ? '' : ' ikincil'}`, href: '#/hesaptalepleri/destek' }, 'Destek Talepleri'), ' ',
-    h('a', { class: `btn${sekme === 'hesap' ? '' : ' ikincil'}`, href: '#/hesaptalepleri/hesap' }, 'Dondurma / Silme'));
-  if (sekme === 'hesap') {
-    return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Gelen Talepler'), sekmeler),
-      h('p', { class: 'not' }, 'Hesap dondurma ve silme kayıtları. Silme talepleri 30 gün sonra otomatik uygulanır: kişisel veri anonimleştirilir.'),
-      tablo([{ baslik: 'Kullanıcı', deger: (a) => a.name }, { baslik: 'Tür', deger: (a) => (a.type === 'FREEZE' ? 'Dondurma' : 'Silme') },
-        { baslik: 'Durum', deger: (a) => rozet(a.status) }, { baslik: 'Talep', deger: (a) => tarih(a.createdAt) }, { baslik: 'Planlanan', deger: (a) => tarih(a.scheduledFor) }],
-      await api('/account-requests'), (a) => (location.hash = `#/kullanici/${a.userId}`)));
-  }
-  const filtre = h('select', { class: 'genis', onchange: (e) => (location.hash = `#/hesaptalepleri/destek/${e.target.value}`) },
+// 21 Eki: Gelen Talepler = destek e-postaları (ve eski uygulama formu).
+// Hesap dondurma/silme otomatik işlendiği için talep değildir: kayıtları
+// Silme Kuyrukları sayfasındadır (eski bağlantılar oraya yönlenir).
+SAYFALAR.hesaptalepleri = async (sekme = 'destek', durum = '', aranan = '') => {
+  if (sekme === 'hesap') { location.hash = '#/silmekuyruklari'; return h('p', { class: 'not' }, 'Yönlendiriliyor…'); }
+  // Durum ve arama adres çubuğunda tutulur: geri dönünce aynı sonuç görünür.
+  const git = (d, q) => { location.hash = `#/hesaptalepleri/destek/${encodeURIComponent(d)}${q ? `/${encodeURIComponent(q)}` : ''}`; };
+  const filtre = h('select', { class: 'genis', onchange: (e) => git(e.target.value, aranan) },
     [['', 'Tümü'], ['OPEN', 'Yanıt bekleyenler'], ['ANSWERED', 'Yanıtlananlar'], ['CLOSED', 'Kapananlar']]
       .map(([v, e]) => h('option', { value: v, ...(v === durum ? { selected: true } : {}) }, e)));
-  const liste = await api(`/support/tickets${durum ? `?status=${encodeURIComponent(durum)}` : ''}`);
-  return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Gelen Talepler'), sekmeler),
-    h('p', { class: 'not' }, 'Kullanıcıların uygulamadan gönderdiği destek talepleri. Yanıtınız kullanıcının doğrulanmış e-posta adresine gönderilir ve uygulamada da görünür.'),
-    h('div', { class: 'kart' }, h('label', {}, 'Durum'), filtre),
-    tablo([{ baslik: 'No', deger: (t) => t.ticketNo }, { baslik: 'Kullanıcı', deger: (t) => t.userName }, { baslik: 'Konu', deger: (t) => t.subject },
-      { baslik: 'Durum', deger: (t) => destekRozet(t.status) }, { baslik: 'Gönderim', deger: (t) => tarih(t.createdAt) }, { baslik: 'Son işlem', deger: (t) => tarih(t.updatedAt) }],
-    liste, (t) => (location.hash = `#/destektalebi/${t.id}`)));
+  // ── ARAMA (21 Eki): talep no, e-posta, ad, konu ya da mesajdaki kelime ──
+  const kutu = h('input', { type: 'search', class: 'genis', value: aranan, maxlength: 100, placeholder: 'Talep no, e-posta, ad ya da konu…', 'aria-label': 'Gelen taleplerde ara' });
+  const aramaFormu = h('form', { class: 'gt-arama', onsubmit: (e) => { e.preventDefault(); git(durum, kutu.value.trim()); } },
+    kutu, h('button', { class: 'btn', type: 'submit' }, 'Ara'),
+    aranan ? h('button', { class: 'btn ikincil', type: 'button', onclick: () => git(durum, '') }, 'Temizle') : null);
+  const SAYFA = 100;
+  const sorgu = (ofset) => {
+    const p = new URLSearchParams({ limit: String(SAYFA), offset: String(ofset) });
+    if (durum) p.set('status', durum);
+    if (aranan) p.set('q', aranan);
+    return api(`/support/tickets?${p}`);
+  };
+  let liste = await sorgu(0);
+  const kolonlar = [{ baslik: 'No', deger: (t) => t.ticketNo }, { baslik: 'Gönderen', deger: gonderenAdi },
+    { baslik: 'Kaynak', deger: (t) => (t.source === 'EMAIL' ? 'E-posta' : 'Uygulama') }, { baslik: 'Konu', deger: (t) => t.subject },
+    { baslik: 'Durum', deger: (t) => destekRozet(t.status) }, { baslik: 'Gönderim', deger: (t) => tarih(t.createdAt) }, { baslik: 'Son işlem', deger: (t) => tarih(t.updatedAt) }];
+  const ac = (t) => (location.hash = `#/destektalebi/${t.id}`);
+  const yer = h('div', {});
+  const ciz = (sonGelen) => {
+    const devam = sonGelen === SAYFA
+      ? h('button', { class: 'btn ikincil', onclick: async (e) => {
+        e.target.disabled = true;
+        const ek = await guvenli(() => sorgu(liste.length));
+        if (ek) { liste = liste.concat(ek); ciz(ek.length); } else e.target.disabled = false;
+      } }, 'Daha fazla göster')
+      : null;
+    yer.replaceChildren(...[
+      aranan ? h('p', { class: 'not' }, `"${aranan}" için ${liste.length}${sonGelen === SAYFA ? '+' : ''} sonuç.`) : null,
+      aranan && !liste.length ? h('p', { class: 'not' }, 'Eşleşen talep yok.') : tablo(kolonlar, liste, ac),
+      devam].filter(Boolean));
+  };
+  ciz(liste.length);
+  return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Gelen Talepler')),
+    h('p', { class: 'not' }, 'Destek e-posta adresine gelen e-postalar burada talep olarak açılır. Yanıtınız e-postayı gönderen adrese gider; kişi bu e-postayı yanıtlarsa yazdığı aynı talebe eklenir.'),
+    h('div', { class: 'kart gt-filtre' }, h('div', {}, h('label', {}, 'Ara'), aramaFormu), h('div', {}, h('label', {}, 'Durum'), filtre)),
+    yer);
 };
+
+/** Talebin göndereni: kayıtlı kullanıcının adı, yoksa e-postanın göndereni. */
+const gonderenAdi = (t) => t.userName || t.senderName || t.senderEmail || '—';
 
 SAYFALAR.destektalebi = async (id) => {
   const yazabilir = ['super_admin', 'moderator'].includes(ben.role);
@@ -431,7 +464,7 @@ SAYFALAR.destektalebi = async (id) => {
     const d = await form('Talebi yanıtla', [
       { ad: 'body', etiket: 'Yanıt (kullanıcıya e-postayla gider)', tur: 'textarea', zorunlu: true },
       { ad: 'close', etiket: 'Yanıtla ve talebi kapat', tur: 'checkbox' }], 'Gönder',
-    { aciklama: t.userEmailVerified ? undefined : 'Kullanıcının doğrulanmış e-posta adresi yok: yanıt kaydedilir ve uygulamada görünür, e-posta gönderilemez.' });
+    { aciklama: t.source === 'EMAIL' ? `Yanıt ${t.senderEmail} adresine gider.` : t.userEmailVerified ? undefined : 'Kullanıcının doğrulanmış e-posta adresi yok: yanıt kaydedilir ve uygulamada görünür, e-posta gönderilemez.' });
     if (!d) return;
     const r = await guvenli(() => api(`/support/tickets/${id}/reply`, { yontem: 'POST', govde: { body: d.body, close: d.close === true } }));
     if (r) { bildir(`Yanıt kaydedildi. E-posta: ${DURUM_EPOSTA[r.email?.status] ?? r.email?.status ?? '—'}`, r.email?.status === 'FAILED'); yenile(); }
@@ -445,15 +478,19 @@ SAYFALAR.destektalebi = async (id) => {
       h('button', { class: 'btn', onclick: yanitla }, 'Yanıtla'), h('button', { class: 'btn ikincil', onclick: kapat }, 'Kapat')) : null),
     h('p', { class: 'not' }, 'Bu görüntüleme denetim kaydına yazıldı.'),
     h('div', { class: 'kart' }, alanlarListesi([
-      ['Kullanıcı', h('a', { href: `#/kullanici/${t.userId}` }, t.userName || 'profil')],
-      ['E-posta', `${t.userEmail || '—'}${t.userEmail ? (t.userEmailVerified ? ' (doğrulanmış)' : ' (doğrulanmamış)') : ''}`],
-      ['Konu', t.subject], ['Durum', destekRozet(t.status)], ['Platform', t.platform ? `${t.platform} ${t.appVersion ?? ''}` : '—'],
+      ['Kaynak', t.source === 'EMAIL' ? 'Destek e-postası' : 'Uygulama'],
+      ...(t.source === 'EMAIL' ? [['Gönderen', `${t.senderName ? `${t.senderName} · ` : ''}${t.senderEmail ?? '—'}`]] : []),
+      ['Kullanıcı', t.userId ? h('a', { href: `#/kullanici/${t.userId}` }, t.userName || 'profil') : 'Kayıtlı kullanıcı değil'],
+      ...(t.userId ? [['Hesap e-postası', `${t.userEmail || '—'}${t.userEmail ? (t.userEmailVerified ? ' (doğrulanmış)' : ' (doğrulanmamış)') : ''}`]] : []),
+      ['Konu', t.subject], ['Durum', destekRozet(t.status)], ...(t.source === 'EMAIL' ? [] : [['Platform', t.platform ? `${t.platform} ${t.appVersion ?? ''}` : '—']]),
       ['Gönderim', tarih(t.createdAt)], ['Kapanış', tarih(t.closedAt)],
     ])),
     h('h3', {}, 'Mesaj'), h('div', { class: 'mesaj' }, t.message),
-    h('h3', {}, 'Yanıtlar'),
-    t.replies.length ? t.replies.map((y) => h('div', { class: 'mesaj' },
-      h('div', { class: 'ust' }, h('span', {}, y.admin ?? 'yönetici'), h('span', {}, `${tarih(y.createdAt)} · e-posta: ${DURUM_EPOSTA[y.emailStatus] ?? '—'}`)), y.body))
+    h('h3', {}, 'Yazışma'),
+    t.replies.length ? t.replies.map((y) => h('div', { class: `mesaj${y.author === 'USER' ? ' kullanici-mesaji' : ''}` },
+      h('div', { class: 'ust' },
+        h('span', {}, y.author === 'USER' ? `${gonderenAdi(t)} (e-postayla yanıt)` : (y.admin ?? 'yönetici')),
+        h('span', {}, y.author === 'USER' ? tarih(y.createdAt) : `${tarih(y.createdAt)} · e-posta: ${DURUM_EPOSTA[y.emailStatus] ?? '—'}`)), y.body))
       : h('p', { class: 'not' }, 'Henüz yanıt yok.'));
 };
 const DURUM_EPOSTA = { SENT: 'gönderildi', FAILED: 'gönderilemedi', PENDING: 'bekliyor' };
@@ -473,7 +510,18 @@ SAYFALAR.denetim = async () => h('div', {}, h('h2', {}, 'Denetim Kaydı'), h('p'
 // özetlenmiş gelir (Firebase uid'si ve dosya anahtarı gösterilmez).
 const KUYRUK_DURUM = { BEKLIYOR: 'Bekliyor', BASARISIZ: 'Başarısız (yeniden denenecek)', DENEME_TUKENDI: 'Deneme hakkı tükendi', UZUN_SURELI_HATA: 'Uzun süredir başarısız' };
 SAYFALAR.silmekuyruklari = async () => {
-  const d = await api('/deletion-queues');
+  // 21 Eki: hesap dondurma/silme kayıtları da burada (eskiden Gelen
+  // Talepler'deydi; otomatik işlendikleri için talep değildir). İki kaynak
+  // ayrı yetkiye bağlı: biri yoksa diğeri yine görünür.
+  const kq = await api('/deletion-queues').then((v) => ({ v }), (e) => ({ e }));
+  const yetkiYok = (e, ne) => h('p', { class: 'not' }, e?.durum === 403 ? `${ne} için yetkiniz yok.` : (e?.message ?? 'Veri alınamadı.'));
+  const hesapBolumu = [
+    h('h3', {}, 'Hesabını silenler ve donduranlar'),
+    h('p', { class: 'not' }, 'Sistem bunları otomatik uygular. Hesabını yeniden etkinleştiren kişi listeden çıkar; silme yasal sürenin sonunda gerçekleşir ve kişisel bilgiler silinir, yalnız hesabın silindiği görünür. Ayrıntı için satıra tıklayın.'),
+    kapatmaPaneli(),
+  ];
+  if (kq.e) return h('div', {}, h('h2', {}, 'Silme Kuyrukları'), ...hesapBolumu, h('h3', {}, 'Silme kuyrukları'), yetkiYok(kq.e, 'Silme kuyrukları'));
+  const d = kq.v;
   const sayilar = (c) => Object.entries(c).map(([k, v]) => `${KUYRUK_DURUM[k] ?? k}: ${v}`).join(' · ') || 'Kuyruk boş';
   const yenidenDene = (kuyruk, id) => async (e) => {
     e?.stopPropagation?.();
@@ -494,6 +542,7 @@ SAYFALAR.silmekuyruklari = async () => {
     h('div', { class: 'kart' }, alanlarListesi([
       ['Bekleyen silme talebi', a.pending], ['Süresi geçmiş, uygulanmamış', a.overdue], ['En eski gecikme', a.oldestOverdueAt ? tarih(a.oldestOverdueAt) : '—'],
     ])),
+    ...hesapBolumu,
     h('h3', {}, 'Firebase kimlik kayıtları'),
     h('p', { class: 'not' }, `${d.firebase.configured ? 'Servis hesabı yapılandırılmış.' : '⚠ Servis hesabı yapılandırılmamış: kayıtlar silinemez, kuyrukta bekler.'} ${sayilar(d.firebase.counts)}. Hatalı işler artan aralıkla (en fazla 24 saatte bir) süresiz yeniden denenir.`),
     d.firebase.items.some((x) => x.deneme > 0) ? h('button', { class: 'btn', onclick: yenidenDene('firebase', null) }, 'Başarısızların tümünü yeniden dene') : null,
@@ -534,16 +583,24 @@ SAYFALAR.entegrasyonlar = async () => {
     const d = await form('Gizli anahtarı değiştir', alanlar, 'Kaydet', { aciklama: 'Değer şifreli saklanır ve bir daha gösterilmez.' });
     if (d && await guvenli(() => api(`/integrations/${x.id}/secret`, { yontem: 'PUT', govde: d }))) { bildir('Kaydedildi'); yenile(); }
   };
+  // Resend: destek e-postalarını Gelen Talepler'e düşüren webhook'un imza anahtarı.
+  const gelenAnahtar = async (x) => {
+    const d = await form('Gelen e-posta imza anahtarı', [{ ad: 'webhookSecret', etiket: 'Resend › Webhooks › email.received › Signing secret (whsec_…)', tur: 'password', zorunlu: true }], 'Kaydet',
+      { aciklama: 'Destek adresine gelen e-postaların Gelen Talepler\'e düşmesi için. Değer şifreli saklanır ve bir daha gösterilmez.' });
+    if (d && await guvenli(() => api(`/integrations/${x.id}/inbound-secret`, { yontem: 'PUT', govde: d }))) { bildir('Kaydedildi'); yenile(); }
+  };
   const etkin = async (x) => { if (await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'PATCH', govde: { active: !x.active } }))) { bildir('Güncellendi'); yenile(); } };
   const test = async (x) => { const r = await guvenli(() => api(`/integrations/${x.id}/test`, { yontem: 'POST', govde: {} })); if (r) { bildir(`${r.ok ? 'Başarılı' : 'Başarısız'}: ${r.message}`, !r.ok); yenile(); } };
   const sil = async (x) => { const n = await gerekceIle('Entegrasyonu kaldır', 'Kaldır'); if (n && await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Kaldırıldı'); yenile(); } };
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Entegrasyonlar'), h('button', { class: 'btn', onclick: ekle }, 'Ekle')),
     h('p', { class: 'not' }, 'Gizli anahtarlar yalnız sunucuda, şifreli saklanır; bu panele asla geri gelmez. Her türde aynı anda tek sağlayıcı etkindir.'),
     tablo([{ baslik: 'Tür', deger: (x) => x.type }, { baslik: 'Sağlayıcı', deger: (x) => x.provider },
-      { baslik: 'Ayar', deger: (x) => JSON.stringify(x.config) }, { baslik: 'Anahtar', deger: (x) => (x.secretSet ? x.secretHint : 'girilmedi') },
+      { baslik: 'Ayar', deger: (x) => JSON.stringify(x.config) },
+      { baslik: 'Anahtar', deger: (x) => [x.secretSet ? x.secretHint : 'girilmedi', x.provider === 'resend' ? ` · gelen e-posta: ${x.inboundSecretSet ? 'girildi' : 'girilmedi'}` : ''].join('') },
       { baslik: 'Durum', deger: (x) => rozet(x.active ? 'aktif' : 'pasif') },
       { baslik: 'Son test', deger: (x) => (x.lastTestAt ? `${x.lastTestOk ? '✓' : '✗'} ${x.lastTestMessage}` : '—') },
       { baslik: '', deger: (x) => h('span', {}, superMi ? h('button', { class: 'btn ikincil', onclick: () => sir(x) }, 'Anahtar') : null, ' ',
+        superMi && x.provider === 'resend' ? [h('button', { class: 'btn ikincil', onclick: () => gelenAnahtar(x) }, 'Gelen e-posta anahtarı'), ' '] : null,
         h('button', { class: 'btn ikincil', onclick: () => test(x) }, 'Test'), ' ', h('button', { class: 'btn', onclick: () => etkin(x) }, x.active ? 'Pasifleştir' : 'Etkinleştir'), ' ',
         h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Kaldır')) }], liste));
 };

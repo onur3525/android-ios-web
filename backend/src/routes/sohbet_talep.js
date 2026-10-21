@@ -571,6 +571,55 @@ export function sohbetTalepRotalar(r, db) {
     return satir.map((a) => ({ ...talepGorunum(a), userId: a.user_id, name: a.name }));
   });
 
+  // ── HESABINI SİLENLER VE DONDURANLAR (21 Eki, kullanıcı kararı) ──
+  //
+  // Özet ve Silme Kuyrukları'ndaki liste (tek kaynak). Yalnız şu an anlamlı
+  // olanlar:
+  //   · FROZEN           — hesap ŞU AN dondurulmuş (en son dondurma kaydı).
+  //                        Kişi yeniden giriş yapıp hesabı etkinleştirince
+  //                        (users.frozen_at = NULL) listeden kendiliğinden çıkar.
+  //   · DELETION_PENDING — silme talebi, yasal süre dolmadı (kişi iptal
+  //                        ederse CANCELLED olur ve listeden çıkar).
+  //   · DELETED          — süre doldu, silindi. Kişisel veri (ad, telefon,
+  //                        e-posta, adres…) zaten anonimleştirildi
+  //                        (silmeTalepleriniIsle); kayıt yalnız hesabın
+  //                        silindiğini ve tarihlerini gösterir — ad DÖNMEZ.
+  // Tüm zamanlar: türe göre TOPLAM sayılar + sayfalı liste (state ile süzülür).
+  const KAPATMA_DURUMU = `CASE WHEN r.type = 'FREEZE' THEN 'FROZEN' WHEN r.status = 'COMPLETED' THEN 'DELETED' ELSE 'DELETION_PENDING' END`;
+  const KAPATMA_KOSULU = `((r.type = 'DELETION' AND r.status IN ('PENDING', 'COMPLETED'))
+           OR (r.type = 'FREEZE' AND u.frozen_at IS NOT NULL AND u.deleted_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM account_requests r2 WHERE r2.user_id = r.user_id AND r2.type = 'FREEZE' AND r2.created_at > r.created_at)))`;
+  r.get('/admin/v1/account-closures', async (ctx) => {
+    yetkiIste(ctx.admin, 'users.read');
+    const sayac = { FROZEN: 0, DELETION_PENDING: 0, DELETED: 0 };
+    for (const x of await db.prepare(
+      `SELECT ${KAPATMA_DURUMU} durum, COUNT(*) n FROM account_requests r JOIN users u ON u.id = r.user_id WHERE ${KAPATMA_KOSULU} GROUP BY 1`,
+    ).all()) sayac[x.durum] = Number(x.n);
+    const durum = ctx.query.get('state');
+    if (durum && !(durum in sayac)) throw hata.dogrulama('Geçersiz durum');
+    const limit = Math.min(Math.max(Number(ctx.query.get('limit') ?? 100) || 100, 1), 500);
+    const ofset = Math.min(Math.max(Number(ctx.query.get('offset') ?? 0) || 0, 0), 1_000_000);
+    const satir = await db.prepare(
+      `SELECT r.*, u.name, u.frozen_at, u.deleted_at
+         FROM account_requests r JOIN users u ON u.id = r.user_id
+        WHERE ${KAPATMA_KOSULU}${durum ? ` AND ${KAPATMA_DURUMU} = ?` : ''}
+        ORDER BY r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
+    ).all(...(durum ? [durum] : []), limit, ofset);
+    const items = satir.map((a) => {
+      const d = a.type === 'FREEZE' ? 'FROZEN' : a.status === 'COMPLETED' ? 'DELETED' : 'DELETION_PENDING';
+      return {
+        id: a.id, userId: a.user_id, type: a.type, state: d,
+        name: d === 'DELETED' ? null : a.name,
+        reason: d === 'DELETED' ? null : (a.reason ?? null),
+        requestedAt: a.created_at,
+        frozenAt: d === 'FROZEN' ? a.frozen_at : null,
+        scheduledFor: a.scheduled_for ?? null,
+        deletedAt: d === 'DELETED' ? (a.completed_at ?? a.deleted_at) : null,
+      };
+    });
+    return { counts: sayac, total: sayac.FROZEN + sayac.DELETION_PENDING + sayac.DELETED, items };
+  });
+
   r.get('/admin/v1/users/:id/legal-acceptances', async (ctx) => {
     yetkiIste(ctx.admin, 'users.read');
     return (await db.prepare('SELECT * FROM legal_acceptances WHERE user_id = ? ORDER BY accepted_at DESC').all(ctx.params.id))

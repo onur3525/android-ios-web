@@ -186,6 +186,8 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   const MATRIS = [
     // [yöntem, yol, izinli roller]
     ['GET', '/admin/v1/stats', ['super_admin', 'moderator', 'readonly']],
+    ['GET', '/admin/v1/system/status', ['super_admin', 'moderator', 'readonly']],
+    ['GET', `/admin/v1/stats/period?from=${encodeURIComponent(new Date().toISOString())}&days=1`, ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/users', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/listings', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/offers', ['super_admin', 'moderator', 'readonly']],
@@ -199,6 +201,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     ['GET', '/admin/v1/config/app', ['super_admin', 'operations', 'readonly']],
     ['GET', '/admin/v1/notifications/outbound', ['super_admin', 'moderator', 'operations']],
     ['GET', '/admin/v1/account-requests', ['super_admin', 'moderator', 'readonly']],
+    ['GET', '/admin/v1/account-closures', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/support/tickets', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/feedback', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/integrations', ['super_admin', 'operations']],
@@ -438,6 +441,88 @@ test('SSRF: admin iç ağ adresiyle entegrasyon oluşturamaz/güncelleyemez; ba�
   const t = await istek(`/admin/v1/integrations/${e.json.id}/test`, { yontem: 'POST', govde: {} });
   assert.equal(t.json.ok, false);
   assert.match(t.json.message, /reddedildi/);
+});
+
+test('21 Eki: Özet tarih aralığı — günlük sayılar doğrudan veritabanından; aralık dışı sayılmaz; geçersiz aralık reddedilir', async () => {
+  const GUN = 86_400_000;
+  const bas = new Date(Date.now() - 2 * GUN - 60_000); // 3. dilim "şimdi"yi kapsar
+  const yol = (b, g) => `/admin/v1/stats/period?from=${encodeURIComponent(b.toISOString())}&days=${g}`;
+  const once = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
+  assert.equal(once.days, 3);
+  for (const k of ['users', 'listings', 'offers', 'teklifTalepleri', 'accountRequests', 'supportTickets']) assert.equal(once[k].length, 3, k);
+  await kisi('5340000099', 'CUSTOMER');
+  const sonra = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
+  assert.deepEqual(sonra.users.slice(0, 2), once.users.slice(0, 2), 'geçmiş günler değişmez');
+  assert.equal(sonra.users[2], once.users[2] + 1, 'yeni kayıt bugünün dilimine düşer');
+  // Aralık bitmişse sonradan gelen kayıt sayılmaz.
+  const gecmis = (await istek(yol(new Date(Date.now() - 10 * GUN), 2), { rol: 'readonly' })).json;
+  assert.deepEqual(gecmis.users, [0, 0], 'test kayıtlarının hepsi bugün açıldı');
+  // Tek gün saatlik: 24 dilim; şimdi açılan kayıt şimdiki saate düşer.
+  const gunBasi = new Date(Date.now() - 30 * 60_000);
+  const saatlik = (await istek(`${yol(gunBasi, 1)}&unit=hour`, { rol: 'readonly' })).json;
+  assert.equal(saatlik.unit, 'hour'); assert.equal(saatlik.users.length, 24);
+  await kisi('5340000098', 'CUSTOMER');
+  const saatlik2 = (await istek(`${yol(gunBasi, 1)}&unit=hour`, { rol: 'readonly' })).json;
+  assert.equal(saatlik2.users[0], saatlik.users[0] + 1);
+  assert.equal((await istek(`${yol(bas, 2)}&unit=hour`, { rol: 'readonly' })).durum, 400, 'saatlik yalnız tek gün');
+  for (const bozuk of [yol(bas, 0), yol(bas, 801), yol(bas, 1.5), '/admin/v1/stats/period?from=dun&days=1', '/admin/v1/stats/period?days=1']) {
+    assert.equal((await istek(bozuk, { rol: 'readonly' })).durum, 400, bozuk);
+  }
+});
+
+test('21 Eki: Sistem durumu detayı — alıcı/içerik dönmez; yetkiye göre entegrasyon ve son hatalar', async () => {
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, provider, provider_response, attempts, created_at)
+    VALUES (?, NULL, 'EMAIL', 'gizli@ornek.com', 'EPOSTA_DOGRULAMA', 'Konu', 'gizli içerik', 'FAILED', 'resend', 'resend 422: gizli@ornek.com +905551112233 reddedildi', 1, ?)`).run(randomUUID(), simdi());
+  const tam = (await istek('/admin/v1/system/status', { rol: 'super_admin' })).json;
+  assert.equal(tam.api.status, 'OK'); assert.equal(tam.database.status, 'OK');
+  assert.ok(tam.database.lastMigration && tam.database.migrations > 0);
+  assert.ok(tam.delivery.email.FAILED >= 1);
+  assert.ok(Array.isArray(tam.integrations));
+  assert.equal(tam.recentFailures[0].template, 'EPOSTA_DOGRULAMA');
+  const metin = JSON.stringify(tam);
+  assert.ok(!metin.includes('gizli@ornek.com') && !metin.includes('5551112233') && !metin.includes('gizli içerik'), 'alıcı ve içerik dönmez');
+  const salt = (await istek('/admin/v1/system/status', { rol: 'readonly' })).json;
+  assert.equal(salt.integrations, null); assert.equal(salt.recentFailures, null);
+  assert.ok(salt.delivery.email.FAILED >= 1, 'sayılar herkese');
+});
+
+test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, iptal eden çıkar, silinenin adı görünmez', async () => {
+  const liste = async () => (await istek('/admin/v1/account-closures?limit=500', { rol: 'readonly' })).json.items;
+  const sayilar = async () => (await istek('/admin/v1/account-closures', { rol: 'readonly' })).json.counts;
+  const once = await sayilar();
+  const bul = async (u) => (await liste()).filter((k) => k.userId === u.id);
+  // Dondurma → listede; yeniden giriş (etkinleştirme) → listeden çıkar.
+  const d = await kisi('5340000271', 'CUSTOMER');
+  const fr = await istek('/api/v1/profiles/me/freeze', { yontem: 'POST', token: d.token, govde: { reason: 'ara veriyorum' } });
+  assert.equal(fr.durum, 200, JSON.stringify(fr.json));
+  const [f] = await bul(d);
+  assert.equal(f.state, 'FROZEN'); assert.equal(f.name, 'Kişi 71'); assert.equal(f.reason, 'ara veriyorum'); assert.ok(f.frozenAt && f.requestedAt);
+  await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'giris%'`).run();
+  const gr = await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: '5340000271', password: 'sifre1234' } });
+  assert.equal(gr.durum, 200, JSON.stringify(gr.json));
+  assert.deepEqual(await bul(d), [], 'etkinleştiren listeden çıkar');
+  // Silme talebi → "Silinecek"; iptal → çıkar.
+  const s1 = await kisi('5340000272', 'CUSTOMER');
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: s1.token, govde: { password: 'sifre1234' } });
+  const [p] = await bul(s1);
+  assert.equal(p.state, 'DELETION_PENDING'); assert.equal(p.name, 'Kişi 72'); assert.ok(p.scheduledFor);
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'DELETE', token: s1.token });
+  assert.deepEqual(await bul(s1), [], 'iptal eden çıkar');
+  // Süre dolunca silinir: kişisel bilgi yok, yalnız silindiği ve tarihleri.
+  const s2 = await kisi('5340000273', 'CUSTOMER');
+  await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: s2.token, govde: { password: 'sifre1234', reason: 'gizli neden' } });
+  await db.prepare(`UPDATE account_requests SET scheduled_for = ? WHERE user_id = ?`).run('2000-01-01T00:00:00.000Z', s2.id);
+  await silmeTalepleriniIsle(db);
+  const [x] = await bul(s2);
+  assert.equal(x.state, 'DELETED'); assert.equal(x.name, null); assert.equal(x.reason, null); assert.ok(x.deletedAt && x.requestedAt);
+  assert.ok(!JSON.stringify(x).includes('Kişi 73') && !JSON.stringify(x).includes('5340000273'));
+  // Toplam sayılar (tüm zamanlar) ve türe göre süzme.
+  const son = await sayilar();
+  assert.deepEqual([son.FROZEN - once.FROZEN, son.DELETION_PENDING - once.DELETION_PENDING, son.DELETED - once.DELETED], [0, 0, 1]);
+  const silinenler = (await istek('/admin/v1/account-closures?state=DELETED&limit=500', { rol: 'readonly' })).json;
+  assert.ok(silinenler.items.every((k) => k.state === 'DELETED') && silinenler.items.some((k) => k.userId === s2.id));
+  assert.equal(silinenler.items.length, son.DELETED);
+  assert.equal((await istek('/admin/v1/account-closures?state=YOK', { rol: 'readonly' })).durum, 400);
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {

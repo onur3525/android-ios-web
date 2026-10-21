@@ -77,7 +77,9 @@ export const SABLONLAR = {
   // Gelen Talepler: admin yanıtı (yalnız e-posta kanalı kullanılır).
   DESTEK_YANITI: {
     sms: 'Merhaba, {NO} numaralı "{KONU}" başlıklı destek talebinize yanıtımız:\n\n{YANIT}\n\nHizmetCep Destek',
-    konu: 'Destek talebiniz yanıtlandı',
+    // Konudaki talep numarası, kullanıcının bu e-postaya verdiği yanıtın
+    // AYNI talebe eklenmesini sağlar (gelen_eposta.js).
+    konu: 'Destek talebiniz yanıtlandı (Talep No: {NO})',
   },
   ILAN_KALDIRILDI: {
     sms: 'Merhaba, "{ILAN}" ilanınız HizmetCep yönetimi tarafından kaldırılmıştır. İşlem nedeni: {NEDEN} Detaylı bilgi için: {DESTEK}',
@@ -94,7 +96,7 @@ export function epostaIcerigi(sablon, degerler = {}) {
   const s = SABLONLAR[sablon];
   const e = s.eposta;
   return kurumsalEposta({
-    konu: s.konu ?? 'HizmetCep',
+    konu: doldur(s.konu ?? 'HizmetCep', degerler),
     baslik: doldur(e?.baslik ?? s.konu ?? 'HizmetCep', degerler),
     paragraflar: e
       ? e.paragraflar.map((p) => doldur(p, degerler))
@@ -118,7 +120,7 @@ export async function kanalHazir(db, kanal) {
   return (kanal === 'SMS' ? config.sms : config.eposta).ad !== 'yok';
 }
 
-async function saglayiciyaGonder(db, kanal, hedef, konu, govde, html) {
+async function saglayiciyaGonder(db, kanal, hedef, konu, govde, html, yanitAdresi) {
   // Admin panelinden etkinleştirilmiş entegrasyon ÖNCELİKLİ; yoksa ortam.
   const e = await etkinEntegrasyon(db, kanal === 'SMS' ? 'SMS' : 'EMAIL');
   if (e && kanal === 'EMAIL' && e.provider === 'resend') {
@@ -127,7 +129,7 @@ async function saglayiciyaGonder(db, kanal, hedef, konu, govde, html) {
     const r = await guvenliIstek(RESEND_ADRESI, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${e.secret.token}` },
-      body: JSON.stringify({ from: e.config.from, to: [hedef], subject: konu, html, text: govde }),
+      body: JSON.stringify({ from: e.config.from, to: [hedef], subject: konu, html, text: govde, ...(yanitAdresi ? { reply_to: yanitAdresi } : {}) }),
       timeoutMs: 10_000,
     });
     if (r.status < 200 || r.status > 299) throw new Error(`resend ${r.status}: ${r.text.slice(0, 400)}`);
@@ -168,8 +170,9 @@ async function saglayiciyaGonder(db, kanal, hedef, konu, govde, html) {
  * Tek kanala gönderir ve kaydeder. Hiçbir zaman fırlatmaz; sonucu döner.
  * @returns {Promise<{id:string,status:'SENT'|'FAILED'}>}
  */
-export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler = {}, denetimRef, gizliGovde }) {
+export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler = {}, denetimRef, gizliGovde, yanitAdresi }) {
   const s = SABLONLAR[sablon];
+  const konu = s.konu ? doldur(s.konu, degerler) : null;
   let govde = doldur(s.sms, degerler);
   let html;
   if (kanal === 'EMAIL') {
@@ -187,14 +190,14 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
   await db.prepare(
     `INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, audit_ref, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 0, ?, ?)`,
-  ).run(id, kullaniciId ?? null, kanal, hedef || '-', sablon, s.konu ?? null, kayitGovdesi, denetimRef ?? null, simdi());
+  ).run(id, kullaniciId ?? null, kanal, hedef || '-', sablon, konu, kayitGovdesi, denetimRef ?? null, simdi());
   if (!hedef) {
     await db.prepare(`UPDATE outbound_messages SET status = 'FAILED', provider_response = ? WHERE id = ?`)
       .run('doğrulanmış kanal yok', id);
     return { id, status: 'FAILED' };
   }
   try {
-    const r = await saglayiciyaGonder(db, kanal, hedef, s.konu, govde, html);
+    const r = await saglayiciyaGonder(db, kanal, hedef, konu, govde, html, yanitAdresi);
     await db.prepare(`UPDATE outbound_messages SET status = 'SENT', provider = ?, provider_response = ?, attempts = 1, sent_at = ? WHERE id = ?`)
       .run(r.saglayici, r.yanit, simdi(), id);
     return { id, status: 'SENT' };

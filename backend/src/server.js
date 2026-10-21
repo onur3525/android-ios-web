@@ -19,6 +19,7 @@ import {
   ApiHatasi, Yonlendirici, cerezleriOku, govdeOku, hata, istekKimligi,
   ipTeshisi, istemciIp, jsonGonder,
 } from './http.js';
+import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
@@ -122,6 +123,8 @@ export function uygulamaKur(db) {
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
         return fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
       }
+      // Destek e-postaları (Resend Receiving webhook'u): ham gövde + imza (gelen_eposta.js).
+      if (yol === GELEN_YOL) return await gelenEpostaWebhook(db, req, res);
       if (req.method === 'GET' && yol.startsWith('/eposta-varlik/')) {
         return epostaVarligiGonder(yol.slice('/eposta-varlik/'.length), res);
       }

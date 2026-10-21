@@ -11,6 +11,7 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'widgets/sohbet_fotograf_akisi.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../ui/sayfa_bildirimleri.dart';
 
 /// "TEKLİF TALEBİ" SOHBETİ — AYRI EKRAN.
 ///
@@ -55,6 +56,8 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   @override
   void initState() {
     super.initState();
+    // Bildirime dokunmadan açılsa da bu sayfanın bildirimleri okundu.
+    sayfaBildirimleriniOku(this, BildirimSayfasi.talepSohbet, widget.talepId);
     // ⚠ YENİ — sohbet açılınca karşı taraftan gelen mesajlar
     // "okundu" işaretlenir (2 tik, renk değişir). Kare sonrası
     // çalışır — `context.read` build dışında güvenli.

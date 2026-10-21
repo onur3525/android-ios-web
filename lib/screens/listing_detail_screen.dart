@@ -25,6 +25,7 @@ import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
 import '../core/tutar_bicimi.dart';
 import '../core/platform/yerel_gorsel.dart';
+import '../ui/sayfa_bildirimleri.dart';
 
 /// Müşteri — İlan Detayı (HTML vListing): ilan bilgisi, durum,
 /// Gelen Teklifler listesi ve duruma göre aksiyonlar
@@ -50,6 +51,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen>
   @override
   void initState() {
     super.initState();
+    // Bildirime dokunmadan açılsa da bu sayfanın bildirimleri okundu.
+    sayfaBildirimleriniOku(this, BildirimSayfasi.ilan, widget.listingId);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
     _zamanlayici =

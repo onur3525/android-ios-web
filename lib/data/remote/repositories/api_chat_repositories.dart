@@ -379,4 +379,18 @@ class ApiNotificationRepository extends ChangeNotifier {
     }
     return load();
   }
+
+  /// Sayfa görüldü → o sayfanın okunmamış bildirimleri okundu (sunucu
+  /// kuralı). Bir şey değiştiyse liste ve rozet tazelenir.
+  Future<DomainError?> sayfaGoruldu(String sayfa, String refId) async {
+    final (res, err) = await _guard(() => _api.readForPage(sayfa, refId));
+    if (err != null) {
+      return err;
+    }
+    if (((res?['changed'] as num?) ?? 0) == 0) {
+      return null;
+    }
+    await loadUnreadCount();
+    return load();
+  }
 }

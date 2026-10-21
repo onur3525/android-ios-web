@@ -2,7 +2,9 @@
 // GELEN TALEPLER — kullanıcının uygulamadan destek ekibine gönderdiği
 // gerçek talepler (ürün kararı, Eki 2026)
 //
-//   Kullanıcı (Bize Ulaşın / Talep Gönder)
+//   Kullanıcı destek adresine e-posta yazar (21 Eki — asıl yol)
+//     → Resend Receiving webhook → gelen_eposta.js (talep açılır / yanıt eklenir)
+//   Kullanıcı (uygulamadan, eski form)
 //     → POST /api/v1/support/tickets          (gerçek kayıt, PostgreSQL)
 //     → Admin > Gelen Talepler                 (GET /admin/v1/support/tickets)
 //     → Admin yanıtı                           (POST …/:id/reply)
@@ -34,7 +36,7 @@ function metin(v, alan, min, max) {
   return t;
 }
 
-const yanitGorunumu = (y) => ({ id: y.id, body: y.body, createdAt: y.created_at });
+const yanitGorunumu = (y) => ({ id: y.id, body: y.body, createdAt: y.created_at, author: y.author ?? 'ADMIN' });
 
 function kullaniciTalepGorunumu(t, yanitlar) {
   return {
@@ -99,16 +101,21 @@ export function destekRotalar(r, db) {
   }));
 
   // ════ ADMİN ════
+  // E-postayla gelen talepte gönderen kayıtlı kullanıcı olmayabilir (userId
+  // boş); ad ve adres e-postanın gönderenidir. Yanıt o adrese gider.
   const adminGorunumu = (t, iletisimGor) => ({
-    id: t.id, ticketNo: t.ticket_no, userId: t.user_id, userName: t.user_name ?? '',
+    id: t.id, ticketNo: t.ticket_no, userId: t.user_id ?? null, userName: t.user_name ?? '',
     userEmail: iletisimGor ? (t.user_email ?? '') : epostaMaskele(t.user_email),
-    userEmailVerified: t.user_email_verified === 1,
+    userEmailVerified: t.user_email_verified === 1 || t.user_email_verified === true,
+    source: t.source ?? 'APP',
+    senderName: t.sender_name ?? null,
+    senderEmail: t.sender_email ? (iletisimGor ? t.sender_email : epostaMaskele(t.sender_email)) : null,
     subject: t.subject, status: t.status, platform: t.platform, appVersion: t.app_version,
     createdAt: t.created_at, updatedAt: t.updated_at, closedAt: t.closed_at,
   });
   const adminGetir = (id) => db.prepare(
     `SELECT t.*, u.name user_name, u.email user_email, u.email_verified user_email_verified
-       FROM support_tickets t JOIN users u ON u.id = t.user_id WHERE t.id = ?`,
+       FROM support_tickets t LEFT JOIN users u ON u.id = t.user_id WHERE t.id = ?`,
   ).get(id);
 
   r.get('/admin/v1/support/tickets', async (ctx) => {
@@ -116,11 +123,23 @@ export function destekRotalar(r, db) {
     const durum = ctx.query.get('status');
     if (durum && !DURUMLAR.includes(durum)) throw hata.dogrulama('Geçersiz durum');
     const limit = Math.min(Math.max(Number(ctx.query.get('limit') ?? 100) || 100, 1), 500);
+    const ofset = Math.min(Math.max(Number(ctx.query.get('offset') ?? 0) || 0, 0), 100_000);
+    // ── ARAMA (21 Eki): talep no, gönderen/kullanıcı e-postası ya da adı,
+    // konu ve mesaj. Veritabanında aranır (yalnız ekrandaki kayıtlarda değil).
+    const kosul = []; const p = [];
+    if (durum) { kosul.push('t.status = ?'); p.push(durum); }
+    const ara = String(ctx.query.get('q') ?? '').trim().slice(0, 100).toLocaleLowerCase('tr-TR');
+    if (ara) {
+      const k = `%${ara.replace(/[!%_]/g, (c) => `!${c}`)}%`; // LIKE özel karakterleri düz aranır
+      const alanlar = ['t.subject', 't.message', "COALESCE(t.sender_email, '')", "COALESCE(t.sender_name, '')", "COALESCE(u.name, '')", "COALESCE(u.email, '')"];
+      kosul.push(`(t.ticket_no = ? OR ${alanlar.map((a) => `lower(${a}) LIKE ? ESCAPE '!'`).join(' OR ')})`);
+      p.push(ara, ...alanlar.map(() => k));
+    }
     const satir = await db.prepare(
       `SELECT t.*, u.name user_name, u.email user_email, u.email_verified user_email_verified
-         FROM support_tickets t JOIN users u ON u.id = t.user_id
-        ${durum ? 'WHERE t.status = ?' : ''} ORDER BY t.created_at DESC LIMIT ?`,
-    ).all(...(durum ? [durum, limit] : [limit]));
+         FROM support_tickets t LEFT JOIN users u ON u.id = t.user_id
+        ${kosul.length ? `WHERE ${kosul.join(' AND ')}` : ''} ORDER BY t.created_at DESC, t.id DESC LIMIT ? OFFSET ?`,
+    ).all(...p, limit, ofset);
     const iletisimGor = yetkiliMi(ctx.admin.role, 'users.contact.read');
     return satir.map((t) => adminGorunumu(t, iletisimGor));
   });
@@ -139,7 +158,7 @@ export function destekRotalar(r, db) {
     return {
       ...adminGorunumu(t, yetkiliMi(ctx.admin.role, 'users.contact.read')),
       message: t.message,
-      replies: ys.map((y) => ({ ...yanitGorunumu(y), admin: y.admin_email, emailStatus: y.email_status ?? null })),
+      replies: ys.map((y) => ({ ...yanitGorunumu(y), admin: y.admin_email ?? null, emailStatus: y.email_status ?? null })),
     };
   });
 
@@ -164,11 +183,18 @@ export function destekRotalar(r, db) {
       });
     });
     // E-posta işlemden SONRA (sağlayıcı hatası yanıtı geri almaz; sonuç kayıtlı).
-    // Yalnız DOĞRULANMIŞ e-postaya gider; yoksa kayıt "doğrulanmış kanal yok" ile FAILED.
+    // E-postayla gelen talep: yanıt, kullanıcının yazdığı adrese gider.
+    // Uygulamadan gelen talep: yalnız DOĞRULANMIŞ e-postaya; yoksa FAILED.
+    // Kullanıcının bu e-postaya yanıtı destek adresine döner (Reply-To) ve
+    // konudaki talep numarasıyla aynı talebe eklenir.
+    let destek = null;
+    try { destek = await db.prepare('SELECT email FROM support_info WHERE id = 1').get(); } catch { /* Reply-To'suz gider */ }
+    const dogrulanmis = (t.user_email_verified === 1 || t.user_email_verified === true) && t.user_email ? t.user_email : null;
     const e = await gonder(db, {
       kullaniciId: t.user_id, kanal: 'EMAIL', sablon: 'DESTEK_YANITI', denetimRef: id,
-      hedef: t.user_email_verified === 1 && t.user_email ? t.user_email : null,
+      hedef: t.source === 'EMAIL' && t.sender_email ? t.sender_email : dogrulanmis,
       degerler: { NO: t.ticket_no, KONU: t.subject, YANIT: govde },
+      yanitAdresi: destek?.email || undefined,
     });
     await db.prepare('UPDATE support_ticket_replies SET outbound_id = ? WHERE id = ?').run(e.id, id);
     return { id, ticketId: t.id, status: yeniDurum, email: e };

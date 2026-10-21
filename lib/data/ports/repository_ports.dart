@@ -380,6 +380,12 @@ abstract class NotificationPort extends ChangeNotifier {
   Future<DomainError?> loadUnreadCount(String userId);
   Future<DomainError?> markRead(String id);
   Future<DomainError?> markAllRead(String userId);
+
+  /// Sayfa görüldü → o sayfaya ait okunmamış bildirimler okundu.
+  /// Hangi sayfanın hangi bildirimleri gördüğü SUNUCUDA tanımlıdır
+  /// (backend `SAYFA_BILDIRIMLERI`, tek kaynak). Varsayılan: bir şey
+  /// yapmaz (mock — dağıtılan pakette yok).
+  Future<DomainError?> sayfaGoruldu(String sayfa, String refId) async => null;
 }
 
 /// BÖLGE VERİSİ PORTU — şehir/ilçe/mahalle tek kaynaktan okunur.
