@@ -81,9 +81,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null || j == null) {
       return;
     }
-    final acc = Mappers.account(j);
-    acc.address = currentAccount?.address;
-    currentAccount = acc;
+    _hesabiYaz(j);
     notifyListeners();
   }
 
@@ -124,6 +122,16 @@ class ApiAuthRepository extends ChangeNotifier {
       return (null, err);
     }
     return (Mappers.kisiOzeti(j), null);
+  }
+
+  /// ── ⚠ HESABI SUNUCU YANITIYLA GÜNCELLER — TEK KAYNAK (21 Eki) ──
+  /// Adres ayrı uçtan gelir (yanıtta yok); önceki değer korunur. Önceden
+  /// rol değiştirme vb. sonrası adres ve (sunucu göndermediği için)
+  /// profil fotoğrafı ekrandan kayboluyordu.
+  void _hesabiYaz(Map<String, dynamic> j) {
+    final acc = Mappers.account(j);
+    acc.address ??= currentAccount?.address;
+    currentAccount = acc;
   }
 
   Future<DomainError?> loadMe() async {
@@ -200,7 +208,7 @@ class ApiAuthRepository extends ChangeNotifier {
     }
     final ozel = res!['firebaseCustomToken'];
     firebaseOzelBelgesi = ozel is String && ozel.isNotEmpty ? ozel : null;
-    currentAccount = Mappers.account(res);
+    _hesabiYaz(res);
     notifyListeners();
     return null;
   }
@@ -213,7 +221,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    currentAccount = Mappers.account(res!);
+    _hesabiYaz(res!);
     notifyListeners();
     return null;
   }
@@ -242,7 +250,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    currentAccount = Mappers.account(res!);
+    _hesabiYaz(res!);
     notifyListeners();
     return null;
   }
@@ -286,7 +294,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    currentAccount = Mappers.account(res!);
+    _hesabiYaz(res!);
     notifyListeners();
     return null;
   }
@@ -330,7 +338,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    currentAccount = Mappers.account(res!);
+    _hesabiYaz(res!);
     notifyListeners();
     return null;
   }

@@ -226,6 +226,9 @@ test('21 Eki: iki rolü olan kullanıcı yeniden girişte HİZMET VEREN rolüyle
   // Kullanıcı hizmet alana geçti.
   const g = await istek('/api/v1/users/me/active-role', { token: tk, govde: { role: 'CUSTOMER' } });
   assert.ok(g.durum < 300, JSON.stringify(g.json));
+  // 21 Eki: rol değişikliği yanıtı profil fotoğraflarını da taşır (tek kaynak
+  // hesapYaniti) — istemci hesabı bu yanıtla değiştirir.
+  assert.ok(g.json.photos && 'customer' in g.json.photos && 'provider' in g.json.photos, JSON.stringify(g.json));
   assert.equal((await roller(tel)).active_role, 'CUSTOMER');
   // Çıkış + yeniden giriş → hizmet veren.
   const giris = await istek('/api/v1/auth/login', { govde: { phone: tel, password: 'GucluSifre12' } });
