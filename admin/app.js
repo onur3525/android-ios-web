@@ -23,7 +23,6 @@ let ben = null;
 const MENU = [
   ['ozet', 'Özet', ['super_admin', 'moderator', 'readonly']],
   ['talepler', 'Teklif Talepleri', ['super_admin', 'moderator', 'readonly']],
-  ['yorumlar', 'Değerlendirmeler', ['super_admin', 'moderator', 'readonly']],
   ['katalog', 'Kategori ve Hizmetler', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['bolgeler', 'İl / İlçe / Mahalle', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['yasal', 'Yasal Belgeler', ['super_admin', 'content', 'readonly']],
@@ -99,7 +98,7 @@ function girisEkrani(bilgi) {
 // düğmesi yoktur; Özet içinde açılır: menüde Özet seçili kalır, üstte
 // "‹ Özet" ile geri dönülür. (Menüsünde bu sayfa olan rolde — ör. operasyon
 // için Silme Kuyrukları — normal menü sayfası gibi davranır.)
-const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilanlar', 'ilan', 'sohbet', 'teklifler', 'silmekuyruklari']);
+const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilanlar', 'ilan', 'sohbet', 'teklifler', 'silmekuyruklari', 'yorumlar']);
 
 function duzen(sayfa, icerik) {
   const menu = MENU.filter(([, , roller]) => roller.includes(ben.role));
@@ -111,7 +110,8 @@ function duzen(sayfa, icerik) {
       menu.map(([k, ad]) => h('a', { class: secili === k ? 'secili' : '', href: `#/${k}` }, ad)),
       h('div', { class: 'cikis' }, h('a', { onclick: cikis }, 'Çıkış'))),
     h('main', { class: 'icerik' },
-      ozetAlti ? h('a', { class: 'oz-geri', href: '#/ozet' }, '‹ Özet') : null,
+      // Kullanıcı detayının kendi "‹ Kullanıcılar" bağlantısı var; ikisi üst üste çıkmasın.
+      ozetAlti && sayfa !== 'kullanici' ? h('a', { class: 'oz-geri', href: '#/ozet' }, '‹ Özet') : null,
       icerik));
 }
 

@@ -112,6 +112,18 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);
     }
   };
+  const yorumKaldir = async (y) => {
+    const neden = await gerekceIle('Değerlendirme kaldırılsın mı?', 'Kaldır',
+      'Değerlendirme yayından kalkar ve hizmet verenin puanına sayılmaz; işlem gerekçesiyle denetim kaydına yazılır.');
+    if (!neden) return;
+    try {
+      await api(`/reviews/${y.id}/remove`, { yontem: 'POST', govde: { reason: neden } });
+      bildir('Değerlendirme kaldırıldı');
+      yenile();
+    } catch (e) {
+      bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);
+    }
+  };
   const silindi = !!u.deletedAt;
   const tuslar = silindi ? [] : [
     u.status === 'ACTIVE' ? h('button', { class: 'btn kd-turuncu', onclick: () => islem('suspend', 'Askıya al', 'Kullanıcının bütün oturumları kapanır; doğrulanmış telefon/e-postasına gerekçeyle bildirim gider.') }, 'Askıya al') : null,
@@ -168,10 +180,18 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       ['Karşı taraf', (t) => (t.hizmetAlanId === id ? t.saglayiciAdi : 'Talep eden')],
       ['Durum', (t) => rozet(t.durum)], ['Tarih', (t) => kisaTarih(t.createdAt)],
     ], talepler, (t) => (location.hash = `#/talep/${t.id}`)))],
+    // 21 Eki: Değerlendirmelerin ayrı menü sayfası yok; hizmet verene yapılan
+    // yorumlar onun kartında (bu sekmede) görünür ve buradan kaldırılır
+    // (gerekçe + yeniden doğrulama + denetim kaydı; yetkiyi sunucu denetler).
     ['Değerlendirmeler', yorumlar ? yorumlar.length : null, () => (!yorumlar ? h('p', { class: 'oz-bos kd-bos' }, durumMesaji(yoP.e || yoA.e)) : tablo([
-      ['Yön', (y) => y.yon], ['Puan', (y) => h('span', { class: 'kd-yildiz' }, '★'.repeat(y.stars) + '☆'.repeat(5 - y.stars))],
-      ['Yorum', (y) => y.text || '—'], ['Durum', (y) => rozet(y.status)], ['Tarih', (y) => kisaTarih(y.createdAt)],
+      ['Yön', (y) => (y.yon === 'Aldığı' ? 'Aldığı yorum' : 'Yaptığı yorum')], ['Puan', (y) => h('span', { class: 'kd-yildiz' }, '★'.repeat(y.stars) + '☆'.repeat(5 - y.stars))],
+      ['Yorum', (y) => y.text || '—'],
+      ['Durum', (y) => h('div', {}, rozet(y.status), y.removedReason ? h('div', { class: 'ku-eposta', title: y.removedReason }, `Kaldırma nedeni: ${y.removedReason}`) : null)],
+      ['Tarih', (y) => kisaTarih(y.createdAt)],
       ['İlgili', (y) => (y.listingId ? 'İlan' : y.talepId ? 'Teklif talebi' : '—')],
+      ['', (y) => (y.status === 'PUBLISHED'
+        ? h('button', { class: 'btn tehlike kd-kucuk', onclick: (e) => { e.stopPropagation(); yorumKaldir(y); } }, 'Kaldır')
+        : '')],
     ], yorumlar, (y) => (y.listingId ? (location.hash = `#/ilan/${y.listingId}`) : y.talepId ? (location.hash = `#/talep/${y.talepId}`) : null)))],
     ['Oturumlar', u.sessions.length, () => tablo([
       ['Durum', (o) => (o.revokedAt ? h('span', { class: 'ku-durum kd-kapali' }, 'Kapalı') : h('span', { class: 'ku-durum ACTIVE' }, 'Açık'))],
