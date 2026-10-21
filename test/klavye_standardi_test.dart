@@ -200,4 +200,31 @@ void main() {
       expect(t.contains('return const SizedBox.shrink();'), isTrue);
     });
   });
+
+  group('7 — Alt menü kök sekme geçişleri animasyonsuz', () {
+    final gecis = read('lib/core/klavye.dart');
+
+    test('yalnız alt menünün kök rotaları geçiş animasyonunu atlar', () {
+      for (final rota in const [
+        '/customer/find-provider',
+        '/customer/listings',
+        '/provider/jobs',
+        '/provider/won',
+        '/notifications',
+        '/profile',
+      ]) {
+        expect(gecis.contains("'$rota'"), isTrue, reason: rota);
+      }
+      expect(
+        gecis.contains('_altMenuKokRotalari.contains(route.settings.name)'),
+        isTrue,
+        reason: 'alt menü kök rotaları geçiş animasyonundan ayrılmalı',
+      );
+      expect(gecis.contains('return child;'), isTrue);
+      // Alt menü dışındaki ayrıntı rotalarının geçiş kodu korunur.
+      expect(gecis.contains('FadeTransition('), isTrue);
+      expect(gecis.contains('SlideTransition('), isTrue);
+    });
+  });
+
 }

@@ -83,9 +83,10 @@ export async function adminMfaYenile(db, { email, yeniSir, mod, sunucuParmakIzi 
   let cozuldu = false;
   try { sirCoz(a.totp_secret_enc); cozuldu = true; } catch { /* beklenen durum */ }
   if (cozuldu) {
-    throw new BakimHatasi('Mevcut MFA sırrı bu anahtarla çözülebiliyor; yenileme gerekmiyor (sorun başka yerde). Hiçbir şey yazılmadı.');
+    mesajlar.push('✓ Mevcut sır çözülebiliyor; onaylı değişimde eski değer yedeklenecek.');
+  } else {
+    mesajlar.push('✓ Mevcut sır çözülemiyor; eski değer yedeklenerek değiştirilecek.');
   }
-  mesajlar.push('✓ Mevcut sır bu anahtarla çözülemiyor (kök neden doğrulandı).');
 
   if (mod === 'kontrol') {
     mesajlar.push('KONTROL modu: tüm denetimler geçti; veritabanına HİÇBİR ŞEY yazılmadı.');

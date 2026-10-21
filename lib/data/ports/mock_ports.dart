@@ -234,6 +234,11 @@ class MockAuthPort extends AuthPort {
     return null;
   }
 
+  /// MOCK MODDA gerçek e-posta gönderimi yapılamaz; sahte başarı döndürme.
+  @override
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async =>
+      const ValidationError('E-posta doğrulaması yalnız gerçek API modunda kullanılabilir.');
+
   /// TELEFON DEĞİŞİKLİĞİ — SMS DOĞRULAMASI ZORUNLUDUR.
   ///
   /// ⚠ Önceki hâl `otpCode` parametresini ALIYOR ama HİÇ BAKMIYORDU:
