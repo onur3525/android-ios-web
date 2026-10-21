@@ -408,19 +408,49 @@ const destekRozet = (v) => h('span', { class: `rozet ${v}`, title: v }, DESTEK_D
 // 21 Eki: Gelen Talepler = destek e-postaları (ve eski uygulama formu).
 // Hesap dondurma/silme otomatik işlendiği için talep değildir: kayıtları
 // Silme Kuyrukları sayfasındadır (eski bağlantılar oraya yönlenir).
-SAYFALAR.hesaptalepleri = async (sekme = 'destek', durum = '') => {
+SAYFALAR.hesaptalepleri = async (sekme = 'destek', durum = '', aranan = '') => {
   if (sekme === 'hesap') { location.hash = '#/silmekuyruklari'; return h('p', { class: 'not' }, 'Yönlendiriliyor…'); }
-  const filtre = h('select', { class: 'genis', onchange: (e) => (location.hash = `#/hesaptalepleri/destek/${e.target.value}`) },
+  // Durum ve arama adres çubuğunda tutulur: geri dönünce aynı sonuç görünür.
+  const git = (d, q) => { location.hash = `#/hesaptalepleri/destek/${encodeURIComponent(d)}${q ? `/${encodeURIComponent(q)}` : ''}`; };
+  const filtre = h('select', { class: 'genis', onchange: (e) => git(e.target.value, aranan) },
     [['', 'Tümü'], ['OPEN', 'Yanıt bekleyenler'], ['ANSWERED', 'Yanıtlananlar'], ['CLOSED', 'Kapananlar']]
       .map(([v, e]) => h('option', { value: v, ...(v === durum ? { selected: true } : {}) }, e)));
-  const liste = await api(`/support/tickets${durum ? `?status=${encodeURIComponent(durum)}` : ''}`);
+  // ── ARAMA (21 Eki): talep no, e-posta, ad, konu ya da mesajdaki kelime ──
+  const kutu = h('input', { type: 'search', class: 'genis', value: aranan, maxlength: 100, placeholder: 'Talep no, e-posta, ad ya da konu…', 'aria-label': 'Gelen taleplerde ara' });
+  const aramaFormu = h('form', { class: 'gt-arama', onsubmit: (e) => { e.preventDefault(); git(durum, kutu.value.trim()); } },
+    kutu, h('button', { class: 'btn', type: 'submit' }, 'Ara'),
+    aranan ? h('button', { class: 'btn ikincil', type: 'button', onclick: () => git(durum, '') }, 'Temizle') : null);
+  const SAYFA = 100;
+  const sorgu = (ofset) => {
+    const p = new URLSearchParams({ limit: String(SAYFA), offset: String(ofset) });
+    if (durum) p.set('status', durum);
+    if (aranan) p.set('q', aranan);
+    return api(`/support/tickets?${p}`);
+  };
+  let liste = await sorgu(0);
+  const kolonlar = [{ baslik: 'No', deger: (t) => t.ticketNo }, { baslik: 'Gönderen', deger: gonderenAdi },
+    { baslik: 'Kaynak', deger: (t) => (t.source === 'EMAIL' ? 'E-posta' : 'Uygulama') }, { baslik: 'Konu', deger: (t) => t.subject },
+    { baslik: 'Durum', deger: (t) => destekRozet(t.status) }, { baslik: 'Gönderim', deger: (t) => tarih(t.createdAt) }, { baslik: 'Son işlem', deger: (t) => tarih(t.updatedAt) }];
+  const ac = (t) => (location.hash = `#/destektalebi/${t.id}`);
+  const yer = h('div', {});
+  const ciz = (sonGelen) => {
+    const devam = sonGelen === SAYFA
+      ? h('button', { class: 'btn ikincil', onclick: async (e) => {
+        e.target.disabled = true;
+        const ek = await guvenli(() => sorgu(liste.length));
+        if (ek) { liste = liste.concat(ek); ciz(ek.length); } else e.target.disabled = false;
+      } }, 'Daha fazla göster')
+      : null;
+    yer.replaceChildren(...[
+      aranan ? h('p', { class: 'not' }, `"${aranan}" için ${liste.length}${sonGelen === SAYFA ? '+' : ''} sonuç.`) : null,
+      aranan && !liste.length ? h('p', { class: 'not' }, 'Eşleşen talep yok.') : tablo(kolonlar, liste, ac),
+      devam].filter(Boolean));
+  };
+  ciz(liste.length);
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Gelen Talepler')),
     h('p', { class: 'not' }, 'Destek e-posta adresine gelen e-postalar burada talep olarak açılır. Yanıtınız e-postayı gönderen adrese gider; kişi bu e-postayı yanıtlarsa yazdığı aynı talebe eklenir.'),
-    h('div', { class: 'kart' }, h('label', {}, 'Durum'), filtre),
-    tablo([{ baslik: 'No', deger: (t) => t.ticketNo }, { baslik: 'Gönderen', deger: gonderenAdi },
-      { baslik: 'Kaynak', deger: (t) => (t.source === 'EMAIL' ? 'E-posta' : 'Uygulama') }, { baslik: 'Konu', deger: (t) => t.subject },
-      { baslik: 'Durum', deger: (t) => destekRozet(t.status) }, { baslik: 'Gönderim', deger: (t) => tarih(t.createdAt) }, { baslik: 'Son işlem', deger: (t) => tarih(t.updatedAt) }],
-    liste, (t) => (location.hash = `#/destektalebi/${t.id}`)));
+    h('div', { class: 'kart gt-filtre' }, h('div', {}, h('label', {}, 'Ara'), aramaFormu), h('div', {}, h('label', {}, 'Durum'), filtre)),
+    yer);
 };
 
 /** Talebin göndereni: kayıtlı kullanıcının adı, yoksa e-postanın göndereni. */

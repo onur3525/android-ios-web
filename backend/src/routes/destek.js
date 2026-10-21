@@ -123,11 +123,23 @@ export function destekRotalar(r, db) {
     const durum = ctx.query.get('status');
     if (durum && !DURUMLAR.includes(durum)) throw hata.dogrulama('Geçersiz durum');
     const limit = Math.min(Math.max(Number(ctx.query.get('limit') ?? 100) || 100, 1), 500);
+    const ofset = Math.min(Math.max(Number(ctx.query.get('offset') ?? 0) || 0, 0), 100_000);
+    // ── ARAMA (21 Eki): talep no, gönderen/kullanıcı e-postası ya da adı,
+    // konu ve mesaj. Veritabanında aranır (yalnız ekrandaki kayıtlarda değil).
+    const kosul = []; const p = [];
+    if (durum) { kosul.push('t.status = ?'); p.push(durum); }
+    const ara = String(ctx.query.get('q') ?? '').trim().slice(0, 100).toLocaleLowerCase('tr-TR');
+    if (ara) {
+      const k = `%${ara.replace(/[!%_]/g, (c) => `!${c}`)}%`; // LIKE özel karakterleri düz aranır
+      const alanlar = ['t.subject', 't.message', "COALESCE(t.sender_email, '')", "COALESCE(t.sender_name, '')", "COALESCE(u.name, '')", "COALESCE(u.email, '')"];
+      kosul.push(`(t.ticket_no = ? OR ${alanlar.map((a) => `lower(${a}) LIKE ? ESCAPE '!'`).join(' OR ')})`);
+      p.push(ara, ...alanlar.map(() => k));
+    }
     const satir = await db.prepare(
       `SELECT t.*, u.name user_name, u.email user_email, u.email_verified user_email_verified
          FROM support_tickets t LEFT JOIN users u ON u.id = t.user_id
-        ${durum ? 'WHERE t.status = ?' : ''} ORDER BY t.created_at DESC LIMIT ?`,
-    ).all(...(durum ? [durum, limit] : [limit]));
+        ${kosul.length ? `WHERE ${kosul.join(' AND ')}` : ''} ORDER BY t.created_at DESC, t.id DESC LIMIT ? OFFSET ?`,
+    ).all(...p, limit, ofset);
     const iletisimGor = yetkiliMi(ctx.admin.role, 'users.contact.read');
     return satir.map((t) => adminGorunumu(t, iletisimGor));
   });

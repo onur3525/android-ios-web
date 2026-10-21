@@ -151,3 +151,25 @@ test('alıntı kesme: yalnız yeni yazılan kalır', () => {
   assert.equal(alintiyiKes('Tamam.\n\n21 Eki 2026 Çar tarihinde HizmetCep <a@b.c> şunu yazdı:\n> eski'), 'Tamam.');
   assert.equal(alintiyiKes('Yeni\n> eski\n> eski'), 'Yeni');
 });
+
+test('Gelen Talepler araması: talep no, e-posta, ad, konu/mesaj; durumla birlikte; sayfalı; joker karakter düz aranır', async () => {
+  const z = eposta({ from: 'Zeynep Kaya <zeynep.kaya@firma.com>', subject: 'Teklif onayı', text: 'Kombi servisi için teklif gelmedi.' });
+  await webhook(z);
+  const t = await talep(z.data.email_id);
+  const ara = async (q, ek = '') => (await admin(`/admin/v1/support/tickets?q=${encodeURIComponent(q)}${ek}`)).json.map((x) => x.id);
+  assert.deepEqual(await ara(t.ticket_no), [t.id], 'talep numarası');
+  assert.ok((await ara('zeynep.kaya@')).includes(t.id), 'e-postanın bir kısmı');
+  assert.ok((await ara('firma.com')).includes(t.id), 'alan adı');
+  assert.ok((await ara('Zeynep')).includes(t.id), 'ad (büyük/küçük harf duyarsız)');
+  assert.ok((await ara('kombi')).includes(t.id), 'mesajdaki kelime');
+  assert.ok((await ara('teklif onayı')).includes(t.id), 'konu');
+  assert.deepEqual(await ara('yokboylebirsey'), []);
+  assert.deepEqual(await ara('%'), [], '% bütün kayıtları getirmez');
+  assert.deepEqual(await ara('zeynep', '&status=CLOSED'), [], 'durum filtresiyle birlikte');
+  assert.ok((await ara('zeynep', '&status=OPEN')).includes(t.id));
+  // Sayfalama: ikinci sayfa ilkini tekrarlamaz.
+  const hepsi = (await admin('/admin/v1/support/tickets')).json.map((x) => x.id);
+  const s1 = (await admin('/admin/v1/support/tickets?limit=2&offset=0')).json.map((x) => x.id);
+  const s2 = (await admin('/admin/v1/support/tickets?limit=2&offset=2')).json.map((x) => x.id);
+  assert.deepEqual([...s1, ...s2], hepsi.slice(0, 4));
+});
