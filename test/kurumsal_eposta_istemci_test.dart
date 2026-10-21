@@ -135,6 +135,13 @@ void main() {
     expect('_epostaOnayiniEsitle()'.allMatches(s).length, greaterThanOrEqualTo(3));
   });
 
+  test('21 Eki: hesap yanıtıyla güncellemede adres korunur (tek kaynak _hesabiYaz)', () {
+    final r = _kod('lib/data/remote/repositories/api_repositories.dart');
+    expect(r.contains('currentAccount = Mappers.account('), isFalse,
+        reason: 'hesap doğrudan yanıtla değiştiriliyor; adres kaybolur');
+    expect(r.contains('acc.address ??= currentAccount?.address;'), isTrue);
+  });
+
   test('kanal yoksa (sent:false) Firebase gönderimine düşülür', () {
     final p = _kod('lib/data/ports/api_ports.dart');
     expect('await repo.kurumsalEpostaGonder('.allMatches(p).length, 2);

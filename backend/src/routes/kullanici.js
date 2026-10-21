@@ -88,6 +88,16 @@ export async function profilFotograflari(db, u) {
   };
 }
 
+/**
+ * ── ⚠ HESAP YANITI — TEK KAYNAK (21 Eki, kullanıcı bulgusu) ──
+ * Hesabı döndüren BÜTÜN uçlar bunu kullanır. Önceden rol değiştirme, telefon
+ * ve e-posta değişikliği gibi uçlar profil fotoğraflarını yanıta koymuyordu;
+ * istemci hesabı bu yanıtla değiştirdiği için fotoğraf ekrandan kayboluyordu.
+ */
+export async function hesapYaniti(db, u) {
+  return kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u));
+}
+
 export function kullaniciGorunumu(u, saglayici, fotograflar = null) {
   return {
     ...(fotograflar ? { photos: fotograflar } : {}),
@@ -161,6 +171,13 @@ async function oturumVer(db, kullaniciId, req) {
   // "Dilediğiniz zaman tekrar giriş yaparak hesabınızı etkinleştirebilirsiniz").
   // Oturum yalnız kimlik doğrulandıktan sonra verildiği için tek kapı burası.
   await db.prepare('UPDATE users SET frozen_at = NULL, updated_at = ? WHERE id = ? AND frozen_at IS NOT NULL').run(simdi(), kullaniciId);
+  // ── ⚠ GİRİŞTE HİZMET VEREN ROLÜ (21 Eki, kullanıcı kuralı) ──
+  // İki rolü olan kullanıcı oturumu kapatıp yeniden giriş yaptığında
+  // HİZMET VEREN rolüyle açılır; isterse sonra Rol Değiştir'den geçer.
+  // Tek kapı burası (telefon/şifre, Firebase girişi, kayıt). Açık oturumun
+  // yenilenmesi (uygulamayı kapatıp açma) seçili rolü DEĞİŞTİRMEZ.
+  await db.prepare(`UPDATE users SET active_role = 'PROVIDER' WHERE id = ? AND active_role <> 'PROVIDER'
+                      AND (',' || roles || ',') LIKE '%,PROVIDER,%'`).run(kullaniciId);
   const jti = randomUUID();
   const yenileme = randomBytes(32).toString('base64url');
   const z = simdi();
@@ -810,7 +827,7 @@ export function kullaniciRotalar(r, db) {
   }));
 
   // ── PROFİL ──
-  r.get('/api/v1/users/me', korumali(async (ctx) => kullaniciGorunumu(ctx.kullanici, await saglayiciProfili(db, ctx.kullanici.id), await profilFotograflari(db, ctx.kullanici))));
+  r.get('/api/v1/users/me', korumali(async (ctx) => hesapYaniti(db, ctx.kullanici)));
 
   // ── BİLDİRİM TERCİHLERİ ──
   // Hesap Ayarları › Bildirim Tercihleri. Yalnız PUSH'u etkiler: kapatılan
@@ -838,7 +855,7 @@ export function kullaniciRotalar(r, db) {
     if (!roller(ctx.kullanici).includes(rol)) throw hata.yetki('Bu rol hesabınızda yok');
     await db.prepare('UPDATE users SET active_role = ?, updated_at = ? WHERE id = ?').run(rol, simdi(), ctx.kullanici.id);
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
-    return kullaniciGorunumu(u, await saglayiciProfili(db, u.id));
+    return hesapYaniti(db, u);
   }));
 
   r.patch('/api/v1/profiles/me', korumali(async (ctx) => {
@@ -879,7 +896,7 @@ export function kullaniciRotalar(r, db) {
       if (eski && eski !== yeni) await silinmekUzereIsaretle(db, [eski], u0.id);
     }
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
-    return kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u));
+    return hesapYaniti(db, u);
   }));
 
   r.post('/api/v1/profiles/me/phone/change', korumali(async (ctx) => {
@@ -964,7 +981,7 @@ export function kullaniciRotalar(r, db) {
     // üretilen kısa ömürlü özel belgeyle (Admin SDK createCustomToken ile
     // aynı biçim) istemci yeniden bağlanır; eski oturumlar açılamaz.
     const ozel = u0.firebase_uid ? firebaseOzelBelge(u0.firebase_uid) : null;
-    return { ...kullaniciGorunumu(u, await saglayiciProfili(db, u.id)), ...(ozel ? { firebaseCustomToken: ozel } : {}) };
+    return { ...(await hesapYaniti(db, u)), ...(ozel ? { firebaseCustomToken: ozel } : {}) };
   }
 
   // ── E-POSTA DEĞİŞTİRME (Firebase kaynaklı, karar: 6 Eki) ──
@@ -1026,7 +1043,7 @@ export function kullaniciRotalar(r, db) {
 
   r.post('/api/v1/profiles/me/email/sync', korumali(async (ctx) => {
     const u = await epostaOnayiniEsitle(await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id));
-    return kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u));
+    return hesapYaniti(db, u);
   }));
 
   const epostaBaglantisiGonder = async (ctx, yeni) => {
@@ -1116,16 +1133,16 @@ export function kullaniciRotalar(r, db) {
       if (!u.email_verified) {
         await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
         const g = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
-        return kullaniciGorunumu(g, await saglayiciProfili(db, g.id));
+        return hesapYaniti(db, g);
       }
-      return kullaniciGorunumu(u, await saglayiciProfili(db, u.id));
+      return hesapYaniti(db, u);
     }
     if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(yeni, u.id)) {
       throw hata.cakisma('Bu e-posta adresi başka bir hesapta kayıtlı');
     }
     await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), u.id);
     const g = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
-    return kullaniciGorunumu(g, await saglayiciProfili(db, g.id));
+    return hesapYaniti(db, g);
   }));
 
   r.get('/api/v1/profiles/me/address', korumali(async (ctx) => {
