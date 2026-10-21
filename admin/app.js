@@ -8,7 +8,7 @@ import {
 } from './cekirdek.js';
 import { ozetSayfasi } from './ozet.js';
 import { sistemSayfasi } from './sistem.js';
-import { kapatmaAdi, kapatmaDetayi, kapatmaDurumu, kapatmaTarihi } from './hesap_kapatma.js';
+import { kapatmaPaneli } from './hesap_kapatma.js';
 import { kullanicilarSayfasi } from './kullanicilar.js';
 import { kullaniciDetaySayfasi } from './kullanici_detay.js';
 import { ilanlarSayfasi } from './ilanlar.js';
@@ -513,14 +513,12 @@ SAYFALAR.silmekuyruklari = async () => {
   // 21 Eki: hesap dondurma/silme kayıtları da burada (eskiden Gelen
   // Talepler'deydi; otomatik işlendikleri için talep değildir). İki kaynak
   // ayrı yetkiye bağlı: biri yoksa diğeri yine görünür.
-  const [kq, ar] = await Promise.all([api('/deletion-queues'), api('/account-closures')].map((p) => p.then((v) => ({ v }), (e) => ({ e }))));
+  const kq = await api('/deletion-queues').then((v) => ({ v }), (e) => ({ e }));
   const yetkiYok = (e, ne) => h('p', { class: 'not' }, e?.durum === 403 ? `${ne} için yetkiniz yok.` : (e?.message ?? 'Veri alınamadı.'));
   const hesapBolumu = [
     h('h3', {}, 'Hesabını silenler ve donduranlar'),
     h('p', { class: 'not' }, 'Sistem bunları otomatik uygular. Hesabını yeniden etkinleştiren kişi listeden çıkar; silme yasal sürenin sonunda gerçekleşir ve kişisel bilgiler silinir, yalnız hesabın silindiği görünür. Ayrıntı için satıra tıklayın.'),
-    ar.e ? yetkiYok(ar.e, 'Bu liste') : tablo([{ baslik: 'Hesap', deger: kapatmaAdi }, { baslik: 'İşlem', deger: (a) => (a.type === 'FREEZE' ? 'Dondurma' : 'Silme') },
-      { baslik: 'Durum', deger: kapatmaDurumu }, { baslik: 'Tarih', deger: kapatmaTarihi }],
-    ar.v, kapatmaDetayi),
+    kapatmaPaneli(),
   ];
   if (kq.e) return h('div', {}, h('h2', {}, 'Silme Kuyrukları'), ...hesapBolumu, h('h3', {}, 'Silme kuyrukları'), yetkiYok(kq.e, 'Silme kuyrukları'));
   const d = kq.v;

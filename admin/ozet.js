@@ -17,7 +17,7 @@
 // yetersiz" gösterilir. CSP: satır içi stil yok; grafik SVG öznitelikli.
 // ═══════════════════════════════════════════════════════════════
 import { api, h, rozet } from './cekirdek.js';
-import { kapatmaAdi, kapatmaDetayi, kapatmaDurumu, kapatmaTarihi } from './hesap_kapatma.js';
+import { kapatmaPaneli } from './hesap_kapatma.js';
 
 const GUN = 86_400_000;
 const RENK = { mavi: '#2563EB', yesil: '#22C55E', mor: '#8B5CF6', turuncu: '#F97316', kirmizi: '#EF4444', gri: '#94A3B8' };
@@ -277,9 +277,9 @@ export async function ozetSayfasi() {
   const d = donem(secim);
   const toplamGun = 2 * d.gun;
   const sorguBas = gunEkle(d.bas, d.gun - toplamGun);
-  const [st, ku, il, gt, en, dn] = await Promise.all([
+  const [st, ku, il, en, dn] = await Promise.all([
     al('/stats'), al('/users?limit=200'), al('/listings?limit=200'),
-    al('/account-closures'), al('/integrations'),
+    al('/integrations'),
     al(`/stats/period?from=${encodeURIComponent(sorguBas.toISOString())}&days=${toplamGun}`),
   ]);
   if (st.e) throw st.e; // özet sayıları alınamıyorsa ekranın anlamı yok
@@ -287,7 +287,6 @@ export async function ozetSayfasi() {
   const s = st.v;
   const kullanicilar = ku.v?.items;
   const ilanlar = il.v?.items;
-  const gelen = gt.v;
 
   // "Son 7 gün · yeni kullanıcı" kartı (değişmedi): liste 7 günü kapsıyorsa.
   const gunler = { kullanici: kapsar(kullanicilar, ku.v?.total) ? gunluk(kullanicilar) : null };
@@ -376,11 +375,8 @@ export async function ozetSayfasi() {
         ['Tarih', (l) => kisaTarih(l.createdAt)],
       ], ilanlar.slice(0, 5), (l) => (location.hash = `#/ilan/${l.id}`))),
       // 21 Eki: Hesabını Silenler ve Donduranlar (tek kaynak: hesap_kapatma.js).
-      bolum('Hesabını Silenler ve Donduranlar', 'silmekuyruklari', gt.e ? yuklenemedi(gt.e) : tablo([
-        ['Hesap', kapatmaAdi],
-        ['Durum', kapatmaDurumu],
-        ['Tarih', kapatmaTarihi],
-      ], gelen.slice(0, 5), kapatmaDetayi))),
+      // Tüm zamanlar: toplam sayılar + kaydırılabilir liste.
+      bolum('Hesabını Silenler ve Donduranlar', 'silmekuyruklari', kapatmaPaneli({ kompakt: true }))),
 
     h('p', { class: 'not' }, 'HizmetCep ücretsizdir: ödeme, komisyon ya da abonelik verisi yoktur.'));
 }

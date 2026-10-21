@@ -584,28 +584,40 @@ export function sohbetTalepRotalar(r, db) {
   //                        e-posta, adres…) zaten anonimleştirildi
   //                        (silmeTalepleriniIsle); kayıt yalnız hesabın
   //                        silindiğini ve tarihlerini gösterir — ad DÖNMEZ.
+  // Tüm zamanlar: türe göre TOPLAM sayılar + sayfalı liste (state ile süzülür).
+  const KAPATMA_DURUMU = `CASE WHEN r.type = 'FREEZE' THEN 'FROZEN' WHEN r.status = 'COMPLETED' THEN 'DELETED' ELSE 'DELETION_PENDING' END`;
+  const KAPATMA_KOSULU = `((r.type = 'DELETION' AND r.status IN ('PENDING', 'COMPLETED'))
+           OR (r.type = 'FREEZE' AND u.frozen_at IS NOT NULL AND u.deleted_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM account_requests r2 WHERE r2.user_id = r.user_id AND r2.type = 'FREEZE' AND r2.created_at > r.created_at)))`;
   r.get('/admin/v1/account-closures', async (ctx) => {
     yetkiIste(ctx.admin, 'users.read');
+    const sayac = { FROZEN: 0, DELETION_PENDING: 0, DELETED: 0 };
+    for (const x of await db.prepare(
+      `SELECT ${KAPATMA_DURUMU} durum, COUNT(*) n FROM account_requests r JOIN users u ON u.id = r.user_id WHERE ${KAPATMA_KOSULU} GROUP BY 1`,
+    ).all()) sayac[x.durum] = Number(x.n);
+    const durum = ctx.query.get('state');
+    if (durum && !(durum in sayac)) throw hata.dogrulama('Geçersiz durum');
+    const limit = Math.min(Math.max(Number(ctx.query.get('limit') ?? 100) || 100, 1), 500);
+    const ofset = Math.min(Math.max(Number(ctx.query.get('offset') ?? 0) || 0, 0), 1_000_000);
     const satir = await db.prepare(
       `SELECT r.*, u.name, u.frozen_at, u.deleted_at
          FROM account_requests r JOIN users u ON u.id = r.user_id
-        WHERE (r.type = 'DELETION' AND r.status IN ('PENDING', 'COMPLETED'))
-           OR (r.type = 'FREEZE' AND u.frozen_at IS NOT NULL AND u.deleted_at IS NULL
-               AND NOT EXISTS (SELECT 1 FROM account_requests r2 WHERE r2.user_id = r.user_id AND r2.type = 'FREEZE' AND r2.created_at > r.created_at))
-        ORDER BY r.created_at DESC LIMIT 500`,
-    ).all();
-    return satir.map((a) => {
-      const durum = a.type === 'FREEZE' ? 'FROZEN' : a.status === 'COMPLETED' ? 'DELETED' : 'DELETION_PENDING';
+        WHERE ${KAPATMA_KOSULU}${durum ? ` AND ${KAPATMA_DURUMU} = ?` : ''}
+        ORDER BY r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
+    ).all(...(durum ? [durum] : []), limit, ofset);
+    const items = satir.map((a) => {
+      const d = a.type === 'FREEZE' ? 'FROZEN' : a.status === 'COMPLETED' ? 'DELETED' : 'DELETION_PENDING';
       return {
-        id: a.id, userId: a.user_id, type: a.type, state: durum,
-        name: durum === 'DELETED' ? null : a.name,
-        reason: durum === 'DELETED' ? null : (a.reason ?? null),
+        id: a.id, userId: a.user_id, type: a.type, state: d,
+        name: d === 'DELETED' ? null : a.name,
+        reason: d === 'DELETED' ? null : (a.reason ?? null),
         requestedAt: a.created_at,
-        frozenAt: durum === 'FROZEN' ? a.frozen_at : null,
+        frozenAt: d === 'FROZEN' ? a.frozen_at : null,
         scheduledFor: a.scheduled_for ?? null,
-        deletedAt: durum === 'DELETED' ? (a.completed_at ?? a.deleted_at) : null,
+        deletedAt: d === 'DELETED' ? (a.completed_at ?? a.deleted_at) : null,
       };
     });
+    return { counts: sayac, total: sayac.FROZEN + sayac.DELETION_PENDING + sayac.DELETED, items };
   });
 
   r.get('/admin/v1/users/:id/legal-acceptances', async (ctx) => {

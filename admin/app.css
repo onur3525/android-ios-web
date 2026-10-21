@@ -34,6 +34,18 @@ textarea { width:100%; min-height:90px; }
 .rozet.ACTIVE,.rozet.PUBLISHED,.rozet.SENT,.rozet.TAMAMLANDI,.rozet.aktif { background:#e3f5e8; color:var(--yesil); }
 .rozet.SUSPENDED,.rozet.PENDING,.rozet.DRAFT,.rozet.BEKLEMEDE { background:#fff4e0; color:var(--sari); }
 .rozet.BANNED,.rozet.FAILED,.rozet.ADMIN_REMOVED,.rozet.ADMIN_DELETED,.rozet.pasif { background:#fde8e8; color:var(--kirmizi); }
+.hk-sayilar { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.hk-sayi { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:96px; padding:8px 12px; border:1px solid #E2E8F0; border-radius:10px; background:#fff; cursor:pointer; text-align:left; }
+.hk-sayi strong { font-size:20px; line-height:1.1; }
+.hk-sayi span { font-size:12px; color:#64748B; }
+.hk-sayi:hover { border-color:#BFD3FB; }
+.hk-sayi.secili { border-color:#2563EB; background:#EFF6FF; }
+.hk-sayi.hk-FROZEN strong { color:#0369A1; } .hk-sayi.hk-DELETION_PENDING strong { color:#B45309; } .hk-sayi.hk-DELETED strong { color:#DC2626; }
+.hk-panel.kompakt .hk-sayilar { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); }
+.hk-panel.kompakt .hk-sayi { min-width:0; padding:6px 10px; flex-direction:row; align-items:baseline; gap:8px; }
+.hk-panel.kompakt .hk-sayi strong { font-size:17px; }
+.hk-kaydir { max-height:320px; overflow:auto; }
+.hk-devam { margin-top:10px; }
 .rozet.hk-FROZEN { background:#E0F2FE; color:#0369A1; }
 .rozet.hk-DELETION_PENDING { background:#fff4e0; color:var(--sari); }
 .rozet.hk-DELETED { background:#fde8e8; color:var(--kirmizi); }

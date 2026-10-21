@@ -487,7 +487,9 @@ test('21 Eki: Sistem durumu detayı — alıcı/içerik dönmez; yetkiye göre e
 });
 
 test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, iptal eden çıkar, silinenin adı görünmez', async () => {
-  const liste = async () => (await istek('/admin/v1/account-closures', { rol: 'readonly' })).json;
+  const liste = async () => (await istek('/admin/v1/account-closures?limit=500', { rol: 'readonly' })).json.items;
+  const sayilar = async () => (await istek('/admin/v1/account-closures', { rol: 'readonly' })).json.counts;
+  const once = await sayilar();
   const bul = async (u) => (await liste()).filter((k) => k.userId === u.id);
   // Dondurma → listede; yeniden giriş (etkinleştirme) → listeden çıkar.
   const d = await kisi('5340000271', 'CUSTOMER');
@@ -514,6 +516,13 @@ test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, ipt
   const [x] = await bul(s2);
   assert.equal(x.state, 'DELETED'); assert.equal(x.name, null); assert.equal(x.reason, null); assert.ok(x.deletedAt && x.requestedAt);
   assert.ok(!JSON.stringify(x).includes('Kişi 73') && !JSON.stringify(x).includes('5340000273'));
+  // Toplam sayılar (tüm zamanlar) ve türe göre süzme.
+  const son = await sayilar();
+  assert.deepEqual([son.FROZEN - once.FROZEN, son.DELETION_PENDING - once.DELETION_PENDING, son.DELETED - once.DELETED], [0, 0, 1]);
+  const silinenler = (await istek('/admin/v1/account-closures?state=DELETED&limit=500', { rol: 'readonly' })).json;
+  assert.ok(silinenler.items.every((k) => k.state === 'DELETED') && silinenler.items.some((k) => k.userId === s2.id));
+  assert.equal(silinenler.items.length, son.DELETED);
+  assert.equal((await istek('/admin/v1/account-closures?state=YOK', { rol: 'readonly' })).durum, 400);
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {
