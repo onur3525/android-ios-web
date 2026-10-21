@@ -82,6 +82,10 @@ test('şablon: logo, düğme, alt bilgi; girdi kaçışlanır; yalnız https ba�
   assert.ok(x.html.includes('<meta name="color-scheme" content="light only">'));
   assert.ok(x.html.includes('E-postamı Doğrula'));
   assert.ok(x.html.includes('href="https://ornek.com/a?b=1&amp;c=2"'));
+  // 21 Eki: uzun adres metin olarak yazılmaz (Gmail e-postayı küçültüyordu);
+  // yalnız bağlantı olarak ve düz metin sürümünde bulunur.
+  assert.equal(x.html.split('https://ornek.com/a?b=1&amp;c=2').length - 1, 2, 'adres yalnız iki href içinde olmalı');
+  assert.ok(x.html.includes('bu bağlantıya dokunun'));
   assert.ok(x.html.includes('destek@hizmetcep.com'));
   assert.ok(!x.html.includes('<script>'), 'kaçışlanmamış girdi');
   assert.ok(x.html.includes('&lt;script&gt;'));
