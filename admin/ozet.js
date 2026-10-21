@@ -151,11 +151,16 @@ function gunluk(liste, alan = 'createdAt') {
 }
 
 
-/** Kart başlığı + "Tümünü gör" bağlantısı. */
+/**
+ * Kart başlığı + "Tümünü gör" bağlantısı (sayfa Özet içinde açılır).
+ * hedef: 'sayfa' ya da birden çok bağlantı için [['Ad', 'sayfa'], …].
+ */
 function bolum(baslik, hedef, ...icerik) {
+  const baglantilar = Array.isArray(hedef)
+    ? h('span', { class: 'oz-tumu-grup' }, hedef.map(([ad, s]) => h('a', { class: 'oz-tumu', href: `#/${s}` }, `${ad} ›`)))
+    : hedef ? h('a', { class: 'oz-tumu', href: `#/${hedef}` }, 'Tümünü gör ›') : null;
   return h('section', { class: 'oz-kart' },
-    h('div', { class: 'oz-kart-ust' }, h('h3', {}, baslik),
-      hedef ? h('a', { class: 'oz-tumu', href: `#/${hedef}` }, 'Tümünü gör ›') : null),
+    h('div', { class: 'oz-kart-ust' }, h('h3', {}, baslik), baglantilar),
     ...icerik);
 }
 
@@ -347,7 +352,7 @@ export async function ozetSayfasi() {
         h('div', { class: 'oz-mini-izgara iki' },
           miniKart('Son 7 gün · yeni kullanıcı', son7, 'kisi', 'acikmavi'),
           miniKart('Bekleyen hesap silme', s.pendingDeletions, 'silme', 'kirmizi'))),
-      bolum('İlan ve Teklifler', 'ilanlar',
+      bolum('İlan ve Teklifler', [['İlanlar', 'ilanlar'], ['Teklifler', 'teklifler']],
         h('div', { class: 'oz-mini-izgara uc' },
           miniKart('Açık ilan', s.activeListings, 'ilan', 'mavi'),
           miniKart('Son 24 saatte teklif', s.offersToday, 'teklif', 'mor'),

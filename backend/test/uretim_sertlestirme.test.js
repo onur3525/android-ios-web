@@ -525,6 +525,27 @@ test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, ipt
   assert.equal((await istek('/admin/v1/account-closures?state=YOK', { rol: 'readonly' })).durum, 400);
 });
 
+test('21 Eki: admin oturumu 5 dk hareketsizlikte kapanır; süre panele bildirilir', async () => {
+  const sir = base32Uret();
+  const id = randomUUID();
+  await db.prepare(`INSERT INTO admins (id, email, name, role, password_hash, totp_secret_enc, created_at) VALUES (?, 'bosta@hc.test', 'B', 'readonly', ?, ?, ?)`)
+    .run(id, sifreOzetle('GucluSifre12345'), sirSifrele(sir), simdi());
+  const a = await fetch(`${taban}/admin/v1/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1' }, body: JSON.stringify({ email: 'bosta@hc.test', password: 'GucluSifre12345' }) });
+  const c = a.headers.get('set-cookie').split(';')[0];
+  const m = await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: c, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
+  assert.equal((await m.json()).idleTimeoutSeconds, 300);
+  const me = () => fetch(`${taban}/admin/v1/auth/me`, { headers: { Cookie: c } });
+  const r1 = await me();
+  assert.equal(r1.status, 200); assert.equal((await r1.json()).idleTimeoutSeconds, 300);
+  // 4 dk hareketsiz: oturum sürer (ve istek süreyi yeniler).
+  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 4 * 60_000).toISOString(), id);
+  assert.equal((await me()).status, 200);
+  // 6 dk hareketsiz: oturum kapanır, şifre ve kod yeniden istenir.
+  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 6 * 60_000).toISOString(), id);
+  assert.equal((await me()).status, 401);
+  assert.equal((await me()).status, 401, 'kapanan oturum geri gelmez');
+});
+
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {
   assert.equal((await istek('/admin/v1/integrations', { yontem: 'POST', govde: { type: 'EMAIL', provider: 'resend', config: { from: 'yanlis-bicim' } } })).durum, 400);
   assert.equal((await istek('/admin/v1/integrations', { yontem: 'POST', govde: { type: 'SMS', provider: 'resend', config: { from: 'HizmetCep <bildirim@hizmetcep.com>' } } })).durum, 400);
