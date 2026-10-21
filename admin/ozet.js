@@ -322,7 +322,7 @@ export async function ozetSayfasi() {
           miniKart('Açık ilan', s.activeListings, 'ilan', 'mavi'),
           miniKart('Son 24 saatte teklif', s.offersToday, 'teklif', 'mor'),
           miniKart('Süren teklif talebi', s.openTalepler, 'talep', 'turuncu'))),
-      bolum('Sistem Durumu', 'entegrasyonlar', h('ul', { class: 'oz-durum-liste' }, sistem),
+      bolum('Sistem Durumu', 'sistem', h('ul', { class: 'oz-durum-liste' }, sistem),
         en.e ? h('p', { class: 'oz-bos' }, 'Entegrasyon durumu için yetkiniz yok.') : null)),
 
     h('div', { class: 'oz-uclu' },

@@ -62,6 +62,12 @@ pre.govde { white-space:pre-wrap; background:#f7f8fa; padding:12px; border-radiu
 .oz-baslik p { margin:4px 0 0; color:var(--oz-soluk); font-size:14px; }
 .oz-tarih { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--oz-cizgi); border-radius:10px; padding:10px 14px; font-size:14px; color:var(--oz-yazi); white-space:nowrap; }
 .oz-tarih svg { color:var(--oz-soluk); }
+.oz-uclu.sd-iki { grid-template-columns:repeat(2, minmax(0,1fr)); }
+.sd-liste { display:grid; grid-template-columns:max-content 1fr; gap:10px 16px; margin:0; font-size:14px; }
+.sd-liste dt { color:var(--oz-soluk); }
+.sd-liste dd { margin:0; }
+@media (max-width:820px) { .oz-uclu.sd-iki { grid-template-columns:1fr; } }
+@media (max-width:420px) { .sd-liste { grid-template-columns:1fr; gap:2px; } .sd-liste dd { margin-bottom:8px; } }
 .oz-tarih-sar { position:relative; }
 button.oz-tarih { cursor:pointer; }
 button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB; }

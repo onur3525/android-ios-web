@@ -186,6 +186,7 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   const MATRIS = [
     // [yöntem, yol, izinli roller]
     ['GET', '/admin/v1/stats', ['super_admin', 'moderator', 'readonly']],
+    ['GET', '/admin/v1/system/status', ['super_admin', 'moderator', 'readonly']],
     ['GET', `/admin/v1/stats/period?from=${encodeURIComponent(new Date().toISOString())}&days=1`, ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/users', ['super_admin', 'moderator', 'readonly']],
     ['GET', '/admin/v1/listings', ['super_admin', 'moderator', 'readonly']],
@@ -458,6 +459,22 @@ test('21 Eki: Özet tarih aralığı — günlük sayılar doğrudan veritabanı
   for (const bozuk of [yol(bas, 0), yol(bas, 801), yol(bas, 1.5), '/admin/v1/stats/period?from=dun&days=1', '/admin/v1/stats/period?days=1']) {
     assert.equal((await istek(bozuk, { rol: 'readonly' })).durum, 400, bozuk);
   }
+});
+
+test('21 Eki: Sistem durumu detayı — alıcı/içerik dönmez; yetkiye göre entegrasyon ve son hatalar', async () => {
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, provider, provider_response, attempts, created_at)
+    VALUES (?, NULL, 'EMAIL', 'gizli@ornek.com', 'EPOSTA_DOGRULAMA', 'Konu', 'gizli içerik', 'FAILED', 'resend', 'resend 422: gizli@ornek.com +905551112233 reddedildi', 1, ?)`).run(randomUUID(), simdi());
+  const tam = (await istek('/admin/v1/system/status', { rol: 'super_admin' })).json;
+  assert.equal(tam.api.status, 'OK'); assert.equal(tam.database.status, 'OK');
+  assert.ok(tam.database.lastMigration && tam.database.migrations > 0);
+  assert.ok(tam.delivery.email.FAILED >= 1);
+  assert.ok(Array.isArray(tam.integrations));
+  assert.equal(tam.recentFailures[0].template, 'EPOSTA_DOGRULAMA');
+  const metin = JSON.stringify(tam);
+  assert.ok(!metin.includes('gizli@ornek.com') && !metin.includes('5551112233') && !metin.includes('gizli içerik'), 'alıcı ve içerik dönmez');
+  const salt = (await istek('/admin/v1/system/status', { rol: 'readonly' })).json;
+  assert.equal(salt.integrations, null); assert.equal(salt.recentFailures, null);
+  assert.ok(salt.delivery.email.FAILED >= 1, 'sayılar herkese');
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {

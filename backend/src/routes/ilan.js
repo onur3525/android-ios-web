@@ -54,6 +54,8 @@ export const SAYFA_BILDIRIMLERI = Object.freeze({
   talep: { turler: ['TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED'] },
   'talep-sohbet': { turler: ['TALEP_MESSAGE'] },
 });
+/** Sağlayıcı yanıtındaki olası alıcıyı (e-posta / telefon) gizler. */
+const yanitMaskele = (t) => t.replace(/[^\s"'<>@]+@[^\s"'<>]+/g, '***@***').replace(/\+?\d[\d\s-]{6,}\d/g, '***');
 const UUID_DESENI = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ── Görünümler (Flutter mappers.dart ile birebir alan adları) ──
@@ -773,6 +775,49 @@ export function ilanRotalar(r, db) {
       offers: await seri('offers'),
       teklifTalepleri: await seri('teklif_talepleri'),
       accountRequests: kullaniciYetkisi ? await seri('account_requests') : null,
+    };
+  });
+
+  // ── SİSTEM DURUMU DETAYI (21 Eki) ──
+  //
+  // Özet'teki "Sistem Durumu" kartının ayrıntısı. Yalnız backend'in
+  // gerçekten bildiği değerler: sunucu çalışma süresi, veritabanı türü ve
+  // yanıt süresi, son veritabanı güncellemesi, son 7 günün gönderim
+  // sayıları ve son başarısız gönderimler. Alıcı (telefon/e-posta) ve
+  // ileti içeriği DÖNMEZ. Entegrasyon ayrıntısı `integrations.read`, son
+  // hatalar `notifications.read` yetkisi ister; yetki yoksa null.
+  r.get('/admin/v1/system/status', async (ctx) => {
+    yetkiIste(ctx.admin, 'content.read');
+    const t0 = performance.now();
+    await db.prepare('SELECT 1 AS n').get();
+    const dbMs = Math.round((performance.now() - t0) * 10) / 10;
+    const goc = await db.prepare('SELECT id, applied_at FROM schema_migrations ORDER BY id DESC LIMIT 1').get();
+    const gocSayisi = Number((await db.prepare('SELECT COUNT(*) n FROM schema_migrations').get()).n);
+    const yediGun = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    const kanal = { SMS: { SENT: 0, FAILED: 0, PENDING: 0 }, EMAIL: { SENT: 0, FAILED: 0, PENDING: 0 } };
+    for (const x of await db.prepare('SELECT channel, status, COUNT(*) n FROM outbound_messages WHERE created_at > ? GROUP BY channel, status').all(yediGun)) {
+      if (kanal[x.channel] && x.status in kanal[x.channel]) kanal[x.channel][x.status] = Number(x.n);
+    }
+    const push = { SENT: 0, FAILED: 0, PENDING: 0, NO_TOKEN: 0, SKIPPED: 0 };
+    for (const x of await db.prepare('SELECT push_status s, COUNT(*) n FROM notifications WHERE created_at > ? GROUP BY push_status').all(yediGun)) {
+      const k = x.s === null || x.s === 'SENDING' ? 'PENDING' : x.s;
+      if (k in push) push[k] += Number(x.n);
+    }
+    const entegrasyon = yetkiliMi(ctx.admin.role, 'integrations.read')
+      ? (await db.prepare('SELECT type, provider, active, last_test_at, last_test_ok, last_test_message FROM integrations WHERE deleted_at IS NULL ORDER BY type, created_at').all())
+        .map((x) => ({ type: x.type, provider: x.provider, active: x.active === 1 || x.active === true, lastTestAt: x.last_test_at,
+          lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1 || x.last_test_ok === true, lastTestMessage: x.last_test_message }))
+      : null;
+    const sonHatalar = yetkiliMi(ctx.admin.role, 'notifications.read')
+      ? (await db.prepare(`SELECT channel, template, provider, provider_response, attempts, created_at FROM outbound_messages WHERE status = 'FAILED' ORDER BY created_at DESC LIMIT 10`).all())
+        .map((m) => ({ channel: m.channel, template: m.template, provider: m.provider, providerResponse: m.provider_response ? yanitMaskele(String(m.provider_response)).slice(0, 200) : null, attempts: m.attempts, createdAt: m.created_at }))
+      : null;
+    return {
+      api: { status: 'OK', uptimeSeconds: Math.round(process.uptime()), serverTime: new Date().toISOString() },
+      database: { status: 'OK', driver: db.surucu, responseMs: dbMs, lastMigration: goc?.id ?? null, lastMigrationAt: goc?.applied_at ?? null, migrations: gocSayisi },
+      delivery: { since: yediGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
+      integrations: entegrasyon,
+      recentFailures: sonHatalar,
     };
   });
 

@@ -7,6 +7,7 @@ import {
   oturumDusunce, rozet, tablo, tarih,
 } from './cekirdek.js';
 import { ozetSayfasi } from './ozet.js';
+import { sistemSayfasi } from './sistem.js';
 import { kullanicilarSayfasi } from './kullanicilar.js';
 import { kullaniciDetaySayfasi } from './kullanici_detay.js';
 import { ilanlarSayfasi } from './ilanlar.js';
@@ -86,7 +87,8 @@ function duzen(sayfa, icerik) {
   return h('div', { class: 'duzen' },
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
-      menu.map(([k, ad]) => h('a', { class: sayfa === k ? 'secili' : '', href: `#/${k}` }, ad)),
+      // Sistem Durumu, Özet'in alt sayfasıdır: menüde Özet seçili kalır.
+      menu.map(([k, ad]) => h('a', { class: (sayfa === 'sistem' ? 'ozet' : sayfa) === k ? 'secili' : '', href: `#/${k}` }, ad)),
       h('div', { class: 'cikis' }, h('a', { onclick: cikis }, 'Çıkış'))),
     h('main', { class: 'icerik' }, icerik));
 }
@@ -118,6 +120,8 @@ oturumDusunce(() => { ben = null; girisEkrani(); });
 // ── Özet ──────────────────────────────────────────────────────
 // Tasarım ve veri kaynakları: ozet.js (yalnız mevcut admin API'leri).
 SAYFALAR.ozet = () => ozetSayfasi();
+// Özet → Sistem Durumu "Tümünü gör" (21 Eki): kartın ayrıntısı (sistem.js).
+SAYFALAR.sistem = () => sistemSayfasi();
 
 // ── Kullanıcılar ──────────────────────────────────────────────
 // Tasarım ve veri kaynakları: kullanicilar.js (yalnız mevcut admin API'leri).
