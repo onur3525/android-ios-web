@@ -161,6 +161,13 @@ async function oturumVer(db, kullaniciId, req) {
   // "Dilediğiniz zaman tekrar giriş yaparak hesabınızı etkinleştirebilirsiniz").
   // Oturum yalnız kimlik doğrulandıktan sonra verildiği için tek kapı burası.
   await db.prepare('UPDATE users SET frozen_at = NULL, updated_at = ? WHERE id = ? AND frozen_at IS NOT NULL').run(simdi(), kullaniciId);
+  // ── ⚠ GİRİŞTE HİZMET VEREN ROLÜ (21 Eki, kullanıcı kuralı) ──
+  // İki rolü olan kullanıcı oturumu kapatıp yeniden giriş yaptığında
+  // HİZMET VEREN rolüyle açılır; isterse sonra Rol Değiştir'den geçer.
+  // Tek kapı burası (telefon/şifre, Firebase girişi, kayıt). Açık oturumun
+  // yenilenmesi (uygulamayı kapatıp açma) seçili rolü DEĞİŞTİRMEZ.
+  await db.prepare(`UPDATE users SET active_role = 'PROVIDER' WHERE id = ? AND active_role <> 'PROVIDER'
+                      AND (',' || roles || ',') LIKE '%,PROVIDER,%'`).run(kullaniciId);
   const jti = randomUUID();
   const yenileme = randomBytes(32).toString('base64url');
   const z = simdi();
