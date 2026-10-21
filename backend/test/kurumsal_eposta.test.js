@@ -219,6 +219,27 @@ test('21 Eki: bağlantıya tıklanmışsa doğrulama düğmesi e-posta gönderme
   assert.ok(u.email_verified);
 });
 
+test('21 Eki: e-postası Firebase\'de değişmiş hesap telefon + şifreyle giriş yapabilir; yeni adres işlenir', async () => {
+  const { firebaseSifreTestDogrulayicisi } = await import('../src/firebase_token.js');
+  const tel = '5421120011';
+  await hesap(tel, { uid: 'fb-ep-11' });
+  // Bağlantı tıklandı: Firebase'de adres yeni, sunucuda hâlâ eski.
+  fbKullanicilar.set('fb-ep-11', { email: 'girisyeni@ornek.com', emailVerified: true });
+  firebaseSifreTestDogrulayicisi(async (email, sifre) => email === 'girisyeni@ornek.com' && sifre === 'GucluSifre12');
+  try {
+    await db.prepare('DELETE FROM rate_limits').run();
+    const yanlis = await istek('/api/v1/auth/login', { govde: { phone: tel, password: 'YanlisSifre99' } });
+    assert.equal(yanlis.durum, 401);
+    const r = await istek('/api/v1/auth/login', { govde: { phone: tel, password: 'GucluSifre12' } });
+    assert.equal(r.durum, 200, JSON.stringify(r.json));
+    const u = await db.prepare('SELECT email, email_verified FROM users WHERE phone = ?').get(tel);
+    assert.equal(u.email, 'girisyeni@ornek.com');
+    assert.ok(u.email_verified);
+  } finally {
+    firebaseSifreTestDogrulayicisi(null);
+  }
+});
+
 test('Firebase yönetimi yoksa hiçbir değişiklik yapılmaz, { sent:false } döner (istemci Firebase gönderimine düşer)', async () => {
   const tel = '5421120005';
   const tk = await hesap(tel, { uid: 'fb-ep-5' });

@@ -386,3 +386,36 @@ test('telefon değişikliği yanıtı, servis hesabıyla imzalı kısa ömürlü
   assert.equal(r2.durum, 200);
   assert.equal('firebaseCustomToken' in r2.json, false);
 });
+
+test('21 Eki (kullanıcı kuralı): e-posta değişikliği oturumu KAPATMAZ — Firebase sınırı ilerlese de açık oturumlar yenilenir, yeni adres işlenir', async () => {
+  const h = await hesap('5390000071', 'fb-eposta-degisim-1');
+  // Kullanıcı "doğrula ve değiştir" bağlantısına tıkladı: Firebase belirteçleri
+  // iptal eder (validSince ileri), şifre DEĞİŞMEZ, yeni adres doğrulanmış.
+  const vs = an() + 1;
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, email: 'degisen@ornek.com', emailVerified: true });
+  await kontrolSifirla(h.tel);
+  const r = await yenile(h.a.refreshToken);
+  assert.equal(r.durum, 200, 'e-posta değişikliği oturumu kapattı');
+  assert.equal((await istek('/api/v1/users/me', { token: h.b.accessToken })).durum, 200, 'diğer oturum da açık');
+  const u = await db.prepare('SELECT email, email_verified, firebase_valid_since FROM users WHERE phone = ?').get(h.tel);
+  assert.equal(u.email, 'degisen@ornek.com');
+  assert.ok(u.email_verified);
+  assert.equal(Number(u.firebase_valid_since), vs, 'eski Firebase belgeleriyle yeni oturum açılmasın');
+  assert.equal((await firebaseOturumu(h.uid, h.tel, { auth_time: an() - 30 })).durum, 401);
+});
+
+test('21 Eki: adres hesaba zaten işlenmişse de (eşitleme ucu) e-posta değişikliği oturumu kapatmaz; şifre sıfırlama yine kapatır', async () => {
+  const h = await hesap('5390000072', 'fb-eposta-degisim-2');
+  const vs = an() - 2;
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, email: 'islenmis@ornek.com', emailVerified: true });
+  await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE phone = ?')
+    .run('islenmis@ornek.com', new Date().toISOString(), h.tel);
+  await kontrolSifirla(h.tel);
+  const r = await yenile(h.a.refreshToken);
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  // Aynı hesapta sonra şifre e-postayla sıfırlanırsa oturumlar kapanır.
+  const vs2 = an() + 2;
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs2, passwordUpdatedAt: String(vs2 * 1000) });
+  await kontrolSifirla(h.tel);
+  assert.equal((await yenile(r.json.refreshToken)).durum, 401);
+});

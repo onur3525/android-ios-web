@@ -75,7 +75,12 @@ export async function firebaseTokenDogrula(token) {
  * sıfırlama sonrası da) telefon+şifre girişi tek kaynaktan doğrulanır.
  * Yapılandırılmamışsa null döner (çağıran yerel özete düşer).
  */
+let sifreTestDogrulayicisi = null;
+/** Yalnız testler: Firebase e-posta/şifre doğrulamasını değiştirir. */
+export function firebaseSifreTestDogrulayicisi(f) { sifreTestDogrulayicisi = f; }
+
 export async function firebaseSifreDogrula(email, sifre) {
+  if (sifreTestDogrulayicisi) return sifreTestDogrulayicisi(email, sifre);
   if (!config.firebaseWebApiKey) return null;
   const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(config.firebaseWebApiKey)}`, {
     method: 'POST',
