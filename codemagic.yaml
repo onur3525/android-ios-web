@@ -393,9 +393,13 @@ workflows:
   #                           (önerilen biçim: sha256/<SPKI base64>)
   #   STORAGE_HOSTS         — izinli depolama alan adları; boşsa release'te
   #                           dosya yükleme REDDEDİLİR (güvenlik turu 2)
-  #   APK_SIGNATURE_SHA256  — boşsa imza denetimi KAPALI
+  #   APK_SIGNATURE_SHA256  — Play Console → Uygulama bütünlüğü →
+  #                           "Uygulama imzalama anahtarı sertifikası"
+  #                           SHA-256 (base64). ⚠ Yükleme anahtarınınki
+  #                           DEĞİL: Play App Signing açıkken mağazadaki
+  #                           paketi Google'ın anahtarı imzalar.
   release-hardened:
-    name: Sürüm APK (karartmalı)
+    name: Sürüm paketi (AAB, karartmalı)
     instance_type: linux_x2
     max_build_duration: 60
     environment:
@@ -482,23 +486,37 @@ workflows:
           keyPassword=$KEY_PASSWORD
           EOF
 
-      - name: Sürüm APK
+      # ── ⚠ ELLE KURULAN RELEASE APK ÜRETİLMEZ ──
+      #
+      # Play App Signing açıkken mağazadaki paketi Google'ın anahtarı
+      # imzalar; burada üretilecek APK ise yükleme anahtarıyla
+      # imzalanır. Böyle bir APK'yı kuran kullanıcı mağazadan
+      # güncelleme alırken "paket çakışıyor" hatası alır. Test için
+      # Play Console "Dahili test" kanalı kullanılır.
+
+      - name: Derleme numarası (versionCode)
+        # ⚠ Play aynı versionCode'u iki kez KABUL ETMEZ ve numara geri
+        # alınamaz. Play'deki en son numara ile Codemagic sayacının
+        # büyüğünün bir fazlası kullanılır (iOS'taki TestFlight
+        # adımının Android karşılığı).
         script: |
-          flutter build apk --release \
-            --obfuscate --split-debug-info=build/symbols \
-            --dart-define=DATA_SOURCE=api \
-            --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=CERT_PINS="$CERT_PINS" \
-            --dart-define=STORAGE_HOSTS="$STORAGE_HOSTS" \
-            --dart-define=APK_SIGNATURE_SHA256="$APK_SIGNATURE_SHA256"
+          PLAY=$(google-play get-latest-build-number \
+            --package-name "com.hizmetcep.app" 2>/dev/null || echo 0)
+          case "$PLAY" in ''|*[!0-9]*) PLAY=0 ;; esac
+          SAYAC=${BUILD_NUMBER:-0}
+          case "$SAYAC" in ''|*[!0-9]*) SAYAC=0 ;; esac
+          if [ "$PLAY" -gt "$SAYAC" ]; then TABAN=$PLAY; else TABAN=$SAYAC; fi
+          NUMARA=$(($TABAN + 1))
+          echo "Play son numara: $PLAY · Codemagic sayacı: $SAYAC · Kullanılacak: $NUMARA"
+          echo "ANDROID_DERLEME_NUMARASI=$NUMARA" >> "$CM_ENV"
 
       - name: Mağaza paketi (AAB)
         script: |
           # ⚠ PLAY STORE .aab İSTER, .apk KABUL ETMEZ.
           #
-          # APK yalnız elle kurulum ve test içindir; mağazaya yüklenen
-          # paket budur.
+          # Mağazaya yüklenen tek paket budur.
           flutter build appbundle --release \
+            --build-number="$ANDROID_DERLEME_NUMARASI" \
             --obfuscate --split-debug-info=build/symbols \
             --dart-define=DATA_SOURCE=api \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
@@ -508,8 +526,6 @@ workflows:
     artifacts:
       # ⚠ MAĞAZAYA YÜKLENEN: .aab
       - build/app/outputs/bundle/release/*.aab
-      # Elle kurulum ve test için.
-      - build/app/outputs/flutter-apk/*.apk
       # ⚠ Semboller olmadan çökme raporu okunamaz.
       - build/symbols/**
 
