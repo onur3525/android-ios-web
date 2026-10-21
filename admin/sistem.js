@@ -82,7 +82,7 @@ export async function sistemSayfasi() {
 
   return h('div', { class: 'oz' },
     h('div', { class: 'oz-baslik' },
-      h('div', {}, h('a', { class: 'oz-tumu', href: '#/ozet' }, '‹ Özet'), h('h2', {}, 'Sistem Durumu'),
+      h('div', {}, h('h2', {}, 'Sistem Durumu'),
         h('p', {}, `Sunucu saati: ${zaman(s.api.serverTime)}`))),
     h('div', { class: 'oz-uclu sd-iki' },
       kart('Backend API', satirlar([

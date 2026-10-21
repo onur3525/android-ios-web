@@ -22,9 +22,6 @@ let ben = null;
 
 const MENU = [
   ['ozet', 'Özet', ['super_admin', 'moderator', 'readonly']],
-  ['kullanicilar', 'Kullanıcılar', ['super_admin', 'moderator', 'readonly']],
-  ['ilanlar', 'İlanlar', ['super_admin', 'moderator', 'readonly']],
-  ['teklifler', 'Teklifler', ['super_admin', 'moderator', 'readonly']],
   ['talepler', 'Teklif Talepleri', ['super_admin', 'moderator', 'readonly']],
   ['yorumlar', 'Değerlendirmeler', ['super_admin', 'moderator', 'readonly']],
   ['katalog', 'Kategori ve Hizmetler', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
@@ -37,7 +34,9 @@ const MENU = [
   ['hesaptalepleri', 'Gelen Talepler', ['super_admin', 'moderator', 'readonly']],
   ['geribildirim', 'Uygulama Geri Bildirimleri', ['super_admin', 'moderator', 'readonly']],
   ['entegrasyonlar', 'Entegrasyonlar', ['super_admin', 'operations']],
-  ['silmekuyruklari', 'Silme Kuyrukları', ['super_admin', 'operations']],
+  // Özet'i olan roller Silme Kuyrukları'nı Özet içinden açar; Özet'i
+  // olmayan operasyon rolü için menüde kalır.
+  ['silmekuyruklari', 'Silme Kuyrukları', ['operations']],
   ['yoneticiler', 'Yöneticiler', ['super_admin']],
   ['denetim', 'Denetim Kaydı', ['super_admin']],
 ];
@@ -95,15 +94,25 @@ function girisEkrani(bilgi) {
 }
 
 // ── Düzen ve yönlendirme ──────────────────────────────────────
+// ── ÖZET'İN ALT SAYFALARI (21 Eki, kullanıcı kararı) ──
+// Özet kartlarının "Tümünü gör" ile açtığı sayfaların sol menüde ayrı
+// düğmesi yoktur; Özet içinde açılır: menüde Özet seçili kalır, üstte
+// "‹ Özet" ile geri dönülür. (Menüsünde bu sayfa olan rolde — ör. operasyon
+// için Silme Kuyrukları — normal menü sayfası gibi davranır.)
+const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilanlar', 'ilan', 'sohbet', 'teklifler', 'silmekuyruklari']);
+
 function duzen(sayfa, icerik) {
   const menu = MENU.filter(([, , roller]) => roller.includes(ben.role));
+  const ozetAlti = OZET_ALT_SAYFALARI.has(sayfa) && menu.some(([k]) => k === 'ozet') && !menu.some(([k]) => k === sayfa);
+  const secili = ozetAlti ? 'ozet' : sayfa;
   return h('div', { class: 'duzen' },
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
-      // Sistem Durumu, Özet'in alt sayfasıdır: menüde Özet seçili kalır.
-      menu.map(([k, ad]) => h('a', { class: (sayfa === 'sistem' ? 'ozet' : sayfa) === k ? 'secili' : '', href: `#/${k}` }, ad)),
+      menu.map(([k, ad]) => h('a', { class: secili === k ? 'secili' : '', href: `#/${k}` }, ad)),
       h('div', { class: 'cikis' }, h('a', { onclick: cikis }, 'Çıkış'))),
-    h('main', { class: 'icerik' }, icerik));
+    h('main', { class: 'icerik' },
+      ozetAlti ? h('a', { class: 'oz-geri', href: '#/ozet' }, '‹ Özet') : null,
+      icerik));
 }
 
 async function cikis() {
