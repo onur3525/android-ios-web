@@ -465,41 +465,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           // (`tumunuOkundu`) — iki dal da aynı nesneyi kullanır.
           //
           // ⚠ MOBİL KİLİTLİ: `else` dalı önceki satırın BİREBİR aynısı.
-          if (kIsWeb) ...[
-            const RefPageTitle('Bildirimler', geriDugmesi: false),
-            if (tumunuOkundu != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: tumunuOkundu,
-                ),
-              ),
-          ] else
+          // ── ⚠ 21 Eki (kullanıcı kararı): "Bildirimler" üst başlığı web ve
+          // mobilde KALDIRILDI. "Tümünü okundu say" düğmesi (varsa) sağa
+          // yaslı olarak yerinde kalır.
+          if (tumunuOkundu != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Bildirimler',
-                      // ⚠ ORTALI: öteki sayfa başlıkları (`RefPageTitle`)
-                      // ortalı çiziliyor; bu ekran kendi başlığını
-                      // çizdiği için kuralın dışında kalmıştı. Sağdaki
-                      // "Tümünü okundu say" düğmesi yerinde kalır.
-                      textAlign: TextAlign.center,
-                      style: refText(
-                        size: RF.s25,
-                        weight: RF.w700,
-                        color: RC.text,
-                        letterSpacing: RF.lsM03,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10), // gap:10px
-                  // .nt-readall — okunmamış varken anlamlıdır.
-                  if (tumunuOkundu != null) tumunuOkundu,
-                ],
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: tumunuOkundu,
               ),
             ),
 

@@ -17,12 +17,11 @@ void main() {
   const webBasliklari = <String, String>{
     'lib/screens/find_provider_screen.dart':
         "const RefPageTitle('Hizmet Veren Bul')",
+    // 21 Eki (kullanıcı kararı): İşlerim, Kazandığım, Bildirimler ve
+    // Profil sekmelerinin üst başlığı web ve mobilde KALDIRILDI (aşağıdaki
+    // ayrı teste bkz.). Hizmet alandaki "İlanlarım" başlığı kalır.
     'lib/screens/my_listings_screen.dart':
-        "RefPageTitle(saglayici ? 'İşlerim' : 'İlanlarım',",
-    'lib/screens/notifications_screen.dart':
-        "const RefPageTitle('Bildirimler', geriDugmesi: false)",
-    'lib/screens/profile_screen.dart':
-        "const RefPageTitle('Profil', geriDugmesi: false)",
+        "const RefPageTitle('İlanlarım', geriDugmesi: false)",
     'lib/screens/account_settings_screen.dart':
         "const RefPageTitle('Hesap Ayarları')",
     'lib/screens/legal_screen.dart':
@@ -39,6 +38,14 @@ void main() {
       expect(once.contains('kIsWeb'), isTrue,
           reason: '$yol: başlık web koşuluna bağlı değil (mobil etkilenir)');
     });
+  });
+
+  test('21 Eki: dört sekmenin üst başlığı yok (web + mobil)', () {
+    expect(oku('lib/screens/jobs_screen.dart').contains("widget.kazandigim ? 'Kazandığım' : 'İşlerim'"), isFalse);
+    expect(oku('lib/screens/notifications_screen.dart').contains("RefPageTitle('Bildirimler'"), isFalse);
+    expect(oku('lib/screens/notifications_screen.dart').contains("'Bildirimler',\n"), isFalse);
+    expect(oku('lib/screens/profile_screen.dart').contains("RefPageTitle('Profil'"), isFalse);
+    expect(oku('lib/screens/my_listings_screen.dart').contains("saglayici ? 'İşlerim'"), isFalse);
   });
 
   test('zaten standart olanlar yerinde', () {

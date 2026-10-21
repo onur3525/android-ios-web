@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
@@ -71,7 +70,8 @@ class ProfileScreen extends StatelessWidget {
           // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
           // sekme olduğu için geri oku YOK. Mobilde bu satır hiç
           // eklenmez; aşağıdaki rol etiketi düzeni aynen durur.
-          if (kIsWeb) const RefPageTitle('Profil', geriDugmesi: false),
+          // 21 Eki (kullanıcı kararı): web'deki "Profil" başlığı kaldırıldı;
+          // mobilde zaten yoktu.
           // ⚠ BÜYÜK BAŞLIK YERİNE ROL ETİKETİ.
           //
           // "Profil - Hizmet Veren" satırı iki iş yapıyordu: sayfayı

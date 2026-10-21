@@ -535,16 +535,10 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
           // `nav_actions.dart`taki etiketlerin birebir aynısı.
           //
           // ⚠ GERİ OKU YOK: bu bir bölüm, alt sayfa değil.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: RefPageTitle(
-              // ⚠ BU EKRAN YALNIZ HİZMET VERENE AİT: `custNavItems`
-              // burada `saglayici: true` ile kuruluyor, ayrı bir rol
-              // denetimi gerekmiyor.
-              widget.kazandigim ? 'Kazandığım' : 'İşlerim',
-              geriDugmesi: false,
-            ),
-          ),
+          // ⚠ 21 Eki (kullanıcı kararı): "İşlerim" / "Kazandığım" üst
+          // başlığı web ve mobilde KALDIRILDI; bölüm adı alt bar ve kenar
+          // çubuğunda seçili sekmeden belli. Üst boşluk korunur.
+          const SizedBox(height: 8),
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve

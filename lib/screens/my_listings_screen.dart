@@ -193,9 +193,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
         children: [
           // ⚠ YALNIZ WEB: standart sayfa başlığı (`RefPageTitle`). Kök
           // sekme olduğu için geri oku YOK. Mobil ağaç değişmez.
-          if (kIsWeb)
-            RefPageTitle(saglayici ? 'İşlerim' : 'İlanlarım',
-                geriDugmesi: false),
+          // 21 Eki: hizmet verende "İşlerim" başlığı kaldırıldı (kullanıcı
+          // kararı); hizmet alandaki "İlanlarım" aynen.
+          if (kIsWeb && !saglayici)
+            const RefPageTitle('İlanlarım', geriDugmesi: false),
           // .cust-tabs — rol duyarlı
           RefSegmentTabs(
             selected: _tab,
