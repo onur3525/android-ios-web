@@ -268657,7 +268657,7 @@
       return A._asyncStartSync($async$_my_listings_screen$_refresh$0, $async$completer);
     },
     build$1(context) {
-      var tumu, t2, t3, t4, kabulEdilenTalepler, liste, teklif, t5, t6, t7, _i, oge, _this = this, _null = null,
+      var tumu, t2, t3, kabulEdilenTalepler, liste, teklif, t4, t5, t6, t7, _i, oge, _this = this, _null = null,
         t1 = A.Provider_of(context, true, type$.AuthController)._auth,
         saglayici = t1.get$activeRole() === B.Role_1,
         me = t1.get$currentAccount(),
@@ -268670,52 +268670,47 @@
         t2 = me.id;
         tumu = ilanCtl._listings.byOwner$1(t2);
       }
-      t2 = !saglayici;
-      if (t2 && !t1 && _this._tab === 1) {
+      if (!saglayici && !t1 && _this._tab === 1) {
         t1 = A.Provider_of(context, true, type$.TeklifTalebiController);
-        t3 = me.id;
-        t3 = t1._teklif_talebi_controller$_port.byHizmetAlan$1(t3);
-        t1 = A._arrayInstanceType(t3);
-        t4 = t1._eval$1("WhereIterable<1>");
-        kabulEdilenTalepler = A.List_List$_of(new A.WhereIterable(t3, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure()), t4), t4._eval$1("Iterable.E"));
+        t2 = me.id;
+        t2 = t1._teklif_talebi_controller$_port.byHizmetAlan$1(t2);
+        t1 = A._arrayInstanceType(t2);
+        t3 = t1._eval$1("WhereIterable<1>");
+        kabulEdilenTalepler = A.List_List$_of(new A.WhereIterable(t2, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure()), t3), t3._eval$1("Iterable.E"));
       } else
         kabulEdilenTalepler = B.List_empty27;
       t1 = A._arrayInstanceType(tumu);
-      t3 = t1._eval$1("WhereIterable<1>");
-      liste = A.List_List$_of(new A.WhereIterable(tumu, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure0(_this)), t3), t3._eval$1("Iterable.E"));
+      t2 = t1._eval$1("WhereIterable<1>");
+      liste = A.List_List$_of(new A.WhereIterable(tumu, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure0(_this)), t2), t2._eval$1("Iterable.E"));
       teklif = new A._MyListingsScreenState_build_teklif(offerCtl);
       t1 = A._arrayInstanceType(liste);
-      t3 = t1._eval$1("WhereIterable<1>");
-      liste = A.List_List$_of(new A.WhereIterable(liste, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure1(_this, teklif)), t3), t3._eval$1("Iterable.E"));
+      t2 = t1._eval$1("WhereIterable<1>");
+      liste = A.List_List$_of(new A.WhereIterable(liste, t1._eval$1("bool(1)")._as(new A._MyListingsScreenState_build_closure1(_this, teklif)), t2), t2._eval$1("Iterable.E"));
       B.JSArray_methods.sort$1(liste, new A._MyListingsScreenState_build_closure2(_this, teklif));
       t1 = A.custNavItems(context, saglayici);
-      t3 = type$.JSArray_Widget;
-      t4 = A._setArrayType([], t3);
-      if (t2)
-        t4.push(B.RefPageTitle_Va5);
       t2 = _this._tab;
-      t5 = saglayici ? B.List_72J : B.List_rXB;
-      t4.push(new A.RefSegmentTabs(t5, t2, new A._MyListingsScreenState_build_closure3(_this), _null, _null));
-      t4.push(new A.Padding(B.EdgeInsets_0_0_0_10, A.Row$(A._setArrayType([A.Expanded$(new A.RefListCount("" + (liste.length + kabulEdilenTalepler.length) + " ilan bulundu", _null), 1), B.SizedBox_10_null_null_null, new A.RefPillButton("assets/svg/ic_sort.svg", "S\u0131rala", _this.get$_siralaMenu(), _null), B.SizedBox_8_null_null_null, new A.RefPillButton("assets/svg/ic_filter.svg", "Filtreler", _this.get$_filtreMenu(), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
-      t2 = ilanCtl._loading;
+      t3 = saglayici ? B.List_72J : B.List_rXB;
+      t4 = type$.JSArray_Widget;
+      t2 = A._setArrayType([new A.RefSegmentTabs(t3, t2, new A._MyListingsScreenState_build_closure3(_this), _null, _null), new A.Padding(B.EdgeInsets_0_0_0_10, A.Row$(A._setArrayType([A.Expanded$(new A.RefListCount("" + (liste.length + kabulEdilenTalepler.length) + " ilan bulundu", _null), 1), B.SizedBox_10_null_null_null, new A.RefPillButton("assets/svg/ic_sort.svg", "S\u0131rala", _this.get$_siralaMenu(), _null), B.SizedBox_8_null_null_null, new A.RefPillButton("assets/svg/ic_filter.svg", "Filtreler", _this.get$_filtreMenu(), _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t4);
+      t3 = ilanCtl._loading;
       t5 = ilanCtl._lastError;
       t6 = liste.length === 0;
       t7 = !t6 || kabulEdilenTalepler.length !== 0;
-      if (!t2 && t5 != null && !t7)
-        t4.push(new A.HataTamEkran(t5, _this.get$_my_listings_screen$_refresh(), _null));
+      if (!t3 && t5 != null && !t7)
+        t2.push(new A.HataTamEkran(t5, _this.get$_my_listings_screen$_refresh(), _null));
       else if (t6 && kabulEdilenTalepler.length === 0)
-        t4.push(B._BosListe_null);
+        t2.push(B._BosListe_null);
       else {
-        t2 = A._setArrayType([], t3);
-        t3 = A._arrayInstanceType(liste);
-        t3 = A.List_List$_of(new A.MappedListIterable(liste, t3._eval$1("+listing,talep(Listing,TeklifTalebi?)(1)")._as(new A._MyListingsScreenState_build_closure4()), t3._eval$1("MappedListIterable<1,+listing,talep(Listing,TeklifTalebi?)>")), type$.Record_2_nullable_Listing_listing_and_nullable_TeklifTalebi_talep);
+        t3 = A._setArrayType([], t4);
+        t4 = A._arrayInstanceType(liste);
+        t4 = A.List_List$_of(new A.MappedListIterable(liste, t4._eval$1("+listing,talep(Listing,TeklifTalebi?)(1)")._as(new A._MyListingsScreenState_build_closure4()), t4._eval$1("MappedListIterable<1,+listing,talep(Listing,TeklifTalebi?)>")), type$.Record_2_nullable_Listing_listing_and_nullable_TeklifTalebi_talep);
         t5 = A._arrayInstanceType(kabulEdilenTalepler);
-        B.JSArray_methods.addAll$1(t3, new A.MappedListIterable(kabulEdilenTalepler, t5._eval$1("+listing,talep(Listing?,TeklifTalebi)(1)")._as(new A._MyListingsScreenState_build_closure5()), t5._eval$1("MappedListIterable<1,+listing,talep(Listing?,TeklifTalebi)>")));
-        B.JSArray_methods.sort$1(t3, new A._MyListingsScreenState_build_closure6());
-        t5 = t3.length;
+        B.JSArray_methods.addAll$1(t4, new A.MappedListIterable(kabulEdilenTalepler, t5._eval$1("+listing,talep(Listing?,TeklifTalebi)(1)")._as(new A._MyListingsScreenState_build_closure5()), t5._eval$1("MappedListIterable<1,+listing,talep(Listing?,TeklifTalebi)>")));
+        B.JSArray_methods.sort$1(t4, new A._MyListingsScreenState_build_closure6());
+        t5 = t4.length;
         _i = 0;
-        for (; _i < t3.length; t3.length === t5 || (0, A.throwConcurrentModificationError)(t3), ++_i) {
-          oge = t3[_i];
+        for (; _i < t4.length; t4.length === t5 || (0, A.throwConcurrentModificationError)(t4), ++_i) {
+          oge = t4[_i];
           t6 = oge._0;
           if (t6 != null)
             t6 = new A._IlanKarti(t6, teklif.call$1(t6), new A._MyListingsScreenState_build_closure7(context, oge), _null);
@@ -268724,11 +268719,11 @@
             t6.toString;
             t6 = new A._TeklifTalebiIsKarti(t6, new A._MyListingsScreenState_build_closure8(context, oge), _null);
           }
-          t2.push(new A.Padding(B.EdgeInsets_0_0_0_8, t6, _null));
+          t3.push(new A.Padding(B.EdgeInsets_0_0_0_8, t6, _null));
         }
-        B.JSArray_methods.addAll$1(t4, t2);
+        B.JSArray_methods.addAll$1(t2, t3);
       }
-      return A.RefShell$(A.Column$(t4, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), new A.RefBottomNav(t1, "ilanlarim", _null));
+      return A.RefShell$(A.Column$(t2, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), new A.RefBottomNav(t1, "ilanlarim", _null));
     },
     _siralaMenu$0() {
       return this._secimSheet$4$baslik$onSec$secenekler$secili("S\u0131rala", new A._MyListingsScreenState__siralaMenu_closure(this), B.List_q0h, this._sort);
@@ -311520,7 +311515,6 @@
     B.RefPageTitle_Adreslerim_null_null = new A.RefPageTitle("Adreslerim", null, null);
     B.RefPageTitle_AmU = new A.RefPageTitle("Hizmet Veren Kayd\u0131", false, null);
     B.RefPageTitle_Sb9 = new A.RefPageTitle("Hesap Ayarlar\u0131", null, null);
-    B.RefPageTitle_Va5 = new A.RefPageTitle("\u0130lanlar\u0131m", false, null);
     B.RefPageTitle_Vc1 = new A.RefPageTitle("Profil Bilgilerim", null, null);
     B.RefPageTitle_ZHV = new A.RefPageTitle("Uygulamay\u0131 Puanla", null, null);
     B.RefPageTitle_frF = new A.RefPageTitle("Hizmet Veren Bul", null, null);
