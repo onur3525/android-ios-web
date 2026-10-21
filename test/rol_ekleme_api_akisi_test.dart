@@ -1,9 +1,8 @@
-// ROL EKLEME — API MODU İSTEMCİ AKIŞI (15 Eki)
+// ROL EKLEME — API MODU İSTEMCİ AKIŞI
 //
-// Sunucu sözleşmesi (backend/test/rol_ekleme.test.js): POST
-// /auth/roles/add { role, password, firebaseIdToken }. Kanıt yeni bir
-// telefon doğrulamasıdır; şifre yanlışsa SMS harcanmaz diye istemci
-// önce şifreyi doğrular.
+// ⚠ 21 Eki (kullanıcı kararı): telefon ve SMS kodu İSTENMEZ. Sunucu
+// sözleşmesi (backend/test/rol_ekleme.test.js): POST /auth/roles/add
+// { role, password }.
 //
 // ⚠ Kaynak metni denetleyen testlerde YORUM SATIRLARI ELENİR.
 import 'dart:io';
@@ -34,7 +33,7 @@ ApiAuthPort _port(ApiClient c) =>
 
 void main() {
   group('API portu', () {
-    test('doğrulama ister; kanıtsız istek SUNUCUYA HİÇ GİTMEZ', () async {
+    test('şifre ister; şifresiz istek SUNUCUYA HİÇ GİTMEZ', () async {
       final be = FakeBackend({
         'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
         'GET /profiles/me/address': (_) => null,
@@ -44,14 +43,12 @@ void main() {
       expect(port.rolEklemeDogrulamaIster, isTrue);
 
       expect(await port.addRole(Role.provider), isA<ValidationError>());
-      expect(await port.addRole(Role.provider, sifre: kTestPass),
-          isA<ValidationError>());
       expect(await port.addRole(Role.provider, telefonKaniti: 'kanit'),
           isA<ValidationError>());
       expect(be.countOf('POST /auth/roles/add'), 0);
     });
 
-    test('şifre + kanıt sunucuya gider; ardından hizmet veren profili yazılır',
+    test('yalnız şifre sunucuya gider; ardından hizmet veren profili yazılır',
         () async {
       Map<String, dynamic>? gonderilen;
       Map<String, dynamic>? profil;
@@ -75,13 +72,11 @@ void main() {
       final hata = await port.addRole(Role.provider,
           categories: {'Tesisat'},
           serviceDistricts: {'Bornova'},
-          sifre: kTestPass,
-          telefonKaniti: 'firebase-id-token');
+          sifre: kTestPass);
       expect(hata, isNull);
       expect(gonderilen, {
         'role': 'PROVIDER',
         'password': kTestPass,
-        'firebaseIdToken': 'firebase-id-token',
       });
       expect(gonderilen!.containsKey('otpCode'), isFalse);
       expect(profil, {
@@ -97,16 +92,14 @@ void main() {
       final be = FakeBackend({
         'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
         'GET /profiles/me/address': (_) => null,
-        'POST /auth/roles/add': (_) => apiError(400, 'PHONE_PROOF_INVALID',
-            'Telefon doğrulaması geçersiz ya da süresi dolmuş. Yeni kod isteyin.'),
+        'POST /auth/roles/add': (_) => apiError(400, 'WRONG_PASSWORD', 'Şifre hatalı'),
       });
       final port = _port(be.client());
       await port.restoreSession();
       final hata = await port.addRole(Role.provider,
           categories: {'Tesisat'},
           serviceDistricts: {'Bornova'},
-          sifre: kTestPass,
-          telefonKaniti: 'eski');
+          sifre: kTestPass);
       expect(hata, isNotNull);
       expect(be.countOf('PUT /profiles/me/provider'), 0);
     });
@@ -128,16 +121,13 @@ void main() {
   group('Rol Değiştir ekranı', () {
     final r = _kod('lib/screens/role_switch_screen.dart');
 
-    test('API modunda şifre ÖNCE, SMS SONRA; kanıt addRole\'a gider', () {
+    test('API modunda yalnız şifre sorulur; telefon/SMS adımı YOK', () {
       expect(r.contains('if (auth.rolEklemeDogrulamaIster) {'), isTrue);
-      final iSifre = r.indexOf('final sifre = await _sifreAl(auth);');
-      final iKod = r.indexOf('await auth.rolEklemeKodGonder();', iSifre);
-      expect(iSifre, greaterThan(0));
-      expect(iKod, greaterThan(iSifre),
-          reason: 'şifre doğrulanmadan SMS gönderiliyor');
+      expect(r.contains('final sifre = await _sifreAl(auth);'), isTrue);
       expect(r.contains('.verifyPassword(ctl.text)'), isTrue);
-      expect(r.contains('purpose: OtpPurpose.rolEkleme'), isTrue);
-      expect(r.contains('telefonKaniti: kanit,'), isTrue);
+      expect(r.contains('rolEklemeKodGonder'), isFalse);
+      expect(r.contains('OtpScreen('), isFalse);
+      expect(r.contains('kayıtlı telefonunuza doğrulama kodu'), isFalse);
     });
 
     test('ekranda sabit kod ya da test ipucu yok', () {
@@ -146,11 +136,11 @@ void main() {
     });
   });
 
-  test('istemci roles/add gövdesinde otpCode GÖNDERMEZ', () {
+  test('istemci roles/add gövdesinde yalnız rol ve şifre gönderir', () {
     final a = _kod('lib/data/remote/api/auth_api.dart');
     expect(
         a.contains(
-            "c.post('/auth/roles/add', body: {'role': role, 'password': password, 'firebaseIdToken': firebaseIdToken});"),
+            "c.post('/auth/roles/add', body: {'role': role, 'password': password});"),
         isTrue);
   });
 }

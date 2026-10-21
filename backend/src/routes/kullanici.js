@@ -721,9 +721,9 @@ export function kullaniciRotalar(r, db) {
     await rolEklemeSiniri.denetle(db, ctx.kullanici.id);
     const rol = rolDogrula(ctx.body.role);
     if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
-    // Firebase kanıtı: yakın zamanda telefonla yeniden doğrulama ŞART.
-    // Kanıt yoksa eski sunucu OTP yolu (yalnız gerçekten istenmiş kod).
-    await telefonKaniti(db, ctx.body, ctx.kullanici.phone, ['ROLE_ADD', 'LOGIN'], { yakinDogrulama: { oturumBaslangici: ctx.kOturum.created_at } });
+    // ⚠ 21 Eki (kullanıcı kararı): rol eklerken telefon/SMS doğrulaması
+    // İSTENMEZ. Oturum açık + mevcut şifre + kullanıcı başına hız sınırı
+    // yeterli sayıldı. Eski uygulamaların gönderdiği kanıt/kod yok sayılır.
     const mevcut = roller(ctx.kullanici);
     if (mevcut.includes(rol)) throw hata.cakisma('Bu rol hesabınızda zaten var');
     await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?').run([...mevcut, rol].join(','), rol, simdi(), ctx.kullanici.id);

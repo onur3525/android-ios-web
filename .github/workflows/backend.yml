@@ -51,13 +51,27 @@ jobs:
           name: backend-package-lock
           path: backend/package-lock.json
           retention-days: 30
+      # Çıktı dosyaya da yazılır; başarısızlıkta düşen testler iş
+      # açıklaması olarak işaretlenir (günlük indirilemese de görünür).
       - name: SQLite
-        run: npm test
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee sqlite-test.log
+      - name: SQLite başarısız testleri işaretle
+        if: failure()
+        run: node ../.github/scripts/test_hatalarini_isaretle.mjs sqlite-test.log SQLite
       - name: PostgreSQL 16
         env:
           HC_TEST_DB: postgres
           HC_DATABASE_URL: postgres://hc:hc_test_only@localhost:5432/hizmetcep_test
-        run: npm test
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee pg-test.log
+      - name: PostgreSQL başarısız testleri işaretle
+        if: failure()
+        run: node ../.github/scripts/test_hatalarini_isaretle.mjs pg-test.log PostgreSQL
       # ── GÜVENLİK (15 Eki denetimi) ──
       # Bağımlılık denetimi: bilinen YÜKSEK/KRİTİK açık varsa iş kırmızı olur.
       - name: npm audit (üretim bağımlılıkları)

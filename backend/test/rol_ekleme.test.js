@@ -1,4 +1,7 @@
-// /api/v1/auth/roles/add — ikinci rol ekleme (15 Eki sertleştirmesi).
+// /api/v1/auth/roles/add — ikinci rol ekleme.
+// ⚠ 21 Eki (kullanıcı kararı): rol eklerken telefon/SMS doğrulaması
+// İSTENMEZ; yalnız şifre ve hız sınırı. Aşağıdaki 15 Eki notu tarihçedir.
+// (15 Eki sertleştirmesi:)
 //   · kullanıcı başına hız sınırı (15 dk'da 5; yanlış şifre ve geçersiz
 //     kanıt da sayılır),
 //   · Firebase kanıtı: imza/proje/süre/telefon denetimleri KORUNUR ve ayrıca
@@ -89,87 +92,33 @@ test('doğru şifre + taze telefon doğrulaması: rol eklenir, aktif rol değiş
   assert.equal(tekrar.durum, 409);
 });
 
-test('yanlış şifre, numara uyuşmazlığı ve yakın doğrulama eksikliği reddedilir; rol eklenmez', async () => {
+test('21 Eki: telefon/SMS doğrulaması İSTENMEZ; yalnız şifre — yanlış şifre reddedilir', async () => {
   const tel = '5421110002';
   const tk = await hizmetAlan(tel);
-  await oturumuEskit(tel);
-  const iyi = { sub: 'fb-rol-2', phone_number: `+90${tel}` };
-
-  const a = await rolEkle(tk, { password: 'YanlisSifre99', firebaseIdToken: belge(iyi) });
+  const a = await rolEkle(tk, { password: 'YanlisSifre99' });
   assert.equal(a.durum, 400); assert.equal(a.json.error.code, 'WRONG_PASSWORD');
-
-  const b = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, phone_number: '+905429999999' }) });
-  assert.equal(b.durum, 400); assert.equal(b.json.error.code, 'OTP_INVALID');
-
-  // Belge YENİ (iat taze) ama son doğrulama 11 dk önce → yeniden doğrulama şart.
-  const c = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, auth_time: an() - 11 * 60 }) });
-  assert.equal(c.durum, 400); assert.equal(c.json.error.code, 'REAUTH_REQUIRED');
-
-  // Taze ama son oturum ŞİFREYLE açılmış (telefon değil).
-  const d = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, firebase: { sign_in_provider: 'password' } }) });
-  assert.equal(d.durum, 400); assert.equal(d.json.error.code, 'REAUTH_REQUIRED');
-
-  // Yöntem bilgisi hiç yok.
-  const e = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, firebase: undefined }) });
-  assert.equal(e.durum, 400); assert.equal(e.json.error.code, 'REAUTH_REQUIRED');
-
   assert.equal((await roller(tel)).roles, 'CUSTOMER');
+  // Kanıt ve kod gönderilmeden, doğru şifreyle rol eklenir.
+  const b = await rolEkle(tk, {});
+  assert.equal(b.durum, 204, JSON.stringify(b.json));
+  assert.equal((await roller(tel)).roles, 'CUSTOMER,PROVIDER');
 });
 
-test('giriş belgesi yeniden kullanılamaz: doğrulama oturum açıldıktan SONRA yapılmalı', async () => {
-  // Telefonla giriş: Firebase doğrulaması (auth_time) sunucu oturumundan
-  // hemen ÖNCE olur. Aynı belge (ya da yenilenmiş hâli: iat yeni, auth_time
-  // aynı) 10 dk içinde bile rol eklemede KABUL EDİLMEZ.
-  const tel = '5421110007';
-  const tk = await hizmetAlan(tel);
-  await oturumuEskit(tel, 120); // oturum 2 dk önce açıldı
-  const giris = an() - 125; // girişteki telefon doğrulaması oturumdan 5 sn önce
-  const a = await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-7', phone_number: `+90${tel}`, auth_time: giris, iat: an() - 2 }) });
-  assert.equal(a.durum, 400); assert.equal(a.json.error.code, 'REAUTH_REQUIRED');
-  // Oturumdan hemen sonra (30 sn pay içinde) yapılan doğrulama da kabul edilmez.
-  const b = await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-7', phone_number: `+90${tel}`, auth_time: an() - 110 }) });
-  assert.equal(b.durum, 400); assert.equal(b.json.error.code, 'REAUTH_REQUIRED');
-  // Rol ekleme sırasında YENİ kod doğrulandı → kabul.
-  const c = await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-7', phone_number: `+90${tel}`, auth_time: an() - 3 }) });
-  assert.equal(c.durum, 204, JSON.stringify(c.json));
-});
-
-test('imza, proje ve süre denetimleri korunur; istenmemiş sunucu kodu (123456) reddedilir', async () => {
+test('21 Eki: eski uygulamanın gönderdiği telefon kanıtı/kodu yok sayılır (geçersiz olsa da engellemez)', async () => {
   const tel = '5421110003';
   const tk = await hizmetAlan(tel);
-  await oturumuEskit(tel);
-  const iyi = { sub: 'fb-rol-3', phone_number: `+90${tel}` };
   const yabanci = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey;
-
-  // ⚠ 400 (401 DEĞİL): istemci 401'de oturumu yenileyip isteği tekrarlardı.
-  const a = await rolEkle(tk, { firebaseIdToken: belge(iyi, { anahtar: yabanci }) });
-  assert.equal(a.durum, 400); assert.equal(a.json.error.code, 'PHONE_PROOF_INVALID');
-  const b = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, aud: 'baska-proje', iss: 'https://securetoken.google.com/baska-proje' }) });
-  assert.equal(b.durum, 400); assert.equal(b.json.error.code, 'PHONE_PROOF_INVALID');
-  const c = await rolEkle(tk, { firebaseIdToken: belge({ ...iyi, exp: an() - 60 }) });
-  assert.equal(c.durum, 400); assert.equal(c.json.error.code, 'PHONE_PROOF_INVALID');
-  // Oturum hâlâ geçerli (kanıt hatası oturumu kapatmaz).
-  assert.equal((await istek('/api/v1/users/me', { yontem: 'GET', token: tk })).durum, 200);
-  // Firebase kanıtı yok; sunucudan ROLE_ADD kodu hiç istenmedi.
-  const d = await rolEkle(tk, { otpCode: '123456' });
-  assert.equal(d.durum, 400);
-  assert.match(d.json.error.code, /^OTP_(EXPIRED|INVALID)$/);
-
-  assert.equal((await roller(tel)).roles, 'CUSTOMER');
+  const r = await rolEkle(tk, { otpCode: '123456', firebaseIdToken: belge({ sub: 'fb-rol-3', phone_number: '+905429999999' }, { anahtar: yabanci }) });
+  assert.equal(r.durum, 204, JSON.stringify(r.json));
 });
 
-test('kullanıcı başına hız sınırı: 15 dk içinde 6. deneme 429 (doğru bilgiyle bile)', async () => {
+test('kullanıcı başına hız sınırı: 15 dk içinde 6. deneme 429 (doğru şifreyle bile)', async () => {
   const tel = '5421110004';
   const tk = await hizmetAlan(tel);
-  await oturumuEskit(tel);
-  const yabanci = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey;
-  // Yanlış şifre (3) + geçersiz telefon kanıtı (2): HEPSİ sınırı tüketir.
-  for (let i = 0; i < 3; i++) {
-    assert.equal((await rolEkle(tk, { password: `Yanlis${i}Sifre9`, firebaseIdToken: belge({ sub: 'fb-rol-4', phone_number: `+90${tel}` }) })).durum, 400);
+  for (let i = 0; i < 5; i++) {
+    assert.equal((await rolEkle(tk, { password: `Yanlis${i}Sifre9` })).durum, 400);
   }
-  assert.equal((await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-4', phone_number: `+90${tel}` }, { anahtar: yabanci }) })).durum, 400);
-  assert.equal((await rolEkle(tk, { otpCode: '123456' })).durum, 400);
-  const r = await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-4', phone_number: `+90${tel}` }) });
+  const r = await rolEkle(tk, {});
   assert.equal(r.durum, 429);
   assert.equal(r.json.error.code, 'RATE_LIMITED');
   assert.equal((await roller(tel)).roles, 'CUSTOMER');
@@ -178,8 +127,7 @@ test('kullanıcı başına hız sınırı: 15 dk içinde 6. deneme 429 (doğru b
   // Sınır kullanıcıya özeldir: başka kullanıcı etkilenmez.
   const tel2 = '5421110005';
   const tk2 = await hizmetAlan(tel2);
-  await oturumuEskit(tel2);
-  assert.equal((await rolEkle(tk2, { firebaseIdToken: belge({ sub: 'fb-rol-5', phone_number: `+90${tel2}` }) })).durum, 204);
+  assert.equal((await rolEkle(tk2, {})).durum, 204);
 });
 
 test('kayıt davranışı DEĞİŞMEDİ: yakın doğrulama şartı yalnız rol eklemede', async () => {
