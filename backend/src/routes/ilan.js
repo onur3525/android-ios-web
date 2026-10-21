@@ -745,7 +745,8 @@ export function ilanRotalar(r, db) {
   // Özet ekranındaki tarih seçimi (Bugün / Bu hafta / Bu ay / aralık)
   // için GÜNLÜK sayılar. Liste uçlarının 200 kayıt sınırına takılmadan
   // doğrudan veritabanından sayılır; sayı uydurulmaz.
-  //   from — panelin yerel gün başlangıcı (ISO), days — gün sayısı.
+  //   from — panelin yerel gün başlangıcı (ISO), days — gün sayısı,
+  //   unit=hour (yalnız days=1) — tek günün 24 saatlik dilimleri (grafik).
   // Günler `from`dan itibaren 24 saatlik dilimlerdir (Türkiye'de yaz
   // saati yok). Kullanıcı ve gelen talep sayıları `users.read` yetkisi
   // ister; yetki yoksa null döner (ekranda "yetki yok").
@@ -755,14 +756,18 @@ export function ilanRotalar(r, db) {
     const gun = Number(ctx.query.get('days'));
     if (!Number.isFinite(bas) || !Number.isInteger(gun) || gun < 1 || gun > 800) throw hata.dogrulama('Geçersiz tarih aralığı');
     const GUN_MS = 86_400_000;
+    const saatlik = ctx.query.get('unit') === 'hour';
+    if (saatlik && gun !== 1) throw hata.dogrulama('Saatlik dilim yalnız tek gün için');
+    const dilim = saatlik ? 3_600_000 : GUN_MS;
+    const adet = saatlik ? 24 : gun;
     const ilk = new Date(bas).toISOString();
     const son = new Date(bas + gun * GUN_MS).toISOString();
     const seri = async (tablo, ek = '') => {
-      const sayac = Array(gun).fill(0);
+      const sayac = Array(adet).fill(0);
       const satirlar = await db.prepare(`SELECT created_at t FROM ${tablo} WHERE created_at >= ? AND created_at < ?${ek}`).all(ilk, son);
       for (const { t } of satirlar) {
-        const i = Math.floor(((t instanceof Date ? t.getTime() : Date.parse(t)) - bas) / GUN_MS);
-        if (i >= 0 && i < gun) sayac[i]++;
+        const i = Math.floor(((t instanceof Date ? t.getTime() : Date.parse(t)) - bas) / dilim);
+        if (i >= 0 && i < adet) sayac[i]++;
       }
       return sayac;
     };
@@ -770,6 +775,7 @@ export function ilanRotalar(r, db) {
     return {
       from: ilk,
       days: gun,
+      unit: saatlik ? 'hour' : 'day',
       users: kullaniciYetkisi ? await seri('users', ' AND deleted_at IS NULL') : null,
       listings: await seri('listings'),
       offers: await seri('offers'),

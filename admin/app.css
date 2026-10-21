@@ -69,6 +69,9 @@ pre.govde { white-space:pre-wrap; background:#f7f8fa; padding:12px; border-radiu
 @media (max-width:820px) { .oz-uclu.sd-iki { grid-template-columns:1fr; } }
 @media (max-width:420px) { .sd-liste { grid-template-columns:1fr; gap:2px; } .sd-liste dd { margin-bottom:8px; } }
 .oz-tarih-sar { position:relative; }
+button.oz-secim-dugme { display:inline-flex; align-items:center; gap:6px; background:#fff; cursor:pointer; white-space:nowrap; }
+button.oz-secim-dugme:hover, .oz-tarih-sar.kucuk.acik button.oz-secim-dugme { border-color:#BFD3FB; color:var(--oz-yazi); }
+.oz-tarih-sar.kucuk .oz-tarih-ok { font-size:10px; }
 button.oz-tarih { cursor:pointer; }
 button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB; }
 .oz-tarih-ok { color:var(--oz-soluk); font-size:12px; }

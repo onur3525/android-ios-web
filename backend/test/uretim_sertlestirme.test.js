@@ -456,6 +456,14 @@ test('21 Eki: Özet tarih aralığı — günlük sayılar doğrudan veritabanı
   // Aralık bitmişse sonradan gelen kayıt sayılmaz.
   const gecmis = (await istek(yol(new Date(Date.now() - 10 * GUN), 2), { rol: 'readonly' })).json;
   assert.deepEqual(gecmis.users, [0, 0], 'test kayıtlarının hepsi bugün açıldı');
+  // Tek gün saatlik: 24 dilim; şimdi açılan kayıt şimdiki saate düşer.
+  const gunBasi = new Date(Date.now() - 30 * 60_000);
+  const saatlik = (await istek(`${yol(gunBasi, 1)}&unit=hour`, { rol: 'readonly' })).json;
+  assert.equal(saatlik.unit, 'hour'); assert.equal(saatlik.users.length, 24);
+  await kisi('5340000098', 'CUSTOMER');
+  const saatlik2 = (await istek(`${yol(gunBasi, 1)}&unit=hour`, { rol: 'readonly' })).json;
+  assert.equal(saatlik2.users[0], saatlik.users[0] + 1);
+  assert.equal((await istek(`${yol(bas, 2)}&unit=hour`, { rol: 'readonly' })).durum, 400, 'saatlik yalnız tek gün');
   for (const bozuk of [yol(bas, 0), yol(bas, 801), yol(bas, 1.5), '/admin/v1/stats/period?from=dun&days=1', '/admin/v1/stats/period?days=1']) {
     assert.equal((await istek(bozuk, { rol: 'readonly' })).durum, 400, bozuk);
   }
