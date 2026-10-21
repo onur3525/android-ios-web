@@ -75,8 +75,11 @@ after(async () => {
 
 test('şablon: logo, düğme, alt bilgi; girdi kaçışlanır; yalnız https bağlantı düğme olur', () => {
   const x = epostaIcerigi('EPOSTA_DOGRULAMA', { AD: '<script>x</script>', EPOSTA: 'a@b.com', BAGLANTI: 'https://ornek.com/a?b=1&c=2', DESTEK: 'destek@hizmetcep.com' });
-  assert.ok(x.html.includes('/eposta-varlik/wordmark.png'));
-  assert.ok(x.html.includes('/eposta-varlik/logo_mark.png'));
+  // 21 Eki: tek, büyük logo (beyaz zemin görselin içinde).
+  assert.ok(x.html.includes('/eposta-varlik/eposta_logo.png'));
+  assert.ok(x.html.includes('width="280"'));
+  // Beyaz görünüm: koyu moda çevirme isteyen istemcilere "yalnız açık" bildirilir.
+  assert.ok(x.html.includes('<meta name="color-scheme" content="light only">'));
   assert.ok(x.html.includes('E-postamı Doğrula'));
   assert.ok(x.html.includes('href="https://ornek.com/a?b=1&amp;c=2"'));
   assert.ok(x.html.includes('destek@hizmetcep.com'));
@@ -92,13 +95,15 @@ test('eski düz metin şablonları da kurumsal kalıpla çizilir', () => {
   const x = epostaIcerigi('HESAP_ASKIYA_ALINDI', { NEDEN: 'Kural <ihlali>', DESTEK: 'destek@hizmetcep.com' });
   assert.ok(x.html.includes('Hesabınız askıya alındı'));
   assert.ok(x.html.includes('Kural &lt;ihlali&gt;'));
-  assert.ok(x.html.includes('/eposta-varlik/wordmark.png'));
+  assert.ok(x.html.includes('/eposta-varlik/eposta_logo.png'));
 });
 
 test('logo görselleri sunulur; beyaz liste dışı ad 404', async () => {
-  const r = await istek('/eposta-varlik/wordmark.png', { yontem: 'GET' });
-  assert.equal(r.durum, 200);
-  assert.equal(r.tur, 'image/png');
+  for (const ad of ['eposta_logo.png', 'wordmark.png', 'logo_mark.png']) {
+    const r = await istek(`/eposta-varlik/${ad}`, { yontem: 'GET' });
+    assert.equal(r.durum, 200, ad);
+    assert.equal(r.tur, 'image/png');
+  }
   assert.equal((await istek('/eposta-varlik/../../package.json', { yontem: 'GET' })).durum, 404);
   assert.equal((await istek('/eposta-varlik/logo.png', { yontem: 'GET' })).durum, 404);
 });
