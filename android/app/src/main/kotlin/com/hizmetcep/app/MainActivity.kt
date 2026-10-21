@@ -1,5 +1,6 @@
 package com.hizmetcep.app
 
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.SystemClock
@@ -78,6 +79,47 @@ class MainActivity : FlutterActivity() {
          */
         private const val SPLASH_MAX_MS = 9000L
 
+        /**
+         * BİLDİRİM KÖPRÜSÜ (21 Eki) — `BildirimAlici` ile çizilen sistem
+         * bildirimine dokunulunca hedef Dart'a iletilir:
+         *   "ilk"     → soğuk açılışta dokunulan bildirim (bir kez)
+         *   "acildi"  → uygulama açıkken dokunulan bildirim (native → Dart)
+         */
+        private const val BILDIRIM_CHANNEL = "hizmetcep/bildirim"
+
+        /** Uygulama önde mi? (BildirimAlici önde sistem bildirimi çizmez.) */
+        @Volatile
+        var onde = false
+            private set
+    }
+
+    private var bildirimKanali: MethodChannel? = null
+    private var bekleyenBildirim: Map<String, String>? = null
+
+    /** Intent dokunulan HizmetCep bildirimi mi? Öyleyse verisi (bir kez). */
+    private fun bildirimAcilisi(intent: Intent?): Map<String, String>? {
+        if (intent?.getBooleanExtra(BildirimCizici.ACILIS, false) != true) return null
+        intent.removeExtra(BildirimCizici.ACILIS)
+        val m = HashMap<String, String>()
+        for (k in BildirimAlici.AKTARILAN) intent.getStringExtra(k)?.let { m[k] = it }
+        return m
+    }
+
+    override fun onResume() {
+        super.onResume()
+        onde = true
+    }
+
+    override fun onPause() {
+        onde = false
+        super.onPause()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val m = bildirimAcilisi(intent) ?: return
+        val k = bildirimKanali
+        if (k != null) k.invokeMethod("acildi", m) else bekleyenBildirim = m
     }
 
     /** Dart açılış kararını verdi mi? */
@@ -128,6 +170,7 @@ class MainActivity : FlutterActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
+        bekleyenBildirim = bildirimAcilisi(intent)
         basladi = SystemClock.uptimeMillis()
         bootLog("NATIVE_ON_CREATE")
 
@@ -227,6 +270,20 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // ── BİLDİRİM KÖPRÜSÜ ──
+        bildirimKanali = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BILDIRIM_CHANNEL)
+            .also { k ->
+                k.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "ilk" -> {
+                            result.success(bekleyenBildirim)
+                            bekleyenBildirim = null
+                        }
+                        else -> result.notImplemented()
+                    }
+                }
+            }
 
         // ── SPLASH KÖPRÜSÜ ──
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SPLASH_CHANNEL)
