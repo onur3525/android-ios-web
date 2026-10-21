@@ -393,38 +393,58 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
             //
             // ⚠ YALNIZ HİZMET ALANDA: menü talebi silme içindir;
             // hizmet verenin böyle bir yetkisi yok, onda çizilmez.
-            Row(
+            // ── ⚠ BAŞLIK OKLA AYNI SATIRDA, EKRANA ORTALI (21 Eki,
+            // kullanıcı isteği) ──
+            //
+            // Eskiden ok ve üç nokta bir satırda, "Teklif Talebi"
+            // başlığı ayrı bir satırda duruyordu; içerik aşağı itiliyor
+            // ve sıkışık görünüyordu. Başlık artık ok satırının
+            // ortasında; altındaki içerik yukarı çekildi.
+            Stack(
+              alignment: Alignment.center,
               children: [
-                const RefBackButton(),
-                const Spacer(),
-                // ── ⚠ YALNIZ AÇIK TALEPTE (12 Eyl, kullanıcı
-                // isteği) ──
-                //
-                // "Üç nokta sadece açık işlerde olacak; tamamlanan
-                // işlerde buna gerek yok."
-                //
-                // Menü tek bir şey yapar: talebi siler. İş
-                // seçildikten ya da tamamlandıktan sonra silmek bir
-                // kaydı yok etmektir — yorum, puan ve karşı tarafın
-                // geçmişi ona bağlıdır.
-                //
-                // ⚠ KOŞUL MODELDE: `silinebilir`. Ekran kendi
-                // koşulunu yazmaz; `Listing.isTamamlanmisIs` ile aynı
-                // desen.
-                if (!benSaglayiciMi && t.silinebilir)
-                  RefTap(
-                    onTap: () => _talepMenusu(t),
-                    borderRadius: BorderRadius.circular(RR.circle),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: RefSvg('assets/svg/ic_dots.svg',
-                          size: 20, color: RC.textSoft),
-                    ),
+                Text(
+                  'Teklif Talebi',
+                  textAlign: TextAlign.center,
+                  style: refText(
+                    size: RF.s25,
+                    weight: RF.w700,
+                    color: RC.text,
+                    letterSpacing: RF.lsM03,
                   ),
+                ),
+                Row(
+                  children: [
+                    const RefBackButton(),
+                    const Spacer(),
+                    // ── ⚠ YALNIZ AÇIK TALEPTE (12 Eyl, kullanıcı
+                    // isteği) ──
+                    //
+                    // "Üç nokta sadece açık işlerde olacak; tamamlanan
+                    // işlerde buna gerek yok."
+                    //
+                    // Menü tek bir şey yapar: talebi siler. İş
+                    // seçildikten ya da tamamlandıktan sonra silmek bir
+                    // kaydı yok etmektir — yorum, puan ve karşı tarafın
+                    // geçmişi ona bağlıdır.
+                    //
+                    // ⚠ KOŞUL MODELDE: `silinebilir`. Ekran kendi
+                    // koşulunu yazmaz; `Listing.isTamamlanmisIs` ile aynı
+                    // desen.
+                    if (!benSaglayiciMi && t.silinebilir)
+                      RefTap(
+                        onTap: () => _talepMenusu(t),
+                        borderRadius: BorderRadius.circular(RR.circle),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: RefSvg('assets/svg/ic_dots.svg',
+                              size: 20, color: RC.textSoft),
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 4),
-            RefPageTitle('Teklif Talebi', geriDugmesi: false),
             const SizedBox(height: 12),
 
             // ── ⚠ ANA İÇERİK + YARDIMCI BÖLÜM — HER EKRANDA TEK SÜTUN
