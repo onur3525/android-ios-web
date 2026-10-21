@@ -116,10 +116,11 @@ test('mevcut adres: Firebase e-postası boşsa yazılır, bağlantı üretilir, 
   const r = await istek('/api/v1/profiles/me/email/verification', { token: tk });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.deepEqual(r.json, { sent: true, email: `e${tel}@ornek.com` });
-  assert.deepEqual(cagrilar.map((c) => c.islem), ['lookup', 'update', 'sendOobCode']);
-  assert.equal(cagrilar[1].govde.email, `e${tel}@ornek.com`);
-  assert.equal(cagrilar[1].govde.emailVerified, false);
-  assert.deepEqual(cagrilar[2].govde, { requestType: 'VERIFY_EMAIL', email: `e${tel}@ornek.com`, returnOobLink: true });
+  // İlk okuma: kullanıcı bağlantıya zaten tıkladı mı (eşitleme).
+  assert.deepEqual(cagrilar.map((c) => c.islem), ['lookup', 'lookup', 'update', 'sendOobCode']);
+  assert.equal(cagrilar[2].govde.email, `e${tel}@ornek.com`);
+  assert.equal(cagrilar[2].govde.emailVerified, false);
+  assert.deepEqual(cagrilar[3].govde, { requestType: 'VERIFY_EMAIL', email: `e${tel}@ornek.com`, returnOobLink: true });
   const m = await sonMesaj(tel);
   assert.equal(m.channel, 'EMAIL');
   assert.equal(m.template, 'EPOSTA_DOGRULAMA');
@@ -155,6 +156,47 @@ test('kurallar: başka hesaptaki adres 409, aynı adres 409, Firebase adresi far
   const tk2 = await hesap('5421120004');
   assert.equal((await istek('/api/v1/profiles/me/email/verification', { token: tk2 })).durum, 409);
   assert.equal((await istek('/api/v1/profiles/me/email/verification', {})).durum, 401);
+});
+
+test('21 Eki: Firebase\'de doğrulanmış e-posta sunucuya eşitlenir; doğrulanmamışsa değişmez', async () => {
+  const tel = '5421120006';
+  const tk = await hesap(tel, { uid: 'fb-ep-6' });
+  fbKullanicilar.set('fb-ep-6', { email: `e${tel}@ornek.com`, emailVerified: false });
+  let r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.emailVerified, false);
+  fbKullanicilar.set('fb-ep-6', { email: `e${tel}@ornek.com`, emailVerified: true });
+  r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
+  assert.equal(r.json.emailVerified, true);
+  assert.equal(r.json.email, `e${tel}@ornek.com`);
+  // Zaten onaylıysa düğme yeniden e-posta göndermez.
+  assert.equal((await istek('/api/v1/profiles/me/email/verification', { token: tk })).durum, 409);
+});
+
+test('21 Eki: "doğrula ve değiştir" tamamlanınca yeni adres ve onay işlenir; başka hesaptaki adres işlenmez', async () => {
+  const tel = '5421120007';
+  const tk = await hesap(tel, { uid: 'fb-ep-7' });
+  fbKullanicilar.set('fb-ep-7', { email: 'degisen.adres@ornek.com', emailVerified: true });
+  const r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
+  assert.equal(r.json.email, 'degisen.adres@ornek.com');
+  assert.equal(r.json.emailVerified, true);
+  const tel2 = '5421120008';
+  const tk2 = await hesap(tel2, { uid: 'fb-ep-8' });
+  fbKullanicilar.set('fb-ep-8', { email: 'degisen.adres@ornek.com', emailVerified: true });
+  const r2 = await istek('/api/v1/profiles/me/email/sync', { token: tk2 });
+  assert.equal(r2.json.email, `e${tel2}@ornek.com`);
+  assert.equal(r2.json.emailVerified, false);
+});
+
+test('21 Eki: bağlantıya tıklanmışsa doğrulama düğmesi e-posta göndermez, ALREADY_VERIFIED döner', async () => {
+  const tel = '5421120009';
+  const tk = await hesap(tel, { uid: 'fb-ep-9' });
+  fbKullanicilar.set('fb-ep-9', { email: `e${tel}@ornek.com`, emailVerified: true });
+  const r = await istek('/api/v1/profiles/me/email/verification', { token: tk });
+  assert.deepEqual(r.json, { sent: false, reason: 'ALREADY_VERIFIED' });
+  assert.equal(await sonMesaj(tel), undefined);
+  const u = await db.prepare('SELECT email_verified FROM users WHERE phone = ?').get(tel);
+  assert.ok(u.email_verified);
 });
 
 test('Firebase yönetimi yoksa hiçbir değişiklik yapılmaz, { sent:false } döner (istemci Firebase gönderimine düşer)', async () => {

@@ -11,6 +11,10 @@ class ProfileApi {
   /// Sunucu bağlantıyı Firebase'e ürettirir ve e-postayı HizmetCep
   /// tasarımıyla gönderir. Yanıt `{sent: true, email}`; e-posta kanalı
   /// yoksa `{sent: false}` (istemci Firebase'in kendi gönderimine düşer).
+  /// Firebase'de doğrulanmış e-postayı hesaba işler; güncel kullanıcıyı döner.
+  Future<Map<String, dynamic>> epostaOnayiniEsitle() =>
+      c.post('/profiles/me/email/sync');
+
   Future<Map<String, dynamic>> epostaDogrulamaIste() =>
       c.post('/profiles/me/email/verification');
 

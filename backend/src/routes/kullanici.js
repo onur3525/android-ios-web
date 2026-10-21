@@ -940,9 +940,44 @@ export function kullaniciRotalar(r, db) {
   // ya da Firebase servis hesabı yoksa HİÇBİR değişiklik yapılmadan
   // { sent:false } döner; istemci o zaman Firebase'in kendi gönderimini
   // kullanır (eski davranış). Bağlantı kayda düz yazılmaz.
+  // ── ⚠ E-POSTA ONAYI EŞİTLEME (21 Eki, kullanıcı bulgusu) ──
+  //
+  // Bağlantıya tıklanınca doğrulama Firebase'de olur; sunucu bunu ancak
+  // bir sonraki Firebase girişinde öğreniyordu. Kullanıcı e-postasını
+  // doğruladığı hâlde "onaylanmadı" görüyor ve düğme açık kalıyordu.
+  // Artık onaysız hesapta Firebase kaydı okunur: doğrulanmış adres
+  // profil adresiyle aynıysa onay işlenir; "doğrula ve değiştir"
+  // tamamlanmışsa (Firebase'de YENİ adres doğrulanmış) adres de güncellenir.
+  // Firebase okunamazsa sessizce eski durum korunur.
+  const epostaOnayiniEsitle = async (u) => {
+    if (u.email_verified || !u.firebase_uid || !firebaseYonetimiHazir()) return u;
+    let fb;
+    try { fb = await firebaseKullaniciBilgisi(u.firebase_uid); } catch { return u; }
+    const fbEposta = String(fb?.email || '').trim().toLowerCase();
+    if (!fb?.epostaDogrulandi || !fbEposta) return u;
+    const mevcut = String(u.email || '').trim().toLowerCase();
+    if (fbEposta === mevcut) {
+      await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+    } else {
+      if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;
+      await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
+    }
+    return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  };
+
+  r.post('/api/v1/profiles/me/email/sync', korumali(async (ctx) => {
+    const u = await epostaOnayiniEsitle(await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id));
+    return kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u));
+  }));
+
   const epostaBaglantisiGonder = async (ctx, yeni) => {
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
+    let u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
+    // Kullanıcı bağlantıya zaten tıkladıysa yeniden e-posta gönderilmez.
+    if (!yeni && !u.email_verified) {
+      u = await epostaOnayiniEsitle(u);
+      if (u.email_verified) return { sent: false, reason: 'ALREADY_VERIFIED' };
+    }
     const mevcut = String(u.email || '').trim().toLowerCase();
     if (!yeni) {
       if (!mevcut) throw hata.durum('Hesabınızda kayıtlı e-posta adresi yok');

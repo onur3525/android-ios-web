@@ -38,6 +38,9 @@ class ProfileController extends BaseController {
       runAction('profile:email-change',
           () => _auth.epostaDegisimiBaslat(yeniEposta));
 
+  /// Firebase'de doğrulanmış e-postayı hesaba işler (21 Eki).
+  Future<void> epostaOnayiniEsitle() => _auth.epostaOnayiniEsitle();
+
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) =>
       runAction('profile:email-verify-current',
           () => _auth.mevcutEpostaDogrulamaGonder(mevcutEposta));

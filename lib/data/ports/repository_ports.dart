@@ -209,6 +209,11 @@ abstract class AuthPort extends ChangeNotifier {
   /// kadar eski adres geçerlidir (iş kuralları §4).
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta);
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta);
+
+  /// E-POSTA ONAYI EŞİTLEME (21 Eki): bağlantıya tıklanınca doğrulama
+  /// Firebase'de olur; sunucudaki hesap bununla eşitlenir ve ekran
+  /// "onaylı" durumuna geçer. Mock modda yapılacak bir şey yoktur.
+  Future<void> epostaOnayiniEsitle() async {}
   Future<ProviderApprovalState> providerApproval();
 
   /// TEK ADRES: kullanıcının en fazla bir adresi olur. Yalnız güncelleme

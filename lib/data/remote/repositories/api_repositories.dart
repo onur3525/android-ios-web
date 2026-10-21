@@ -61,7 +61,30 @@ class ApiAuthRepository extends ChangeNotifier {
     if (err != null) {
       return (false, err);
     }
+    // Kullanıcı bağlantıya zaten tıklamış: e-posta gönderilmez, hesap
+    // "onaylı" olarak yenilenir.
+    if (j?['reason'] == 'ALREADY_VERIFIED') {
+      await epostaOnayiniEsitle();
+      return (true, null);
+    }
     return (j?['sent'] == true, null);
+  }
+
+  /// Firebase'de doğrulanmış e-postayı hesaba işler (21 Eki). Hesap zaten
+  /// onaylıysa istek atılmaz; hata olursa mevcut durum korunur.
+  Future<void> epostaOnayiniEsitle() async {
+    final once = currentAccount;
+    if (once == null || once.emailVerified) {
+      return;
+    }
+    final (j, err) = await _guard(() => _profile.epostaOnayiniEsitle());
+    if (err != null || j == null) {
+      return;
+    }
+    final acc = Mappers.account(j);
+    acc.address = currentAccount?.address;
+    currentAccount = acc;
+    notifyListeners();
   }
 
   Future<(String?, DomainError?)> firebaseBaglantiBelgesi() async {
