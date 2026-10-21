@@ -229,7 +229,8 @@ class MockAuthPort extends AuthPort {
   /// beklemeye alınır; bu, gerçek akışın istemci tarafıyla birebir
   /// aynıdır.
   @override
-  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async {
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
+      {required String sifre}) async {
     repo.updateProfile(email: yeniEposta);
     return null;
   }

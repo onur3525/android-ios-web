@@ -18,9 +18,11 @@ class ProfileApi {
   Future<Map<String, dynamic>> epostaDogrulamaIste() =>
       c.post('/profiles/me/email/verification');
 
-  Future<Map<String, dynamic>> epostaDegisimiIste(String yeniEposta) =>
+  /// ⚠ 21 Eki (güvenlik Y2): mevcut şifre SUNUCUDA doğrulanır.
+  Future<Map<String, dynamic>> epostaDegisimiIste(
+          String yeniEposta, String mevcutSifre) =>
       c.post('/profiles/me/email/change-request',
-          body: {'newEmail': yeniEposta});
+          body: {'newEmail': yeniEposta, 'currentPassword': mevcutSifre});
 
   /// KARŞI TARAF ÖZETİ — yalnız ilişkisi olan kullanıcı için döner (404).
   /// Telefon ve tam ad sunucunun kurallarına göre gelir.

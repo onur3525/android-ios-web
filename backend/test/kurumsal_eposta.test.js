@@ -138,7 +138,7 @@ test('yeni adres: "doğrula ve değiştir" bağlantısı yeni adrese gider; prof
   const tk = await hesap(tel, { uid: 'fb-ep-2' });
   fbKullanicilar.set('fb-ep-2', { email: `e${tel}@ornek.com` });
   cagrilar.length = 0;
-  const r = await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: 'Yeni.Adres@Ornek.com' } });
+  const r = await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: 'Yeni.Adres@Ornek.com', currentPassword: 'GucluSifre12' } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.deepEqual(r.json, { sent: true, email: 'yeni.adres@ornek.com' });
   assert.deepEqual(cagrilar.map((c) => c.islem), ['lookup', 'sendOobCode']);
@@ -146,16 +146,18 @@ test('yeni adres: "doğrula ve değiştir" bağlantısı yeni adrese gider; prof
   const m = await sonMesaj(tel);
   assert.equal(m.template, 'EPOSTA_DEGISIKLIGI');
   assert.equal(m.target, 'yeni.adres@ornek.com');
-  const u = await db.prepare('SELECT email FROM users WHERE phone = ?').get(tel);
+  const u = await db.prepare('SELECT email, pending_email FROM users WHERE phone = ?').get(tel);
   assert.equal(u.email, `e${tel}@ornek.com`);
+  // Bekleyen istek sunucuda kayıtlı (bağlantı tıklanınca yalnız bu adres işlenir).
+  assert.equal(u.pending_email, 'yeni.adres@ornek.com');
 });
 
 test('kurallar: başka hesaptaki adres 409, aynı adres 409, Firebase adresi farklıysa 409, kimliği olmayan 409, oturumsuz 401', async () => {
   const tel = '5421120003';
   const tk = await hesap(tel, { uid: 'fb-ep-3' });
   fbKullanicilar.set('fb-ep-3', { email: 'baska@ornek.com' });
-  assert.equal((await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: 'e5421120001@ornek.com' } })).durum, 409);
-  assert.equal((await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: `e${tel}@ornek.com` } })).durum, 409);
+  assert.equal((await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: 'e5421120001@ornek.com', currentPassword: 'GucluSifre12' } })).durum, 409);
+  assert.equal((await istek('/api/v1/profiles/me/email/change-request', { token: tk, govde: { newEmail: `e${tel}@ornek.com`, currentPassword: 'GucluSifre12' } })).durum, 409);
   assert.equal((await istek('/api/v1/profiles/me/email/verification', { token: tk })).durum, 409);
   const tk2 = await hesap('5421120004');
   assert.equal((await istek('/api/v1/profiles/me/email/verification', { token: tk2 })).durum, 409);
@@ -181,12 +183,14 @@ test('21 Eki: "doğrula ve değiştir" tamamlanınca yeni adres ve onay işlenir
   const tel = '5421120007';
   const tk = await hesap(tel, { uid: 'fb-ep-7' });
   fbKullanicilar.set('fb-ep-7', { email: 'degisen.adres@ornek.com', emailVerified: true });
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?').run('degisen.adres@ornek.com', new Date().toISOString(), tel);
   const r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
   assert.equal(r.json.email, 'degisen.adres@ornek.com');
   assert.equal(r.json.emailVerified, true);
   const tel2 = '5421120008';
   const tk2 = await hesap(tel2, { uid: 'fb-ep-8' });
   fbKullanicilar.set('fb-ep-8', { email: 'degisen.adres@ornek.com', emailVerified: true });
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?').run('degisen.adres@ornek.com', new Date().toISOString(), tel2);
   const r2 = await istek('/api/v1/profiles/me/email/sync', { token: tk2 });
   assert.equal(r2.json.email, `e${tel2}@ornek.com`);
   assert.equal(r2.json.emailVerified, false);
@@ -203,6 +207,7 @@ test('21 Eki: ONAYLI hesapta adres değişikliği tamamlanınca yeni adres profi
   assert.equal(r.json.emailVerified, true);
   // Bağlantı tıklandı: Firebase'de yeni adres doğrulanmış.
   fbKullanicilar.set('fb-ep-10', { email: 'onayli.yeni@ornek.com', emailVerified: true });
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?').run('onayli.yeni@ornek.com', new Date().toISOString(), tel);
   r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
   assert.equal(r.json.email, 'onayli.yeni@ornek.com');
   assert.equal(r.json.emailVerified, true);
@@ -225,6 +230,7 @@ test('21 Eki: e-postası Firebase\'de değişmiş hesap telefon + şifreyle giri
   await hesap(tel, { uid: 'fb-ep-11' });
   // Bağlantı tıklandı: Firebase'de adres yeni, sunucuda hâlâ eski.
   fbKullanicilar.set('fb-ep-11', { email: 'girisyeni@ornek.com', emailVerified: true });
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?').run('girisyeni@ornek.com', new Date().toISOString(), tel);
   firebaseSifreTestDogrulayicisi(async (email, sifre) => email === 'girisyeni@ornek.com' && sifre === 'GucluSifre12');
   try {
     await db.prepare('DELETE FROM rate_limits').run();
@@ -238,6 +244,119 @@ test('21 Eki: e-postası Firebase\'de değişmiş hesap telefon + şifreyle giri
   } finally {
     firebaseSifreTestDogrulayicisi(null);
   }
+});
+
+// ═════ 21 Eki — GÜVENLİK Y2: e-posta değişikliği yeniden kimlik doğrulama ister ═════
+const degisimIste = (tk, govde) => istek('/api/v1/profiles/me/email/change-request', { token: tk, govde });
+const mesajlar = (tel, sablon) => db.prepare(
+  `SELECT * FROM outbound_messages WHERE user_id = (SELECT id FROM users WHERE phone = ?) AND template = ? ORDER BY created_at`,
+).all(tel, sablon);
+
+test('Y2: mevcut şifre yoksa ya da yanlışsa değişiklik başlamaz — Firebase\'e gidilmez, bekleyen istek ve e-posta yok', async () => {
+  const tel = '5421120012';
+  const tk = await hesap(tel, { uid: 'fb-ep-12' });
+  fbKullanicilar.set('fb-ep-12', { email: `e${tel}@ornek.com` });
+  cagrilar.length = 0;
+  const yok = await degisimIste(tk, { newEmail: 'hedef12@ornek.com' });
+  assert.equal(yok.durum, 400);
+  assert.equal(yok.json.error.code, 'WRONG_PASSWORD');
+  const yanlis = await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'YanlisSifre99' });
+  assert.equal(yanlis.durum, 400);
+  assert.equal(yanlis.json.error.code, 'WRONG_PASSWORD');
+  assert.equal(cagrilar.length, 0, 'şifre doğrulanmadan Firebase çağrılmamalı');
+  const u = await db.prepare('SELECT email, pending_email FROM users WHERE phone = ?').get(tel);
+  assert.equal(u.email, `e${tel}@ornek.com`);
+  assert.equal(u.pending_email, null);
+  assert.equal((await mesajlar(tel, 'EPOSTA_DEGISIKLIGI')).length, 0);
+  // Yanlış şifreler kritik işlem sınırına sayılır (kaba kuvvet): 10 denemeden sonra 429.
+  for (let i = 0; i < 8; i++) await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'YanlisSifre99' });
+  assert.equal((await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'GucluSifre12' })).durum, 429);
+});
+
+test('Y2: doğru şifreyle uçtan uca — bağlantı tıklanınca adres değişir, ESKİ adrese güvenlik bildirimi TEK kez gider (eşzamanlı ve tekrarlanan eşitleme)', async () => {
+  const tel = '5421120013';
+  const tk = await hesap(tel, { uid: 'fb-ep-13' });
+  fbKullanicilar.set('fb-ep-13', { email: `e${tel}@ornek.com`, emailVerified: true });
+  const r = await degisimIste(tk, { newEmail: 'yeni13@ornek.com', currentPassword: 'GucluSifre12' });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  // Bağlantı henüz tıklanmadı → değişiklik yok.
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, `e${tel}@ornek.com`);
+  // Tıklandı: Firebase'de yeni adres doğrulanmış. Üç eşzamanlı eşitleme.
+  fbKullanicilar.set('fb-ep-13', { email: 'yeni13@ornek.com', emailVerified: true });
+  const sonuc = await Promise.all([1, 2, 3].map(() => istek('/api/v1/profiles/me/email/sync', { token: tk })));
+  for (const x of sonuc) assert.equal(x.durum, 200, JSON.stringify(x.json));
+  // Tekrar oynatılan eşitleme yeni bir şey yapmaz.
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, 'yeni13@ornek.com');
+  const u = await db.prepare('SELECT email, email_verified, pending_email FROM users WHERE phone = ?').get(tel);
+  assert.equal(u.email, 'yeni13@ornek.com');
+  assert.ok(u.email_verified);
+  assert.equal(u.pending_email, null);
+  const bildirim = await mesajlar(tel, 'EPOSTA_DEGISTI');
+  assert.equal(bildirim.length, 1, 'eski adrese bildirim tam bir kez');
+  assert.equal(bildirim[0].target, `e${tel}@ornek.com`);
+  assert.equal(bildirim[0].status, 'SENT');
+  assert.ok(!bildirim[0].body.includes('yeni13@ornek.com'), 'yeni adres bildirimde açık yazılmaz');
+  assert.ok(bildirim[0].body.includes('y***@ornek.com'));
+});
+
+test('Y2: bekleyen istek olmadan, süresi dolmuşken ya da yerine yenisi geçmişken Firebase\'deki adres işlenmez', async () => {
+  const tel = '5421120014';
+  const tk = await hesap(tel, { uid: 'fb-ep-14' });
+  // Bekleyen istek yok: Firebase istemcisinden doğrudan değişiklik.
+  fbKullanicilar.set('fb-ep-14', { email: 'dogrudan14@ornek.com', emailVerified: true });
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, `e${tel}@ornek.com`);
+  // Süresi dolmuş bekleyen istek (72 saatten eski).
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?')
+    .run('dogrudan14@ornek.com', new Date(Date.now() - 73 * 3600 * 1000).toISOString(), tel);
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, `e${tel}@ornek.com`);
+  // İki eşzamanlı istek: yalnız SONUNCUSU geçerli; eskisinin bağlantısı işlenmez.
+  fbKullanicilar.set('fb-ep-14', { email: `e${tel}@ornek.com`, emailVerified: true });
+  const ikisi = await Promise.all([
+    degisimIste(tk, { newEmail: 'birinci14@ornek.com', currentPassword: 'GucluSifre12' }),
+    degisimIste(tk, { newEmail: 'ikinci14@ornek.com', currentPassword: 'GucluSifre12' }),
+  ]);
+  for (const x of ikisi) assert.equal(x.durum, 200, JSON.stringify(x.json));
+  const bekleyen = (await db.prepare('SELECT pending_email FROM users WHERE phone = ?').get(tel)).pending_email;
+  assert.ok(['birinci14@ornek.com', 'ikinci14@ornek.com'].includes(bekleyen));
+  const diger = bekleyen === 'birinci14@ornek.com' ? 'ikinci14@ornek.com' : 'birinci14@ornek.com';
+  fbKullanicilar.set('fb-ep-14', { email: diger, emailVerified: true });
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, `e${tel}@ornek.com`, 'geçersizleşmiş istek işlenmemeli');
+  fbKullanicilar.set('fb-ep-14', { email: bekleyen, emailVerified: true });
+  assert.equal((await istek('/api/v1/profiles/me/email/sync', { token: tk })).json.email, bekleyen);
+});
+
+test('Y2: doğrulama e-postası gönderilemezse bekleyen istek silinir, hesap eski hâlinde kalır (502)', async () => {
+  const { sirSifrele } = await import('../src/auth.js');
+  const { onbellegiTemizle } = await import('../src/entegrasyon.js');
+  const tel = '5421120015';
+  const tk = await hesap(tel, { uid: 'fb-ep-15' });
+  fbKullanicilar.set('fb-ep-15', { email: `e${tel}@ornek.com`, emailVerified: true });
+  const z = new Date().toISOString();
+  await db.prepare(`INSERT INTO integrations (id, type, provider, active, config_json, secret_enc, created_at, updated_at)
+    VALUES ('test-eposta-bozuk', 'EMAIL', 'webhook', TRUE, ?, ?, ?, ?)`)
+    .run(JSON.stringify({ url: 'https://gecersiz-kopru.invalid/gonder' }), sirSifrele(JSON.stringify({ token: 'x' })), z, z);
+  onbellegiTemizle();
+  try {
+    const r = await degisimIste(tk, { newEmail: 'yeni15@ornek.com', currentPassword: 'GucluSifre12' });
+    assert.equal(r.durum, 502, JSON.stringify(r.json));
+    const u = await db.prepare('SELECT email, pending_email FROM users WHERE phone = ?').get(tel);
+    assert.equal(u.email, `e${tel}@ornek.com`);
+    assert.equal(u.pending_email, null, 'gönderilemeyen istek bekletilmez');
+    const m = await mesajlar(tel, 'EPOSTA_DEGISIKLIGI');
+    assert.equal(m.at(-1).status, 'FAILED');
+    assert.ok(!m.at(-1).body.includes('oobCode'), 'bağlantı kayda düz yazılmaz');
+  } finally {
+    await db.prepare(`DELETE FROM integrations WHERE id = 'test-eposta-bozuk'`).run();
+    onbellegiTemizle();
+  }
+});
+
+test('Y1: Firebase oturum köprüsü kaldırıldı — erişim belgesiyle Firebase özel belgesi alınamaz', async () => {
+  const tel = '5421120016';
+  const tk = await hesap(tel, { uid: 'fb-ep-16' });
+  const r = await istek('/api/v1/auth/firebase/baglanti', { token: tk });
+  assert.equal(r.durum, 404);
+  assert.ok(!JSON.stringify(r.json ?? {}).includes('firebaseCustomToken'));
 });
 
 test('Firebase yönetimi yoksa hiçbir değişiklik yapılmaz, { sent:false } döner (istemci Firebase gönderimine düşer)', async () => {

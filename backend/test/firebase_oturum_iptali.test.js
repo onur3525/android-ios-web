@@ -387,35 +387,32 @@ test('telefon değişikliği yanıtı, servis hesabıyla imzalı kısa ömürlü
   assert.equal('firebaseCustomToken' in r2.json, false);
 });
 
-test('21 Eki (kullanıcı kuralı): e-posta değişikliği oturumu KAPATMAZ — Firebase sınırı ilerlese de açık oturumlar yenilenir, yeni adres işlenir', async () => {
+test('21 Eki (kullanıcı kuralı + Y2): şifreyle başlatılmış e-posta değişikliği oturumu KAPATMAZ — Firebase sınırı ilerlese de açık oturumlar yenilenir, yeni adres işlenir', async () => {
   const h = await hesap('5390000071', 'fb-eposta-degisim-1');
-  // Kullanıcı "doğrula ve değiştir" bağlantısına tıkladı: Firebase belirteçleri
-  // iptal eder (validSince ileri), şifre DEĞİŞMEZ, yeni adres doğrulanmış.
+  // Kullanıcı profilden şifresiyle değişiklik istedi (bekleyen istek), sonra
+  // "doğrula ve değiştir" bağlantısına tıkladı: Firebase belirteçleri iptal
+  // eder (validSince ileri), şifre DEĞİŞMEZ, yeni adres doğrulanmış.
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE phone = ?').run('degisen@ornek.com', new Date().toISOString(), h.tel);
   const vs = an() + 1;
   Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, email: 'degisen@ornek.com', emailVerified: true });
   await kontrolSifirla(h.tel);
   const r = await yenile(h.a.refreshToken);
   assert.equal(r.durum, 200, 'e-posta değişikliği oturumu kapattı');
   assert.equal((await istek('/api/v1/users/me', { token: h.b.accessToken })).durum, 200, 'diğer oturum da açık');
-  const u = await db.prepare('SELECT email, email_verified, firebase_valid_since FROM users WHERE phone = ?').get(h.tel);
+  const u = await db.prepare('SELECT email, email_verified, firebase_valid_since, pending_email FROM users WHERE phone = ?').get(h.tel);
   assert.equal(u.email, 'degisen@ornek.com');
   assert.ok(u.email_verified);
+  assert.equal(u.pending_email, null);
   assert.equal(Number(u.firebase_valid_since), vs, 'eski Firebase belgeleriyle yeni oturum açılmasın');
   assert.equal((await firebaseOturumu(h.uid, h.tel, { auth_time: an() - 30 })).durum, 401);
 });
 
-test('21 Eki: adres hesaba zaten işlenmişse de (eşitleme ucu) e-posta değişikliği oturumu kapatmaz; şifre sıfırlama yine kapatır', async () => {
+test('21 Eki (Y2): bekleyen istek OLMADAN Firebase\'de yapılan e-posta değişikliği işlenmez ve dış iptal sayılır (oturumlar kapanır)', async () => {
   const h = await hesap('5390000072', 'fb-eposta-degisim-2');
-  const vs = an() - 2;
-  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, email: 'islenmis@ornek.com', emailVerified: true });
-  await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE phone = ?')
-    .run('islenmis@ornek.com', new Date().toISOString(), h.tel);
+  const vs = an() + 1;
+  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs, email: 'saldirgan@ornek.com', emailVerified: true });
   await kontrolSifirla(h.tel);
-  const r = await yenile(h.a.refreshToken);
-  assert.equal(r.durum, 200, JSON.stringify(r.json));
-  // Aynı hesapta sonra şifre e-postayla sıfırlanırsa oturumlar kapanır.
-  const vs2 = an() + 2;
-  Object.assign(fbKullanicilar.get(h.uid), { validSince: vs2, passwordUpdatedAt: String(vs2 * 1000) });
-  await kontrolSifirla(h.tel);
-  assert.equal((await yenile(r.json.refreshToken)).durum, 401);
+  assert.equal((await yenile(h.a.refreshToken)).durum, 401, 'yetkisiz değişiklik sonrası eski oturum kapanmalı');
+  const u = await db.prepare('SELECT email FROM users WHERE phone = ?').get(h.tel);
+  assert.equal(u.email, `i${h.tel}@ornek.com`, 'adres değişmemeli');
 });

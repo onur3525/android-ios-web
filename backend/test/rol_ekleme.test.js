@@ -197,22 +197,17 @@ test('rol kuralları değişmedi: iki rolü olan SMS olmadan geçiş yapar; mevc
   assert.equal((await roller(tel2)).roles, 'CUSTOMER');
 });
 
-test('21 Eki: Firebase bağlantı belgesi yalnız kendi kimliği için verilir; kimlik yoksa açık hata', async () => {
+test('21 Eki (güvenlik Y1): Firebase bağlantı belgesi ucu KALDIRILDI — Firebase kimliği olan hesap da erişim belgesiyle özel belge alamaz', async () => {
   const { firebaseOzelBelgeTestUreticisi } = await import('../src/firebase_token.js');
   firebaseOzelBelgeTestUreticisi((uid) => `belge-${uid}`);
   try {
-    await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run(); // önceki testlerin OTP sınırı
+    await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
     const tel = '5421110019';
     const tk = await hizmetAlan(tel);
-    // Firebase kimliği bağlı değil → 409, belge yok.
-    const yok = await istek('/api/v1/auth/firebase/baglanti', { token: tk });
-    assert.equal(yok.durum, 409, JSON.stringify(yok.json));
     await db.prepare('UPDATE users SET firebase_uid = ? WHERE phone = ?').run('fb-baglanti-1', tel);
     const r = await istek('/api/v1/auth/firebase/baglanti', { token: tk });
-    assert.equal(r.durum, 200, JSON.stringify(r.json));
-    assert.equal(r.json.firebaseCustomToken, 'belge-fb-baglanti-1');
-    // Oturumsuz istek reddedilir.
-    assert.equal((await istek('/api/v1/auth/firebase/baglanti', {})).durum, 401);
+    assert.equal(r.durum, 404, JSON.stringify(r.json));
+    assert.ok(!JSON.stringify(r.json ?? {}).includes('belge-fb-baglanti-1'));
   } finally {
     firebaseOzelBelgeTestUreticisi(null);
   }

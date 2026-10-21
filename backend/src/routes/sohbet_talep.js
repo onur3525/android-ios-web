@@ -618,7 +618,7 @@ export async function silmeTalepleriniIsle(db) {
         // firebase_uid de SİLİNİR: kişiye bağlanabilen bir kimliktir ve
         // tekil dizinde (deleted_at'tan bağımsız) tutulduğu için kalırsa
         // aynı kişinin yeni kaydı çakışmayla (500) düşerdi.
-        `UPDATE users SET name = 'Silinmiş Kullanıcı', phone = ?, email = NULL, password_hash = ?, firebase_uid = NULL, photo_customer_ref = NULL, photo_provider_ref = NULL, frozen_at = NULL,
+        `UPDATE users SET name = 'Silinmiş Kullanıcı', phone = ?, email = NULL, password_hash = ?, firebase_uid = NULL, photo_customer_ref = NULL, photo_provider_ref = NULL, frozen_at = NULL, pending_email = NULL, pending_email_at = NULL,
                           phone_verified = FALSE, email_verified = FALSE, deleted_at = ?, updated_at = ? WHERE id = ?`,
       ).run(`silindi-${a.user_id}`, `silindi$${randomUUID()}`, z, z, a.user_id);
       await db.prepare('DELETE FROM addresses WHERE user_id = ?').run(a.user_id);

@@ -34,9 +34,10 @@ class ProfileController extends BaseController {
   /// E-POSTA DEĞİŞİMİ — yeni adrese doğrulama bağlantısı yollanır.
   ///
   /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ (iş kuralları §4).
-  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) =>
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
+          {required String sifre}) =>
       runAction('profile:email-change',
-          () => _auth.epostaDegisimiBaslat(yeniEposta));
+          () => _auth.epostaDegisimiBaslat(yeniEposta, sifre: sifre));
 
   /// Firebase'de doğrulanmış e-postayı hesaba işler (21 Eki).
   Future<void> epostaOnayiniEsitle() => _auth.epostaOnayiniEsitle();
