@@ -20,7 +20,9 @@ void main() {
   final p = _kod('lib/screens/profile_info_screen.dart');
 
   test('iki gönderim de sonucu ekrandaki duruma yazar', () {
-    expect('setState(() => _epostaGonderimDurumu ='.allMatches(p).length, 2);
+    // ⚠ Yalnız gönderim sonuçları sayılır; adres değişince yapılan
+    // temizleme (`= null)`) aynı satırda kalır ve sayılmaz.
+    expect('setState(() => _epostaGonderimDurumu =\n'.allMatches(p).length, 2);
     expect(p.contains('istenmeyen (spam) klasörünü kontrol'), isTrue);
   });
 
