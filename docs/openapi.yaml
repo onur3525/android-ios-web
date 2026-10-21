@@ -775,8 +775,8 @@ paths:
       tags: [Profile]
       summary: Firebase'de doğrulanmış e-postayı hesaba işler
       description: |
-        21 Eki: bağlantıya tıklanınca doğrulama Firebase'de olur. Onaysız
-        hesapta Firebase kaydı okunur; doğrulanmış adres profil adresiyle
+        21 Eki: bağlantıya tıklanınca doğrulama Firebase'de olur. Firebase
+        kaydı okunur (onaylı hesapta da: adres değişikliği için); doğrulanmış adres profil adresiyle
         aynıysa onay, "doğrula ve değiştir" tamamlandıysa yeni adres ve onay
         işlenir. Firebase okunamazsa hesap olduğu gibi döner. Yanıt
         `/users/me` ile aynı biçimdedir.

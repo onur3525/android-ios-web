@@ -74,7 +74,7 @@ void main() {
     expect(be.countOf('POST /auth/firebase/baglanti'), 0);
   });
 
-  test('21 Eki: eşitleme hesabı "onaylı" yapar; onaylı hesapta istek atılmaz', () async {
+  test('21 Eki: eşitleme hesabı "onaylı" yapar', () async {
     var onayli = false;
     final be = FakeBackend({
       'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
@@ -90,8 +90,24 @@ void main() {
     await port.epostaOnayiniEsitle();
     expect(onayli, isTrue);
     expect(port.currentAccount!.emailVerified, isTrue);
+  });
+
+  test('21 Eki: onaylı hesapta da eşitlenir — tamamlanan adres değişikliği profile gelir', () async {
+    final be = FakeBackend({
+      'GET /users/me': (_) =>
+          {...userJson(role: 'CUSTOMER'), 'emailVerified': true},
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/sync': (_) => {
+            ...userJson(role: 'CUSTOMER'),
+            'email': 'yeni.adres@ornek.com',
+            'emailVerified': true,
+          },
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
     await port.epostaOnayiniEsitle();
     expect(be.countOf('POST /profiles/me/email/sync'), 1);
+    expect(port.currentAccount!.email, 'yeni.adres@ornek.com');
   });
 
   test('21 Eki: bağlantıya zaten tıklandıysa (ALREADY_VERIFIED) hesap yenilenir, hata yok', () async {

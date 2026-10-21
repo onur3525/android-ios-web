@@ -949,14 +949,20 @@ export function kullaniciRotalar(r, db) {
   // profil adresiyle aynıysa onay işlenir; "doğrula ve değiştir"
   // tamamlanmışsa (Firebase'de YENİ adres doğrulanmış) adres de güncellenir.
   // Firebase okunamazsa sessizce eski durum korunur.
+  //
+  // ⚠ 21 Eki (ikinci kullanıcı bulgusu): ONAYLI hesapta da çalışır. Onaylı
+  // adresini değiştiren kullanıcı yeni adresteki bağlantıya tıkladığında
+  // Firebase'de adres değişiyordu ama profil eski adresi gösteriyordu;
+  // eşitleme yalnız onaysız hesaplarda yapılıyordu.
   const epostaOnayiniEsitle = async (u) => {
-    if (u.email_verified || !u.firebase_uid || !firebaseYonetimiHazir()) return u;
+    if (!u.firebase_uid || !firebaseYonetimiHazir()) return u;
     let fb;
     try { fb = await firebaseKullaniciBilgisi(u.firebase_uid); } catch { return u; }
     const fbEposta = String(fb?.email || '').trim().toLowerCase();
     if (!fb?.epostaDogrulandi || !fbEposta) return u;
     const mevcut = String(u.email || '').trim().toLowerCase();
     if (fbEposta === mevcut) {
+      if (u.email_verified) return u;
       await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
     } else {
       if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;

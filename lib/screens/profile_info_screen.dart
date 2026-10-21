@@ -233,14 +233,24 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   /// eşitlenir. "Doğrula ve değiştir" tamamlandıysa alana yeni adres yazılır.
   Future<void> _epostaOnayiniEsitle() async {
     final once = context.read<AuthController>().currentAccount;
-    if (once == null || once.emailVerified) return;
+    if (once == null) return;
+    final oncekiEposta = once.email;
+    final oncekiOnay = once.emailVerified;
     await context.read<ProfileController>().epostaOnayiniEsitle();
     if (!mounted) return;
     final sonra = context.read<AuthController>().currentAccount;
     if (sonra == null || !sonra.emailVerified) return;
+    final adresDegisti =
+        epostaNormalize(sonra.email) != epostaNormalize(oncekiEposta);
+    if (!adresDegisti && oncekiOnay) return;
     setState(() {
       _epostaGonderildi = false;
-      if (epostaNormalize(_email.text) == epostaNormalize(once.email)) {
+      // Alan hâlâ eski adresi ya da az önce doğrulanan yeni adresi
+      // gösteriyorsa güncel adres yazılır (kullanıcı yeni bir şey yazdıysa
+      // dokunulmaz).
+      final alan = epostaNormalize(_email.text);
+      if (alan == epostaNormalize(oncekiEposta) ||
+          alan == epostaNormalize(sonra.email)) {
         _email.text = sonra.email;
       }
     });

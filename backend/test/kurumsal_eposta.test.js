@@ -192,6 +192,22 @@ test('21 Eki: "doğrula ve değiştir" tamamlanınca yeni adres ve onay işlenir
   assert.equal(r2.json.emailVerified, false);
 });
 
+test('21 Eki: ONAYLI hesapta adres değişikliği tamamlanınca yeni adres profile işlenir', async () => {
+  const tel = '5421120010';
+  const tk = await hesap(tel, { uid: 'fb-ep-10' });
+  await db.prepare('UPDATE users SET email_verified = TRUE WHERE phone = ?').run(tel);
+  // Değişiklik bağlantısı henüz tıklanmadı: Firebase'de eski adres → değişiklik yok.
+  fbKullanicilar.set('fb-ep-10', { email: `e${tel}@ornek.com`, emailVerified: true });
+  let r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
+  assert.equal(r.json.email, `e${tel}@ornek.com`);
+  assert.equal(r.json.emailVerified, true);
+  // Bağlantı tıklandı: Firebase'de yeni adres doğrulanmış.
+  fbKullanicilar.set('fb-ep-10', { email: 'onayli.yeni@ornek.com', emailVerified: true });
+  r = await istek('/api/v1/profiles/me/email/sync', { token: tk });
+  assert.equal(r.json.email, 'onayli.yeni@ornek.com');
+  assert.equal(r.json.emailVerified, true);
+});
+
 test('21 Eki: bağlantıya tıklanmışsa doğrulama düğmesi e-posta göndermez, ALREADY_VERIFIED döner', async () => {
   const tel = '5421120009';
   const tk = await hesap(tel, { uid: 'fb-ep-9' });
