@@ -332,9 +332,11 @@ test('Y2: doğrulama e-postası gönderilemezse bekleyen istek silinir, hesap es
   const tk = await hesap(tel, { uid: 'fb-ep-15' });
   fbKullanicilar.set('fb-ep-15', { email: `e${tel}@ornek.com`, emailVerified: true });
   const z = new Date().toISOString();
+  // PostgreSQL'de integrations.id UUID türündedir.
+  const entegrasyonId = (await import('node:crypto')).randomUUID();
   await db.prepare(`INSERT INTO integrations (id, type, provider, active, config_json, secret_enc, created_at, updated_at)
-    VALUES ('test-eposta-bozuk', 'EMAIL', 'webhook', TRUE, ?, ?, ?, ?)`)
-    .run(JSON.stringify({ url: 'https://gecersiz-kopru.invalid/gonder' }), sirSifrele(JSON.stringify({ token: 'x' })), z, z);
+    VALUES (?, 'EMAIL', 'webhook', TRUE, ?, ?, ?, ?)`)
+    .run(entegrasyonId, JSON.stringify({ url: 'https://gecersiz-kopru.invalid/gonder' }), sirSifrele(JSON.stringify({ token: 'x' })), z, z);
   onbellegiTemizle();
   try {
     const r = await degisimIste(tk, { newEmail: 'yeni15@ornek.com', currentPassword: 'GucluSifre12' });
@@ -346,7 +348,7 @@ test('Y2: doğrulama e-postası gönderilemezse bekleyen istek silinir, hesap es
     assert.equal(m.at(-1).status, 'FAILED');
     assert.ok(!m.at(-1).body.includes('oobCode'), 'bağlantı kayda düz yazılmaz');
   } finally {
-    await db.prepare(`DELETE FROM integrations WHERE id = 'test-eposta-bozuk'`).run();
+    await db.prepare('DELETE FROM integrations WHERE id = ?').run(entegrasyonId);
     onbellegiTemizle();
   }
 });
