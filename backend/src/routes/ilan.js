@@ -748,8 +748,8 @@ export function ilanRotalar(r, db) {
   //   from — panelin yerel gün başlangıcı (ISO), days — gün sayısı,
   //   unit=hour (yalnız days=1) — tek günün 24 saatlik dilimleri (grafik).
   // Günler `from`dan itibaren 24 saatlik dilimlerdir (Türkiye'de yaz
-  // saati yok). Kullanıcı ve gelen talep sayıları `users.read` yetkisi
-  // ister; yetki yoksa null döner (ekranda "yetki yok").
+  // saati yok). Kullanıcı ve dondurma/silme sayıları `users.read`, Gelen
+  // Talepler sayısı `support.tickets.read` yetkisi ister; yetki yoksa null.
   r.get('/admin/v1/stats/period', async (ctx) => {
     yetkiIste(ctx.admin, 'content.read');
     const bas = Date.parse(String(ctx.query.get('from') ?? ''));
@@ -781,6 +781,8 @@ export function ilanRotalar(r, db) {
       offers: await seri('offers'),
       teklifTalepleri: await seri('teklif_talepleri'),
       accountRequests: kullaniciYetkisi ? await seri('account_requests') : null,
+      // Gelen Talepler (destek e-postaları + uygulama formu).
+      supportTickets: yetkiliMi(ctx.admin.role, 'support.tickets.read') ? await seri('support_tickets') : null,
     };
   });
 

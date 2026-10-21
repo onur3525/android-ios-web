@@ -448,7 +448,7 @@ test('21 Eki: Özet tarih aralığı — günlük sayılar doğrudan veritabanı
   const yol = (b, g) => `/admin/v1/stats/period?from=${encodeURIComponent(b.toISOString())}&days=${g}`;
   const once = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
   assert.equal(once.days, 3);
-  for (const k of ['users', 'listings', 'offers', 'teklifTalepleri', 'accountRequests']) assert.equal(once[k].length, 3, k);
+  for (const k of ['users', 'listings', 'offers', 'teklifTalepleri', 'accountRequests', 'supportTickets']) assert.equal(once[k].length, 3, k);
   await kisi('5340000099', 'CUSTOMER');
   const sonra = (await istek(yol(bas, 3), { rol: 'readonly' })).json;
   assert.deepEqual(sonra.users.slice(0, 2), once.users.slice(0, 2), 'geçmiş günler değişmez');

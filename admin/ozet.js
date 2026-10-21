@@ -333,7 +333,7 @@ export async function ozetSayfasi() {
         bugunKarti('Yeni ilan', 'ilan', 'yesil', donemSay(dv.listings), karsilastirma),
         bugunKarti('Yeni teklif', 'teklif', 'mor', donemSay(dv.offers), karsilastirma),
         bugunKarti('Yeni teklif talebi', 'talep', 'turuncu', donemSay(dv.teklifTalepleri), karsilastirma),
-        bugunKarti('Gelen talep', 'silme', 'kirmizi', donemSay(dv.accountRequests), karsilastirma))),
+        bugunKarti('Gelen talep', 'talep', 'kirmizi', donemSay(dv.supportTickets), karsilastirma))),
 
     h('div', { class: 'oz-uclu' },
       bolum('Kullanıcılar', 'kullanicilar',
@@ -374,7 +374,7 @@ export async function ozetSayfasi() {
         ['Durum', (l) => rozet(l.status)],
         ['Tarih', (l) => kisaTarih(l.createdAt)],
       ], ilanlar.slice(0, 5), (l) => (location.hash = `#/ilan/${l.id}`))),
-      bolum('Dondurma / Silme', 'hesaptalepleri/hesap', gt.e ? yuklenemedi(gt.e) : tablo([
+      bolum('Dondurma / Silme', 'silmekuyruklari', gt.e ? yuklenemedi(gt.e) : tablo([
         ['Konu', (a) => (a.type === 'FREEZE' ? 'Hesap dondurma' : 'Hesap silme')],
         ['Gönderen', (a) => a.name],
         ['Tarih', (a) => kisaTarih(a.createdAt)],
