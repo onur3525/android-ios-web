@@ -50,20 +50,14 @@ void main() {
       }
     });
 
-    test('⚠ TAMAMLANAN İŞ SAYISI EKLENDİ', () {
-      // Yüksek puanlı ama tek işi olan biriyle, orta puanlı ama yirmi
-      // işi olan biri aynı görünmemeli.
-      expect(k.contains('iş tamamladı'), isTrue,
-          reason: 'iş sayısı kartta yok');
-      expect(k.contains('ic_briefcase.svg'), isTrue,
-          reason: 'çanta ikonu yok — kalkan bu anlamı taşımaz');
-    });
-
-    test('⚠ SAYIM TEK KAYNAKTAN', () {
-      // Ekran kendi sorgusunu yazarsa aynı kişi başka kartta başka
-      // sayı gösterir.
-      expect(k.contains('tamamlananIsSayisi(context, offer.providerId)'),
-          isTrue);
+    test('⚠ TAMAMLANAN İŞ SAYISI ÖNİZLEMEDE YOK (21 Eki, kullanıcı isteği)', () {
+      // İş sayısı yalnız teklif detayında görünür.
+      expect(k.contains('iş tamamladı'), isFalse,
+          reason: 'iş sayısı önizleme kartına geri gelmiş');
+      expect(k.contains('ic_briefcase.svg'), isFalse);
+      expect(_kod('lib/screens/offer_detail_screen.dart')
+          .contains('iş tamamladı'), isTrue,
+          reason: 'iş sayısı teklif detayında da yok');
     });
   });
 

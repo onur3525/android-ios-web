@@ -58,11 +58,12 @@ void main() {
       expect(o.contains('konumMetni(adres, mahalleDahil: true)'), isTrue);
     });
 
-    test('ad, konum, tamamlanan iş ve üyelik çizilir', () {
+    test('önizlemede ad ve konum çizilir; iş sayısı ve üyelik YALNIZ detayda (21 Eki)', () {
       expect(satir.contains('ozet.adSoyad'), isTrue);
       expect(satir.contains('ozet.konum'), isTrue);
-      expect(satir.contains('iş tamamladı'), isTrue);
-      expect(satir.contains('ozet.uyelikMetni'), isTrue);
+      expect(satir.contains('iş tamamladı'), isFalse);
+      expect(satir.contains('ozet.uyelikMetni'), isFalse);
+      expect(satir.contains('ic_briefcase.svg'), isFalse);
     });
 
     test('⚠ PROFİL FOTOĞRAFI YOK (kullanıcı isteği, 10 Eyl)', () {

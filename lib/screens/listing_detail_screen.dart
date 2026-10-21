@@ -20,7 +20,6 @@ import 'widgets/yanlis_taraf_kapisi.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/kullanici_konumu.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
-import '../domain/saglayici_ozeti.dart' show tamamlananIsSayisi;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../core/geri.dart';
@@ -1059,7 +1058,7 @@ class _TeklifKarti extends StatelessWidget {
             ),
             ],
 
-            // .of-meta — zaman | kimlik | tamamlanan iş
+            // .of-meta — zaman | kimlik | olumlu yorum
             const SizedBox(height: 5),
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -1102,28 +1101,8 @@ class _TeklifKarti extends StatelessWidget {
                       style: refText(
                           size: 10, weight: RF.w400, color: RC.textSoft)),
                 ],
-                // ── ⚠ TAMAMLANAN İŞ SAYISI (12 Eyl, kullanıcı
-                // isteği) ──
-                //
-                // "Hizmet verenin puanı, kaç yorumu olduğu, kaç iş
-                // bitirdiği görünmeli." Puan ve yorum sayısı adın
-                // altında zaten vardı; EKSİK olan iş sayısıydı.
-                //
-                // Hizmet alan burada teklifleri karşılaştırıyor:
-                // yüksek puanlı ama tek işi olan biriyle, orta puanlı
-                // ama yirmi işi olan biri aynı görünmemeli.
-                //
-                // ⚠ SAYIM TEK KAYNAKTAN: `tamamlananIsSayisi`. Ekran
-                // kendi sorgusunu yazarsa aynı kişi başka kartta
-                // başka sayı gösterir.
-                _ayrac(),
-                const RefSvg('assets/svg/ic_briefcase.svg',
-                    size: 13, color: RC.textSoft),
-                const SizedBox(width: 4),
-                Text('${tamamlananIsSayisi(context, offer.providerId)} '
-                    'iş tamamladı',
-                    style: refText(
-                        size: 10, weight: RF.w400, color: RC.textSoft)),
+                // ⚠ TAMAMLANAN İŞ SAYISI ÖNİZLEMEDE YOK (kullanıcı
+                // isteği, 21 Eki): yalnız teklif detayında görünür.
               ],
             ),
           ],
