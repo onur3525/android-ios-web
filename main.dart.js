@@ -66562,7 +66562,7 @@
     },
     _ProfileInfoScreenState__epostaOnayiniEsitle_closure: function _ProfileInfoScreenState__epostaOnayiniEsitle_closure(t0, t1, t2) {
       this.$this = t0;
-      this.once = t1;
+      this.oncekiEposta = t1;
       this.sonra = t2;
     },
     _ProfileInfoScreenState_initState_closure: function _ProfileInfoScreenState_initState_closure(t0) {
@@ -254876,7 +254876,7 @@
     epostaOnayiniEsitle$0() {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$self = this, _0_0, j, acc, t1, once;
+        $async$returnValue, $async$self = this, _0_0, j, acc, t1;
       var $async$epostaOnayiniEsitle$0 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -254884,8 +254884,7 @@
           switch ($async$goto) {
             case 0:
               // Function start
-              once = $async$self.currentAccount;
-              if (once == null || once.emailVerified) {
+              if ($async$self.currentAccount == null) {
                 // goto return
                 $async$goto = 1;
                 break;
@@ -270642,7 +270641,7 @@
     _epostaOnayiniEsitle$0() {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
-        $async$returnValue, $async$self = this, sonra, t1, once;
+        $async$returnValue, $async$self = this, oncekiEposta, oncekiOnay, sonra, t1, once;
       var $async$_epostaOnayiniEsitle$0 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1)
           return A._asyncRethrow($async$result, $async$completer);
@@ -270652,11 +270651,13 @@
               // Function start
               t1 = type$.AuthController;
               once = A.Provider_of($async$self.get$context(0), false, t1)._auth.get$currentAccount();
-              if (once == null || once.emailVerified) {
+              if (once == null) {
                 // goto return
                 $async$goto = 1;
                 break;
               }
+              oncekiEposta = once.email;
+              oncekiOnay = once.emailVerified;
               $async$goto = 3;
               return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.ProfileController)._profile_controller$_auth.epostaOnayiniEsitle$0(), $async$_epostaOnayiniEsitle$0);
             case 3:
@@ -270672,7 +270673,12 @@
                 $async$goto = 1;
                 break;
               }
-              $async$self.setState$1(new A._ProfileInfoScreenState__epostaOnayiniEsitle_closure($async$self, once, sonra));
+              if (A.epostaNormalize(sonra.email) === A.epostaNormalize(oncekiEposta) && oncekiOnay) {
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$self.setState$1(new A._ProfileInfoScreenState__epostaOnayiniEsitle_closure($async$self, oncekiEposta, sonra));
             case 1:
               // return
               return A._asyncReturn($async$returnValue, $async$completer);
@@ -271030,12 +271036,14 @@
   };
   A._ProfileInfoScreenState__epostaOnayiniEsitle_closure.prototype = {
     call$0() {
-      var t1 = this.$this;
+      var alan, _this = this,
+        t1 = _this.$this;
       t1._epostaGonderildi = false;
       t1 = t1.___ProfileInfoScreenState__email_F;
       t1 === $ && A.throwLateFieldNI("_email");
-      if (A.epostaNormalize(t1._change_notifier$_value.text) === A.epostaNormalize(this.once.email))
-        t1.set$text(0, this.sonra.email);
+      alan = A.epostaNormalize(t1._change_notifier$_value.text);
+      if (alan === A.epostaNormalize(_this.oncekiEposta) || alan === A.epostaNormalize(_this.sonra.email))
+        t1.set$text(0, _this.sonra.email);
     },
     $signature: 0
   };
