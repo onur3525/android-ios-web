@@ -41,6 +41,11 @@ class AuthApi {
   Future<Map<String, dynamic>> firebaseSession(String idToken) =>
       c.post('/auth/firebase/session', body: {'idToken': idToken});
 
+  /// Bu hesabın Firebase kimliği için kısa ömürlü özel belge (21 Eki):
+  /// Firebase oturumu yoksa (web'de sayfa yenilenince) e-posta doğrulama
+  /// bağlantısı gönderilebilsin diye.
+  Future<Map<String, dynamic>> firebaseBaglanti() => c.post('/auth/firebase/baglanti');
+
   Future<Map<String, dynamic>> login({required String phone, required String password}) =>
       c.post('/auth/login', body: {'phone': phone, 'password': password});
 

@@ -274,6 +274,9 @@ class FirebaseKimlik {
     } catch (_) {}
   }
 
+  /// Firebase'de açık oturum var mı (e-posta doğrulama/değişikliği için).
+  Future<bool> oturumVar() async => (await _auth())?.currentUser != null;
+
   /// Telefon değişikliğinden sonra sunucunun verdiği kısa ömürlü özel
   /// belgeyle (iptal sınırından sonra üretilmiş) Firebase'e yeniden bağlanır.
   Future<void> ozelBelgeyleBaglan(String belge) async {

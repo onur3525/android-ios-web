@@ -915,6 +915,23 @@ export function kullaniciRotalar(r, db) {
   //   · istenen adres verildiyse token'daki adresle aynı
   //   · adres başka bir hesapta kayıtlı değil
   // Firebase oturum ucu da sonraki girişte aynı eşitlemeyi yapar.
+  // ── FIREBASE OTURUM BAĞLANTISI (21 Eki, kullanıcı bulgusu) ──
+  // Web'de Firebase oturumu tarayıcıda saklanmaz (Persistence.NONE); sayfa
+  // yenilenince HizmetCep oturumu sürer ama Firebase oturumu yoktur. E-posta
+  // doğrulama bağlantısını Firebase'in kendisi gönderdiği için oturum gerekir;
+  // yoksa "Güvenlik için lütfen yeniden giriş yapın" hatası çıkıyordu. Bu uç,
+  // oturum açmış kullanıcıya YALNIZ KENDİ Firebase kimliği için 5 dakikalık
+  // özel belge verir (telefon değişikliğindeki yöntemle aynı). Kritik işlem
+  // hız sınırına tabidir.
+  r.post('/api/v1/auth/firebase/baglanti', korumali(async (ctx) => {
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    const u = await db.prepare('SELECT firebase_uid FROM users WHERE id = ?').get(ctx.kullanici.id);
+    if (!u?.firebase_uid) throw hata.durum('Hesabınız e-posta doğrulaması için henüz hazır değil. Çıkış yapıp yeniden giriş yapın.');
+    const belge = firebaseOzelBelge(u.firebase_uid);
+    if (!belge) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'E-posta doğrulaması şu anda başlatılamıyor. Lütfen daha sonra tekrar deneyin.');
+    return { firebaseCustomToken: belge };
+  }));
+
   r.post('/api/v1/profiles/me/email/change', korumali(async (ctx) => {
     const token = String(ctx.body.firebaseIdToken ?? '').trim();
     if (!token) throw hata.dogrulama('E-posta değişikliği Firebase doğrulaması gerektirir');

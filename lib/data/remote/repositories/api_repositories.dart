@@ -49,6 +49,18 @@ class ApiAuthRepository extends ChangeNotifier {
   final ApiClient _client;
   ApiAuthRepository(this._client, this._auth, this._profile);
 
+  /// Firebase özel belgesi (bkz. AuthApi.firebaseBaglanti).
+  Future<(String?, DomainError?)> firebaseBaglantiBelgesi() async {
+    final (j, err) = await _guard(() => _auth.firebaseBaglanti());
+    if (err != null) {
+      return (null, err);
+    }
+    final b = j?['firebaseCustomToken'];
+    return b is String && b.isNotEmpty
+        ? (b, null)
+        : (null, const ValidationError('E-posta doğrulaması şu anda başlatılamadı. Lütfen tekrar deneyin.'));
+  }
+
   Account? currentAccount;
   bool get loggedIn => currentAccount != null;
   Role get activeRole => currentAccount?.activeRole ?? Role.customer;
