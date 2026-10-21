@@ -52,7 +52,8 @@ async function istek(yol, { yontem = 'POST', govde, token } = {}) {
 }
 /** Sunucu OTP yoluyla (test kancası) hizmet alan hesabı açar → erişim token'ı. */
 async function hizmetAlan(tel) {
-  assert.equal((await istek('/api/v1/auth/otp/request', { govde: { phone: tel, purpose: 'REGISTER' } })).durum, 204);
+  const o = await istek('/api/v1/auth/otp/request', { govde: { phone: tel, purpose: 'REGISTER' } });
+  assert.equal(o.durum, 204, JSON.stringify(o.json));
   const r = await istek('/api/v1/auth/register', { govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: 'Rol Deneme', email: `r${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   return r.json.accessToken;
@@ -194,4 +195,25 @@ test('rol kuralları değişmedi: iki rolü olan SMS olmadan geçiş yapar; mevc
   const tk2 = await hizmetAlan(tel2);
   assert.equal((await istek('/api/v1/users/me/active-role', { token: tk2, govde: { role: 'PROVIDER' } })).durum, 403);
   assert.equal((await roller(tel2)).roles, 'CUSTOMER');
+});
+
+test('21 Eki: Firebase bağlantı belgesi yalnız kendi kimliği için verilir; kimlik yoksa açık hata', async () => {
+  const { firebaseOzelBelgeTestUreticisi } = await import('../src/firebase_token.js');
+  firebaseOzelBelgeTestUreticisi((uid) => `belge-${uid}`);
+  try {
+    await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run(); // önceki testlerin OTP sınırı
+    const tel = '5421110019';
+    const tk = await hizmetAlan(tel);
+    // Firebase kimliği bağlı değil → 409, belge yok.
+    const yok = await istek('/api/v1/auth/firebase/baglanti', { token: tk });
+    assert.equal(yok.durum, 409, JSON.stringify(yok.json));
+    await db.prepare('UPDATE users SET firebase_uid = ? WHERE phone = ?').run('fb-baglanti-1', tel);
+    const r = await istek('/api/v1/auth/firebase/baglanti', { token: tk });
+    assert.equal(r.durum, 200, JSON.stringify(r.json));
+    assert.equal(r.json.firebaseCustomToken, 'belge-fb-baglanti-1');
+    // Oturumsuz istek reddedilir.
+    assert.equal((await istek('/api/v1/auth/firebase/baglanti', {})).durum, 401);
+  } finally {
+    firebaseOzelBelgeTestUreticisi(null);
+  }
 });

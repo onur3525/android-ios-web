@@ -497,12 +497,36 @@ class ApiAuthPort extends AuthPort {
   @override
   /// Yeni adrese Firebase doğrulama bağlantısı; adres bağlantı tıklanınca
   /// değişir ve sonraki girişte sunucu hesabına işlenir.
-  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) =>
-      FirebaseKimlik.i.epostaDegistir(yeniEposta);
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async =>
+      await _firebaseOturumuHazirla() ??
+      await FirebaseKimlik.i.epostaDegistir(yeniEposta);
 
   @override
-  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) =>
-      FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
+  Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta) async =>
+      await _firebaseOturumuHazirla() ??
+      await FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
+
+  /// ── ⚠ FIREBASE OTURUMU YOKSA KURULUR (21 Eki, kullanıcı bulgusu) ──
+  /// E-posta doğrulama bağlantısını Firebase gönderir ve açık Firebase
+  /// oturumu ister. Web'de bu oturum tarayıcıda saklanmadığı için sayfa
+  /// yenilenince yoktu ve düğme "Güvenlik için lütfen yeniden giriş yapın"
+  /// diyordu. Artık sunucudan bu hesaba ait kısa ömürlü özel belge alınıp
+  /// Firebase'e bağlanılır; kullanıcıdan bir şey istenmez. TEK KAYNAK:
+  /// mevcut adres doğrulaması ve yeni adres değişikliği aynı yolu kullanır.
+  Future<DomainError?> _firebaseOturumuHazirla() async {
+    if (await FirebaseKimlik.i.oturumVar()) {
+      return null;
+    }
+    final (belge, err) = await repo.firebaseBaglantiBelgesi();
+    if (err != null) {
+      return err;
+    }
+    await FirebaseKimlik.i.ozelBelgeyleBaglan(belge!);
+    return await FirebaseKimlik.i.oturumVar()
+        ? null
+        : const ValidationError(
+            'E-posta doğrulaması şu anda başlatılamadı. Lütfen tekrar deneyin.');
+  }
 
   @override
   Future<ProviderApprovalState> providerApproval() => repo.providerApproval();

@@ -485,6 +485,22 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Eşleşen hesap yok }
 
+  /auth/firebase/baglanti:
+    post:
+      tags: [Auth]
+      summary: Bu hesabın Firebase kimliği için kısa ömürlü özel belge
+      description: |
+        Oturumlu kullanıcının bağlı Firebase kimliği için 5 dakikalık özel
+        belge (custom token) döner. İstemcide Firebase oturumu yoksa (web'de
+        sayfa yenilenince) e-posta doğrulama bağlantısı gönderilebilsin diye
+        kullanılır. Yalnız kendi hesabı; kritik işlem sınırı uygulanır.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: '{ firebaseCustomToken }' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { description: Hesaba bağlı Firebase kimliği yok }
+        '503': { description: Belge üretilemiyor }
+
   /auth/otp/request:
     post:
       tags: [Auth]
