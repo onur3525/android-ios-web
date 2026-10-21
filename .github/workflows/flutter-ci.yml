@@ -91,6 +91,26 @@ jobs:
       - run: flutter pub get
       - name: Gradle wrapper (tek kaynak betik)
         run: bash android/gradle_wrapper_hazirla.sh
+      # ── SABİT DEBUG ANAHTARI ──
+      #
+      # ⚠ Her koşu kendi debug anahtarını üretirse yeni test APK'sı eski
+      # kurulumun üzerine KURULAMAZ ("paket çakışıyor"). Gizli değer
+      # tanımlıysa her koşu aynı anahtarla imzalar; tanımlı değilse
+      # davranış eskisi gibidir. Yalnız `.debug` test paketini etkiler;
+      # mağaza paketi (com.hizmetcep.app) bununla imzalanmaz.
+      #
+      # ⚠ DEĞER LOGA BASILMAZ; yalnız varlığı bildirilir.
+      - name: Sabit debug anahtarı (varsa)
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$DEBUG_KEYSTORE_B64" ]; then
+            mkdir -p "$HOME/.android"
+            printf '%s' "$DEBUG_KEYSTORE_B64" | base64 --decode > "$HOME/.android/debug.keystore"
+            echo "Sabit debug anahtarı kullanılıyor."
+          else
+            echo "DEBUG_KEYSTORE_B64 tanımlı değil: bu koşu geçici debug anahtarıyla imzalanır."
+          fi
       # ⚠ 15 Eki (canlı hazırlığı): test APK'sı da test sitesi gibi gerçek
       # backend'e bağlanır; dağıtılan hiçbir pakette mock veri yoktur.
       - name: Android debug APK (gerçek API)

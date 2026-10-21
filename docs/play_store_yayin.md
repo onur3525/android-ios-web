@@ -49,31 +49,46 @@ Environment variables → hepsi "secure" işaretli:
 | `API_BASE_URL` | `https://...` (release'te https zorunlu) |
 | `CERT_PINS` | en az iki pin, virgülle (önerilen: `sha256/<SPKI base64>`) |
 | `STORAGE_HOSTS` | izinli depolama alan adları, virgülle (boşsa yükleme reddedilir) |
-| `APK_SIGNATURE_SHA256` | imza özeti (aşağıda) |
+| `APK_SIGNATURE_SHA256` | Google'ın imza anahtarının özeti (aşağıda) |
+| `GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` | Play'deki son derleme numarasını okumak için servis hesabı (bölüm 5) |
+
+⚠ İmza özeti YÜKLEME ANAHTARINIZDAN ALINMAZ. Play App Signing açıkken
+kullanıcının telefonuna giden paketi Google'ın "uygulama imzalama
+anahtarı" imzalar. Uygulama da çalışırken bu imzayı okur. Yükleme
+anahtarının özeti verilirse imza denetimi mağazadan indiren HERKESTE
+başarısız olur.
 
 İmza özetini almak:
 
-    keytool -list -v -keystore hizmetcep.jks -alias hizmetcep \
-      | grep "SHA256:" 
+1. Play Console → uygulama → Test ve yayınlama → Uygulama bütünlüğü →
+   Play uygulama imzalama → "Uygulama imzalama anahtarı sertifikası"
+2. Oradaki SHA-256 değerini kopyalayın (iki nokta ayraçlı onaltılık)
+3. base64'e çevirin:
 
-⚠ `keytool` çıktısı iki nokta ayraçlı onaltılıktır; uygulama base64
-bekler. Dönüştürme yapılmadan verilirse imza denetimi HER ZAMAN
-başarısız olur — bu yüzden özet elde edilene kadar değişken BOŞ
-bırakılmalıdır (boşken denetim kapalıdır).
+       echo "AA:BB:...:FF" | tr -d ':' | xxd -r -p | base64
+
+⚠ Uygulama base64 bekler. Onaltılık biçim olduğu gibi verilirse imza
+denetimi HER ZAMAN başarısız olur.
+
+⚠ Aynı sayfadaki SHA-1 ve SHA-256 değerleri Firebase Console → Proje
+ayarları → Android uygulaması (`com.hizmetcep.app`) → "Parmak izi
+ekle" bölümüne de eklenmelidir; yükleme anahtarınınkiler de eklenir.
+Eksikse mağazadan indiren kullanıcılar SMS koduyla giriş yapamaz.
 
 ## 4. Paket üretimi
 
-`release-hardened` iş akışı elle tetiklenir. İçinde iki komut çalışır:
+`release-hardened` iş akışı elle tetiklenir ve yalnız mağaza paketini
+üretir:
 
-    flutter build apk --release --obfuscate ...        # test/elle kurulum
-    flutter build appbundle --release --obfuscate ...  # MAĞAZAYA GİDEN
+    flutter build appbundle --release --build-number=<otomatik> --obfuscate ...
 
-İki çıktı verir:
+Çıktı: `.aab` → **mağazaya yüklenen**
 
-- `.aab` → **mağazaya yüklenen**
-- `.apk` → elle kurulum ve test
-
-⚠ `.aab` telefona doğrudan kurulamaz. Test için `.apk` kullanılır.
+⚠ Release APK BİLEREK ÜRETİLMEZ. Yükleme anahtarıyla imzalanmış bir
+APK'yı kuran kişi, mağazadan güncelleme alırken "paket mevcut bir
+paketle çakışıyor" hatası alır ve uygulamayı silmek zorunda kalır.
+Gerçek cihaz testi Play Console → "Dahili test" kanalıyla yapılır;
+oradan kurulan paket mağaza sürümüyle aynı imzayı taşır.
 
 ⚠ `build/symbols` klasörü SAKLANIR. Karartma açık olduğu için çökme
 raporları bu dosyalar olmadan okunamaz. Her sürüm için ayrı saklayın.
@@ -82,8 +97,18 @@ raporları bu dosyalar olmadan okunamaz. Her sürüm için ayrı saklayın.
 
 `pubspec.yaml` → `version: 1.0.0+1`
 
-⚠ Sağdaki sayı her mağaza yüklemesinde MUTLAKA artar. Play aynı
-numarayı iki kez kabul etmez ve numara geri alınamaz.
+Soldaki kısım (`1.0.0`) kullanıcının gördüğü sürümdür ve elle
+değiştirilir. Sağdaki sayı (versionCode) CI'da OTOMATİK verilir:
+Play'deki en son numara ile Codemagic sayacının büyüğünün bir fazlası.
+Elle artırmaya gerek yoktur.
+
+⚠ Play aynı numarayı iki kez kabul etmez ve numara geri alınamaz.
+
+⚠ Play'deki son numarayı okumak için Codemagic'te
+`GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` (Play Console'a erişimi olan
+Google Cloud servis hesabının JSON anahtarı, "secure") tanımlanmalıdır.
+Tanımlı değilse yalnız Codemagic sayacı kullanılır; o da her derlemede
+arttığı için numara yine geriye gitmez.
 
 ## 6. Play Console'da beyan edilecekler
 
