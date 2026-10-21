@@ -75,8 +75,8 @@ void main() {
         'SaglayiciOzetSatiri(':
             'lib/screens/widgets/saglayici_ozet_satiri.dart',
         'SahipKarti(': 'lib/screens/widgets/detay_karti_parcalari.dart',
-        'HizmetAlanOzetSatiri(':
-            'lib/screens/widgets/hizmet_alan_ozet_satiri.dart',
+        // 21 Eki: `HizmetAlanOzetSatiri` artık "iş tamamladı" çizmiyor
+        // (önizlemede gösterilmez), bu yüzden listede yok.
       };
       bilesenler.forEach((_, dosya) {
         final k = _kodu(dosya);

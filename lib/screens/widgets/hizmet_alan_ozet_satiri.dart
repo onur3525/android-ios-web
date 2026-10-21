@@ -37,6 +37,11 @@ class HizmetAlanOzetSatiri extends StatelessWidget {
   //
   // ⚠ TEK BİLEŞEN, İKİ KART: bu satırı "Kazandığım" ekranındaki iki
   // kart türü de kullanıyor; ikisinde birden avatar kalkar.
+  //
+  // ⚠ ÖNİZLEMEDE İŞ SAYISI VE ÜYELİK YOK (kullanıcı isteği, 21 Eki):
+  // "N iş tamamladı • Ay Yıl'ten beri üye" satırı yalnız karta
+  // girilince (detay ekranındaki `SahipKarti`) görünür. Bu bileşen
+  // yalnız liste kartlarında kullanılır.
   @override
   Widget build(BuildContext context) => Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,28 +74,6 @@ class HizmetAlanOzetSatiri extends StatelessWidget {
                     ],
                   ),
                 ],
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    // ⚠ ÇANTA: "iş tamamladı" satırlarının ortak ikonu.
-                    const RefSvg('assets/svg/ic_briefcase.svg',
-                        size: 13, color: Color(0xFF5B6472)),
-                    const SizedBox(width: 5),
-                    Flexible(
-                      child: Text(
-                          ozet.uyelikMetni == null
-                              ? '${ozet.tamamlananIs} iş tamamladı'
-                              : '${ozet.tamamlananIs} iş tamamladı  •  '
-                                  '${ozet.uyelikMetni}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: refText(
-                              size: RF.s115,
-                              weight: RF.w400,
-                              color: const Color(0xFF5B6472))),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
