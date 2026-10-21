@@ -118,6 +118,14 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
 
   bool _busy = false;
 
+  /// ── ⚠ E-POSTA GÖNDERİM DURUMU — ALANIN ALTINDA KALICI YAZI (21 Eki) ──
+  ///
+  /// Başarı uyarıları (`sysToastOk`) 9 Eyl'den beri bilerek çizilmiyor;
+  /// bu yüzden doğrulama bağlantısı gönderildiğinde ekranda HİÇBİR şey
+  /// değişmiyordu ve kullanıcı e-postanın gidip gitmediğini bilemiyordu.
+  /// Sonuç alt şerit olarak değil, düğmenin altında yazı olarak durur.
+  String? _epostaGonderimDurumu;
+
   /// ⚠ ALAN BAZLI YENİDEN DOĞRULAMA ANAHTARLARI.
   ///
   /// Uyarı bir kez göründükten sonra, kullanıcı hatayı düzeltince
@@ -281,7 +289,9 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    sysToastOk(context, 'Doğrulama bağlantısı mevcut e-posta adresinize gönderildi. E-postanızdaki bağlantıyı açın.');
+    setState(() => _epostaGonderimDurumu =
+        'Doğrulama bağlantısı $mevcut adresine gönderildi. Gelen kutunuzu ve '
+        'istenmeyen (spam) klasörünü kontrol edin.');
   }
 
   Future<void> _yeniEpostaDogrulamaGonder() async {
@@ -296,10 +306,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-    sysToastOk(
-      context,
-      'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.',
-    );
+    setState(() => _epostaGonderimDurumu =
+        'Doğrulama bağlantısı ${epostaNormalize(_email.text)} adresine '
+        'gönderildi. Gelen kutunuzu ve istenmeyen (spam) klasörünü kontrol '
+        'edin. Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.');
   }
 
   Future<void> _save() async {
@@ -566,7 +576,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
               focusNode: _fEposta,
               // ⚠ `onChanged` doğrulama YAPMAZ.
               //
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() => _epostaGonderimDurumu = null),
               hint: 'E-posta',
               keyboardType: TextInputType.emailAddress,
                   // ⚠ E-postada baş harf büyütülmez.
@@ -622,6 +632,28 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                           onPressed: _busy ? null : _yeniEpostaDogrulamaGonder,
                           icon: const Icon(Icons.outgoing_mail, size: 18),
                           label: const Text('Yeni E-posta Adresini Doğrula'),
+                        ),
+                      ),
+                    if (_epostaGonderimDurumu != null && !onayli)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.mark_email_unread_outlined,
+                                size: 18, color: RC.success),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _epostaGonderimDurumu!,
+                                style: refText(
+                                  size: RF.s135,
+                                  weight: RF.w500,
+                                  color: RC.success,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
