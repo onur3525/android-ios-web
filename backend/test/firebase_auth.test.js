@@ -94,11 +94,19 @@ test('Firebase oturumu: eski (bağsız) hesap doğrulanmış telefonla ilk kez b
   assert.equal(yok.durum, 404);
 });
 
-test('Firebase\'de doğrulanmış yeni e-posta hesaba işlenir', async () => {
+test('Firebase\'de doğrulanmış yeni e-posta YALNIZ şifreyle başlatılmış bekleyen istekle hesaba işlenir (21 Eki, Y2)', async () => {
+  // Bekleyen istek yok: Firebase'den doğrudan yapılan değişiklik işlenmez.
+  const once = await istek('/api/v1/auth/firebase/session', { idToken: idToken({ sub: 'fb-uid-1', email: 'yeni@ornek.com', email_verified: true }) });
+  assert.equal(once.durum, 200, JSON.stringify(once.json));
+  assert.equal((await istek('/api/v1/users/me', null, once.json.accessToken)).json.email, 'fb@ornek.com');
+  // Sunucuda başlatılmış istek (şifre doğrulamalı uçla aynı kayıt) → işlenir.
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE firebase_uid = ?').run('yeni@ornek.com', new Date().toISOString(), 'fb-uid-1');
   const r = await istek('/api/v1/auth/firebase/session', { idToken: idToken({ sub: 'fb-uid-1', email: 'yeni@ornek.com', email_verified: true }) });
   const me = await istek('/api/v1/users/me', null, r.json.accessToken);
   assert.equal(me.json.email, 'yeni@ornek.com');
   assert.equal(me.json.emailVerified, true);
+  const u = await db.prepare('SELECT pending_email FROM users WHERE firebase_uid = ?').get('fb-uid-1');
+  assert.equal(u.pending_email, null, 'bekleyen istek tüketildi');
 });
 
 test('askıdaki hesap Firebase ile de giremez', async () => {
@@ -127,7 +135,11 @@ test('E-posta değiştirme: yalnız hesaba bağlı ve DOĞRULANMIŞ Firebase adr
   assert.equal((await istek(yol, { firebaseIdToken: idToken({ sub: 'baska-uid', email: 'degisim-yeni@ornek.com', email_verified: true }) }, erisim)).durum, 403);
   // İstenen adres token'daki adresle aynı olmalı
   assert.equal((await istek(yol, { newEmail: 'farkli@ornek.com', firebaseIdToken: idToken({ sub: 'fb-uid-e1', email: 'degisim-yeni@ornek.com', email_verified: true }) }, erisim)).durum, 409);
-  // Doğrulanmış adres işlenir
+  // ⚠ 21 Eki (Y2): bekleyen (şifreyle başlatılmış) istek yoksa doğrulanmış adres de İŞLENMEZ
+  assert.equal((await istek(yol, { newEmail: 'degisim-yeni@ornek.com', firebaseIdToken: idToken({ sub: 'fb-uid-e1', email: 'degisim-yeni@ornek.com', email_verified: true }) }, erisim)).durum, 409);
+  assert.equal((await db.prepare('SELECT email FROM users WHERE id = ?').get('22222222-2222-2222-2222-222222222222')).email, 'once@ornek.com');
+  await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ? WHERE id = ?').run('degisim-yeni@ornek.com', new Date().toISOString(), '22222222-2222-2222-2222-222222222222');
+  // Doğrulanmış ve bekleyen istekle eşleşen adres işlenir
   const ok = await istek(yol, { newEmail: 'DEGISIM-YENI@ornek.com', firebaseIdToken: idToken({ sub: 'fb-uid-e1', email: 'degisim-yeni@ornek.com', email_verified: true }) }, erisim);
   assert.equal(ok.durum, 200, JSON.stringify(ok.json));
   const u = await db.prepare('SELECT email, email_verified FROM users WHERE id = ?').get('22222222-2222-2222-2222-222222222222');

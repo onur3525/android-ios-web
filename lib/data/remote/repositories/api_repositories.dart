@@ -49,15 +49,15 @@ class ApiAuthRepository extends ChangeNotifier {
   final ApiClient _client;
   ApiAuthRepository(this._client, this._auth, this._profile);
 
-  /// Firebase özel belgesi (bkz. AuthApi.firebaseBaglanti).
   /// Kurumsal doğrulama e-postası (21 Eki). `yeniEposta` verilirse yeni
-  /// adrese "doğrula ve değiştir" bağlantısı gider. Dönen `bool`: sunucu
-  /// e-postayı GÖNDERDİ mi (false = e-posta kanalı yok; çağıran Firebase'in
-  /// kendi gönderimini kullanır).
-  Future<(bool, DomainError?)> kurumsalEpostaGonder({String? yeniEposta}) async {
+  /// adrese "doğrula ve değiştir" bağlantısı gider; bu durumda `mevcutSifre`
+  /// ZORUNLUDUR ve sunucuda doğrulanır (güvenlik Y2). Dönen `bool`: sunucu
+  /// e-postayı GÖNDERDİ mi (false = e-posta kanalı yok).
+  Future<(bool, DomainError?)> kurumsalEpostaGonder(
+      {String? yeniEposta, String? mevcutSifre}) async {
     final (j, err) = await _guard(() => yeniEposta == null
         ? _profile.epostaDogrulamaIste()
-        : _profile.epostaDegisimiIste(yeniEposta));
+        : _profile.epostaDegisimiIste(yeniEposta, mevcutSifre ?? ''));
     if (err != null) {
       return (false, err);
     }
@@ -83,17 +83,6 @@ class ApiAuthRepository extends ChangeNotifier {
     }
     _hesabiYaz(j);
     notifyListeners();
-  }
-
-  Future<(String?, DomainError?)> firebaseBaglantiBelgesi() async {
-    final (j, err) = await _guard(() => _auth.firebaseBaglanti());
-    if (err != null) {
-      return (null, err);
-    }
-    final b = j?['firebaseCustomToken'];
-    return b is String && b.isNotEmpty
-        ? (b, null)
-        : (null, const ValidationError('E-posta doğrulaması şu anda başlatılamadı. Lütfen tekrar deneyin.'));
   }
 
   Account? currentAccount;

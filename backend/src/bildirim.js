@@ -38,6 +38,16 @@ export const SABLONLAR = {
       not: 'Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın; hesabınızda herhangi bir değişiklik yapılmaz.',
     },
   },
+  // ── 21 Eki (güvenlik Y2): adres değişince ESKİ adrese bilgilendirme ──
+  EPOSTA_DEGISTI: {
+    konu: 'E-posta adresiniz değiştirildi',
+    sms: 'Merhaba {AD},\n\nHizmetCep hesabınızın e-posta adresi {YENI} olarak değiştirildi.\n\nBu değişikliği siz yapmadıysanız uygulamada "Şifremi Unuttum" ile telefon numaranızla şifrenizi hemen yenileyin ve {DESTEK} adresinden bize ulaşın.',
+    eposta: {
+      baslik: 'E-posta adresiniz değiştirildi',
+      paragraflar: ['Merhaba {AD},', 'HizmetCep hesabınızın e-posta adresi {YENI} olarak değiştirildi. Bu adrese artık hesabınızla ilgili e-posta gönderilmeyecek.'],
+      not: 'Bu değişikliği siz yapmadıysanız uygulamada "Şifremi Unuttum" ile telefon numaranızla şifrenizi hemen yenileyin ve {DESTEK} adresinden bize ulaşın.',
+    },
+  },
   EPOSTA_DEGISIKLIGI: {
     konu: 'Yeni e-posta adresinizi doğrulayın',
     sms: 'Merhaba {AD},\n\nHizmetCep hesabınızın e-posta adresini {EPOSTA} olarak değiştirmek için bu bağlantıyı açın:\n{BAGLANTI}\n\nBağlantıyı açana kadar mevcut adresiniz geçerli kalır. Bu isteği siz yapmadıysanız bu e-postayı dikkate almayın.',

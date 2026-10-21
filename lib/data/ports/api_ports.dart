@@ -494,24 +494,27 @@ class ApiAuthPort extends AuthPort {
     return repo.profilFotografiniKaydet(photoPath, acc.activeRole);
   }
 
-  @override
-  /// Yeni adrese Firebase doğrulama bağlantısı; adres bağlantı tıklanınca
-  /// değişir ve sonraki girişte sunucu hesabına işlenir.
+  /// ── ⚠ E-POSTA DOĞRULAMA VE DEĞİŞİKLİĞİ YALNIZ SUNUCUDAN (21 Eki, güvenlik) ──
   ///
-  /// ⚠ 21 Eki: e-posta önce SUNUCUDAN, HizmetCep tasarımıyla gider
-  /// (bağlantıyı Firebase üretir). Sunucuda e-posta kanalı yoksa Firebase'in
-  /// kendi gönderimi kullanılır (eski yol, aynı bağlantı türü).
-  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta) async {
-    final (gonderildi, err) =
-        await repo.kurumsalEpostaGonder(yeniEposta: yeniEposta);
+  /// Bağlantıyı Firebase üretir, e-postayı sunucu gönderir. İstemci Firebase
+  /// oturumuna ihtiyaç DUYMAZ: önceki "Firebase oturum köprüsü"
+  /// (`/auth/firebase/baglanti`) kaldırıldı (Y1) — erişim belgesini Firebase'de
+  /// şifre/e-posta değiştirebilen bir oturuma yükseltiyordu. Sunucuda e-posta
+  /// kanalı yoksa Firebase'e düşülmez; açık hata gösterilir.
+  static const _kanalYok = ValidationError(
+      'E-posta gönderimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.');
+
+  @override
+  /// Yeni adrese "doğrula ve değiştir" bağlantısı. ⚠ Y2: mevcut şifre
+  /// sunucuda doğrulanır; adres yalnız bağlantı tıklanınca değişir.
+  Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
+      {required String sifre}) async {
+    final (gonderildi, err) = await repo.kurumsalEpostaGonder(
+        yeniEposta: yeniEposta, mevcutSifre: sifre);
     if (err != null) {
       return err;
     }
-    if (gonderildi) {
-      return null;
-    }
-    return await _firebaseOturumuHazirla() ??
-        await FirebaseKimlik.i.epostaDegistir(yeniEposta);
+    return gonderildi ? null : _kanalYok;
   }
 
   @override
@@ -523,33 +526,7 @@ class ApiAuthPort extends AuthPort {
     if (err != null) {
       return err;
     }
-    if (gonderildi) {
-      return null;
-    }
-    return await _firebaseOturumuHazirla() ??
-        await FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);
-  }
-
-  /// ── ⚠ FIREBASE OTURUMU YOKSA KURULUR (21 Eki, kullanıcı bulgusu) ──
-  /// E-posta doğrulama bağlantısını Firebase gönderir ve açık Firebase
-  /// oturumu ister. Web'de bu oturum tarayıcıda saklanmadığı için sayfa
-  /// yenilenince yoktu ve düğme "Güvenlik için lütfen yeniden giriş yapın"
-  /// diyordu. Artık sunucudan bu hesaba ait kısa ömürlü özel belge alınıp
-  /// Firebase'e bağlanılır; kullanıcıdan bir şey istenmez. TEK KAYNAK:
-  /// mevcut adres doğrulaması ve yeni adres değişikliği aynı yolu kullanır.
-  Future<DomainError?> _firebaseOturumuHazirla() async {
-    if (await FirebaseKimlik.i.oturumVar()) {
-      return null;
-    }
-    final (belge, err) = await repo.firebaseBaglantiBelgesi();
-    if (err != null) {
-      return err;
-    }
-    await FirebaseKimlik.i.ozelBelgeyleBaglan(belge!);
-    return await FirebaseKimlik.i.oturumVar()
-        ? null
-        : const ValidationError(
-            'E-posta doğrulaması şu anda başlatılamadı. Lütfen tekrar deneyin.');
+    return gonderildi ? null : _kanalYok;
   }
 
   @override

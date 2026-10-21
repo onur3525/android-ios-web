@@ -338,11 +338,21 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     setState(() => _epostaGonderildi = true);
   }
 
+  /// ⚠ 21 Eki (güvenlik Y2): e-posta değişikliği mevcut şifreyi ister;
+  /// şifreyi SUNUCU doğrular (panel yalnız alır). İptal edilirse null.
+  Future<String?> _epostaIcinSifre() => sifreIleDogrula(context,
+      aciklama: 'E-posta adresinizi değiştirmeden önce güvenlik için '
+          'şifrenizi girin.',
+      renk: RC.blue);
+
   Future<void> _yeniEpostaDogrulamaGonder() async {
     if (_busy || !_epostaDegisti || _epostaHata != null) return;
+    final sifre = await _epostaIcinSifre();
+    if (sifre == null || !mounted) return;
     setState(() => _busy = true);
     final err = await context.read<ProfileController>().epostaDegisimiBaslat(
           epostaNormalize(_email.text),
+          sifre: sifre,
         );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -388,9 +398,16 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     // bağlantı yollar, adres ancak tıklanınca yürürlüğe girer.
     // Kullanıcıya "güncellendi" demek yanlış olurdu.
     var epostaBeklemede = false;
+    String? epostaSifresi;
     if (_epostaDegisti) {
-      final e = await profile
-          .epostaDegisimiBaslat(epostaNormalize(_email.text));
+      epostaSifresi = await _epostaIcinSifre();
+      if (epostaSifresi == null || !mounted) {
+        if (mounted) setState(() => _busy = false);
+        return;
+      }
+      final e = await profile.epostaDegisimiBaslat(
+          epostaNormalize(_email.text),
+          sifre: epostaSifresi);
       if (!mounted) {
         return;
       }
@@ -411,10 +428,13 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
       //
       // ⚠ YENİDEN KİMLİK DOĞRULAMA (güvenlik denetimi, karar 2): kod
       // gönderilmeden önce mevcut şifre sorulur; sunucu da doğrular.
-      final sifre = await sifreIleDogrula(context,
-          aciklama: 'Telefon numaranızı değiştirmeden önce güvenlik için '
-              'şifrenizi girin.',
-          renk: RC.blue);
+      // Aynı kaydetmede e-posta için şifre zaten alındıysa yeniden sorulmaz
+      // (sunucu her işlemde ayrıca doğrular).
+      final sifre = epostaSifresi ??
+          await sifreIleDogrula(context,
+              aciklama: 'Telefon numaranızı değiştirmeden önce güvenlik için '
+                  'şifrenizi girin.',
+              renk: RC.blue);
       if (sifre == null || !mounted) {
         return;
       }

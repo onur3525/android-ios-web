@@ -266,32 +266,61 @@ async function saglayiciProfili(db, kullaniciId) {
 /**
  * ── ⚠ FIREBASE'DE DOĞRULANMIŞ E-POSTAYI HESABA İŞLER — TEK KAYNAK (21 Eki) ──
  *
- * `k`: firebaseKullaniciBilgisi kaydı. Doğrulanmış adres profil adresiyle
- * aynıysa yalnız onay işlenir. Farklıysa ("doğrula ve değiştir" tamamlandı)
- * adres de değişir — başka hesapta kayıtlıysa DEĞİŞMEZ.
+ * `k`: { email, epostaDogrulandi, validSince } (firebaseKullaniciBilgisi
+ * kaydı ya da doğrulanmış Firebase belgesinden). Doğrulanmış adres profil
+ * adresiyle aynıysa yalnız onay işlenir.
  *
- * ⚠ OTURUM KAPANMAZ (kullanıcı kuralı): Firebase adres değişikliğinde
- * yenileme belirteçlerini iptal eder ve `validSince`'i ileri alır. Uzlaştırma
- * bunu "dışarıda iptal" sanıp kullanıcının açık oturumlarını kapatıyordu
- * (hesap açıkken e-posta değişince çıkış, yeniden şifre). Değişiklik burada
- * işlenirken yerel sınır Firebase'inkine çekilir; uzlaştırma bunu yeni bir
- * iptal saymaz. Eski Firebase belgeleriyle yeni oturum yine açılmaz.
+ * ⚠ ADRES DEĞİŞİKLİĞİ YALNIZ SUNUCUNUN BAŞLATTIĞI İSTEKLE (güvenlik Y2):
+ * Firebase'de doğrulanmış FARKLI adres, ancak kullanıcının MEVCUT ŞİFRESİYLE
+ * sunucuda başlattığı ve süresi dolmamış bekleyen istekle (`pending_email`)
+ * aynıysa hesaba yazılır. Firebase istemcisinden doğrudan yapılan değişiklik
+ * (ör. ele geçirilmiş bir Firebase oturumuyla) hesaba İŞLENMEZ.
+ * Başka hesapta kayıtlı adres işlenmez. İşleme koşullu güncellemeyle yapılır:
+ * aynı istek eşzamanlı iki eşitlemede İKİ KEZ işlenmez.
+ *
+ * İşlendiğinde:
+ *   · yerel Firebase sınırı ileri alınır — Firebase adres değişikliğinde
+ *     belirteçleri iptal eder; uzlaştırma bunu yeni bir dış iptal saymaz,
+ *     açık oturumlar KAPANMAZ (kullanıcı kuralı). Eski belgelerle yeni
+ *     oturum yine açılmaz.
+ *   · ESKİ adrese güvenlik bildirimi gönderilir (kayıt outbound_messages'ta;
+ *     gönderim başarısız olsa da değişiklik geri alınmaz, kayıt FAILED kalır).
  * Dönen: güncel kullanıcı satırı (değişiklik yoksa aynı satır).
  */
+export const BEKLEYEN_EPOSTA_SURESI_MS = 72 * 60 * 60 * 1000;
+const kucuk = (v) => String(v || '').trim().toLowerCase();
+/** 'ali.veli@ornek.com' → 'a***@ornek.com' (bildirimlerde tam adres yazılmaz). */
+function epostaMaskele(e) {
+  const [ad, alan] = String(e).split('@');
+  return alan ? `${ad.slice(0, 1)}***@${alan}` : '***';
+}
 export async function firebaseEpostasiniIsle(db, u, k) {
-  const fbEposta = String(k?.email || '').trim().toLowerCase();
+  const fbEposta = kucuk(k?.email);
   if (!k?.epostaDogrulandi || !fbEposta) return u;
-  const mevcut = String(u.email || '').trim().toLowerCase();
+  const mevcut = kucuk(u.email);
   if (fbEposta === mevcut) {
     if (u.email_verified) return u;
     await db.prepare('UPDATE users SET email_verified = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
-  } else {
-    if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;
-    await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
-    if (k.validSince) {
-      await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
-        .run(k.validSince, u.id, k.validSince);
-    }
+    return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  }
+  const istekZamani = u.pending_email_at ? new Date(u.pending_email_at).getTime() : NaN;
+  if (kucuk(u.pending_email) !== fbEposta || !(Date.now() - istekZamani <= BEKLEYEN_EPOSTA_SURESI_MS)) return u;
+  if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id)) return u;
+  const g = await db.prepare(
+    `UPDATE users SET email = ?, email_verified = TRUE, pending_email = NULL, pending_email_at = NULL, updated_at = ?
+      WHERE id = ? AND pending_email = ?`,
+  ).run(fbEposta, simdi(), u.id, u.pending_email);
+  if (g.changes !== 1) return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  if (k.validSince) {
+    await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
+      .run(k.validSince, u.id, k.validSince);
+  }
+  if (mevcut) {
+    // gonder() fırlatmaz; sonuç outbound_messages'a yazılır.
+    await gonder(db, {
+      kullaniciId: u.id, kanal: 'EMAIL', hedef: mevcut, sablon: 'EPOSTA_DEGISTI',
+      degerler: { AD: u.name, YENI: epostaMaskele(fbEposta) },
+    });
   }
   return db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
 }
@@ -438,17 +467,12 @@ export async function firebaseDisDegisiklikleriniUzlastir(db, u) {
   // (şifre değişmedi, Firebase'de doğrulanmış yeni adres var) oturumlar
   // KAPATILMAZ; adres hesaba işlenir ve yerel sınır ileri alınır.
   const fbEposta = String(k.email || '').trim().toLowerCase();
-  if (!sifreDegisti && k.epostaDogrulandi && fbEposta) {
-    if (fbEposta !== String(u.email || '').trim().toLowerCase()) {
-      const g = await firebaseEpostasiniIsle(db, u, k);
-      if (String(g.email || '').toLowerCase() === fbEposta) return;
-    } else if (u.updated_at && Date.parse(u.updated_at) >= k.validSince * 1000) {
-      // Adres değişikliği hesaba ZATEN işlenmiş (eşitleme ucu ya da Firebase
-      // girişi, sınır ileri alınmadan): yine iptal sayılmaz, sınır çekilir.
-      await db.prepare('UPDATE users SET firebase_valid_since = ? WHERE id = ? AND (firebase_valid_since IS NULL OR firebase_valid_since < ?)')
-        .run(k.validSince, u.id, k.validSince);
-      return;
-    }
+  // Yalnız kullanıcının şifresiyle başlattığı (bekleyen) değişiklik işlenir;
+  // bekleyen istek yoksa Firebase'deki adres değişikliği DIŞ İPTAL sayılır ve
+  // aşağıdaki kural (oturumları kapatma) aynen uygulanır.
+  if (!sifreDegisti && k.epostaDogrulandi && fbEposta && fbEposta !== String(u.email || '').trim().toLowerCase()) {
+    const g = await firebaseEpostasiniIsle(db, u, k);
+    if (String(g.email || '').toLowerCase() === fbEposta) return;
   }
   await db.tx(async () => {
     await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'FIREBASE_REVOKED' WHERE user_id = ? AND revoked_at IS NULL AND created_at < ?`)
@@ -718,14 +742,11 @@ export function kullaniciRotalar(r, db) {
     durumKapisi(u);
     // İptal edilmiş (şifre sıfırlama/değiştirme, telefon değişikliği öncesi) belgeyle oturum açılmaz.
     await firebaseBelgesiIptalDenetimi(db, u, yuk);
-    // E-posta değişikliği Firebase'de doğrulama bağlantısıyla yapılır
-    // (verifyBeforeUpdateEmail); doğrulanmış yeni adres burada hesaba
-    // işlenir — başka hesapta kayıtlıysa DEĞİŞTİRİLMEZ.
+    // E-posta: tek kaynak (firebaseEpostasiniIsle). Farklı adres YALNIZ
+    // sunucuda şifreyle başlatılmış bekleyen istekle eşleşirse işlenir (Y2).
     const fbEposta = String(yuk.email || '').toLowerCase();
-    if (yuk.email_verified === true && fbEposta && fbEposta !== String(u.email || '').toLowerCase()
-        && !(await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(fbEposta, u.id))) {
-      await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(fbEposta, simdi(), u.id);
-      u = { ...u, email: fbEposta };
+    if (fbEposta && fbEposta !== String(u.email || '').toLowerCase()) {
+      u = await firebaseEpostasiniIsle(db, u, { email: yuk.email, epostaDogrulandi: yuk.email_verified === true, validSince: yuk.auth_time });
     }
     const epostaDogru = yuk.email_verified === true && u.email && fbEposta === u.email.toLowerCase();
     await db.prepare(`UPDATE users SET firebase_uid = ?, email_verified = CASE WHEN ? THEN TRUE ELSE email_verified END,
@@ -996,22 +1017,13 @@ export function kullaniciRotalar(r, db) {
   //   · istenen adres verildiyse token'daki adresle aynı
   //   · adres başka bir hesapta kayıtlı değil
   // Firebase oturum ucu da sonraki girişte aynı eşitlemeyi yapar.
-  // ── FIREBASE OTURUM BAĞLANTISI (21 Eki, kullanıcı bulgusu) ──
-  // Web'de Firebase oturumu tarayıcıda saklanmaz (Persistence.NONE); sayfa
-  // yenilenince HizmetCep oturumu sürer ama Firebase oturumu yoktur. E-posta
-  // doğrulama bağlantısını Firebase'in kendisi gönderdiği için oturum gerekir;
-  // yoksa "Güvenlik için lütfen yeniden giriş yapın" hatası çıkıyordu. Bu uç,
-  // oturum açmış kullanıcıya YALNIZ KENDİ Firebase kimliği için 5 dakikalık
-  // özel belge verir (telefon değişikliğindeki yöntemle aynı). Kritik işlem
-  // hız sınırına tabidir.
-  r.post('/api/v1/auth/firebase/baglanti', korumali(async (ctx) => {
-    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    const u = await db.prepare('SELECT firebase_uid FROM users WHERE id = ?').get(ctx.kullanici.id);
-    if (!u?.firebase_uid) throw hata.durum('Hesabınız e-posta doğrulaması için henüz hazır değil. Çıkış yapıp yeniden giriş yapın.');
-    const belge = firebaseOzelBelge(u.firebase_uid);
-    if (!belge) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'E-posta doğrulaması şu anda başlatılamıyor. Lütfen daha sonra tekrar deneyin.');
-    return { firebaseCustomToken: belge };
-  }));
+  // ── ⚠ FIREBASE OTURUM KÖPRÜSÜ KALDIRILDI (21 Eki, güvenlik Y1) ──
+  // `/auth/firebase/baglanti` erişim belgesi karşılığında Firebase özel
+  // belgesi veriyordu: ele geçirilmiş 15 dakikalık bir belge, Firebase'de
+  // şifre/e-posta değiştirebilen bir oturuma yükseltilebiliyordu. E-posta
+  // doğrulama ve değişikliği artık yalnız sunucu üzerinden yapılır (aşağıda);
+  // istemcinin Firebase oturumuna ihtiyacı yoktur. Özel belge yalnız telefon
+  // değişikliğinde (SMS + şifre doğrulandıktan sonra) verilir.
 
   // ── ⚠ KURUMSAL DOĞRULAMA E-POSTASI (21 Eki, kullanıcı isteği) ──
   //
@@ -1047,8 +1059,14 @@ export function kullaniciRotalar(r, db) {
   }));
 
   const epostaBaglantisiGonder = async (ctx, yeni) => {
+    // Hız sınırı şifre denetiminden ÖNCE sayılır (yanlış şifreler dahil).
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
     let u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
+    // ⚠ Y2: adres DEĞİŞİKLİĞİ erişim belgesiyle yetinmez; mevcut şifre
+    // SUNUCUDA (Firebase'e bağlı hesapta Firebase'de) doğrulanır.
+    if (yeni && !(await sifreDogruMu(db, u, String(ctx.body.currentPassword ?? '')))) {
+      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
+    }
     // Kullanıcı bağlantıya zaten tıkladıysa yeniden e-posta gönderilmez.
     if (!yeni && !u.email_verified) {
       u = await epostaOnayiniEsitle(u);
@@ -1098,13 +1116,23 @@ export function kullaniciRotalar(r, db) {
       throw baslatilamadi();
     }
     const hedef = yeni || mevcut;
+    // Bekleyen istek bağlantı gönderilmeden ÖNCE yazılır (bağlantı hemen
+    // tıklansa da eşleşsin); yeni istek eskisinin yerine geçer.
+    if (yeni) {
+      await db.prepare('UPDATE users SET pending_email = ?, pending_email_at = ?, updated_at = ? WHERE id = ?')
+        .run(yeni, simdi(), simdi(), u.id);
+    }
     const g = await gonder(db, {
       kullaniciId: u.id, kanal: 'EMAIL', hedef,
       sablon: yeni ? 'EPOSTA_DEGISIKLIGI' : 'EPOSTA_DOGRULAMA',
       degerler: { AD: u.name, EPOSTA: hedef, BAGLANTI: baglanti },
       gizliGovde: true,
     });
-    if (g.status !== 'SENT') throw new ApiHatasi(502, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.');
+    if (g.status !== 'SENT') {
+      // Gönderilemeyen istek bekletilmez (hesap eski hâlinde kalır).
+      if (yeni) await db.prepare('UPDATE users SET pending_email = NULL, pending_email_at = NULL WHERE id = ? AND pending_email = ?').run(u.id, yeni);
+      throw new ApiHatasi(502, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.');
+    }
     return { sent: true, email: hedef };
   };
 
@@ -1140,8 +1168,9 @@ export function kullaniciRotalar(r, db) {
     if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND id <> ? AND deleted_at IS NULL').get(yeni, u.id)) {
       throw hata.cakisma('Bu e-posta adresi başka bir hesapta kayıtlı');
     }
-    await db.prepare('UPDATE users SET email = ?, email_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), u.id);
-    const g = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    // ⚠ Y2: yalnız şifreyle başlatılmış bekleyen istek işlenir (tek kaynak).
+    const g = await firebaseEpostasiniIsle(db, u, { email: yeni, epostaDogrulandi: true, validSince: yuk.auth_time });
+    if (kucuk(g.email) !== yeni) throw hata.durum('Bu e-posta değişikliği için önce profilinizden şifrenizle değişiklik isteği oluşturun');
     return hesapYaniti(db, g);
   }));
 

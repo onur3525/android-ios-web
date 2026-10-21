@@ -485,22 +485,6 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Eşleşen hesap yok }
 
-  /auth/firebase/baglanti:
-    post:
-      tags: [Auth]
-      summary: Bu hesabın Firebase kimliği için kısa ömürlü özel belge
-      description: |
-        Oturumlu kullanıcının bağlı Firebase kimliği için 5 dakikalık özel
-        belge (custom token) döner. İstemcide Firebase oturumu yoksa (web'de
-        sayfa yenilenince) e-posta doğrulama bağlantısı gönderilebilsin diye
-        kullanılır. Yalnız kendi hesabı; kritik işlem sınırı uygulanır.
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200': { description: '{ firebaseCustomToken }' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '409': { description: Hesaba bağlı Firebase kimliği yok }
-        '503': { description: Belge üretilemiyor }
-
   /auth/otp/request:
     post:
       tags: [Auth]
@@ -806,14 +790,20 @@ paths:
       tags: [Profile]
       summary: Yeni e-posta adresine kurumsal "doğrula ve değiştir" e-postası
       description: |
-        Gövde `{ newEmail }`. Adres yalnız bağlantı tıklanınca değişir;
-        profil adresi bu çağrıyla DEĞİŞMEZ. Kanal yoksa `{ sent:false }`
-        (yukarıdaki gibi).
+        Gövde `{ newEmail, currentPassword }`. 21 Eki (güvenlik Y2): mevcut
+        şifre SUNUCUDA doğrulanır (yanlışsa 400 WRONG_PASSWORD; kritik işlem
+        hız sınırına sayılır). İstek bekleyen değişiklik olarak kaydedilir;
+        adres yalnız bağlantı tıklanınca ve bu bekleyen istekle (72 saat)
+        eşleşirse değişir, eski adrese güvenlik bildirimi gider. Firebase'de
+        sunucu dışından yapılan değişiklik hesaba işlenmez. Yeni istek
+        öncekinin yerine geçer. E-posta gönderilemezse bekleyen istek silinir
+        (502). Kanal yoksa `{ sent:false }`.
       responses:
         '200': { description: '{ sent, email } ya da { sent:false, reason }' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400': { description: Geçersiz adres ya da WRONG_PASSWORD (mevcut şifre hatalı/eksik) }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { description: Adres başka hesapta kayıtlı / mevcut adresle aynı }
+        '429': { description: Kritik işlem hız sınırı }
         '502': { description: E-posta gönderilemedi }
         '503': { description: Firebase bağlantısı üretilemedi }
 

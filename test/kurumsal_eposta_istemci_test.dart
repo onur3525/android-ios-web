@@ -42,7 +42,7 @@ void main() {
     expect(be.countOf('POST /auth/firebase/baglanti'), 0);
   });
 
-  test('yeni adres: gövdede yalnız newEmail gider', () async {
+  test('yeni adres: gövdede yeni adres ve mevcut şifre gider (Y2)', () async {
     Map<String, dynamic>? govde;
     final be = FakeBackend({
       'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
@@ -54,8 +54,9 @@ void main() {
     });
     final port = _port(be.client());
     await port.restoreSession();
-    expect(await port.epostaDegisimiBaslat('yeni@ornek.com'), isNull);
-    expect(govde, {'newEmail': 'yeni@ornek.com'});
+    expect(await port.epostaDegisimiBaslat('yeni@ornek.com', sifre: 'Sifre1234'),
+        isNull);
+    expect(govde, {'newEmail': 'yeni@ornek.com', 'currentPassword': 'Sifre1234'});
     expect(be.countOf('POST /auth/firebase/baglanti'), 0);
   });
 
@@ -68,7 +69,7 @@ void main() {
     });
     final port = _port(be.client());
     await port.restoreSession();
-    final h = await port.epostaDegisimiBaslat('baska@ornek.com');
+    final h = await port.epostaDegisimiBaslat('baska@ornek.com', sifre: 'Sifre1234');
     expect(h, isA<DomainError>());
     expect(h!.message, 'Bu e-posta adresi başka bir hesapta kayıtlı');
     expect(be.countOf('POST /auth/firebase/baglanti'), 0);
@@ -142,11 +143,38 @@ void main() {
     expect(r.contains('acc.address ??= currentAccount?.address;'), isTrue);
   });
 
-  test('kanal yoksa (sent:false) Firebase gönderimine düşülür', () {
-    final p = _kod('lib/data/ports/api_ports.dart');
-    expect('await repo.kurumsalEpostaGonder('.allMatches(p).length, 2);
-    expect('if (gonderildi) {'.allMatches(p).length, 2);
-    expect(p.contains('await FirebaseKimlik.i.epostaDegistir(yeniEposta);'), isTrue);
-    expect(p.contains('await FirebaseKimlik.i.mevcutEpostaDogrulamaGonder(mevcutEposta);'), isTrue);
+  test('21 Eki (Y1): kanal yoksa (sent:false) Firebase\'e düşülmez, açık hata döner', () async {
+    final be = FakeBackend({
+      'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/verification': (_) =>
+          {'sent': false, 'reason': 'CHANNEL_UNAVAILABLE'},
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
+    expect(await port.mevcutEpostaDogrulamaGonder('a@ornek.com'), isA<ValidationError>());
+    expect(be.countOf('POST /auth/firebase/baglanti'), 0);
   });
+
+  test('21 Eki (Y2): yanlış mevcut şifre kullanıcıya hata olarak döner', () async {
+    final be = FakeBackend({
+      'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/change-request': (_) =>
+          apiError(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı'),
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
+    final h = await port.epostaDegisimiBaslat('yeni@ornek.com', sifre: 'yanlis');
+    expect(h, isA<WrongPasswordError>());
+    expect(h!.message, 'Mevcut şifre hatalı');
+  });
+
+  test('21 Eki (Y2): Profil Bilgilerim e-posta değişikliğinden önce şifre ister', () {
+    final s = _kod('lib/screens/profile_info_screen.dart');
+    expect('await _epostaIcinSifre()'.allMatches(s).length, 2);
+    expect(s.contains('sifre: sifre,'), isTrue);
+    expect(s.contains('sifre: epostaSifresi'), isTrue);
+  });
+
 }
