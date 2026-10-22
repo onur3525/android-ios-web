@@ -65,8 +65,10 @@ export async function fotoSil(db, anahtar) {
 /** Depodaki fotoğrafı istemciye akıtır (özel depo; imzalı GET sunucuda). */
 export async function fotoGonder(db, anahtar, res) {
   if (!FOTO_ANAHTAR.test(anahtar)) return bulunamadi(res);
-  const bagli = await db.prepare('SELECT 1 FROM categories WHERE photo_ref = ? AND deleted_at IS NULL').get(anahtar);
-  if (!bagli) return bulunamadi(res); // yalnız bir kategoriye BAĞLI fotoğraflar sunulur
+  // Yalnız bir kategoriye ya da ana sayfa çatısına (029) BAĞLI fotoğraflar sunulur.
+  const bagli = await db.prepare('SELECT 1 FROM categories WHERE photo_ref = ? AND deleted_at IS NULL').get(anahtar)
+    ?? await db.prepare('SELECT 1 FROM catalog_roofs WHERE photo_ref = ?').get(anahtar);
+  if (!bagli) return bulunamadi(res);
   const ayar = await depolamaAyari(db);
   const r = ayar ? await fetch(s3ImzaliAdres(ayar, { yontem: 'GET', anahtar, sureSn: 120 }), { signal: AbortSignal.timeout(10000) }).catch(() => null) : null;
   if (!r || !r.ok) return bulunamadi(res);
@@ -84,7 +86,8 @@ export async function fotoGonder(db, anahtar, res) {
 // Zaten herkese açık uygulama paketinin parçası; yalnız beyaz listedeki
 // iki klasör, yalnız okuma.
 const VARLIK_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..'));
-const VARLIK = /^assets\/(categories\/[a-z0-9_]+\.(jpg|png|webp)|svg\/categories\/[a-z0-9_]+\.svg)$/;
+// 22 Eki: ana sayfa çatı fotoğrafları (assets/alanlar) da önizlenir.
+const VARLIK = /^assets\/((categories|alanlar)\/[a-z0-9_]+\.(jpg|png|webp)|svg\/categories\/[a-z0-9_]+\.svg)$/;
 const VARLIK_TUR = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', svg: 'image/svg+xml' };
 
 export async function varlikGonder(yol, res) {

@@ -14,6 +14,7 @@ import '../data/remote/api/config_api.dart';
 import '../data/category_tree.dart';
 import '../data/remote/api/category_api.dart';
 import 'category_ui.dart' show sunucuFotograflariniAyarla, sunucuIkonlariniAyarla;
+import '../data/hizmet_alanlari.dart' show sunucuAlanlariniAyarla;
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
@@ -699,6 +700,9 @@ class _SplashScreenState extends State<SplashScreen> {
         KatalogKaynagi.i.guncelle(agac);
         sunucuIkonlariniAyarla(CategoryApi.ikonlar(j));
         sunucuFotograflariniAyarla(CategoryApi.fotograflar(j),
+            apiKoku: Uri.parse(ApiConfig.baseUrl).origin);
+        // Ana sayfa çatıları (22 Eki): ad, açıklama, fotoğraf, kategoriler.
+        sunucuAlanlariniAyarla(j['roofs'],
             apiKoku: Uri.parse(ApiConfig.baseUrl).origin);
         BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
       } catch (e) {

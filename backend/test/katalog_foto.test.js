@@ -115,3 +115,56 @@ test('katalog sırası ve diğer kategoriler fotoğraf işlemlerinden etkilenmez
   assert.equal(liste[0].id, kat.id);
   assert.equal(liste.filter((x) => x.photoRef).length, 0);
 });
+
+// ── ANA SAYFA ÇATILARI (029, 22 Eki) ──
+test('çatılar: uygulamadaki 24 çatı ve 166 kategori bağıyla gelir; uygulama yanıtında da var', async () => {
+  const r = await istek('/admin/v1/catalog/roofs');
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.roofs.length, 24);
+  const ev = r.json.roofs[0];
+  assert.equal(ev.key, 'ev');
+  assert.equal(ev.name, 'Ev & Yaşam');
+  assert.equal(ev.description, 'Tesisatçı, Elektrikçi');
+  assert.equal(ev.bundledPhotoUrl, '/katalog-varlik/assets/alanlar/ev.jpg');
+  assert.ok(ev.categories.some((k) => k.name === 'Su Tesisatı' && k.iconUrl));
+  assert.equal(r.json.roofs.reduce((a, c) => a + c.categories.length, 0), 166);
+  assert.deepEqual(r.json.unassigned, []);
+  assert.equal(r.json.roofs.find((c) => c.name === 'İnşaat & Dekorasyon').cardLabel, 'İnşaat\nDekorasyon', 'kart kısaltması uygulamadakiyle aynı');
+  const f = await istek(ev.bundledPhotoUrl);
+  assert.equal(f.durum, 200); assert.equal(f.tur, 'image/jpeg');
+  const uyg = (await istek('/api/v1/categories')).json;
+  assert.equal(uyg.roofs.length, 24);
+  assert.deepEqual(uyg.roofs[0], { key: 'ev', name: 'Ev & Yaşam', description: 'Tesisatçı, Elektrikçi', categories: ev.categories.map((k) => k.name) });
+});
+
+test('çatı adı değişir (kart kısaltması kalkar); geçersiz/çakışan ad reddedilir; denetim kaydı', async () => {
+  const p = (key, name) => istek(`/admin/v1/catalog/roofs/${key}`, { yontem: 'PATCH', govde: { name } });
+  assert.equal((await p('yok', 'Bir Ad')).durum, 404);
+  assert.equal((await p('insaat', 'X')).durum, 400, 'çok kısa');
+  assert.equal((await p('insaat', 'Ev & Yaşam')).durum, 409, 'başka çatının adı');
+  const r = await p('insaat', 'Yapı ve Dekorasyon');
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.name, 'Yapı ve Dekorasyon');
+  assert.equal(r.json.cardLabel, null);
+  assert.equal((await istek('/api/v1/categories')).json.roofs.find((c) => c.key === 'insaat').name, 'Yapı ve Dekorasyon');
+  assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'catalog.roof.update' AND target_id = 'insaat'").get());
+});
+
+test('çatı fotoğrafı: yükle → uygulamada görünür → değiştir → kaldır (paket fotoğrafına döner)', async () => {
+  const y1 = await istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'POST', govde: { contentType: 'image/jpeg', data: JPEG.toString('base64') } });
+  assert.equal(y1.durum, 200, JSON.stringify(y1.json));
+  const ilk = y1.json.photoRef;
+  const uyg = (await istek('/api/v1/categories')).json.roofs[0];
+  assert.equal(uyg.photoUrl, `/api/v1/categories/photo/${ilk}`);
+  const g = await istek(uyg.photoUrl);
+  assert.equal(g.durum, 200); assert.equal(g.tur, 'image/jpeg');
+  const y2 = await istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'POST', govde: { contentType: 'image/png', data: PNG.toString('base64') } });
+  assert.ok(!depo.has(`/hc/${ilk}`), 'eski nesne silinir');
+  assert.equal((await istek(`/api/v1/categories/photo/${ilk}`)).durum, 404);
+  const k = await istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'DELETE', govde: {} });
+  assert.equal(k.json.photoRef, null);
+  assert.ok(!depo.has(`/hc/${y2.json.photoRef}`));
+  assert.equal((await istek('/api/v1/categories')).json.roofs[0].photoUrl, undefined);
+  assert.equal((await istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'DELETE', govde: {} })).durum, 409);
+  assert.equal((await istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'POST', govde: { contentType: 'image/svg+xml', data: 'PHN2Zy8+' } })).durum, 400);
+});

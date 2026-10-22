@@ -31,6 +31,7 @@ class HizmetAlani {
     required this.gorsel,
     required this.ikon,
     required this.kategoriler,
+    this.fotoUrl,
   });
 
   final String ad;
@@ -40,9 +41,86 @@ class HizmetAlani {
 
   /// ⚠ MEVCUT kategori adları — `kCategoryTree` anahtarları.
   final List<String> kategoriler;
+
+  /// Admin panelinden yüklenen fotoğrafın TAM adresi (yalnız API modu);
+  /// yoksa `null` ve kart paket fotoğrafını ([gorsel]) çizer.
+  final String? fotoUrl;
+
+  /// Kalıcı kimlik: paket görselinin adı (`assets/alanlar/ev.jpg` → `ev`).
+  /// Sunucudaki çatı kaydı (`roofs[].key`) bu anahtarla eşleşir; ad
+  /// admin panelinden değişebildiği için kimlik olarak ad KULLANILMAZ.
+  String get anahtar {
+    final dosya = gorsel.split('/').last;
+    final nokta = dosya.lastIndexOf('.');
+    return nokta < 0 ? dosya : dosya.substring(0, nokta);
+  }
 }
 
-const List<HizmetAlani> kHizmetAlanlari = [
+/// ── ⚠ ÇATILAR SUNUCUDAN (22 Eki, kullanıcı kararı) ──
+///
+/// Çatının ADI, AÇIKLAMASI, FOTOĞRAFI ve KATEGORİLERİ admin panelinden
+/// yönetilir; uygulama bunları `GET /categories` yanıtındaki `roofs`
+/// alanından okur ([sunucuAlanlariniAyarla]). Sunucu verisi yoksa ya da
+/// alınamazsa aşağıdaki GÖMÜLÜ liste aynen kullanılır — bugünkü görünüm
+/// değişmez. Uygulamanın tanımadığı (paketinde görseli olmayan) çatı
+/// anahtarı yok sayılır.
+List<HizmetAlani> get kHizmetAlanlari => _sunucuAlanlari ?? kGomuluHizmetAlanlari;
+
+List<HizmetAlani>? _sunucuAlanlari;
+
+/// Admin'den yüklenen çatı fotoğrafı: YALNIZ bu kalıp kabul edilir ve API
+/// sunucusunun kendi kökenine çözülür (kategori fotoğraflarıyla aynı kural).
+final RegExp _sunucuCatiFotoKalibi =
+    RegExp(r'^/api/v1/categories/photo/katalog/kategori/[0-9a-f-]{36}\.(jpg|png|webp)$');
+
+/// Sunucu yanıtındaki `roofs` listesini uygular. Liste yoksa/bozuksa
+/// gömülü liste devrede kalır.
+void sunucuAlanlariniAyarla(Object? roofs, {required String apiKoku}) {
+  if (roofs is! List) {
+    return;
+  }
+  final sunucu = <String, Map<dynamic, dynamic>>{
+    for (final r in roofs.whereType<Map<dynamic, dynamic>>())
+      if (r['key'] is String) r['key'] as String: r,
+  };
+  if (sunucu.isEmpty) {
+    return;
+  }
+  final out = <HizmetAlani>[];
+  for (final g in kGomuluHizmetAlanlari) {
+    final r = sunucu[g.anahtar];
+    if (r == null) {
+      out.add(g);
+      continue;
+    }
+    final ad = r['name'];
+    final aciklama = r['description'];
+    final kategoriler = r['categories'];
+    final foto = r['photoUrl'];
+    out.add(HizmetAlani(
+      ad: ad is String && ad.trim().isNotEmpty ? ad : g.ad,
+      aciklama: aciklama is String ? aciklama : g.aciklama,
+      gorsel: g.gorsel,
+      ikon: g.ikon,
+      kategoriler: kategoriler is List
+          ? kategoriler.whereType<String>().toList()
+          : g.kategoriler,
+      fotoUrl: foto is String && _sunucuCatiFotoKalibi.hasMatch(foto)
+          ? '$apiKoku$foto'
+          : null,
+    ));
+  }
+  _sunucuAlanlari = out;
+  _kategoriAlani = _esle(out);
+}
+
+/// Yalnız testler: sunucu çatılarını kaldırır (gömülü listeye döner).
+void sunucuAlanlariniSifirla() {
+  _sunucuAlanlari = null;
+  _kategoriAlani = _esle(kGomuluHizmetAlanlari);
+}
+
+const List<HizmetAlani> kGomuluHizmetAlanlari = [
   HizmetAlani(
     ad: 'Ev & Yaşam',
     aciklama:
@@ -382,19 +460,40 @@ const Map<String, String> kHizmetCatiIstisnasi = {
   'Araç Döşeme Yıkama': 'Araç Hizmetleri',
 };
 
-/// Kategori → VARSAYILAN çatı.
-final Map<String, String> kKategoriAlani = {
-  for (final a in kHizmetAlanlari)
-    for (final c in a.kategoriler) c: a.ad,
-};
+/// Kategori → VARSAYILAN çatı (etkin çatı listesinden; sunucu verisi
+/// gelince yeniden kurulur).
+Map<String, String> get kKategoriAlani => _kategoriAlani;
+
+Map<String, String> _kategoriAlani = _esle(kGomuluHizmetAlanlari);
+
+Map<String, String> _esle(List<HizmetAlani> alanlar) => {
+      for (final a in alanlar)
+        for (final c in a.kategoriler) c: a.ad,
+    };
+
+/// İstisna listesindeki çatı adı GÖMÜLÜ addır; çatı admin panelinden
+/// yeniden adlandırılmışsa güncel adı anahtar üzerinden bulunur.
+String _guncelCatiAdi(String gomuluAd) {
+  for (final g in kGomuluHizmetAlanlari) {
+    if (g.ad == gomuluAd) {
+      for (final a in kHizmetAlanlari) {
+        if (a.anahtar == g.anahtar) {
+          return a.ad;
+        }
+      }
+    }
+  }
+  return gomuluAd;
+}
 
 /// Bir hizmetin çatısı: istisna varsa o, yoksa kategorisinin çatısı.
 ///
 /// ⚠ TEK KAYNAK. Ekranlar kendi kuralını yazmaz; çatı sorusu buradan
 /// sorulur, yoksa istisnalar sessizce atlanır.
-String? hizmetAlani(String kategori, String? hizmet) =>
-    (hizmet != null ? kHizmetCatiIstisnasi[hizmet] : null) ??
-    kKategoriAlani[kategori];
+String? hizmetAlani(String kategori, String? hizmet) {
+  final istisna = hizmet != null ? kHizmetCatiIstisnasi[hizmet] : null;
+  return istisna != null ? _guncelCatiAdi(istisna) : kKategoriAlani[kategori];
+}
 
 /// Bir çatının altında GERÇEKTEN görünen hizmetler.
 ///
@@ -438,6 +537,8 @@ List<String> catisizKategoriler() =>
 /// ⚠ Bütünlük: GÖMÜLÜ katalogun her kategorisi bir çatıya bağlı
 /// OLMALI. Sunucudan gelen yeni kategoriler bu denetimin dışındadır
 /// (bkz. `catisizKategoriler`).
-bool alanKapsamiTam() =>
-    kKategoriAlani.length == kGomuluKatalog.length &&
-    kGomuluKatalog.keys.every(kKategoriAlani.containsKey);
+bool alanKapsamiTam() {
+  final gomulu = _esle(kGomuluHizmetAlanlari);
+  return gomulu.length == kGomuluKatalog.length &&
+      kGomuluKatalog.keys.every(gomulu.containsKey);
+}

@@ -1101,7 +1101,22 @@ class _AlanKarti extends StatelessWidget {
               aspectRatio: HizmetAlanlariPaneli.kFotoOrani,
               // ⚠ ESNETME YOK: BoxFit.cover kontrollü kırpar,
               // BoxFit.fill geometriyi bozardı.
-              child: Image.asset(alan.gorsel, fit: BoxFit.cover),
+              // ⚠ 22 Eki: admin'den yüklenen çatı fotoğrafı (yalnız API
+              // modu) varsa o; yüklenirken / hata olursa paket fotoğrafı.
+              child: alan.fotoUrl == null
+                  ? Image.asset(alan.gorsel, fit: BoxFit.cover)
+                  : Image.network(
+                      alan.fotoUrl!,
+                      fit: BoxFit.cover,
+                      // Web: CORS engelinde tarayıcının <img> öğesine düşer.
+                      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                      frameBuilder: (_, child, kare, esZamanli) =>
+                          esZamanli || kare != null
+                              ? child
+                              : Image.asset(alan.gorsel, fit: BoxFit.cover),
+                      errorBuilder: (_, __, ___) =>
+                          Image.asset(alan.gorsel, fit: BoxFit.cover),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
