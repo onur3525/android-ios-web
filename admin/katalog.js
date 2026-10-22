@@ -12,6 +12,12 @@
 // Sıra SUNUCUDA atanır; istemci sort GÖNDERMEZ (mevcut sıra hiç değişmez).
 // Uygulama (Flutter) kataloğu GET /api/v1/categories ile aynı sırada okur.
 //
+// ÇATILAR (22 Eki, kullanıcı kararı): sayfa uygulamanın ana sayfası gibi
+// açılır — yalnız 24 çatı, 3'lü ızgara, uygulamadaki fotoğraf/ad/açıklama.
+// Çatıya dokununca o çatının kategorileri ikonlarıyla görünür. Çatının adı
+// ve fotoğrafı, kategorinin ikonu buradan değişir (GET/PATCH
+// /admin/v1/catalog/roofs…). Adres: #/katalog (ızgara), #/katalog/<çatı>.
+//
 // BİLİNÇLİ SINIRLAR (ayrıntı: rapor):
 //   · İkon: Flutter yalnız paketindeki SVG'leri çizer → yalnız o listeden seçilir.
 //   · Kategori fotoğrafı (008 göçü): admin'den yüklenen fotoğraf MEVCUT nesne
@@ -84,15 +90,26 @@ const YAZABILIR = ['super_admin', 'content']; // backend catalog.write ile aynı
 const dosyaAdi = (yol) => (yol ? String(yol).split('/').pop() : null);
 const kucuk = (s) => s.toLocaleLowerCase('tr-TR');
 
-export async function katalogSayfasi(rol) {
+const CATISIZ = '_';
+
+/** Çatı kartı: uygulamadaki kartla aynı içerik (fotoğraf, kart etiketi, açıklama). */
+function catiKarti(c) {
+  return h('a', { class: 'kt-cati', href: `#/katalog/${encodeURIComponent(c.key)}` },
+    gorsel(c.photoUrl || c.bundledPhotoUrl, 'kt-cati-foto'),
+    h('span', { class: 'kt-cati-ad' }, c.cardLabel || c.name),
+    h('span', { class: 'kt-cati-aciklama' }, c.description));
+}
+
+export async function katalogSayfasi(rol, catiKey) {
   const yazabilir = YAZABILIR.includes(rol);
+  if (!catiKey) return catiIzgarasi(yazabilir);
+  let cati = null;
   let kategoriler = [];
   let ikonlar = [];
   let seciliId = null;
   let istekNo = 0;
 
   const ara = h('input', { class: 'ku-ara kt-ara', type: 'search', placeholder: 'Kategori ara', 'aria-label': 'Kategori ara' });
-  const sayac = h('div', { class: 'ku-sayac', hidden: true });
   const katListe = h('div', { class: 'kt-liste', role: 'list' });
   const detay = h('div', { class: 'kt-detay' });
   const duzen = h('div', { class: 'kt-duzen' });
@@ -109,10 +126,15 @@ export async function katalogSayfasi(rol) {
     const no = ++istekNo;
     katListe.replaceChildren(h('div', { class: 'il-yukleniyor', role: 'status' }, 'Kategoriler yükleniyor…'));
     try {
-      const [k, i] = await Promise.all([api('/catalog/categories'), ikonlar.length ? ikonlar : api('/catalog/icons').catch(() => [])]);
+      const [r, i] = await Promise.all([api('/catalog/roofs'), ikonlar.length ? ikonlar : api('/catalog/icons').catch(() => [])]);
       if (no !== istekNo) return;
-      kategoriler = k;
+      cati = catiKey === CATISIZ
+        ? { key: CATISIZ, name: 'Çatıya bağlı olmayan kategoriler', categories: r.unassigned, sabit: true }
+        : r.roofs.find((c) => c.key === catiKey) ?? null;
+      if (!cati) { location.hash = '#/katalog'; return; }
+      kategoriler = cati.categories;
       ikonlar = i;
+      catiUstunuCiz();
     } catch (e) {
       if (no !== istekNo) return;
       katListe.replaceChildren(h('div', { class: 'ku-bos' },
@@ -121,8 +143,6 @@ export async function katalogSayfasi(rol) {
         e.durum === 403 ? null : h('button', { class: 'btn ikincil', onclick: () => kategorileriYukle() }, 'Tekrar dene')));
       return;
     }
-    sayac.hidden = false;
-    sayac.textContent = `${kategoriler.length.toLocaleString('tr-TR')} kategori`;
     listeyiCiz();
     if (seciliId && kategoriler.some((x) => x.id === seciliId)) await hizmetleriYukle(seciliId);
   }
@@ -145,7 +165,8 @@ export async function katalogSayfasi(rol) {
       onclick: () => { seciliId = k.id; listeyiCiz(); hizmetleriYukle(k.id); duzen.classList.add('detay-acik'); },
     },
     h('span', { class: 'kt-sira' }, String(k.siraNo)),
-    gorsel(k.photoUrl || k.bundledPhotoUrl, 'kt-kucuk-gorsel', 'Yok'),
+    // Uygulamadaki rozet: yüklenmiş fotoğraf varsa o, yoksa kategori ikonu.
+    gorsel(k.photoUrl || k.iconUrl, 'kt-kucuk-gorsel kt-rozet', 'İkon'),
     h('span', { class: 'kt-kat-metin' },
       h('span', { class: 'ku-ad' }, k.name),
       h('span', { class: 'ku-eposta' }, `${k.serviceCount.toLocaleString('tr-TR')} hizmet${k.kartDisi ? ' · ana sayfa ızgarasında yok' : ''}`)),
@@ -191,9 +212,10 @@ export async function katalogSayfasi(rol) {
         h('div', { class: 'kt-ikon-alani' },
           h('div', { class: 'oz-etiket' }, 'İkon'),
           gorsel(k.iconUrl, 'kt-ikon', 'Genel ikon'),
-          h('div', { class: 'ku-eposta' }, dosyaAdi(k.icon) ?? 'Genel ikon'))),
+          h('div', { class: 'ku-eposta' }, dosyaAdi(k.icon) ?? 'Genel ikon'),
+          yazabilir ? h('button', { class: 'btn ikincil kt-kucuk', onclick: () => ikonDegistir(k) }, 'İkonu değiştir') : null)),
       h('div', { class: 'kd-bilgi-izgara kt-bilgi' },
-        h('div', { class: 'kd-bilgi' }, h('div', { class: 'oz-etiket' }, 'Katalog sırası'), h('div', { class: 'kd-deger' }, String(kategoriler.indexOf(k) + 1))),
+        h('div', { class: 'kd-bilgi' }, h('div', { class: 'oz-etiket' }, 'Katalog sırası'), h('div', { class: 'kd-deger' }, String(Number(k.sort) + 1))),
         h('div', { class: 'kd-bilgi' }, h('div', { class: 'oz-etiket' }, 'Hizmet sayısı'), h('div', { class: 'kd-deger' }, String(hizmetler.length)))),
       h('h4', { class: 'kt-alt-baslik' }, 'Hizmetler (uygulamadaki sırayla)'),
       hizmetler.length ? h('ol', { class: 'kt-hizmetler' }, hizmetler.map((s) => h('li', { class: `kt-hizmet${s.active ? '' : ' pasif'}` },
@@ -207,28 +229,6 @@ export async function katalogSayfasi(rol) {
   }
 
   // ── FORMLAR (yalnız API'nin kabul ettiği alanlar) ──
-  async function kategoriEkle() {
-    const d = await form('Yeni kategori', [
-      { ad: 'name', etiket: 'Kategori adı (2–100 karakter)', zorunlu: true },
-      { ad: 'icon', etiket: 'İkon (uygulama paketindeki ikonlar)', tur: 'select', deger: '', secenekler: ikonSecenekleri(null) },
-      { ad: 'foto', etiket: 'Oluşturduktan sonra fotoğraf seç (JPEG/PNG/WEBP, en fazla 5 MB)', tur: 'checkbox', deger: true },
-    ], 'Oluştur', { aciklama: 'Yeni kategori kataloğun SONUNA eklenir; mevcut sıra değişmez. Uygulamada görünmesi için en az bir hizmet ekleyin.' });
-    if (!d) return;
-    try {
-      const k = await api('/catalog/categories', { yontem: 'POST', govde: { name: d.name, ...(d.icon ? { icon: d.icon } : {}) } });
-      bildir('Kategori oluşturuldu');
-      seciliId = k.id;
-      if (d.foto) {
-        const secim = await dosyaSec();
-        if (secim && await onizlemeOnayi(`Fotoğraf — ${k.name}`, secim)) {
-          try { await fotoGonder(k.id, secim); bildir('Kategori ve fotoğraf kaydedildi'); } catch (e) { hataGoster(e); }
-        }
-      }
-      await kategorileriYukle();
-      duzen.classList.add('detay-acik');
-    } catch (e) { hataGoster(e); }
-  }
-
   async function kategoriDuzenle(k) {
     const d = await form(`Kategoriyi düzenle — ${k.name}`, [
       { ad: 'name', etiket: 'Kategori adı', deger: k.name, zorunlu: true },
@@ -308,6 +308,77 @@ export async function katalogSayfasi(rol) {
     } catch (e) { hataGoster(e); }
   }
 
+  // ── İKON SEÇİCİ: uygulama paketindeki ikonlar görsel olarak seçilir ──
+  async function ikonDegistir(k) {
+    const secim = await new Promise((coz) => {
+      const kapat = (v) => { perde.remove(); coz(v); };
+      const izgara = h('div', { class: 'kt-ikon-izgara' }, ikonlar.map((i) => h('button', {
+        class: `kt-ikon-sec${i === k.icon ? ' secili' : ''}`, title: dosyaAdi(i), onclick: () => kapat(i),
+      }, h('img', { src: `/katalog-varlik/${i}`, alt: dosyaAdi(i) }))));
+      const perde = h('div', { class: 'perde', role: 'dialog', 'aria-modal': 'true' },
+        h('div', { class: 'pencere kt-pencere' },
+          h('h3', {}, `İkon seç — ${k.name}`),
+          h('p', { class: 'not' }, 'Uygulama yalnız kendi paketindeki ikonları çizebilir; liste bu ikonlardır.'),
+          izgara,
+          h('div', { class: 'tuslar' }, h('button', { class: 'btn ikincil', onclick: () => kapat(null) }, 'Vazgeç'))));
+      perde.addEventListener('keydown', (e) => { if (e.key === 'Escape') kapat(null); });
+      document.body.append(perde);
+    });
+    if (!secim || secim === k.icon) return;
+    try {
+      await api(`/catalog/categories/${k.id}`, { yontem: 'PATCH', govde: { icon: secim } });
+      bildir('İkon kaydedildi');
+      await kategorileriYukle();
+    } catch (e) { hataGoster(e); }
+  }
+
+  // ── ÇATI BAŞLIĞI: ad ve fotoğraf ──
+  const catiUst = h('div', { class: 'kt-cati-ust' });
+  function catiUstunuCiz() {
+    if (cati.sabit) { catiUst.replaceChildren(h('p', { class: 'not' }, 'Bu kategoriler uygulamada aramada ve ilan verirken görünür; ana sayfa çatılarında görünmez.')); return; }
+    catiUst.replaceChildren(
+      gorsel(cati.photoUrl || cati.bundledPhotoUrl, 'kt-cati-ust-foto'),
+      h('div', { class: 'kt-cati-ust-metin' },
+        h('div', { class: 'oz-etiket' }, 'Çatı'),
+        h('h3', {}, cati.name),
+        h('p', { class: 'ku-eposta' }, cati.description),
+        h('p', { class: 'ku-eposta' }, cati.photoUrl ? 'Fotoğraf: admin\'den yüklendi' : 'Fotoğraf: uygulama paketi'),
+        yazabilir ? h('div', { class: 'kt-tuslar' },
+          h('button', { class: 'btn ikincil kt-kucuk', onclick: catiAdiDegistir }, 'Adı değiştir'),
+          h('button', { class: 'btn ikincil kt-kucuk', onclick: catiFotoDegistir }, 'Fotoğrafı değiştir'),
+          cati.photoRef ? h('button', { class: 'btn tehlike kt-kucuk', onclick: catiFotoKaldir }, 'Fotoğrafı kaldır') : null) : null));
+  }
+  async function catiAdiDegistir() {
+    const d = await form(`Çatı adı — ${cati.name}`, [{ ad: 'name', etiket: 'Çatı adı (2–60 karakter)', deger: cati.name, zorunlu: true }], 'Kaydet',
+      { aciklama: 'Uygulamanın ana sayfasındaki kartta ve çatı ekranında bu ad görünür.' });
+    if (!d || d.name === cati.name) return;
+    try {
+      await api(`/catalog/roofs/${encodeURIComponent(cati.key)}`, { yontem: 'PATCH', govde: { name: d.name } });
+      bildir('Çatı adı kaydedildi');
+      await kategorileriYukle();
+    } catch (e) { hataGoster(e); }
+  }
+  async function catiFotoDegistir() {
+    const secim = await dosyaSec();
+    if (!secim) return;
+    if (!(await onizlemeOnayi(`Fotoğraf — ${cati.name}`, secim, cati.photoUrl || cati.bundledPhotoUrl || null))) return;
+    try {
+      await api(`/catalog/roofs/${encodeURIComponent(cati.key)}/photo`, { yontem: 'POST', govde: { contentType: secim.tur, data: secim.veri } });
+      bildir('Fotoğraf kaydedildi');
+      await kategorileriYukle();
+    } catch (e) { hataGoster(e); }
+  }
+  async function catiFotoKaldir() {
+    const d = await form(`Fotoğraf kaldırılsın mı? — ${cati.name}`, [], 'Kaldır',
+      { tehlike: true, aciklama: 'Yüklenen fotoğraf depodan silinir; uygulama bu çatıda paketindeki fotoğrafa döner.' });
+    if (!d) return;
+    try {
+      await api(`/catalog/roofs/${encodeURIComponent(cati.key)}/photo`, { yontem: 'DELETE', govde: {} });
+      bildir('Fotoğraf kaldırıldı');
+      await kategorileriYukle();
+    } catch (e) { hataGoster(e); }
+  }
+
   ara.addEventListener('input', () => listeyiCiz()); // katalog API'si listenin TAMAMINI verir
 
   await kategorileriYukle();
@@ -318,8 +389,30 @@ export async function katalogSayfasi(rol) {
     h('section', { class: 'oz-kart kt-sag' }, detay));
 
   return h('div', { class: 'oz ku kt' },
-    h('div', { class: 'oz-baslik' },
-      h('div', {}, h('h2', {}, 'Kategori ve Hizmetler'), h('p', {}, 'Uygulamadaki katalog; sıra ve içerik buradan yönetilir, değişiklikler doğrudan veritabanına kaydedilir')),
-      h('div', { class: 'kt-ust-sag' }, sayac, yazabilir ? h('button', { class: 'btn', onclick: kategoriEkle }, '+ Yeni Kategori') : null)),
+    h('a', { class: 'oz-geri', href: '#/katalog' }, '‹ Çatılar'),
+    h('section', { class: 'oz-kart' }, catiUst),
     duzen);
+}
+
+// ── ÇATI IZGARASI: uygulamanın ana sayfası gibi (3'lü) ──
+async function catiIzgarasi(yazabilir) {
+  const r = await api('/catalog/roofs');
+  return h('div', { class: 'oz ku kt' },
+    h('div', { class: 'oz-baslik' },
+      h('div', {}, h('h2', {}, 'Kategori ve Hizmetler'), h('p', {}, 'Uygulamanın ana sayfasındaki çatılar; dokununca içindeki kategoriler açılır')),
+      yazabilir ? h('div', { class: 'kt-ust-sag' }, h('button', { class: 'btn', onclick: () => yeniKategoriVeGit() }, '+ Yeni Kategori')) : null),
+    h('div', { class: 'kt-cati-izgara' }, r.roofs.map(catiKarti)),
+    r.unassigned.length ? h('a', { class: 'oz-tumu', href: `#/katalog/${CATISIZ}` }, `Çatıya bağlı olmayan ${r.unassigned.length.toLocaleString('tr-TR')} kategori ›`) : null);
+}
+
+/** Yeni kategori çatısız başlar; oluşturulunca o listeye gidilir. */
+async function yeniKategoriVeGit() {
+  const d = await form('Yeni kategori', [{ ad: 'name', etiket: 'Kategori adı (2–100 karakter)', zorunlu: true }], 'Oluştur',
+    { aciklama: 'Yeni kategori hiçbir çatıya bağlı değildir: uygulamada aramada ve ilan verirken görünür. Uygulamada görünmesi için en az bir hizmet ekleyin.' });
+  if (!d) return;
+  try {
+    await api('/catalog/categories', { yontem: 'POST', govde: { name: d.name } });
+    bildir('Kategori oluşturuldu');
+    location.hash = `#/katalog/${CATISIZ}`;
+  } catch (e) { bildir(e.message, true); }
 }

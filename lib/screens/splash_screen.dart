@@ -14,6 +14,7 @@ import '../data/remote/api/config_api.dart';
 import '../data/category_tree.dart';
 import '../data/remote/api/category_api.dart';
 import 'category_ui.dart' show sunucuFotograflariniAyarla, sunucuIkonlariniAyarla;
+import '../data/hizmet_alanlari.dart' show sunucuAlanlariniAyarla;
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
@@ -693,13 +694,16 @@ class _SplashScreenState extends State<SplashScreen> {
     // kullanılıyor.
     if (ApiConfig.useRealApi) {
       try {
+        final apiKoku = Uri.parse(ApiConfig.baseUrl).origin;
         BootLog.olay('CATALOG_FETCH_START');
         final j = await CategoryApi(client!).tree().timeout(_kConfigButce);
         final agac = CategoryApi.parse(j);
         KatalogKaynagi.i.guncelle(agac);
         sunucuIkonlariniAyarla(CategoryApi.ikonlar(j));
         sunucuFotograflariniAyarla(CategoryApi.fotograflar(j),
-            apiKoku: Uri.parse(ApiConfig.baseUrl).origin);
+            apiKoku: apiKoku);
+        // Ana sayfa çatıları (22 Eki): ad, açıklama, fotoğraf, kategoriler.
+        sunucuAlanlariniAyarla(j['roofs'], apiKoku: apiKoku);
         BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
       } catch (e) {
         // ⚠ Gömülü katalog devrede kalır — kategorisiz uygulama olmaz.

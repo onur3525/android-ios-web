@@ -360,3 +360,22 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .kt-karsilastir { display:flex; gap:14px; flex-wrap:wrap; }
 .pencere.kt-pencere { width:min(560px, 92vw); }
 @media (max-width:600px) { .kt-medya { grid-template-columns:1fr; } }
+/* Kategori ve Hizmetler — çatı ızgarası (22 Eki): uygulamanın ana sayfası gibi 3'lü */
+.kt-cati-izgara { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; max-width:900px; }
+.kt-cati { display:flex; flex-direction:column; align-items:center; text-align:center; background:#fff; border:1.5px solid #ECEEF2; border-radius:12px; overflow:hidden; text-decoration:none; color:var(--oz-yazi); }
+.kt-cati:hover { border-color:#BFD3FB; }
+.kt-cati-foto { width:100%; aspect-ratio:1.5; border-radius:0; }
+.kt-cati-ad { white-space:pre-line; font-weight:600; font-size:15px; line-height:1.2; padding:10px 8px 4px; min-height:2.4em; display:flex; align-items:center; }
+.kt-cati-aciklama { font-size:13px; color:var(--oz-soluk); padding:0 8px 12px; line-height:1.4; }
+.kt-cati-ust { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.kt-cati-ust-foto { width:240px; max-width:100%; aspect-ratio:1.5; }
+.kt-cati-ust-metin h3 { margin:2px 0 4px; font-size:20px; }
+.kt-cati-ust-metin p { margin:2px 0; }
+.kt-cati-ust-metin .kt-tuslar { margin-top:10px; }
+.kt-rozet { width:42px; height:42px; aspect-ratio:auto; background:#EFF4FD; border-radius:11px; }
+.kt-rozet img { object-fit:contain; padding:10px; box-sizing:border-box; }
+.kt-ikon-izgara { display:grid; grid-template-columns:repeat(auto-fill, minmax(64px, 1fr)); gap:8px; max-height:50vh; overflow:auto; margin:10px 0; }
+.kt-ikon-sec { background:#EFF4FD; border:2px solid transparent; border-radius:10px; padding:12px; cursor:pointer; aspect-ratio:1; }
+.kt-ikon-sec img { width:100%; height:100%; object-fit:contain; }
+.kt-ikon-sec.secili, .kt-ikon-sec:hover { border-color:var(--oz-mavi, #2563EB); }
+@media (max-width: 640px) { .kt-cati-izgara { gap:8px; } .kt-cati-ad { font-size:12.5px; } .kt-cati-aciklama { font-size:11px; } }

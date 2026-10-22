@@ -14,7 +14,7 @@ import { DESTEK_BILGISI } from '../destek_bilgisi.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
-    `SELECT id, name, active, icon, photo_ref FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
+    `SELECT id, name, active, icon, photo_ref, roof_key FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
   ).all();
   const hiz = await db.prepare(
     `SELECT category_id, name FROM services
@@ -25,7 +25,14 @@ export async function katalogYaniti(db) {
     if (!gruplu.has(h.category_id)) gruplu.set(h.category_id, []);
     gruplu.get(h.category_id).push(h.name);
   }
+  // Ana sayfa çatıları (029): ad, açıklama, yüklenen fotoğraf ve kategori
+  // adları (katalog sırasıyla). Eski istemciler bu alanı yok sayar.
+  const catilar = await db.prepare('SELECT key, name, description, photo_ref FROM catalog_roofs ORDER BY sort, name').all();
+  const catiKategorileri = new Map(catilar.map((c) => [c.key, []]));
+  for (const k of kat) if (k.roof_key && catiKategorileri.has(k.roof_key)) catiKategorileri.get(k.roof_key).push(k.name);
   return {
+    roofs: catilar.map((c) => ({ key: c.key, name: c.name, description: c.description,
+      ...(c.photo_ref ? { photoUrl: `/api/v1/categories/photo/${c.photo_ref}` } : {}), categories: catiKategorileri.get(c.key) })),
     items: kat
       .map((k) => ({ category: k.name, active: k.active === 1, ...(k.icon ? { icon: k.icon } : {}),
         // Admin'den yüklenen fotoğraf (göreli yol; yoksa uygulama paket fotoğrafına düşer)

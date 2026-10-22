@@ -23,6 +23,7 @@ COPY backend/varliklar ./varliklar
 COPY admin /app/admin
 # Admin önizlemesi için uygulama paketindeki katalog görselleri (salt okunur).
 COPY assets/categories /app/assets/categories
+COPY assets/alanlar /app/assets/alanlar
 COPY assets/svg/categories /app/assets/svg/categories
 # Kurumsal e-postalardaki logo (GET /eposta-varlik/…).
 COPY assets/logo/logo_mark.png assets/logo/wordmark.png /app/assets/logo/

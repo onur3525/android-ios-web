@@ -245,7 +245,8 @@ SAYFALAR.yorumlar = () => degerlendirmelerSayfasi(ben.role);
 
 // ── Katalog ───────────────────────────────────────────────────
 // Tasarım ve veri kaynakları: katalog.js (yalnız mevcut admin katalog API'leri).
-SAYFALAR.katalog = () => katalogSayfasi(ben.role);
+// '#/katalog' çatı ızgarası, '#/katalog/<çatı>' o çatının kategorileri (22 Eki).
+SAYFALAR.katalog = (cati) => katalogSayfasi(ben.role, cati);
 
 SAYFALAR.kategori = async (id) => {
   const yazabilir = ['super_admin', 'content'].includes(ben.role);

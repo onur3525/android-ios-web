@@ -366,6 +366,86 @@ export function adminRotalar(r, db) {
     return kategoriGorunumu(await kategoriGetir(k.id));
   });
 
+  // ── ANA SAYFA ÇATILARI (029, 22 Eki) ──
+  // Uygulamadaki 3'lü ızgaranın çatıları: ad ve fotoğraf değiştirilebilir.
+  // Çatı silinmez/eklenmez; kategoriler çatıya başlangıç verisiyle bağlıdır.
+  const catiGorunumu = (c, kategoriler) => ({
+    key: c.key, name: c.name, description: c.description, cardLabel: c.card_label ?? null, sort: c.sort,
+    photoRef: c.photo_ref ?? null,
+    photoUrl: c.photo_ref ? `/api/v1/categories/photo/${c.photo_ref}` : null,
+    bundledPhotoUrl: c.bundled_photo ? `/katalog-varlik/${c.bundled_photo}` : null,
+    updatedAt: c.updated_at,
+    ...(kategoriler ? { categories: kategoriler } : {}),
+  });
+  const catiGetir = async (key) => {
+    const c = await db.prepare('SELECT * FROM catalog_roofs WHERE key = ?').get(String(key));
+    if (!c) throw hata.bulunamadi('Çatı bulunamadı');
+    return c;
+  };
+
+  r.get('/admin/v1/catalog/roofs', async (ctx) => {
+    yetkiIste(ctx.admin, 'catalog.read');
+    const sayim = new Map((await db.prepare('SELECT category_id, COUNT(*) n FROM services WHERE deleted_at IS NULL GROUP BY category_id').all())
+      .map((x) => [x.category_id, x.n]));
+    const kategoriler = await db.prepare('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY sort, name').all();
+    const gruplu = new Map();
+    for (const k of kategoriler) {
+      const anahtar = k.roof_key ?? '';
+      if (!gruplu.has(anahtar)) gruplu.set(anahtar, []);
+      gruplu.get(anahtar).push(await kategoriGorunumu(k, sayim));
+    }
+    const catilar = await db.prepare('SELECT * FROM catalog_roofs ORDER BY sort, name').all();
+    const bilinen = new Set(catilar.map((c) => c.key));
+    return {
+      roofs: catilar.map((c) => catiGorunumu(c, gruplu.get(c.key) ?? [])),
+      // Hiçbir çatıya bağlı olmayan kategoriler (ör. sonradan eklenenler):
+      // uygulamada aramada görünür, ana sayfa çatısında görünmez.
+      unassigned: [...gruplu.entries()].filter(([a]) => !bilinen.has(a)).flatMap(([, l]) => l),
+    };
+  });
+
+  r.patch('/admin/v1/catalog/roofs/:key', async (ctx) => {
+    yetkiIste(ctx.admin, 'catalog.write');
+    const c = await catiGetir(ctx.params.key);
+    const isim = ad(ctx.body.name, 'Çatı adı', 2, 60);
+    if (isim === c.name) throw hata.dogrulama('Değişiklik yok');
+    if (await db.prepare('SELECT 1 FROM catalog_roofs WHERE name = ? AND key <> ?').get(isim, c.key)) throw hata.cakisma('Bu adda bir çatı zaten var');
+    await db.tx(async () => {
+      // Kart kısaltması eski ada aitti: ad değişince kart yeni adı gösterir.
+      await db.prepare('UPDATE catalog_roofs SET name = ?, card_label = NULL, updated_at = ? WHERE key = ?').run(isim, simdi(), c.key);
+      await yaz(ctx, { islem: 'catalog.roof.update', hedefTur: 'catalog_roof', hedefId: c.key, once: { name: c.name }, sonra: { name: isim } });
+    });
+    return catiGorunumu(await catiGetir(c.key));
+  });
+
+  r.post('/admin/v1/catalog/roofs/:key/photo', async (ctx) => {
+    yetkiIste(ctx.admin, 'catalog.write');
+    const c = await catiGetir(ctx.params.key);
+    const yeni = await fotoYukle(db, ctx.body.contentType, ctx.body.data);
+    await db.tx(async () => {
+      await db.prepare('UPDATE catalog_roofs SET photo_ref = ?, updated_at = ? WHERE key = ?').run(yeni, simdi(), c.key);
+      await yaz(ctx, { islem: 'catalog.roof.photo.set', hedefTur: 'catalog_roof', hedefId: c.key, once: { photoRef: c.photo_ref ?? null }, sonra: { photoRef: yeni } });
+    });
+    if (c.photo_ref && !(await fotoSil(db, c.photo_ref))) {
+      await yaz(ctx, { islem: 'storage.delete.failed', hedefTur: 'storage_object', hedefId: c.photo_ref });
+    }
+    return catiGorunumu(await catiGetir(c.key));
+  });
+
+  r.delete('/admin/v1/catalog/roofs/:key/photo', async (ctx) => {
+    yetkiIste(ctx.admin, 'catalog.write');
+    const c = await catiGetir(ctx.params.key);
+    if (!c.photo_ref) throw hata.durum('Bu çatıda yüklenmiş fotoğraf yok');
+    await db.tx(async () => {
+      await db.prepare('UPDATE catalog_roofs SET photo_ref = NULL, updated_at = ? WHERE key = ?').run(simdi(), c.key);
+      await yaz(ctx, { islem: 'catalog.roof.photo.remove', hedefTur: 'catalog_roof', hedefId: c.key, once: { photoRef: c.photo_ref }, sonra: { photoRef: null } });
+    });
+    if (!(await fotoSil(db, c.photo_ref))) {
+      await yaz(ctx, { islem: 'storage.delete.failed', hedefTur: 'storage_object', hedefId: c.photo_ref });
+    }
+    return catiGorunumu(await catiGetir(c.key));
+  });
+
   r.get('/admin/v1/catalog/categories/:id/services', async (ctx) => {
     yetkiIste(ctx.admin, 'catalog.read');
     await kategoriGetir(ctx.params.id);
