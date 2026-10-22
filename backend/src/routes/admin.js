@@ -201,7 +201,32 @@ export function adminRotalar(r, db) {
   // ── YÖNETİCİLER ──────────────────────────────────────────
   r.get('/admin/v1/admins', async (ctx) => {
     yetkiIste(ctx.admin, 'admins.manage');
-    return (await db.prepare('SELECT * FROM admins ORDER BY created_at').all()).map(adminGorunumu);
+    return (await db.prepare('SELECT * FROM admins WHERE deleted_at IS NULL ORDER BY created_at').all()).map(adminGorunumu);
+  });
+
+  // ── YÖNETİCİ SİLME (22 Eki, kullanıcı kararı) ──
+  // Yalnız süper yönetici; kendini ve son etkin süper yöneticiyi silemez.
+  // Kayıt fiziksel silinmez (destek yanıtları ve denetim kaydı ona bağlı):
+  // deleted_at işaretlenir, hesap pasif olur, oturumları kapanır, e-posta serbest bırakılır (aynı adresle yeniden eklenebilir).
+  // Silinen yöneticinin e-postası denetim kaydında saklanır.
+  r.delete('/admin/v1/admins/:id', async (ctx) => {
+    yetkiIste(ctx.admin, 'admins.manage');
+    yenidenDogrulamaIste(ctx.oturum);
+    const a = await db.prepare('SELECT * FROM admins WHERE id = ? AND deleted_at IS NULL').get(ctx.params.id);
+    if (!a) throw hata.bulunamadi('Yönetici bulunamadı');
+    if (a.id === ctx.admin.id) throw hata.durum('Kendi hesabınızı silemezsiniz');
+    const neden = gerekce(ctx.body.reason);
+    if (a.role === 'super_admin') {
+      const kalan = Number((await db.prepare(`SELECT COUNT(*) n FROM admins WHERE role = 'super_admin' AND active = TRUE AND deleted_at IS NULL AND id <> ?`).get(a.id)).n);
+      if (kalan === 0) throw hata.durum('Son etkin süper yönetici silinemez');
+    }
+    const z = simdi();
+    await db.tx(async () => {
+      await db.prepare('UPDATE admins SET deleted_at = ?, active = FALSE, email = ? WHERE id = ?').run(z, `silindi-${a.id}@yonetici.invalid`, a.id);
+      await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(a.id);
+      await yaz(ctx, { islem: 'admin.delete', hedefTur: 'admin', hedefId: a.id, once: { email: a.email, name: a.name, role: a.role }, gerekce: neden });
+    });
+    return undefined;
   });
 
   r.post('/admin/v1/admins', async (ctx) => {
@@ -228,7 +253,8 @@ export function adminRotalar(r, db) {
   r.patch('/admin/v1/admins/:id', async (ctx) => {
     yetkiIste(ctx.admin, 'admins.manage');
     yenidenDogrulamaIste(ctx.oturum);
-    const a = await db.prepare('SELECT * FROM admins WHERE id = ?').get(ctx.params.id);
+    // Silinmiş yönetici (030) düzenlenemez/yeniden etkinleştirilemez.
+    const a = await db.prepare('SELECT * FROM admins WHERE id = ? AND deleted_at IS NULL').get(ctx.params.id);
     if (!a) throw hata.bulunamadi();
     if (a.id === ctx.admin.id) throw hata.durum('Kendi hesabınızın rolünü/durumunu değiştiremezsiniz');
     const yeni = { role: a.role, active: a.active };

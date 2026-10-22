@@ -709,9 +709,18 @@ SAYFALAR.yoneticiler = async () => {
     const d = await form(`${a.email}`, [{ ad: 'role', etiket: 'Rol', tur: 'select', deger: a.role, secenekler: ROL_TR }, { ad: 'active', etiket: 'Aktif', tur: 'checkbox', deger: a.active }]);
     if (d && await guvenli(() => api(`/admins/${a.id}`, { yontem: 'PATCH', govde: d }))) { bildir('Güncellendi'); yenile(); }
   };
+  // Süper yönetici diğer yöneticileri silebilir (22 Eki). Kendini silemez.
+  const sil = async (a) => {
+    const n = await gerekceIle(`"${a.name}" (${a.email}) silinsin mi?`, 'Sil', 'Hesap kapanır, oturumları sonlanır ve listeden kalkar. Geçmiş işlemleri denetim kaydında kalır. Aynı e-postayla yeniden yönetici eklenebilir.');
+    if (n && await guvenli(() => api(`/admins/${a.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Yönetici silindi'); yenile(); }
+  };
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Yöneticiler'), h('button', { class: 'btn', onclick: ekle }, 'Yönetici ekle')),
     tablo([{ baslik: 'Ad', deger: (a) => a.name }, { baslik: 'E-posta', deger: (a) => a.email }, { baslik: 'Rol', deger: (a) => ROL_TR.find(([v]) => v === a.role)?.[1] },
-      { baslik: 'MFA', deger: (a) => (a.mfa ? 'Kurulu' : 'Yok') }, { baslik: 'Durum', deger: (a) => rozet(a.active ? 'aktif' : 'pasif') }], liste, (a) => (a.id !== ben.id ? duzenle(a) : null)));
+      { baslik: 'MFA', deger: (a) => (a.mfa ? 'Kurulu' : 'Yok') }, { baslik: 'Durum', deger: (a) => rozet(a.active ? 'aktif' : 'pasif') },
+      { baslik: '', deger: (a) => (a.id !== ben.id
+        ? h('span', {}, h('button', { class: 'btn ikincil', onclick: (e) => { e.stopPropagation(); duzenle(a); } }, 'Düzenle'), ' ',
+          h('button', { class: 'btn tehlike', onclick: (e) => { e.stopPropagation(); sil(a); } }, 'Sil'))
+        : h('span', { class: 'not' }, 'Siz')) }], liste, (a) => (a.id !== ben.id ? duzenle(a) : null)));
 };
 
 // ── Başlangıç ─────────────────────────────────────────────────
