@@ -79,6 +79,12 @@ function donem(x) {
   if (x.tur === 'ay') return { bas: new Date(bugun.getFullYear(), bugun.getMonth(), 1), gun: bugun.getDate(), etiket: 'Bu ay' };
   if (x.tur === 'aralik') return { bas: x.bas, gun: gunFarki(x.bas, x.bit) + 1, etiket: 'Tarih aralığı' };
   if (x.tur === 'son7') return { bas: gunEkle(bugun, -6), gun: 7, etiket: 'Son 7 gün' };
+  // 22 Eki: yıl seçimi (içinde bulunulan yıl bugüne kadar).
+  if (x.tur === 'yil') {
+    const bas = new Date(x.yil, 0, 1);
+    const son = x.yil === bugun.getFullYear() ? bugun : new Date(x.yil, 11, 31);
+    return { bas, gun: gunFarki(bas, son) + 1, etiket: String(x.yil) };
+  }
   return { bas: bugun, gun: 1, etiket: 'Bugün' };
 }
 
@@ -88,11 +94,13 @@ function yenidenCiz() { window.dispatchEvent(new HashChangeEvent('hashchange'));
  * Tarih seçici — sağ üst (büyük) ve grafik kartları (küçük) aynı bileşeni
  * kullanır. x: seçim, onSec: yeni seçimle çağrılır.
  */
-function tarihSecici(x, onSec, { secenekler = SECENEKLER, kucuk = false } = {}) {
+function tarihSecici(x, onSec, { secenekler = SECENEKLER, kucuk = false, aralik = true } = {}) {
   const d = donem(x);
   const son = gunEkle(d.bas, d.gun - 1);
   const aralikMetni = d.gun === 1 ? uzunTarih(d.bas) : `${uzunTarih(d.bas)} - ${uzunTarih(son)}`;
   const metin = kucuk ? (x.tur === 'aralik' ? aralikMetni : d.etiket) : `${d.etiket} · ${aralikMetni}`;
+  // Seçenek: [tür, ad, ek alanlar] (yıl: { yil }).
+  const seciliMi = (tur, ek) => x.tur === tur && (tur !== 'yil' || x.yil === ek?.yil);
   const bugun = yerelGun(new Date());
   const ilk = h('input', { type: 'date', max: girdiTarihi(bugun), value: girdiTarihi(d.bas), 'aria-label': 'Başlangıç tarihi' });
   const sonGirdi = h('input', { type: 'date', max: girdiTarihi(bugun), value: girdiTarihi(son), 'aria-label': 'Bitiş tarihi' });
@@ -122,12 +130,12 @@ function tarihSecici(x, onSec, { secenekler = SECENEKLER, kucuk = false } = {}) 
     if (!hataMetni) sec({ tur: 'aralik', bas: b, bit: t });
   };
   sar.append(dugme, h('div', { class: 'oz-tarih-menu', role: 'menu' },
-    secenekler.map(([tur, ad]) => h('button', { type: 'button', role: 'menuitem', class: `oz-tarih-secenek${x.tur === tur ? ' secili' : ''}`, onclick: () => sec({ tur }) }, ad)),
-    h('form', { class: `oz-aralik${x.tur === 'aralik' ? ' secili' : ''}`, onsubmit: uygula },
+    secenekler.map(([tur, ad, ek]) => h('button', { type: 'button', role: 'menuitem', class: `oz-tarih-secenek${seciliMi(tur, ek) ? ' secili' : ''}`, onclick: () => sec({ tur, ...(ek ?? {}) }) }, ad)),
+    aralik ? h('form', { class: `oz-aralik${x.tur === 'aralik' ? ' secili' : ''}`, onsubmit: uygula },
       h('div', { class: 'oz-aralik-baslik' }, 'Tarih aralığı'),
       h('label', {}, 'Başlangıç', ilk), h('label', {}, 'Bitiş', sonGirdi),
       hataYeri,
-      h('button', { type: 'submit', class: 'oz-aralik-uygula' }, 'Uygula'))));
+      h('button', { type: 'submit', class: 'oz-aralik-uygula' }, 'Uygula')) : null));
   return sar;
 }
 
@@ -195,16 +203,40 @@ const tl = (v) => `${Number(v ?? 0).toLocaleString('tr-TR')} TL`;
  * bir kez, seçildiği gün sayılır (ilan teklifleri + kabul edilen teklif
  * talepleri). Kaynak: /stats/market.
  */
-function tutarKarti(etiket, pz) {
-  if (pz.e) return h('section', { class: 'oz-kart' }, h('div', { class: 'oz-kart-ust' }, h('h3', {}, 'Seçilen Teklif Tutarı')), yuklenemedi(pz.e));
-  const s = pz.v.selectedOffers;
-  return h('section', { class: 'oz-kart oz-tutar' },
-    h('div', { class: 'oz-kart-ust' }, h('h3', {}, 'Seçilen Teklif Tutarı'), h('span', { class: 'oz-secim' }, etiket)),
-    h('div', { class: 'oz-tutar-buyuk' }, tl(s.totalTl)),
-    h('p', { class: 'oz-alt' }, `${sayi(s.count)} teklif seçildi · hizmet alanların seçtiği tekliflerin toplamı`),
-    h('div', { class: 'oz-mini-izgara iki' },
-      miniKart(`İlan teklifleri · ${sayi(s.listingOffers.count)} adet`, null, 'ilan', 'mavi', tl(s.listingOffers.totalTl)),
-      miniKart(`Teklif talepleri · ${sayi(s.teklifTalepleri.count)} adet`, null, 'talep', 'turuncu', tl(s.teklifTalepleri.totalTl))));
+// 22 Eki: kartın kendi seçimi — Bugün / Bu hafta / Bu ay / yıllar (yeniden eskiye).
+let tutarSecimi = { tur: 'bugun' };
+function tutarKarti() {
+  const BASLIK = 'Seçilen Toplam Teklif Tutarı';
+  const kart = h('section', { class: 'oz-kart oz-tutar' });
+  let ilkYil = null;
+  const ciz = async () => {
+    const x = tutarSecimi;
+    const d = donem(x);
+    const buYil = new Date().getFullYear();
+    const yillar = [];
+    for (let y = buYil; y >= Math.min(ilkYil ?? buYil, buYil); y -= 1) yillar.push(['yil', String(y), { yil: y }]);
+    const ust = h('div', { class: 'oz-kart-ust' }, h('h3', {}, BASLIK),
+      tarihSecici(x, (yeni) => { tutarSecimi = yeni; ciz(); }, { secenekler: [...SECENEKLER, ...yillar], kucuk: true, aralik: false }));
+    kart.replaceChildren(ust, h('p', { class: 'oz-bos' }, 'Yükleniyor…'));
+    let r;
+    try {
+      r = await api(`/stats/market?from=${encodeURIComponent(d.bas.toISOString())}&days=${d.gun}`);
+    } catch (e) {
+      if (tutarSecimi === x) kart.replaceChildren(ust, yuklenemedi(e));
+      return;
+    }
+    if (tutarSecimi !== x) return; // bu arada başka seçim yapıldı
+    if (r.firstSelectedYear && r.firstSelectedYear !== ilkYil) { ilkYil = r.firstSelectedYear; return ciz(); }
+    const s = r.selectedOffers;
+    kart.replaceChildren(ust,
+      h('div', { class: 'oz-tutar-buyuk' }, tl(s.totalTl)),
+      h('p', { class: 'oz-alt' }, `${sayi(s.count)} teklif seçildi · hizmet alanların seçtiği tekliflerin toplamı`),
+      h('div', { class: 'oz-mini-izgara iki' },
+        miniKart(`İlan teklifleri · ${sayi(s.listingOffers.count)} adet`, null, 'ilan', 'mavi', tl(s.listingOffers.totalTl)),
+        miniKart(`Teklif talepleri · ${sayi(s.teklifTalepleri.count)} adet`, null, 'talep', 'turuncu', tl(s.teklifTalepleri.totalTl))));
+  };
+  ciz();
+  return kart;
 }
 
 function miniKart(ad, deger, ikonAd, renk, metin) {
@@ -363,7 +395,7 @@ export async function ozetSayfasi() {
         bugunKarti('Gelen talep', 'talep', 'kirmizi', donemSay(dv.supportTickets), karsilastirma))),
 
     h('div', { class: 'oz-uclu sd-iki' },
-      tutarKarti(d.etiket, pz),
+      tutarKarti(),
       bolum('Teklif Talepleri', 'talepler', pz.e ? yuklenemedi(pz.e) : (() => {
         const t = pz.v.teklifTalepleri; const b = t.byStatus;
         return h('div', {},
