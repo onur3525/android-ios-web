@@ -71,7 +71,7 @@ export async function bolgeAgaci(db) {
 
 async function yayindakiSurum(db, slug) {
   return await db.prepare(
-    `SELECT d.slug, d.title, v.version, v.effective_date, v.body, v.sha256, v.id
+    `SELECT d.slug, d.title, v.version, v.effective_date, v.body, v.sha256, v.id, v.summary, v.pdf_ref
        FROM legal_documents d JOIN legal_versions v ON v.slug = d.slug
       WHERE d.slug = ? AND d.active = TRUE AND v.status = 'PUBLISHED'`,
   ).get(slug);
@@ -102,7 +102,9 @@ export function publicRotalar(r, db) {
     }
     const v = await yayindakiSurum(db, ctx.params.slug);
     if (!v) throw hata.bulunamadi('Belge bulunamadı');
-    return { slug: v.slug, title: v.title, version: String(v.version), effectiveDate: v.effective_date, body: v.body };
+    return { slug: v.slug, title: v.title, version: String(v.version), effectiveDate: v.effective_date, body: v.body,
+      // 031: PDF'li sürümde kısa özet + PDF adresi (sürüme özgü, değişmez).
+      ...(v.pdf_ref ? { summary: v.summary, pdfUrl: `/api/v1/legal/${v.slug}/pdf/${v.version}` } : {}) };
   });
 
   r.get('/api/v1/config/app', async (ctx) => {

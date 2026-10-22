@@ -505,12 +505,14 @@ export function sohbetTalepRotalar(r, db) {
   // etmediği SÜRÜMLERİ. Flutter açılışta bunu sorar → "Görüntüle → Kabul Et".
   r.get('/api/v1/legal/pending-acceptances', korumali(async (ctx) =>
     (await db.prepare(
-      `SELECT d.slug, d.title, v.id version_id, v.version, v.sha256, v.effective_date
+      `SELECT d.slug, d.title, v.id version_id, v.version, v.sha256, v.effective_date, v.summary, v.pdf_ref
          FROM legal_documents d JOIN legal_versions v ON v.slug = d.slug AND v.status = 'PUBLISHED'
         WHERE d.active = TRUE AND d.requires_acceptance = TRUE
           AND NOT EXISTS (SELECT 1 FROM legal_acceptances a WHERE a.user_id = ? AND a.version_id = v.id)
         ORDER BY d.slug`,
-    ).all(ctx.kullanici.id)).map((x) => ({ slug: x.slug, title: x.title, version: String(x.version), sha256: x.sha256, effectiveDate: x.effective_date })),
+    ).all(ctx.kullanici.id)).map((x) => ({ slug: x.slug, title: x.title, version: String(x.version), sha256: x.sha256, effectiveDate: x.effective_date,
+      // 031: PDF'li sürüm — uygulama kısa özeti gösterir, isteyene PDF'in tamamını açar.
+      ...(x.pdf_ref ? { summary: x.summary, pdfUrl: `/api/v1/legal/${x.slug}/pdf/${x.version}` } : {}) })),
   ));
 
   r.post('/api/v1/legal/:slug/accept', korumali(async (ctx) => {

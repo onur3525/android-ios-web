@@ -371,13 +371,54 @@ SAYFALAR.belge = async (slug) => {
     const d = await form('Yeni sürüm (taslak)', [{ ad: 'body', etiket: 'Belge metni', tur: 'textarea', zorunlu: true }, { ad: 'effectiveDate', etiket: 'Yürürlük tarihi (YYYY-AA-GG, boş = bugün)', desen: '^\\d{4}-\\d{2}-\\d{2}$' }]);
     if (d && await guvenli(() => api(`/legal/${slug}/versions`, { yontem: 'POST', govde: { body: d.body, ...(d.effectiveDate ? { effectiveDate: d.effectiveDate } : {}) } }))) { bildir('Taslak oluşturuldu'); yenile(); }
   };
+  // ── PDF İLE GÜNCELLEME (22 Eki): PDF + kısa özet; taslak ya da tek adımda yayın ──
+  const pdfGuncelle = () => new Promise((coz) => {
+    const dosya = h('input', { type: 'file', accept: 'application/pdf,.pdf', class: 'genis' });
+    const ozet = h('textarea', { class: 'genis', rows: 6, placeholder: 'Kullanıcıların uygulamaya girince göreceği kısa özet: belgenin neyi kapsadığı (20-2000 karakter).' });
+    const tarihG = h('input', { class: 'genis', type: 'date' });
+    const hataA = h('div', { class: 'hata' });
+    const kapat = (v) => { perde.remove(); coz(v); };
+    const gonder = async (yayin) => {
+      hataA.textContent = '';
+      const f = dosya.files?.[0];
+      if (!f) return (hataA.textContent = 'PDF dosyası seçin');
+      if (f.type && f.type !== 'application/pdf') return (hataA.textContent = 'Yalnız PDF yüklenebilir');
+      if (f.size > 10 * 1024 * 1024) return (hataA.textContent = 'PDF en fazla 10 MB olabilir');
+      const metin = ozet.value.trim();
+      if (metin.length < 20) return (hataA.textContent = 'Kısa özet en az 20 karakter olmalıdır');
+      const veri = await new Promise((ok) => { const o = new FileReader(); o.onload = () => ok(String(o.result).split(',')[1]); o.readAsDataURL(f); });
+      const govde = { pdf: veri, summary: metin, publish: yayin, ...(tarihG.value ? { effectiveDate: tarihG.value } : {}) };
+      kapat(null);
+      if (await guvenli(() => api(`/legal/${slug}/versions`, { yontem: 'POST', govde }))) {
+        bildir(yayin ? 'Yeni sürüm yayınlandı' : 'Taslak kaydedildi'); yenile();
+      }
+    };
+    const perde = h('div', { class: 'perde', role: 'dialog', 'aria-modal': 'true' },
+      h('div', { class: 'pencere' },
+        h('h3', {}, `${b?.title ?? slug} — PDF ile güncelle`),
+        h('p', { class: 'not' }, b?.requiresAcceptance
+          ? 'Yayınlandığında kullanıcılar uygulamaya ilk girişlerinde bu özeti görür; isterse PDF\'in tamamını açar, "Tamam" ile kabul eder.'
+          : 'Bu belge kullanıcı kabulü istemiyor; yayınlanınca uygulamada güncel sürüm olarak görünür.'),
+        h('label', {}, 'PDF dosyası (en fazla 10 MB)'), dosya,
+        h('label', {}, 'Kısa özet'), ozet,
+        h('label', {}, 'Yürürlük tarihi (boş = bugün)'), tarihG,
+        hataA,
+        h('div', { class: 'tuslar' },
+          h('button', { class: 'btn ikincil', onclick: () => kapat(null) }, 'Vazgeç'),
+          h('button', { class: 'btn ikincil', onclick: () => gonder(false) }, 'Taslak kaydet'),
+          h('button', { class: 'btn', onclick: () => gonder(true) }, 'Güncelle ve yayınla'))));
+    perde.addEventListener('keydown', (e) => { if (e.key === 'Escape') kapat(null); });
+    document.body.append(perde);
+  });
   const ayar = async () => {
     const d = await form('Belge ayarları', [{ ad: 'title', etiket: 'Başlık', deger: b.title, zorunlu: true }, { ad: 'requiresAcceptance', etiket: 'Kullanıcı kabulü gerektirir', tur: 'checkbox', deger: b.requiresAcceptance }, { ad: 'active', etiket: 'Aktif', tur: 'checkbox', deger: b.active }]);
     if (d && await guvenli(() => api(`/legal/${slug}`, { yontem: 'PATCH', govde: d }))) { bildir('Kaydedildi'); yenile(); }
   };
   const goster = async (v) => {
     const x = await guvenli(() => api(`/legal/${slug}/versions/${v.version}`));
-    if (x) bilgiPenceresi(`${b.title} — sürüm ${x.version}`, h('p', { class: 'not' }, `SHA-256: ${x.sha256}`), h('pre', { class: 'govde' }, x.body));
+    if (x) bilgiPenceresi(`${b.title} — sürüm ${x.version}`, h('p', { class: 'not' }, `SHA-256: ${x.sha256}`),
+      x.hasPdf ? [h('p', {}, h('strong', {}, 'Kısa özet')), h('pre', { class: 'govde' }, x.summary ?? ''), h('a', { class: 'btn ikincil', href: x.pdfUrl, target: '_blank', rel: 'noopener' }, 'PDF\'i aç')]
+        : h('pre', { class: 'govde' }, x.body));
   };
   const yayinla = async (v) => {
     if (!(await form(`Sürüm ${v.version} yayınlansın mı?`, [], 'Yayınla', { aciklama: 'Yayındaki sürüm arşive alınır; kabul gerektiren belgede kullanıcılar yeni sürümü onaylamadan devam edemez.' }))) return;
@@ -388,10 +429,13 @@ SAYFALAR.belge = async (slug) => {
     if (n && await guvenli(() => api(`/legal/${slug}/versions/${v.version}/archive`, { yontem: 'POST', govde: { reason: n } }))) { bildir('Arşivlendi'); yenile(); }
   };
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, b?.title ?? slug), yazabilir ? h('div', { class: 'arac' },
-    h('button', { class: 'btn ikincil', onclick: ayar }, 'Ayarlar'), h('button', { class: 'btn', onclick: yeniSurum }, 'Yeni sürüm')) : null),
+    h('button', { class: 'btn ikincil', onclick: ayar }, 'Ayarlar'), h('button', { class: 'btn ikincil', onclick: yeniSurum }, 'Metinle yeni sürüm'),
+    h('button', { class: 'btn', onclick: pdfGuncelle }, 'PDF ile güncelle')) : null),
   tablo([{ baslik: 'Sürüm', deger: (v) => v.version }, { baslik: 'Durum', deger: (v) => rozet(v.status) },
+    { baslik: 'Tür', deger: (v) => (v.hasPdf ? `PDF (${Math.max(1, Math.round((v.pdfSize ?? 0) / 1024)).toLocaleString('tr-TR')} KB)` : 'Metin') },
     { baslik: 'Yürürlük', deger: (v) => v.effectiveDate }, { baslik: 'Yayın', deger: (v) => tarih(v.publishedAt) },
-    { baslik: '', deger: (v) => h('span', {}, h('button', { class: 'btn ikincil', onclick: () => goster(v) }, 'Metni gör'),
+    { baslik: '', deger: (v) => h('span', {}, h('button', { class: 'btn ikincil', onclick: () => goster(v) }, v.hasPdf ? 'Özeti gör' : 'Metni gör'),
+      v.hasPdf ? [' ', h('a', { class: 'btn ikincil', href: v.pdfUrl, target: '_blank', rel: 'noopener' }, 'PDF')] : null,
       yazabilir && v.status === 'DRAFT' ? [' ', h('button', { class: 'btn', onclick: () => yayinla(v) }, 'Yayınla')] : null,
       yazabilir && v.status !== 'ARCHIVED' ? [' ', h('button', { class: 'btn tehlike', onclick: () => arsivle(v) }, 'Pasife al')] : null) }], surumler));
 };

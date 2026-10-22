@@ -16,6 +16,7 @@ import { denetimYaz } from '../audit.js';
 import { config } from '../config.js';
 import { simdi } from '../db.js';
 import { fotoSil, fotoYukle } from '../katalog_foto.js';
+import { pdfYukle } from '../yasal_pdf.js';
 import { bakimOnbellegiTemizle } from '../bakim_modu.js';
 import { ApiHatasi, HizSiniri, cerez, hata } from '../http.js';
 
@@ -625,6 +626,9 @@ export function adminRotalar(r, db) {
   const surumGorunumu = (v, govdeli = false) => ({
     id: v.id, slug: v.slug, version: v.version, sha256: v.sha256, effectiveDate: v.effective_date,
     status: v.status, createdAt: v.created_at, publishedAt: v.published_at,
+    // 031: PDF'li sürüm (özet + PDF). Önizleme admin oturumuyla açılır.
+    summary: v.summary ?? null, hasPdf: !!v.pdf_ref, pdfSize: v.pdf_size ?? null,
+    pdfUrl: v.pdf_ref ? `/admin/v1/legal/${v.slug}/versions/${v.version}/pdf` : null,
     ...(govdeli ? { body: v.body } : {}),
   });
 
@@ -679,22 +683,44 @@ export function adminRotalar(r, db) {
     return surumGorunumu(v, true);
   });
 
+  // Yeni sürüm: ya düz metin (body) ya da PDF + kısa özet (22 Eki).
+  // publish: true → "Güncelle ve yayınla": sürüm oluşturulup aynı işlemde
+  // yayınlanır, önceki yayındaki sürüm arşive alınır; kabul isteyen
+  // belgede kullanıcılar uygulamaya girince özeti görüp kabul eder.
   r.post('/admin/v1/legal/:slug/versions', async (ctx) => {
     yetkiIste(ctx.admin, 'legal.write');
     const d = await belgeGetir(ctx.params.slug);
-    const govde = typeof ctx.body.body === 'string' ? ctx.body.body.trim() : '';
-    if (govde.length < 20) throw hata.dogrulama('Belge metni en az 20 karakter olmalıdır');
-    if (govde.length > 500_000) throw hata.dogrulama('Belge metni çok uzun');
+    const yayinla = ctx.body.publish === true;
+    if (yayinla) yenidenDogrulamaIste(ctx.oturum);
     const yururluk = tarihVeyaBos(ctx.body.effectiveDate, 'Yürürlük tarihi') || simdi();
+    let govde; let ozet; let pdf = null; let kisaOzet = null;
+    if (ctx.body.pdf !== undefined) {
+      kisaOzet = typeof ctx.body.summary === 'string' ? ctx.body.summary.trim() : '';
+      if (kisaOzet.length < 20 || kisaOzet.length > 2000) throw hata.dogrulama('Kısa özet 20-2000 karakter olmalıdır');
+      pdf = await pdfYukle(db, ctx.body.pdf);
+      govde = kisaOzet;
+      ozet = pdf.sha256;
+    } else {
+      govde = typeof ctx.body.body === 'string' ? ctx.body.body.trim() : '';
+      if (govde.length < 20) throw hata.dogrulama('Belge metni en az 20 karakter olmalıdır');
+      if (govde.length > 500_000) throw hata.dogrulama('Belge metni çok uzun');
+      ozet = createHash('sha256').update(govde, 'utf8').digest('hex');
+    }
     const v = (await db.prepare('SELECT COALESCE(MAX(version), 0) + 1 n FROM legal_versions WHERE slug = ?').get(d.slug)).n;
     const id = randomUUID();
-    const ozet = createHash('sha256').update(govde, 'utf8').digest('hex');
+    const z = simdi();
     await db.tx(async () => {
       await db.prepare(
-        `INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_by, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', ?, ?)`,
-      ).run(id, d.slug, v, govde, ozet, yururluk.slice(0, 10), ctx.admin.id, simdi());
-      await yaz(ctx, { islem: 'legal.version.create', hedefTur: 'legal_version', hedefId: id, sonra: { slug: d.slug, version: v, sha256: ozet } });
+        `INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_by, created_at, summary, pdf_ref, pdf_size)
+         VALUES (?, ?, ?, ?, ?, ?, 'DRAFT', ?, ?, ?, ?, ?)`,
+      ).run(id, d.slug, v, govde, ozet, yururluk.slice(0, 10), ctx.admin.id, z, kisaOzet, pdf?.anahtar ?? null, pdf?.boyut ?? null);
+      await yaz(ctx, { islem: 'legal.version.create', hedefTur: 'legal_version', hedefId: id, sonra: { slug: d.slug, version: v, sha256: ozet, pdf: !!pdf } });
+      if (yayinla) {
+        const onceki = await db.prepare(`SELECT * FROM legal_versions WHERE slug = ? AND status = 'PUBLISHED'`).get(d.slug);
+        if (onceki) await db.prepare(`UPDATE legal_versions SET status = 'ARCHIVED' WHERE id = ?`).run(onceki.id);
+        await db.prepare(`UPDATE legal_versions SET status = 'PUBLISHED', published_by = ?, published_at = ? WHERE id = ?`).run(ctx.admin.id, z, id);
+        await yaz(ctx, { islem: 'legal.version.publish', hedefTur: 'legal_version', hedefId: id, once: onceki ? { version: onceki.version } : null, sonra: { version: v, sha256: ozet } });
+      }
     });
     return surumGorunumu(await db.prepare('SELECT * FROM legal_versions WHERE id = ?').get(id), true);
   });

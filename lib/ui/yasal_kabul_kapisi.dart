@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api_config.dart';
+import '../core/yasal_pdf_ac.dart';
 import 'gezgin.dart';
 
 /// ═══════════════════════════════════════════════════════════════
@@ -93,6 +94,10 @@ class _YasalKabulKapisiState extends State<YasalKabulKapisi> {
     }
     final slug = '${b['slug']}';
     final baslik = '${b['title']}';
+    // 22 Eki: PDF'li sürümde kısa özet gösterilir; isteyen PDF'in tamamını
+    // açar, "Tamam" ile kabul eder (okumadan da kabul edilebilir).
+    final ozet = b['summary'] is String ? b['summary'] as String : null;
+    final pdf = yasalPdfAdresi(b['pdfUrl']) != null ? b['pdfUrl'] : null;
     final sonuc = await showDialog<bool>(
       context: ctx,
       barrierDismissible: false,
@@ -100,14 +105,40 @@ class _YasalKabulKapisiState extends State<YasalKabulKapisi> {
         canPop: false,
         child: AlertDialog(
           title: Text('$baslik güncellendi'),
-          content: const Text(
-              'Uygulamayı kullanmaya devam etmek için güncel metni okuyup onaylamanız gerekiyor.'),
+          content: ozet != null
+              ? ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 320),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Bu belge kısaca şunları kapsar:',
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 8),
+                        Text(ozet),
+                        const SizedBox(height: 12),
+                        const Text(
+                            '"Tamam"a basarak belgenin güncel sürümünü kabul etmiş olursunuz.',
+                            style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                )
+              : const Text(
+                  'Uygulamayı kullanmaya devam etmek için güncel metni okuyup onaylamanız gerekiyor.'),
           actions: [
-            TextButton(
-              onPressed: () => gezginAnahtari.currentState?.pushNamed('/legal',
-                  arguments: {'slug': slug, 'title': baslik}),
-              child: const Text('Metni Görüntüle'),
-            ),
+            if (pdf != null)
+              TextButton(
+                onPressed: () => yasalPdfAc(pdf),
+                child: const Text('Tamamını Oku (PDF)'),
+              )
+            else
+              TextButton(
+                onPressed: () => gezginAnahtari.currentState?.pushNamed('/legal',
+                    arguments: {'slug': slug, 'title': baslik}),
+                child: const Text('Metni Görüntüle'),
+              ),
             FilledButton(
               onPressed: () async {
                 try {
@@ -129,7 +160,7 @@ class _YasalKabulKapisiState extends State<YasalKabulKapisi> {
                   }
                 }
               },
-              child: const Text('Kabul Et ve Devam Et'),
+              child: Text(ozet != null ? 'Tamam' : 'Kabul Et ve Devam Et'),
             ),
           ],
         ),
