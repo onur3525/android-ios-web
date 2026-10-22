@@ -34,9 +34,31 @@ class CihazKimligi {
   );
 
   Future<String?>? _deger;
+  String? _okunan;
+  bool _okundu = false;
 
   /// Cihaz kimliği; yoksa üretilip saklanır. Depo hatasında null.
+  ///
+  /// ⚠ 22 Eki (KVKK/çerez): YALNIZ oturum varken ya da giriş/kayıt
+  /// sırasında çağrılır; oturumsuz ziyaretçi için [mevcut] kullanılır.
   Future<String?> deger() => _deger ??= _yukle();
+
+  /// Daha önce üretilmiş kimlik; yoksa null — ÜRETMEZ, depoya yazmaz.
+  Future<String?> mevcut() async {
+    if (_deger != null) {
+      return _deger;
+    }
+    if (!_okundu) {
+      try {
+        final v = kIsWeb ? kaliciOku(kCihazAnahtari) : await _depo.read(key: kCihazAnahtari);
+        _okunan = gecerliMi(v) ? v : null;
+      } catch (_) {
+        _okunan = null;
+      }
+      _okundu = true;
+    }
+    return _okunan;
+  }
 
   /// Yeni rastgele kimlik: 32 bayt, base64url (dolgusuz) → 43 karakter.
   static String uret([Random? r]) {
@@ -69,5 +91,9 @@ class CihazKimligi {
 
   /// Yalnız testler.
   @visibleForTesting
-  void sifirla() => _deger = null;
+  void sifirla() {
+    _deger = null;
+    _okunan = null;
+    _okundu = false;
+  }
 }

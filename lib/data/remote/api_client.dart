@@ -147,9 +147,12 @@ class ApiClient {
       'Accept': 'application/json',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
       if (cerezliOturum) 'X-HC-Web': '1',
-      ...await _cihazBasliklari(),
     };
     final token = await tokens.accessToken();
+    // Cihaz kimliği yalnız OTURUM varken ya da giriş/kayıt sırasında
+    // üretilir; oturumsuz ziyaretçinin tarayıcısına hiçbir şey yazılmaz.
+    headers.addAll(await _cihazBasliklari(
+        olustur: token != null || path.startsWith('/auth/')));
     if (token != null) {
       // ⚠ ÇEREZE GEÇİŞ NOKTASI (web · M-05): backend HttpOnly/Secure/
       // SameSite çerez koyduğunda web'de bu başlık EKLENMEZ; kimlik
@@ -297,8 +300,11 @@ class ApiClient {
   /// ⚠ CİHAZ KİMLİĞİ (22 Eki · bakımda test hesabı): rastgele cihaz
   /// kimliği ve platform adı. Sunucu yalnız admin'in listesindeki hesaplar
   /// için kullanır (bkz. `core/cihaz_kimligi.dart`). Kimlik yoksa başlık da yok.
-  Future<Map<String, String>> _cihazBasliklari() async {
-    final c = await CihazKimligi.i.deger();
+  /// `olustur: false` iken yoksa ÜRETİLMEZ (oturumsuz ziyaretçi).
+  Future<Map<String, String>> _cihazBasliklari({required bool olustur}) async {
+    final c = olustur
+        ? await CihazKimligi.i.deger()
+        : await CihazKimligi.i.mevcut();
     if (c == null) {
       return const {};
     }
@@ -322,7 +328,7 @@ class ApiClient {
               headers: {
                 'Content-Type': 'application/json',
                 if (cerezliOturum) 'X-HC-Web': '1',
-                ...await _cihazBasliklari(),
+                ...await _cihazBasliklari(olustur: true),
               },
               body: jsonEncode(
                   rt == null ? <String, String>{} : {'refreshToken': rt}))

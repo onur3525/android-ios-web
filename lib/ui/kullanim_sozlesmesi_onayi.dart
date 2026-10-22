@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -12,9 +13,10 @@ import 'ref_widgets.dart';
 ///      HizmetCep'i kullanırken geçerli olan kuralları, hak ve
 ///      sorumluluklarımı içerir.
 ///   2. "Kişisel verilerimin işlenmesi ve aktarılmasına ilişkin
-///      Aydınlatma Metni'ni okudum ve kabul ediyorum. *"
-///      Paylaştığım kişisel verilerin, Aydınlatma Metni'nde belirtilen
-///      amaçlarla işlenmesine ve gerektiğinde paylaşılmasına izin veriyorum.
+///      Aydınlatma Metni'ni okudum, bilgilendirildim. *"
+///      ⚠ 22 Eki (KVKK): aydınlatma BİLGİLENDİRMEDİR — kabul veya rıza
+///      ifadesi kullanılmaz (açık rızayla karıştırılmamalı; Aydınlatma
+///      Tebliği). Satır, metnin gösterildiğinin ispatıdır.
 /// İkisi de işaretlenmeden kayıt tamamlanmaz. 18 yaş koşulu Kullanım
 /// Sözleşmesi'nin 4. maddesindedir — ayrı yaş kutusu YOKTUR.
 ///
@@ -40,6 +42,7 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
 
   static const String kBaslik = 'Kullanım Sözleşmesi';
   static const String kAydinlatma = 'Aydınlatma Metni';
+  static const String kCerez = 'Çerez Politikası';
 
   @override
   Widget build(BuildContext context) => Column(
@@ -75,12 +78,35 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
                 onTap: () => Navigator.pushNamed(context, '/legal',
                     arguments: {'slug': 'kvkk', 'title': kAydinlatma}),
               ),
-              (text: '’ni okudum ve kabul ediyorum.', onTap: null),
+              (text: '’ni okudum, bilgilendirildim.', onTap: null),
             ],
-            altYazi: 'Paylaştığım kişisel verilerin, Aydınlatma Metni’nde '
-                'belirtilen amaçlarla işlenmesine ve gerektiğinde '
-                'paylaşılmasına izin veriyorum.',
+            altYazi: 'Hangi kişisel verilerimin, hangi amaçla ve hangi '
+                'hukuki sebeple işlendiğini ve haklarımı anlatır.',
           ),
+          // 22 Eki: web'de çerez/tarayıcı deposu bilgilendirmesi (onay
+          // istemez; yalnız zorunlu çerezler kullanılır).
+          if (kIsWeb)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(2, 0, 2, 12),
+              child: RefTap(
+                key: const ValueKey('cerez-politikasi'),
+                onTap: () => Navigator.pushNamed(context, '/legal',
+                    arguments: {'slug': 'cookies', 'title': kCerez}),
+                child: Text.rich(TextSpan(
+                  style: refText(
+                      size: RF.s12, weight: RF.w400, color: RC.textSoft),
+                  children: [
+                    const TextSpan(
+                        text: 'Web sitesinde yalnız zorunlu çerezler '
+                            'kullanılır. Ayrıntılar: '),
+                    TextSpan(
+                        text: kCerez,
+                        style: refText(
+                            size: RF.s12, weight: RF.w600, color: RC.blue)),
+                  ],
+                )),
+              ),
+            ),
         ],
       );
 }

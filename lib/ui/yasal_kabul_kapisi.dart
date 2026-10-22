@@ -104,7 +104,11 @@ class _YasalKabulKapisiState extends State<YasalKabulKapisi> {
       builder: (d) => PopScope(
         canPop: false,
         child: AlertDialog(
-          title: Text('$baslik güncellendi'),
+          // 22 Eki: kullanıcı bu belgeyi daha önce HİÇ onaylamadıysa
+          // "güncellendi" denmez (yanıltıcıydı).
+          title: Text(b['firstTime'] == true
+              ? '$baslik onayınız gerekiyor'
+              : '$baslik güncellendi'),
           content: ozet != null
               ? ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 320),

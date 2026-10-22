@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -217,6 +218,25 @@ class ProfileScreen extends StatelessWidget {
           onTap: () => Navigator.pushNamed(c, '/legal',
               arguments: {'slug': 'privacy', 'title': 'Gizlilik Politikası'}),
         ),
+        // 22 Eki (KVKK): aydınlatma açılışta onaylatılmıyor; buradan okunur.
+        RefMenuRow(
+          iconAsset: 'assets/svg/ic_pdoc.svg',
+          iconBg: const Color(0xFFE7EFFD),
+          title: 'Aydınlatma Metni',
+          subtitle: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
+          onTap: () => Navigator.pushNamed(c, '/legal',
+              arguments: {'slug': 'kvkk', 'title': 'Aydınlatma Metni'}),
+        ),
+        // Çerez Politikası yalnız web'de (mobil uygulama çerez kullanmaz).
+        if (kIsWeb)
+          RefMenuRow(
+            iconAsset: 'assets/svg/ic_pdoc.svg',
+            iconBg: const Color(0xFFEEF0F4),
+            title: 'Çerez Politikası',
+            subtitle: 'Web sitesinde kullanılan zorunlu çerezler.',
+            onTap: () => Navigator.pushNamed(c, '/legal',
+                arguments: {'slug': 'cookies', 'title': 'Çerez Politikası'}),
+          ),
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pstar.svg',
           iconBg: const Color(0xFFFDE9F1),

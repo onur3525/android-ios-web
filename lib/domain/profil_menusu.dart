@@ -209,6 +209,24 @@ const List<ProfilMenuOgesi> _diger = [
     rota: '/legal',
     rotaArgumani: {'slug': 'privacy', 'title': 'Gizlilik Politikası'},
   ),
+  // 22 Eki (KVKK): aydınlatma artık açılışta onaylatılmıyor; her zaman
+  // buradan okunabilir. Çerez Politikası web içindir (kenar çubuğu web'de).
+  ProfilMenuOgesi(
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
+    ikonZemini: Color(0xFFE7EFFD),
+    baslik: 'Aydınlatma Metni',
+    altYazi: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
+    rota: '/legal',
+    rotaArgumani: {'slug': 'kvkk', 'title': 'Aydınlatma Metni'},
+  ),
+  ProfilMenuOgesi(
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
+    ikonZemini: Color(0xFFEEF0F4),
+    baslik: 'Çerez Politikası',
+    altYazi: 'Web sitesinde kullanılan zorunlu çerezler.',
+    rota: '/legal',
+    rotaArgumani: {'slug': 'cookies', 'title': 'Çerez Politikası'},
+  ),
   ProfilMenuOgesi(
     ikon: 'assets/svg/ic_pstar.svg',
     ikonZemini: Color(0xFFFDE9F1),

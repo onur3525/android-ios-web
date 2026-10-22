@@ -181,19 +181,31 @@ test('teklif talebi: hizmet veren reddeder — kendi listesinden kalkar, hizmet 
   assert.ok((await istek('/api/v1/teklif-talepleri', { token: usta.token })).json.some((x) => x.id === u));
 });
 
+// ⚠ 22 Eki (033): onay isteyen tek belge Kullanım Sözleşmesi (terms).
 test('yasal kabul: yalnız kabul isteyen + yayındaki sürüm; sürüm değişince yeniden istenir', async () => {
   const z = simdi();
-  await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'kvkk', 1, 'metin bir', 'aaa', '2026-10-01', 'PUBLISHED', ?)`).run(randomUUID(), z);
+  // Aydınlatma (kvkk) bilgilendirmedir: yayında sürümü olsa da onay istenmez.
+  await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'kvkk', 1, 'aydınlatma', 'kkk', '2026-10-01', 'PUBLISHED', ?)`).run(randomUUID(), z);
+  await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'terms', 1, 'metin bir', 'aaa', '2026-10-01', 'PUBLISHED', ?)`).run(randomUUID(), z);
   let bekleyen = (await istek('/api/v1/legal/pending-acceptances', { token: alan.token })).json;
-  assert.deepEqual(bekleyen.map((b) => b.slug), ['kvkk']);
-  assert.equal((await istek('/api/v1/legal/kvkk/accept', { yontem: 'POST', token: alan.token, govde: { version: '1', sha256: 'yanlis' } })).durum, 409);
-  assert.equal((await istek('/api/v1/legal/kvkk/accept', { yontem: 'POST', token: alan.token, govde: { version: '1', sha256: 'aaa', platform: 'android' } })).durum, 200);
+  assert.deepEqual(bekleyen.map((b) => b.slug), ['terms']);
+  assert.equal(bekleyen[0].firstTime, true, 'hiç onaylamadı: "güncellendi" denmez');
+  assert.equal((await istek('/api/v1/legal/terms/accept', { yontem: 'POST', token: alan.token, govde: { version: '1', sha256: 'yanlis' } })).durum, 409);
+  assert.equal((await istek('/api/v1/legal/terms/accept', { yontem: 'POST', token: alan.token, govde: { version: '1', sha256: 'aaa', platform: 'android' } })).durum, 200);
   bekleyen = (await istek('/api/v1/legal/pending-acceptances', { token: alan.token })).json;
   assert.equal(bekleyen.length, 0);
-  await db.prepare(`UPDATE legal_versions SET status = 'ARCHIVED' WHERE slug = 'kvkk'`).run();
-  await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'kvkk', 2, 'metin iki', 'bbb', '2026-10-02', 'PUBLISHED', ?)`).run(randomUUID(), z);
+  await db.prepare(`UPDATE legal_versions SET status = 'ARCHIVED' WHERE slug = 'terms'`).run();
+  await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'terms', 2, 'metin iki', 'bbb', '2026-10-02', 'PUBLISHED', ?)`).run(randomUUID(), z);
   bekleyen = (await istek('/api/v1/legal/pending-acceptances', { token: alan.token })).json;
   assert.equal(bekleyen[0].version, '2');
+  assert.equal(bekleyen[0].firstTime, false, 'önceki sürümü onaylamıştı: "güncellendi"');
+  // Onay istemeyen belgeler: gizlilik, aydınlatma, çerez; üyelik sözleşmesi pasif.
+  const belgeler = Object.fromEntries((await db.prepare('SELECT slug, active, requires_acceptance FROM legal_documents').all()).map((d) => [d.slug, [d.active, d.requires_acceptance]]));
+  assert.deepEqual(belgeler.privacy, [1, 0]);
+  assert.deepEqual(belgeler.kvkk, [1, 0]);
+  assert.deepEqual(belgeler.cookies, [1, 0]);
+  assert.deepEqual(belgeler.membership, [0, 0]);
+  assert.deepEqual(belgeler.terms, [1, 1]);
 });
 
 test('hesap silme: 30 gün sonra kişisel veri anonimleşir, oturum kapanır; iptal edilebilir', async () => {

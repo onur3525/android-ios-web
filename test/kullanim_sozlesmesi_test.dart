@@ -18,7 +18,12 @@ void main() {
     expect(o.contains("(text: '’ni okudum ve kabul ediyorum.', onTap: null)"), isTrue);
     expect(o.contains("'Kişisel verilerimin işlenmesi ve aktarılmasına ilişkin '"), isTrue);
     expect(o.contains("'HizmetCep’i kullanırken geçerli olan kuralları, hak ve '\n                'sorumluluklarımı içerir.'"), isTrue);
-    expect(o.contains("'Paylaştığım kişisel verilerin, Aydınlatma Metni’nde '\n                'belirtilen amaçlarla işlenmesine ve gerektiğinde '\n                'paylaşılmasına izin veriyorum.'"), isTrue);
+    // ⚠ 22 Eki (KVKK): aydınlatma bilgilendirmedir — "kabul / izin" denmez.
+    expect(o.contains("(text: '’ni okudum, bilgilendirildim.', onTap: null)"), isTrue);
+    expect(o.contains('izin veriyorum'), isFalse, reason: 'aydınlatma açık rızayla karıştırılmış');
+    expect(o.contains("'Hangi kişisel verilerimin, hangi amaçla ve hangi '\n                'hukuki sebeple işlendiğini ve haklarımı anlatır.'"), isTrue);
+    // Web'de çerez bilgilendirmesi (onay istemez).
+    expect(o.contains("arguments: {'slug': 'cookies', 'title': kCerez}"), isTrue);
     expect(o.contains("text: '  *'"), isTrue);
     expect(o.contains("arguments: {'slug': 'terms', 'title': kBaslik}"), isTrue);
     expect(o.contains("arguments: {'slug': 'kvkk', 'title': kAydinlatma}"), isTrue);
