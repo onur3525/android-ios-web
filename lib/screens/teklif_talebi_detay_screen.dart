@@ -327,6 +327,43 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
     Navigator.of(context).maybePop();
   }
 
+  // ── 22 Eki: HİZMET VEREN TALEBİ REDDEDER ──
+  Future<void> _saglayiciReddet(TeklifTalebi t) async {
+    final onay = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Talep reddedilsin mi?',
+            style: refText(size: RF.s17, weight: RF.w700, color: RC.text)),
+        content: Text(
+            'Talep teklif isteklerinizden kaldırılır ve hizmet alana '
+            'talebini reddettiğiniz bildirilir.',
+            style: refText(size: RF.s14, weight: RF.w400, color: RC.textSoft)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text('Reddet',
+                style: refText(
+                    size: RF.s145, weight: RF.w700, color: RC.danger)),
+          ),
+        ],
+      ),
+    );
+    if (onay != true || !mounted) return;
+    final err =
+        await context.read<TeklifTalebiController>().saglayiciReddet(t.id);
+    if (!mounted) return;
+    if (err != null) {
+      sysToastErr(context, SysKind.genericError, extra: err.message);
+      return;
+    }
+    sysToastOk(context, 'Talep reddedildi.');
+    Navigator.of(context).maybePop();
+  }
+
   Future<void> _tamamla(TeklifTalebi t) async {
     final err = await context.read<TeklifTalebiController>().tamamla(t.id);
     if (!mounted) return;
@@ -727,6 +764,7 @@ class _TeklifTalebiDetayScreenState extends State<TeklifTalebiDetayScreen> {
                 gonderimOnayi: _gonderimOnayi,
                 onTeklifVer: () => _teklifVer(t),
                 onTamamla: () => _tamamla(t),
+                onReddet: () => _saglayiciReddet(t),
               )
               : _HizmetAlanAksiyonlari(
                 talep: t,
@@ -1071,6 +1109,7 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
     required this.gonderimOnayi,
     required this.onTeklifVer,
     required this.onTamamla,
+    required this.onReddet,
   });
 
   final TeklifTalebi talep;
@@ -1084,6 +1123,9 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
   final bool gonderimOnayi;
   final VoidCallback onTeklifVer;
   final VoidCallback onTamamla;
+
+  /// 22 Eki: hizmet veren teklif vermek ZORUNDA DEĞİL — talebi reddeder.
+  final VoidCallback onReddet;
 
   @override
   Widget build(BuildContext context) {
@@ -1197,6 +1239,11 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
       return Text('Hizmet alan bu talebi iptal etti.',
           style: refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
     }
+    // 22 Eki: hizmet veren talebi reddettiyse form çizilmez.
+    if (talep.saglayiciReddetti) {
+      return Text('Bu talebi reddettiniz.',
+          style: refText(size: RF.s135, weight: RF.w500, color: RC.textSoft));
+    }
 
     // ── TEKLİF VERME FORMU ──
     return Column(
@@ -1252,6 +1299,27 @@ class _SaglayiciAksiyonlari extends StatelessWidget {
         const SizedBox(height: 20),
         RefPrimaryButton('Teklif Ver',
             busy: gonderiliyor, onPressed: onTeklifVer),
+        // ── 22 Eki (kullanıcı kararı): TALEBİ REDDET ──
+        // Teklif vermek istemeyen hizmet veren talebi reddeder; talep
+        // listesinden kalkar, hizmet alana bildirilir.
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            key: const ValueKey('talep-reddet'),
+            onPressed: gonderiliyor ? null : onReddet,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: RC.danger,
+              side: const BorderSide(color: RC.danger),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(RR.r12)),
+            ),
+            child: Text('Talebi Reddet',
+                style: refText(
+                    size: RF.s145, weight: RF.w700, color: RC.danger)),
+          ),
+        ),
       ],
     );
   }
@@ -1354,8 +1422,13 @@ class _HizmetAlanAksiyonlari extends StatelessWidget {
       // notunu HİÇ göremiyordu. Teklif artık SALT OKUNUR görünür; yalnız
       // "Teklifi Seç" düğmesi yoktur (süresi dolan teklif seçilemez).
       case TeklifTalebiDurumu.reddedildi:
+        // 22 Eki: talebi hizmet veren reddettiyse hizmet alan PASİF
+        // görür; üç nokta menüsünden kendisi silebilir.
         return _SonlananTeklif(
-            talep: talep, metin: 'Bu teklifi reddettin.');
+            talep: talep,
+            metin: talep.saglayiciReddetti
+                ? 'Hizmet veren bu talebi reddetti.'
+                : 'Bu teklifi reddettin.');
 
       case TeklifTalebiDurumu.suresiDoldu:
         return _SonlananTeklif(

@@ -99,7 +99,9 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
   @override
   List<TeklifTalebi> bySaglayici(String saglayiciId) {
     _gerekirseTazele();
-    return _onbellek.values.where((t) => t.saglayiciId == saglayiciId).toList()
+    return _onbellek.values
+        .where((t) => t.saglayiciId == saglayiciId && !t.saglayiciReddetti)
+        .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -159,6 +161,10 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
   @override
   Future<DomainError?> reddet(String id, {String? gerekce}) =>
       _yaz(() => _c.post('/teklif-talepleri/$id/reddet', body: {if (gerekce != null) 'gerekce': gerekce}));
+
+  @override
+  Future<DomainError?> saglayiciReddet(String id) =>
+      _yaz(() => _c.post('/teklif-talepleri/$id/reddet', body: const <String, String>{}));
 
   @override
   Future<DomainError?> sil(String id, {String? gerekce}) =>
@@ -227,6 +233,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
         teklifTarihi: j['teklifTarihi'] == null ? null : _zaman(j['teklifTarihi']),
         redGerekcesi: j['redGerekcesi'] as String?,
         silindiAt: j['silindiAt'] == null ? null : _zaman(j['silindiAt']),
+        saglayiciReddetti: j['saglayiciReddetti'] == true,
         mesajlar: ((j['mesajlar'] as List?) ?? const [])
             .whereType<Map<String, dynamic>>()
             .map((m) => TeklifMesaj(

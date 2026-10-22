@@ -111,6 +111,7 @@ class TeklifTalebi {
     List<TeklifMesaj>? mesajlar,
     this.redGerekcesi,
     this.silindiAt,
+    this.saglayiciReddetti = false,
   }) : mesajlar = mesajlar ?? [];
 
   final String id;
@@ -225,6 +226,13 @@ class TeklifTalebi {
   DateTime? silindiAt;
 
   bool get hizmetAlanSildi => silindiAt != null;
+
+  /// ── ⚠ HİZMET VEREN TALEBİ REDDETTİ (22 Eki, kullanıcı kararı) ──
+  /// Hizmet veren teklif vermek zorunda değildir; "Talebi Reddet" der.
+  /// Talep hizmet verenin listesinden kalkar (`bySaglayici` döndürmez);
+  /// hizmet alan "Hizmet veren reddetti" olarak PASİF görür ve kendisi
+  /// silebilir. Durum `reddedildi`dir.
+  bool saglayiciReddetti;
 
   /// Hizmet verenin sunduğu fiyat — YALNIZ `teklifGeldi` ve sonrası
   /// durumlarda dolu.

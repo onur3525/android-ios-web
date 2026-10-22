@@ -71,6 +71,10 @@ export function talepGorunumu(t, mesajlar = [], degerlendirme = null) {
     teklifTarihi: t.teklif_tarihi, redGerekcesi: t.red_gerekcesi, createdAt: t.created_at,
     // Hizmet alan talebi sildiyse dolu (15 Eki); hizmet veren "iptal edildi" görür.
     silindiAt: t.silindi_at ?? null,
+    // 22 Eki: talebi HİZMET VEREN reddetti (teklif vermeden). Hizmet alan
+    // talebi pasif görür ("Hizmet veren reddetti"); hizmet verenin
+    // listesinden kalkar.
+    saglayiciReddetti: t.durum === 'REDDEDILDI' && t.reddeden_id != null && t.reddeden_id === t.saglayici_id,
     mesajlar: mesajlar.map((m) => ({ id: m.id, gonderenId: m.gonderen_id, metin: m.metin, fotografRef: m.fotograf_ref, createdAt: m.created_at, okundu: !!m.read_at })),
     // Talebin değerlendirmesi (yoksa null): istemci "Değerlendirme Yapıldı"
     // durumunu yeniden girişten sonra da doğru gösterir.
@@ -231,8 +235,9 @@ export function sohbetTalepRotalar(r, db) {
       `SELECT t.*, s.name saglayici_adi FROM teklif_talepleri t JOIN users s ON s.id = t.saglayici_id
         WHERE (t.hizmet_alan_id = ? OR t.saglayici_id = ?)
           AND NOT (t.hizmet_alan_id = ? AND t.silindi_at IS NOT NULL)
+          AND NOT (t.saglayici_id = ? AND t.durum = 'REDDEDILDI' AND t.reddeden_id = t.saglayici_id)
         ORDER BY t.created_at DESC`,
-    ).all(u.id, u.id, u.id); // ⚠ hizmet alanın SİLDİĞİ talep kendi listesine dönmez
+    ).all(u.id, u.id, u.id, u.id); // ⚠ hizmet alanın SİLDİĞİ / hizmet verenin REDDETTİĞİ talep o tarafın listesine dönmez
     const out = await talepleriTopluTamamla(liste);
     return out;
   }));
@@ -330,6 +335,12 @@ export function sohbetTalepRotalar(r, db) {
     const g3 = await db.prepare(`UPDATE teklif_talepleri SET durum = 'REDDEDILDI', red_gerekcesi = ?, reddeden_id = ?, updated_at = ? WHERE id = ? AND durum IN (${izinli.map(() => '?').join(', ')})`)
       .run(g, ctx.kullanici.id, simdi(), t.id, ...izinli);
     if (g3.changes !== 1) throw kural('INVALID_STATE', 'Bu talep artık reddedilemez');
+    // 22 Eki: hizmet veren reddettiyse hizmet alan bilgilendirilir (talep
+    // onun listesinde pasif kalır; kendisi silebilir).
+    if (!alan) {
+      await uygulamaIciBildir(db, t.hizmet_alan_id, 'TALEP_DECLINED', 'Teklif talebiniz reddedildi',
+        `"${t.hizmet}" talebinizi hizmet veren reddetti.`, t.id, 'talep');
+    }
     return talepTam(await talepGetir(t.id, ctx.kullanici));
   }));
 

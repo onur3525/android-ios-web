@@ -275,6 +275,7 @@ abstract final class Mappers {
         'TALEP_OFFER' => NotifType.teklifVerildi,
         'TALEP_ACCEPTED' => NotifType.teklifSecildi,
         'TALEP_MESSAGE' => NotifType.teklifYeniMesaj,
+        'TALEP_DECLINED' => NotifType.talepSaglayiciReddetti,
         'NEW_OFFER' => NotifType.newOffer,
         'OFFER_SELECTED' => NotifType.offerSelected,
         'REFUND' => NotifType.refund,

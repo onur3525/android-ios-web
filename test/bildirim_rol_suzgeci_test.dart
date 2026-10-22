@@ -45,6 +45,7 @@ void main() {
         NotifType.listingExpired,
         NotifType.teklifVerildi,
         NotifType.teklifIsiTamamlandi,
+        NotifType.talepSaglayiciReddetti, // hizmet veren reddetti (22 Eki)
       ]) {
         expect(bildirimRolu(t), Role.customer, reason: '$t');
       }

@@ -21,6 +21,7 @@ enum NotifType {
   teklifSuresiDoldu,     // 30 saat doldu (hizmet verene)
   teklifIsiTamamlandi,   // İş tamamlandı işaretlendi (hizmet alana)
   teklifYeniMesaj,       // Teklif talebi sohbetinde yeni mesaj (karşı tarafa)
+  talepSaglayiciReddetti, // Hizmet veren talebi reddetti (hizmet alana · 22 Eki)
   /// Sunucu yeni bir tip eklediyse uygulama ÇÖKMEZ: bilinmeyen tip
   /// nötr ikon ve başlıkla gösterilir.
   unknown,

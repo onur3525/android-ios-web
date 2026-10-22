@@ -53,7 +53,7 @@ export const SAYFA_BILDIRIMLERI = Object.freeze({
   ilan: { turler: ['NEW_OFFER', 'LISTING_EXPIRED'], teklifUzerinden: ['CONTACT_OPENED'] },
   is: { turler: ['NEW_LISTING', 'OFFER_SELECTED'], teklifUzerinden: ['CONTACT_OPENED'] },
   sohbet: { turler: ['NEW_MESSAGE'] },
-  talep: { turler: ['TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED'] },
+  talep: { turler: ['TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED', 'TALEP_DECLINED'] },
   'talep-sohbet': { turler: ['TALEP_MESSAGE'] },
 });
 /** Sağlayıcı yanıtındaki olası alıcıyı (e-posta / telefon) gizler. */
@@ -100,7 +100,7 @@ const yorumGorunumu = (y) => ({
  * `tur`: ilan akışı NEW_OFFER · OFFER_SELECTED · CONTACT_OPENED · NEW_MESSAGE ·
  * LISTING_EXPIRED · ANNOUNCEMENT; Bul (teklif talebi) akışı AYRI kodlarla:
  * TALEP_REQUEST (hizmet verene talep) · TALEP_OFFER (hizmet alana teklif) ·
- * TALEP_ACCEPTED (hizmet verene kabul) · TALEP_MESSAGE. ⚠ Eskiden talep
+ * TALEP_ACCEPTED (hizmet verene kabul) · TALEP_DECLINED (hizmet alana: hizmet veren reddetti) · TALEP_MESSAGE. ⚠ Eskiden talep
  * bildirimleri ilan kodlarıyla (NEW_OFFER…) yazılıyordu; istemci onları
  * İLAN bildirimi sanıp talep kimliğiyle ilan ekranını açıyordu.
  * `pushHedef`: telefona giden bildirimin açacağı ekran (Flutter
