@@ -143,7 +143,8 @@ oturumDusunce(() => { ben = null; girisEkrani('Oturum süresi doldu. Yeniden gir
 // Tasarım ve veri kaynakları: ozet.js (yalnız mevcut admin API'leri).
 SAYFALAR.ozet = () => ozetSayfasi();
 // Özet → Sistem Durumu "Tümünü gör" (21 Eki): kartın ayrıntısı (sistem.js).
-SAYFALAR.sistem = () => sistemSayfasi();
+// '#/sistem/yedek': yedekleme durumu Render'dan hemen yeniden okunur (22 Eki).
+SAYFALAR.sistem = (alt) => sistemSayfasi({ yedekYenile: alt === 'yedek' });
 
 // ── Kullanıcılar ──────────────────────────────────────────────
 // Tasarım ve veri kaynakları: kullanicilar.js (yalnız mevcut admin API'leri).
@@ -581,6 +582,7 @@ SAYFALAR.silmekuyruklari = async () => {
 // ── Entegrasyonlar ────────────────────────────────────────────
 SAYFALAR.entegrasyonlar = async () => {
   const liste = await api('/integrations');
+  const yedek = await api('/system/backup-monitor');
   const superMi = ben.role === 'super_admin';
   const ekle = async () => {
     const d = await form('Entegrasyon ekle', [
@@ -613,6 +615,26 @@ SAYFALAR.entegrasyonlar = async () => {
   const etkin = async (x) => { if (await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'PATCH', govde: { active: !x.active } }))) { bildir('Güncellendi'); yenile(); } };
   const test = async (x) => { const r = await guvenli(() => api(`/integrations/${x.id}/test`, { yontem: 'POST', govde: {} })); if (r) { bildir(`${r.ok ? 'Başarılı' : 'Başarısız'}: ${r.message}`, !r.ok); yenile(); } };
   const sil = async (x) => { const n = await gerekceIle('Entegrasyonu kaldır', 'Kaldır'); if (n && await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Kaldırıldı'); yenile(); } };
+  // ── Yedekleme izleme (22 Eki): Render API'sinden yalnız OKUMA ──
+  const yedekBagla = async () => {
+    const d = await form('Yedekleme izleme (Render)', [
+      { ad: 'postgresId', etiket: 'Postgres kimliği (Render › veritabanı › Info: dpg-…)', zorunlu: true, deger: yedek.postgresId ?? '' },
+      { ad: 'apiKey', etiket: 'Render API anahtarı (Account Settings › API Keys: rnd_…)', tur: 'password', zorunlu: true },
+    ], 'Kaydet ve kontrol et', { aciklama: 'Anahtar yalnız yedekleme durumunu OKUMAK için kullanılır; şifreli saklanır ve bir daha gösterilmez.' });
+    const r = d && await guvenli(() => api('/system/backup-monitor', { yontem: 'PUT', govde: d }));
+    if (r) { bildir(r.checkOk ? 'Kaydedildi: Render API okundu' : `Kaydedildi ama okunamadı: ${r.checkMessage}`, !r.checkOk); yenile(); }
+  };
+  const yedekKaldir = async () => {
+    const n = await gerekceIle('Yedekleme izlemeyi kaldır', 'Kaldır');
+    if (n && await guvenli(() => api('/system/backup-monitor', { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Kaldırıldı'); yenile(); }
+  };
+  const yedekBolumu = h('div', { class: 'kart' },
+    h('h3', {}, 'Yedekleme izleme (Render)'),
+    h('p', { class: 'not' }, yedek.configured
+      ? `Postgres: ${yedek.postgresId} · anahtar ${yedek.secretHint} · son kontrol ${yedek.checkedAt ? tarih(yedek.checkedAt) : '—'} · ${yedek.checkOk ? 'okundu' : `okunamadı: ${yedek.checkMessage ?? '—'}`}`
+      : 'Bağlı değil: Sistem Durumu\'nda yedekleme "doğrulanmadı" görünür.'),
+    superMi ? h('span', {}, h('button', { class: 'btn ikincil', onclick: yedekBagla }, yedek.configured ? 'Değiştir' : 'Bağla'), ' ',
+      yedek.configured ? h('button', { class: 'btn tehlike', onclick: yedekKaldir }, 'Kaldır') : null) : null);
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Entegrasyonlar'), h('button', { class: 'btn', onclick: ekle }, 'Ekle')),
     h('p', { class: 'not' }, 'Gizli anahtarlar yalnız sunucuda, şifreli saklanır; bu panele asla geri gelmez. Her türde aynı anda tek sağlayıcı etkindir.'),
     tablo([{ baslik: 'Tür', deger: (x) => x.type }, { baslik: 'Sağlayıcı', deger: (x) => x.provider },
@@ -623,7 +645,8 @@ SAYFALAR.entegrasyonlar = async () => {
       { baslik: '', deger: (x) => h('span', {}, superMi ? h('button', { class: 'btn ikincil', onclick: () => sir(x) }, 'Anahtar') : null, ' ',
         superMi && x.provider === 'resend' ? [h('button', { class: 'btn ikincil', onclick: () => gelenAnahtar(x) }, 'Gelen e-posta anahtarı'), ' '] : null,
         h('button', { class: 'btn ikincil', onclick: () => test(x) }, 'Test'), ' ', h('button', { class: 'btn', onclick: () => etkin(x) }, x.active ? 'Pasifleştir' : 'Etkinleştir'), ' ',
-        h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Kaldır')) }], liste));
+        h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Kaldır')) }], liste),
+    yedekBolumu);
 };
 
 // ── Yöneticiler ───────────────────────────────────────────────

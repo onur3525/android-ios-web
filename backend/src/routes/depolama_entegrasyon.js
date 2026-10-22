@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
 import { sirCoz, sirSifrele, yenidenDogrulamaIste, yetkiIste } from '../auth.js';
+import { yedekDurumu } from '../sistem_izleme.js';
 import { denetimYaz } from '../audit.js';
 import { depolamaAyari, s3ImzaliAdres } from '../entegrasyon.js';
 import { olaylar } from '../olaylar.js';
@@ -261,6 +262,42 @@ export function depolamaEntegrasyonRotalar(r, db) {
     await db.prepare('UPDATE integrations SET last_test_at = ?, last_test_ok = ?, last_test_message = ? WHERE id = ?').run(simdi(), ok ? 1 : 0, mesaj, x.id);
     await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'integration.test', hedefTur: 'integration', hedefId: x.id, sonra: { ok, mesaj } });
     return { ok, message: mesaj };
+  });
+
+  // ── YEDEKLEME İZLEME (22 Eki): Render API anahtarı + Postgres kimliği ──
+  // Yalnız OKUMA amaçlı kullanılır (geri yükleme durumu + dışa aktarma
+  // listesi). Anahtar şifreli saklanır, hiçbir yanıtta düz dönmez.
+  r.get('/admin/v1/system/backup-monitor', async (ctx) => {
+    yetkiIste(ctx.admin, 'integrations.read');
+    return yedekDurumu(db);
+  });
+
+  r.put('/admin/v1/system/backup-monitor', async (ctx) => {
+    yetkiIste(ctx.admin, 'integrations.secret');
+    yenidenDogrulamaIste(ctx.oturum);
+    const pid = String(ctx.body.postgresId ?? '').trim();
+    const anahtar = String(ctx.body.apiKey ?? '').trim();
+    if (!/^dpg-[a-z0-9-]{8,60}$/.test(pid)) throw hata.dogrulama('Postgres kimliği "dpg-" ile başlamalıdır (Render › veritabanı › Info)');
+    if (!/^rnd_[A-Za-z0-9_-]{16,200}$/.test(anahtar)) throw hata.dogrulama('Render API anahtarı "rnd_" ile başlamalıdır');
+    const ipucu = `••••${anahtar.slice(-4)}`;
+    const z = simdi();
+    await db.tx(async () => {
+      await db.prepare('DELETE FROM backup_monitor WHERE id = 1').run();
+      await db.prepare(`INSERT INTO backup_monitor (id, provider, postgres_id, secret_enc, secret_hint, updated_at) VALUES (1, 'render', ?, ?, ?, ?)`)
+        .run(pid, sirSifrele(JSON.stringify({ apiKey: anahtar })), ipucu, z);
+      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'backup_monitor.set', hedefTur: 'backup_monitor', hedefId: '1', sonra: { provider: 'render', postgresId: pid, hint: ipucu } });
+    });
+    return yedekDurumu(db, { yenile: true });
+  });
+
+  r.delete('/admin/v1/system/backup-monitor', async (ctx) => {
+    yetkiIste(ctx.admin, 'integrations.secret');
+    yenidenDogrulamaIste(ctx.oturum);
+    await db.tx(async () => {
+      await db.prepare('DELETE FROM backup_monitor WHERE id = 1').run();
+      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'backup_monitor.delete', hedefTur: 'backup_monitor', hedefId: '1', gerekce: ctx.body.reason });
+    });
+    return undefined;
   });
 
   r.delete('/admin/v1/integrations/:id', async (ctx) => {

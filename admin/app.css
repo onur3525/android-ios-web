@@ -141,7 +141,11 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .oz-durum-ad { display:flex; align-items:center; gap:10px; min-width:0; } .oz-durum-ad svg { color:var(--oz-soluk); }
 .oz-durum { font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-align:right; }
 .oz-durum::before { content:''; flex:0 0 9px; width:9px; height:9px; border-radius:50%; background:currentColor; }
-.oz-durum.iyi { color:#16A34A; } .oz-durum.kotu { color:var(--oz-kirmizi); } .oz-durum.notr { color:var(--oz-soluk); }
+.oz-durum.iyi { color:#16A34A; } .oz-durum.kotu { color:var(--oz-kirmizi); } .oz-durum.notr { color:var(--oz-soluk); } .oz-durum.uyari { color:#D97706; }
+/* Sistem Durumu — genel durum kartı (22 Eki) */
+.sd-genel { border-left:4px solid var(--oz-soluk); } .sd-genel.iyi { border-left-color:#16A34A; } .sd-genel.uyari { border-left-color:#D97706; } .sd-genel.kotu { border-left-color:var(--oz-kirmizi); }
+.sd-genel .not { margin:4px 0; }
+.sd-madde { margin:8px 0; padding-left:20px; font-size:14px; } .sd-madde li { margin:3px 0; } .sd-madde.kotu { color:var(--oz-kirmizi); } .sd-madde.uyari { color:#B45309; }
 .oz-secim { font-size:12px; color:var(--oz-soluk); border:1px solid var(--oz-cizgi); border-radius:8px; padding:5px 10px; }
 .oz-lejant { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--oz-soluk); margin:-6px 0 6px; }
 .oz-nokta { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }

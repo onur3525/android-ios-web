@@ -66,6 +66,20 @@ async function firebaseIslemSatirlari(db) {
   }));
 }
 
+/**
+ * Sistem Durumu (22 Eki): takılı silme işlerinin SAYILARI (kimlik yok).
+ * Kaynak bu ekrandaki kuyruklarla aynıdır.
+ */
+export async function silmeKuyruguSorunlari(db) {
+  const n = async (sql, ...p) => Number((await db.prepare(sql).get(...p)).n);
+  return {
+    filesExhausted: await n(`SELECT COUNT(*) AS n FROM storage_objects WHERE status = 'DISCARDED' AND deleted_at IS NULL AND delete_attempts >= ?`, DOSYA_AZAMI_DENEME),
+    firebaseLongFailure: await n('SELECT COUNT(*) AS n FROM firebase_silme_kuyrugu WHERE deneme >= ?', FIREBASE_UZUN_SURELI_DENEME),
+    firebaseOpsLongFailure: await n('SELECT COUNT(*) AS n FROM firebase_islem_kuyrugu WHERE deneme >= ?', FIREBASE_UZUN_SURELI_DENEME),
+    overdueAccountDeletions: await n(`SELECT COUNT(*) AS n FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING' AND scheduled_for < ?`, simdi()),
+  };
+}
+
 const say = (satirlar) => satirlar.reduce((a, s) => ({ ...a, [s.durum]: (a[s.durum] ?? 0) + 1 }), {});
 
 export function silmeKuyruklariRotalar(r, db) {
