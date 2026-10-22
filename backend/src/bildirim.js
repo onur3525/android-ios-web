@@ -27,6 +27,10 @@ import { kurumsalEposta } from './eposta_tasarimi.js';
  */
 export const SABLONLAR = {
   OTP: { sms: 'HizmetCep doğrulama kodunuz: {KOD}. Kodu kimseyle paylaşmayın.' },
+  // ── 22 Eki (KVKK takip denetimi E3): kayıtlı numarayla KAYIT kodu
+  // istenince yanıt NÖTR kalır (numaranın kayıtlı olduğu sızmaz); numaranın
+  // sahibine kod yerine bu bilgi gider. ──
+  KAYITLI_NUMARA: { sms: 'HizmetCep: Bu numarayla kayıtlı bir hesabınız var. Uygulamada "Giriş Yap" ile girebilir ya da "Şifremi Unuttum" ile şifrenizi yenileyebilirsiniz. Bu isteği siz yapmadıysanız dikkate almayın.' },
   // ── 21 Eki: doğrulama e-postaları artık HizmetCep tasarımıyla gider
   // (önceden Firebase'in düz şablonu). Bağlantıyı Firebase üretir. ──
   EPOSTA_DOGRULAMA: {

@@ -117,7 +117,11 @@ export function kullaniciGorunumu(u, saglayici, fotograflar = null) {
 // ── OTP ─────────────────────────────────────────────────────
 const smsYok = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama kodu şu anda gönderilemiyor. Lütfen daha sonra tekrar deneyin.');
 
-async function otpUret(db, tel, amac, ip) {
+// [sablon] 'KAYITLI_NUMARA' ise (kayıtlı numarayla KAYIT kodu istendi)
+// kod üretilip AYNI sınırlar işletilir ama kişiye kod GÖNDERİLMEZ; kayıtlı
+// kod hiç kimseye ulaşmadığı için kullanılamaz. Böylece yanıt, süre ve hız
+// sınırı davranışı kayıtlı/kayıtsız numarada AYNIDIR (E3, 22 Eki).
+async function otpUret(db, tel, amac, ip, { sablon = 'OTP' } = {}) {
   await otpIpSiniri.denetle(db, ip);
   const son = await db.prepare(
     `SELECT created_at FROM otp_codes WHERE phone = ? AND purpose = ? ORDER BY created_at DESC LIMIT 1`,
@@ -131,7 +135,7 @@ async function otpUret(db, tel, amac, ip) {
   await db.prepare(
     `INSERT INTO otp_codes (id, phone, purpose, code_hash, expires_at, attempts, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)`,
   ).run(randomUUID(), tel, amac, otpOzet(tel, amac, kod), new Date(Date.now() + OTP_SURESI).toISOString(), simdi());
-  const g = await gonder(db, { kanal: 'SMS', hedef: `+90${tel}`, sablon: 'OTP', degerler: { KOD: kod }, gizliGovde: true });
+  const g = await gonder(db, { kanal: 'SMS', hedef: `+90${tel}`, sablon, degerler: sablon === 'OTP' ? { KOD: kod } : {}, gizliGovde: true });
   if (g.status !== 'SENT') {
     // Kod kullanıcıya ULAŞMADI: kayıt geri alınır (60 sn bekleme/saatlik
     // sınır boşa harcanmasın). Neden outbound_messages'ta FAILED durur.
@@ -144,7 +148,7 @@ async function otpUret(db, tel, amac, ip) {
     if (amac === 'REGISTER' || amac === 'PHONE_CHANGE') throw smsYok();
     return null;
   }
-  return kod; // yalnız testlerde kullanılır; yanıta ASLA yazılmaz
+  return sablon === 'OTP' ? kod : null; // yalnız testlerde kullanılır; yanıta ASLA yazılmaz
 }
 
 async function otpTuket(db, tel, amaclar, kod) {
@@ -560,7 +564,18 @@ export function kullaniciRotalar(r, db) {
     // entegrasyonu kapalı) numaraya BAKMADAN açıkça reddedilir.
     if (!(await kanalHazir(db, 'SMS'))) throw smsYok();
     const var_ = await db.prepare('SELECT id FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
-    if ((amac === 'REGISTER' || amac === 'PHONE_CHANGE') && var_) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    // ⚠ E3 (KVKK takip denetimi, 22 Eki): KAYIT için yanıt artık NÖTR —
+    // önceden 409 "Bu telefon numarası kayıtlı" dönüyor, herkes numaranın
+    // HizmetCep'te kayıtlı olup olmadığını öğrenebiliyordu. Numaranın
+    // sahibine kod yerine "hesabınız var, giriş yapın" bilgisi gider; kayıt
+    // ucu (sahiplik kanıtından SONRA) yine 409 döner.
+    if (amac === 'REGISTER' && var_) {
+      await otpUret(db, tel, amac, ctx.ip, { sablon: 'KAYITLI_NUMARA' });
+      if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = null;
+      return undefined;
+    }
+    // PHONE_CHANGE: oturum açmış kullanıcıya özgü; açık hata korunur.
+    if (amac === 'PHONE_CHANGE' && var_) throw hata.cakisma('Bu telefon numarası kayıtlı');
     // FORGOT/LOGIN: numara kayıtlı değilse de AYNI yanıt (kayıt bilgisi sızmaz),
     // ama SMS gönderilmez.
     if ((amac === 'FORGOT' || amac === 'LOGIN' || amac === 'ROLE_ADD') && !var_) return undefined;

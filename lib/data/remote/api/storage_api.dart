@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 
 import '../api_client.dart';
+import '../gorsel_meta_temizleyici.dart';
 import '../yukleme_adresi.dart';
 
 /// BEKLEYEN YÜKLEME İPTALİ — SUNUCU SÖZLEŞMESİ
@@ -92,11 +93,21 @@ class StorageApi {
     if (ret != null) {
       throw Exception('Dosya yüklenemedi (adres reddedildi: $ret)');
     }
+    // ⚠ KVKK (22 Eki, takip denetimi B5): fotoğrafın EXIF/GPS meta
+    // verisi YÜKLEMEDEN ÖNCE ayıklanır — bütün yükleme yolları (ilan,
+    // sohbet, profil, kayıt; Android, iOS, web) bu geçitten geçer.
+    // Çözülemeyen dosya meta verisiyle GÖNDERİLMEZ.
+    final List<int> temiz;
+    try {
+      temiz = GorselMetaTemizleyici.temizle(bytes, contentType);
+    } on FormatException {
+      throw Exception('Dosya yüklenemedi (fotoğraf okunamadı)');
+    }
     final yanit = await http
         .put(
           Uri.parse(uploadUrl),
           headers: {'Content-Type': contentType},
-          body: bytes,
+          body: temiz,
         )
         .timeout(const Duration(seconds: 60));
     if (yanit.statusCode < 200 || yanit.statusCode >= 300) {

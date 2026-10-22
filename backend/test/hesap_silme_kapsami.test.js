@@ -119,3 +119,42 @@ test('açık ilan ve açık teklif silmede kapanır', async () => {
   assert.equal((await bir('SELECT status FROM offers WHERE id = ?', o.json.id)).status, 'CLOSED');
   assert.equal((await bir('SELECT status FROM listings WHERE id = ?', l.json.id)).status, 'ACTIVE', 'karşı tarafın ilanı açık kalır');
 });
+
+// KVKK takip denetimi (22 Eki) E2 + B12: e-postayla açılan destek talebinin
+// gönderen adı/adresi ve bakım test hesabı kayıtları da silinir; başka
+// kişinin talebine ve cihaz kaydına dokunulmaz.
+test('silmede e-posta destek talebinin gönderen bilgisi ve bakım cihaz kayıtları kalkar; başkasınınki kalır', async () => {
+  const k = await kisi('5380000031', 'CUSTOMER');
+  const baska = await kisi('5380000032', 'CUSTOMER');
+  const z = new Date().toISOString();
+  const talep = async (id, no, uid, eposta) => db.prepare(
+    `INSERT INTO support_tickets (id, ticket_no, user_id, subject, message, status, created_at, updated_at, source, sender_email, sender_name, inbound_email_id)
+     VALUES (?, ?, ?, 'Konu', 'İleti', 'OPEN', ?, ?, 'EMAIL', ?, 'Gönderen Ad', ?)`,
+  ).run(id, no, uid, z, z, eposta, `gelen-${no}`);
+  await talep('11111111-1111-4111-8111-111111111111', '990001', k.id, `s${k.tel}@ornek.com`);
+  await talep('22222222-2222-4222-8222-222222222222', '990002', baska.id, `s${baska.tel}@ornek.com`);
+  await talep('33333333-3333-4333-8333-333333333333', '990003', null, `s${k.tel}@ornek.com`);
+  await db.prepare('UPDATE users SET maintenance_bypass = TRUE WHERE id IN (?, ?)').run(k.id, baska.id);
+  const cihaz = (id, uid) => db.prepare('INSERT INTO maintenance_devices (id, user_id, device_hash, platform, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, uid, `ozet-${id}`, 'android', z, z);
+  await cihaz('44444444-4444-4444-8444-444444444444', k.id);
+  await cihaz('55555555-5555-4555-8555-555555555555', baska.id);
+
+  await sil(k);
+
+  const t = await bir('SELECT * FROM support_tickets WHERE ticket_no = ?', '990001');
+  assert.equal(t.sender_email, null);
+  assert.equal(t.sender_name, null);
+  assert.equal(t.status, 'CLOSED');
+  assert.equal(t.ticket_no, '990001', 'kayıt (numara, tarih) kalır');
+  const b = await bir('SELECT * FROM support_tickets WHERE ticket_no = ?', '990002');
+  assert.equal(b.sender_email, `s${baska.tel}@ornek.com`, 'başkasının talebi değişmez');
+  assert.equal(b.sender_name, 'Gönderen Ad');
+  const bagsiz = await bir('SELECT * FROM support_tickets WHERE ticket_no = ?', '990003');
+  assert.equal(bagsiz.sender_email, `s${k.tel}@ornek.com`, 'hesaba bağlanmamış e-posta talebine dokunulmaz (karar listesinde)');
+
+  assert.equal((await bir('SELECT maintenance_bypass m FROM users WHERE id = ?', k.id)).m, 0);
+  assert.equal((await bir('SELECT COUNT(*) n FROM maintenance_devices WHERE user_id = ?', k.id)).n, 0);
+  assert.equal((await bir('SELECT maintenance_bypass m FROM users WHERE id = ?', baska.id)).m, 1);
+  assert.equal((await bir('SELECT COUNT(*) n FROM maintenance_devices WHERE user_id = ?', baska.id)).n, 1);
+});

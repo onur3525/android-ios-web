@@ -66,6 +66,23 @@ export function kisaAd(ad) {
  * "Müşteri Yorumları" aynı sayıyı gösterir): seçilen teklifler +
  * tamamlanan teklif talepleri.
  */
+/**
+ * İLAN–TEKLİF TELEFON KURALI — TEK KAYNAK (KVKK takip denetimi E1, 22 Eki).
+ *
+ * `GET /contact/:offerId`, `GET /messages/conversations` ve kişi özeti
+ * (`/users/:id/summary`) karşı tarafın telefonunu YALNIZ bu kurala göre
+ * döndürür:
+ *   · iletişim açılmamışsa (contacts kaydı yok) telefon yok;
+ *   · karşı taraf İLAN SAHİBİ ise telefon yalnız ilanda açıkça
+ *     "telefonGoster" seçildiyse görünür — "yalnizMesaj" ya da tanınmayan
+ *     her değer GİZLİ sayılır (güvenli taraf);
+ *   · karşı taraf hizmet veren ise iletişim açıkken görünür (önceki kural).
+ */
+export function ilanTelefonuGorunur({ iletisimAcik, karsiIlanSahibi, tercih }) {
+  if (!iletisimAcik) return false;
+  return karsiIlanSahibi ? tercih === 'telefonGoster' : true;
+}
+
 export async function saglayiciTamamlananIs(db, id) {
   return (await db.prepare(`SELECT COUNT(*) n FROM offers WHERE status = 'SELECTED' AND provider_id = ?`).get(id)).n
     + (await db.prepare(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum = 'TAMAMLANDI' AND saglayici_id = ?`).get(id)).n;
@@ -81,14 +98,15 @@ async function gorunurluk(db, u, x) {
 
   // 1) İlan–teklif: u hizmet veren, x ilan sahibi.
   for (const r of await db.prepare(
-    `SELECT c.offer_id acik FROM offers o JOIN listings l ON l.id = o.listing_id
+    `SELECT c.offer_id acik, l.iletisim_tercihi tercih FROM offers o JOIN listings l ON l.id = o.listing_id
        LEFT JOIN contacts c ON c.offer_id = o.id
       WHERE o.provider_id = ? AND l.owner_id = ?`,
   ).all(u.id, x.id)) {
     musteri = true;
     mahalle = true;
     yukselt(r.acik ? AD_TAM : AD_MASKELI);
-    if (r.acik) telefon = true;
+    // ⚠ E1: ilan sahibi "yalnizMesaj" seçtiyse telefonu açılmaz.
+    if (ilanTelefonuGorunur({ iletisimAcik: !!r.acik, karsiIlanSahibi: true, tercih: r.tercih })) telefon = true;
   }
   // 2) İlan–teklif: u ilan sahibi, x hizmet veren.
   for (const r of await db.prepare(
@@ -98,7 +116,7 @@ async function gorunurluk(db, u, x) {
   ).all(x.id, u.id)) {
     saglayici = true;
     yukselt(AD_TAM);
-    if (r.acik) telefon = true;
+    if (ilanTelefonuGorunur({ iletisimAcik: !!r.acik, karsiIlanSahibi: false })) telefon = true;
   }
   // 3) Açık ilan akışı: u hizmet veren, x'in teklif alabilen ilanı var.
   if (u.roles.split(',').includes('PROVIDER') && await db.prepare(

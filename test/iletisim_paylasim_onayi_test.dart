@@ -34,7 +34,10 @@ void main() {
     expect(m.contains('final allowed = actorId == o.providerId || actorId == l.ownerId;'), isTrue);
     final b = _oku('backend/src/routes/ilan.js');
     expect(b.contains("'İletişimi yalnızca ilan sahibi açabilir'"), isFalse);
-    expect(b.contains("l.iletisim_tercihi === 'yalnizMesaj'"), isTrue);
+    // 23 Eki (KVKK E1): telefon kuralı tek kaynakta (kisi_ozeti.js);
+    // ilan sahibinin telefonu yalnız "telefonGoster" seçildiyse görünür.
+    expect(b.contains('ilanTelefonuGorunur({ iletisimAcik: true, karsiIlanSahibi: karsiId === l.owner_id, tercih: l.iletisim_tercihi })'), isTrue);
+    expect(_oku('backend/src/routes/kisi_ozeti.js').contains("return karsiIlanSahibi ? tercih === 'telefonGoster' : true;"), isTrue);
   });
 
   test('ilan oluştururken seçilen iletişim tercihi sunucuya gider ve geri okunur', () {

@@ -153,9 +153,12 @@ export function flutterVerisiniOku() {
 export const catiAnahtari = (gorsel) => String(gorsel).split('/').pop().replace(/\.[a-z]+$/, '');
 
 // Eski ücretli modelden kalan ve ÜRÜNDE AKTİF OLMAYAN belgeler.
-const KALINTI_BELGELER = new Set(['refund']);
+// 22 Eki (033): Üyelik Sözleşmesi Kullanım Sözleşmesi ile aynı işi görüyordu → pasif.
+const KALINTI_BELGELER = new Set(['refund', 'membership']);
 // Kayıtta onaylanan belgeler (Flutter: `termsAccepted`).
-const KABUL_ISTEYEN = new Set(['terms', 'privacy', 'kvkk', 'membership']);
+// ⚠ 22 Eki (033, KVKK): aydınlatma ve gizlilik BİLGİLENDİRMEDİR, kabul ettirilmez;
+// onay isteyen tek belge Kullanım Sözleşmesi'dir.
+const KABUL_ISTEYEN = new Set(['terms']);
 
 export async function tohumla(db, v = flutterVerisiniOku()) {
   const z = simdi();

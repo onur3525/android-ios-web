@@ -90,38 +90,40 @@ test('taslak PDF herkese açık değil; admin önizleyebilir', async () => {
   assert.equal(anonim.status, 401, 'admin önizlemesi oturumsuz açılmaz');
 });
 
+// ⚠ 22 Eki (033): onay isteyen tek belge Kullanım Sözleşmesi (terms);
+// aydınlatma/gizlilik bilgilendirmedir, onaylatılmaz.
 test('güncelle ve yayınla: tek adımda yayın; kullanıcı özeti ve PDF\'i görür; Tamam ile kabul', async () => {
-  const r = await istek('/admin/v1/legal/kvkk/versions', { yontem: 'POST', govde: { pdf: PDF.toString('base64'), summary: OZET, publish: true } });
-  assert.equal(r.durum, 200, JSON.stringify(r.json));
-  assert.equal(r.json.status, 'PUBLISHED');
-  const pub = (await istek('/api/v1/legal/kvkk')).json;
-  assert.equal(pub.summary, OZET);
-  assert.equal(pub.pdfUrl, `/api/v1/legal/kvkk/pdf/${r.json.version}`);
-  const p = await istek(pub.pdfUrl);
-  assert.equal(p.durum, 200); assert.equal(p.tur, 'application/pdf'); assert.ok(p.ham.equals(PDF));
-  // Kullanıcı
+  // Kullanıcı önce kayıt olur (o an yayında sözleşme sürümü yok).
   await db.prepare(`DELETE FROM rate_limits`).run();
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: '5330000991', purpose: 'REGISTER' } });
   const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: '5330000991', password: 'sifre1234', name: 'Yasal Kişi', email: 'yasal@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(k.durum, 200, JSON.stringify(k.json));
+  const r = await istek('/admin/v1/legal/terms/versions', { yontem: 'POST', govde: { pdf: PDF.toString('base64'), summary: OZET, publish: true } });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.status, 'PUBLISHED');
+  const pub = (await istek('/api/v1/legal/terms')).json;
+  assert.equal(pub.summary, OZET);
+  assert.equal(pub.pdfUrl, `/api/v1/legal/terms/pdf/${r.json.version}`);
+  const p = await istek(pub.pdfUrl);
+  assert.equal(p.durum, 200); assert.equal(p.tur, 'application/pdf'); assert.ok(p.ham.equals(PDF));
   const bekleyen = (await istek('/api/v1/legal/pending-acceptances', { token: k.json.accessToken })).json;
-  const b = bekleyen.find((x) => x.slug === 'kvkk');
+  const b = bekleyen.find((x) => x.slug === 'terms');
   assert.ok(b, 'yeni sürüm kabul bekliyor');
   assert.equal(b.summary, OZET);
   assert.equal(b.pdfUrl, pub.pdfUrl);
-  const kabul = await istek('/api/v1/legal/kvkk/accept', { yontem: 'POST', token: k.json.accessToken, govde: { version: b.version, sha256: b.sha256, platform: 'android' } });
+  const kabul = await istek('/api/v1/legal/terms/accept', { yontem: 'POST', token: k.json.accessToken, govde: { version: b.version, sha256: b.sha256, platform: 'android' } });
   assert.equal(kabul.durum, 200);
-  assert.ok(!(await istek('/api/v1/legal/pending-acceptances', { token: k.json.accessToken })).json.some((x) => x.slug === 'kvkk'));
-  const kayit = await db.prepare("SELECT sha256 FROM legal_acceptances WHERE slug = 'kvkk'").get();
+  assert.ok(!(await istek('/api/v1/legal/pending-acceptances', { token: k.json.accessToken })).json.some((x) => x.slug === 'terms'));
+  const kayit = await db.prepare("SELECT sha256 FROM legal_acceptances WHERE slug = 'terms'").get();
   assert.equal(kayit.sha256, createHash('sha256').update(PDF).digest('hex'));
 });
 
 test('eski (arşiv) sürümün PDF\'i açık kalır: kullanıcı kabul ettiğini görebilir', async () => {
   const yeni = Buffer.concat([PDF, Buffer.from('ikinci')]);
-  const r = await istek('/admin/v1/legal/kvkk/versions', { yontem: 'POST', govde: { pdf: yeni.toString('base64'), summary: `${OZET} (güncel)`, publish: true } });
+  const r = await istek('/admin/v1/legal/terms/versions', { yontem: 'POST', govde: { pdf: yeni.toString('base64'), summary: `${OZET} (güncel)`, publish: true } });
   assert.equal(r.durum, 200);
-  const surumler = (await istek('/admin/v1/legal/kvkk/versions')).json;
+  const surumler = (await istek('/admin/v1/legal/terms/versions')).json;
   const arsiv = surumler.find((v) => v.status === 'ARCHIVED' && v.hasPdf);
   assert.ok(arsiv);
-  assert.equal((await istek(`/api/v1/legal/kvkk/pdf/${arsiv.version}`)).durum, 200);
+  assert.equal((await istek(`/api/v1/legal/terms/pdf/${arsiv.version}`)).durum, 200);
 });
