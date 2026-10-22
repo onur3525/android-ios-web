@@ -12,10 +12,12 @@ const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { simdi } = await import('../src/db.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
+const { degisiklikOnayi, onayKimligi } = await import('./admin_onay.js');
 
 let db, sunucu, taban;
 const cerezler = {};
 async function istek(yol, { yontem = 'GET', govde, rol } = {}) {
+  if (rol) await degisiklikOnayi(taban, yol, yontem, cerezler[rol]);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(rol ? { Cookie: cerezler[rol], 'X-HC-Admin': '1' } : {}) },
@@ -32,6 +34,7 @@ async function adminGiris(rol) {
   const c = g.headers.get('set-cookie').split(';')[0];
   await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: c, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
   cerezler[rol] = c;
+  onayKimligi(c, 'GucluSifre12345', sir);
 }
 
 before(async () => {

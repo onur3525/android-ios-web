@@ -13,12 +13,14 @@ const { uygulamaKur } = await import('../src/server.js');
 const { simdi } = await import('../src/db.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { istekOlc, olcumleriYaz, yolDeseni, kaynakTestOkuyucu, yedekTestGetirici, izlemeBakimi, genelDurum } = await import('../src/sistem_izleme.js');
+const { degisiklikOnayi, onayKimligi } = await import('./admin_onay.js');
 
 const SIFRE = 'GucluSifre12345';
 let db, sunucu, taban;
 const cerezler = {};
 
 async function istek(yol, { yontem = 'GET', govde, rol = 'super_admin' } = {}) {
+  if (yol.startsWith('/admin/')) await degisiklikOnayi(taban, yol, yontem, cerezler[rol]);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(yol.startsWith('/admin/') ? { Cookie: cerezler[rol] ?? '', 'X-HC-Admin': '1' } : {}) },
@@ -36,6 +38,7 @@ async function adminGiris(rol) {
   const m = await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: c, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
   assert.equal(m.status, 200);
   cerezler[rol] = c;
+  onayKimligi(c, SIFRE, sir);
 }
 const durum = async (rol, ek = '') => {
   const r = await istek(`/admin/v1/system/status${ek}`, { rol });
