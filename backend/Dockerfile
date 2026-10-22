@@ -30,6 +30,8 @@ COPY assets/logo/logo_mark.png assets/logo/wordmark.png /app/assets/logo/
 # Başlangıç verisi aktarımı (npm run seed) Flutter veri dosyalarını okur.
 COPY lib/data /app/lib/data
 COPY lib/screens/category_ui.dart /app/lib/screens/category_ui.dart
+# Çatı kart kısaltmaları (kKartEtiketi) başlangıç verisinde okunur (029).
+COPY lib/screens/home_screen.dart /app/lib/screens/home_screen.dart
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
