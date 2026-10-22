@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/theme.dart';
 import '../data/legal_cache.dart';
+import '../core/yasal_pdf_ac.dart';
 import '../data/remote/api/legal_api.dart';
 import '../data/remote/api_client.dart';
 import '../ui/ref_widgets.dart';
@@ -138,6 +139,17 @@ class _LegalScreenState extends State<LegalScreen> {
                           ),
                         ],
                         const SizedBox(height: 16),
+                        // 22 Eki: PDF'li sürümde metin = kısa özet; tamamı PDF'te.
+                        if (d.pdfUrl != null) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: OutlinedButton(
+                              onPressed: () => yasalPdfAc(d.pdfUrl),
+                              child: const Text('Belgenin tamamını aç (PDF)'),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         ..._render(d.body),
                       ],
                     ),

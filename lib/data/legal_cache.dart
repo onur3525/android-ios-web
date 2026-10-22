@@ -12,12 +12,18 @@ class LegalDoc {
   final String effectiveDate;
   final String body;
 
+  /// 22 Eki: PDF'li sürüm — kısa özet ve göreli PDF yolu (yoksa null).
+  final String? summary;
+  final String? pdfUrl;
+
   const LegalDoc({
     required this.slug,
     required this.title,
     required this.version,
     required this.effectiveDate,
     required this.body,
+    this.summary,
+    this.pdfUrl,
   });
 
   factory LegalDoc.fromJson(Map<String, dynamic> j) => LegalDoc(
@@ -26,6 +32,8 @@ class LegalDoc {
         version: j['version'] as String? ?? '',
         effectiveDate: j['effectiveDate'] as String? ?? '',
         body: j['body'] as String? ?? '',
+        summary: j['summary'] as String?,
+        pdfUrl: j['pdfUrl'] as String?,
       );
 }
 

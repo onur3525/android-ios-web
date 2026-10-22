@@ -12,7 +12,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz, yenidenDogrulamaHatasi, yenidenDogrulamayiTuket } from './auth.js';
+import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz, yetkiliMi, yenidenDogrulamaHatasi, yenidenDogrulamayiTuket } from './auth.js';
 import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
@@ -20,6 +20,7 @@ import {
   ipTeshisi, istemciIp, jsonGonder,
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
+import { pdfGonder } from './yasal_pdf.js';
 import { istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
 import { bakimDurumu, bakimdaAcikMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
@@ -133,6 +134,23 @@ export function uygulamaKur(db) {
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
         return fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
       }
+      // ── YASAL BELGE PDF'İ (031): yayında ya da arşivdeki sürüm herkese açık
+      // (kullanıcı kabul ettiği sürümü görebilmeli); taslak YALNIZ admin.
+      {
+        const m = req.method === 'GET' && /^\/api\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/pdf\/(\d{1,6})$/.exec(yol);
+        if (m) {
+          const v = await db.prepare(`SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ? AND status <> 'DRAFT'`).get(m[1], Number(m[2]));
+          return pdfGonder(db, v?.pdf_ref, res, `${m[1]}-v${m[2]}.pdf`);
+        }
+        const a = req.method === 'GET' && /^\/admin\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/versions\/(\d{1,6})\/pdf$/.exec(yol);
+        if (a) {
+          const c = await oturumCoz(db, cerezleriOku(req)[OTURUM_CEREZI], 'full');
+          if (!c) throw hata.kimlik();
+          if (!yetkiliMi(c.admin.role, 'legal.read')) throw hata.yetki();
+          const v = await db.prepare('SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ?').get(a[1], Number(a[2]));
+          return pdfGonder(db, v?.pdf_ref, res, `${a[1]}-v${a[2]}.pdf`);
+        }
+      }
       // Destek e-postaları (Resend Receiving webhook'u): ham gövde + imza (gelen_eposta.js).
       if (yol === GELEN_YOL) return await gelenEpostaWebhook(db, req, res);
       if (req.method === 'GET' && yol.startsWith('/eposta-varlik/')) {
@@ -180,8 +198,10 @@ export function uygulamaKur(db) {
       }
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
         // Kategori fotoğrafı (base64, en fazla 5 MB) için daha geniş sınır; yalnız bu yol ve oturum doğrulandıktan sonra.
-        const fotoYolu = req.method === 'POST' && /^\/admin\/v1\/catalog\/categories\/[^/]+\/photo$/.test(yol);
-        ctx.body = await govdeOku(req, fotoYolu ? 8 * 1024 * 1024 : undefined);
+        const fotoYolu = req.method === 'POST' && /^\/admin\/v1\/catalog\/(categories|roofs)\/[^/]+\/photo$/.test(yol);
+        // Yasal belge PDF'i (en fazla 10 MB; base64 ile ~13,4 MB) — yalnız bu yol, oturum doğrulandıktan sonra.
+        const pdfYolu = req.method === 'POST' && /^\/admin\/v1\/legal\/[^/]+\/versions$/.test(yol);
+        ctx.body = await govdeOku(req, pdfYolu ? 15 * 1024 * 1024 : fotoYolu ? 8 * 1024 * 1024 : undefined);
       }
 
       let sonuc = await bulunan.isleyici(ctx);
