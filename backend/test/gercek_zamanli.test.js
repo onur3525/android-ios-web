@@ -111,7 +111,7 @@ const giris = async (tel) => (await istek('/api/v1/auth/login', { yontem: 'POST'
 const acikMi = (b) => b.ws.readyState === WebSocket.OPEN;
 const bakim = async (acik) => {
   if (acik) {
-    await db.prepare(`INSERT INTO app_config (platform, maintenance_active, maintenance_message, updated_at) VALUES ('web', 1, 'Bakım', ?)`).run(new Date().toISOString());
+    await db.prepare(`INSERT INTO app_config (platform, maintenance_active, maintenance_message, updated_at) VALUES ('web', TRUE, 'Bakım', ?)`).run(new Date().toISOString());
   } else {
     await db.prepare(`DELETE FROM app_config WHERE platform = 'web'`).run();
   }
