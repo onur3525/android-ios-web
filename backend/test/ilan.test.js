@@ -139,6 +139,12 @@ test('seçim: yalnız sahip; diğer teklifler kapanır; değerlendirme bir kez',
   assert.equal(satir.listing.title, hizmet);
   assert.equal(liste.json.nextCursor, null);
   assert.equal(liste.json.reviews.length, 1, 'eski `reviews` alanı korunur');
+  // 22 Eki: yorumlar ekranında hizmet verenin tamamladığı toplam iş
+  // (kişi özetiyle aynı sayı).
+  assert.equal(liste.json.completedJobs, 1);
+  const oz = await istek(`/api/v1/users/${usta.id}/summary`, { token: usta2.token });
+  assert.equal(oz.json.completedJobsAsProvider, 1, JSON.stringify(oz.json));
+  assert.equal((await istek(`/api/v1/providers/${usta2.id}/reviews`, { token: usta2.token })).json.completedJobs, 0, 'seçilmeyen teklif sayılmaz');
 });
 
 test('hizmet veren yorumları: imleçli sayfalama, geçersiz limit/cursor 400', async () => {

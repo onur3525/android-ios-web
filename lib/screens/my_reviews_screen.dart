@@ -14,6 +14,7 @@ import '../data/remote/api_client.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/kalan_alanda_ortala.dart';
 import 'widgets/puan_dagilim_satiri.dart';
+import '../domain/saglayici_ozeti.dart' show tamamlananIsSayisi;
 // ⚠ Yorum kartı ORTAK — kopya çizim yok.
 import 'provider_reviews_screen.dart' show YorumKartiGovde;
 import '../ui/ref_tokens.dart';
@@ -37,6 +38,11 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
 
   double? _average;
   int _count = 0;
+
+  /// Hizmet verenin TAMAMLADIĞI toplam iş (22 Eki). Kaynak: sunucu
+  /// `completedJobs` (kişi özetiyle aynı sayı); mock modda ortak
+  /// `tamamlananIsSayisi`.
+  int _tamamlananIs = 0;
   Map<String, int> _dist = const {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0};
 
   bool _loading = true;
@@ -120,6 +126,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             ..clear()
             ..addAll(list.map(_mockSatir));
           _count = list.length;
+          _tamamlananIs = me == null ? 0 : tamamlananIsSayisi(context, me.id, izle: false);
           _average = list.isEmpty
               ? null
               : list.fold<int>(0, (t, r) => t + r.stars) / list.length;
@@ -149,6 +156,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
       setState(() {
         _average = (j['average'] as num?)?.toDouble();
         _count = (j['count'] as num?)?.toInt() ?? 0;
+        _tamamlananIs = (j['completedJobs'] as num?)?.toInt() ?? 0;
         _dist = _parseDist(j['distribution']);
         _items
           ..clear()
@@ -370,6 +378,14 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                         size: RF.s115,
                         weight: RF.w400,
                         color: RC.textSoft)),
+                // 22 Eki: kendi tamamladığı toplam iş (sıfır da gösterilir).
+                const SizedBox(height: 3),
+                Text('$_tamamlananIs iş tamamladı',
+                    key: const ValueKey('tamamlanan-is'),
+                    style: refText(
+                        size: RF.s115,
+                        weight: RF.w600,
+                        color: RC.text)),
               ],
             ),
           ),
