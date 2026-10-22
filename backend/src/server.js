@@ -198,7 +198,7 @@ export function uygulamaKur(db) {
       }
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
         // Kategori fotoğrafı (base64, en fazla 5 MB) için daha geniş sınır; yalnız bu yol ve oturum doğrulandıktan sonra.
-        const fotoYolu = req.method === 'POST' && /^\/admin\/v1\/catalog\/(categories|roofs)\/[^/]+\/photo$/.test(yol);
+        const fotoYolu = req.method === 'POST' && /^\/admin\/v1\/catalog\/roofs\/[^/]+\/photo$/.test(yol);
         // Yasal belge PDF'i (en fazla 10 MB; base64 ile ~13,4 MB) — yalnız bu yol, oturum doğrulandıktan sonra.
         const pdfYolu = req.method === 'POST' && /^\/admin\/v1\/legal\/[^/]+\/versions$/.test(yol);
         ctx.body = await govdeOku(req, pdfYolu ? 15 * 1024 * 1024 : fotoYolu ? 8 * 1024 * 1024 : undefined);

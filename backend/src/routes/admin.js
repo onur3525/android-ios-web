@@ -280,13 +280,9 @@ export function adminRotalar(r, db) {
     return k;
   };
   const kategoriGorunumu = async (k, sayim = null) => ({
-    id: k.id, name: k.name, active: k.active === 1, sort: k.sort, icon: k.icon, photo: k.photo,
-    // Önizleme yolları (aynı köken; depo özel kalır):
-    //   photoUrl   → admin'den yüklenen fotoğraf (varsa; uygulama bunu kullanır)
-    //   bundledPhotoUrl / iconUrl → uygulama paketindeki dosya (yedek görünüm)
-    photoRef: k.photo_ref ?? null,
-    photoUrl: k.photo_ref ? `/api/v1/categories/photo/${k.photo_ref}` : null,
-    bundledPhotoUrl: k.photo ? `/katalog-varlik/${k.photo}` : null,
+    id: k.id, name: k.name, active: k.active === 1, sort: k.sort, icon: k.icon,
+    // Önizleme: uygulama paketindeki ikon (aynı köken). Kategoride fotoğraf
+    // yoktur (22 Eki); fotoğraf yalnız çatılarda.
     iconUrl: k.icon ? `/katalog-varlik/${k.icon}` : null,
     kartDisi: k.kart_disi === 1, updatedAt: k.updated_at,
     serviceCount: sayim ? (sayim.get(k.id) ?? 0)
@@ -365,35 +361,9 @@ export function adminRotalar(r, db) {
     return undefined;
   });
 
-  // ── KATEGORİ FOTOĞRAFI (mevcut nesne depolama; sunucu doğrulamalı) ──
-  r.post('/admin/v1/catalog/categories/:id/photo', async (ctx) => {
-    yetkiIste(ctx.admin, 'catalog.write');
-    const k = await kategoriGetir(ctx.params.id);
-    const yeni = await fotoYukle(db, ctx.body.contentType, ctx.body.data);
-    await db.tx(async () => {
-      await db.prepare('UPDATE categories SET photo_ref = ?, updated_at = ? WHERE id = ?').run(yeni, simdi(), k.id);
-      await yaz(ctx, { islem: 'catalog.category.photo.set', hedefTur: 'category', hedefId: k.id, once: { photoRef: k.photo_ref ?? null }, sonra: { photoRef: yeni } });
-    });
-    // Eski nesne sahipsiz kalmasın (kayıt güncellendikten SONRA silinir).
-    if (k.photo_ref && !(await fotoSil(db, k.photo_ref))) {
-      await yaz(ctx, { islem: 'storage.delete.failed', hedefTur: 'storage_object', hedefId: k.photo_ref });
-    }
-    return kategoriGorunumu(await kategoriGetir(k.id));
-  });
-
-  r.delete('/admin/v1/catalog/categories/:id/photo', async (ctx) => {
-    yetkiIste(ctx.admin, 'catalog.write');
-    const k = await kategoriGetir(ctx.params.id);
-    if (!k.photo_ref) throw hata.durum('Bu kategoride yüklenmiş fotoğraf yok');
-    await db.tx(async () => {
-      await db.prepare('UPDATE categories SET photo_ref = NULL, updated_at = ? WHERE id = ?').run(simdi(), k.id);
-      await yaz(ctx, { islem: 'catalog.category.photo.remove', hedefTur: 'category', hedefId: k.id, once: { photoRef: k.photo_ref }, sonra: { photoRef: null } });
-    });
-    if (!(await fotoSil(db, k.photo_ref))) {
-      await yaz(ctx, { islem: 'storage.delete.failed', hedefTur: 'storage_object', hedefId: k.photo_ref });
-    }
-    return kategoriGorunumu(await kategoriGetir(k.id));
-  });
+  // ⚠ KATEGORİ FOTOĞRAFI KALDIRILDI (22 Eki, kullanıcı kararı): uygulamada
+  // fotoğraf yalnız çatılarda, kategorilerde yalnız ikon var. Kategoriye
+  // fotoğraf yükleme/kaldırma ucu yoktur; fotoğraf işlemleri çatılardadır.
 
   // ── ANA SAYFA ÇATILARI (029, 22 Eki) ──
   // Uygulamadaki 3'lü ızgaranın çatıları: ad ve fotoğraf değiştirilebilir.
