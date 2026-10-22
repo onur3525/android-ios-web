@@ -29,7 +29,7 @@ const teklifSiniri = new HizSiniri('teklif_ver', 120, 60 * 60 * 1000);
 // Hizmet veren dizini toplu kazınmasın diye (kullanıcı başına).
 const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
 import { kullaniciCoz } from './kullanici.js';
-import { kisaAd } from './kisi_ozeti.js';
+import { kisaAd, saglayiciTamamlananIs } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushKuyrugunuIsle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
@@ -640,6 +640,9 @@ export function ilanRotalar(r, db) {
       average: ort.n ? Number(Number(ort.a).toFixed(2)) : null,
       count: ort.n,
       distribution: dagilim,
+      // 22 Eki: hizmet veren kendi yorumlar ekranında tamamladığı toplam
+      // iş sayısını görür (kişi özetiyle aynı kaynak).
+      completedJobs: await saglayiciTamamlananIs(db, ctx.params.id),
       items: liste.map((y) => {
         const baslik = y.ilan_basligi ?? y.talep_hizmeti ?? '';
         return {

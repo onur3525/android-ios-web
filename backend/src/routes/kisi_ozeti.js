@@ -61,6 +61,16 @@ export function kisaAd(ad) {
  * İsteyen (u) ile hedef (x) arasındaki ilişkiler → görünürlük.
  * Dönüş null ise ilişki yok (404).
  */
+/**
+ * Hizmet verenin TAMAMLADIĞI İŞ SAYISI — TEK KAYNAK (kişi özeti ve
+ * "Müşteri Yorumları" aynı sayıyı gösterir): seçilen teklifler +
+ * tamamlanan teklif talepleri.
+ */
+export async function saglayiciTamamlananIs(db, id) {
+  return (await db.prepare(`SELECT COUNT(*) n FROM offers WHERE status = 'SELECTED' AND provider_id = ?`).get(id)).n
+    + (await db.prepare(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum = 'TAMAMLANDI' AND saglayici_id = ?`).get(id)).n;
+}
+
 async function gorunurluk(db, u, x) {
   let ad = -1;
   let musteri = false; // x, u'ya HİZMET ALAN olarak görünüyor
@@ -145,10 +155,7 @@ export function kisiOzetiRotalar(r, db) {
 
     const adres = await db.prepare('SELECT city, district, neighborhood FROM addresses WHERE user_id = ?').get(x.id);
     const ayar = await depolamaAyari(db);
-    const isSaglayici = g.saglayici
-      ? ((await db.prepare(`SELECT COUNT(*) n FROM offers WHERE status = 'SELECTED' AND provider_id = ?`).get(x.id)).n
-        + (await db.prepare(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum = 'TAMAMLANDI' AND saglayici_id = ?`).get(x.id)).n)
-      : 0;
+    const isSaglayici = g.saglayici ? await saglayiciTamamlananIs(db, x.id) : 0;
     const isMusteri = g.musteri
       ? ((await db.prepare(`SELECT COUNT(*) n FROM listings WHERE owner_id = ? AND selected_offer_id IS NOT NULL`).get(x.id)).n
         + (await db.prepare(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum = 'TAMAMLANDI' AND hizmet_alan_id = ?`).get(x.id)).n)
