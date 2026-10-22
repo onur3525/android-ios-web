@@ -32,12 +32,14 @@ const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { s3ImzaliAdres } = await import('../src/entegrasyon.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban, cerez, kat;
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200, 7)]);
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(200, 3)]);
 
 async function istek(yol, { yontem = 'GET', govde } = {}) {
+  await degisiklikOnayi(taban, yol, yontem, cerez);
   const r = await fetch(taban + yol, { method: yontem, headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1', Cookie: cerez ?? '' }, body: govde ? JSON.stringify(govde) : undefined });
   const t = await r.text();
   let j = null; try { j = t ? JSON.parse(t) : null; } catch { j = t; }
@@ -56,6 +58,7 @@ before(async () => {
   const g = await istek('/admin/v1/auth/login', { yontem: 'POST', govde: { email: 'foto@hc.test', password: 'GucluSifre12345' } });
   cerez = g.baslik.get('set-cookie').split(';')[0];
   await istek('/admin/v1/auth/mfa', { yontem: 'POST', govde: { code: totpUret(sir) } });
+  onayKimligi(cerez, 'GucluSifre12345', sir);
   kat = (await istek('/admin/v1/catalog/categories')).json[0];
 });
 after(async () => { sunucu?.close(); s3.close(); await db?.close(); });

@@ -19,6 +19,9 @@ import { fotoSil, fotoYukle } from '../katalog_foto.js';
 import { ApiHatasi, HizSiniri, cerez, hata } from '../http.js';
 
 const girisSiniri = new HizSiniri('admin_giris', 10, 15 * 60 * 1000);
+// Yeniden doğrulama HER değişiklikte yapıldığından (22 Eki) giriş sınırından
+// geniştir; hatalı denemeler ayrıca hesap sayacına/kilidine sayılır (5 hata).
+const yenidenDogrulamaSiniri = new HizSiniri('admin_reauth', 60, 15 * 60 * 1000);
 const KILIT_ESIGI = 5;
 const KILIT_SURESI = 15 * 60 * 1000;
 
@@ -140,12 +143,47 @@ export function adminRotalar(r, db) {
     return { ...adminGorunumu(c.admin), idleTimeoutSeconds: Math.floor(config.adminOturumBosta / 1000) };
   });
 
+  // ── YENİDEN DOĞRULAMA: mevcut şifre + TOTP (her değişiklikten önce) ──
+  // Hatalar girişle AYNI hesap sayacına/kilidine sayılır; kilitlenince bu
+  // oturum da kapanır (açık kalmış ekranda şifre denenemez).
   r.post('/admin/v1/auth/reauth', async (ctx) => {
-    await girisSiniri.denetle(db, `reauth:${ctx.ip}`);
-    if (!totpDogrula(totpSirri(ctx.admin), ctx.body.code)) {
-      throw new ApiHatasi(401, 'AUTH_FAILED', 'Doğrulama kodu hatalı');
+    await yenidenDogrulamaSiniri.denetle(db, ctx.ip);
+    const a = ctx.admin;
+    if (a.locked_until && Date.parse(a.locked_until) > Date.now()) {
+      await oturumKapat(db, ctx.token);
+      throw hata.hiz('Hesap geçici olarak kilitli');
     }
+    const sifreDogru = await sifreDogrulaAsenkron(String(ctx.body.password ?? ''), a.password_hash);
+    const kodDogru = totpDogrula(totpSirri(a), ctx.body.code);
+    if (!sifreDogru || !kodDogru) {
+      const n = (a.failed_count ?? 0) + 1;
+      const kilit = n >= KILIT_ESIGI;
+      await db.prepare('UPDATE admins SET failed_count = ?, locked_until = ? WHERE id = ?').run(
+        kilit ? 0 : n, kilit ? new Date(Date.now() + KILIT_SURESI).toISOString() : null, a.id,
+      );
+      if (kilit) await oturumKapat(db, ctx.token);
+      await yaz(ctx, { islem: 'auth.reauth_failed' });
+      throw new ApiHatasi(401, 'AUTH_FAILED', 'Şifre ya da doğrulama kodu hatalı');
+    }
+    await db.prepare('UPDATE admins SET failed_count = 0, locked_until = NULL WHERE id = ?').run(a.id);
     await yenidenDogrulandi(db, ctx.token);
+    return { ok: true };
+  });
+
+  // ── KENDİ ŞİFRESİNİ DEĞİŞTİRME (22 Eki) ──
+  // Mevcut şifre + kod, her değişiklikte olduğu gibi yeniden doğrulamayla
+  // istenir (server.js). Değişince bu yöneticinin DİĞER oturumları kapanır.
+  r.post('/admin/v1/auth/password', async (ctx) => {
+    const yeni = ctx.body.newPassword;
+    const kural = sifreKurali(yeni);
+    if (kural) throw hata.dogrulama(kural);
+    if (await sifreDogrulaAsenkron(yeni, ctx.admin.password_hash)) throw hata.dogrulama('Yeni şifre mevcut şifreyle aynı olamaz');
+    const ozet = await sifreOzetleAsenkron(yeni);
+    await db.tx(async () => {
+      await db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(ozet, ctx.admin.id);
+      await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ? AND token_hash <> ?').run(ctx.admin.id, ctx.oturum.token_hash);
+    });
+    await yaz(ctx, { islem: 'auth.password_changed', hedefTur: 'admin', hedefId: ctx.admin.id });
     return { ok: true };
   });
 

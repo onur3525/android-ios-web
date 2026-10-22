@@ -65,7 +65,11 @@ export function hareketsizlikKilidi(sureSn, kilitle) {
   }, 5000);
 }
 
-/** API çağrısı; REAUTH_REQUIRED gelirse TOTP sorar ve isteği tekrarlar. */
+/**
+ * API çağrısı. ⚠ Her değişiklik (GET dışı) sunucuda şifre + doğrulama kodu
+ * ister (tek kullanımlık): REAUTH_REQUIRED gelince ikisi sorulur ve istek
+ * bir kez tekrarlanır. Görüntüleme hiç sormaz.
+ */
 export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar = {} } = {}) {
   const r = await fetch(`/admin/v1${yol}`, {
     method: yontem,
@@ -86,11 +90,15 @@ export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar
   throw new ApiHata(r.status, kod, j?.error?.message ?? 'İşlem başarısız');
 }
 
+/** Mevcut şifre + 6 haneli kod sorar ve sunucuda doğrular. */
+export const SIFRE_ALANI = { ad: 'password', etiket: 'Mevcut şifreniz', tur: 'password', zorunlu: true, ham: true };
+export const KOD_ALANI = { ad: 'code', etiket: 'Doğrulama uygulamasındaki 6 haneli kod', tur: 'text', zorunlu: true, desen: '^\\d{6}$' };
 async function yenidenDogrula() {
-  const d = await form('Kimliğinizi doğrulayın', [{ ad: 'code', etiket: 'Doğrulama uygulamasındaki 6 haneli kod', tur: 'text', zorunlu: true, desen: '^\\d{6}$' }], 'Doğrula');
+  const d = await form('Değişikliği onaylayın', [SIFRE_ALANI, KOD_ALANI], 'Onayla',
+    { aciklama: 'Güvenliğiniz için her değişiklikte şifreniz ve doğrulama kodunuz istenir.' });
   if (!d) return false;
   try {
-    await api('/auth/reauth', { yontem: 'POST', govde: { code: d.code }, tekrar: false });
+    await api('/auth/reauth', { yontem: 'POST', govde: { password: d.password, code: d.code }, tekrar: false });
     return true;
   } catch (e) {
     bildir(e.message, true);
@@ -98,7 +106,7 @@ async function yenidenDogrula() {
   }
 }
 
-/** Modal form. alanlar: [{ad, etiket, tur:'text'|'textarea'|'select'|'number'|'checkbox'|'password'|'email', secenekler, deger, zorunlu, desen}] */
+/** Modal form. alanlar: [{ad, etiket, tur:'text'|'textarea'|'select'|'number'|'checkbox'|'password'|'email', secenekler, deger, zorunlu, desen, ham}] (ham: boşluk kırpılmaz — şifreler) */
 export function form(baslik, alanlar, onay = 'Kaydet', { tehlike = false, aciklama } = {}) {
   return new Promise((coz) => {
     const girdiler = {};
@@ -119,7 +127,7 @@ export function form(baslik, alanlar, onay = 'Kaydet', { tehlike = false, acikla
         const g = girdiler[a.ad];
         let v = a.tur === 'checkbox' ? g.checked : g.value;
         if (a.tur === 'number') v = v === '' ? undefined : Number(v);
-        if (typeof v === 'string') v = v.trim();
+        if (typeof v === 'string' && !a.ham) v = v.trim();
         if (a.zorunlu && (v === '' || v === undefined)) return (hataAlani.textContent = `${a.etiket} zorunludur`);
         if (a.desen && v && !new RegExp(a.desen).test(v)) return (hataAlani.textContent = `${a.etiket} biçimi geçersiz`);
         sonuc[a.ad] = v;

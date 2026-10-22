@@ -4,6 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
@@ -17,6 +18,7 @@ const { suresiDolanlariIsle } = await import('../src/routes/ilan.js');
 let db, sunucu, taban, adminCerez, hizmet, musteri, usta, usta2;
 
 async function istek(yol, { yontem = 'GET', govde, token, basliklar = {} } = {}) {
+  if (yol.startsWith('/admin/')) await degisiklikOnayi(taban, yol, yontem, adminCerez);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -55,6 +57,7 @@ before(async () => {
   const a = await fetch(`${taban}/admin/v1/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1' }, body: JSON.stringify({ email: 'sa@hc.test', password: 'GucluSifre12345' }) });
   adminCerez = a.headers.get('set-cookie').split(';')[0];
   await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: adminCerez, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
+  onayKimligi(adminCerez, 'GucluSifre12345', sir);
   hizmet = (await db.prepare('SELECT name FROM services LIMIT 1').get()).name;
   musteri = await kullaniciOlustur('5300000001', 'CUSTOMER');
   usta = await kullaniciOlustur('5300000002', 'PROVIDER');

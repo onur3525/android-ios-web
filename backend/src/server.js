@@ -12,7 +12,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz } from './auth.js';
+import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz, yenidenDogrulamaHatasi, yenidenDogrulamayiTuket } from './auth.js';
 import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
@@ -43,6 +43,8 @@ import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
 
 const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
 const ACIK_ADMIN_YOLLARI = new Set(['/admin/v1/auth/login', '/admin/v1/auth/mfa']);
+// Değişiklik sayılmayan oturum işlemleri: yeniden doğrulamanın kendisi ve çıkış.
+const YENIDEN_DOGRULAMASIZ = new Set(['/admin/v1/auth/reauth', '/admin/v1/auth/logout']);
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
 const PANEL_CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'";
 
@@ -153,6 +155,11 @@ export function uygulamaKur(db) {
           if (!c) throw hata.kimlik();
           ctx.admin = c.admin;
           ctx.oturum = c.oturum;
+          // ⚠ HER DEĞİŞİKLİK şifre + doğrulama kodu ister (tek kullanımlık).
+          // Görüntüleme (GET) serbest. Gövde okunmadan ÖNCE reddedilir.
+          if (req.method !== 'GET' && !YENIDEN_DOGRULAMASIZ.has(yol) && !(await yenidenDogrulamayiTuket(db, token))) {
+            throw yenidenDogrulamaHatasi();
+          }
         }
       }
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {

@@ -31,6 +31,7 @@ const { config } = await import('../src/config.js');
 const { istemciIp } = await import('../src/http.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { testSertifikaGetiricisi } = await import('../src/firebase_token.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 // ── Firebase test anahtarı (firebase_auth.test.js ile aynı yöntem) ──
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -57,6 +58,7 @@ const ADMIN = 'ip-admin@hc.test';
 const ADMIN_SIR = base32Uret();
 
 async function istek(yol, { yontem = 'GET', govde, token, cerez, basliklar = {} } = {}) {
+  await degisiklikOnayi(taban, yol, yontem, cerez, basliklar);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -247,19 +249,23 @@ async function adminGirisi(basliklar) {
   assert.equal(g.durum, 200, JSON.stringify(g.json));
   const m = await istek('/admin/v1/auth/mfa', { yontem: 'POST', govde: { code: totpUret(ADMIN_SIR) }, cerez: g.cerez, basliklar });
   assert.equal(m.durum, 200, JSON.stringify(m.json));
+  onayKimligi(g.cerez, SIFRE, ADMIN_SIR);
   return g.cerez;
 }
 
-test('C5 · admin yeniden doğrulama (15 dk / 10): sahte değerle 11. istek 429', async () => {
+test('C5 · admin yeniden doğrulama (15 dk / 60): sahte değerle 61. istek 429', async () => {
+  // 22 Eki: her değişiklik şifre + kod ister; sınır bu yüzden 60/15 dk.
+  // Hatalı denemeler ayrıca hesabı 5'te kilitler (admin_yeniden_dogrulama.test.js),
+  // bu yüzden IP sınırı DOĞRU bilgilerle sayılır: başarılı denemeler de sayılır.
   config.guvenilirProxySayisi = 1;
   const cerez = await adminGirisi(xff(sahte(0), GERCEK));
-  const dogru = totpUret(ADMIN_SIR);
-  const yanlis = dogru === '000000' ? '111111' : '000000';
-  for (let i = 0; i < 10; i++) {
-    const r = await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: { code: yanlis }, cerez, basliklar: xff(sahte(i), GERCEK) });
-    assert.equal(r.durum, 401, `yeniden doğrulama ${i + 1}`);
+  const govde = () => ({ password: SIFRE, code: totpUret(ADMIN_SIR) });
+  for (let i = 0; i < 60; i++) {
+    const r = await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: govde(), cerez, basliklar: xff(sahte(i), GERCEK) });
+    assert.equal(r.durum, 200, `yeniden doğrulama ${i + 1}: ${JSON.stringify(r.json)}`);
   }
-  assert.equal((await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: { code: yanlis }, cerez, basliklar: xff(sahte(62), GERCEK) })).durum, 429);
+  assert.equal((await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: govde(), cerez, basliklar: xff(sahte(62), GERCEK) })).durum, 429);
+  await db.prepare("DELETE FROM rate_limits WHERE key LIKE 'admin_reauth:%'").run(); // sonraki testlerin değişiklik onayları
 });
 
 test('C6 · hop 0: başlıktaki değerler ne olursa olsun tek soket sayacı (127.0.0.1)', async () => {

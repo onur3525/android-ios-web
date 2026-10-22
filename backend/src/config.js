@@ -205,7 +205,9 @@ export const config = {
   corsKokenleri: corsKokenleri(),
   // 21 Eki (kullanıcı kararı): 30 dk çok uzundu — en çok 5 dk hareketsizlik.
   // Panel de aynı süreyi /auth/me yanıtından alır ve ekranı kendisi kilitler.
-  adminOturumBosta: 5 * 60 * 1000, // 5 dk hareketsizlik
+  // 15 dk hareketsizlik (22 Eki: her değişiklik zaten şifre + kod ister).
+  adminOturumBosta: 15 * 60 * 1000,
   adminOturumMutlak: 8 * 60 * 60 * 1000, // 8 saat
-  yenidenDogrulamaSuresi: 5 * 60 * 1000, // kritik işlem için 5 dk
+  // Şifre + kod doğrulaması ile değişiklik arasındaki azami süre (tek kullanımlık izin).
+  yenidenDogrulamaSuresi: 2 * 60 * 1000,
 };

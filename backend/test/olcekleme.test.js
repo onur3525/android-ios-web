@@ -24,6 +24,7 @@ const { gercekZamanliKur } = await import('../src/gercek_zamanli.js');
 const { olaylar } = await import('../src/olaylar.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db;
 const ornek = [];
@@ -35,6 +36,7 @@ async function ornekBaslat() {
   return { s, taban: `http://127.0.0.1:${s.address().port}` };
 }
 async function istek(taban, yol, { yontem = 'GET', govde, token, cerez } = {}) {
+  await degisiklikOnayi(taban, yol, yontem, cerez);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -158,6 +160,7 @@ test('entegrasyon: sır şifreli saklanır, hiçbir yanıtta düz dönmez', asyn
   const g = await istek(o1.taban, '/admin/v1/auth/login', { yontem: 'POST', govde: { email: 'ent@hc.test', password: 'GucluSifre12345' } });
   const c = g.setCookie.split(';')[0];
   await istek(o1.taban, '/admin/v1/auth/mfa', { yontem: 'POST', cerez: c, govde: { code: totpUret(sir) } });
+  onayKimligi(c, 'GucluSifre12345', sir);
   assert.equal((await istek(o1.taban, '/admin/v1/integrations', { yontem: 'POST', cerez: c, govde: { type: 'SMS', provider: 'webhook', config: { url: 'http://duz-http.com' } } })).durum, 400);
   const e = await istek(o1.taban, '/admin/v1/integrations', { yontem: 'POST', cerez: c, govde: { type: 'SMS', provider: 'webhook', config: { url: 'https://sms-kopru.ornek.com/gonder' } } });
   assert.equal((await istek(o1.taban, `/admin/v1/integrations/${e.json.id}`, { yontem: 'PATCH', cerez: c, govde: { active: true } })).durum, 409, 'sırsız etkinleşmez');
