@@ -151,6 +151,33 @@ export async function pushKuyrugunuIsle(db, { sureMs = 45_000 } = {}) {
   return null; // bütün yuvalar başka örneklerde meşgul
 }
 
+// ── KAYIT ANINDA TETİKLENEN PUSH İŞLERİ ──
+// Bildirim kaydı (uygulamaIciBildir) commit'ten sonra kuyruğu bekletmeden
+// işletir; ana işlem sonucu beklemez. İşler burada izlenir ki testler
+// "biraz bekle" (sabit süre) yerine işin GERÇEKTEN bittiğini bekleyebilsin:
+// PostgreSQL'de iş 50 ms'yi aşınca testin kendi turuyla yarışıp
+// kararsız sonuç veriyordu (CI'da ara sıra kırmızı).
+const tetiklenenIsler = new Set();
+
+/** Kuyruğu arka planda işletir (hatası ana işlemi etkilemez). */
+export function pushTetikle(db) {
+  const is = pushKuyrugunuIsle(db, { sureMs: 5_000 }).catch(() => {}).finally(() => tetiklenenIsler.delete(is));
+  tetiklenenIsler.add(is);
+}
+
+/**
+ * Yalnız testler: commit sonrası sıraya alınmış ve çalışan bütün tetik
+ * işleri bitene dek bekler (sabit süre beklemenin yerine).
+ */
+export async function tetiklenenPushIsleriniBekle() {
+  // commitSonrasi işi setImmediate ile başlatır: önce o sıranın boşalması.
+  await new Promise((ok) => setImmediate(ok));
+  while (tetiklenenIsler.size) {
+    await Promise.all([...tetiklenenIsler]);
+    await new Promise((ok) => setImmediate(ok));
+  }
+}
+
 /** Tek tur — gönderilen sayısı (testler ve eski çağrılar için). */
 export async function pushGonderiminiIsle(db) {
   return (await pushTuru(db)).gonderilen;

@@ -6,7 +6,7 @@ process.env.HC_SESSIZ = '1';
 const { testDb } = await import('./destek.js');
 const { simdi } = await import('../src/db.js');
 const { uygulamaIciBildir } = await import('../src/routes/ilan.js');
-const { pushGonderiminiIsle, fcmTestGondericisi, fcmGonder, mesajGovdesi } = await import('../src/fcm.js');
+const { pushGonderiminiIsle, fcmTestGondericisi, fcmGonder, mesajGovdesi, tetiklenenPushIsleriniBekle } = await import('../src/fcm.js');
 
 let db;
 const giden = [];
@@ -30,7 +30,7 @@ test('yalnız bildirim sahibinin bütün cihazlarına, Flutter biçiminde gönde
   await jeton(b, 'b-jeton-1-xxxxxxxxxxxxxxxxxxxx', 'web');
   const ilanId = randomUUID();
   await uygulamaIciBildir(db, a, 'NEW_OFFER', 'Yeni teklif', 'İlanınıza teklif geldi', ilanId, 'ilan');
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   giden.length = 0;
   await db.prepare(`UPDATE notifications SET push_status = NULL, push_claimed_at = NULL WHERE user_id = ?`).run(a); // anında tetikleme sonucunu sıfırla, işi doğrudan sına
   await pushGonderiminiIsle(db);
@@ -48,7 +48,7 @@ test('geçersiz jeton KALICI silinir; geçici hatada jeton korunur ve yeniden de
   await jeton(c, 'c-gecersiz-xxxxxxxxxxxxxxxxxxxx'); await jeton(c, 'c-gecici-xxxxxxxxxxxxxxxxxxxxx');
   davranis = (t) => (t.startsWith('c-gecersiz') ? 'gecersiz' : 'gecici');
   await uygulamaIciBildir(db, c, 'NEW_MESSAGE', 'Yeni mesaj', 'x', randomUUID(), 'mesaj');
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   const kalan = (await db.prepare('SELECT token FROM push_tokens WHERE user_id = ?').all(c)).map((r) => r.token);
   assert.deepEqual(kalan, ['c-gecici-xxxxxxxxxxxxxxxxxxxxx']);
@@ -68,13 +68,13 @@ test('geçersiz jeton KALICI silinir; geçici hatada jeton korunur ve yeniden de
 test('jetonu olmayan kullanıcı NO_TOKEN; gönderici hata fırlatsa da iş ve ana işlem bozulmaz', async () => {
   const d = await kullanici('5551110004');
   await uygulamaIciBildir(db, d, 'ANNOUNCEMENT', 'Duyuru', 'x', randomUUID());
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.equal((await durum(d)).push_status, 'NO_TOKEN');
   const e = await kullanici('5551110005'); await jeton(e, 'e-jeton-xxxxxxxxxxxxxxxxxxxxxxx');
   fcmTestGondericisi({ gonder: async () => { throw new Error('ağ yok'); } });
   await uygulamaIciBildir(db, e, 'NEW_OFFER', 'Teklif', 'x', randomUUID(), 'talep'); // ana işlem hata vermez
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.equal((await db.prepare('SELECT COUNT(*) n FROM push_tokens WHERE user_id = ?').get(e)).n, 1, 'geçici hatada jeton silinmez');
   // Hedefsiz bildirim (duyuru) Bildirimler ekranına gider: veri hedef/id taşımaz
@@ -135,7 +135,7 @@ test('askıya alınmış / banlı / silinmiş hesaba push GİTMEZ; jetonlar sili
     await jeton(u, t);
     await uygulamaIciBildir(db, u, 'NEW_MESSAGE', 'Yeni mesaj', 'x', randomUUID(), 'mesaj');
   }
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.deepEqual(giden2.filter((t) => /^(askida|banli|silinmis)-/.test(t)), [], 'etkin olmayan hesaba gönderim yok');
   for (const u of [askida, banli, silinmis]) assert.equal((await durum(u)).push_status, 'SKIPPED');
@@ -143,7 +143,7 @@ test('askıya alınmış / banlı / silinmiş hesaba push GİTMEZ; jetonlar sili
   // Etkin hesaba normal gönderim sürer.
   const etkin = await kullanici('5551110014'); await jeton(etkin, 'etkin-jeton-xxxxxxxxxxxxxxxxxx');
   await uygulamaIciBildir(db, etkin, 'NEW_MESSAGE', 'Yeni mesaj', 'x', randomUUID(), 'mesaj');
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.equal((await durum(etkin)).push_status, 'SENT');
 });
@@ -161,7 +161,7 @@ test('bildirim tercihi: kapatılan türde push GİTMEZ (uygulama içi kayıt dur
     'TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED', 'TALEP_MESSAGE']) {
     await uygulamaIciBildir(db, k, tur, tur, 'x', randomUUID());
   }
-  await new Promise((ok) => setTimeout(ok, 50));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   const satirlar = await db.prepare('SELECT type, push_status FROM notifications WHERE user_id = ?').all(k);
   const durumu = Object.fromEntries(satirlar.map((r) => [r.type, r.push_status]));
@@ -190,10 +190,7 @@ test('çok işçi: aynı kuyruğu eşzamanlı işleyen işçiler bir bildirimi �
   }
   await Promise.all([pushGonderiminiIsle(db), pushGonderiminiIsle(db), pushGonderiminiIsle(db)]);
   // Kayıt anında tetiklenen işler de aynı kuyruğu tüketiyor: hepsi bitene dek bekle.
-  const son = Date.now() + 3000;
-  while (Date.now() < son && (await db.prepare(`SELECT COUNT(*) n FROM notifications WHERE user_id = ? AND push_status = 'SENT'`).get(k)).n < 40) {
-    await new Promise((ok) => setTimeout(ok, 20));
-  }
+  await tetiklenenPushIsleriniBekle();
   for (const id of kimlikler) assert.ok((sayac.get(id) ?? 0) <= 1, `bildirim ${id} birden çok gönderildi`);
   const sent = await db.prepare(`SELECT COUNT(*) n FROM notifications WHERE user_id = ? AND push_status = 'SENT'`).get(k);
   assert.equal(sent.n, 40);

@@ -31,7 +31,7 @@ const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
 import { kullaniciCoz } from './kullanici.js';
 import { kisaAd, saglayiciTamamlananIs } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
-import { fcmEtkin, pushKuyrugunuIsle } from '../fcm.js';
+import { fcmEtkin, pushTetikle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 import { silmeKuyruguSorunlari } from './silme_kuyruklari.js';
 import { apiOlcumleri, genelDurum, kaynakKullanimi, olcumleriYaz, sonSunucuHatalari, yedekDurumu, yoneticiGuvenlikOlaylari } from '../sistem_izleme.js';
@@ -114,7 +114,7 @@ export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, ref
   // Push işi isteğin işlemi COMMIT edildikten SONRA ve işlem bağlamının
   // DIŞINDA tetiklenir (bkz. db.commitSonrasi). Böylece yeni satır görünür
   // olur ve iş isteğin bağlantısını kullanmaz.
-  if (fcmEtkin()) db.commitSonrasi(() => { pushKuyrugunuIsle(db, { sureMs: 5_000 }).catch(() => {}); });
+  if (fcmEtkin()) db.commitSonrasi(() => pushTetikle(db));
 }
 
 // ── ⚠ YENİ İLAN → EŞLEŞEN HİZMET VERENLERE BİLDİRİM (15 Eki, kullanıcı isteği) ──

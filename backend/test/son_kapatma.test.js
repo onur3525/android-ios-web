@@ -24,7 +24,7 @@ const { uygulamaKur } = await import('../src/server.js');
 const { olaylar } = await import('../src/olaylar.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { depoOkuyucusuAta, sihirliBaytTuru, nesneSorunu } = await import('../src/depo_dogrulama.js');
-const { pushGonderiminiIsle, fcmTestGondericisi } = await import('../src/fcm.js');
+const { pushGonderiminiIsle, fcmTestGondericisi, tetiklenenPushIsleriniBekle } = await import('../src/fcm.js');
 const { uygulamaIciBildir } = await import('../src/routes/ilan.js');
 
 let db, sunucu, taban, KAT, HIZ;
@@ -221,7 +221,7 @@ test('dondurma GERÇEK durum: oturum/yenileme geçersiz, aramada yok, push yok; 
   const giden = [];
   fcmTestGondericisi({ gonder: async (t) => { giden.push(t); return 'ok'; } });
   await uygulamaIciBildir(db, k.id, 'NEW_MESSAGE', 'x', 'y', randomUUID(), 'mesaj');
-  await new Promise((ok) => setTimeout(ok, 30));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.ok(!giden.includes('dondur-jeton-xxxxxxxxxxxxxxxxxxx'), 'dondurulmuşa push yok');
   fcmTestGondericisi(null);
@@ -294,7 +294,7 @@ test('push: işçi çökmesi (SENDING takılı) → 5 dk sonra başka işçi dev
   await db.prepare(`INSERT INTO push_tokens (token, user_id, platform, created_at, last_seen) VALUES (?, ?, 'android', ?, ?)`).run('cokme-jeton-xxxxxxxxxxxxxxxxxxxx', k.id, simdi(), simdi());
   fcmTestGondericisi({ gonder: async () => 'ok' });
   await uygulamaIciBildir(db, k.id, 'NEW_MESSAGE', 'x', 'y', randomUUID(), 'mesaj');
-  await new Promise((ok) => setTimeout(ok, 30));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   // İşçi sahiplenip ÇÖKTÜ: satır SENDING'de kaldı.
   const n = await db.prepare('SELECT id FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').get(k.id);
@@ -310,7 +310,7 @@ test('push: işçi çökmesi (SENDING takılı) → 5 dk sonra başka işçi dev
   // Zaman aşımı → geçici: jeton silinmez, yeniden denenir.
   fcmTestGondericisi({ gonder: async () => 'gecici' });
   await uygulamaIciBildir(db, k.id, 'NEW_MESSAGE', 'x', 'y', randomUUID(), 'mesaj');
-  await new Promise((ok) => setTimeout(ok, 30));
+  await tetiklenenPushIsleriniBekle();
   await pushGonderiminiIsle(db);
   assert.ok(await db.prepare('SELECT 1 FROM push_tokens WHERE token = ?').get('cokme-jeton-xxxxxxxxxxxxxxxxxxxx'), 'geçici hatada jeton korunur');
   // Kalıcı geçersiz → jeton silinir.
