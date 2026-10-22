@@ -12,11 +12,27 @@
 // odaya YALNIZ sohbetin iki tarafı ve YALNIZ iletişim açıkken katılır.
 // Kullanıcının oturumları iptal edilince (askı/ban/şifre) açık soketleri
 // de kapatılır. Çerçeve boyutu sınırlı (maxPayload).
+//
+// ⚠ YENİDEN DOĞRULAMA (KVKK takip denetimi E4, 22 Eki): erişim jetonu
+// yalnız bağlantı kurulurken doğrulanıyordu; soket, jetonun süresi
+// dolduktan ve oturumun kendisi (yenileme süresi) bittikten sonra da açık
+// kalabiliyordu, bakım modu soketleri hiç kapsamıyordu. Artık bağlantıda
+// ve her YENIDEN_DOGRULAMA_MS'de bir, bütün soketler TOPLU (tek sorgu /
+// 200 oturum) denetlenir; şu durumlarda soket kapanır:
+//   · oturum iptal edilmiş ya da oturum süresi (`user_sessions.expires_at`)
+//     dolmuş — kısa ömürlü erişim jetonu süresi değil: istemci jetonu
+//     REST'te yeniler ve yeniden bağlanmada tazesini gönderir;
+//   · hesap silinmiş, dondurulmuş, askıda ya da kapatılmış;
+//   · bakım açık ve hesap bakım test listesinde değil.
+// Veritabanı geçici olarak okunamazsa soketler KAPATILMAZ (bağlantıda
+// zaten doğrulandılar; iptal olayları ayrıca anında kapatır).
 // ═══════════════════════════════════════════════════════════════
 import { gorselAdresleriEkle } from './gorsel_adresleri.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { olaylar } from './olaylar.js';
 import { kullaniciCoz } from './routes/kullanici.js';
+import { bakimDurumu } from './bakim_modu.js';
+import { simdi } from './db.js';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const NSP = '/ws';
@@ -36,6 +52,8 @@ function cerceve(metin, opkod = 0x1) {
 
 const KIMLIK_ZAMAN_ASIMI = 10_000;
 const KULLANICI_BASINA_AZAMI_BAGLANTI = 10;
+export const YENIDEN_DOGRULAMA_MS = 60_000;
+const DOGRULAMA_PARCASI = 200;
 
 class Baglanti {
   constructor(soket, hub) {
@@ -130,6 +148,8 @@ class Baglanti {
       try { auth = geri ? JSON.parse(geri) : {}; } catch { /* boş */ }
       try {
         const { u, oturum } = await kullaniciCoz(this.hub.db, { headers: { authorization: `Bearer ${auth.token ?? ''}` } });
+        // Bakım modu REST kapısından geçmeyen soketlere de uygulanır.
+        if (!(await this.hub.oturumlarGecerli([{ oturumId: oturum.id, kullaniciId: u.id }])).has(oturum.id)) throw new Error('gecersiz');
         this.kullanici = u;
         this.oturumId = oturum.id;
         this.hub.baglantiEkle(this);
@@ -186,6 +206,43 @@ export function gercekZamanliKur(sunucu, db) {
       set?.delete(b);
       if (set && set.size === 0) this.odalar.delete(o);
     },
+    /**
+     * Geçerli oturum kimlikleri (Set). [liste]: {oturumId, kullaniciId}.
+     * Okuma hatası fırlatır (çağıran karar verir).
+     */
+    async oturumlarGecerli(liste) {
+      const bk = await bakimDurumu(db);
+      const gecerli = new Set();
+      const benzersiz = [...new Map(liste.map((x) => [x.oturumId, x])).values()];
+      for (let i = 0; i < benzersiz.length; i += DOGRULAMA_PARCASI) {
+        const parca = benzersiz.slice(i, i + DOGRULAMA_PARCASI);
+        const satirlar = await db.prepare(
+          `SELECT s.id, s.user_id FROM user_sessions s JOIN users u ON u.id = s.user_id
+            WHERE s.id IN (${parca.map(() => '?').join(', ')}) AND s.revoked_at IS NULL AND s.expires_at > ?
+              AND u.deleted_at IS NULL AND u.frozen_at IS NULL AND u.status NOT IN ('SUSPENDED', 'BANNED')
+              ${bk.aktif ? 'AND u.maintenance_bypass = TRUE' : ''}`,
+        ).all(...parca.map((x) => x.oturumId), simdi());
+        const sahip = new Map(parca.map((x) => [x.oturumId, x.kullaniciId]));
+        for (const r of satirlar) if (sahip.get(r.id) === r.user_id) gecerli.add(r.id);
+      }
+      return gecerli;
+    },
+    /** Bütün açık soketleri yeniden doğrular; kapatılan sayısı. */
+    async yenidenDogrula() {
+      const hepsi = [...this.kullanicilar.values()].flatMap((set) => [...set]);
+      if (!hepsi.length) return 0;
+      let gecerli;
+      try {
+        gecerli = await this.oturumlarGecerli(hepsi.map((b) => ({ oturumId: b.oturumId, kullaniciId: b.kullanici.id })));
+      } catch {
+        return 0; // geçici okuma hatası: soketler korunur
+      }
+      let kapanan = 0;
+      for (const b of hepsi) {
+        if (!gecerli.has(b.oturumId)) { b.kapat(); kapanan++; }
+      }
+      return kapanan;
+    },
     async katilabilir(kullaniciId, offerId) {
       const x = await db.prepare(
         `SELECT 1 FROM offers o JOIN listings l ON l.id = o.listing_id JOIN contacts c ON c.offer_id = o.id
@@ -222,7 +279,10 @@ export function gercekZamanliKur(sunucu, db) {
 
   /** Kapanışta (ölçek küçültme/dağıtım) bütün soketler düzgün kapatılır;
    *  istemci otomatik olarak başka bir örneğe yeniden bağlanır. */
+  const dogrulamaZamanlayici = setInterval(() => { hub.yenidenDogrula().catch(() => {}); }, YENIDEN_DOGRULAMA_MS);
+  dogrulamaZamanlayici.unref?.();
   hub.hepsiniKapat = () => {
+    clearInterval(dogrulamaZamanlayici);
     for (const set of hub.kullanicilar.values()) for (const b of [...set]) b.kapat();
   };
 

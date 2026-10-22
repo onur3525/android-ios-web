@@ -14,7 +14,7 @@ const { gercekZamanliKur } = await import('../src/gercek_zamanli.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { oturumlariIptal } = await import('../src/routes/kullanici.js');
 
-let db, sunucu, taban, alan, usta, yabanci, offerId;
+let db, sunucu, taban, alan, usta, yabanci, offerId, hub;
 
 async function istek(yol, { yontem = 'GET', govde, token } = {}) {
   const r = await fetch(taban + yol, { method: yontem, headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: govde ? JSON.stringify(govde) : undefined });
@@ -56,7 +56,7 @@ before(async () => {
   db = await testDb();
   await tohumla(db);
   sunucu = createServer(uygulamaKur(db));
-  gercekZamanliKur(sunucu, db);
+  hub = gercekZamanliKur(sunucu, db);
   await new Promise((ok) => sunucu.listen(0, ok));
   taban = `http://127.0.0.1:${sunucu.address().port}`;
   const hiz = (await db.prepare('SELECT name FROM services LIMIT 1').get()).name;
@@ -68,6 +68,7 @@ before(async () => {
   await istek(`/api/v1/offers/${offerId}/communication`, { yontem: 'POST', token: alan.token });
 });
 after(async () => {
+  hub?.hepsiniKapat();
   sunucu?.closeAllConnections?.();
   sunucu?.close();
   await db?.close();
@@ -102,4 +103,93 @@ test('oturumlar iptal edilince (askı/ban) açık soket kapanır', async () => {
   await oturumlariIptal(db, usta.id, 'SUSPENDED');
   await u.kapandi;
   assert.ok(true);
+});
+
+// ── KVKK takip denetimi E4 (22 Eki): soketler düzenli yeniden doğrulanır ──
+const { bakimOnbellegiTemizle } = await import('../src/bakim_modu.js');
+const giris = async (tel) => (await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: tel, password: 'sifre1234' } })).json.accessToken;
+const acikMi = (b) => b.ws.readyState === WebSocket.OPEN;
+const bakim = async (acik) => {
+  if (acik) {
+    await db.prepare(`INSERT INTO app_config (platform, maintenance_active, maintenance_message, updated_at) VALUES ('web', 1, 'Bakım', ?)`).run(new Date().toISOString());
+  } else {
+    await db.prepare(`DELETE FROM app_config WHERE platform = 'web'`).run();
+  }
+  bakimOnbellegiTemizle();
+};
+
+test('oturum süresi dolunca yeniden doğrulamada soket kapanır; geçerli oturum açık kalır; yeni oturumla yeniden bağlanılır', async () => {
+  const k = await kisi('5320000011', 'CUSTOMER');
+  const d = await kisi('5320000012', 'CUSTOMER');
+  const a = sio(k.token);
+  const b = sio(d.token);
+  assert.ok(await a.bekle((p) => p.startsWith('40/ws')));
+  assert.ok(await b.bekle((p) => p.startsWith('40/ws')));
+  await db.prepare('UPDATE user_sessions SET expires_at = ? WHERE user_id = ?').run('2000-01-01T00:00:00.000Z', k.id);
+  assert.equal(await hub.yenidenDogrula(), 1);
+  await a.kapandi;
+  assert.equal(acikMi(b), true, 'geçerli oturumun soketi etkilenmez');
+  // Süresi dolmuş oturumun jetonuyla yeniden bağlanma reddedilir…
+  const red = sio(k.token);
+  assert.ok(await red.bekle((p) => p.startsWith('44/ws')));
+  await red.kapandi;
+  // …yeni girişin jetonuyla kabul edilir.
+  const yeni = sio(await giris('5320000011'));
+  assert.ok(await yeni.bekle((p) => p.startsWith('40/ws')));
+  yeni.ws.close();
+  b.ws.close();
+});
+
+test('dondurulan ya da silinen hesabın soketi yeniden doğrulamada kapanır', async () => {
+  const k = await kisi('5320000021', 'CUSTOMER');
+  const a = sio(k.token);
+  assert.ok(await a.bekle((p) => p.startsWith('40/ws')));
+  await db.prepare('UPDATE users SET frozen_at = ? WHERE id = ?').run(new Date().toISOString(), k.id);
+  assert.equal(await hub.yenidenDogrula(), 1);
+  await a.kapandi;
+  const s = await kisi('5320000022', 'CUSTOMER');
+  const c = sio(s.token);
+  assert.ok(await c.bekle((p) => p.startsWith('40/ws')));
+  await db.prepare('UPDATE users SET deleted_at = ? WHERE id = ?').run(new Date().toISOString(), s.id);
+  assert.equal(await hub.yenidenDogrula(), 1);
+  await c.kapandi;
+});
+
+test('bakım açılınca listede olmayan hesabın soketi kapanır, yenisi kabul edilmez; bakım test hesabı açık kalır', async () => {
+  const n = await kisi('5320000031', 'CUSTOMER');
+  const t = await kisi('5320000032', 'CUSTOMER');
+  await db.prepare('UPDATE users SET maintenance_bypass = TRUE WHERE id = ?').run(t.id);
+  const a = sio(n.token);
+  const b = sio(t.token);
+  assert.ok(await a.bekle((p) => p.startsWith('40/ws')));
+  assert.ok(await b.bekle((p) => p.startsWith('40/ws')));
+  await bakim(true);
+  try {
+    assert.equal(await hub.yenidenDogrula(), 1);
+    await a.kapandi;
+    assert.equal(acikMi(b), true);
+    const red = sio(n.token);
+    assert.ok(await red.bekle((p) => p.startsWith('44/ws')), 'bakımda yeni bağlantı reddedilir');
+    await red.kapandi;
+  } finally {
+    await bakim(false);
+    b.ws.close();
+  }
+});
+
+test('veritabanı geçici okunamazsa soketler kapatılmaz', async () => {
+  const k = await kisi('5320000041', 'CUSTOMER');
+  const a = sio(k.token);
+  assert.ok(await a.bekle((p) => p.startsWith('40/ws')));
+  const asil = db.prepare.bind(db);
+  db.prepare = (sql) => (/FROM user_sessions s JOIN users/.test(sql)
+    ? { all: async () => { throw new Error('geçici'); } }
+    : asil(sql));
+  try {
+    assert.equal(await hub.yenidenDogrula(), 0);
+  } finally {
+    db.prepare = asil;
+  }
+  assert.equal(acikMi(a), true);
+  a.ws.close();
 });

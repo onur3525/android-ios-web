@@ -35,6 +35,7 @@ import { kullaniciRotalar } from './routes/kullanici.js';
 import { ilanRotalar, suresiDolanlariIsle } from './routes/ilan.js';
 import { silmeTalepleriniIsle, sohbetTalepRotalar, talepSureleriniIsle } from './routes/sohbet_talep.js';
 import { kisiOzetiRotalar } from './routes/kisi_ozeti.js';
+import { hataOzeti } from './guvenli_gunluk.js';
 import { dosyaTemizliginiIsle } from './dosya_temizligi.js';
 import { pushKuyrugunuIsle } from './fcm.js';
 import { publicRotalar } from './routes/public.js';
@@ -215,7 +216,7 @@ export function uygulamaKur(db) {
       return jsonGonder(res, 200, sonuc, baslik);
     } catch (e) {
       const bilinen = e instanceof ApiHatasi;
-      if (!bilinen) console.error(`[${istekId}]`, e);
+      if (!bilinen) console.error(`[${istekId}]`, JSON.stringify(hataOzeti(e))); // B11: tam nesne yazılmaz
       res.hcHataKodu = bilinen ? e.kod : 'INTERNAL_ERROR';
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};
       return jsonGonder(res, bilinen ? e.durum : 500, {
@@ -255,9 +256,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.
   const zamanlayici = setInterval(() => {
-    for (const [ad, f] of isler) db.isKilidi(`is:${ad}`, () => f(db)).catch((e) => console.error(ad, e));
+    for (const [ad, f] of isler) db.isKilidi(`is:${ad}`, () => f(db)).catch((e) => console.error(ad, JSON.stringify(hataOzeti(e))));
     // Push kendi kilit yuvalarını yönetir (HC_PUSH_PARALEL ile çok işçi).
-    pushKuyrugunuIsle(db).catch((e) => console.error('push_gonderimi', e));
+    pushKuyrugunuIsle(db).catch((e) => console.error('push_gonderimi', JSON.stringify(hataOzeti(e))));
   }, 60_000);
   zamanlayici.unref();
   // API ölçümleri her örnekte 15 sn'de bir veritabanına eklenir.

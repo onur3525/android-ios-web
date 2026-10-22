@@ -29,7 +29,7 @@ const teklifSiniri = new HizSiniri('teklif_ver', 120, 60 * 60 * 1000);
 // Hizmet veren dizini toplu kazınmasın diye (kullanıcı başına).
 const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
 import { kullaniciCoz } from './kullanici.js';
-import { kisaAd, saglayiciTamamlananIs } from './kisi_ozeti.js';
+import { ilanTelefonuGorunur, kisaAd, saglayiciTamamlananIs } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushTetikle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
@@ -211,6 +211,8 @@ export function ilanRotalar(r, db) {
     const zaman = ctx.body.workTiming ?? null;
     // 16 Eki: "numaramı gizle" seçimi — yoksa telefon görünür (önceki davranış).
     const tercih = ctx.body.iletisimTercihi ?? 'telefonGoster';
+    // ⚠ E1 (22 Eki): yalnız tanımlı iki değer kabul edilir (teklif talebiyle aynı).
+    if (!['telefonGoster', 'yalnizMesaj'].includes(tercih)) throw hata.dogrulama('Geçersiz iletişim tercihi');
     // Idempotency: aynı anahtarla yeniden deneme ilk ilanı döndürür (sınır harcanmaz).
     const ILAN_IDEM = { tablo: 'listings', sahipSutun: 'owner_id' };
     const anahtar = idemAnahtari(ctx);
@@ -465,8 +467,9 @@ export function ilanRotalar(r, db) {
     // 16 Eki: iletişimi kim açarsa açsın iki taraf birbirinin bilgisini
     // görür; YALNIZ ilan sahibi "Sadece Uygulama İçi Mesaj" seçtiyse onun
     // telefonu hizmet verene gösterilmez (mesajlaşma açık kalır).
-    const telefonGizli = karsiId === l.owner_id && l.iletisim_tercihi === 'yalnizMesaj';
-    return { open: true, contactOpenAt: c.opened_at, counterpart: { name: k.name, phone: telefonGizli ? null : k.phone } };
+    // Kural tek kaynakta (kisi_ozeti.js › ilanTelefonuGorunur).
+    const gorunur = ilanTelefonuGorunur({ iletisimAcik: true, karsiIlanSahibi: karsiId === l.owner_id, tercih: l.iletisim_tercihi });
+    return { open: true, contactOpenAt: c.opened_at, counterpart: { name: k.name, phone: gorunur ? k.phone : null } };
   }));
 
   r.post('/api/v1/offers/:offerId/communication', korumali(async (ctx) => {

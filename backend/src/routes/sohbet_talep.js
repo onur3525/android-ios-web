@@ -34,6 +34,7 @@ import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
+import { ilanTelefonuGorunur } from './kisi_ozeti.js';
 
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
 // Silme talebinden sonraki bekleme (talep bu sürede geri çekilebilir). Süre
@@ -111,7 +112,7 @@ export function sohbetTalepRotalar(r, db) {
   r.get('/api/v1/messages/conversations', korumali(async (ctx) => {
     const id = ctx.kullanici.id;
     const satirlar = await db.prepare(
-      `SELECT o.*, l.title listing_title, l.owner_id, c.opened_at
+      `SELECT o.*, l.title listing_title, l.owner_id, l.iletisim_tercihi, c.opened_at
          FROM offers o JOIN listings l ON l.id = o.listing_id JOIN contacts c ON c.offer_id = o.id
         WHERE o.provider_id = ? OR l.owner_id = ? ORDER BY c.opened_at DESC`,
     ).all(id, id);
@@ -136,9 +137,12 @@ export function sohbetTalepRotalar(r, db) {
       const karsi = kullanicilar.get(karsiId);
       const son = sonlar.get(s.id);
       const okunmamis = okunmamislar.get(s.id) ?? 0;
+      // ⚠ E1 (22 Eki): telefon tek kuralla (kisi_ozeti.js); sohbet yalnız
+      // iletişim açıkken listelenir (JOIN contacts).
+      const telefonGorunur = ilanTelefonuGorunur({ iletisimAcik: true, karsiIlanSahibi: karsiId === s.owner_id, tercih: s.iletisim_tercihi });
       out.push({
         offer: { id: s.id, listingId: s.listing_id, providerId: s.provider_id, amountTl: s.amount_tl, note: s.note, status: s.status, createdAt: s.created_at },
-        listingTitle: s.listing_title, counterpart: { id: karsiId, name: karsi?.name ?? '', phone: karsi?.phone ?? '' },
+        listingTitle: s.listing_title, counterpart: { id: karsiId, name: karsi?.name ?? '', phone: telefonGorunur ? (karsi?.phone ?? '') : null },
         lastMessage: son ? mesajGorunumu(son) : null, unread: okunmamis,
       });
     }
@@ -687,7 +691,7 @@ export async function silmeTalepleriniIsle(db) {
         // tekil dizinde (deleted_at'tan bağımsız) tutulduğu için kalırsa
         // aynı kişinin yeni kaydı çakışmayla (500) düşerdi.
         `UPDATE users SET name = 'Silinmiş Kullanıcı', phone = ?, email = NULL, password_hash = ?, firebase_uid = NULL, photo_customer_ref = NULL, photo_provider_ref = NULL, frozen_at = NULL, pending_email = NULL, pending_email_at = NULL,
-                          phone_verified = FALSE, email_verified = FALSE, deleted_at = ?, updated_at = ? WHERE id = ?`,
+                          phone_verified = FALSE, email_verified = FALSE, maintenance_bypass = FALSE, deleted_at = ?, updated_at = ? WHERE id = ?`,
       ).run(`silindi-${a.user_id}`, `silindi$${randomUUID()}`, z, z, a.user_id);
       await db.prepare('DELETE FROM addresses WHERE user_id = ?').run(a.user_id);
       await db.prepare('DELETE FROM provider_profiles WHERE user_id = ?').run(a.user_id);
@@ -698,8 +702,16 @@ export async function silmeTalepleriniIsle(db) {
       // için kalır.
       await db.prepare(
         `UPDATE support_tickets SET subject = 'Silinmiş hesap', message = '[Hesap silindiği için içerik kaldırıldı]',
+                                    sender_email = NULL, sender_name = NULL,
                                     status = 'CLOSED', closed_at = COALESCE(closed_at, ?), updated_at = ? WHERE user_id = ?`,
       ).run(z, z, a.user_id);
+      // ⚠ E2 (KVKK takip denetimi, 22 Eki): e-postayla açılan talepte
+      // gönderen adresi/adı da kişisel veridir; yukarıda NULL yapılır.
+      // Yalnız bu hesaba BAĞLI (user_id) talepler; hesaba bağlanmamış
+      // e-posta talepleri başka bir kişiye ait olabileceği için dokunulmaz.
+      // ⚠ B12: bakım test hesabı işareti ve tanınmış cihaz kayıtları
+      // (cihaz kimliği özeti, platform, zamanlar) hesapla birlikte silinir.
+      await db.prepare('DELETE FROM maintenance_devices WHERE user_id = ?').run(a.user_id);
       // Hesabın bütün kullanıcı dosyaları fiziksel silme kuyruğuna.
       await hesapDosyalariniIsaretle(db, a.user_id);
       await oturumlariIptal(db, a.user_id, 'DELETED');
