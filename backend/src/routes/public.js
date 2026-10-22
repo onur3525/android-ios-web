@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { hata } from '../http.js';
 import { DESTEK_BILGISI } from '../destek_bilgisi.js';
+import { bakimIstisnasiMi } from '../bakim_modu.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
@@ -111,11 +112,15 @@ export function publicRotalar(r, db) {
     const p = ctx.query.get('platform');
     if (!['android', 'ios', 'web'].includes(p)) throw hata.dogrulama('platform android, ios ya da web olmalıdır');
     const c = await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p);
+    const aktif = c ? c.maintenance_active === 1 : false;
     return {
       maintenance: {
-        active: c ? c.maintenance_active === 1 : false,
+        active: aktif,
         message: c?.maintenance_message ?? null,
         endAt: c?.maintenance_end_at ?? null,
+        // 032: istek bakımda erişebilen hesabın oturumuyla geldiyse uygulama
+        // bakım ekranını göstermez (yalnız bakım açıkken eklenir).
+        ...(aktif && await bakimIstisnasiMi(db, ctx.req) ? { bypass: true } : {}),
       },
       release: {
         minSupportedVersion: c?.min_version ?? null,

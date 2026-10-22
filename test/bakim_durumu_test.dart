@@ -44,6 +44,52 @@ void main() {
         '${iki(t.day)}.${iki(t.month)}.${t.year} ${iki(t.hour)}:${iki(t.minute)}');
   });
 
+  test('032: listedeki hesap (bypass) için bakım ekranı yok', () {
+    expect(bakimEtkinMi({'active': true}), isTrue);
+    expect(bakimEtkinMi({'active': true, 'bypass': true}), isFalse);
+    expect(bakimEtkinMi({'active': false}), isFalse);
+    expect(bakimEtkinMi(null), isFalse);
+    final d = BakimDurumu.i;
+    d.uygula({'active': true, 'message': 'x', 'bypass': true});
+    expect(d.aktif, isFalse);
+    d.uygula({'active': true, 'message': 'x'});
+    expect(d.aktif, isTrue);
+  });
+
+  testWidgets('032: gizli giriş kapısı logoya 2 sn basılı tutunca açılır', (t) async {
+    var acildi = 0;
+    await t.pumpWidget(MaterialApp(
+      home: BakimEkrani(onYenile: () {}, onGiris: () => acildi++),
+    ));
+    final kapi = find.byKey(const ValueKey('bakim-giris-kapisi'));
+    expect(kapi, findsOneWidget);
+    var g = await t.startGesture(t.getCenter(kapi));
+    await t.pump(const Duration(seconds: 1));
+    await g.up();
+    await t.pump();
+    expect(acildi, 0, reason: 'kısa basış kapıyı açmaz');
+    g = await t.startGesture(t.getCenter(kapi));
+    await t.pump(kBakimGirisSuresi + const Duration(milliseconds: 100));
+    await g.up();
+    await t.pump();
+    expect(acildi, 1);
+  });
+
+  testWidgets('032: giriş açıkken örtü kalkar; kapı yoksa algılayıcı da yok', (t) async {
+    await t.pumpWidget(MaterialApp(
+      builder: (context, child) => BakimKapisi(child: child!),
+      home: const Scaffold(body: Text('ana ekran')),
+    ));
+    BakimDurumu.i.uygula({'active': true, 'message': 'Bakım'});
+    await t.pump();
+    expect(find.text('Bakımdayız'), findsOneWidget);
+    BakimDurumu.i.girisAc();
+    await t.pump();
+    expect(find.text('Bakımdayız'), findsNothing);
+    await t.pumpWidget(MaterialApp(home: BakimEkrani(onYenile: () {})));
+    expect(find.byKey(const ValueKey('bakim-giris-kapisi')), findsNothing);
+  });
+
   testWidgets('BakimKapisi: bakım açıkken ekran örtülür, kapanınca kalkar', (t) async {
     await t.pumpWidget(MaterialApp(
       builder: (context, child) => BakimKapisi(child: child!),

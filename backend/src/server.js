@@ -22,7 +22,7 @@ import {
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
 import { istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
-import { bakimDurumu, bakimdaAcikMi } from './bakim_modu.js';
+import { BAKIMDA_GIRIS_YOLLARI, bakimDurumu, bakimdaAcikMi, bakimIstisnasiMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
@@ -163,9 +163,11 @@ export function uygulamaKur(db) {
         return await panelDosyasi(res, yol);
       }
       // ── BAKIM MODU (22 Eki): kullanıcı API'si 503 döner (admin etkilenmez).
-      if (yol.startsWith('/api/v1/') && !bakimdaAcikMi(yol)) {
+      // Bakımda erişebilen test hesabı (032) geçer; giriş uçlarında karar
+      // şifre doğrulandıktan sonra hesaba göre verilir (bakimGirisKapisi).
+      if (yol.startsWith('/api/v1/') && !bakimdaAcikMi(yol) && !BAKIMDA_GIRIS_YOLLARI.has(yol)) {
         const b = await bakimDurumu(db);
-        if (b.aktif) {
+        if (b.aktif && !(await bakimIstisnasiMi(db, req))) {
           res.setHeader('Retry-After', '60');
           throw new ApiHatasi(503, 'MAINTENANCE', b.mesaj || 'Bakım çalışması sürüyor');
         }

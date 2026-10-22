@@ -19,6 +19,7 @@ import { fotoSil, fotoYukle } from '../katalog_foto.js';
 import { IL_ILCE_KAYNAK, ILLER, ilBul } from '../il_ilce_listesi.js';
 import { pdfYukle } from '../yasal_pdf.js';
 import { bakimOnbellegiTemizle } from '../bakim_modu.js';
+import { telefon } from './kullanici.js';
 import { ApiHatasi, HizSiniri, cerez, hata } from '../http.js';
 
 const girisSiniri = new HizSiniri('admin_giris', 10, 15 * 60 * 1000);
@@ -899,6 +900,44 @@ export function adminRotalar(r, db) {
     });
     bakimOnbellegiTemizle();
     return bakimGorunumu();
+  });
+
+  // ── BAKIMDA TEST HESAPLARI (032, 22 Eki, kullanıcı kararı) ──
+  // Listedeki kullanıcı hesabı bakım açıkken şifresiyle giriş yapıp
+  // uygulamayı kullanır; diğer herkes bakım ekranını görür. Hesap e-posta
+  // ya da telefonla bulunur. Ekleme/çıkarma şifre + doğrulama kodu ister.
+  const testHesabiGorunumu = (u) => ({
+    id: u.id, name: u.name, phone: u.phone, email: u.email ?? '', roles: u.roles.split(','), status: u.status,
+  });
+  r.get('/admin/v1/maintenance/testers', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.testers');
+    return (await db.prepare('SELECT * FROM users WHERE maintenance_bypass = TRUE AND deleted_at IS NULL ORDER BY name').all())
+      .map(testHesabiGorunumu);
+  });
+  r.post('/admin/v1/maintenance/testers', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.testers');
+    const giris = String(ctx.body.account ?? '').trim();
+    if (!giris) throw hata.dogrulama('E-posta ya da telefon numarası giriniz');
+    const u = giris.includes('@')
+      ? await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(giris.toLowerCase())
+      : await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(telefon(giris));
+    if (!u) throw hata.bulunamadi('Bu e-posta ya da telefonla kayıtlı kullanıcı bulunamadı');
+    if (u.maintenance_bypass === 1) throw hata.cakisma('Bu hesap zaten listede');
+    await db.tx(async () => {
+      await db.prepare('UPDATE users SET maintenance_bypass = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+      await yaz(ctx, { islem: 'maintenance.tester.add', hedefTur: 'user', hedefId: u.id, sonra: { maintenanceBypass: true } });
+    });
+    return testHesabiGorunumu(u);
+  });
+  r.delete('/admin/v1/maintenance/testers/:id', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.testers');
+    const u = await db.prepare('SELECT * FROM users WHERE id = ? AND maintenance_bypass = TRUE').get(ctx.params.id);
+    if (!u) throw hata.bulunamadi('Hesap listede değil');
+    await db.tx(async () => {
+      await db.prepare('UPDATE users SET maintenance_bypass = FALSE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+      await yaz(ctx, { islem: 'maintenance.tester.remove', hedefTur: 'user', hedefId: u.id, once: { maintenanceBypass: true } });
+    });
+    return undefined;
   });
 
   // ── DENETİM KAYDI ────────────────────────────────────────

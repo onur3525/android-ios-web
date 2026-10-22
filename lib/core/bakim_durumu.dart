@@ -14,6 +14,15 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+/// `maintenance` nesnesi bu cihaz için bakım ekranı gerektiriyor mu?
+///
+/// ⚠ TEK KAYNAK (açılış kararı + uygulama açıkken izleme). Sunucu, istek
+/// admin'in "Bakımda erişebilecek hesaplar" listesindeki bir hesabın
+/// oturumuyla geldiyse `bypass: true` ekler (032): o kişi uygulamayı
+/// normal kullanır, diğer herkes bakım ekranını görür.
+bool bakimEtkinMi(Object? m) =>
+    m is Map && m['active'] == true && m['bypass'] != true;
+
 class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
   BakimDurumu._();
 
@@ -26,15 +35,33 @@ class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _zamanlayici;
   VoidCallback? _bitince;
   bool _sorguda = false;
+  bool _girisAcik = false;
 
   bool get aktif => _aktif;
+
+  /// Bakım ekranındaki gizli giriş kapısından (logoya 2 sn basılı tutma)
+  /// giriş ekranı açıkken bakım örtüsü kalkar. Giriş ekranı kapanınca
+  /// durum sunucuya yeniden sorulur: listedeki hesapla giriş yapıldıysa
+  /// sunucu `bypass` der ve örtü gelmez; yapılmadıysa örtü geri gelir.
+  bool get girisAcik => _girisAcik;
+
+  void girisAc() {
+    _girisAcik = true;
+    notifyListeners();
+  }
+
+  Future<void> girisKapat() async {
+    await kontrolEt();
+    _girisAcik = false;
+    notifyListeners();
+  }
   String? get mesaj => _mesaj;
   String? get bitis => _bitis;
 
   /// `maintenance` nesnesini uygular (`{active, message, endAt}`).
   void uygula(Object? m) {
     final harita = m is Map ? m : const <String, Object?>{};
-    final aktif = harita['active'] == true;
+    final aktif = bakimEtkinMi(harita);
     final mesaj = harita['message'] is String ? harita['message'] as String : null;
     final bitis = harita['endAt'] is String ? harita['endAt'] as String : null;
     if (aktif == _aktif && mesaj == _mesaj && bitis == _bitis) {
@@ -97,6 +124,7 @@ class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
     _sorgu = null;
     _bitince = null;
     _aktif = false;
+    _girisAcik = false;
     _mesaj = null;
     _bitis = null;
   }

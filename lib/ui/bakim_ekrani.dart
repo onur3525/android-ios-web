@@ -7,9 +7,11 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../core/bakim_durumu.dart';
+import 'gezgin.dart';
 import 'ref_tokens.dart';
 
 const String kVarsayilanBakimMesaji =
@@ -34,11 +36,17 @@ class BakimEkrani extends StatefulWidget {
     this.mesaj,
     this.bitis,
     required this.onYenile,
+    this.onGiris,
   });
 
   final String? mesaj;
   final String? bitis;
   final VoidCallback onYenile;
+
+  /// Gizli giriş kapısı (032): logoya 2 sn basılı tutunca çağrılır. Ekran
+  /// görsel olarak değişmez; yalnız admin'in listesindeki hesaplar bakımda
+  /// giriş yapabilir (karar sunucuda).
+  final VoidCallback? onGiris;
 
   @override
   State<BakimEkrani> createState() => _BakimEkraniState();
@@ -74,32 +82,35 @@ class _BakimEkraniState extends State<BakimEkrani>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 168,
-                    height: 168,
-                    child: AnimatedBuilder(
-                      animation: _a,
-                      builder: (context, _) {
-                        // Logonun arkasında yavaş dönen dişli ve hafif nabız.
-                        final nabiz =
-                            1 + 0.04 * math.sin(_a.value * 2 * math.pi * 3);
-                        return Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Transform.rotate(
-                              angle: _a.value * 2 * math.pi,
-                              child: Icon(Icons.settings,
-                                  size: 168,
-                                  color: RC.blue.withValues(alpha: 0.10)),
-                            ),
-                            Transform.scale(
-                              scale: nabiz,
-                              child: Image.asset('assets/logo/logo_mark.png',
-                                  width: 76, height: 76),
-                            ),
-                          ],
-                        );
-                      },
+                  _girisKapisi(
+                    widget.onGiris,
+                    child: SizedBox(
+                      width: 168,
+                      height: 168,
+                      child: AnimatedBuilder(
+                        animation: _a,
+                        builder: (context, _) {
+                          // Logonun arkasında yavaş dönen dişli ve hafif nabız.
+                          final nabiz =
+                              1 + 0.04 * math.sin(_a.value * 2 * math.pi * 3);
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Transform.rotate(
+                                angle: _a.value * 2 * math.pi,
+                                child: Icon(Icons.settings,
+                                    size: 168,
+                                    color: RC.blue.withValues(alpha: 0.10)),
+                              ),
+                              Transform.scale(
+                                scale: nabiz,
+                                child: Image.asset('assets/logo/logo_mark.png',
+                                    width: 76, height: 76),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -146,6 +157,27 @@ class _BakimEkraniState extends State<BakimEkrani>
   }
 }
 
+/// Logoya 2 sn basılı tutma algılayıcısı; kapı yoksa logo olduğu gibi.
+Widget _girisKapisi(VoidCallback? onGiris, {required Widget child}) {
+  if (onGiris == null) {
+    return child;
+  }
+  return RawGestureDetector(
+    key: const ValueKey('bakim-giris-kapisi'),
+    gestures: {
+      LongPressGestureRecognizer:
+          GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+        () => LongPressGestureRecognizer(duration: kBakimGirisSuresi),
+        (r) => r.onLongPress = onGiris,
+      ),
+    },
+    child: child,
+  );
+}
+
+/// Gizli giriş kapısının basılı tutma süresi.
+const Duration kBakimGirisSuresi = Duration(seconds: 2);
+
 /// Uygulamanın en dışında: bakım açıksa bütün ekranları örter.
 class BakimKapisi extends StatelessWidget {
   const BakimKapisi({super.key, required this.child});
@@ -162,16 +194,27 @@ class BakimKapisi extends StatelessWidget {
         children: [
           child,
           // Alttaki ekranlara dokunuş geçmez.
-          if (d.aktif)
+          if (d.aktif && !d.girisAcik)
             const Positioned.fill(
               child: ModalBarrier(dismissible: false, color: Colors.white),
             ),
-          if (d.aktif)
+          if (d.aktif && !d.girisAcik)
             Positioned.fill(
               child: BakimEkrani(
                 mesaj: d.mesaj,
                 bitis: d.bitis,
                 onYenile: () => unawaited(d.kontrolEt()),
+                onGiris: () {
+                  final nav = gezginAnahtari.currentState;
+                  if (nav == null) {
+                    return;
+                  }
+                  d.girisAc();
+                  // Giriş ekranı kapanınca (geri ya da başarılı girişte
+                  // yığından kaldırılınca) durum yeniden sorulur.
+                  unawaited(
+                      nav.pushNamed<void>('/login').whenComplete(d.girisKapat));
+                },
               ),
             ),
         ],

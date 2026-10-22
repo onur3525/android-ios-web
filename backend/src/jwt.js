@@ -17,8 +17,12 @@ export function jwtImzala(yuk) {
   return `${bas}.${govde}.${imza}`;
 }
 
-/** Geçerliyse yük, değilse null. Algoritma sabit: 'none'/RS saldırısı yok. */
-export function jwtDogrula(token) {
+/**
+ * Geçerliyse yük, değilse null. Algoritma sabit: 'none'/RS saldırısı yok.
+ * `sureyiYoksay`: YALNIZ bakımda test hesabı tanıma (bakim_modu.js) içindir;
+ * imza yine zorunludur, oturumun iptal/bitiş denetimi orada yapılır.
+ */
+export function jwtDogrula(token, { sureyiYoksay = false } = {}) {
   const p = String(token || '').split('.');
   if (p.length !== 3) return null;
   let bas;
@@ -33,7 +37,7 @@ export function jwtDogrula(token) {
   if (beklenen.length !== gelen.length || !timingSafeEqual(beklenen, gelen)) return null;
   try {
     const yuk = JSON.parse(Buffer.from(p[1], 'base64url').toString());
-    if (typeof yuk.exp !== 'number' || yuk.exp * 1000 < Date.now()) return null;
+    if (typeof yuk.exp !== 'number' || (!sureyiYoksay && yuk.exp * 1000 < Date.now())) return null;
     return yuk;
   } catch {
     return null;

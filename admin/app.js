@@ -546,8 +546,30 @@ function bakimKarti(b) {
         h('button', { class: 'btn tehlike', onclick: ac }, 'Bakım modunu aç')]);
 }
 
+// ── BAKIMDA TEST HESAPLARI (032, 22 Eki): yalnız süper yönetici ──
+function testHesaplariKarti(liste) {
+  const ekle = async () => {
+    const d = await form('Bakımda erişebilecek hesap ekle', [
+      { ad: 'account', etiket: 'Kullanıcının e-postası ya da telefon numarası', zorunlu: true },
+    ], 'Ekle', { aciklama: 'Hesap uygulamada kayıtlı olmalı. Bakım açıkken bu hesap şifresiyle giriş yapıp uygulamayı ve web sitesini normal kullanır; diğer herkes bakım ekranını görür.' });
+    if (d && await guvenli(() => api('/maintenance/testers', { yontem: 'POST', govde: { account: d.account } }))) { bildir('Hesap listeye eklendi'); yenile(); }
+  };
+  const cikar = async (u) => {
+    const d = await form(`Listeden çıkarılsın mı? — ${u.name}`, [], 'Çıkar', { tehlike: true, aciklama: 'Bakım açıkken bu hesap da bakım ekranını görür.' });
+    if (d && await guvenli(() => api(`/maintenance/testers/${u.id}`, { yontem: 'DELETE', govde: {} }))) { bildir('Hesap listeden çıkarıldı'); yenile(); }
+  };
+  return h('div', { class: 'kart' },
+    h('div', { class: 'ust' }, h('h3', {}, 'Bakımda erişebilecek hesaplar'), h('button', { class: 'btn ikincil', onclick: ekle }, 'Hesap ekle')),
+    h('p', { class: 'not' }, 'Bakım modunda yalnız bu hesaplar şifreyle giriş yapıp değişiklikleri kullanıcıların göreceği hâliyle kontrol edebilir.'),
+    liste.length
+      ? tablo([{ baslik: 'Ad', deger: (u) => h('a', { href: `#/kullanici/${u.id}` }, u.name) }, { baslik: 'E-posta', deger: (u) => u.email || '—' },
+        { baslik: 'Telefon', deger: (u) => u.phone }, { baslik: '', deger: (u) => h('button', { class: 'btn tehlike kt-kucuk', onclick: () => cikar(u) }, 'Çıkar') }], liste)
+      : h('p', { class: 'not' }, 'Listede hesap yok.'));
+}
+
 SAYFALAR.duyurular = async () => {
-  const [gecmis, bakim] = await Promise.all([api('/announcements'), api('/maintenance')]);
+  const testciGor = ben.role === 'super_admin';
+  const [gecmis, bakim, testciler] = await Promise.all([api('/announcements'), api('/maintenance'), testciGor ? api('/maintenance/testers') : null]);
   const gonder = async () => {
     const d = await form('Duyuru gönder', [{ ad: 'title', etiket: 'Başlık', zorunlu: true }, { ad: 'body', etiket: 'Metin', tur: 'textarea', zorunlu: true },
       { ad: 'target', etiket: 'Hedef', tur: 'select', deger: 'ALL', secenekler: [['ALL', 'Herkes'], ['CUSTOMER', 'Hizmet alanlar'], ['PROVIDER', 'Hizmet verenler']] }], 'Gönder');
@@ -556,6 +578,7 @@ SAYFALAR.duyurular = async () => {
   };
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Duyurular'), h('button', { class: 'btn', onclick: gonder }, 'Duyuru gönder')),
     bakimKarti(bakim),
+    testciGor ? testHesaplariKarti(testciler) : null,
     h('p', { class: 'not' }, 'Duyurular uygulamadaki Bildirimler sekmesine düşer; yalnız etkin hesaplara gider.'),
     tablo([{ baslik: 'Başlık', deger: (a) => a.title }, { baslik: 'Hedef', deger: (a) => a.target }, { baslik: 'Alıcı', deger: (a) => a.recipients }, { baslik: 'Tarih', deger: (a) => tarih(a.createdAt) }], gecmis));
 };

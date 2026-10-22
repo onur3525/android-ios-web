@@ -171,6 +171,8 @@ const YETKI = {
   'announcements.write': ['super_admin', 'content'],
   // Bakım modu (22 Eki): Duyurular ekranından açılır/kapanır.
   'maintenance.write': ['super_admin', 'content'],
+  // 032: bakımda erişebilen test hesaplarını yalnız süper yönetici belirler.
+  'maintenance.testers': ['super_admin'],
   'notifications.read': ['super_admin', 'moderator', 'operations'],
   'integrations.read': ['super_admin', 'operations'],
   'integrations.write': ['super_admin', 'operations'],

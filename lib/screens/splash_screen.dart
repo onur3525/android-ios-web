@@ -674,7 +674,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final r = j['release'] as Map<String, dynamic>?;
         // ⚠ 22 Eki: bakım uygulama açıkken de izlenir (BakimDurumu).
         BakimDurumu.i.uygula(m);
-        maintenanceActive = m?['active'] as bool? ?? false;
+        maintenanceActive = bakimEtkinMi(m);
         message = m?['message'] as String?;
         endAt = m?['endAt'] as String?;
         minVer = r?['minSupportedVersion'] as String?;
@@ -862,7 +862,11 @@ class BootBlockedScreen extends StatelessWidget {
               // ⚠ 22 Eki: ortak bakım ekranı (logo + animasyon). Bakım
               // bitince açılış kendiliğinden baştan çalışır.
               BootDecision.maintenance => () {
-                  BakimDurumu.i.bitinceCalistir(onRetry);
+                  // Giriş kapısıyla oturum açılınca bu ekran yığından
+                  // kalkmış olabilir; kalkmışsa yeniden başlatılmaz.
+                  BakimDurumu.i.bitinceCalistir(() {
+                    if (context.mounted) onRetry();
+                  });
                   return BakimEkrani(
                     mesaj: result.maintenanceMessage,
                     bitis: result.maintenanceEndAt,
