@@ -654,9 +654,16 @@ class _SplashScreenState extends State<SplashScreen> {
     String? message, endAt, minVer, latestVer;
 
     if (ApiConfig.useRealApi) {
+      final api = ConfigApi(client!);
+      // ⚠ 22 Eki: bakım izlemesi açılış sorgusunun SONUCUNDAN BAĞIMSIZ
+      // başlar. Eskiden yalnız sorgu başarılıysa başlıyordu: sunucu yavaş
+      // uyanıp sorgu kısa bütçeyi aşınca izleme hiç kurulmuyor, bakım
+      // açılınca ne bakım ekranı çıkıyor ne de 503 "MAINTENANCE" yanıtı
+      // ekranı açabiliyordu (kullanıcı uygulamada gezinmeye devam ediyordu).
+      BakimDurumu.i
+          .baslat(() => api.app(platform: currentPlatform()));
       try {
         BootLog.olay('CONFIG_CHECK_START');
-        final api = ConfigApi(client!);
         // ⚠ KISA BÜTÇE: fail-safe'ten önce bitmeli (beyaz ekran yok).
         final j = await api
             .app(platform: currentPlatform())
@@ -667,8 +674,6 @@ class _SplashScreenState extends State<SplashScreen> {
         final r = j['release'] as Map<String, dynamic>?;
         // ⚠ 22 Eki: bakım uygulama açıkken de izlenir (BakimDurumu).
         BakimDurumu.i.uygula(m);
-        BakimDurumu.i
-            .baslat(() => api.app(platform: currentPlatform()));
         maintenanceActive = m?['active'] as bool? ?? false;
         message = m?['message'] as String?;
         endAt = m?['endAt'] as String?;
@@ -678,6 +683,9 @@ class _SplashScreenState extends State<SplashScreen> {
         // Sunucuya ulaşılamadı. Bu, "internet yok" DEMEK DEĞİLDİR.
         configOk = false;
         BootLog.olay('CONFIG_CHECK_END', 'fail:${e.runtimeType}');
+        // Açılış bekletilmez; bakım durumu hemen arka planda yeniden
+        // sorulur. Bakımdaysa bakım ekranı açılan ekranın üstünü örter.
+        unawaited(BakimDurumu.i.kontrolEt());
       }
     } else {
       configOk = true; // mock modda meta ucu yoktur
