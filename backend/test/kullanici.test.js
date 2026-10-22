@@ -12,11 +12,13 @@ const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban, adminCerez, adminSir;
 const TEL = '5321112233';
 
 async function istek(yol, { yontem = 'GET', govde, token, cerez } = {}) {
+  await degisiklikOnayi(taban, yol, yontem, cerez);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -52,6 +54,7 @@ before(async () => {
   const c = a.setCookie.split(';')[0];
   await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: c, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(adminSir) }) });
   adminCerez = c;
+  onayKimligi(c, 'GucluSifre12345', adminSir);
 });
 after(async () => {
   sunucu?.close();

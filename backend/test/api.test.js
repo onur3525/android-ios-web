@@ -8,6 +8,7 @@ import { testDb } from './destek.js';
 import { uygulamaKur } from '../src/server.js';
 import { tohumla, flutterVerisiniOku } from '../scripts/seed_from_flutter.js';
 import { base32Uret, sifreOzetle, sirSifrele, totpUret } from '../src/auth.js';
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban;
 const SIFRE = 'GucluSifre12345';
@@ -20,7 +21,8 @@ async function adminEkle(email, rol) {
     .run(randomUUID(), email, email, rol, sifreOzetle(SIFRE), sirSifrele(sir), simdi());
 }
 
-async function istek(yol, { yontem = 'GET', govde, cerez, csrf = true } = {}) {
+async function istek(yol, { yontem = 'GET', govde, cerez, csrf = true, onay = true } = {}) {
+  if (onay && csrf) await degisiklikOnayi(taban, yol, yontem, cerez);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -40,6 +42,7 @@ async function girisYap(email) {
   const cerez = a.setCookie.split(';')[0];
   const b = await istek('/admin/v1/auth/mfa', { yontem: 'POST', govde: { code: totpUret(sirlar[email]) }, cerez });
   assert.equal(b.durum, 200, JSON.stringify(b.json));
+  onayKimligi(cerez, SIFRE, sirlar[email]);
   return cerez;
 }
 
@@ -168,13 +171,19 @@ test('iade belgesi (kalıntı) kullanıcıya yayınlanmaz', async () => {
 
 test('bakım modu yeniden doğrulama ister; süresi geçince reddedilir', async () => {
   const c = await girisYap('super@hc.test');
-  await db.prepare("UPDATE admin_sessions SET reauth_at = '2000-01-01T00:00:00.000Z'").run();
-  const r = await istek('/admin/v1/config/app/web', { yontem: 'PUT', govde: { maintenanceActive: true, maintenanceMessage: 'Planlı bakım yapılıyor' }, cerez: c });
+  const g = { maintenanceActive: true, maintenanceMessage: 'Planlı bakım yapılıyor' };
+  // Onaysız değişiklik reddedilir.
+  const r = await istek('/admin/v1/config/app/web', { yontem: 'PUT', govde: g, cerez: c, onay: false });
   assert.equal(r.durum, 403);
   assert.equal(r.json.error.code, 'REAUTH_REQUIRED');
-  const ra = await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: { code: totpUret(sirlar['super@hc.test']) }, cerez: c });
+  // Onay süresi geçmişse de reddedilir.
+  const ra = await istek('/admin/v1/auth/reauth', { yontem: 'POST', govde: { password: SIFRE, code: totpUret(sirlar['super@hc.test']) }, cerez: c });
   assert.equal(ra.durum, 200);
-  const r2 = await istek('/admin/v1/config/app/web', { yontem: 'PUT', govde: { maintenanceActive: true, maintenanceMessage: 'Planlı bakım yapılıyor', minSupportedVersion: '1.0.0' }, cerez: c });
+  await db.prepare("UPDATE admin_sessions SET reauth_at = '2000-01-01T00:00:00.000Z'").run();
+  const eski = await istek('/admin/v1/config/app/web', { yontem: 'PUT', govde: g, cerez: c, onay: false });
+  assert.equal(eski.json?.error?.code, 'REAUTH_REQUIRED');
+  // Şifre + kodla onaylanınca geçer.
+  const r2 = await istek('/admin/v1/config/app/web', { yontem: 'PUT', govde: { ...g, minSupportedVersion: '1.0.0' }, cerez: c });
   assert.equal(r2.durum, 200);
   const pub = (await istek('/api/v1/config/app?platform=web')).json;
   assert.equal(pub.maintenance.active, true);

@@ -23,11 +23,13 @@ const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { silmeTalepleriniIsle } = await import('../src/routes/sohbet_talep.js');
 const { ozelAdresMi, disAdresSorunu, guvenliIstek, guvenliLookup } = await import('../src/ag_guvenligi.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban;
 const adminCerez = {};
 
-async function istek(yol, { yontem = 'GET', govde, token, rol, gerekce } = {}) {
+async function istek(yol, { yontem = 'GET', govde, token, rol, gerekce, onay = true } = {}) {
+  if (onay && yol.startsWith('/admin/')) await degisiklikOnayi(taban, yol, yontem, adminCerez[rol ?? 'super_admin']);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -67,6 +69,7 @@ async function adminGiris(rol) {
   const me = await fetch(`${taban}/admin/v1/auth/me`, { headers: { Cookie: c } });
   assert.equal(me.status, 200, `${rol}: MFA sonrası ilk istek`);
   adminCerez[rol] = c;
+  onayKimligi(c, 'GucluSifre12345', sir);
 }
 
 let kat, hiz;
@@ -229,17 +232,17 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   ]) {
     assert.equal((await istek(yol, { yontem, govde, rol: 'readonly' })).durum, 403, `readonly ${yontem} ${yol}`);
   }
-  // Kritik işlemler yeniden doğrulama ister (MFA'dan > 5 dk sonra).
+  // Kritik işlemler şifre + kodla onaylanmadan yapılamaz (22 Eki: her değişiklik).
   await db.prepare('UPDATE admin_sessions SET reauth_at = ?').run('2000-01-01T00:00:00.000Z');
   const u = await kisi('5340000031', 'CUSTOMER');
-  const r = await istek(`/admin/v1/users/${u.id}/suspend`, { yontem: 'POST', govde: { reason: 'deneme gerekçesi' }, rol: 'moderator' });
+  const r = await istek(`/admin/v1/users/${u.id}/suspend`, { yontem: 'POST', govde: { reason: 'deneme gerekçesi' }, rol: 'moderator', onay: false });
   assert.equal(r.json.error.code, 'REAUTH_REQUIRED');
   // Yıkıcı katalog/bölge kaldırma da yeniden doğrulama ister.
   const kat1 = (await db.prepare('SELECT id FROM categories LIMIT 1').get()).id;
   const hiz1 = (await db.prepare('SELECT id FROM services LIMIT 1').get()).id;
   const il1 = (await db.prepare('SELECT id FROM cities LIMIT 1').get()).id;
   for (const yol of [`/admin/v1/catalog/categories/${kat1}`, `/admin/v1/catalog/services/${hiz1}`, `/admin/v1/regions/cities/${il1}`]) {
-    const x = await istek(yol, { yontem: 'DELETE', govde: { reason: 'deneme gerekçesi' }, rol: 'content' });
+    const x = await istek(yol, { yontem: 'DELETE', govde: { reason: 'deneme gerekçesi' }, rol: 'content', onay: false });
     assert.equal(x.json?.error?.code, 'REAUTH_REQUIRED', yol);
   }
   assert.ok(await db.prepare('SELECT 1 FROM categories WHERE id = ? AND deleted_at IS NULL').get(kat1), 'kategori silinmemiş olmalı');
@@ -526,7 +529,7 @@ test('21 Eki: Hesabını silenler ve donduranlar — etkinleştiren çıkar, ipt
   assert.equal((await istek('/admin/v1/account-closures?state=YOK', { rol: 'readonly' })).durum, 400);
 });
 
-test('21 Eki: admin oturumu 5 dk hareketsizlikte kapanır; süre panele bildirilir', async () => {
+test('21 Eki: admin oturumu 15 dk hareketsizlikte kapanır (22 Eki); süre panele bildirilir', async () => {
   const sir = base32Uret();
   const id = randomUUID();
   await db.prepare(`INSERT INTO admins (id, email, name, role, password_hash, totp_secret_enc, created_at) VALUES (?, 'bosta@hc.test', 'B', 'readonly', ?, ?, ?)`)
@@ -534,15 +537,15 @@ test('21 Eki: admin oturumu 5 dk hareketsizlikte kapanır; süre panele bildiril
   const a = await fetch(`${taban}/admin/v1/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1' }, body: JSON.stringify({ email: 'bosta@hc.test', password: 'GucluSifre12345' }) });
   const c = a.headers.get('set-cookie').split(';')[0];
   const m = await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: c, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
-  assert.equal((await m.json()).idleTimeoutSeconds, 300);
+  assert.equal((await m.json()).idleTimeoutSeconds, 900);
   const me = () => fetch(`${taban}/admin/v1/auth/me`, { headers: { Cookie: c } });
   const r1 = await me();
-  assert.equal(r1.status, 200); assert.equal((await r1.json()).idleTimeoutSeconds, 300);
-  // 4 dk hareketsiz: oturum sürer (ve istek süreyi yeniler).
-  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 4 * 60_000).toISOString(), id);
+  assert.equal(r1.status, 200); assert.equal((await r1.json()).idleTimeoutSeconds, 900);
+  // 14 dk hareketsiz: oturum sürer (ve istek süreyi yeniler).
+  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 14 * 60_000).toISOString(), id);
   assert.equal((await me()).status, 200);
-  // 6 dk hareketsiz: oturum kapanır, şifre ve kod yeniden istenir.
-  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 6 * 60_000).toISOString(), id);
+  // 16 dk hareketsiz: oturum kapanır, şifre ve kod yeniden istenir.
+  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE admin_id = ?').run(new Date(Date.now() - 16 * 60_000).toISOString(), id);
   assert.equal((await me()).status, 401);
   assert.equal((await me()).status, 401, 'kapanan oturum geri gelmez');
 });

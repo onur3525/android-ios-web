@@ -8,8 +8,12 @@
 // çerez HttpOnly + SameSite=Strict (+ üretimde Secure). İki aşama:
 //   'mfa'  — şifre doğru, TOTP bekleniyor (yalnız /auth/mfa çağrılabilir)
 //   'full' — tam oturum
-// Hareketsizlikte 30 dk, mutlak 8 saat sonra düşer. Kritik işlemler
-// son 5 dk içinde TOTP ile yeniden doğrulama (reauth) ister.
+// Hareketsizlikte düşer (config.adminOturumBosta), mutlak 8 saatte biter.
+// ⚠ HER DEĞİŞİKLİK (GET dışı her admin isteği) mevcut şifre + TOTP ile
+// yeniden doğrulama ister (22 Eki, kullanıcı kuralı: açık kalmış ekranda
+// kimse değişiklik yapamasın; izleme/görüntüleme serbest). Doğrulama TEK
+// KULLANIMLIKTIR: yalnız ardından gelen ilk değişikliği açar ve kısa
+// sürede (config.yenidenDogrulamaSuresi) kullanılmazsa geçersizleşir.
 // ═══════════════════════════════════════════════════════════════
 import {
   createCipheriv, createDecipheriv, createHash, createHmac,
@@ -215,12 +219,34 @@ export async function oturumYukselt(db, token) {
   // ⚠ await ŞART: PostgreSQL sürücüsünde sorgu asenkron; beklenmezse
   // çerez yanıtla gider ama oturum henüz 'mfa' aşamasında kalabilir
   // (hemen gelen ilk istek 401 alır).
-  await db.prepare(`UPDATE admin_sessions SET stage = 'full', last_seen = ?, reauth_at = ? WHERE token_hash = ?`)
-    .run(z, z, ozetle(token));
+  // Giriş, değişiklik izni VERMEZ (reauth_at boş): ilk değişiklik de sorar.
+  await db.prepare(`UPDATE admin_sessions SET stage = 'full', last_seen = ?, reauth_at = NULL WHERE token_hash = ?`)
+    .run(z, ozetle(token));
 }
 
 export async function yenidenDogrulandi(db, token) {
   await db.prepare('UPDATE admin_sessions SET reauth_at = ? WHERE token_hash = ?').run(simdi(), ozetle(token));
+}
+
+/**
+ * Tek kullanımlık yeniden doğrulamayı TÜKETİR (atomik). Son
+ * config.yenidenDogrulamaSuresi içinde şifre + TOTP doğrulandıysa true
+ * döner ve izin silinir; aynı izinle ikinci değişiklik yapılamaz
+ * (eşzamanlı iki istekten yalnız biri geçer).
+ */
+export async function yenidenDogrulamayiTuket(db, token) {
+  if (!token) return false;
+  const sinir = new Date(Date.now() - config.yenidenDogrulamaSuresi).toISOString();
+  const r = await db.prepare('UPDATE admin_sessions SET reauth_at = NULL WHERE token_hash = ? AND reauth_at IS NOT NULL AND reauth_at >= ?')
+    .run(ozetle(token), sinir);
+  return (r.changes ?? 0) === 1;
+}
+
+/** Yeniden doğrulama istenen hata (panel bunu görünce şifre + kod sorar). */
+export function yenidenDogrulamaHatasi() {
+  const e = hata.yetki('Bu değişiklik için şifrenizi ve doğrulama kodunuzu girin');
+  e.kod = 'REAUTH_REQUIRED';
+  return e;
 }
 
 /** Token → { admin, oturum } ya da null. Süresi dolanı siler. */
@@ -241,11 +267,14 @@ export async function oturumCoz(db, token, beklenenAsama = 'full') {
   return { admin, oturum: o };
 }
 
-/** Kritik işlem: son 5 dk içinde TOTP ile yeniden doğrulama şart. */
+/**
+ * Kritik işlem: istek, tek kullanımlık şifre + TOTP doğrulamasıyla gelmiş
+ * olmalı. (Asıl denetim server.js'te HER değişiklik için yapılır ve izni
+ * tüketir; bu ikinci, rota içi güvencedir: oturum satırı izin tüketilmeden
+ * ÖNCE okunduğundan reauth_at burada hâlâ doludur.)
+ */
 export function yenidenDogrulamaIste(oturum) {
   if (!oturum.reauth_at || Date.now() - Date.parse(oturum.reauth_at) > config.yenidenDogrulamaSuresi) {
-    const e = hata.yetki('Bu işlem için kimliğinizi yeniden doğrulayın');
-    e.kod = 'REAUTH_REQUIRED';
-    throw e;
+    throw yenidenDogrulamaHatasi();
   }
 }

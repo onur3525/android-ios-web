@@ -21,12 +21,14 @@ const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/a
 const { silmeTalepleriniIsle } = await import('../src/routes/sohbet_talep.js');
 const { maskeleyici, MASKE } = await import('../src/denetim_anonimlestirme.js');
 const { dosyaTemizliginiIsle } = await import('../src/dosya_temizligi.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban;
 const adminCerez = {};
 const adminKimlik = {};
 
 async function istek(yol, { yontem = 'GET', govde, token, rol } = {}) {
+  if (yol.startsWith('/admin/')) await degisiklikOnayi(taban, yol, yontem, adminCerez[rol ?? 'super_admin']);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: {
@@ -50,6 +52,7 @@ async function adminGiris(rol) {
   assert.equal(m.status, 200);
   adminCerez[rol] = c;
   adminKimlik[rol] = id;
+  onayKimligi(c, 'GucluSifre12345', sir);
 }
 async function kisi(tel, ad) {
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);

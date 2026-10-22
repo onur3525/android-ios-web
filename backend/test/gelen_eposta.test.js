@@ -14,6 +14,7 @@ const { simdi } = await import('../src/db.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { onbellegiTemizle } = await import('../src/entegrasyon.js');
 const { gelenEpostaTestGetirici, svixDogrula, alintiyiKes } = await import('../src/gelen_eposta.js');
+import { degisiklikOnayi, onayKimligi } from './admin_onay.js';
 
 let db, sunucu, taban, adminCerez;
 const SIR = `whsec_${randomBytes(24).toString('base64')}`;
@@ -36,6 +37,7 @@ function eposta({ from = 'Ayşe Yılmaz <ayse@ornek.com>', subject = 'Uygulamaya
   return { type: 'email.received', created_at: simdi(), data: { email_id: id, from: postalar.get(id).from, to: ['destek@hizmetcep.com'], subject } };
 }
 async function admin(yol, { yontem = 'GET', govde } = {}) {
+  await degisiklikOnayi(taban, yol, yontem, adminCerez);
   const r = await fetch(taban + yol, { method: yontem, headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1', Cookie: adminCerez }, body: govde ? JSON.stringify(govde) : undefined });
   return { durum: r.status, json: await r.json() };
 }
@@ -54,6 +56,7 @@ before(async () => {
   const a = await fetch(`${taban}/admin/v1/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HC-Admin': '1' }, body: JSON.stringify({ email: 'y@hc.test', password: 'GucluSifre12345' }) });
   adminCerez = a.headers.get('set-cookie').split(';')[0];
   await fetch(`${taban}/admin/v1/auth/mfa`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: adminCerez, 'X-HC-Admin': '1' }, body: JSON.stringify({ code: totpUret(sir) }) });
+  onayKimligi(adminCerez, 'GucluSifre12345', sir);
 });
 after(async () => { gelenEpostaTestGetirici(null); sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
 

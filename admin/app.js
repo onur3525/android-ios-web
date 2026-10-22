@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 import {
   ApiHata, alanlarListesi, api, bildir, bilgiPenceresi, form, gerekceIle, guvenli, h,
-  hareketsizlikKilidi, oturumDusunce, rozet, tablo, tarih,
+  hareketsizlikKilidi, oturumDusunce, rozet, tablo, tarih, SIFRE_ALANI, KOD_ALANI,
 } from './cekirdek.js';
 import { ozetSayfasi } from './ozet.js';
 import { sistemSayfasi } from './sistem.js';
@@ -41,7 +41,7 @@ const MENU = [
 const DURUM_TR = { ACTIVE: 'Aktif', SUSPENDED: 'Askıda', BANNED: 'Banlı' };
 
 // ── Giriş ─────────────────────────────────────────────────────
-/** Giriş yapıldı: 5 dk hareketsizlikte ekran kilitlenir (süre sunucudan). */
+/** Giriş yapıldı: 15 dk hareketsizlikte ekran kilitlenir (süre sunucudan). */
 function oturumBasladi() {
   hareketsizlikKilidi(ben?.idleTimeoutSeconds, async () => {
     ben = null;
@@ -107,11 +107,31 @@ function duzen(sayfa, icerik) {
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
       menu.map(([k, ad]) => h('a', { class: secili === k ? 'secili' : '', href: `#/${k}` }, ad)),
-      h('div', { class: 'cikis' }, h('a', { onclick: cikis }, 'Çıkış'))),
+      h('div', { class: 'cikis' }, h('a', { onclick: sifreDegistir }, 'Şifre değiştir'), h('a', { onclick: cikis }, 'Çıkış'))),
     h('main', { class: 'icerik' },
       // Kullanıcı detayının kendi "‹ Kullanıcılar" bağlantısı var; ikisi üst üste çıkmasın.
       ozetAlti && sayfa !== 'kullanici' ? h('a', { class: 'oz-geri', href: '#/ozet' }, '‹ Özet') : null,
       icerik));
+}
+
+// ── KENDİ ŞİFRESİNİ DEĞİŞTİRME (22 Eki) ──
+// Mevcut şifre + kod (her değişiklikteki doğrulama) ve yeni şifre tek
+// pencerede; değişince diğer cihazlardaki oturumlar kapanır.
+async function sifreDegistir() {
+  const d = await form('Şifre değiştir', [
+    SIFRE_ALANI, KOD_ALANI,
+    { ad: 'yeni', etiket: 'Yeni şifre (en az 12 karakter, harf ve rakam)', tur: 'password', zorunlu: true, ham: true },
+    { ad: 'tekrar', etiket: 'Yeni şifre (tekrar)', tur: 'password', zorunlu: true, ham: true },
+  ], 'Şifreyi değiştir');
+  if (!d) return;
+  if (d.yeni !== d.tekrar) return bildir('Yeni şifreler aynı değil', true);
+  if (d.yeni === d.password) return bildir('Yeni şifre mevcut şifreyle aynı olamaz', true);
+  const tamam = await guvenli(async () => {
+    await api('/auth/reauth', { yontem: 'POST', govde: { password: d.password, code: d.code }, tekrar: false });
+    await api('/auth/password', { yontem: 'POST', govde: { newPassword: d.yeni }, tekrar: false });
+    return true;
+  });
+  if (tamam) bildir('Şifreniz değiştirildi. Diğer cihazlardaki oturumlar kapatıldı.');
 }
 
 async function cikis() {
