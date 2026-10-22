@@ -10,6 +10,7 @@
 //                               release:{minSupportedVersion,latestVersion}}
 // ═══════════════════════════════════════════════════════════════
 import { hata } from '../http.js';
+import { DESTEK_BILGISI } from '../destek_bilgisi.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
@@ -69,9 +70,9 @@ async function yayindakiSurum(db, slug) {
   ).get(slug);
 }
 
-export async function destekBilgisi(db) {
-  const s = await db.prepare('SELECT description, email FROM support_info WHERE id = 1').get();
-  return s ? { description: s.description, email: s.email } : null;
+/** Destek bilgisi koda gömülüdür (destek_bilgisi.js; 22 Eki). */
+export async function destekBilgisi() {
+  return { description: DESTEK_BILGISI.description, email: DESTEK_BILGISI.email };
 }
 
 export function publicRotalar(r, db) {
@@ -88,7 +89,7 @@ export function publicRotalar(r, db) {
 
   r.get('/api/v1/legal/:slug', async (ctx) => {
     if (ctx.params.slug === 'support') {
-      const d = await destekBilgisi(db);
+      const d = await destekBilgisi();
       if (!d) throw hata.bulunamadi('Destek bilgisi bulunamadı');
       return d;
     }

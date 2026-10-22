@@ -12,6 +12,7 @@
 // ⚠ Sağlayıcı anahtarları yalnız sunucuda (ortam/şifreli kasa).
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
+import { DESTEK_BILGISI } from './destek_bilgisi.js';
 import { config, uretim } from './config.js';
 import { simdi } from './db.js';
 import { etkinEntegrasyon } from './entegrasyon.js';
@@ -178,9 +179,7 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
   if (kanal === 'EMAIL') {
     // Alt bilgideki destek adresi: çağıran vermediyse kayıtlı olan.
     if (!degerler.DESTEK) {
-      let d = null;
-      try { d = await db.prepare('SELECT email FROM support_info WHERE id = 1').get(); } catch { /* alt bilgisiz gider */ }
-      if (d?.email) degerler = { ...degerler, DESTEK: d.email };
+      degerler = { ...degerler, DESTEK: DESTEK_BILGISI.email };
     }
     ({ html, text: govde } = epostaIcerigi(sablon, degerler));
   }
@@ -210,8 +209,7 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
 
 /** Kullanıcının DOĞRULANMIŞ kanallarına (SMS ve/veya e-posta) gönderir. */
 export async function kullaniciyaBildir(db, kullanici, sablon, degerler, denetimRef) {
-  const destek = await db.prepare('SELECT email FROM support_info WHERE id = 1').get();
-  const tam = { DESTEK: destek?.email ?? '', ...degerler };
+  const tam = { DESTEK: DESTEK_BILGISI.email, ...degerler };
   const sonuc = [];
   sonuc.push(await gonder(db, {
     kullaniciId: kullanici.id, kanal: 'SMS', sablon, degerler: tam, denetimRef,

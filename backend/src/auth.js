@@ -166,7 +166,6 @@ const YETKI = {
   'regions.write': ['super_admin', 'content'],
   'legal.read': ['super_admin', 'content', 'readonly'],
   'legal.write': ['super_admin', 'content'],
-  'support.write': ['super_admin', 'content'],
   'config.read': ['super_admin', 'operations', 'readonly'],
   'config.write': ['super_admin', 'operations'],
   'announcements.write': ['super_admin', 'content'],

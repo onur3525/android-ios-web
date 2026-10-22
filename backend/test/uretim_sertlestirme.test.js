@@ -200,7 +200,6 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
     ['GET', '/admin/v1/catalog/categories', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
     ['GET', '/admin/v1/regions/cities', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
     ['GET', '/admin/v1/legal', ['super_admin', 'content', 'readonly']],
-    ['GET', '/admin/v1/support', ['super_admin', 'content', 'readonly']],
     ['GET', '/admin/v1/announcements', ['super_admin', 'content']],
     ['GET', '/admin/v1/config/app', ['super_admin', 'operations', 'readonly']],
     ['GET', '/admin/v1/notifications/outbound', ['super_admin', 'moderator', 'operations']],
@@ -225,7 +224,6 @@ test('admin izin matrisi: her rol yalnız menüsündeki işlevlere erişir', asy
   for (const [yontem, yol, govde] of [
     ['PATCH', `/admin/v1/catalog/categories/${kat0}`, { sort: 1 }],
     ['POST', '/admin/v1/regions/cities', { name: 'Deneme İli' }],
-    ['PUT', '/admin/v1/support', { description: 'açıklama metni uzun', email: 'd@e.com' }],
     ['POST', '/admin/v1/announcements', { title: 'Başlık', body: 'Duyuru metni' }],
     ['PUT', '/admin/v1/config/app/web', { maintenanceActive: false }],
     ['POST', '/admin/v1/admins', { email: 'x@y.z', name: 'X', role: 'readonly', password: 'GucluSifre12345' }],

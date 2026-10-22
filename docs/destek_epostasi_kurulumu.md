@@ -24,7 +24,7 @@ Akış: destek@hizmetcep.com → Resend Receiving → `POST /webhooks/resend/inb
 5. **Admin › Entegrasyonlar** › E-posta (resend) satırı › **Gelen e-posta
    anahtarı** › değeri yapıştır. Değer şifreli saklanır, bir daha gösterilmez;
    API anahtarı değiştirilince silinmez.
-6. **Admin › Destek Bilgisi** e-posta adresi `destek@hizmetcep.com` olmalı.
+6. Destek adresi koda gömülüdür (`backend/src/destek_bilgisi.js`: `destek@hizmetcep.com`); panelden değiştirilmez.
    Uygulamada gösterilen adres ve yanıt e-postalarının "Yanıtla" adresi budur.
 7. Deneme: kişisel bir adresten destek@hizmetcep.com'a e-posta gönder;
    birkaç saniye içinde Gelen Talepler'de görünmeli.

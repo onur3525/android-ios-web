@@ -645,26 +645,8 @@ export function adminRotalar(r, db) {
     return surumGorunumu(await db.prepare('SELECT * FROM legal_versions WHERE id = ?').get(v.id));
   });
 
-  // ── DESTEK ───────────────────────────────────────────────
-  r.get('/admin/v1/support', async (ctx) => {
-    yetkiIste(ctx.admin, 'legal.read');
-    return await db.prepare('SELECT description, email, updated_at updatedAt FROM support_info WHERE id = 1').get() || null;
-  });
-
-  r.put('/admin/v1/support', async (ctx) => {
-    yetkiIste(ctx.admin, 'support.write');
-    const aciklama = ad(ctx.body.description, 'Açıklama', 10, 1000);
-    const email = String(ctx.body.email || '').trim();
-    if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw hata.dogrulama('Geçerli bir e-posta giriniz');
-    const once = await db.prepare('SELECT description, email FROM support_info WHERE id = 1').get();
-    await db.tx(async () => {
-      await db.prepare(`INSERT INTO support_info (id, description, email, updated_at) VALUES (1, ?, ?, ?)
-                  ON CONFLICT(id) DO UPDATE SET description = excluded.description, email = excluded.email, updated_at = excluded.updated_at`)
-        .run(aciklama, email, simdi());
-      await yaz(ctx, { islem: 'support.update', hedefTur: 'support', hedefId: '1', once, sonra: { description: aciklama, email } });
-    });
-    return { description: aciklama, email };
-  });
+  // ── DESTEK: bilgi koda gömülüdür (destek_bilgisi.js); admin düzenlemesi
+  // kaldırıldı (22 Eki, kullanıcı kararı).
 
   // ── UYGULAMA AYARLARI ────────────────────────────────────
   const ayarGorunumu = (c, p) => ({
