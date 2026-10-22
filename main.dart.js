@@ -26638,7 +26638,7 @@
             position = A.TextSelectionToolbarTextButton__getPosition(i, t1);
             t1 = A.TextSelectionToolbarTextButton__getStartPadding(position);
             t2 = A.TextSelectionToolbarTextButton__getEndPadding(position);
-            B.JSArray_methods.add$1(buttons, new A.TextSelectionToolbarTextButton(A.Text$(A.AdaptiveTextSelectionToolbar_getButtonLabel(context, buttonItem), _null, _null, _null, _null, _null, _null, _null), buttonItem.onPressed, new A.EdgeInsetsDirectional(t1, 0, t2, 0), B.AlignmentDirectional_m1_0, _null));
+            B.JSArray_methods.add$1(buttons, new A.TextSelectionToolbarTextButton(A.Text$(A.AdaptiveTextSelectionToolbar_getButtonLabel(context, buttonItem), _null, _null, _null, _null, _null, _null, _null, _null), buttonItem.onPressed, new A.EdgeInsetsDirectional(t1, 0, t2, 0), B.AlignmentDirectional_m1_0, _null));
           }
           return buttons;
         case 3:
@@ -28439,7 +28439,7 @@
     },
     DesktopTextSelectionToolbarButton$text(context, onPressed, text) {
       var _null = null;
-      return new A.DesktopTextSelectionToolbarButton(onPressed, A.Text$(text, _null, B.TextOverflow_2, _null, _null, B.TextStyle_mqU.copyWith$1$color(A.Theme_of(context).colorScheme.brightness === B.Brightness_0 ? B.Color_wst : B.Color_PW1), _null, _null), _null);
+      return new A.DesktopTextSelectionToolbarButton(onPressed, A.Text$(text, _null, _null, B.TextOverflow_2, _null, _null, B.TextStyle_mqU.copyWith$1$color(A.Theme_of(context).colorScheme.brightness === B.Brightness_0 ? B.Color_wst : B.Color_PW1), _null, _null), _null);
     },
     DesktopTextSelectionToolbarButton: function DesktopTextSelectionToolbarButton(t0, t1, t2) {
       this.onPressed = t0;
@@ -31001,9 +31001,9 @@
     },
     _NavigationRailThemeData_Object_Diagnosticable: function _NavigationRailThemeData_Object_Diagnosticable() {
     },
-    OutlinedButton$(child, onPressed, style) {
+    OutlinedButton$(child, key, onPressed, style) {
       var _null = null;
-      return new A.OutlinedButton(onPressed, _null, _null, _null, style, _null, _null, false, _null, true, _null, child, _null);
+      return new A.OutlinedButton(onPressed, _null, _null, _null, style, _null, _null, false, _null, true, _null, child, key);
     },
     OutlinedButton_styleFrom(alignment, animationDuration, backgroundColor, disabledBackgroundColor, disabledForegroundColor, disabledMouseCursor, elevation, enableFeedback, enabledMouseCursor, foregroundColor, maximumSize, minimumSize, padding, shadowColor, shape, side, splashFactory, tapTargetSize, textStyle, visualDensity) {
       var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, _null = null;
@@ -56671,8 +56671,8 @@
       context.dependOnInheritedWidgetOfExactType$1$0(type$.DefaultTextHeightBehavior);
       return null;
     },
-    Text$(data, maxLines, overflow, semanticsLabel, softWrap, style, textAlign, textDirection) {
-      return new A.Text(data, null, style, textAlign, textDirection, softWrap, overflow, maxLines, semanticsLabel, null);
+    Text$(data, key, maxLines, overflow, semanticsLabel, softWrap, style, textAlign, textDirection) {
+      return new A.Text(data, null, style, textAlign, textDirection, softWrap, overflow, maxLines, semanticsLabel, key);
     },
     _SelectableTextContainerDelegate__compareScreenOrder(a, b) {
       var rectA, rectB, result,
@@ -59427,7 +59427,7 @@
       var _null = null,
         t1 = A.ScaffoldMessenger_of(context);
       t1.clearSnackBars$0();
-      t1.showSnackBar$1(A.SnackBar$(_null, _null, _null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, _null, A.Text$(msg, _null, _null, _null, _null, _null, B.TextAlign_2, _null), _null, B.Duration_1900000, _null, _null, _null, B.EdgeInsets_16_0_16_68, _null, _null, _null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), _null, _null));
+      t1.showSnackBar$1(A.SnackBar$(_null, _null, _null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, _null, A.Text$(msg, _null, _null, _null, _null, _null, _null, B.TextAlign_2, _null), _null, B.Duration_1900000, _null, _null, _null, B.EdgeInsets_16_0_16_68, _null, _null, _null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), _null, _null));
     },
     SysKind: function SysKind(t0, t1) {
       this.index = t0;
@@ -60115,6 +60115,10 @@
       this.$this = t0;
       this.id = t1;
     },
+    TeklifTalebiController_saglayiciReddet_closure: function TeklifTalebiController_saglayiciReddet_closure(t0, t1) {
+      this.$this = t0;
+      this.id = t1;
+    },
     TeklifTalebiController_sil_closure: function TeklifTalebiController_sil_closure(t0, t1, t2) {
       this.$this = t0;
       this.id = t1;
@@ -60729,8 +60733,8 @@
       this.description = t0;
       this.email = t1;
     },
-    TeklifTalebi$(aciklama, createdAt, durum, fotograflar, hizmet, hizmetAlanId, id, iletisimTercihi, isZamani, kategori, mesajlar, redGerekcesi, saglayiciAdi, saglayiciId, silindiAt, talepNo, teklifAciklamasi, teklifFiyati, teklifTarihi) {
-      return new A.TeklifTalebi(id, talepNo, hizmetAlanId, saglayiciId, saglayiciAdi, kategori, hizmet, aciklama, fotograflar, iletisimTercihi, isZamani, createdAt, durum, redGerekcesi, silindiAt, teklifFiyati, teklifAciklamasi, teklifTarihi, mesajlar == null ? A._setArrayType([], type$.JSArray_TeklifMesaj) : mesajlar);
+    TeklifTalebi$(aciklama, createdAt, durum, fotograflar, hizmet, hizmetAlanId, id, iletisimTercihi, isZamani, kategori, mesajlar, redGerekcesi, saglayiciAdi, saglayiciId, saglayiciReddetti, silindiAt, talepNo, teklifAciklamasi, teklifFiyati, teklifTarihi) {
+      return new A.TeklifTalebi(id, talepNo, hizmetAlanId, saglayiciId, saglayiciAdi, kategori, hizmet, aciklama, fotograflar, iletisimTercihi, isZamani, createdAt, durum, redGerekcesi, silindiAt, saglayiciReddetti, teklifFiyati, teklifAciklamasi, teklifTarihi, mesajlar == null ? A._setArrayType([], type$.JSArray_TeklifMesaj) : mesajlar);
     },
     TeklifTalebiDurumu: function TeklifTalebiDurumu(t0, t1) {
       this.index = t0;
@@ -60753,7 +60757,7 @@
       _.fotografYolu = t4;
       _.durum = t5;
     },
-    TeklifTalebi: function TeklifTalebi(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18) {
+    TeklifTalebi: function TeklifTalebi(t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19) {
       var _ = this;
       _.id = t0;
       _.talepNo = t1;
@@ -60770,10 +60774,11 @@
       _.durum = t12;
       _.redGerekcesi = t13;
       _.silindiAt = t14;
-      _.teklifFiyati = t15;
-      _.teklifAciklamasi = t16;
-      _.teklifTarihi = t17;
-      _.mesajlar = t18;
+      _.saglayiciReddetti = t15;
+      _.teklifFiyati = t16;
+      _.teklifAciklamasi = t17;
+      _.teklifTarihi = t18;
+      _.mesajlar = t19;
     },
     ApiAuthPort: function ApiAuthPort(t0, t1, t2, t3, t4) {
       var _ = this;
@@ -61199,7 +61204,7 @@
       return t1 == null ? new A.DateTime(Date.now(), 0, false) : t1;
     },
     ApiTeklifTalebiPort__talep(j) {
-      var t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20,
+      var t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21,
         _s12_ = "teklifTarihi",
         _s9_ = "silindiAt",
         t1 = type$.Map_String_dynamic;
@@ -61231,12 +61236,13 @@
       t18 = t2.$index(j, _s12_) == null ? null : A.ApiTeklifTalebiPort__zaman(t2.$index(j, _s12_));
       t19 = A._asStringQ(t2.$index(j, "redGerekcesi"));
       t20 = t2.$index(j, _s9_) == null ? null : A.ApiTeklifTalebiPort__zaman(t2.$index(j, _s9_));
+      t21 = J.$eq$(t2.$index(j, "saglayiciReddetti"), true);
       t2 = type$.nullable_List_dynamic._as(t2.$index(j, "mesajlar"));
       t1 = J.whereType$1$0$ax(t2 == null ? B.List_empty4 : t2, t1);
       t2 = t1.$ti;
       t2 = A.MappedIterable_MappedIterable(t1, t2._eval$1("TeklifMesaj(Iterable.E)")._as(new A.ApiTeklifTalebiPort__talep_closure()), t2._eval$1("Iterable.E"), type$.TeklifMesaj);
       t1 = A.List_List$_of(t2, A._instanceType(t2)._eval$1("Iterable.E"));
-      return A.TeklifTalebi$(t10, t12, t15, t13, t9, t5, t3, t11, t14, t8, t1, t19, t7, t6, t20, t4, t17, t16, t18);
+      return A.TeklifTalebi$(t10, t12, t15, t13, t9, t5, t3, t11, t14, t8, t1, t19, t7, t6, t21, t20, t4, t17, t16, t18);
     },
     ApiTeklifTalebiPort: function ApiTeklifTalebiPort(t0, t1, t2, t3) {
       var _ = this;
@@ -61281,6 +61287,10 @@
       _.aciklama = t3;
     },
     ApiTeklifTalebiPort_secToVer_closure: function ApiTeklifTalebiPort_secToVer_closure(t0, t1) {
+      this.$this = t0;
+      this.id = t1;
+    },
+    ApiTeklifTalebiPort_saglayiciReddet_closure: function ApiTeklifTalebiPort_saglayiciReddet_closure(t0, t1) {
       this.$this = t0;
       this.id = t1;
     },
@@ -61581,6 +61591,10 @@
           t1 = B.NotifType_16;
           break $label0$0;
         }
+        if ("TALEP_DECLINED" === s) {
+          t1 = B.NotifType_17;
+          break $label0$0;
+        }
         if ("NEW_OFFER" === s) {
           t1 = B.NotifType_0;
           break $label0$0;
@@ -61621,7 +61635,7 @@
           t1 = B.NotifType_9;
           break $label0$0;
         }
-        t1 = B.NotifType_17;
+        t1 = B.NotifType_18;
         break $label0$0;
       }
       return t1;
@@ -62505,7 +62519,7 @@
       var t1, tur, t2, t3, t4, t5, t6, t7;
       type$.Map_String_dynamic._as(j);
       t1 = J.getInterceptor$asx(j);
-      tur = A._e(B.List_ywP, t1.$index(j, "type"), type$.NotifType);
+      tur = A._e(B.List_s9O, t1.$index(j, "type"), type$.NotifType);
       if (tur == null)
         return null;
       t2 = A._asString(t1.$index(j, "id"));
@@ -62547,7 +62561,7 @@
       return A.Review$(t7, typeof t1 == "string" ? A.DateTime_tryParse(t1) : null, t2, t3, t4, t6, t10, t8, t9, t5, t11);
     },
     talepJson(t) {
-      var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, _i, m, t14;
+      var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, _i, m, t15;
       type$.TeklifTalebi._as(t);
       t1 = t.createdAt.toIso8601String$0();
       t2 = t.isZamani;
@@ -62560,16 +62574,17 @@
       t7 = t.redGerekcesi;
       t8 = t.silindiAt;
       t8 = t8 == null ? null : t8.toIso8601String$0();
-      t9 = A._setArrayType([], type$.JSArray_Map_of_String_and_nullable_String);
-      for (t10 = t.mesajlar, t11 = t10.length, t12 = type$.String, t13 = type$.nullable_String, _i = 0; _i < t10.length; t10.length === t11 || (0, A.throwConcurrentModificationError)(t10), ++_i) {
-        m = t10[_i];
-        t14 = m.zaman.toIso8601String$0();
-        t9.push(A.LinkedHashMap_LinkedHashMap$_literal(["id", m.id, "gonderenId", m.gonderenId, "zaman", t14, "metin", m.metin, "fotografYolu", m.fotografYolu, "durum", m.durum._name], t12, t13));
+      t9 = t.saglayiciReddetti;
+      t10 = A._setArrayType([], type$.JSArray_Map_of_String_and_nullable_String);
+      for (t11 = t.mesajlar, t12 = t11.length, t13 = type$.String, t14 = type$.nullable_String, _i = 0; _i < t11.length; t11.length === t12 || (0, A.throwConcurrentModificationError)(t11), ++_i) {
+        m = t11[_i];
+        t15 = m.zaman.toIso8601String$0();
+        t10.push(A.LinkedHashMap_LinkedHashMap$_literal(["id", m.id, "gonderenId", m.gonderenId, "zaman", t15, "metin", m.metin, "fotografYolu", m.fotografYolu, "durum", m.durum._name], t13, t14));
       }
-      return A.LinkedHashMap_LinkedHashMap$_literal(["id", t.id, "talepNo", t.talepNo, "hizmetAlanId", t.hizmetAlanId, "saglayiciId", t.saglayiciId, "saglayiciAdi", t.saglayiciAdi, "kategori", t.kategori, "hizmet", t.hizmet, "aciklama", t.aciklama, "iletisimTercihi", t.iletisimTercihi._name, "createdAt", t1, "fotograflar", t.fotograflar, "isZamani", t2, "durum", t3._name, "teklifFiyati", t4, "teklifAciklamasi", t5, "teklifTarihi", t6, "redGerekcesi", t7, "silindiAt", t8, "mesajlar", t9], t12, type$.dynamic);
+      return A.LinkedHashMap_LinkedHashMap$_literal(["id", t.id, "talepNo", t.talepNo, "hizmetAlanId", t.hizmetAlanId, "saglayiciId", t.saglayiciId, "saglayiciAdi", t.saglayiciAdi, "kategori", t.kategori, "hizmet", t.hizmet, "aciklama", t.aciklama, "iletisimTercihi", t.iletisimTercihi._name, "createdAt", t1, "fotograflar", t.fotograflar, "isZamani", t2, "durum", t3._name, "teklifFiyati", t4, "teklifAciklamasi", t5, "teklifTarihi", t6, "redGerekcesi", t7, "silindiAt", t8, "saglayiciReddetti", t9, "mesajlar", t10], t13, type$.dynamic);
     },
     talepCoz(j) {
-      var t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, _null = null,
+      var t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31, _null = null,
         t1 = type$.Map_String_dynamic;
       t1._as(j);
       t2 = J.getInterceptor$asx(j);
@@ -62607,29 +62622,30 @@
       t20 = A._asStringQ(t2.$index(j, "redGerekcesi"));
       t21 = t2.$index(j, "silindiAt");
       t21 = typeof t21 == "string" ? A.DateTime_tryParse(t21) : _null;
-      t22 = A._setArrayType([], type$.JSArray_TeklifMesaj);
+      t22 = J.$eq$(t2.$index(j, "saglayiciReddetti"), true);
+      t23 = A._setArrayType([], type$.JSArray_TeklifMesaj);
       t2 = t13._as(t2.$index(j, "mesajlar"));
       t1 = J.whereType$1$0$ax(t2 == null ? B.List_empty4 : t2, t1);
       t2 = J.get$iterator$ax(t1._source);
       t1 = t1.$ti;
       t13 = new A.WhereTypeIterator(t2, t1._eval$1("WhereTypeIterator<1>"));
-      t23 = type$.TeklifMesajDurumu;
+      t24 = type$.TeklifMesajDurumu;
       t1 = t1._precomputed1;
       while (t13.moveNext$0()) {
-        t24 = t1._as(t2.get$current(t2));
-        t25 = J.getInterceptor$asx(t24);
-        t26 = A._asString(t25.$index(t24, "id"));
-        t27 = A._asString(t25.$index(t24, "gonderenId"));
-        t28 = t25.$index(t24, "zaman");
-        t28 = typeof t28 == "string" ? A.DateTime_tryParse(t28) : _null;
-        if (t28 == null)
-          t28 = new A.DateTime(Date.now(), 0, false);
-        t29 = A._asStringQ(t25.$index(t24, "metin"));
-        t30 = A._asStringQ(t25.$index(t24, "fotografYolu"));
-        t24 = A._e(B.List_Mti, t25.$index(t24, "durum"), t23);
-        t22.push(new A.TeklifMesaj(t26, t27, t28, t29, t30, t24 == null ? B.TeklifMesajDurumu_0 : t24));
+        t25 = t1._as(t2.get$current(t2));
+        t26 = J.getInterceptor$asx(t25);
+        t27 = A._asString(t26.$index(t25, "id"));
+        t28 = A._asString(t26.$index(t25, "gonderenId"));
+        t29 = t26.$index(t25, "zaman");
+        t29 = typeof t29 == "string" ? A.DateTime_tryParse(t29) : _null;
+        if (t29 == null)
+          t29 = new A.DateTime(Date.now(), 0, false);
+        t30 = A._asStringQ(t26.$index(t25, "metin"));
+        t31 = A._asStringQ(t26.$index(t25, "fotografYolu"));
+        t25 = A._e(B.List_Mti, t26.$index(t25, "durum"), t24);
+        t23.push(new A.TeklifMesaj(t27, t28, t29, t30, t31, t25 == null ? B.TeklifMesajDurumu_0 : t25));
       }
-      return A.TeklifTalebi$(t10, t12, t16, t14, t9, t5, t3, t11, t15, t8, t22, t20, t7, t6, t21, t4, t18, t17, t19);
+      return A.TeklifTalebi$(t10, t12, t16, t14, t9, t5, t3, t11, t15, t8, t23, t20, t7, t6, t22, t21, t4, t18, t17, t19);
     },
     ilanCoz_closure: function ilanCoz_closure() {
     },
@@ -62869,6 +62885,9 @@
         case 15:
           t1 = B.Role_0;
           break;
+        case 17:
+          t1 = B.Role_0;
+          break;
         case 1:
           t1 = B.Role_1;
           break;
@@ -62904,7 +62923,7 @@
           break;
         case 8:
           break;
-        case 17:
+        case 18:
           break;
       }
       return t1;
@@ -65714,7 +65733,7 @@
     },
     _ayrac() {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null);
     },
     _goreliZaman(t) {
       var t1 = new A.DateTime(Date.now(), 0, false).difference$1(t).inMicroseconds,
@@ -66163,7 +66182,7 @@
       _._my_reviews_screen$_scroll = t0;
       _._my_reviews_screen$_items = t1;
       _._average = null;
-      _._my_reviews_screen$_count = 0;
+      _._tamamlananIs = _._my_reviews_screen$_count = 0;
       _._dist = t2;
       _._my_reviews_screen$_loading = true;
       _._hasMore = _._loadingMore = false;
@@ -66174,9 +66193,10 @@
     _MyReviewsScreenState__load_closure: function _MyReviewsScreenState__load_closure(t0) {
       this.$this = t0;
     },
-    _MyReviewsScreenState__load_closure0: function _MyReviewsScreenState__load_closure0(t0, t1) {
+    _MyReviewsScreenState__load_closure0: function _MyReviewsScreenState__load_closure0(t0, t1, t2) {
       this.$this = t0;
       this.list = t1;
+      this.me = t2;
     },
     _MyReviewsScreenState__load__closure: function _MyReviewsScreenState__load__closure() {
     },
@@ -66341,6 +66361,7 @@
         case 11:
         case 12:
         case 13:
+        case 17:
         case 14:
         case 15:
           if (gecerli) {
@@ -66352,7 +66373,7 @@
           break;
         case 2:
         case 5:
-        case 17:
+        case 18:
           break;
       }
       return false;
@@ -66411,7 +66432,7 @@
     },
     _prBaslik(metin) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_1_12_1_7, A.Align$(B.Alignment_m1_0, A.Text$(metin, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), _null, _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_1_12_1_7, A.Align$(B.Alignment_m1_0, A.Text$(metin, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), _null, _null, _null), _null);
     },
     _prGoreliZaman(t) {
       var t1 = new A.DateTime(Date.now(), 0, false).difference$1(t).inMicroseconds,
@@ -67925,6 +67946,14 @@
       this.$this = t0;
       this.r = t1;
     },
+    _TeklifTalebiDetayScreenState__saglayiciReddet_closure: function _TeklifTalebiDetayScreenState__saglayiciReddet_closure() {
+    },
+    _TeklifTalebiDetayScreenState__saglayiciReddet__closure: function _TeklifTalebiDetayScreenState__saglayiciReddet__closure(t0) {
+      this.c = t0;
+    },
+    _TeklifTalebiDetayScreenState__saglayiciReddet__closure0: function _TeklifTalebiDetayScreenState__saglayiciReddet__closure0(t0) {
+      this.c = t0;
+    },
     _TeklifTalebiDetayScreenState_build_closure: function _TeklifTalebiDetayScreenState_build_closure() {
     },
     _TeklifTalebiDetayScreenState_build_closure0: function _TeklifTalebiDetayScreenState_build_closure0() {
@@ -67964,6 +67993,10 @@
       this.t = t1;
     },
     _TeklifTalebiDetayScreenState_build_closure9: function _TeklifTalebiDetayScreenState_build_closure9(t0, t1) {
+      this.$this = t0;
+      this.t = t1;
+    },
+    _TeklifTalebiDetayScreenState_build_closure10: function _TeklifTalebiDetayScreenState_build_closure10(t0, t1) {
       this.context = t0;
       this.t = t1;
     },
@@ -68016,7 +68049,7 @@
     _KarsiTarafBilgisi_build___closure: function _KarsiTarafBilgisi_build___closure(t0) {
       this.$this = t0;
     },
-    _SaglayiciAksiyonlari: function _SaglayiciAksiyonlari(t0, t1, t2, t3, t4, t5, t6, t7) {
+    _SaglayiciAksiyonlari: function _SaglayiciAksiyonlari(t0, t1, t2, t3, t4, t5, t6, t7, t8) {
       var _ = this;
       _.talep = t0;
       _.fiyatController = t1;
@@ -68025,7 +68058,8 @@
       _.gonderimOnayi = t4;
       _.onTeklifVer = t5;
       _.onTamamla = t6;
-      _.key = t7;
+      _.onReddet = t7;
+      _.key = t8;
     },
     _HizmetAlanAksiyonlari: function _HizmetAlanAksiyonlari(t0, t1, t2, t3) {
       var _ = this;
@@ -68319,7 +68353,7 @@
       var _null = null,
         t1 = A.BorderRadius$circular(12),
         t2 = type$.JSArray_Widget;
-      return new A.RefTap(new A.Padding(B.EdgeInsets_4_12_4_12, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(ikon, 20, ikonRengi, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, rozetRengi, _null, _null, B.BoxShape_1), _null, 38, _null, _null, _null, _null, _null, 38), B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), B.SizedBox_null_2_null_null, A.Text$(aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.RefSvg_eB7], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), onTap, t1, _null, _null);
+      return new A.RefTap(new A.Padding(B.EdgeInsets_4_12_4_12, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(ikon, 20, ikonRengi, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, rozetRengi, _null, _null, B.BoxShape_1), _null, 38, _null, _null, _null, _null, _null, 38), B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), B.SizedBox_null_2_null_null, A.Text$(aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.RefSvg_eB7], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), onTap, t1, _null, _null);
     },
     fotografKaynagiSec_closure: function fotografKaynagiSec_closure(t0) {
       this.context = t0;
@@ -69065,7 +69099,7 @@
               t2 = A.BorderRadius$circular(12);
               t3 = A.BoxDecoration$(null, A.BorderRadius$circular(12), null, B.Color_gUK, null, null, B.BoxShape_0);
               $async$goto = 4;
-              return A._asyncAwait(A.RefBottomSheet_goster(c, new A.RefSheetBody("assets/svg/ic_phead.svg", B.Color_gUK, "Size nas\u0131l yard\u0131mc\u0131 olabiliriz?", t1, new A.RefTap(A.Container$(null, A.Row$(A._setArrayType([B.RefSvg_dpl, B.SizedBox_9_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(bilgi.email, 1, B.TextOverflow_2, null, null, A.refText(B.Color_Z7i, null, null, 0, 14.5, B.FontWeight_700), null, null), null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, null), B.Clip_0, null, null, t3, null, null, null, null, B.EdgeInsets_14_13_14_13, null, null, 1 / 0), new A.destekMerkeziPaneliniAc_closure(c, bilgi), t2, null, null), null), "Destek Merkezi", type$.void), $async$destekMerkeziPaneliniAc);
+              return A._asyncAwait(A.RefBottomSheet_goster(c, new A.RefSheetBody("assets/svg/ic_phead.svg", B.Color_gUK, "Size nas\u0131l yard\u0131mc\u0131 olabiliriz?", t1, new A.RefTap(A.Container$(null, A.Row$(A._setArrayType([B.RefSvg_dpl, B.SizedBox_9_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(bilgi.email, null, 1, B.TextOverflow_2, null, null, A.refText(B.Color_Z7i, null, null, 0, 14.5, B.FontWeight_700), null, null), null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, null), B.Clip_0, null, null, t3, null, null, null, null, B.EdgeInsets_14_13_14_13, null, null, 1 / 0), new A.destekMerkeziPaneliniAc_closure(c, bilgi), t2, null, null), null), "Destek Merkezi", type$.void), $async$destekMerkeziPaneliniAc);
             case 4:
               // returning from await.
             case 1:
@@ -69426,7 +69460,7 @@
         t1 = boyut == null,
         gri = A.refText(B.Color_Ldf, _null, _null, 0, t1 ? 14.5 : boyut, B.FontWeight_500);
       if (!zorunlu)
-        return A.Text$(metin, 1, B.TextOverflow_2, _null, _null, gri, _null, _null);
+        return A.Text$(metin, _null, 1, B.TextOverflow_2, _null, _null, gri, _null, _null);
       return A.RichText$(_null, _null, 1, B.TextOverflow_2, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, t1 ? 14.5 : boyut, B.FontWeight_700), "* "), A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, _null, metin)], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, gri, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0);
     },
     RefFormField$(controller, enabled, etiket, etiketGoster, focusNode, hatali, hint, iconAsset, inputFormatters, key, keyboardType, obscureText, onChanged, onEditingComplete, onFieldSubmitted, suffix, textCapitalization, textInputAction, validator, yerTutucu) {
@@ -85481,7 +85515,7 @@
       var t1 = this.resolve;
       t1.call(t1, value);
     },
-    $signature: 220
+    $signature: 222
   };
   A.CustomFutureOfJSAnyToJSPromise_get_toPromise__closure0.prototype = {
     call$2(error, stackTrace) {
@@ -85654,7 +85688,7 @@
     call$1(handled) {
       this._box_0.result = handled;
     },
-    $signature: 10
+    $signature: 11
   };
   A.FlutterHtmlKeyboardEvent.prototype = {
     get$shiftKey(_) {
@@ -85959,7 +85993,7 @@
       this._box_0.sentAnyEvents = true;
       return this.$this.performDispatchKeyData.call$1(data);
     },
-    $signature: 203
+    $signature: 204
   };
   A.Layer.prototype = {
     get$needsPainting() {
@@ -86927,7 +86961,7 @@
       if (value != null)
         this.cleanup.call$1(value);
     },
-    $signature: 220
+    $signature: 222
   };
   A.UniqueRef.prototype = {
     UniqueRef$4$onDispose(owner, nativeObject, _debugOwnerLabel, onDispose, $T) {
@@ -100136,7 +100170,7 @@
       t2 = t2.sourceRect;
       return J.asUint8List$0$x(B.NativeUint8ClampedList_methods.get$buffer(type$.NativeUint8ClampedList._as(A._asJSObject(t3.getImageData(0, 0, t1, B.JSNumber_methods.ceil$0(t2.bottom - t2.top))).data)));
     },
-    $signature: 235
+    $signature: 237
   };
   A.WebParagraphStyle.prototype = {
     $eq(_, other) {
@@ -101888,7 +101922,7 @@
         return dim + "=" + B.JSNumber_methods.toStringAsFixed$1(min, 1);
       return B.JSNumber_methods.toStringAsFixed$1(min, 1) + "<=" + dim + "<=" + B.JSNumber_methods.toStringAsFixed$1(max, 1);
     },
-    $signature: 222
+    $signature: 226
   };
   A._DefaultTextEditingStrategy_Object_CompositionAwareMixin.prototype = {};
   A.__PointerAdapter__BaseAdapter__WheelEventListenerMixin.prototype = {};
@@ -105331,7 +105365,7 @@
     call$1(o) {
       return this.getTag(o);
     },
-    $signature: 209
+    $signature: 210
   };
   A.initHooks_closure0.prototype = {
     call$2(o, tag) {
@@ -114446,14 +114480,14 @@
     call$4$actorId$stars$talepId$text($0, $1, $2, $3) {
       return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$4$actorId$stars$talepId$text", 0, [$0, $1, $2, $3], ["actorId", "stars", "talepId", "text"], 0));
     },
+    call$5$constraints$delegate$parent$resizable$title($0, $1, $2, $3, $4) {
+      return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$5$constraints$delegate$parent$resizable$title", 0, [$0, $1, $2, $3, $4], ["constraints", "delegate", "parent", "resizable", "title"], 0));
+    },
     call$3$aciklama$fiyat($0, $1, $2) {
       return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$3$aciklama$fiyat", 0, [$0, $1, $2], ["aciklama", "fiyat"], 0));
     },
     call$2$gerekce($0, $1) {
       return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$2$gerekce", 0, [$0, $1], ["gerekce"], 0));
-    },
-    call$5$constraints$delegate$parent$resizable$title($0, $1, $2, $3, $4) {
-      return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$5$constraints$delegate$parent$resizable$title", 0, [$0, $1, $2, $3, $4], ["constraints", "delegate", "parent", "resizable", "title"], 0));
     },
     call$4$amount$listingId$note$providerId($0, $1, $2, $3) {
       return this.noSuchMethod$1(this, A.createInvocationMirror("call", "call$4$amount$listingId$note$providerId", 0, [$0, $1, $2, $3], ["amount", "listingId", "note", "providerId"], 0));
@@ -128863,7 +128897,7 @@
     build$1(context) {
       var _this = this, _null = null,
         t1 = _this._widget.text,
-        child = A.Text$(t1, _null, B.TextOverflow_2, _null, _null, B.TextStyle_mqU.copyWith$1$color(_this._isHovered ? A.CupertinoTheme_of(context).get$primaryContrastingColor() : B.CupertinoDynamicColor_ml5.resolveFrom$1(context)), _null, _null);
+        child = A.Text$(t1, _null, _null, B.TextOverflow_2, _null, _null, B.TextStyle_mqU.copyWith$1$color(_this._isHovered ? A.CupertinoTheme_of(context).get$primaryContrastingColor() : B.CupertinoDynamicColor_ml5.resolveFrom$1(context)), _null, _null);
       t1 = _this._isHovered ? A.CupertinoTheme_of(context).get$primaryColor() : _null;
       return A.SizedBox$(A.MouseRegion$(A.CupertinoButton$(B.Alignment_m1_0, B.BorderRadius_nnp, child, t1, B.CupertinoDynamicColor_zvp, 0, _this._widget.onPressed, B.EdgeInsets_8_2_8_5, 0.7), B.C__DeferringMouseCursor, _null, _this.get$_onEnter(), _this.get$_onExit(), _null), _null, 1 / 0);
     }
@@ -130713,7 +130747,7 @@
         t1 = A.CupertinoTextSelectionToolbarButton_getButtonLabel(context, t1);
       } else
         t1 = t2;
-      textWidget = A.Text$(t1, _null, B.TextOverflow_2, _null, _null, B.TextStyle_IOa.copyWith$1$color(this._widget.onPressed != null ? B.CupertinoDynamicColor_ml5.resolveFrom$1(context) : B.CupertinoDynamicColor_yWg), _null, _null);
+      textWidget = A.Text$(t1, _null, _null, B.TextOverflow_2, _null, _null, B.TextStyle_IOa.copyWith$1$color(this._widget.onPressed != null ? B.CupertinoDynamicColor_ml5.resolveFrom$1(context) : B.CupertinoDynamicColor_yWg), _null, _null);
       t1 = this._widget.buttonItem;
       switch (t1 == null ? _null : t1.type) {
         case B.ContextMenuButtonType_0:
@@ -134839,7 +134873,7 @@
       type$.HitTestEntry_HitTestTarget._as(entry);
       return false;
     },
-    $signature: 208
+    $signature: 209
   };
   A.GestureBinding__handlePointerEventImmediately_closure.prototype = {
     call$0() {
@@ -138687,7 +138721,7 @@
     call$2(a, b) {
       return A._asDouble(a) + A._asDouble(b);
     },
-    $signature: 204
+    $signature: 205
   };
   A.ScaleGestureRecognizer__reconfigure_closure1.prototype = {
     call$0() {
@@ -138774,7 +138808,7 @@
     call$2(a, b) {
       return A._asDouble(a) + A._asDouble(b);
     },
-    $signature: 204
+    $signature: 205
   };
   A._ScaleEndDetails_Object_Diagnosticable.prototype = {};
   A._ScaleStartDetails_Object_Diagnosticable.prototype = {};
@@ -147230,7 +147264,7 @@
       t4.toString;
       t5 = t3.helperStyle;
       t6 = t3.textAlign;
-      t6 = A.Text$(t4, t3.helperMaxLines, B.TextOverflow_2, _null, _null, t5, t6, _null);
+      t6 = A.Text$(t4, _null, t3.helperMaxLines, B.TextOverflow_2, _null, _null, t5, t6, _null);
       return A.Semantics$(_null, new A.FadeTransition(new A._AnimatedEvaluation(t2, new A.Tween(1, 0, t1), t1._eval$1("_AnimatedEvaluation<Animatable.T>")), false, t6, _null), true, _null, _null, false, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, B.SemanticsValidationResult_0, _null);
     },
     _buildError$0() {
@@ -147301,7 +147335,7 @@
         t2 = t2._widget;
         t6 = t2.errorStyle;
         t7 = t2.textAlign;
-        t7 = A.Text$(t5, t2.errorMaxLines, B.TextOverflow_2, _null, _null, t6, t7, _null);
+        t7 = A.Text$(t5, _null, t2.errorMaxLines, B.TextOverflow_2, _null, _null, t6, t7, _null);
         t2 = t7;
       } else
         t2 = t5;
@@ -148663,7 +148697,7 @@
           t6 = hintStyle.overflow;
           t6 = _this.get$decoration().hintMaxLines == null ? _null : B.TextOverflow_2;
           t7 = _this._widget.textAlign;
-          hintWidget = A.Text$(hintText, _this.get$decoration().hintMaxLines, t6, _null, _null, hintStyle, t7, t3.hintTextDirection);
+          hintWidget = A.Text$(hintText, _null, _this.get$decoration().hintMaxLines, t6, _null, _null, hintStyle, t7, t3.hintTextDirection);
         }
         showHint = _this._widget.isEmpty && !_this.get$_hasInlineLabel();
         t3 = showHint ? 1 : 0;
@@ -148715,7 +148749,7 @@
         _this.get$decoration();
         t12 = _this.get$decoration().labelText;
         t12.toString;
-        t12 = A.Text$(t12, _null, B.TextOverflow_2, _null, _null, _null, _this._widget.textAlign, _null);
+        t12 = A.Text$(t12, _null, _null, B.TextOverflow_2, _null, _null, _null, _this._widget.textAlign, _null);
         label = new A.MatrixTransition(new A._InputDecoratorState_build_closure(), B.Alignment_0_0, _null, A.AnimatedOpacity$(A.AnimatedDefaultTextStyle$(t12, B.Cubic_Dkk, B.Duration_167000, t4), B.Cubic_Dkk, B.Duration_167000, t11), t10, _null);
       } else
         label = _null;
@@ -148771,7 +148805,7 @@
         t18 = _this.get$decoration().counterText;
         t18.toString;
         t2 = _this._getHelperStyle$2(themeData, defaults).merge$1(A.WidgetStateProperty_resolveAs(_this.get$decoration().counterStyle, _this.get$widgetState(), t2));
-        counter = A.Semantics$(_null, A.Text$(t18, _null, B.TextOverflow_2, _this.get$decoration().semanticCounterText, _null, t2, _null, _null), true, _null, _null, false, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, t17, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, B.SemanticsValidationResult_0, _null);
+        counter = A.Semantics$(_null, A.Text$(t18, _null, _null, B.TextOverflow_2, _this.get$decoration().semanticCounterText, _null, t2, _null, _null), true, _null, _null, false, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, t17, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, B.SemanticsValidationResult_0, _null);
       } else
         counter = _null;
       textDirection = A.Directionality_of(context);
@@ -154731,7 +154765,7 @@
     call$1(entry) {
       return type$.HitTestEntry_HitTestTarget._as(entry).target.$eq(0, this.renderObject);
     },
-    $signature: 208
+    $signature: 209
   };
   A._ScaffoldState_State_TickerProviderStateMixin_RestorationMixin_dispose_closure.prototype = {
     call$2(property, listener) {
@@ -160900,21 +160934,21 @@
       var t1 = this.$this;
       return t1.get$canvas(t1).clipPath$2$doAntiAlias(0, this.path, doAntiAlias);
     },
-    $signature: 10
+    $signature: 11
   };
   A.ClipContext_clipRRectAndPaint_closure.prototype = {
     call$1(doAntiAlias) {
       var t1 = this.$this;
       return t1.get$canvas(t1).clipRRect$2$doAntiAlias(this.rrect, doAntiAlias);
     },
-    $signature: 10
+    $signature: 11
   };
   A.ClipContext_clipRectAndPaint_closure.prototype = {
     call$1(doAntiAlias) {
       var t1 = this.$this;
       return t1.get$canvas(t1).clipRect$2$doAntiAlias(this.rect, doAntiAlias);
     },
-    $signature: 10
+    $signature: 11
   };
   A.HSVColor.prototype = {
     toColor$0() {
@@ -167061,7 +167095,7 @@
         return dim + "=" + B.JSNumber_methods.toStringAsFixed$1(min, 1);
       return B.JSNumber_methods.toStringAsFixed$1(min, 1) + "<=" + dim + "<=" + B.JSNumber_methods.toStringAsFixed$1(max, 1);
     },
-    $signature: 222
+    $signature: 226
   };
   A.BoxHitTestResult.prototype = {
     addWithPaintTransform$3$hitTest$position$transform(hitTest, position, transform) {
@@ -201936,7 +201970,7 @@
     call$1(timings) {
       J.forEach$1$ax(type$.List_FrameTiming._as(timings), this.$this.get$_profileFramePostEvent());
     },
-    $signature: 196
+    $signature: 211
   };
   A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initServiceExtensions_closure.prototype = {
     call$0() {
@@ -203211,7 +203245,7 @@
       t1.firstFrameCallback = null;
       this.$this.WidgetsBinding__firstFrameCompleter.complete$0(0);
     },
-    $signature: 196
+    $signature: 211
   };
   A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure1.prototype = {
     call$0() {
@@ -208611,7 +208645,7 @@
     call$1(entry) {
       return type$.HitTestEntry_HitTestTarget._as(entry).target.$eq(0, this.$this.get$renderEditable());
     },
-    $signature: 208
+    $signature: 209
   };
   A._ScribblePlaceholder.prototype = {
     build$3$dimensions$textScaler(builder, dimensions, textScaler) {
@@ -211876,7 +211910,7 @@
         t1.setState$1(new A.FormFieldState_build__closure(t1));
       }
     },
-    $signature: 10
+    $signature: 11
   };
   A.FormFieldState_build__closure.prototype = {
     call$0() {
@@ -217010,7 +217044,7 @@
         t2 = _this._widget.errorBuilder;
         if (t2 != null)
           return t2.call$3(context, t1, _this._lastStack);
-        return A.Stack$(B.Alignment_0_0, A._setArrayType([B.Positioned_bkT, new A.Padding(B.EdgeInsets_4_4_4_4, A.FittedBox$(B.Alignment_0_0, A.Text$(A.S(t1), _null, _null, _null, _null, B.TextStyle_a5a, B.TextAlign_2, B.TextDirection_1), B.Clip_0, B.BoxFit_1), _null)], type$.JSArray_Widget), B.Clip_1, B.StackFit_0, _null);
+        return A.Stack$(B.Alignment_0_0, A._setArrayType([B.Positioned_bkT, new A.Padding(B.EdgeInsets_4_4_4_4, A.FittedBox$(B.Alignment_0_0, A.Text$(A.S(t1), _null, _null, _null, _null, _null, B.TextStyle_a5a, B.TextAlign_2, B.TextDirection_1), B.Clip_0, B.BoxFit_1), _null)], type$.JSArray_Widget), B.Clip_1, B.StackFit_0, _null);
       }
       result = A._Cell$named("result");
       _0_0 = _this._imageInfo;
@@ -219062,7 +219096,7 @@
     call$1(value) {
       return this._box_0.completedValue = value;
     },
-    $signature: 209
+    $signature: 210
   };
   A._loadAll_closure0.prototype = {
     call$1(p) {
@@ -244222,7 +244256,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 202
+    $signature: 203
   };
   A.WidgetInspectorService_initServiceExtensions_closure8.prototype = {
     call$1(args) {
@@ -244251,7 +244285,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 202
+    $signature: 203
   };
   A.WidgetInspectorService_initServiceExtensions_closure9.prototype = {
     call$1(args) {
@@ -244280,7 +244314,7 @@
       });
       return A._asyncStartSync($async$call$1, $async$completer);
     },
-    $signature: 202
+    $signature: 203
   };
   A.WidgetInspectorService_initServiceExtensions_closure10.prototype = {
     call$1(parameters) {
@@ -246908,21 +246942,21 @@
       A._asDouble(b);
       return a < b ? a : b;
     },
-    $signature: 204
+    $signature: 205
   };
   A.yerelGorsel_closure.prototype = {
     call$3(context, _, __) {
       var t1 = this.hataYedegi;
       return (t1 == null ? A.gorsel_yedegi__varsayilanGorselYedegi$closure() : t1).call$1(context);
     },
-    $signature: 205
+    $signature: 206
   };
   A.yerelGorsel_closure0.prototype = {
     call$3(context, _, __) {
       var t1 = this.hataYedegi;
       return (t1 == null ? A.gorsel_yedegi__varsayilanGorselYedegi$closure() : t1).call$1(context);
     },
-    $signature: 205
+    $signature: 206
   };
   A.pushBaslat_closure.prototype = {
     call$2(tur, veri) {
@@ -247010,13 +247044,13 @@
       t3 = A.Container$(_null, A.Icon$(A._sysIcon(t1), c, _null, 32), B.Clip_0, _null, _null, t3, _null, 72, _null, _null, _null, _null, _null, 72);
       t1 = _this.title;
       t4 = type$.JSArray_Widget;
-      t1 = A._setArrayType([t3, B.SizedBox_null_14_null_null, A.Text$(t1 == null ? t2.title : t1, _null, _null, _null, _null, B.TextStyle_AYI, B.TextAlign_2, _null)], t4);
+      t1 = A._setArrayType([t3, B.SizedBox_null_14_null_null, A.Text$(t1 == null ? t2.title : t1, _null, _null, _null, _null, _null, B.TextStyle_AYI, B.TextAlign_2, _null)], t4);
       t3 = _this.desc;
       t5 = t3 == null;
       if ((t5 ? t2.desc : t3).length !== 0)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_7_null_null, A.ConstrainedBox$(A.Text$(t5 ? t2.desc : t3, _null, _null, _null, _null, B.TextStyle_szJ, B.TextAlign_2, _null), B.BoxConstraints_EUc)], t4));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_7_null_null, A.ConstrainedBox$(A.Text$(t5 ? t2.desc : t3, _null, _null, _null, _null, _null, B.TextStyle_szJ, B.TextAlign_2, _null), B.BoxConstraints_EUc)], t4));
       if (act.length !== 0 && _this.onAction != null)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_20_null_null, A.ConstrainedBox$(A.ElevatedButton$(A.Text$(act, _null, _null, _null, _null, _null, _null, _null), _this.onAction, _null), B.BoxConstraints_EUc)], t4));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_20_null_null, A.ConstrainedBox$(A.ElevatedButton$(A.Text$(act, _null, _null, _null, _null, _null, _null, _null, _null), _this.onAction, _null), B.BoxConstraints_EUc)], t4));
       return new A.Padding(B.EdgeInsets_20_26_20_26, A.Column$(t1, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
     }
   };
@@ -247030,7 +247064,7 @@
       var _null = null,
         t1 = this.busy,
         t2 = t1 ? _null : this.onPressed;
-      return A.ElevatedButton$(t1 ? B.SizedBox_CVL : A.Text$(this.label, _null, _null, _null, _null, _null, _null, _null), t2, _null);
+      return A.ElevatedButton$(t1 ? B.SizedBox_CVL : A.Text$(this.label, _null, _null, _null, _null, _null, _null, _null, _null), t2, _null);
     }
   };
   A.TelefonBicimlendirici.prototype = {
@@ -247407,13 +247441,13 @@
     call$0() {
       return this.$this._auth.girisEposta$2(this.email, this.pass);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_girisTelefonSifre_closure.prototype = {
     call$0() {
       return this.$this._auth.girisTelefonSifre$2(this.phone, this.pass);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_register_closure.prototype = {
     call$0() {
@@ -247444,51 +247478,51 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_telefonDegisimiDogrula_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._auth.telefonDegisimiDogrula$3$mevcutSifre(_this.challengeId, _this.kod, _this.mevcutSifre);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_kurtarmaSifreBelirle_closure.prototype = {
     call$0() {
       return this.$this._auth.kurtarmaSifreBelirle$2(this.yetki, this.yeniSifre);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_switchRole_closure.prototype = {
     call$0() {
       return this.$this._auth.switchRole$1(this.role);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_addRole_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._auth.addRole$5$categories$serviceDistricts$sifre$telefonKaniti(_this.role, _this.categories, _this.serviceDistricts, _this.sifre, _this.telefonKaniti);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_changePassword_closure.prototype = {
     call$0() {
       return this.$this._auth.changePassword$2(this.current, this.next);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_verifyPassword_closure.prototype = {
     call$0() {
       return this.$this._auth.verifyPassword$1(this.password);
     },
-    $signature: 11
+    $signature: 10
   };
   A.AuthController_sifreSifirlamaIste_closure.prototype = {
     call$0() {
       return this.$this._auth.sifreSifirlamaIste$1(this.email);
     },
-    $signature: 11
+    $signature: 10
   };
   A.BaseController.prototype = {
     BaseController$1(_deps) {
@@ -247759,7 +247793,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ChatController_sendDelivered_closure.prototype = {
     call$0() {
@@ -247790,7 +247824,7 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ContactController.prototype = {
     openShared$2$actorId(offerId, actorId) {
@@ -247839,7 +247873,7 @@
     call$0() {
       return this.$this._contacts.openShared$2$actorId(this.offerId, this.actorId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ContactController_openShared_closure0.prototype = {
     call$0() {
@@ -248006,19 +248040,19 @@
     call$0() {
       return this.$this._listings.loadMine$1(this.ownerId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_loadAvailable_closure.prototype = {
     call$0() {
       return this.$this._listings.loadAvailable$2$category$district(this.category, this.district);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_loadOne_closure.prototype = {
     call$0() {
       return this.$this._listings.loadOne$1(this.id);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_publish_closure.prototype = {
     call$0() {
@@ -248049,26 +248083,26 @@
       });
       return A._asyncStartSync($async$call$0, $async$completer);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_publish_closure0.prototype = {
     call$0() {
       return this.$this._listings.loadMine$1(this.ownerId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_delete_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._listings.delete$3$actorId$reason(0, _this.listingId, _this.actorId, _this.reason);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ListingController_delete_closure0.prototype = {
     call$0() {
       return this.$this._listings.loadMine$1(this.actorId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.NotificationController.prototype = {
     load$1(_, userId) {
@@ -248082,13 +248116,13 @@
     call$0() {
       return this.$this._notifs.load$1(0, this.userId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.NotificationController_markRead_closure.prototype = {
     call$0() {
       return this.$this._notifs.markRead$1(this.id);
     },
-    $signature: 11
+    $signature: 10
   };
   A.OfferController.prototype = {
     loadMine$0() {
@@ -248108,20 +248142,20 @@
     call$0() {
       return this.$this._offers.loadMine$0();
     },
-    $signature: 11
+    $signature: 10
   };
   A.OfferController_loadForListing_closure.prototype = {
     call$0() {
       return this.$this._offers.loadForListing$1(this.listingId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.OfferController_placeOffer_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._offers.placeOffer$4$amount$listingId$note$providerId(_this.amount, _this.listingId, _this.note, _this.providerId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.OfferController_placeOffer_closure0.prototype = {
     call$0() {
@@ -248152,7 +248186,7 @@
       var _this = this;
       return _this.$this._offers.selectOffer$3$actorId$listingId$offerId(_this.actorId, _this.listingId, _this.offerId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.OfferController_selectOffer_closure0.prototype = {
     call$0() {
@@ -248436,38 +248470,38 @@
     call$0() {
       return this.$this._profile_controller$_auth.updateProfile$2$name$photoPath(this.name, this.photoPath);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ProfileController_epostaDegisimiBaslat_closure.prototype = {
     call$0() {
       return this.$this._profile_controller$_auth.epostaDegisimiBaslat$2$sifre(this.yeniEposta, this.sifre);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ProfileController_mevcutEpostaDogrulamaGonder_closure.prototype = {
     call$0() {
       return this.$this._profile_controller$_auth.mevcutEpostaDogrulamaGonder$1(this.mevcutEposta);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ProfileController_saveAddress_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._profile_controller$_auth.saveAddress$3$city$district$neighborhood(_this.city, _this.district, _this.neighborhood);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ProfileController_setCategories_closure.prototype = {
     call$0() {
       return this.$this._profile_controller$_auth.setProviderPrefs$1$categories(this.categories);
     },
-    $signature: 11
+    $signature: 10
   };
   A.ProfileController_setDistricts_closure.prototype = {
     call$0() {
       return this.$this._profile_controller$_auth.setProviderPrefs$1$districts(this.districts);
     },
-    $signature: 11
+    $signature: 10
   };
   A.RegionController.prototype = {
     get$tree() {
@@ -248623,7 +248657,7 @@
       var _this = this;
       return _this.$this._reviews.submit$6$actorId$listingId$offerId$stars$talepId$text(0, _this.actorId, _this.listingId, _this.offerId, _this.stars, _this.talepId, _this.text);
     },
-    $signature: 11
+    $signature: 10
   };
   A.TeklifTalebiController.prototype = {
     gorulmemisTalepSayisi$1(saglayiciId) {
@@ -248646,6 +248680,9 @@
     },
     secToVer$1(id) {
       return this.runAction$2("teklif-sec-" + id, new A.TeklifTalebiController_secToVer_closure(this, id));
+    },
+    saglayiciReddet$1(id) {
+      return this.runAction$2("talep-saglayici-reddet-" + id, new A.TeklifTalebiController_saglayiciReddet_closure(this, id));
     },
     sil$2$gerekce(id, gerekce) {
       return this.runAction$2("talep-sil-" + id, new A.TeklifTalebiController_sil_closure(this, id, gerekce));
@@ -248691,39 +248728,45 @@
       var _this = this;
       return _this.$this._teklif_talebi_controller$_port.gonder$9$aciklama$fotograflar$hizmet$hizmetAlanId$iletisimTercihi$isZamani$kategori$saglayiciAdi$saglayiciId(_this.aciklama, _this.fotograflar, _this.hizmet, _this.hizmetAlanId, _this.iletisimTercihi, _this.isZamani, _this.kategori, _this.saglayiciAdi, _this.saglayiciId);
     },
-    $signature: 11
+    $signature: 10
   };
   A.TeklifTalebiController_teklifVer_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._teklif_talebi_controller$_port.teklifVer$3$aciklama$fiyat(_this.id, _this.aciklama, _this.fiyat);
     },
-    $signature: 11
+    $signature: 10
   };
   A.TeklifTalebiController_secToVer_closure.prototype = {
     call$0() {
       return this.$this._teklif_talebi_controller$_port.secToVer$1(this.id);
     },
-    $signature: 11
+    $signature: 10
+  };
+  A.TeklifTalebiController_saglayiciReddet_closure.prototype = {
+    call$0() {
+      return this.$this._teklif_talebi_controller$_port.saglayiciReddet$1(this.id);
+    },
+    $signature: 10
   };
   A.TeklifTalebiController_sil_closure.prototype = {
     call$0() {
       return this.$this._teklif_talebi_controller$_port.sil$2$gerekce(this.id, this.gerekce);
     },
-    $signature: 11
+    $signature: 10
   };
   A.TeklifTalebiController_tamamla_closure.prototype = {
     call$0() {
       return this.$this._teklif_talebi_controller$_port.tamamla$1(this.id);
     },
-    $signature: 11
+    $signature: 10
   };
   A.TeklifTalebiController_mesajGonder_closure.prototype = {
     call$0() {
       var _this = this;
       return _this.$this._teklif_talebi_controller$_port.mesajGonder$4$fotografYolu$gonderenId$metin(_this.id, _this.fotografYolu, _this.gonderenId, _this.metin);
     },
-    $signature: 11
+    $signature: 10
   };
   A.HizmetAlani.prototype = {
     get$anahtar() {
@@ -248740,7 +248783,7 @@
       var t1 = this.ilceSirasi.$index(0, saglayiciIlcesi);
       return t1 == null ? this.siraliIlceler.length + 1 : t1;
     },
-    $signature: 206
+    $signature: 208
   };
   A.mockSaglayicilariBul_closure.prototype = {
     call$2(a, b) {
@@ -251698,7 +251741,7 @@
     call$2(a, r) {
       return A._asInt(a) + type$.Review._as(r).stars;
     },
-    $signature: 219
+    $signature: 220
   };
   A.MockNotificationPort.prototype = {
     dispose$0() {
@@ -251910,7 +251953,7 @@
               type$.List_String._as(fotograflar);
               t2 = B.C_Uuid.v4$0();
               t3 = A.IlanNoUretici_uret();
-              t = A.TeklifTalebi$(aciklama, new A.DateTime(Date.now(), 0, false), B.TeklifTalebiDurumu_0, fotograflar, hizmet, hizmetAlanId, t2, iletisimTercihi, isZamani, kategori, null, null, saglayiciAdi, saglayiciId, null, t3, null, null, null);
+              t = A.TeklifTalebi$(aciklama, new A.DateTime(Date.now(), 0, false), B.TeklifTalebiDurumu_0, fotograflar, hizmet, hizmetAlanId, t2, iletisimTercihi, isZamani, kategori, null, null, saglayiciAdi, saglayiciId, false, null, t3, null, null, null);
               t3 = t.id;
               t1._items.$indexSet(0, t3, t);
               t1.notifyListeners$0();
@@ -251999,6 +252042,45 @@
           }
       });
       return A._asyncStartSync($async$secToVer$1, $async$completer);
+    },
+    saglayiciReddet$1(id) {
+      var $async$goto = 0,
+        $async$completer = A._makeAsyncAwaitCompleter(type$.nullable_DomainError),
+        $async$returnValue, $async$self = this, t, t2, t3, t1;
+      var $async$saglayiciReddet$1 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
+        if ($async$errorCode === 1)
+          return A._asyncRethrow($async$result, $async$completer);
+        for (;;)
+          switch ($async$goto) {
+            case 0:
+              // Function start
+              t1 = $async$self._repo;
+              if (!t1.saglayiciReddet$1(id)) {
+                $async$returnValue = B.ValidationError_xjD;
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              t1._suresiDolanlariUygula$0();
+              t = t1._items.$index(0, id);
+              if (t != null) {
+                t1 = $async$self.notifs;
+                if (t1 != null) {
+                  t2 = t.hizmetAlanId;
+                  t3 = t.id;
+                  t1.push$5$body$refId$title$type$userId(0, '"' + t.hizmet + '" talebinizi hizmet veren reddetti.', t3, "Teklif talebiniz reddedildi", B.NotifType_17, t2);
+                }
+              }
+              $async$returnValue = null;
+              // goto return
+              $async$goto = 1;
+              break;
+            case 1:
+              // return
+              return A._asyncReturn($async$returnValue, $async$completer);
+          }
+      });
+      return A._asyncStartSync($async$saglayiciReddet$1, $async$completer);
     },
     sil$2$gerekce(id, gerekce) {
       var $async$goto = 0,
@@ -253006,6 +253088,9 @@
     secToVer$1(id) {
       return this._api_teklif_talebi_port$_yaz$1(new A.ApiTeklifTalebiPort_secToVer_closure(this, id));
     },
+    saglayiciReddet$1(id) {
+      return this._api_teklif_talebi_port$_yaz$1(new A.ApiTeklifTalebiPort_saglayiciReddet_closure(this, id));
+    },
     sil$2$gerekce(id, gerekce) {
       return this._api_teklif_talebi_port$_yaz$1(new A.ApiTeklifTalebiPort_sil_closure(this, id, gerekce));
     },
@@ -253078,7 +253163,7 @@
       type$.TeklifTalebi._as(t);
       return new A.MapEntry(t.id, t, type$.MapEntry_String_TeklifTalebi);
     },
-    $signature: 229
+    $signature: 230
   };
   A.ApiTeklifTalebiPort_byHizmetAlan_closure.prototype = {
     call$1(t) {
@@ -253097,7 +253182,8 @@
   };
   A.ApiTeklifTalebiPort_bySaglayici_closure.prototype = {
     call$1(t) {
-      return type$.TeklifTalebi._as(t).saglayiciId === this.saglayiciId;
+      type$.TeklifTalebi._as(t);
+      return t.saglayiciId === this.saglayiciId && !t.saglayiciReddetti;
     },
     $signature: 52
   };
@@ -253137,6 +253223,12 @@
   A.ApiTeklifTalebiPort_secToVer_closure.prototype = {
     call$0() {
       return this.$this._c._send$4$body$idempotencyKey("POST", "/teklif-talepleri/" + this.id + "/sec", null, null);
+    },
+    $signature: 12
+  };
+  A.ApiTeklifTalebiPort_saglayiciReddet_closure.prototype = {
+    call$0() {
+      return this.$this._c._send$4$body$idempotencyKey("POST", "/teklif-talepleri/" + this.id + "/reddet", B.Map_empty4, null);
     },
     $signature: 12
   };
@@ -254234,7 +254326,7 @@
       A._asBool(c);
       this.$this.notifyListeners$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A.ApiChatRepository__bindRealtime_closure0.prototype = {
     call$1(d) {
@@ -258401,6 +258493,15 @@
       t.durum = B.TeklifTalebiDurumu_2;
       this.notifyListeners$0();
     },
+    saglayiciReddet$1(id) {
+      var t = this._items.$index(0, id);
+      if (t == null || t.silindiAt != null || t.durum !== B.TeklifTalebiDurumu_0)
+        return false;
+      t.durum = B.TeklifTalebiDurumu_3;
+      t.saglayiciReddetti = true;
+      this.notifyListeners$0();
+      return true;
+    },
     sil$2$gerekce(id, gerekce) {
       var t1,
         t = this._items.$index(0, id);
@@ -258465,7 +258566,7 @@
       type$.TeklifTalebi._as(t);
       return new A.MapEntry(t.id, t, type$.MapEntry_String_TeklifTalebi);
     },
-    $signature: 229
+    $signature: 230
   };
   A.TeklifTalebiRepository_byHizmetAlan_closure.prototype = {
     call$1(t) {
@@ -258484,7 +258585,8 @@
   };
   A.TeklifTalebiRepository_bySaglayici_closure.prototype = {
     call$1(t) {
-      return type$.TeklifTalebi._as(t).saglayiciId === this.saglayiciId;
+      type$.TeklifTalebi._as(t);
+      return t.saglayiciId === this.saglayiciId && !t.saglayiciReddetti;
     },
     $signature: 52
   };
@@ -258626,7 +258728,7 @@
         return 3;
       return 5;
     },
-    $signature: 206
+    $signature: 208
   };
   A.SearchService_services_closure.prototype = {
     call$2(a, b) {
@@ -258858,7 +258960,7 @@
     call$0() {
       return A.PasswordHasher__pbkdf2(this.password, this.salt, 20000, 32);
     },
-    $signature: 235
+    $signature: 237
   };
   A.PasswordHasher__hex_closure.prototype = {
     call$1(x) {
@@ -260346,12 +260448,12 @@
       t3.push(B.RefPageTitle_Sb9);
       t4 = _this._account_settings_screen$_error;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_12_null_null], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_12_null_null], t2));
       t4 = pending == null;
       if (!t4) {
         t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_6b8, 1), A.BorderRadius$circular(12), _null, B.Color_hew, _null, _null, B.BoxShape_0);
-        t6 = A.Text$("Talep tarihi: " + _this._account_settings_screen$_fmt$1(J.$index$asx(pending, "requestedAt")), _null, _null, _null, _null, B.TextStyle_S9e, _null, _null);
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([B.Row_Tpu, B.SizedBox_null_6_null_null, t6, B.SizedBox_null_10_null_null, A.SizedBox$(A.OutlinedButton$(B.Text_ne3, _this._account_settings_screen$_busy ? _null : _this.get$_cancelDeletion(), _null), _null, 1 / 0)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null), B.SizedBox_null_18_null_null], t2));
+        t6 = A.Text$("Talep tarihi: " + _this._account_settings_screen$_fmt$1(J.$index$asx(pending, "requestedAt")), _null, _null, _null, _null, _null, B.TextStyle_S9e, _null, _null);
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([B.Row_Tpu, B.SizedBox_null_6_null_null, t6, B.SizedBox_null_10_null_null, A.SizedBox$(A.OutlinedButton$(B.Text_ne3, _null, _this._account_settings_screen$_busy ? _null : _this.get$_cancelDeletion(), _null), _null, 1 / 0)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null), B.SizedBox_null_18_null_null], t2));
       }
       t3.push(B._Bolum_nai);
       t3.push(new A._SatirKart("assets/svg/ic_plock.svg", B.Color_Fd6, B.Color_Dun, "\u015eifre De\u011fi\u015ftir", "Hesap \u015fifrenizi g\xfcncelleyin.", _this._account_settings_screen$_busy ? _null : new A._AccountSettingsScreenState_build_closure(context), _null));
@@ -260397,10 +260499,10 @@
               t4 = A._setArrayType([], t3);
               if (zengin) {
                 t5 = A.Center$(A.Container$(B.Alignment_0_0, new A.RefSvg(ikonAsset, 24, renk, null), B.Clip_0, null, null, A.BoxDecoration$(null, null, null, renk.withValues$1$alpha(0.12), null, null, B.BoxShape_1), null, 48, null, null, null, null, null, 48), null, null);
-                t6 = A.Text$(baslik, null, null, null, null, A.refText(B.Color_MXH, null, null, 0, 20, B.FontWeight_700), B.TextAlign_2, null);
+                t6 = A.Text$(baslik, null, null, null, null, null, A.refText(B.Color_MXH, null, null, 0, 20, B.FontWeight_700), B.TextAlign_2, null);
                 t7 = renk.withValues$1$alpha(0.08);
                 t7 = A.BoxDecoration$(null, A.BorderRadius$circular(12), null, t7, null, null, B.BoxShape_0);
-                t7 = A._setArrayType([t5, B.SizedBox_null_14_null_null, t6, B.SizedBox_null_16_null_null, A.Container$(null, A.Text$(aciklama, null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.Clip_0, null, null, t7, null, null, null, null, B.EdgeInsets_14_14_14_14, null, null, null)], t3);
+                t7 = A._setArrayType([t5, B.SizedBox_null_14_null_null, t6, B.SizedBox_null_16_null_null, A.Container$(null, A.Text$(aciklama, null, null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.Clip_0, null, null, t7, null, null, null, null, B.EdgeInsets_14_14_14_14, null, null, null)], t3);
                 t5 = bilgiler.length;
                 if (t5 !== 0)
                   t7.push(B.SizedBox_null_10_null_null);
@@ -260408,20 +260510,20 @@
                   b = bilgiler[_i];
                   side = new A.BorderSide(B.Color_W8O, 1.2, B.BorderStyle_1, -1);
                   t6 = new A.Radius(12, 12);
-                  B.JSArray_methods.addAll$1(t7, A._setArrayType([A.Container$(null, A.Row$(A._setArrayType([new A.RefSvg(b._0, 18, B.Color_BhF, null), B.SizedBox_10_null_null_null, new A.Expanded(1, B.FlexFit_0, A.Text$(b._1, null, null, null, null, new A.TextStyle(true, B.Color_yKk, null, "Poppins", B.List_MNo, null, 13, B.FontWeight_400, null, 0, null, null, 1.55, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), B.Clip_0, null, null, new A.BoxDecoration(B.Color_wst, null, new A.Border(side, side, side, side), new A.BorderRadius(t6, t6, t6, t6), null, null, B.BoxShape_0), null, null, null, B.EdgeInsets_0_0_0_8, B.EdgeInsets_12_12_12_12, null, null, null)], t3));
+                  B.JSArray_methods.addAll$1(t7, A._setArrayType([A.Container$(null, A.Row$(A._setArrayType([new A.RefSvg(b._0, 18, B.Color_BhF, null), B.SizedBox_10_null_null_null, new A.Expanded(1, B.FlexFit_0, A.Text$(b._1, null, null, null, null, null, new A.TextStyle(true, B.Color_yKk, null, "Poppins", B.List_MNo, null, 13, B.FontWeight_400, null, 0, null, null, 1.55, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), B.Clip_0, null, null, new A.BoxDecoration(B.Color_wst, null, new A.Border(side, side, side, side), new A.BorderRadius(t6, t6, t6, t6), null, null, B.BoxShape_0), null, null, null, B.EdgeInsets_0_0_0_8, B.EdgeInsets_12_12_12_12, null, null, null)], t3));
                 }
                 t7.push(B.SizedBox_null_12_null_null);
                 B.JSArray_methods.addAll$1(t4, t7);
               } else
-                B.JSArray_methods.addAll$1(t4, A._setArrayType([A.Text$(aciklama, null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_18_null_null], t3));
+                B.JSArray_methods.addAll$1(t4, A._setArrayType([A.Text$(aciklama, null, null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_18_null_null], t3));
               t5 = A.OutlinedButton_styleFrom(null, null, null, null, null, null, null, null, null, B.Color_BhF, null, null, B.EdgeInsets_0_13_0_13, null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), B.BorderSide_934, null, null, null, null);
-              t5 = A.Expanded$(A.OutlinedButton$(A.Text$("Vazge\xe7", null, null, null, null, A.refText(B.Color_BhF, null, null, 0, 14, B.FontWeight_700), null, null), new A._AccountSettingsScreenState__onayPaneli_closure($async$self), t5), 1);
+              t5 = A.Expanded$(A.OutlinedButton$(A.Text$("Vazge\xe7", null, null, null, null, null, A.refText(B.Color_BhF, null, null, 0, 14, B.FontWeight_700), null, null), null, new A._AccountSettingsScreenState__onayPaneli_closure($async$self), t5), 1);
               if (zengin) {
                 t6 = A.FilledButton_styleFrom(renk, null, B.EdgeInsets_0_13_0_13, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), null);
-                t6 = A.FilledButton$(A.Text$(onayMetni, null, null, null, null, A.refText(B.Color_wst, null, null, 0, 14, B.FontWeight_700), B.TextAlign_2, null), new A._AccountSettingsScreenState__onayPaneli_closure0($async$self), t6);
+                t6 = A.FilledButton$(A.Text$(onayMetni, null, null, null, null, null, A.refText(B.Color_wst, null, null, 0, 14, B.FontWeight_700), B.TextAlign_2, null), new A._AccountSettingsScreenState__onayPaneli_closure0($async$self), t6);
               } else {
                 t6 = A.OutlinedButton_styleFrom(null, null, null, null, null, null, null, null, null, renk, null, null, B.EdgeInsets_0_13_0_13, null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), new A.BorderSide(renk, 1.4, B.BorderStyle_1, -1), null, null, null, null);
-                t6 = A.OutlinedButton$(A.Text$(onayMetni, null, null, null, null, A.refText(renk, null, null, 0, 14, B.FontWeight_700), B.TextAlign_2, null), new A._AccountSettingsScreenState__onayPaneli_closure1($async$self), t6);
+                t6 = A.OutlinedButton$(A.Text$(onayMetni, null, null, null, null, null, A.refText(renk, null, null, 0, 14, B.FontWeight_700), B.TextAlign_2, null), null, new A._AccountSettingsScreenState__onayPaneli_closure1($async$self), t6);
               }
               t4.push(A.Row$(A._setArrayType([t5, B.SizedBox_10_null_null_null, A.Expanded$(t6, 1)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null));
               $async$goto = 3;
@@ -260573,12 +260675,12 @@
       auth = A.Provider_of(_this.get$context(0), false, t1);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t2 = type$.JSArray_Widget;
-      return A.Container$(_null, A.Column$(A._setArrayType([A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_les, B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, B.Color_Fd6, _null, _null, B.BoxShape_0), _null, 34, _null, _null, _null, _null, _null, 34), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$("Bildirim Tercihleri", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_8_null_null, _this._bildirimSatiri$3("Yeni teklifler", acc.bildirimTeklif, new A._AccountSettingsScreenState__bildirimKarti_closure(auth)), _this._bildirimSatiri$3("Mesajlar", acc.bildirimMesaj, new A._AccountSettingsScreenState__bildirimKarti_closure0(auth)), _this._bildirimSatiri$3("Duyurular ve kampanyalar", acc.bildirimDuyuru, new A._AccountSettingsScreenState__bildirimKarti_closure1(auth)), _this._bildirimSatiri$3("E-posta ile bilgilendirme", acc.bildirimEposta, new A._AccountSettingsScreenState__bildirimKarti_closure2(auth))], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null);
+      return A.Container$(_null, A.Column$(A._setArrayType([A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_les, B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, B.Color_Fd6, _null, _null, B.BoxShape_0), _null, 34, _null, _null, _null, _null, _null, 34), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$("Bildirim Tercihleri", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_8_null_null, _this._bildirimSatiri$3("Yeni teklifler", acc.bildirimTeklif, new A._AccountSettingsScreenState__bildirimKarti_closure(auth)), _this._bildirimSatiri$3("Mesajlar", acc.bildirimMesaj, new A._AccountSettingsScreenState__bildirimKarti_closure0(auth)), _this._bildirimSatiri$3("Duyurular ve kampanyalar", acc.bildirimDuyuru, new A._AccountSettingsScreenState__bildirimKarti_closure1(auth)), _this._bildirimSatiri$3("E-posta ile bilgilendirme", acc.bildirimEposta, new A._AccountSettingsScreenState__bildirimKarti_closure2(auth))], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null);
     },
     _bildirimSatiri$3(etiket, acik, ayarla) {
       var t1, t2, t3, t4, t5, t6, t7, _null = null;
       type$.void_Function_bool._as(ayarla);
-      t1 = A.Expanded$(A.Text$(etiket, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), 1);
+      t1 = A.Expanded$(A.Text$(etiket, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), 1);
       t2 = this._account_settings_screen$_busy ? _null : new A._AccountSettingsScreenState__bildirimSatiri_closure(ayarla, acik);
       t3 = A.BorderRadius$circular(999);
       t4 = acik ? B.Color_Dun : B.Color_HLW;
@@ -260623,7 +260725,7 @@
         t2 = "\u2014";
         break $label0$0;
       }
-      return new A.Padding(B.EdgeInsets_0_0_0_6, A.Row$(A._setArrayType([A.Expanded$(A.Text$(kind + " \xb7 " + this._account_settings_screen$_fmt$1(t1.$index(r, "requestedAt")), _null, _null, _null, _null, B.TextStyle_384, _null, _null), 1), A.Text$(t2, _null, _null, _null, _null, B.TextStyle_EfA, _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null);
+      return new A.Padding(B.EdgeInsets_0_0_0_6, A.Row$(A._setArrayType([A.Expanded$(A.Text$(kind + " \xb7 " + this._account_settings_screen$_fmt$1(t1.$index(r, "requestedAt")), _null, _null, _null, _null, _null, B.TextStyle_384, _null, _null), 1), A.Text$(t2, _null, _null, _null, _null, _null, B.TextStyle_EfA, _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null);
     },
     _account_settings_screen$_fmt$1(raw) {
       var l,
@@ -260797,25 +260899,25 @@
     call$1(v) {
       return this.auth._auth.setNotificationPrefs$4$duyuru$eposta$mesaj$teklif(null, null, null, v);
     },
-    $signature: 10
+    $signature: 11
   };
   A._AccountSettingsScreenState__bildirimKarti_closure0.prototype = {
     call$1(v) {
       return this.auth._auth.setNotificationPrefs$4$duyuru$eposta$mesaj$teklif(null, null, v, null);
     },
-    $signature: 10
+    $signature: 11
   };
   A._AccountSettingsScreenState__bildirimKarti_closure1.prototype = {
     call$1(v) {
       return this.auth._auth.setNotificationPrefs$4$duyuru$eposta$mesaj$teklif(v, null, null, null);
     },
-    $signature: 10
+    $signature: 11
   };
   A._AccountSettingsScreenState__bildirimKarti_closure2.prototype = {
     call$1(v) {
       return this.auth._auth.setNotificationPrefs$4$duyuru$eposta$mesaj$teklif(null, v, null, null);
     },
-    $signature: 10
+    $signature: 11
   };
   A._AccountSettingsScreenState__bildirimSatiri_closure.prototype = {
     call$0() {
@@ -260826,7 +260928,7 @@
   A._Bolum.prototype = {
     build$1(context) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_0_18_0_8, A.Text$(this.metin, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_800), _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_0_18_0_8, A.Text$(this.metin, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_800), _null, _null), _null);
     }
   };
   A._SatirKart.prototype = {
@@ -260835,7 +260937,7 @@
         t1 = A.BorderRadius$circular(14),
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = type$.JSArray_Widget;
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 17, _this.renk, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, _this.zemin, _null, _null, B.BoxShape_0), _null, 34, _null, _null, _null, _null, _null, 34), B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null), B.SizedBox_null_2_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.RefSvg_2N3], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null), _this.onTap, t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 17, _this.renk, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, _this.zemin, _null, _null, B.BoxShape_0), _null, 34, _null, _null, _null, _null, _null, 34), B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null), B.SizedBox_null_2_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.RefSvg_2N3], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null), _this.onTap, t1, _null, _null);
     }
   };
   A.AddressesScreen.prototype = {
@@ -260974,11 +261076,11 @@
       t3 = type$.JSArray_Widget;
       t4 = A._setArrayType([B.RefPageTitle_Adreslerim_null_null, B.RefSubtitle_1yA], t3);
       if (t1)
-        t4.push(new A.Padding(B.EdgeInsets_0_40_0_40, A.Text$("Adres bilgisi i\xe7in giri\u015f yapmal\u0131s\u0131n\u0131z.", _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null));
+        t4.push(new A.Padding(B.EdgeInsets_0_40_0_40, A.Text$("Adres bilgisi i\xe7in giri\u015f yapmal\u0131s\u0131n\u0131z.", _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null));
       else {
         t3 = A._setArrayType([B.RefCardTitle_null], t3);
         if (uyari != null)
-          t3.push(new A.RefInfoBox(A.Text$(uyari, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, 1.5, 0, 13.5, B.FontWeight_600), _null, _null), false, B.EdgeInsets_0_10_0_0, _null));
+          t3.push(new A.RefInfoBox(A.Text$(uyari, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, 1.5, 0, 13.5, B.FontWeight_600), _null, _null), false, B.EdgeInsets_0_10_0_0, _null));
         t5 = _this._addresses_screen$_city;
         t5 = t5.length !== 0 ? t5 : r.get$cityName();
         t3.push(A.RefDropdownField$("\u0130l", _null, _this._addresses_screen$_saving ? _null : _this.get$_pickCity(), _s7_, t5, true));
@@ -260990,14 +261092,14 @@
         t3.push(A.RefDropdownField$("Mahalle", _null, _this._addresses_screen$_saving || _this._addresses_screen$_district == null ? _null : _this.get$_pickNeighborhood(), _s7_, t5, true));
         t5 = _this._addresses_screen$_error;
         if (t5 != null)
-          t3.push(new A.Padding(B.EdgeInsets_0_12_0_0, A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+          t3.push(new A.Padding(B.EdgeInsets_0_12_0_0, A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
         t3.push(B.SizedBox_null_18_null_null);
         t5 = _this._addresses_screen$_saving;
         t3.push(new A.RefNextButton("Adresi G\xfcncelle", "assets/svg/ic_pen.svg", _this.get$_valid() ? _this.get$_addresses_screen$_save() : _null, t5, _null));
         t4.push(new A.RefFormCard(A.Column$(t3, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), 14, _null));
       }
       if (!t1)
-        t4.push(new A.RefInfoBox(A.Text$("Sistemde yaln\u0131zca bir adres kayd\u0131 bulunabilir. Adres de\u011fi\u015fikli\u011fi yapmak i\xe7in bilgilerinizi g\xfcncelleyebilirsiniz.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
+        t4.push(new A.RefInfoBox(A.Text$("Sistemde yaln\u0131zca bir adres kayd\u0131 bulunabilir. Adres de\u011fi\u015fikli\u011fi yapmak i\xe7in bilgilerinizi g\xfcncelleyebilirsiniz.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
       return A.RefShell$(A.Column$(t4, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), new A.RefBottomNav(t2, "profil", _null));
     },
     _pickCity$0() {
@@ -261395,10 +261497,10 @@
       if (_this._app_rate_screen$_loading)
         t3.push(B.Padding_nnW);
       else if (_this._existing != null && _this.get$_gonderilmisPuan() > 0) {
-        t4 = A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_6eM, B.Clip_0, _null, _null, B.BoxDecoration_e9N, _null, 84, _null, _null, _null, _null, _null, 84), B.SizedBox_null_18_null_null, A.RefStars$(_null, _this.get$_gonderilmisPuan()), B.SizedBox_null_16_null_null, A.Text$("De\u011ferlendirmeniz al\u0131nd\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_800), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, A.ConstrainedBox$(A.Text$("G\xf6r\xfc\u015f\xfcn\xfcz \xfcr\xfcn ekibimize iletildi.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), B.BoxConstraints_6gC)], t2);
+        t4 = A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_6eM, B.Clip_0, _null, _null, B.BoxDecoration_e9N, _null, 84, _null, _null, _null, _null, _null, 84), B.SizedBox_null_18_null_null, A.RefStars$(_null, _this.get$_gonderilmisPuan()), B.SizedBox_null_16_null_null, A.Text$("De\u011ferlendirmeniz al\u0131nd\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_800), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, A.ConstrainedBox$(A.Text$("G\xf6r\xfc\u015f\xfcn\xfcz \xfcr\xfcn ekibimize iletildi.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), B.BoxConstraints_6gC)], t2);
         if (_this.get$_gonderilmisMetin().length !== 0) {
           t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(12), _null, B.Color_88W, _null, _null, B.BoxShape_0);
-          B.JSArray_methods.addAll$1(t4, A._setArrayType([B.SizedBox_null_20_null_null, A.Container$(_null, A.Text$(_this.get$_gonderilmisMetin(), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_14_12_14_12, _null, _null, _null)], t2));
+          B.JSArray_methods.addAll$1(t4, A._setArrayType([B.SizedBox_null_20_null_null, A.Container$(_null, A.Text$(_this.get$_gonderilmisMetin(), _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_14_12_14_12, _null, _null, _null)], t2));
         }
         t4.push(B.SizedBox_null_26_null_null);
         t4.push(B._MagazaKarti_null);
@@ -261412,11 +261514,11 @@
         t1 = _this._app_rate_screen$_stars,
         t2 = type$.JSArray_Widget,
         t3 = _this._app_rate_screen$_text;
-      t2 = A._setArrayType([B.RefSubtitle_zr9, B.SizedBox_null_22_null_null, A.RefStars$(_this._app_rate_screen$_sending ? _null : new A._AppRateScreenState__formGorunum_closure(_this), t1), new A.Padding(B.EdgeInsets_0_10_0_0, A.Row$(A._setArrayType([A.Text$("Deneyiminizi puanlay\u0131n", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), A.Text$("*", _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null), _null), new A.Padding(B.EdgeInsets_1_20_1_4, A.Row$(A._setArrayType([A.Text$("G\xf6r\xfc\u015f\xfcn\xfcz ", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, A.refText(B.Color_byQ, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.RefTextField$(_null, _null, t3, _null, _null, false, "Deneyiminizi payla\u015fabilirsiniz...", _null, _null, _null, 5, false, _null, _null, _null, B.TextCapitalization_10, _null, _null, _null, false), A.Positioned$(10, A.Text$("" + t3._change_notifier$_value.text.length + "/500", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t2), B.Clip_1, B.StackFit_0, _null)], t2);
+      t2 = A._setArrayType([B.RefSubtitle_zr9, B.SizedBox_null_22_null_null, A.RefStars$(_this._app_rate_screen$_sending ? _null : new A._AppRateScreenState__formGorunum_closure(_this), t1), new A.Padding(B.EdgeInsets_0_10_0_0, A.Row$(A._setArrayType([A.Text$("Deneyiminizi puanlay\u0131n", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), A.Text$("*", _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null), _null), new A.Padding(B.EdgeInsets_1_20_1_4, A.Row$(A._setArrayType([A.Text$("G\xf6r\xfc\u015f\xfcn\xfcz ", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, _null, A.refText(B.Color_byQ, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.RefTextField$(_null, _null, t3, _null, _null, false, "Deneyiminizi payla\u015fabilirsiniz...", _null, _null, _null, 5, false, _null, _null, _null, B.TextCapitalization_10, _null, _null, _null, false), A.Positioned$(10, A.Text$("" + t3._change_notifier$_value.text.length + "/500", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t2), B.Clip_1, B.StackFit_0, _null)], t2);
       t1 = _this._app_rate_screen$_error;
       if (t1 != null)
-        t2.push(new A.Padding(B.EdgeInsets_0_10_0_0, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
-      t2.push(new A.RefInfoBox(A.Text$("Verdi\u011finiz de\u011ferlendirme, HizmetCep ekibi taraf\u0131ndan incelenebilir ve uygulamay\u0131 geli\u015ftirmemize yard\u0131mc\u0131 olur.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
+        t2.push(new A.Padding(B.EdgeInsets_0_10_0_0, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+      t2.push(new A.RefInfoBox(A.Text$("Verdi\u011finiz de\u011ferlendirme, HizmetCep ekibi taraf\u0131ndan incelenebilir ve uygulamay\u0131 geli\u015ftirmemize yard\u0131mc\u0131 olur.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
       t2.push(B.SizedBox_null_16_null_null);
       t2.push(new A.RefNextButton("De\u011ferlendirmeyi G\xf6nder", "assets/svg/ic_star_full.svg", _this.get$_app_rate_screen$_submit(), _this._app_rate_screen$_sending, _null));
       return t2;
@@ -261562,11 +261664,11 @@
     },
     build$1(context) {
       var _null = null,
-        t1 = A.Text$("Bu de\u011ferlendirme uygulama i\xe7inde kal\u0131r.", _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null),
+        t1 = A.Text$("Bu de\u011ferlendirme uygulama i\xe7inde kal\u0131r.", _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null),
         t2 = A.BorderRadius$circular(12),
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_Dun, 1.5), A.BorderRadius$circular(12), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t4 = type$.JSArray_Widget;
-      return A.Column$(A._setArrayType([t1, B.SizedBox_null_10_null_null, new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_nlJ, B.SizedBox_9_null_null_null, A.Text$("Ma\u011fazada da de\u011ferlendir", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_18_12_18_12, _null, _null, _null), new A._MagazaKarti_build_closure(this, context), t2, _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      return A.Column$(A._setArrayType([t1, B.SizedBox_null_10_null_null, new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_nlJ, B.SizedBox_9_null_null_null, A.Text$("Ma\u011fazada da de\u011ferlendir", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_18_12_18_12, _null, _null, _null), new A._MagazaKarti_build_closure(this, context), t2, _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
     }
   };
   A._MagazaKarti_build_closure.prototype = {
@@ -261658,7 +261760,7 @@
     },
     build$1(context) {
       var _null = null;
-      return A.Scaffold$(_null, B.Color_wst, A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Column$(A._setArrayType([A.Image$asset("assets/logo/wordmark.png", B.FilterQuality_2, _null, 30, _null), B.SizedBox_null_28_null_null, B.SizedBox_Ruk, B.SizedBox_null_18_null_null, A.Text$("Ba\u011flan\u0131l\u0131yor\u2026", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, A.Text$("Oturumunuz a\xe7\u0131l\u0131yor, bu birka\xe7 saniye s\xfcrebilir.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null), _null, _null), _null);
+      return A.Scaffold$(_null, B.Color_wst, A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Column$(A._setArrayType([A.Image$asset("assets/logo/wordmark.png", B.FilterQuality_2, _null, 30, _null), B.SizedBox_null_28_null_null, B.SizedBox_Ruk, B.SizedBox_null_18_null_null, A.Text$("Ba\u011flan\u0131l\u0131yor\u2026", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, A.Text$("Oturumunuz a\xe7\u0131l\u0131yor, bu birka\xe7 saniye s\xfcrebilir.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null), _null, _null), _null);
     }
   };
   A._BaglaniyorEkraniState__bekle_closure.prototype = {
@@ -261719,7 +261821,7 @@
       t4 = A.kategoriEtiketi(category);
       t3.push(new A.RefDetailHeader(t4, panelde ? false : _null, _null));
       t3.push(B.SizedBox_null_8_null_null);
-      t3.push(A.Row$(A._setArrayType([new A.CategoryBadge(category, 54, _null), B.SizedBox_12_null_null_null, A.Expanded$(A.Text$(A.kategoriEtiketi(category) + " kategorisindeki hizmetler ve a\xe7\u0131k ilanlar", _null, _null, _null, _null, B.TextStyle_meK, _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null));
+      t3.push(A.Row$(A._setArrayType([new A.CategoryBadge(category, 54, _null), B.SizedBox_12_null_null_null, A.Expanded$(A.Text$(A.kategoriEtiketi(category) + " kategorisindeki hizmetler ve a\xe7\u0131k ilanlar", _null, _null, _null, _null, _null, B.TextStyle_meK, _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null));
       t3.push(B.SizedBox_null_14_null_null);
       t3.push(B.Text_3Ui);
       t3.push(B.SizedBox_null_3_null_null);
@@ -261812,7 +261914,7 @@
         t4 = A.BorderRadius$circular(12),
         t5 = t1 ? B.Color_Dun : B.Color_W8O;
       t5 = A.BoxDecoration$(A.Border_Border$all(t5, t1 ? 1.4 : 1), A.BorderRadius$circular(12), _null, _null, _null, _null, B.BoxShape_0);
-      t6 = A.Expanded$(A.Text$(this.ad, _null, _null, _null, _null, A.TextStyle$(_null, _null, B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 13.5, _null, _null, t1 ? B.FontWeight_700 : B.FontWeight_500, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), 1);
+      t6 = A.Expanded$(A.Text$(this.ad, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 13.5, _null, _null, t1 ? B.FontWeight_700 : B.FontWeight_500, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), 1);
       return A.Material$(false, B.Duration_200000, true, t3, A.InkWell$(false, t4, true, A.Container$(_null, A.Row$(A._setArrayType([t6, A.SizedBox$(t1 ? B.RefTik_OnS : _null, 18, 18)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_12_13_12_13, _null, _null, _null), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, this.onTap, _null, _null, _null, _null), B.Clip_0, t2, 0, _null, _null, _null, _null, _null, B.MaterialType_0);
     }
   };
@@ -261945,7 +262047,7 @@
       t9 = _this._new2;
       t10 = _this._obscure3;
       t3.push(new A.RefFormCard(A.Column$(A._setArrayType([t5, B.SizedBox_null_12_null_null, t8, B.SizedBox_null_12_null_null, A.RefTextField$(_this._tekrarKey, _null, t9, _null, _this._f_new2, false, "Yeni \u015fifre tekrar", _null, _null, _null, 1, t10, new A._ChangePasswordScreenState_build_closure7(_this), _null, A.RefSifreGozu$(t10, t6._as(new A._ChangePasswordScreenState_build_closure8(_this))), B.TextCapitalization_10, B.TextInputAction_2, new A._ChangePasswordScreenState_build_closure9(_this), _null, true)], t2), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), 14, _null));
-      t3.push(new A.RefInfoBox(A.Text$("\u015eifreniz en az 8 karakter olmal\u0131d\u0131r. Ard\u0131\u015f\u0131k, tekrar eden ve yayg\u0131n \u015fifreler kabul edilmez. G\xfcvenli\u011finiz i\xe7in harf ve rakam birlikte kullanman\u0131z\u0131 \xf6neririz.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
+      t3.push(new A.RefInfoBox(A.Text$("\u015eifreniz en az 8 karakter olmal\u0131d\u0131r. Ard\u0131\u015f\u0131k, tekrar eden ve yayg\u0131n \u015fifreler kabul edilmez. G\xfcvenli\u011finiz i\xe7in harf ve rakam birlikte kullanman\u0131z\u0131 \xf6neririz.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
       t3.push(B.SizedBox_null_16_null_null);
       t2 = _this._change_password_screen$_busy;
       t3.push(new A.RefNextButton("\u015eifreyi G\xfcncelle", "assets/svg/ic_lockw.svg", B.JSString_methods.trim$0(t4._change_notifier$_value.text).length !== 0 && A.Validators_password(t7._change_notifier$_value.text) == null && t9._change_notifier$_value.text === t7._change_notifier$_value.text ? _this.get$_change_password_screen$_save() : _null, t2, _null));
@@ -261990,10 +262092,10 @@
               // join
               t2 = $async$self.get$context(0);
               t3 = A.Container$(B.Alignment_0_0, B.RefSvg_Gzl, B.Clip_0, null, null, B.BoxDecoration_xgR, null, 58, null, null, null, null, null, 58);
-              t4 = A.Text$("S\u0131f\u0131rlama ba\u011flant\u0131s\u0131 g\xf6nderilecek", null, null, null, null, A.refText(B.Color_MXH, null, null, 0, 16.5, B.FontWeight_700), B.TextAlign_2, null);
+              t4 = A.Text$("S\u0131f\u0131rlama ba\u011flant\u0131s\u0131 g\xf6nderilecek", null, null, null, null, null, A.refText(B.Color_MXH, null, null, 0, 16.5, B.FontWeight_700), B.TextAlign_2, null);
               t5 = A.BoxDecoration$(null, A.BorderRadius$circular(10), null, B.Color_xQ2, null, null, B.BoxShape_0);
               $async$goto = 6;
-              return A._asyncAwait(A.RefBottomSheet_goster(t2, A.Column$(A._setArrayType([t3, B.SizedBox_null_12_null_null, t4, B.SizedBox_null_10_null_null, A.Container$(null, A.Text$(eposta, 1, B.TextOverflow_2, null, null, A.refText(B.Color_Dun, null, null, 0, 14.5, B.FontWeight_700), B.TextAlign_2, null), B.Clip_0, null, null, t5, null, null, null, null, B.EdgeInsets_14_11_14_11, null, null, 1 / 0), B.SizedBox_null_16_null_null, new A.RefPrimaryButton("G\xf6nder", "assets/svg/ic_plane.svg", new A._ChangePasswordScreenState__sifreSifirla_closure0($async$self), false, null), B.SizedBox_null_8_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), "\u015eifre S\u0131f\u0131rlama", type$.bool), $async$_sifreSifirla$0);
+              return A._asyncAwait(A.RefBottomSheet_goster(t2, A.Column$(A._setArrayType([t3, B.SizedBox_null_12_null_null, t4, B.SizedBox_null_10_null_null, A.Container$(null, A.Text$(eposta, null, 1, B.TextOverflow_2, null, null, A.refText(B.Color_Dun, null, null, 0, 14.5, B.FontWeight_700), B.TextAlign_2, null), B.Clip_0, null, null, t5, null, null, null, null, B.EdgeInsets_14_11_14_11, null, null, 1 / 0), B.SizedBox_null_16_null_null, new A.RefPrimaryButton("G\xf6nder", "assets/svg/ic_plane.svg", new A._ChangePasswordScreenState__sifreSifirla_closure0($async$self), false, null), B.SizedBox_null_8_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), "\u015eifre S\u0131f\u0131rlama", type$.bool), $async$_sifreSifirla$0);
             case 6:
               // returning from await.
               if ($async$result !== true || $async$self._framework$_element == null) {
@@ -262097,7 +262199,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._ChangePasswordScreenState_build__closure6(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._ChangePasswordScreenState_build__closure6.prototype = {
     call$0() {
@@ -262143,7 +262245,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._ChangePasswordScreenState_build__closure3(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._ChangePasswordScreenState_build__closure3.prototype = {
     call$0() {
@@ -262185,7 +262287,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._ChangePasswordScreenState_build__closure0(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._ChangePasswordScreenState_build__closure0.prototype = {
     call$0() {
@@ -262425,10 +262527,10 @@
       }
       t3 = _this._widget.offerId;
       t4 = type$.JSArray_Widget;
-      t5 = A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$(title, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), B.TextAlign_2, _null), 1)], t4);
+      t5 = A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$(title, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), B.TextAlign_2, _null), 1)], t4);
       if (t2.length !== 0) {
         t2 = A.BorderRadius$circular(10);
-        t5.push(new A.RefTap(new A.Padding(B.EdgeInsets_6_4_6_4, A.Row$(A._setArrayType([B.RefSvg_l25, B.SizedBox_6_null_null_null, A.Text$("Ara", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 17, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), _null), new A._ChatScreenState_build_closure0(t1, context), t2, _null, _null));
+        t5.push(new A.RefTap(new A.Padding(B.EdgeInsets_6_4_6_4, A.Row$(A._setArrayType([B.RefSvg_l25, B.SizedBox_6_null_null_null, A.Text$("Ara", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 17, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), _null), new A._ChatScreenState_build_closure0(t1, context), t2, _null, _null));
       }
       t1 = A._setArrayType([new A.Padding(B.EdgeInsets_4_4_16_6, A.Row$(t5, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t4);
       t2 = J.getInterceptor$asx(msgs);
@@ -262549,7 +262651,7 @@
         t8.push(new A._SohbetFotografi(t1, mine, _null));
       t1 = m.text;
       if (t1 != null)
-        t8.push(A.Text$(t1, _null, _null, _null, _null, A.TextStyle$(_null, _null, mine ? B.Color_wst : B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 13.5, _null, _null, _null, _null, 1.4, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null));
+        t8.push(A.Text$(t1, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, mine ? B.Color_wst : B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 13.5, _null, _null, _null, _null, 1.4, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null));
       if (mine)
         B.JSArray_methods.addAll$1(t8, A._setArrayType([B.SizedBox_null_3_null_null, t4.call$1$acikZemin(false)], t9));
       return A.Align$(t5, A.Container$(_null, A.Column$(t8, B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, new A.BoxConstraints(0, t3.size._dx * 0.78, 0, 1 / 0), t6, _null, _null, _null, B.EdgeInsets_0_0_0_10, B.EdgeInsets_13_11_13_20, _null, _null, _null), _null, _null, _null);
@@ -262579,7 +262681,7 @@
       t4 = _this.$this;
       t5 = t3.status;
       t6 = t4._statusText$1(t5);
-      t2.push(A.Text$(t6, _null, _null, _null, _null, A.TextStyle$(_null, _null, t5 === B.MessageStatus_4 ? B.Color_wuX : aktifRenk, _null, _null, _null, _null, _null, _null, _null, _null, 10, _null, _null, _null, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null));
+      t2.push(A.Text$(t6, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, t5 === B.MessageStatus_4 ? B.Color_wuX : aktifRenk, _null, _null, _null, _null, _null, _null, _null, _null, 10, _null, _null, _null, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null));
       if (t3.status === B.MessageStatus_4)
         B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_8_null_null_null, new A.RefTap(B.Text_HpD, new A._ChatScreenState_build__durumSatiri_closure(t4, _this.context, t3), _null, _null, _null)], t1));
       return A.Row$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null);
@@ -262616,7 +262718,7 @@
     call$4$currentLength$isFocused$maxLength(_, currentLength, isFocused, maxLength) {
       return null;
     },
-    $signature: 167
+    $signature: 181
   };
   A._ChatScreenState_build_closure3.prototype = {
     call$1(_) {
@@ -262681,7 +262783,7 @@
         t2 = "";
       t3 = t5 ? "Kullan\u0131c\u0131" : ad;
       t5 = type$.JSArray_Widget;
-      t3 = A._setArrayType([new A.RefBasHarfAvatar(t6, t2, 44, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, aktif ? B.FontWeight_700 : B.FontWeight_600), _null, _null), 1)], t5);
+      t3 = A._setArrayType([new A.RefBasHarfAvatar(t6, t2, 44, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t3, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, aktif ? B.FontWeight_700 : B.FontWeight_600), _null, _null), 1)], t5);
       if (okunmamis > 0)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_8_null_null_null, new A.RefSayiRozeti(okunmamis, B.Color_wst, _null)], t5));
       return new A.RefTap(A.ColoredBox$(new A.Padding(B.EdgeInsets_12_10_12_10, A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t4, true), t1, _null, _null, _null);
@@ -263608,7 +263710,7 @@
       t2 = _this.get$_kategoriOnSecili() ? 2 : 1;
       t3 = A.WebPanel_panelMi(context) ? B.Color_Edl : B.Color_wst;
       t4 = type$.JSArray_Widget;
-      t5 = A.Row$(A._setArrayType([new A.RefBackButton(_this.get$_geriAdim(), true, _null), B.SizedBox_8_null_null_null, A.Expanded$(A.Text$("\u0130lan Olu\u015ftur", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 19, B.FontWeight_700), B.TextAlign_2, _null), 1), B.SizedBox_38_null_null_null], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t5 = A.Row$(A._setArrayType([new A.RefBackButton(_this.get$_geriAdim(), true, _null), B.SizedBox_8_null_null_null, A.Expanded$(A.Text$("\u0130lan Olu\u015ftur", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 19, B.FontWeight_700), B.TextAlign_2, _null), 1), B.SizedBox_38_null_null_null], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t6 = _this._step;
       t7 = _this._widget.preLogin ? B.List_XWC : B.List_dVb;
       t7 = A._setArrayType([new A.Padding(B.EdgeInsets_0_0_0_10, t5, _null), new A.RefStepper(t6, t7, _null), new A.Padding(B.EdgeInsets_0_0_0_14, A.SizedBox$(A.LayoutBuilder$(new A._CreateListingScreenState_build_closure0()), 1, _null), _null)], t4);
@@ -263638,8 +263740,8 @@
     },
     _adim1$1(context) {
       var _this = this, _null = null,
-        t1 = A.Text$("Hangi hizmete ihtiyac\u0131n\u0131z var?", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 18, B.FontWeight_700), _null, _null),
-        t2 = A.Text$("\u0130htiyac\u0131n\u0131z olan hizmeti yaz\u0131n, size uygun se\xe7enekleri g\xf6sterelim.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
+        t1 = A.Text$("Hangi hizmete ihtiyac\u0131n\u0131z var?", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 18, B.FontWeight_700), _null, _null),
+        t2 = A.Text$("\u0130htiyac\u0131n\u0131z olan hizmeti yaz\u0131n, size uygun se\xe7enekleri g\xf6sterelim.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_Dun, 1.7), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t4 = _this._aramaCtl,
         t5 = A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_500),
@@ -263649,7 +263751,7 @@
       if (B.JSString_methods.trim$0(t1).length !== 0 && _this._cat == null)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_10_null_null, new A._OneriPaneli(t1, new A._CreateListingScreenState__adim1_closure1(_this), _null)], t6));
       if (B.JSString_methods.trim$0(_this._catQuery).length === 0 && _this._cat == null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$("Arad\u0131\u011f\u0131n\u0131z hizmeti yaz\u0131n", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null)], t6));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$("Arad\u0131\u011f\u0131n\u0131z hizmeti yaz\u0131n", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null)], t6));
       return A.Column$(t3, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     },
     get$_aciklamaEksik() {
@@ -263667,15 +263769,15 @@
     _adim2$1(context) {
       var t4, t5, t6, t7, t8, t9, t10, _this = this, _null = null,
         _s11_ = "(Opsiyonel)",
-        t1 = A.Text$("Se\xe7ili Hizmet", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null),
+        t1 = A.Text$("Se\xe7ili Hizmet", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null),
         t2 = _this._cat,
         t3 = type$.JSArray_Widget;
-      t2 = A.Column$(A._setArrayType([t1, B.SizedBox_null_4_null_null, A.Text$(A.kategoriEtiketi(t2 == null ? "" : t2), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0);
-      t1 = A.Row$(A._setArrayType([A.Text$("Hizmet Zaman\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$(_s11_, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
-      t4 = A.Text$("Zaman tercihiniz varsa belirtin.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
+      t2 = A.Column$(A._setArrayType([t1, B.SizedBox_null_4_null_null, A.Text$(A.kategoriEtiketi(t2 == null ? "" : t2), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      t1 = A.Row$(A._setArrayType([A.Text$("Hizmet Zaman\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$(_s11_, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t4 = A.Text$("Zaman tercihiniz varsa belirtin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
       t5 = _this._isZamani;
-      t6 = A.Row$(A._setArrayType([A.Text$("A\xe7\u0131klama", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Zorunlu)", _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
-      t7 = A.Text$("Hizmetinizle ilgili detaylar\u0131 yaz\u0131n.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
+      t6 = A.Row$(A._setArrayType([A.Text$("A\xe7\u0131klama", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Zorunlu)", _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t7 = A.Text$("Hizmetinizle ilgili detaylar\u0131 yaz\u0131n.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
       t8 = _this._desc;
       if (_this._descDokunuldu)
         t9 = _this.get$_aciklamaEksik() || _this.get$_aciklamaAnlamsiz();
@@ -263683,44 +263785,44 @@
         t9 = false;
       t9 = A.RefTextField$(_null, new A._CreateListingScreenState__adim2_closure(), t8, _null, _this._descOdak, t9, _null, _null, _null, 1000, 6, false, new A._CreateListingScreenState__adim2_closure0(_this), _null, _null, B.TextCapitalization_10, _null, _null, "A\xe7\u0131klama yaz\u0131n.", false);
       t8 = t8._change_notifier$_value.text;
-      t8 = A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(12, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/1000", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null, 14, _null, _null)], t3), B.Clip_1, B.StackFit_0, _null);
+      t8 = A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(12, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/1000", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null, 14, _null, _null)], t3), B.Clip_1, B.StackFit_0, _null);
       t9 = A.refText(_this._descDokunuldu && _this.get$_aciklamaEksik() ? B.Color_wuX : B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400);
       t9 = A.RichText$(_null, _null, _null, B.TextOverflow_0, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([B.TextSpan_cXj, A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(_this._descDokunuldu && _this.get$_aciklamaEksik() ? B.Color_wuX : B.Color_Dun, _null, _null, 0, 12.5, B.FontWeight_700), "3 kelime"), B.TextSpan_AtI], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, t9, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0);
       t10 = _this._kelimeSayisi$0();
-      t1 = A._setArrayType([new A.RefFormCard(t2, 0, _null), new A.Padding(B.EdgeInsets_1_16_1_3, t1, _null), t4, B.SizedBox_null_10_null_null, new A.IsZamaniSecici(t5, new A._CreateListingScreenState__adim2_closure1(_this), _null), new A.Padding(B.EdgeInsets_1_16_1_3, t6, _null), t7, B.SizedBox_null_8_null_null, t8, B.SizedBox_null_7_null_null, A.Row$(A._setArrayType([t9, A.Text$("" + t10 + " kelime", _null, _null, _null, _null, A.refText(_this._descDokunuldu && _this.get$_aciklamaEksik() ? B.Color_wuX : B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_3, B.MainAxisSize_1, 0, _null)], t3);
+      t1 = A._setArrayType([new A.RefFormCard(t2, 0, _null), new A.Padding(B.EdgeInsets_1_16_1_3, t1, _null), t4, B.SizedBox_null_10_null_null, new A.IsZamaniSecici(t5, new A._CreateListingScreenState__adim2_closure1(_this), _null), new A.Padding(B.EdgeInsets_1_16_1_3, t6, _null), t7, B.SizedBox_null_8_null_null, t8, B.SizedBox_null_7_null_null, A.Row$(A._setArrayType([t9, A.Text$("" + t10 + " kelime", _null, _null, _null, _null, _null, A.refText(_this._descDokunuldu && _this.get$_aciklamaEksik() ? B.Color_wuX : B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_3, B.MainAxisSize_1, 0, _null)], t3);
       if (_this._descDokunuldu && _this.get$_aciklamaAnlamsiz())
-        t1.push(new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$(string$.Axe7_kla, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
-      t1.push(new A.Padding(B.EdgeInsets_1_16_1_3, A.Row$(A._setArrayType([A.Text$("Foto\u011fraf", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$(_s11_, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
+        t1.push(new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$(string$.Axe7_kla, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+      t1.push(new A.Padding(B.EdgeInsets_1_16_1_3, A.Row$(A._setArrayType([A.Text$("Foto\u011fraf", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$(_s11_, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
       t2 = _this.___CreateListingScreenState__storageApi_F;
       t2 === $ && A.throwLateFieldNI("_storageApi");
       t1.push(A.ListingPhotoPicker$(!_this._create_listing_screen$_busy, new A._CreateListingScreenState__adim2_closure2(_this), _this._photos, true, t2, !_this._widget.preLogin));
       t1.push(B.SizedBox_null_9_null_null);
-      t1.push(A.Text$("\u0130lan\u0131n\u0131z\u0131 daha iyi anlatmak i\xe7in foto\u011fraf ekleyebilirsiniz. (Maks. 5 foto\u011fraf)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12, B.FontWeight_400), _null, _null));
+      t1.push(A.Text$("\u0130lan\u0131n\u0131z\u0131 daha iyi anlatmak i\xe7in foto\u011fraf ekleyebilirsiniz. (Maks. 5 foto\u011fraf)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12, B.FontWeight_400), _null, _null));
       t1.push(B.SizedBox_null_20_null_null);
-      t1.push(A.Text$("\u0130leti\u015fim Tercihi", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+      t1.push(A.Text$("\u0130leti\u015fim Tercihi", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
       t1.push(B.SizedBox_null_8_null_null);
       t1.push(A.RefAcilirSecici$(string$.Telefo, "Sadece Uygulama \u0130\xe7i Mesaj", "Hizmet veren telefonla da ula\u015fabilir.", "Telefon + Uygulama \u0130\xe7i Mesaj", _this._iletisim === B.IletisimTercihi_0, new A._CreateListingScreenState__adim2_closure3(_this)));
       t2 = A.BoxDecoration$(_null, A.BorderRadius$circular(13), _null, B.Color_die, _null, _null, B.BoxShape_0);
-      t1.push(A.Container$(_null, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_khR, B.Clip_0, _null, _null, B.BoxDecoration_A6u, _null, 40, _null, _null, _null, _null, _null, 40), B.SizedBox_12_null_null_null, A.Expanded$(A.Text$("\u0130lan vermek \xfccretsizdir", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_14_11_14_11, _null, _null, _null));
+      t1.push(A.Container$(_null, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_khR, B.Clip_0, _null, _null, B.BoxDecoration_A6u, _null, 40, _null, _null, _null, _null, _null, 40), B.SizedBox_12_null_null_null, A.Expanded$(A.Text$("\u0130lan vermek \xfccretsizdir", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_14_11_14_11, _null, _null, _null));
       return A.Column$(t1, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     },
     _adim3$1(context) {
       var t3, t4, t5, t6, _this = this, _null = null,
-        t1 = A.Text$("\xd6nizle & Yay\u0131nla", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null),
+        t1 = A.Text$("\xd6nizle & Yay\u0131nla", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null),
         t2 = _this._cat;
-      t2 = A.Text$(A.kategoriEtiketi(t2 == null ? "" : t2), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null);
+      t2 = A.Text$(A.kategoriEtiketi(t2 == null ? "" : t2), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null);
       t3 = B.JSString_methods.trim$0(_this._hood._change_notifier$_value.text);
       t4 = _this._district;
       t5 = A.Provider_of(context, true, type$.RegionController).get$cityName();
       if (t5 == null)
         t5 = "";
       t6 = type$.JSArray_Widget;
-      t5 = A._setArrayType([t2, B.SizedBox_null_4_null_null, A.Text$(t3 + ", " + A.S(t4) + " / " + t5, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), B.Divider_cAy, A.Text$(B.JSString_methods.trim$0(_this._desc._change_notifier$_value.text), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null)], t6);
+      t5 = A._setArrayType([t2, B.SizedBox_null_4_null_null, A.Text$(t3 + ", " + A.S(t4) + " / " + t5, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), B.Divider_cAy, A.Text$(B.JSString_methods.trim$0(_this._desc._change_notifier$_value.text), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null)], t6);
       t2 = _this._photos;
       t3 = t2.length;
       if (t3 !== 0)
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.Divider_cAy, A.Text$("Foto\u011fraflar (" + t3 + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_800), _null, _null), B.SizedBox_null_8_null_null, A.SizedBox$(A.ListView$separated(new A._CreateListingScreenState__adim3_closure(_this, context), t2.length, _null, _null, B.Axis_0, new A._CreateListingScreenState__adim3_closure0(), false), 76, _null)], t6));
-      return A.Column$(A._setArrayType([t1, B.SizedBox_null_12_null_null, new A.RefFormCard(A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 0, _null), new A.RefInfoBox(A.Text$("\u0130lan vermek \xfccretsizdir ve s\u0131n\u0131rs\u0131zd\u0131r \u2014 size hi\xe7bir \xfccret yans\u0131maz. \u0130lan\u0131n\u0131z 30 saat yay\u0131nda kal\u0131r; bu s\xfcrede hizmet verenler teklif verebilir. S\xfcre sonunda teklif se\xe7ilmezse ilan otomatik kapan\u0131r.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null)], t6), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
+        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.Divider_cAy, A.Text$("Foto\u011fraflar (" + t3 + ")", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_800), _null, _null), B.SizedBox_null_8_null_null, A.SizedBox$(A.ListView$separated(new A._CreateListingScreenState__adim3_closure(_this, context), t2.length, _null, _null, B.Axis_0, new A._CreateListingScreenState__adim3_closure0(), false), 76, _null)], t6));
+      return A.Column$(A._setArrayType([t1, B.SizedBox_null_12_null_null, new A.RefFormCard(A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 0, _null), new A.RefInfoBox(A.Text$("\u0130lan vermek \xfccretsizdir ve s\u0131n\u0131rs\u0131zd\u0131r \u2014 size hi\xe7bir \xfccret yans\u0131maz. \u0130lan\u0131n\u0131z 30 saat yay\u0131nda kal\u0131r; bu s\xfcrede hizmet verenler teklif verebilir. S\xfcre sonunda teklif se\xe7ilmezse ilan otomatik kapan\u0131r.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null)], t6), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A._CreateListingScreenState_initState_closure.prototype = {
@@ -264163,7 +264265,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._CreateListingScreenState__adim2__closure(t1, ilkSecili));
     },
-    $signature: 10
+    $signature: 11
   };
   A._CreateListingScreenState__adim2__closure.prototype = {
     call$0() {
@@ -264218,9 +264320,9 @@
   A._Adim3Tamam.prototype = {
     build$1(context) {
       var _null = null,
-        t1 = A.Text$("\u0130lan Olu\u015ftur", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_700), B.TextAlign_2, _null),
+        t1 = A.Text$("\u0130lan Olu\u015ftur", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_700), B.TextAlign_2, _null),
         t2 = this.preLogin ? B.List_7xU : B.List_Y7c;
-      return A.Column$(A._setArrayType([t1, B.SizedBox_null_14_null_null, new A.RefStepper(9, t2, _null), B.SizedBox_null_26_null_null, B.Center_nD9, B.SizedBox_null_18_null_null, new A.Padding(B.EdgeInsets_10_0_10_0, A.Text$("\u0130lan\u0131n\u0131z Yay\u0131nda!", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.25, 0, 25, B.FontWeight_700), B.TextAlign_2, _null), _null), B.SizedBox_null_12_null_null, new A.Padding(B.EdgeInsets_16_0_16_0, A.Text$("\u0130lan\u0131n\u0131z hizmet sa\u011flay\u0131c\u0131lara g\xf6sterilmeye ba\u015fland\u0131.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null), B.SizedBox_null_6_null_null, A.Center$(A.Container$(_null, _null, B.Clip_0, B.Color_jIV, _null, _null, _null, 1, _null, _null, _null, _null, _null, 70), _null, _null), B.SizedBox_null_16_null_null, B.Center_qXX, B.SizedBox_null_8_null_null, new A.Padding(B.EdgeInsets_16_0_16_0, A.Text$("Teklif geldi\u011finde size an\u0131nda bildirim g\xf6nderece\u011fiz.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null), B.SizedBox_null_26_null_null, A.RefWideButton$("Aktif \u0130lanlar\u0131m\u0131 G\xf6r", false, this.onListem)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
+      return A.Column$(A._setArrayType([t1, B.SizedBox_null_14_null_null, new A.RefStepper(9, t2, _null), B.SizedBox_null_26_null_null, B.Center_nD9, B.SizedBox_null_18_null_null, new A.Padding(B.EdgeInsets_10_0_10_0, A.Text$("\u0130lan\u0131n\u0131z Yay\u0131nda!", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.25, 0, 25, B.FontWeight_700), B.TextAlign_2, _null), _null), B.SizedBox_null_12_null_null, new A.Padding(B.EdgeInsets_16_0_16_0, A.Text$("\u0130lan\u0131n\u0131z hizmet sa\u011flay\u0131c\u0131lara g\xf6sterilmeye ba\u015fland\u0131.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null), B.SizedBox_null_6_null_null, A.Center$(A.Container$(_null, _null, B.Clip_0, B.Color_jIV, _null, _null, _null, 1, _null, _null, _null, _null, _null, 70), _null, _null), B.SizedBox_null_16_null_null, B.Center_qXX, B.SizedBox_null_8_null_null, new A.Padding(B.EdgeInsets_16_0_16_0, A.Text$("Teklif geldi\u011finde size an\u0131nda bildirim g\xf6nderece\u011fiz.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null), B.SizedBox_null_26_null_null, A.RefWideButton$("Aktif \u0130lanlar\u0131m\u0131 G\xf6r", false, this.onListem)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A._OneriPaneli.prototype = {
@@ -264228,7 +264330,7 @@
       var t1, t2, t3, i, t4, t5, t6, _null = null,
         sonuc = A.SearchService_services(B.JSString_methods.trim$0(this.sorgu), 12);
       if (sonuc.length === 0)
-        return new A.Padding(B.EdgeInsets_4_6_0_0, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), _null);
+        return new A.Padding(B.EdgeInsets_4_6_0_0, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), _null);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t2 = type$.JSArray_Widget;
       t3 = A._setArrayType([], t2);
@@ -264243,7 +264345,7 @@
         if (t6 == null)
           t6 = t5.subService;
         t5 = t6 == null ? t5.category : t6;
-        t4.push(new A.RefTap(new A.Padding(B.EdgeInsets_14_11_14_11, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Column$(A._setArrayType([A.Text$(t5, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, "Poppins", B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), new A._OneriPaneli_build_closure(this, sonuc, i), _null, _null, _null));
+        t4.push(new A.RefTap(new A.Padding(B.EdgeInsets_14_11_14_11, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Column$(A._setArrayType([A.Text$(t5, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, "Poppins", B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), new A._OneriPaneli_build_closure(this, sonuc, i), _null, _null, _null));
         B.JSArray_methods.addAll$1(t3, t4);
       }
       return A.Container$(_null, A.Column$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, _null, _null, _null, _null);
@@ -264320,16 +264422,16 @@
       t4 = A.SvgPicture$asset("assets/svg/bul_location_bg.svg", _null, B.BoxFit_2, _null, _null);
       t5 = A.Positioned$(0, A.Image$asset("assets/art/bul_location.png", B.FilterQuality_2, B.BoxFit_1, 62, _null), _null, _null, _null, -6, _null, _null);
       t6 = A.Container$(B.Alignment_0_0, B.RefSvg_I5t, B.Clip_0, _null, _null, B.BoxDecoration_A6u, _null, 40, _null, _null, _null, _null, _null, 40);
-      t7 = A.Text$("Konumum", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null);
+      t7 = A.Text$("Konumum", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null);
       t8 = adres != null ? adres.district + " / " + adres.city : "Profilinizde kay\u0131tl\u0131 bir adres yok";
-      t2.push(A.ClipRRect$(t3, A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t4, t5, new A.Padding(B.EdgeInsets_14_14_14_14, A.Row$(A._setArrayType([t6, B.SizedBox_12_null_null_null, A.Column$(A._setArrayType([t7, B.SizedBox_null_2_null_null, A.Text$(t8, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_2, B.MainAxisSize_1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t1), B.Clip_1, B.StackFit_1, _null), 84, _null)));
+      t2.push(A.ClipRRect$(t3, A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t4, t5, new A.Padding(B.EdgeInsets_14_14_14_14, A.Row$(A._setArrayType([t6, B.SizedBox_12_null_null_null, A.Column$(A._setArrayType([t7, B.SizedBox_null_2_null_null, A.Text$(t8, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_2, B.MainAxisSize_1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t1), B.Clip_1, B.StackFit_1, _null), 84, _null)));
       t2.push(B.SizedBox_null_20_null_null);
       t2.push(A.Row$(B.List_7Y0, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null));
       t2.push(B.SizedBox_null_24_null_null);
       t8 = _this._hizmet != null;
       t2.push(new A._AraButonu(t8, t8 ? _this.get$_find_provider_screen$_ara() : _null, _null));
       if (_this._talepVar$1(context))
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_26_null_null, A.Text$("Teklif \u0130stediklerim", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null, B.TeklifIstediklerimListesi_true_null], t1));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_26_null_null, A.Text$("Teklif \u0130stediklerim", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null, B.TeklifIstediklerimListesi_true_null], t1));
       return A.RefPage$(A.Column$(t2, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1));
     }
   };
@@ -264381,14 +264483,14 @@
     build$1(context) {
       var _this = this, _null = null,
         t1 = type$.JSArray_Widget;
-      return A.ClipRRect$(A.BorderRadius$circular(16), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.Positioned$fill(0, A.SvgPicture$asset(_this.bgAsset, _null, B.BoxFit_2, _null, _null)), new A.Padding(B.EdgeInsets_12_16_12_16, A.Column$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.iconAsset, 24, _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_GyU, _null, 44, _null, _null, _null, _null, _null, 44), B.SizedBox_null_12_null_null, A.Text$(_this.title, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_800), _null, _null), B.SizedBox_null_6_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.3, 0, 11.5, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null)], t1), B.Clip_1, B.StackFit_0, _null));
+      return A.ClipRRect$(A.BorderRadius$circular(16), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.Positioned$fill(0, A.SvgPicture$asset(_this.bgAsset, _null, B.BoxFit_2, _null, _null)), new A.Padding(B.EdgeInsets_12_16_12_16, A.Column$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.iconAsset, 24, _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_GyU, _null, 44, _null, _null, _null, _null, _null, 44), B.SizedBox_null_12_null_null, A.Text$(_this.title, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_800), _null, _null), B.SizedBox_null_6_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.3, 0, 11.5, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null)], t1), B.Clip_1, B.StackFit_0, _null));
     }
   };
   A._AraButonu.prototype = {
     build$1(context) {
       var _null = null,
         t1 = this.aktif ? 1 : 0.6;
-      return A.Opacity$(A.ClipRRect$(A.BorderRadius$circular(14), A.Material$(false, B.Duration_200000, true, _null, A.InkWell$(false, _null, true, A.Container$(B.Alignment_0_0, A.Row$(A._setArrayType([B.RefSvg_4EZ, B.SizedBox_8_null_null_null, A.Text$("Hizmet Verenleri Bul", _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, _null, _null, _null, _null, _null, B.EdgeInsets_16_16_16_16, _null, _null, 1 / 0), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, this.onPressed, _null, _null, _null, _null), B.Clip_0, B.Color_VDA, 0, _null, _null, _null, _null, _null, B.MaterialType_0)), t1);
+      return A.Opacity$(A.ClipRRect$(A.BorderRadius$circular(14), A.Material$(false, B.Duration_200000, true, _null, A.InkWell$(false, _null, true, A.Container$(B.Alignment_0_0, A.Row$(A._setArrayType([B.RefSvg_4EZ, B.SizedBox_8_null_null_null, A.Text$("Hizmet Verenleri Bul", _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, _null, _null, _null, _null, _null, B.EdgeInsets_16_16_16_16, _null, _null, 1 / 0), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, this.onPressed, _null, _null, _null, _null), B.Clip_0, B.Color_VDA, 0, _null, _null, _null, _null, _null, B.MaterialType_0)), t1);
     }
   };
   A._HizmetAramaAlani.prototype = {
@@ -264419,19 +264521,19 @@
       t4 = A._setArrayType([], t3);
       t5 = _this._find_provider_screen$_ara;
       if (t5._change_notifier$_value.text.length === 0)
-        t4.push(A.IgnorePointer$(A.Column$(A._setArrayType([A.Text$("Hangi hizmeti ar\u0131yorsun?", _null, _null, _null, _null, A.refText(B.Color_Ikf, _null, _null, 0, 14.5, B.FontWeight_400), _null, _null), A.Text$("\xd6rn. ev temizli\u011fi, boya badana, tesisat\xe7\u0131...", 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Rin, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), true, _null));
+        t4.push(A.IgnorePointer$(A.Column$(A._setArrayType([A.Text$("Hangi hizmeti ar\u0131yorsun?", _null, _null, _null, _null, _null, A.refText(B.Color_Ikf, _null, _null, 0, 14.5, B.FontWeight_400), _null, _null), A.Text$("\xd6rn. ev temizli\u011fi, boya badana, tesisat\xe7\u0131...", _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Rin, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), true, _null));
       t4.push(A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t5, _null, _null, _null, _null, _null, 2, B.InputDecoration_hQV, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._HizmetAramaAlaniState_build_closure(_this), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, _null, _null, _null));
       t1 = A._setArrayType([A.Container$(_null, A.Row$(A._setArrayType([t2, B.SizedBox_10_null_null_null, A.Expanded$(A.Stack$(B.Alignment_m1_0, t4, B.Clip_1, B.StackFit_0, _null), 1), A.RefAramaTemizle$(t5, new A._HizmetAramaAlaniState_build_closure0(_this))], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, B.BoxConstraints_UdF, t1, _null, _null, _null, _null, B.EdgeInsets_12_8_12_8, _null, _null, _null)], t3);
       t2 = _this._widget.seciliHizmet;
       if (t2 != null)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_8_null_null, A.Row$(A._setArrayType([B.RefSvg_SVx, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t3));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_8_null_null, A.Row$(A._setArrayType([B.RefSvg_SVx, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t3));
       else {
         t2 = _this._oneriler.length;
         if (t2 !== 0) {
           t4 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
           B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_4_null_null, A.Container$(_null, A.ListView$separated(new A._HizmetAramaAlaniState_build_closure1(_this), t2, B.EdgeInsets_0_4_0_4, _null, B.Axis_1, new A._HizmetAramaAlaniState_build_closure2(), true), B.Clip_0, _null, B.BoxConstraints_ELY, t4, _null, _null, _null, _null, _null, _null, _null, _null)], t3));
         } else if (B.JSString_methods.trim$0(t5._change_notifier$_value.text).length !== 0)
-          B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t3));
+          B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t3));
       }
       return A.Column$(t1, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
@@ -264495,7 +264597,7 @@
       h = t2[i];
       t2 = h.subService;
       t2.toString;
-      return new A.RefTap(new A.Padding(B.EdgeInsets_14_11_14_11, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_500), _null, _null), _null), new A._HizmetAramaAlaniState_build__closure(t1, h), _null, _null, _null);
+      return new A.RefTap(new A.Padding(B.EdgeInsets_14_11_14_11, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_500), _null, _null), _null), new A._HizmetAramaAlaniState_build__closure(t1, h), _null, _null, _null);
     },
     $signature: 94
   };
@@ -264698,9 +264800,9 @@
       t3 = A._setArrayType([t2, B.SizedBox_null_6_null_null, B.RefPageTitle_8nI, new A.RefSubtitle(t3, _null), B.SizedBox_null_12_null_null], t4);
       t2 = _this._sistemHatasi;
       if (t2 != null)
-        t3.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
       if (_this._gonderildi && !_this._telefonYolu)
-        t3.push(new A.Padding(B.EdgeInsets_0_0_0_14, new A.RefInfoBox(A.Text$("E\u011fer bu e-posta adresiyle kay\u0131tl\u0131 bir hesab\u0131n\u0131z varsa, \u015fifre yenileme ba\u011flant\u0131s\u0131 g\xf6nderildi. L\xfctfen e-posta kutunuzu kontrol edin.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_0_0_0_14, new A.RefInfoBox(A.Text$("E\u011fer bu e-posta adresiyle kay\u0131tl\u0131 bir hesab\u0131n\u0131z varsa, \u015fifre yenileme ba\u011flant\u0131s\u0131 g\xf6nderildi. L\xfctfen e-posta kutunuzu kontrol edin.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null), _null));
       t2 = _this._telefonYolu;
       t5 = _this._forgot_password_screen$_busy;
       t6 = !t5;
@@ -264708,12 +264810,12 @@
         t2 = A.RefFormField$(_this._forgot_password_screen$_email, t6, _null, true, _this._forgot_password_screen$_fEmail, false, "E-posta", "assets/svg/ic_mail.svg", _null, B.ValueKey_HxE, B.TextInputType_5_null_null, false, new A._ForgotPasswordScreenState_build_closure0(_this), _null, _null, _null, B.TextCapitalization_30, B.TextInputAction_2, new A._ForgotPasswordScreenState_build_closure1(_this), "E posta giriniz.");
         t6 = _this.get$_zorunluDolu() ? _this.get$_baglantiGonder() : _null;
         t7 = A.BorderRadius$circular(8);
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([t2, B.SizedBox_null_14_null_null, new A.RefPrimaryButton("\u015eifre Yenileme Ba\u011flant\u0131s\u0131 G\xf6nder", _null, t6, t5, _null), B.SizedBox_null_14_null_null, A.Center$(new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$("Telefon ile devam et", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), _null), new A._ForgotPasswordScreenState_build_closure2(_this), t7, _null, _null), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([t2, B.SizedBox_null_14_null_null, new A.RefPrimaryButton("\u015eifre Yenileme Ba\u011flant\u0131s\u0131 G\xf6nder", _null, t6, t5, _null), B.SizedBox_null_14_null_null, A.Center$(new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$("Telefon ile devam et", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), _null), new A._ForgotPasswordScreenState_build_closure2(_this), t7, _null, _null), _null, _null)], t4));
       } else {
         t2 = A.RefFormField$(_this._forgot_password_screen$_phone, t6, "Telefon", true, _this._forgot_password_screen$_fPhone, false, "Telefon", "assets/svg/ic_phone_f.svg", B.List_TelefonBicimlendirici, B.ValueKey_Sh7, B.TextInputType_3_null_null, false, new A._ForgotPasswordScreenState_build_closure3(_this), _null, _null, _null, B.TextCapitalization_10, B.TextInputAction_2, new A._ForgotPasswordScreenState_build_closure4(_this), "5XX XXX XX XX");
         t6 = _this.get$_zorunluDolu() ? _this.get$_telefonKodIste() : _null;
         t7 = A.BorderRadius$circular(8);
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([t2, B.SizedBox_null_14_null_null, new A.RefPrimaryButton("Do\u011frulama Kodu G\xf6nder", _null, t6, t5, _null), B.SizedBox_null_14_null_null, A.Center$(new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$("E-posta ile devam et", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), _null), new A._ForgotPasswordScreenState_build_closure5(_this), t7, _null, _null), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([t2, B.SizedBox_null_14_null_null, new A.RefPrimaryButton("Do\u011frulama Kodu G\xf6nder", _null, t6, t5, _null), B.SizedBox_null_14_null_null, A.Center$(new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$("E-posta ile devam et", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), _null), new A._ForgotPasswordScreenState_build_closure5(_this), t7, _null, _null), _null, _null)], t4));
       }
       return A.Scaffold$(_null, t1, A.WebPanel$(_null, _null, A.SafeArea$(true, new A.RefScroll(A.Form$(B.AutovalidateMode_1, A.Column$(t3, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), _this._forgot_password_screen$_form), B.EdgeInsets_20_8_20_36, _null), B.EdgeInsets_0_0_0_0, true), _null), _null);
     }
@@ -265075,7 +265177,7 @@
       }
       t1 = J.getInterceptor$asx(kategoriler);
       if (t1.get$isEmpty(kategoriler) && hizmetler.length === 0)
-        t3.push(new A.Padding(B.EdgeInsets_0_18_0_18, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_0_18_0_18, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
       else
         for (i = 0; i < t1.get$length(kategoriler); ++i) {
           t2 = A._setArrayType([], t6);
@@ -265161,7 +265263,7 @@
         t1 = A.BorderRadius$circular(13),
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = type$.JSArray_Widget;
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(this.hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), B.SizedBox_null_2_null_null, A.Text$(this.kategori, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, B.RefSvg_OZ3], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_11_11_11_11, _null, _null, _null), new A._HizmetSonucSatiri_build_closure(this, context), t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(this.hizmet, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), B.SizedBox_null_2_null_null, A.Text$(this.kategori, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, B.RefSvg_OZ3], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_11_11_11_11, _null, _null, _null), new A._HizmetSonucSatiri_build_closure(this, context), t1, _null, _null);
     }
   };
   A._HizmetSonucSatiri_build_closure.prototype = {
@@ -265196,7 +265298,7 @@
       t3 = A.BorderRadius$circular(13);
       t4 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t5 = type$.JSArray_Widget;
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(A.categoryIcon(t2), 22, _null, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(A.kategoriEtiketi(t2), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(A.SubListIterable$(t1, 0, A.checkNotNullable(3, "count", type$.int), type$.String).join$1(0, " \xb7 "), 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.RefSvg_OZ3], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_11_11_11_11, _null, _null, _null), new A._KategoriSatiri_build_closure(this, context), t3, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(A.categoryIcon(t2), 22, _null, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(A.kategoriEtiketi(t2), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(A.SubListIterable$(t1, 0, A.checkNotNullable(3, "count", type$.int), type$.String).join$1(0, " \xb7 "), _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.RefSvg_OZ3], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_11_11_11_11, _null, _null, _null), new A._KategoriSatiri_build_closure(this, context), t3, _null, _null);
     }
   };
   A._KategoriSatiri_build_closure.prototype = {
@@ -265238,7 +265340,7 @@
     build$1(context) {
       var _null = null,
         _s24_ = "assets/svg/ic_person.svg";
-      return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(false, new A.RefScroll(A.Column$(A._setArrayType([B._Header_null, B.SizedBox_null_9_null_null, A.Text$("G\xfcvenilir profesyoneller, an\u0131nda hizmet", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null), B.SizedBox_null_12_null_null, new A.InlineSearchBox("Hangi hizmete ihtiyac\u0131n\u0131z var?", "\xd6rnek: Kombi Bak\u0131m\u0131, Elektrik Ar\u0131zas\u0131, Boya Badana, Klima Montaj\u0131", new A.HomeScreen_build_closure(context), _null), B.SizedBox_null_17_null_null, A._RoleCard$("assets/art/art_house.png", B.Color_hIK, _s24_, B.Color_Dun, "Hizmet Alan Olarak Ba\u015fla", "\xdccretsiz hesap olu\u015fturun,\nilan\u0131n\u0131z\u0131 yay\u0131nlay\u0131n ve\nteklif al\u0131n.", new A.HomeScreen_build_closure0(this, context), B.LinearGradient_lBd, "assets/svg/ic_home_w.svg", B.List_cch, "\xdccretsiz kay\u0131t  \u2022  \xdccretsiz ilan", B.Color_Dun, "Hizmet\nAlmak \u0130stiyorum", B.Color_ad6), B.SizedBox_null_17_null_null, A._RoleCard$("assets/art/art_tools.png", B.Color_kiW, _s24_, B.Color_4VS, "Hizmet Veren Olarak Ba\u015fla", "Hesap olu\u015fturun, i\u015f ilanlar\u0131n\u0131\ng\xf6r\xfcnt\xfcleyin ve yeni\ni\u015fler kazan\u0131n.", new A.HomeScreen_build_closure1(this, context), B.LinearGradient_cu2, "assets/svg/ic_worker_w.svg", B.List_L13, "H\u0131zl\u0131 kay\u0131t  \u2022  Yeni i\u015fler  \u2022  Kazan\xe7", B.Color_4VS, "Hizmet\nVermek \u0130stiyorum", B.Color_Uk6), B.SizedBox_null_16_null_null, B._CategoryCard_null, B.SizedBox_null_16_null_null, B._TrustCard_null, B.SizedBox_null_16_null_null, B._PromoCard_null], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_15_0_15_24, _null), B.EdgeInsets_0_0_0_0, true), _null);
+      return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(false, new A.RefScroll(A.Column$(A._setArrayType([B._Header_null, B.SizedBox_null_9_null_null, A.Text$("G\xfcvenilir profesyoneller, an\u0131nda hizmet", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null), B.SizedBox_null_12_null_null, new A.InlineSearchBox("Hangi hizmete ihtiyac\u0131n\u0131z var?", "\xd6rnek: Kombi Bak\u0131m\u0131, Elektrik Ar\u0131zas\u0131, Boya Badana, Klima Montaj\u0131", new A.HomeScreen_build_closure(context), _null), B.SizedBox_null_17_null_null, A._RoleCard$("assets/art/art_house.png", B.Color_hIK, _s24_, B.Color_Dun, "Hizmet Alan Olarak Ba\u015fla", "\xdccretsiz hesap olu\u015fturun,\nilan\u0131n\u0131z\u0131 yay\u0131nlay\u0131n ve\nteklif al\u0131n.", new A.HomeScreen_build_closure0(this, context), B.LinearGradient_lBd, "assets/svg/ic_home_w.svg", B.List_cch, "\xdccretsiz kay\u0131t  \u2022  \xdccretsiz ilan", B.Color_Dun, "Hizmet\nAlmak \u0130stiyorum", B.Color_ad6), B.SizedBox_null_17_null_null, A._RoleCard$("assets/art/art_tools.png", B.Color_kiW, _s24_, B.Color_4VS, "Hizmet Veren Olarak Ba\u015fla", "Hesap olu\u015fturun, i\u015f ilanlar\u0131n\u0131\ng\xf6r\xfcnt\xfcleyin ve yeni\ni\u015fler kazan\u0131n.", new A.HomeScreen_build_closure1(this, context), B.LinearGradient_cu2, "assets/svg/ic_worker_w.svg", B.List_L13, "H\u0131zl\u0131 kay\u0131t  \u2022  Yeni i\u015fler  \u2022  Kazan\xe7", B.Color_4VS, "Hizmet\nVermek \u0130stiyorum", B.Color_Uk6), B.SizedBox_null_16_null_null, B._CategoryCard_null, B.SizedBox_null_16_null_null, B._TrustCard_null, B.SizedBox_null_16_null_null, B._PromoCard_null], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_15_0_15_24, _null), B.EdgeInsets_0_0_0_0, true), _null);
     }
   };
   A.HomeScreen_build_closure.prototype = {
@@ -265279,14 +265381,14 @@
     build$1(context) {
       var _this = this, _null = null,
         t1 = type$.JSArray_Widget;
-      return A.ClipRRect$(A.BorderRadius$circular(16), new A.RefTap(A.Container$(_null, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.Positioned$(_null, new A.Image(new A.AssetImage(_this.art, _null, _null), _null, _null, _null, _null, B.FilterQuality_3, B.BoxFit_1, _null), _null, _null, _null, 2, 20, 158), new A.Padding(B.EdgeInsets_16_16_16_15, A.Column$(A._setArrayType([new A.RefGradientSquare(_this.squareGradient, _this.squareShadow, new A.RefSvg(_this.squareIcon, 19, B.Color_wst, _null), _null), B.SizedBox_null_12_null_null, A.Text$(_this.title, _null, _null, _null, _null, A.refText(_this.titleColor, _null, _null, -0.4, 16, B.FontWeight_700).copyWith$1$height(1.1875), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_this.desc, _null, _null, _null, _null, A.refText(B.Color_IF6, _null, _null, -0.2, 11.6, B.FontWeight_400).copyWith$1$height(1.25), _null, _null), B.SizedBox_null_12_null_null, new A.RefWhiteCta(_this.ctaIcon, _this.ctaIconColor, _this.ctaLabel, _null), B.SizedBox_null_9_null_null, A.Text$(_this.tags, _null, _null, _null, _null, A.refText(_this.tagsColor, _null, _null, -0.2, 10, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t1), B.Clip_1, B.StackFit_0, _null), B.Clip_0, _this.background, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _this.onTap, _null, _null, _null));
+      return A.ClipRRect$(A.BorderRadius$circular(16), new A.RefTap(A.Container$(_null, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([A.Positioned$(_null, new A.Image(new A.AssetImage(_this.art, _null, _null), _null, _null, _null, _null, B.FilterQuality_3, B.BoxFit_1, _null), _null, _null, _null, 2, 20, 158), new A.Padding(B.EdgeInsets_16_16_16_15, A.Column$(A._setArrayType([new A.RefGradientSquare(_this.squareGradient, _this.squareShadow, new A.RefSvg(_this.squareIcon, 19, B.Color_wst, _null), _null), B.SizedBox_null_12_null_null, A.Text$(_this.title, _null, _null, _null, _null, _null, A.refText(_this.titleColor, _null, _null, -0.4, 16, B.FontWeight_700).copyWith$1$height(1.1875), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_this.desc, _null, _null, _null, _null, _null, A.refText(B.Color_IF6, _null, _null, -0.2, 11.6, B.FontWeight_400).copyWith$1$height(1.25), _null, _null), B.SizedBox_null_12_null_null, new A.RefWhiteCta(_this.ctaIcon, _this.ctaIconColor, _this.ctaLabel, _null), B.SizedBox_null_9_null_null, A.Text$(_this.tags, _null, _null, _null, _null, _null, A.refText(_this.tagsColor, _null, _null, -0.2, 10, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t1), B.Clip_1, B.StackFit_0, _null), B.Clip_0, _this.background, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _this.onTap, _null, _null, _null));
     }
   };
   A._CategoryCard.prototype = {
     build$1(context) {
       var _null = null,
         t1 = type$.JSArray_Widget;
-      return new A.RefCard(A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_5_0_5_0, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_9d4, B.Clip_0, _null, _null, B.BoxDecoration_Ns5, _null, 54, _null, _null, _null, _null, _null, 54), B.SizedBox_13_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$("HizmetCep'te Neler Bulabilirsiniz?", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, 1.3, -0.4, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_5_null_null, A.Text$("Tesisat, elektrik, do\u011falgaz, temizlik, boya, tadilat, m\xfchendislik ve bir\xe7ok farkl\u0131 hizmet kategorisine tek uygulamadan ula\u015fabilirsiniz.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, -0.1, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.SizedBox_null_16_null_null, B.HizmetAlanlariPaneli_null], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_11_16_11_16, _null);
+      return new A.RefCard(A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_5_0_5_0, A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_9d4, B.Clip_0, _null, _null, B.BoxDecoration_Ns5, _null, 54, _null, _null, _null, _null, _null, 54), B.SizedBox_13_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$("HizmetCep'te Neler Bulabilirsiniz?", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, 1.3, -0.4, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_5_null_null, A.Text$("Tesisat, elektrik, do\u011falgaz, temizlik, boya, tadilat, m\xfchendislik ve bir\xe7ok farkl\u0131 hizmet kategorisine tek uygulamadan ula\u015fabilirsiniz.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, -0.1, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.SizedBox_null_16_null_null, B.HizmetAlanlariPaneli_null], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_11_16_11_16, _null);
     }
   };
   A.HizmetAlanlariPaneli.prototype = {
@@ -265309,7 +265411,7 @@
       t1 = $._sunucuAlanlari;
       satirSayisi = B.JSInt_methods.$tdiv((t1 == null ? B.List_9M8 : t1).length + sutun - 1, sutun);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(14), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Hizmet Kategorileri", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null, A.LayoutBuilder$(new A._HizmetAlanlariPaneliState_build_closure(this, sutun, olcek, satirSayisi))], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null);
+      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Hizmet Kategorileri", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null, A.LayoutBuilder$(new A._HizmetAlanlariPaneliState_build_closure(this, sutun, olcek, satirSayisi))], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null);
     }
   };
   A._HizmetAlanlariPaneliState_build_closure.prototype = {
@@ -265384,11 +265486,11 @@
       t8 = B.Map_6vTZU.$index(0, t3);
       if (t8 == null)
         t8 = t3;
-      t7 = A.SizedBox$(A.Center$(A.Text$(t8, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, 1.2, 0, t6, B.FontWeight_600), B.TextAlign_2, _null), _null, _null), t7 * 2, 1 / 0);
+      t7 = A.SizedBox$(A.Center$(A.Text$(t8, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, 1.2, 0, t6, B.FontWeight_600), B.TextAlign_2, _null), _null, _null), t7 * 2, 1 / 0);
       t6 = 10.5 * oran;
       t8 = Math.ceil(olcek.scale$1(0, t6) * 1.4);
       t9 = type$.JSArray_Widget;
-      return new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t5, new A.Padding(B.EdgeInsets_6_8_6_10, A.Column$(A._setArrayType([t7, B.SizedBox_null_3_null_null, A.SizedBox$(A.Text$(t2.aciklama, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, 1.4, 0, t6, B.FontWeight_500), B.TextAlign_2, _null), t8 * 2, 1 / 0)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_2, _null, _null, t4, _null, _null, new A.ValueKey("cati-karti-" + t3, type$.ValueKey_String), _null, _null, _null, _null, _null), new A._AlanKarti__govde_closure1(_this, context), t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t5, new A.Padding(B.EdgeInsets_6_8_6_10, A.Column$(A._setArrayType([t7, B.SizedBox_null_3_null_null, A.SizedBox$(A.Text$(t2.aciklama, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, 1.4, 0, t6, B.FontWeight_500), B.TextAlign_2, _null), t8 * 2, 1 / 0)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_2, _null, _null, t4, _null, _null, new A.ValueKey("cati-karti-" + t3, type$.ValueKey_String), _null, _null, _null, _null, _null), new A._AlanKarti__govde_closure1(_this, context), t1, _null, _null);
     }
   };
   A._AlanKarti_build_closure.prototype = {
@@ -265442,9 +265544,9 @@
         t7 = t7 == null ? _null : t7.get$textScaler();
         t7 = Math.ceil((t7 == null ? B._LinearTextScaler_1 : t7).scale$1(0, 10.5) * 1.3);
         t8 = t4[3];
-        t8 = A.Text$(t8, 3, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, "Poppins", B.List_MNo, _null, 10.5, B.FontWeight_700, _null, -0.2, _null, _null, 1.3, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+        t8 = A.Text$(t8, _null, 3, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, "Poppins", B.List_MNo, _null, 10.5, B.FontWeight_700, _null, -0.2, _null, _null, 1.3, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
         t4 = t4[2];
-        t2.push(new A.Expanded(1, B.FlexFit_0, new A.Padding(B.EdgeInsets_7_0_7_0, A.Row$(A._setArrayType([new A.RefSvg(t5, 23, t6, _null), B.SizedBox_8_null_null_null, new A.Expanded(1, B.FlexFit_0, A.Column$(A._setArrayType([new A.SizedBox(1 / 0, t7 * 3, t8, _null), B.SizedBox_null_4_null_null, new A.SizedBox(1 / 0, _null, A.Text$(t4, _null, _null, _null, _null, new A.TextStyle(true, B.Color_lkD, _null, "Poppins", B.List_MNo, _null, 8.5, B.FontWeight_400, _null, 0, _null, _null, 1.45, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), _null));
+        t2.push(new A.Expanded(1, B.FlexFit_0, new A.Padding(B.EdgeInsets_7_0_7_0, A.Row$(A._setArrayType([new A.RefSvg(t5, 23, t6, _null), B.SizedBox_8_null_null_null, new A.Expanded(1, B.FlexFit_0, A.Column$(A._setArrayType([new A.SizedBox(1 / 0, t7 * 3, t8, _null), B.SizedBox_null_4_null_null, new A.SizedBox(1 / 0, _null, A.Text$(t4, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_lkD, _null, "Poppins", B.List_MNo, _null, 8.5, B.FontWeight_400, _null, 0, _null, _null, 1.45, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), _null));
       }
       return new A.RefCard(A.Row$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.EdgeInsets_4_15_4_15, _null);
     }
@@ -265453,7 +265555,7 @@
     build$1(context) {
       var _null = null,
         t1 = type$.JSArray_Widget;
-      return A.ClipRRect$(A.BorderRadius$circular(16), A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$("\u0130htiyac\u0131n\u0131z olan\nhizmete en h\u0131zl\u0131 yol!", _null, _null, _null, _null, A.refText(B.Color_wst, _null, 1.25, -0.5, 20, B.FontWeight_700), _null, _null), B.SizedBox_null_9_null_null, A.Text$("Do\u011fru profesyonel, do\u011fru fiyat,\ng\xfcvenli hizmet.", _null, _null, _null, _null, A.refText(B.Color_wst.withValues$1$alpha(0.92), _null, 1.5, -0.1, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), A.Transform$translate(B.SizedBox_ogS, B.Offset_4_0)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, B.BoxDecoration_xiz, _null, _null, _null, _null, B.EdgeInsets_16_22_16_22, _null, _null, _null));
+      return A.ClipRRect$(A.BorderRadius$circular(16), A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$("\u0130htiyac\u0131n\u0131z olan\nhizmete en h\u0131zl\u0131 yol!", _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, 1.25, -0.5, 20, B.FontWeight_700), _null, _null), B.SizedBox_null_9_null_null, A.Text$("Do\u011fru profesyonel, do\u011fru fiyat,\ng\xfcvenli hizmet.", _null, _null, _null, _null, _null, A.refText(B.Color_wst.withValues$1$alpha(0.92), _null, 1.5, -0.1, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), A.Transform$translate(B.SizedBox_ogS, B.Offset_4_0)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, B.BoxDecoration_xiz, _null, _null, _null, _null, B.EdgeInsets_16_22_16_22, _null, _null, _null));
     }
   };
   A.JobDetailScreen.prototype = {
@@ -265612,21 +265714,21 @@
       t9 = new A.WhereIterable(t3, t9._eval$1("bool(1)")._as(new A._JobDetailScreenState_build_closure()), t9._eval$1("WhereIterable<1>")).get$length(0);
       t3 = t6 ? _null : owner.kayitTarihi;
       t6 = type$.JSArray_Widget;
-      t3 = A._setArrayType([new A.IlanNoEtiketi(t8, _null), new A.SahipKarti(sahipAdi, iletisimAcik, t9, t1, t3, _null), B.Padding_gtc, A.IlanBaslikSatiri$(l.title, _null), new A.Padding(B.EdgeInsets_0_14_0_7, A.Text$("\u0130lan Detay\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null), _null), B.BolumAyraci_null], t6);
+      t3 = A._setArrayType([new A.IlanNoEtiketi(t8, _null), new A.SahipKarti(sahipAdi, iletisimAcik, t9, t1, t3, _null), B.Padding_gtc, A.IlanBaslikSatiri$(l.title, _null), new A.Padding(B.EdgeInsets_0_14_0_7, A.Text$("\u0130lan Detay\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null), _null), B.BolumAyraci_null], t6);
       t1 = l.isZamani;
       if (t1 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$("Zaman tercihi", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_4_null_null, new A.IsZamaniRozeti(t1, _null), B.BolumAyraci_null], t6));
-      t3.push(A.Text$("\u0130\u015fin detay\u0131", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$("Zaman tercihi", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_4_null_null, new A.IsZamaniRozeti(t1, _null), B.BolumAyraci_null], t6));
+      t3.push(A.Text$("\u0130\u015fin detay\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
       t3.push(B.SizedBox_null_4_null_null);
       t1 = l.desc;
       t1 = iletisimAcik ? t1 : A.maskele(t1);
-      t3.push(A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null));
+      t3.push(A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null));
       t4 = A.kullaniciKonumu(context, t4, true);
       t1 = t4 == null ? l.location : t4;
       t3.push(A.Container$(_null, A.Column$(A._setArrayType([new A.BilgiSatiri("assets/svg/ic_pin.svg", "\u0130l / \u0130l\xe7e / Mahalle", t1, _null), new A.BilgiSatiri("assets/svg/ic_nclock.svg", "\u0130lan Tarihi", A.kisaTarih(l.createdAt), _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, B.BoxDecoration_03T, _null, _null, _null, B.EdgeInsets_0_11_0_0, _null, _null, _null, _null));
       t1 = l.photoPaths.length;
       if (t1 !== 0)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.BolumAyraci_null, A.Text$("Ek Foto\u011fraflar (" + t1 + ")", _null, _null, _null, _null, B.TextStyle_e81, _null, _null), B.SizedBox_null_8_null_null, A.SizedBox$(A.ListView$separated(new A._JobDetailScreenState_build_closure0(context, l), t1, _null, _null, B.Axis_0, new A._JobDetailScreenState_build_closure1(), false), 76, _null)], t6));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.BolumAyraci_null, A.Text$("Ek Foto\u011fraflar (" + t1 + ")", _null, _null, _null, _null, _null, B.TextStyle_e81, _null, _null), B.SizedBox_null_8_null_null, A.SizedBox$(A.ListView$separated(new A._JobDetailScreenState_build_closure0(context, l), t1, _null, _null, B.Axis_0, new A._JobDetailScreenState_build_closure1(), false), 76, _null)], t6));
       t1 = A.Container$(_null, A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t7, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, _null);
       t3 = A._setArrayType([], t6);
       t4 = false;
@@ -265656,11 +265758,11 @@
         t2 = t4;
       if (t2) {
         t2 = _this._amt;
-        t4 = A.Text$("TL", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
+        t4 = A.Text$("TL", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
         t4 = A._setArrayType([B.Text_syu, B.SizedBox_null_10_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t2, _null, _null, _null, _null, _null, 2, A.InputDecoration$(_null, _null, _null, _null, _null, _null, _null, _null, true, _null, _null, _null, _null, _null, _this._amtError, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, "Teklif tutar\u0131n\u0131z\u0131 girin", _null, _null, _null, _null, _null, _null, _null, _null, "Teklif Tutar\u0131", true, true, false, _null, _null, _null, _null, _null, _null, _null, _null, new A.Padding(B.EdgeInsets_0_0_15_0, t4, _null), _null, B.BoxConstraints_0Yu, _null, _null, _null), B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, B.List_TutarBicimlendirici, _null, B.TextInputType_2_false_false, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._JobDetailScreenState_build_closure2(_this), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_0_0_0_140, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, _null, _null, _null), B.SizedBox_null_12_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this._note, _null, _null, _null, _null, _null, 2, B.InputDecoration_EjJ, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, 300, _null, 3, _null, _null, false, "\u2022", _null, new A._JobDetailScreenState_build_closure3(_this), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_0_0_0_140, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_10, _null, _null, _null, _null)], t6);
         t5 = _this._formError;
         if (t5 != null)
-          t4.push(new A.Padding(B.EdgeInsets_4_8_0_0, A.Text$(t5, _null, _null, _null, _null, B.TextStyle_pvn, _null, _null), _null));
+          t4.push(new A.Padding(B.EdgeInsets_4_8_0_0, A.Text$(t5, _null, _null, _null, _null, _null, B.TextStyle_pvn, _null, _null), _null));
         t4.push(B.SizedBox_null_12_null_null);
         t5 = _this._busyOffer;
         t4.push(new A.RefPrimaryButton("\xdccretsiz Teklif Ver", "assets/svg/ic_plane.svg", B.JSString_methods.trim$0(t2._change_notifier$_value.text).length !== 0 ? _this.get$_placeOffer() : _null, t5, _null));
@@ -266215,9 +266317,9 @@
         t2 = A.BorderRadius$circular(14),
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, _null, _null, _null, B.BoxShape_0),
         t4 = type$.JSArray_Widget,
-        t5 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(t.hizmet, _null, _null, _null, _null, B.TextStyle_Yie, _null, _null), B.SizedBox_null_3_null_null, B.Text_opl], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1),
+        t5 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(t.hizmet, _null, _null, _null, _null, _null, B.TextStyle_Yie, _null, _null), B.SizedBox_null_3_null_null, B.Text_opl], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1),
         t6 = t.teklifFiyati;
-      t5 = A._setArrayType([t5, A.Column$(A._setArrayType([A.Text$(A.binlikAyir(t6 == null ? 0 : t6) + " TL", _null, _null, _null, _null, B.TextStyle_ysw, _null, _null)], t4), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1)], t4);
+      t5 = A._setArrayType([t5, A.Column$(A._setArrayType([A.Text$(A.binlikAyir(t6 == null ? 0 : t6) + " TL", _null, _null, _null, _null, _null, B.TextStyle_ysw, _null, _null)], t4), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1)], t4);
       t6 = t.saglayiciId;
       if (A.okunmamisMesajSayisi(t, t6) > 0)
         B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_8_null_null, A.Align$(B.Alignment_m1_0, new A.YeniMesajSeridi(A.okunmamisMesajSayisi(t, t6), _null), _null, _null, _null)], t4));
@@ -266257,24 +266359,24 @@
       t3 = A.BoxDecoration$(A.Border_Border$all(t3, incelendi ? 1 : 2), A.BorderRadius$circular(14), _null, _null, _null, _null, B.BoxShape_0);
       t4 = l.title;
       t5 = incelendi ? B.FontWeight_600 : B.FontWeight_800;
-      t5 = A.Text$(t4, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_MXH : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 14.5, _null, _null, t5, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+      t5 = A.Text$(t4, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_MXH : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 14.5, _null, _null, t5, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
       t6 = this._musteriAdi$2(context, l);
       t7 = incelendi ? B.FontWeight_500 : B.FontWeight_700;
-      t6 = A.Text$(t6, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_MXH : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 12, _null, _null, t7, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+      t6 = A.Text$(t6, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_MXH : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 12, _null, _null, t7, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
       t7 = A.kullaniciKonumu(context, l.ownerId, true);
       if (t7 == null)
         t7 = l.location;
       t8 = incelendi ? B.FontWeight_400 : B.FontWeight_600;
       t9 = type$.JSArray_Widget;
-      t8 = A._setArrayType([t5, B.SizedBox_null_3_null_null, t6, B.SizedBox_null_3_null_null, A.Text$(t7, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_BhF : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 12, _null, _null, t8, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), B.SizedBox_null_7_null_null], t9);
+      t8 = A._setArrayType([t5, B.SizedBox_null_3_null_null, t6, B.SizedBox_null_3_null_null, A.Text$(t7, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, incelendi ? B.Color_BhF : B.Color_WJb, _null, _null, _null, _null, _null, _null, _null, _null, 12, _null, _null, t8, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), B.SizedBox_null_7_null_null], t9);
       t5 = l.isZamani;
       if (t5 != null)
         B.JSArray_methods.addAll$1(t8, A._setArrayType([new A.IsZamaniRozeti(t5, _null), B.SizedBox_null_7_null_null], t9));
       t5 = A.maskele(l.desc);
-      t8.push(A.Text$(t5, 2, B.TextOverflow_2, _null, _null, A.refText(incelendi ? B.Color_A9k : B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_500), _null, _null));
+      t8.push(A.Text$(t5, _null, 2, B.TextOverflow_2, _null, _null, A.refText(incelendi ? B.Color_A9k : B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_500), _null, _null));
       t5 = A.Expanded$(A.Column$(t8, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1);
       t6 = A.kisaTarih(l.createdAt);
-      t4 = A._setArrayType([new A.IlanKategoriIkonu(t4, 34, _null), B.SizedBox_9_null_null_null, t5, B.SizedBox_8_null_null_null, A.Text$(t6, _null, _null, _null, _null, A.refText(incelendi ? B.Color_A9k : B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t9);
+      t4 = A._setArrayType([new A.IlanKategoriIkonu(t4, 34, _null), B.SizedBox_9_null_null_null, t5, B.SizedBox_8_null_null_null, A.Text$(t6, _null, _null, _null, _null, _null, A.refText(incelendi ? B.Color_A9k : B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t9);
       if (trailing != null)
         B.JSArray_methods.addAll$1(t4, A._setArrayType([B.SizedBox_8_null_null_null, trailing], t9));
       return A.Material$(false, B.Duration_200000, true, t1, A.InkWell$(false, t2, true, A.Container$(_null, A.Column$(A._setArrayType([A.Row$(t4, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), new A.Builder(new A._JobsScreenState__jobCard_closure(l), _null), B.SizedBox_null_8_null_null, A.Align$(B.Alignment_1_0, new A.TeklifRozeti(teklifAdedi, _null), _null, _null, _null)], t9), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, new A._JobsScreenState__jobCard_closure0(context, l), _null, _null, _null, _null), B.Clip_0, B.Color_wst, 0, _null, _null, _null, _null, _null, B.MaterialType_0);
@@ -266573,7 +266675,7 @@
       t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, _null, _null, _null, B.BoxShape_0);
       t6 = t3 ? _null : l.title;
       t7 = type$.JSArray_Widget;
-      t6 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t6 == null ? "\u0130lan kald\u0131r\u0131ld\u0131" : t6, _null, _null, _null, _null, B.TextStyle_Yie, _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), A.Text$(A.binlikAyir(o.amount) + " TL", _null, _null, _null, _null, B.TextStyle_ysw, _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t7);
+      t6 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t6 == null ? "\u0130lan kald\u0131r\u0131ld\u0131" : t6, _null, _null, _null, _null, _null, B.TextStyle_Yie, _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), A.Text$(A.binlikAyir(o.amount) + " TL", _null, _null, _null, _null, _null, B.TextStyle_ysw, _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t7);
       if (!t3)
         B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_10_null_null, B.Divider_Lnq, B.SizedBox_null_10_null_null, new A.Builder(new A._JobsScreenState_build__closure0(l), _null)], t7));
       return A.Material$(false, B.Duration_200000, true, t1, A.InkWell$(false, t2, true, A.Container$(_null, A.Column$(t6, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, t4, _null, _null, _null, _null), B.Clip_0, B.Color_wst, 0, _null, _null, _null, _null, _null, B.MaterialType_0);
@@ -266815,7 +266917,7 @@
             B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_10_null_null, A.Container$(_null, B.Row_pvy, B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, B.Color_hew, _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_10_10_10_10, _null, _null, _null)], t2));
           t3.push(B.SizedBox_null_16_null_null);
           if (d.pdfUrl != null)
-            B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Align$(B.Alignment_m1_0, A.OutlinedButton$(B.Text_Sib, new A._LegalScreenState_build_closure(d), _null), _null, _null, _null), B.SizedBox_null_16_null_null], t2));
+            B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Align$(B.Alignment_m1_0, A.OutlinedButton$(B.Text_Sib, _null, new A._LegalScreenState_build_closure(d), _null), _null, _null, _null), B.SizedBox_null_16_null_null], t2));
           B.JSArray_methods.addAll$1(t3, _this._render$1(d.body));
           t1 = A.RefreshIndicator$(A.ListView$(t3, _null, B.EdgeInsets_20_12_20_32, false), _null, t1);
           govde = t1;
@@ -266829,7 +266931,7 @@
     _chip$1(t) {
       var _null = null,
         t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(20), _null, B.Color_UR2, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Text$(t, _null, _null, _null, _null, B.TextStyle_o5D, _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_5_10_5, _null, _null, _null);
+      return A.Container$(_null, A.Text$(t, _null, _null, _null, _null, _null, B.TextStyle_o5D, _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_5_10_5, _null, _null, _null);
     },
     _fmt$1(iso) {
       var d = A.DateTime_tryParse(iso);
@@ -266846,15 +266948,15 @@
         if (line.length === 0)
           B.JSArray_methods.add$1(out, B.SizedBox_null_10_null_null);
         else if (B.JSString_methods.startsWith$1(line, "## "))
-          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_14_0_4, A.Text$(B.JSString_methods.substring$1(line, 3), _null, _null, _null, _null, B.TextStyle_j1t, _null, _null), _null));
+          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_14_0_4, A.Text$(B.JSString_methods.substring$1(line, 3), _null, _null, _null, _null, _null, B.TextStyle_j1t, _null, _null), _null));
         else if (B.JSString_methods.startsWith$1(line, "# "))
-          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_0_0_8, A.Text$(B.JSString_methods.substring$1(line, 2), _null, _null, _null, _null, B.TextStyle_cBp, _null, _null), _null));
+          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_0_0_8, A.Text$(B.JSString_methods.substring$1(line, 2), _null, _null, _null, _null, _null, B.TextStyle_cBp, _null, _null), _null));
         else if (B.JSString_methods.startsWith$1(line, "- "))
-          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_4_0_0_4, A.Row$(A._setArrayType([B.Text_eYT, new A.Expanded(1, B.FlexFit_0, A.Text$(B.JSString_methods.substring$1(line, 2), _null, _null, _null, _null, B.TextStyle_oOv, _null, _null), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
+          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_4_0_0_4, A.Row$(A._setArrayType([B.Text_eYT, new A.Expanded(1, B.FlexFit_0, A.Text$(B.JSString_methods.substring$1(line, 2), _null, _null, _null, _null, _null, B.TextStyle_oOv, _null, _null), _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
         else if (B.JSString_methods.startsWith$1(line, "**") && B.JSString_methods.endsWith$1(line, "**"))
-          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_8_0_2, A.Text$(A.stringReplaceAllUnchecked(line, "**", ""), _null, _null, _null, _null, B.TextStyle_Uhn, _null, _null), _null));
+          B.JSArray_methods.add$1(out, new A.Padding(B.EdgeInsets_0_8_0_2, A.Text$(A.stringReplaceAllUnchecked(line, "**", ""), _null, _null, _null, _null, _null, B.TextStyle_Uhn, _null, _null), _null));
         else
-          B.JSArray_methods.add$1(out, A.Text$(line, _null, _null, _null, _null, B.TextStyle_qdW, _null, _null));
+          B.JSArray_methods.add$1(out, A.Text$(line, _null, _null, _null, _null, _null, B.TextStyle_qdW, _null, _null));
       }
       return out;
     }
@@ -267105,7 +267207,7 @@
               t1 = A.BorderRadius$circular(12);
               t2 = l.status === B.ListingStatus_0 ? "\u0130lan\u0131 Sil" : "\u0130lan\u0131 \u0130ptal Et";
               $async$goto = 3;
-              return A._asyncAwait(A.RefBottomSheet_goster(context, new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([B.RefSvg_MoM, B.SizedBox_10_null_null_null, A.Text$(t2, null, null, null, null, A.refText(B.Color_wuX, null, null, 0, 14.5, B.FontWeight_600), null, null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._ListingDetailScreenState__ilanMenusu_closure(context), t1, null, null), "\u0130lan Se\xe7enekleri", type$.bool), $async$_ilanMenusu$3);
+              return A._asyncAwait(A.RefBottomSheet_goster(context, new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([B.RefSvg_MoM, B.SizedBox_10_null_null_null, A.Text$(t2, null, null, null, null, null, A.refText(B.Color_wuX, null, null, 0, 14.5, B.FontWeight_600), null, null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._ListingDetailScreenState__ilanMenusu_closure(context), t1, null, null), "\u0130lan Se\xe7enekleri", type$.bool), $async$_ilanMenusu$3);
             case 3:
               // returning from await.
               if ($async$result !== true || context._widget == null) {
@@ -267144,7 +267246,7 @@
               for (_i = 0; _i < 5; ++_i) {
                 r = B.List_Du7[_i];
                 t3 = new A.Radius(12, 12);
-                t2.push(new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(r, null, null, null, null, new A.TextStyle(true, B.Color_MXH, null, "Poppins", B.List_MNo, null, 14.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null), B.RefSvg_ptN], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._ListingDetailScreenState__nedenSor_closure(context, r), new A.BorderRadius(t3, t3, t3, t3), null, null));
+                t2.push(new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(r, null, null, null, null, null, new A.TextStyle(true, B.Color_MXH, null, "Poppins", B.List_MNo, null, 14.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null), B.RefSvg_ptN], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._ListingDetailScreenState__nedenSor_closure(context, r), new A.BorderRadius(t3, t3, t3, t3), null, null));
               }
               t1 = type$.String;
               $async$goto = 3;
@@ -267233,17 +267335,17 @@
       t7 = A.kullaniciKonumu(context, l.ownerId, true);
       if (t7 == null)
         t7 = l.location;
-      t7 = A._setArrayType([new A.IlanNoEtiketi(t5, _null), A.IlanBaslikSatiri$(t6, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t7, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), A._ayrac(), B.RefSvg_azL, B.SizedBox_5_null_null_null, A.Text$(A.kisaTarih(l.createdAt), _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)), B.SizedBox_null_7_null_null, A.Text$(l.desc, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null)], t2);
+      t7 = A._setArrayType([new A.IlanNoEtiketi(t5, _null), A.IlanBaslikSatiri$(t6, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t7, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), A._ayrac(), B.RefSvg_azL, B.SizedBox_5_null_null_null, A.Text$(A.kisaTarih(l.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)), B.SizedBox_null_7_null_null, A.Text$(l.desc, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null)], t2);
       t5 = l.photoPaths;
       t6 = t5.length;
       if (t6 !== 0)
-        B.JSArray_methods.addAll$1(t7, A._setArrayType([B.SizedBox_null_12_null_null, A.Text$("Foto\u011fraflar (" + t6 + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_7_null_null, new A._Fotograflar(t5, _null)], t2));
+        B.JSArray_methods.addAll$1(t7, A._setArrayType([B.SizedBox_null_12_null_null, A.Text$("Foto\u011fraflar (" + t6 + ")", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_7_null_null, new A._Fotograflar(t5, _null)], t2));
       t7.push(B.SizedBox_null_6_null_null);
       t5 = l.status;
       t7.push(new A._DurumChipi(l.selectedOfferId != null, t5, _null));
       t4 = A.Container$(_null, A.Column$(t7, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_11_8_11_8, _null, _null, _null);
       t5 = l.selectedOfferId == null ? "Gelen Teklifler (" + offers.length + ")" : "Se\xe7ilen Hizmet Veren";
-      t5 = A._setArrayType([t3, B.SizedBox_null_8_null_null, t4, B.SizedBox_null_9_null_null, new A.Padding(B.EdgeInsets_2_0_2_0, A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_null_6_null_null], t2);
+      t5 = A._setArrayType([t3, B.SizedBox_null_8_null_null, t4, B.SizedBox_null_9_null_null, new A.Padding(B.EdgeInsets_2_0_2_0, A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_null_6_null_null], t2);
       if (offers.length === 0)
         t5.push(new A._BosTeklif(l.status === B.ListingStatus_1, _null));
       else
@@ -267262,7 +267364,7 @@
         if (reviewCtl._reviews.byOffer$1(t2) == null)
           t1.push(new A.Padding(B.EdgeInsets_0_8_0_0, new A.RefPrimaryButton("Yorum Yaz", "assets/svg/ic_starw.svg", new A._ListingDetailScreenState_build_closure2(context, l), false, _null), _null));
         else
-          t1.push(new A.Padding(B.EdgeInsets_0_8_0_0, A.Text$("De\u011ferlendirmeniz al\u0131nd\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_600), B.TextAlign_2, _null), _null));
+          t1.push(new A.Padding(B.EdgeInsets_0_8_0_0, A.Text$("De\u011ferlendirmeniz al\u0131nd\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_600), B.TextAlign_2, _null), _null));
         B.JSArray_methods.addAll$1(t5, t1);
       }
       return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(true, new A.RefScroll(A.Column$(t5, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_12_6_12_84, _null), B.EdgeInsets_0_0_0_0, true), _null);
@@ -267301,12 +267403,12 @@
       t1 = A.BorderRadius$circular(16);
       t2 = this.acik;
       t3 = t2 ? "\u0130lan silinsin mi?" : "\u0130lan iptal edilsin mi?";
-      t3 = A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null);
+      t3 = A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null);
       t4 = A.TextButton$(B.Text_PBK, new A._ListingDetailScreenState__silOnayi__closure(c), _null);
       t2 = t2 ? "Sil" : "\u0130ptal Et";
-      return A.AlertDialog$(A._setArrayType([t4, A.TextButton$(A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), new A._ListingDetailScreenState__silOnayi__closure0(c), _null)], type$.JSArray_Widget), _null, new A.RoundedRectangleBorder(t1, B.BorderSide_Ah5), t3);
+      return A.AlertDialog$(A._setArrayType([t4, A.TextButton$(A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), new A._ListingDetailScreenState__silOnayi__closure0(c), _null)], type$.JSArray_Widget), _null, new A.RoundedRectangleBorder(t1, B.BorderSide_Ah5), t3);
     },
-    $signature: 237
+    $signature: 202
   };
   A._ListingDetailScreenState__silOnayi__closure.prototype = {
     call$0() {
@@ -267447,7 +267549,7 @@
       nokta = t1[2];
       metin = t1[3];
       t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(7), _null, bg, _null, _null, B.BoxShape_0);
-      return A.Align$(B.Alignment_m1_0, A.Container$(_null, A.Row$(A._setArrayType([A.Container$(_null, _null, B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, nokta, _null, _null, B.BoxShape_1), _null, 8, _null, _null, _null, _null, _null, 8), B.SizedBox_5_null_null_null, A.Text$(metin, _null, _null, _null, _null, A.refText(fg, _null, _null, 0, 10.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_3_9_3, _null, _null, _null), _null, _null, _null);
+      return A.Align$(B.Alignment_m1_0, A.Container$(_null, A.Row$(A._setArrayType([A.Container$(_null, _null, B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, nokta, _null, _null, B.BoxShape_1), _null, 8, _null, _null, _null, _null, _null, 8), B.SizedBox_5_null_null_null, A.Text$(metin, _null, _null, _null, _null, _null, A.refText(fg, _null, _null, 0, 10.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_3_9_3, _null, _null, _null), _null, _null, _null);
     }
   };
   A._Fotograflar.prototype = {
@@ -267488,7 +267590,7 @@
     build$1(context) {
       var _null = null,
         t1 = this.suresiDoldu ? "S\xfcresi dolan ilanlarda teklifler g\xf6r\xfcnt\xfclenmez." : "Bu ilana teklif verilmedi.";
-      return new A.Padding(B.EdgeInsets_0_40_0_40, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null);
+      return new A.Padding(B.EdgeInsets_0_40_0_40, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null);
     }
   };
   A._TeklifKarti.prototype = {
@@ -267526,22 +267628,22 @@
       t2 = A.BorderRadius$circular(11);
       t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(11), B.List_eC7, B.Color_wst, _null, _null, B.BoxShape_0);
       t4 = type$.JSArray_Widget;
-      t5 = A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(_this._ad$1(acik), 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0.2, 13.5, B.FontWeight_700), _null, _null), _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t5 = A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(_this._ad$1(acik), _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0.2, 13.5, B.FontWeight_700), _null, _null), _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t6 = ortalama == null ? "\u2014" : B.JSNumber_methods.toStringAsFixed$1(ortalama, 1);
-      t6 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([t5, B.SizedBox_null_2_null_null, A.Row$(A._setArrayType([B.RefSvg_6cx, B.SizedBox_4_null_null_null, A.Text$(t6, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, A.Text$("(" + liste.length + " yorum)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_9_null_null_null, A.Column$(A._setArrayType([A.Text$(A.binlikAyir(t1.amount) + " TL", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_800), _null, _null), B.SizedBox_null_2_null_null, A.Text$("Teklif Fiyat\u0131", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 10, B.FontWeight_600), _null, _null)], t4), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
+      t6 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([t5, B.SizedBox_null_2_null_null, A.Row$(A._setArrayType([B.RefSvg_6cx, B.SizedBox_4_null_null_null, A.Text$(t6, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, A.Text$("(" + liste.length + " yorum)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_9_null_null_null, A.Column$(A._setArrayType([A.Text$(A.binlikAyir(t1.amount) + " TL", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 14.5, B.FontWeight_800), _null, _null), B.SizedBox_null_2_null_null, A.Text$("Teklif Fiyat\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 10, B.FontWeight_600), _null, _null)], t4), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
       t5 = t1.note;
       if (B.JSString_methods.trim$0(A.maskele(t5)).length !== 0) {
         t7 = A.BoxDecoration$(_null, A.BorderRadius$circular(8), _null, B.Color_UX0, _null, _null, B.BoxShape_0);
-        B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_5_null_null, A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Text$(A.maskele(t5), _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.4, 0, 11, B.FontWeight_400), _null, _null), 1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t7, _null, _null, _null, _null, B.EdgeInsets_9_6_9_6, _null, _null, 1 / 0)], t4));
+        B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_5_null_null, A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Text$(A.maskele(t5), _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.4, 0, 11, B.FontWeight_400), _null, _null), 1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t7, _null, _null, _null, _null, B.EdgeInsets_9_6_9_6, _null, _null, 1 / 0)], t4));
       }
       t6.push(B.SizedBox_null_5_null_null);
-      t1 = A._setArrayType([B.RefSvg_IIx, B.SizedBox_4_null_null_null, A.Text$(A._goreliZaman(t1.createdAt), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4);
+      t1 = A._setArrayType([B.RefSvg_IIx, B.SizedBox_4_null_null_null, A.Text$(A._goreliZaman(t1.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4);
       t5 = _this.saglayici;
       t5 = t5 == null ? _null : t5.get$providerOnboardingComplete();
       if (t5 === true)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([A._ayrac(), B.RefSvg_cTr, B.SizedBox_4_null_null_null, A.Text$("Onayl\u0131 Hizmet Veren", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([A._ayrac(), B.RefSvg_cTr, B.SizedBox_4_null_null_null, A.Text$("Onayl\u0131 Hizmet Veren", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4));
       if (olumlu != null)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([A._ayrac(), B.RefSvg_rw9, B.SizedBox_4_null_null_null, A.Text$("%" + A.S(olumlu) + " olumlu yorum", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([A._ayrac(), B.RefSvg_rw9, B.SizedBox_4_null_null_null, A.Text$("%" + A.S(olumlu) + " olumlu yorum", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 10, B.FontWeight_400), _null, _null)], t4));
       t6.push(A.Wrap$(t1, B.WrapCrossAlignment_2, 0, 0));
       return new A.RefTap(A.Container$(_null, A.Column$(t6, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_10_7_10_7, _null, _null, _null), _this.onTap, t2, _null, _null);
     }
@@ -267727,8 +267829,8 @@
       var t4, _this = this,
         _s9_ = "Giri\u015f Yap",
         _null = null,
-        t1 = A.Text$(_s9_, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null),
-        t2 = A.Text$("HizmetCep hesab\u0131n\u0131za giri\u015f yaparak kald\u0131\u011f\u0131n\u0131z yerden devam edin.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null),
+        t1 = A.Text$(_s9_, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null),
+        t2 = A.Text$("HizmetCep hesab\u0131n\u0131za giri\u015f yaparak kald\u0131\u011f\u0131n\u0131z yerden devam edin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null),
         t3 = _this._epostaModu ? "Telefon ile Giri\u015f" : "E-posta ile Giri\u015f";
       t3 = A._setArrayType([B.SizedBox_null_6_null_null, B.Center_X5B, B.SizedBox_null_14_null_null, B.SizedBox_null_4_null_null, t1, B.SizedBox_null_8_null_null, new A.Padding(B.EdgeInsets_6_0_6_0, t2, _null), B.SizedBox_null_22_null_null, new A._GirisYoluDegistir(t3, new A._LoginScreenState__formu_closure(_this), _null), B.SizedBox_null_16_null_null], type$.JSArray_Widget);
       if (_this.get$_kilitMesaji() == null) {
@@ -267744,7 +267846,7 @@
           t1 = _this._login_screen$_sistemHatasi;
           t1.toString;
         }
-        t3.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
       }
       if (_this._epostaModu)
         t3.push(A.RefFormField$(_this._login_screen$_email, !_this._login_screen$_busy, _null, true, _this._login_screen$_fEmail, false, "E-posta", "assets/svg/ic_mail.svg", _null, B.ValueKey_GdA, B.TextInputType_5_null_null, false, new A._LoginScreenState__formu_closure0(_this), _null, _null, _null, B.TextCapitalization_30, B.TextInputAction_6, new A._LoginScreenState__formu_closure1(_this), "E posta giriniz."));
@@ -267756,7 +267858,7 @@
       t3.push(A.RefFormField$(t1, !t2, _null, true, _this._login_screen$_fPass, false, "\u015eifre", "assets/svg/ic_lock.svg", _null, _null, _null, t4, new A._LoginScreenState__formu_closure4(_this), _null, new A._LoginScreenState__formu_closure5(_this), A.RefSifreGozu$(t4, new A._LoginScreenState__formu_closure6(_this)), B.TextCapitalization_10, B.TextInputAction_2, new A._LoginScreenState__formu_closure7(_this), "\u015eifre giriniz."));
       t2 = _this._login_screen$_busy ? _null : new A._LoginScreenState__formu_closure8(context);
       t4 = A.BorderRadius$circular(8);
-      t3.push(new A.Padding(B.EdgeInsets_0_2_2_14, A.Align$(B.Alignment_1_0, new A.RefTap(new A.Padding(B.EdgeInsets_2_4_2_4, A.Text$("\u015eifremi Unuttum", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), _null), t2, t4, _null, _null), _null, _null, _null), _null));
+      t3.push(new A.Padding(B.EdgeInsets_0_2_2_14, A.Align$(B.Alignment_1_0, new A.RefTap(new A.Padding(B.EdgeInsets_2_4_2_4, A.Text$("\u015eifremi Unuttum", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), _null), t2, t4, _null, _null), _null, _null, _null), _null));
       t4 = _this._login_screen$_busy;
       if (B.JSString_methods.trim$0(t1._change_notifier$_value.text).length !== 0)
         t1 = _this._epostaModu ? A.Validators_email(_this._login_screen$_email._change_notifier$_value.text) == null : A.Validators_phone(_this._login_screen$_phone._change_notifier$_value.text) == null;
@@ -267918,7 +268020,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._LoginScreenState__formu__closure0(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._LoginScreenState__formu__closure0.prototype = {
     call$0() {
@@ -267951,7 +268053,7 @@
       var _null = null,
         t1 = A.BorderRadius$circular(12),
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(12), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      return new A.RefTap(A.Container$(B.Alignment_0_0, A.Row$(A._setArrayType([B.RefSvg_UbW, B.SizedBox_8_null_null_null, A.Text$(this.etiket, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, 44, _null, _null, _null, _null, _null, _null), this.onTap, t1, _null, _null);
+      return new A.RefTap(A.Container$(B.Alignment_0_0, A.Row$(A._setArrayType([B.RefSvg_UbW, B.SizedBox_8_null_null_null, A.Text$(this.etiket, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, 44, _null, _null, _null, _null, _null, _null), this.onTap, t1, _null, _null);
     }
   };
   A.MyAreasScreen.prototype = {
@@ -268018,7 +268120,7 @@
                 if (t7 == null)
                   t7 = rc._region_controller$_cache;
                 t7 = (t7 == null ? B.RegionTree_List_empty : t7).hizmeteAcik$1$sehir(il) ? B.Color_MXH : B.Color_Ldf;
-                t6 = A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(il, 1, B.TextOverflow_2, null, null, new A.TextStyle(true, t7, null, "Poppins", B.List_MNo, null, 14.5, t6, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null)], t2);
+                t6 = A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(il, null, 1, B.TextOverflow_2, null, null, new A.TextStyle(true, t7, null, "Poppins", B.List_MNo, null, 14.5, t6, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null)], t2);
                 t7 = rc._region_controller$_tree;
                 if (t7 == null)
                   t7 = rc._region_controller$_cache;
@@ -268027,7 +268129,7 @@
                   if (t7 == null)
                     t7 = rc._region_controller$_cache;
                   t7 = (t7 == null ? B.RegionTree_List_empty : t7).hizmeteAcik$1$sehir(il) ? null : "Yak\u0131nda";
-                  B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_8_null_null_null, A.Text$("\u2014 " + A.S(t7), null, null, null, null, new A.TextStyle(true, B.Color_Ldf, null, "Poppins", B.List_MNo, null, 12.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null)], t2));
+                  B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_8_null_null_null, A.Text$("\u2014 " + A.S(t7), null, null, null, null, null, new A.TextStyle(true, B.Color_Ldf, null, "Poppins", B.List_MNo, null, 12.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null)], t2));
                 }
                 t6 = A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null)], t2);
                 if (il === $async$self._il)
@@ -268133,13 +268235,13 @@
       if (t5 == null)
         t5 = "Se\xe7iniz";
       t6 = type$.JSArray_Widget;
-      t4 = A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_400), _null, _null), 1), B.RefSvg_H95], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null);
+      t4 = A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_400), _null, _null), 1), B.RefSvg_H95], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null);
       if (_this._saving)
         t5 = _null;
       else
         t5 = _this.get$_allSelected() ? _this.get$_clearAll() : _this.get$_selectAll();
       t7 = A.BorderRadius$circular(10);
-      t7 = A._setArrayType([new A.RefTap(t4, t2, t3, _null, _null), B.SizedBox_null_6_null_null, new A.RefTap(new A.Padding(B.EdgeInsets_3_12_3_12, A.Row$(A._setArrayType([new A.RefCheckBox(_this.get$_allSelected(), _null), B.SizedBox_11_null_null_null, A.Expanded$(A.Text$("T\xfcm \u0130l\xe7elere Hizmet Veriyorum", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t5, t7, _null, _null)], t6);
+      t7 = A._setArrayType([new A.RefTap(t4, t2, t3, _null, _null), B.SizedBox_null_6_null_null, new A.RefTap(new A.Padding(B.EdgeInsets_3_12_3_12, A.Row$(A._setArrayType([new A.RefCheckBox(_this.get$_allSelected(), _null), B.SizedBox_11_null_null_null, A.Expanded$(A.Text$("T\xfcm \u0130l\xe7elere Hizmet Veriyorum", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_600), _null, _null), 1)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t5, t7, _null, _null)], t6);
       t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_jIV, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t3 = _this._search;
       t2 = _this._saving;
@@ -268156,7 +268258,7 @@
       t2 = A._setArrayType([], t6);
       t4 = _this._my_areas_screen$_error;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_8_null_null], t6));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_8_null_null], t6));
       t4 = _this._saving;
       t2.push(A.SizedBox$(A.SysButton$("Kaydet", t4, _this._selected._collection$_length === 0 ? _null : _this.get$_save()), _null, 1 / 0));
       t2.push(B.SizedBox_null_6_null_null);
@@ -268316,13 +268418,13 @@
     call$1(_) {
       return this.$this._toggle$1(this.d);
     },
-    $signature: 10
+    $signature: 11
   };
   A._AdCard.prototype = {
     build$1(context) {
       var _null = null,
         t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(15), _null, B.Color_wst, _null, _null, B.BoxShape_0),
-        t2 = A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null], type$.JSArray_Widget);
+        t2 = A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_10_null_null], type$.JSArray_Widget);
       B.JSArray_methods.addAll$1(t2, this.children);
       return A.Container$(_null, A.Column$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_15_15_15_15, _null, _null, _null);
     }
@@ -268428,7 +268530,7 @@
       var _i, r, side, t8, t9, t10, _this = this, _null = null,
         _s7_ = "Poppins",
         t1 = A.WebPanel_panelMi(context) ? B.Color_Edl : B.Color_wst,
-        t2 = A.Text$("Hizmet verdi\u011finiz hizmet kategorilerini se\xe7in.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
+        t2 = A.Text$("Hizmet verdi\u011finiz hizmet kategorilerini se\xe7in.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_Dun, 1.7), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t4 = _this._my_categories_screen$_search,
         t5 = _this._my_categories_screen$_saving,
@@ -268443,16 +268545,16 @@
       for (t3 = _this.get$_aramaSonuclari(), t4 = t3.length, _i = 0; _i < t3.length; t3.length === t4 || (0, A.throwConcurrentModificationError)(t3), ++_i) {
         r = t3[_i];
         t5 = _this._my_categories_screen$_saving ? _null : new A._MyCategoriesScreenState_build_closure1(_this, r);
-        t6 = A.Text$(r._0, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
-        t2.push(new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_2_null_null, A.Text$(r._1, _null, _null, _null, _null, new A.TextStyle(true, B.Color_A9k, _null, _s7_, B.List_MNo, _null, 12, B.FontWeight_400, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_2Tw, _null, _null, _null, _null, B.EdgeInsets_15_11_15_11, _null, _null, 1 / 0), t5, _null, _null, _null));
+        t6 = A.Text$(r._0, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+        t2.push(new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_2_null_null, A.Text$(r._1, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_A9k, _null, _s7_, B.List_MNo, _null, 12, B.FontWeight_400, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_2Tw, _null, _null, _null, _null, B.EdgeInsets_15_11_15_11, _null, _null, 1 / 0), t5, _null, _null, _null));
       }
       t2.push(B.SizedBox_null_16_null_null);
-      t2.push(A.Text$("Se\xe7ili Hizmetlerim (" + _this._my_categories_screen$_selected._collection$_length + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null));
+      t2.push(A.Text$("Se\xe7ili Hizmetlerim (" + _this._my_categories_screen$_selected._collection$_length + ")", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null));
       t2.push(B.SizedBox_null_4_null_null);
-      t2.push(A.Text$("En az bir hizmet kategorisi se\xe7iniz", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null));
+      t2.push(A.Text$("En az bir hizmet kategorisi se\xe7iniz", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null));
       t2.push(B.SizedBox_null_10_null_null);
       if (_this._my_categories_screen$_selected._collection$_length === 0)
-        t2.push(A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null));
+        t2.push(A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null));
       else {
         t3 = A._setArrayType([], t7);
         for (t4 = _this._my_categories_screen$_selected, t4 = A._LinkedHashSetIterator$(t4, t4._collection$_modifications, A._instanceType(t4)._precomputed1), t5 = t4.$ti._precomputed1; t4.moveNext$0();) {
@@ -268461,7 +268563,7 @@
             t6 = t5._as(t6);
           side = new A.BorderSide(B.Color_jIV, 1, B.BorderStyle_1, -1);
           t8 = new A.Radius(11, 11);
-          t9 = A.Text$(t6, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+          t9 = A.Text$(t6, _null, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
           t6 = _this._my_categories_screen$_saving ? _null : new A._MyCategoriesScreenState_build_closure2(_this, t6);
           t10 = new A.Radius(999, 999);
           t3.push(A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, t9, _null), B.SizedBox_8_null_null_null, new A.RefTap(B.Padding_XRX, t6, new A.BorderRadius(t10, t10, t10, t10), _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, new A.BoxDecoration(B.Color_wst, _null, new A.Border(side, side, side, side), new A.BorderRadius(t8, t8, t8, t8), _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null));
@@ -268472,7 +268574,7 @@
       t3 = A._setArrayType([], t7);
       t4 = _this._my_categories_screen$_error;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_8_null_null], t7));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$(t4, _null, _null, _null, _null, _null, B.TextStyle_ql8, _null, _null), B.SizedBox_null_8_null_null], t7));
       t4 = _this._my_categories_screen$_saving;
       t3.push(A.SizedBox$(A.SysButton$("Kaydet", t4, _this._my_categories_screen$_selected._collection$_length === 0 ? _null : _this.get$_my_categories_screen$_save()), _null, 1 / 0));
       return A.Scaffold$(_null, t1, A.WebPanel$(_null, _null, A.SafeArea$(true, A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_16_4_16_0, B.RefDetailHeader_IoP, _null), t2, A.SafeArea$(true, new A.Padding(B.EdgeInsets_18_8_18_12, A.Column$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), B.EdgeInsets_0_0_0_0, false)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_0_0_0_0, true), _null), _null);
@@ -268925,17 +269027,17 @@
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(12), B.List_eC7, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = this.listing,
         t4 = type$.JSArray_Widget,
-        t5 = A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t3.title, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.Padding_9LR], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
+        t5 = A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t3.title, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.Padding_9LR], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
         t6 = A.kullaniciKonumu(context, t3.ownerId, true);
       if (t6 == null)
         t6 = t3.location;
-      return new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t5, B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t6, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), B.RefSvg_azL, B.SizedBox_5_null_null_null, A.Text$(A.kisaTarih(t3.createdAt), _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_5_null_null, A.Text$(t3.desc, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, new A.TeklifRozeti(this.teklifSayisi, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null), this.onTap, t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t5, B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t6, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), B.RefSvg_azL, B.SizedBox_5_null_null_null, A.Text$(A.kisaTarih(t3.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_5_null_null, A.Text$(t3.desc, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, new A.TeklifRozeti(this.teklifSayisi, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null), this.onTap, t1, _null, _null);
     }
   };
   A._BosListe.prototype = {
     build$1(context) {
       var _null = null;
-      return A.KalanAlandaOrtala$(24, A.Text$("Bu sekmede g\xf6sterilecek ilan yok.", _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null));
+      return A.KalanAlandaOrtala$(24, A.Text$("Bu sekmede g\xf6sterilecek ilan yok.", _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null));
     }
   };
   A._TeklifTalebiIsKarti.prototype = {
@@ -268945,10 +269047,10 @@
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(12), B.List_eC7, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = this.talep,
         t4 = type$.JSArray_Widget,
-        t5 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$("Do\u011frudan Teklif", 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, -0.1, 11, B.FontWeight_500), _null, _null), A.Text$(t3.hizmet, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.Padding_9LR], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_s3U, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t3.saglayiciAdi, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), A.Text$(A.kisaTarih(t3.createdAt), _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
+        t5 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$("Do\u011frudan Teklif", _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, -0.1, 11, B.FontWeight_500), _null, _null), A.Text$(t3.hizmet, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.Padding_9LR], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_s3U, B.SizedBox_5_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(t3.saglayiciAdi, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), new A.Padding(B.EdgeInsets_6_0_6_0, A.Text$("|", _null, _null, _null, _null, _null, A.refText(B.Color_HLW, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), _null), A.Text$(A.kisaTarih(t3.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
       t3 = t3.teklifFiyati;
       if (t3 != null)
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_6_null_null, A.Text$(A.binlikAyir(t3) + " TL", _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_6_null_null, A.Text$(A.binlikAyir(t3) + " TL", _null, _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t4));
       return new A.RefTap(A.Container$(_null, A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null), this.onTap, t1, _null, _null);
     }
   };
@@ -269020,7 +269122,7 @@
                   $async$goto = 1;
                   break;
                 }
-                $async$self.setState$1(new A._MyReviewsScreenState__load_closure0($async$self, list));
+                $async$self.setState$1(new A._MyReviewsScreenState__load_closure0($async$self, list, me));
                 // goto return
                 $async$goto = 1;
                 break;
@@ -269193,15 +269295,15 @@
       var t5, t6, _i, k, _this = this, _null = null,
         avg = _this._average,
         t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(15), _null, B.Color_wst, _null, _null, B.BoxShape_0),
-        t2 = A.Text$("Genel Puan\u0131m", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_700), _null, _null),
+        t2 = A.Text$("Genel Puan\u0131m", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_700), _null, _null),
         t3 = avg == null,
         t4 = B.JSNumber_methods.toStringAsFixed$1(t3 ? 0 : avg, 1);
-      t4 = A.Text$(A.stringReplaceAllUnchecked(t4, ".", ","), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -1, 37, B.FontWeight_800), _null, _null);
+      t4 = A.Text$(A.stringReplaceAllUnchecked(t4, ".", ","), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -1, 37, B.FontWeight_800), _null, _null);
       t5 = _this._my_reviews_screen$_stars$2$size(t3 ? 0 : avg, 20);
       t3 = _this._my_reviews_screen$_count;
       t3 = t3 === 0 ? "(Yorum yok)" : "(" + t3 + " yorum)";
       t6 = type$.JSArray_Widget;
-      t3 = A.Container$(_null, A.Column$(A._setArrayType([t2, B.SizedBox_null_5_null_null, t4, B.SizedBox_null_5_null_null, t5, B.SizedBox_null_5_null_null, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_HoN, _null, _null, _null, _null, B.EdgeInsets_0_0_12_0, _null, _null, _null);
+      t3 = A.Container$(_null, A.Column$(A._setArrayType([t2, B.SizedBox_null_5_null_null, t4, B.SizedBox_null_5_null_null, t5, B.SizedBox_null_5_null_null, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), B.SizedBox_null_3_null_null, A.Text$("" + _this._tamamlananIs + " i\u015f tamamlad\u0131", B.ValueKey_F65, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 11.5, B.FontWeight_600), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_HoN, _null, _null, _null, _null, B.EdgeInsets_0_0_12_0, _null, _null, _null);
       t5 = A._setArrayType([], t6);
       for (_i = 0; _i < 5; ++_i) {
         k = B.List_Cww[_i];
@@ -269278,9 +269380,10 @@
       t4 = this.list;
       t5 = A._arrayInstanceType(t4);
       B.JSArray_methods.addAll$1(t3, new A.MappedListIterable(t4, t5._eval$1("Map<String,@>(1)")._as(t2.get$_mockSatir()), t5._eval$1("MappedListIterable<1,Map<String,@>>")));
-      t3 = t4.length;
-      t2._my_reviews_screen$_count = t3;
-      t2._average = t3 === 0 ? null : B.JSArray_methods.fold$1$2(t4, 0, new A._MyReviewsScreenState__load__closure(), type$.int) / t4.length;
+      t2._my_reviews_screen$_count = t4.length;
+      t3 = this.me;
+      t2._tamamlananIs = t3 == null ? 0 : A.tamamlananIsSayisi(t2.get$context(0), t3.id, false);
+      t2._average = t4.length === 0 ? null : B.JSArray_methods.fold$1$2(t4, 0, new A._MyReviewsScreenState__load__closure(), type$.int) / t4.length;
       t1 = A.LinkedHashMap_LinkedHashMap$_empty(type$.String, type$.int);
       y = 1;
       t3 = t5._eval$1("bool(1)");
@@ -269306,7 +269409,7 @@
     call$2(t, r) {
       return A._asInt(t) + type$.Review._as(r).stars;
     },
-    $signature: 219
+    $signature: 220
   };
   A._MyReviewsScreenState__load__closure0.prototype = {
     call$1(r) {
@@ -269330,6 +269433,9 @@
       t4 = A._asNumQ(t3.$index(t2, "count"));
       t4 = t4 == null ? null : B.JSNumber_methods.toInt$0(t4);
       t1._my_reviews_screen$_count = t4 == null ? 0 : t4;
+      t4 = A._asNumQ(t3.$index(t2, "completedJobs"));
+      t4 = t4 == null ? null : B.JSNumber_methods.toInt$0(t4);
+      t1._tamamlananIs = t4 == null ? 0 : t4;
       t1._dist = t1._parseDist$1(t3.$index(t2, "distribution"));
       t4 = t1._my_reviews_screen$_items;
       B.JSArray_methods.clear$0(t4);
@@ -269541,7 +269647,7 @@
       type$.BuildContext._as(_);
       return new A.TeklifTalebiSohbetScreen(this.ilan, this.talep.hizmet, null);
     },
-    $signature: 230
+    $signature: 235
   };
   A.NotificationsScreen_hedefeGit_closure4.prototype = {
     call$1(_) {
@@ -269585,63 +269691,80 @@
     },
     _gorunum$1(t) {
       var t1;
-      switch (t.index) {
-        case 0:
+      $label0$0: {
+        if (B.NotifType_0 === t) {
           t1 = B.Record3_7mc;
-          break;
-        case 1:
+          break $label0$0;
+        }
+        if (B.NotifType_1 === t) {
           t1 = B.Record3_Q6X;
-          break;
-        case 2:
+          break $label0$0;
+        }
+        if (B.NotifType_2 === t) {
           t1 = B.Record3_0aT;
-          break;
-        case 3:
+          break $label0$0;
+        }
+        if (B.NotifType_3 === t) {
           t1 = B.Record3_sti;
-          break;
-        case 4:
+          break $label0$0;
+        }
+        if (B.NotifType_4 === t) {
           t1 = B.Record3_qz3;
-          break;
-        case 9:
+          break $label0$0;
+        }
+        if (B.NotifType_9 === t) {
           t1 = B.Record3_Aun;
-          break;
-        case 5:
+          break $label0$0;
+        }
+        if (B.NotifType_5 === t) {
           t1 = B.Record3_Ir9;
-          break;
-        case 6:
+          break $label0$0;
+        }
+        if (B.NotifType_6 === t) {
           t1 = B.Record3_UiF;
-          break;
-        case 7:
+          break $label0$0;
+        }
+        if (B.NotifType_7 === t) {
           t1 = B.Record3_YxE;
-          break;
-        case 8:
+          break $label0$0;
+        }
+        if (B.NotifType_8 === t) {
           t1 = B.Record3_Obh;
-          break;
-        case 10:
+          break $label0$0;
+        }
+        if (B.NotifType_10 === t) {
           t1 = B.Record3_x6d;
-          break;
-        case 11:
+          break $label0$0;
+        }
+        if (B.NotifType_11 === t) {
           t1 = B.Record3_7mc;
-          break;
-        case 12:
+          break $label0$0;
+        }
+        if (B.NotifType_12 === t) {
           t1 = B.Record3_Q6X;
-          break;
-        case 13:
+          break $label0$0;
+        }
+        if (B.NotifType_13 === t || B.NotifType_17 === t) {
           t1 = B.Record3_22d;
-          break;
-        case 14:
+          break $label0$0;
+        }
+        if (B.NotifType_14 === t) {
           t1 = B.Record3_Ir9;
-          break;
-        case 15:
+          break $label0$0;
+        }
+        if (B.NotifType_15 === t) {
           t1 = B.Record3_EIZ;
-          break;
-        case 16:
+          break $label0$0;
+        }
+        if (B.NotifType_16 === t) {
           t1 = B.Record3_qz3;
-          break;
-        case 17:
+          break $label0$0;
+        }
+        if (B.NotifType_18 === t) {
           t1 = B.Record3_mjI;
-          break;
-        default:
-          t1 = null;
+          break $label0$0;
+        }
+        t1 = null;
       }
       return t1;
     },
@@ -269670,10 +269793,10 @@
       t2 = A._arrayInstanceType(liste);
       if (new A.WhereIterable(liste, t2._eval$1("bool(1)")._as(new A._NotificationsScreenState_build_closure()), t2._eval$1("WhereIterable<1>")).get$length(0) > 0) {
         t2 = A.BorderRadius$circular(8);
-        tumunuOkundu = new A.RefTap(new A.Padding(B.EdgeInsets_0_4_0_4, A.Text$("T\xfcm\xfcn\xfc Okundu Yap", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), new A._NotificationsScreenState_build_closure0(context, liste), t2, _null, _null);
+        tumunuOkundu = new A.RefTap(new A.Padding(B.EdgeInsets_0_4_0_4, A.Text$("T\xfcm\xfcn\xfc Okundu Yap", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), new A._NotificationsScreenState_build_closure0(context, liste), t2, _null, _null);
       } else
         tumunuOkundu = _null;
-      bosMetin = A.Text$("Hen\xfcz bildiriminiz yok.", _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null);
+      bosMetin = A.Text$("Hen\xfcz bildiriminiz yok.", _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null);
       t1 = A.custNavItems(context, t1.get$activeRole() === B.Role_1);
       t2 = type$.JSArray_Widget;
       t3 = A._setArrayType([], t2);
@@ -269742,7 +269865,7 @@
         t3 = okunmamis ? B.Color_5RH : B.Color_wst;
       t3 = A.BoxDecoration$(_null, A.BorderRadius$circular(14), _null, t3, _null, _null, B.BoxShape_0);
       t4 = type$.JSArray_Widget;
-      t4 = A._setArrayType([A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_0_0._0, 22, _0_0._2, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, _0_0._1, _null, _null, B.BoxShape_0), _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Text$(t1.title, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, A.Text$(_this.zaman, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_4, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, B.TextBaseline_0), B.SizedBox_null_3_null_null, A.Text$(t1.body, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 12.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
+      t4 = A._setArrayType([A.Row$(A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_0_0._0, 22, _0_0._2, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, _0_0._1, _null, _null, B.BoxShape_0), _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Text$(t1.title, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, A.Text$(_this.zaman, _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_4, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, B.TextBaseline_0), B.SizedBox_null_3_null_null, A.Text$(t1.body, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 12.5, B.FontWeight_400), _null, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
       if (okunmamis)
         t4.push(A.Positioned$(0, A.Center$(A.Container$(_null, _null, B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, A._setArrayType([A.BoxShadow$(0, B.BlurStyle_0, B.Color_Dun.withValues$1$alpha(0.18), B.Offset_0_0, 3)], type$.JSArray_BoxShadow), B.Color_Dun, _null, _null, B.BoxShape_1), _null, 10, _null, _null, _null, _null, _null, 10), _null, _null), _null, _null, -15, _null, 0, _null));
       return new A.RefTap(A.Container$(_null, A.Stack$(B.AlignmentDirectional_m1_m1, t4, B.Clip_1, B.StackFit_0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_22_13_13_13, _null, _null, _null), _this.onTap, t2, _null, _null);
@@ -269790,14 +269913,14 @@
       t4 = t5.byOffer$1(t4) == null;
       t5 = A.SizedBox$(new A.Builder(new A._OfferDetailScreenState_build_closure1($open, prov), _null), 84, 84);
       t6 = prov == null;
-      t7 = A.Text$(A._saglayiciAdi(t6 ? _null : prov.name, $open), 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 17, B.FontWeight_700), _null, _null);
+      t7 = A.Text$(A._saglayiciAdi(t6 ? _null : prov.name, $open), _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 17, B.FontWeight_700), _null, _null);
       t8 = avg == null ? "\u2014" : B.JSNumber_methods.toStringAsFixed$1(avg, 1);
       t9 = type$.JSArray_Widget;
-      t8 = A.Wrap$(A._setArrayType([B.RefSvg_rrF, B.SizedBox_5_null_null_null, A.Text$(t8, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_5_null_null_null, A.Text$("(" + revs.length + " yorum)", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t9), B.WrapCrossAlignment_2, 0, 0);
+      t8 = A.Wrap$(A._setArrayType([B.RefSvg_rrF, B.SizedBox_5_null_null_null, A.Text$(t8, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_5_null_null_null, A.Text$("(" + revs.length + " yorum)", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t9), B.WrapCrossAlignment_2, 0, 0);
       t10 = A._setArrayType([], t9);
       t11 = t6 ? _null : prov.get$providerOnboardingComplete();
       if (t11 === true)
-        B.JSArray_methods.addAll$1(t10, A._setArrayType([B.RefSvg_Huc, B.SizedBox_5_null_null_null, A.Text$("Onayl\u0131 Hizmet Veren", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t9));
+        B.JSArray_methods.addAll$1(t10, A._setArrayType([B.RefSvg_Huc, B.SizedBox_5_null_null_null, A.Text$("Onayl\u0131 Hizmet Veren", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t9));
       if (A._olumluOran(revs) != null) {
         t11 = A._setArrayType([], t9);
         t12 = t6 ? _null : prov.get$providerOnboardingComplete();
@@ -269805,7 +269928,7 @@
           t11.push(B.Padding_gYU);
         t11.push(B.RefSvg_pkW);
         t11.push(B.SizedBox_5_null_null_null);
-        t11.push(A.Text$("%" + A.S(A._olumluOran(revs)) + " olumlu yorum", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null));
+        t11.push(A.Text$("%" + A.S(A._olumluOran(revs)) + " olumlu yorum", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null));
         B.JSArray_methods.addAll$1(t10, t11);
       }
       if (A.tamamlananIsSayisi(context, t3, true) > 0) {
@@ -269813,18 +269936,18 @@
         t12 = t6 ? _null : prov.get$providerOnboardingComplete();
         if (t12 === true || A._olumluOran(revs) != null)
           t11.push(B.Padding_gYU);
-        t11.push(A.Text$("" + A.tamamlananIsSayisi(context, t3, true) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null));
+        t11.push(A.Text$("" + A.tamamlananIsSayisi(context, t3, true) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null));
         B.JSArray_methods.addAll$1(t10, t11);
       }
       t3 = A.Row$(A._setArrayType([t5, B.SizedBox_12_null_null_null, A.Expanded$(new A.Padding(B.EdgeInsets_0_6_0_0, A.Column$(A._setArrayType([t7, B.SizedBox_null_6_null_null, t8, B.SizedBox_null_6_null_null, A.Wrap$(t10, B.WrapCrossAlignment_2, 0, 0)], t9), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), 1)], t9), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t5 = A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, B.Color_c1Y, _null, _null, B.BoxShape_0);
-      t5 = A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Verilen teklif", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_1_null_null, A.Text$(A.binlikAyir(o.amount) + " TL", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, -0.5, 24, B.FontWeight_800), _null, _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_9_9_9_9, _null, _null, _null);
+      t5 = A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Verilen teklif", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_1_null_null, A.Text$(A.binlikAyir(o.amount) + " TL", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, -0.5, 24, B.FontWeight_800), _null, _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_9_9_9_9, _null, _null, _null);
       t7 = A._prBaslik("Hizmet Verenin Teklifi");
       t8 = A.BoxDecoration$(_null, A.BorderRadius$circular(8), _null, B.Color_UX0, _null, _null, B.BoxShape_0);
       t10 = o.note;
       t10 = $open ? t10 : A.maskele(t10);
-      t8 = A.Container$(_null, A.Row$(A._setArrayType([B.Padding_QSB, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t10, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.4, 0, 11, B.FontWeight_400), _null, _null), 1)], t9), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t8, _null, _null, _null, _null, B.EdgeInsets_9_6_9_6, _null, _null, 1 / 0);
-      t10 = A.Row$(A._setArrayType([B.RefSvg_881, B.SizedBox_7_null_null_null, A.Text$(A._prGoreliZaman(o.createdAt), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t8 = A.Container$(_null, A.Row$(A._setArrayType([B.Padding_QSB, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t10, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.4, 0, 11, B.FontWeight_400), _null, _null), 1)], t9), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t8, _null, _null, _null, _null, B.EdgeInsets_9_6_9_6, _null, _null, 1 / 0);
+      t10 = A.Row$(A._setArrayType([B.RefSvg_881, B.SizedBox_7_null_null_null, A.Text$(A._prGoreliZaman(o.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t9), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t11 = A._prBaslik("\u0130leti\u015fim Bilgileri");
       if ($open) {
         t12 = A._telefonGoster(t6 ? _null : prov.phone);
@@ -269836,7 +269959,7 @@
       t13 = $open ? "Mesaj yaz" : "Mesaj g\xf6ndermek i\xe7in ileti\u015fimi a\xe7\u0131n";
       t3 = A._setArrayType([B.Align_tEd, B.SizedBox_null_2_null_null, t3, B.SizedBox_null_12_null_null, t5, t7, t8, B.SizedBox_null_10_null_null, t10, t11, new A.IntrinsicHeight(A.Row$(A._setArrayType([t6, B.SizedBox_11_null_null_null, A.Expanded$(A._IletisimKutusu$(false, t13, "Mesajla\u015fma", "assets/svg/ic_chat.svg", t12, t12, $open ? new A._OfferDetailScreenState_build_closure3(context, o) : _null), 1)], t9), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), new A._PuanKarti(revs, avg, _null), A._prBaslik("Hizmet Alan Yorumlar\u0131")], t9);
       if (revs.length === 0)
-        t3.push(new A.Padding(B.EdgeInsets_0_22_0_22, A.Text$("Hen\xfcz yorum yap\u0131lmam\u0131\u015f.", _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_0_22_0_22, A.Text$("Hen\xfcz yorum yap\u0131lmam\u0131\u015f.", _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
       else {
         t5 = A._setArrayType([], t9);
         for (i = 0; i < revs.length; ++i) {
@@ -270108,7 +270231,7 @@
     build$1(context) {
       var _null = null,
         t1 = this.boyut;
-      return A.Container$(B.Alignment_0_0, A.Text$(this.harfler, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, t1 * 0.35, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_4z6, _null, t1, _null, _null, _null, _null, _null, t1);
+      return A.Container$(B.Alignment_0_0, A.Text$(this.harfler, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, t1 * 0.35, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_4z6, _null, t1, _null, _null, _null, _null, _null, t1);
     }
   };
   A._IletisimKutusu.prototype = {
@@ -270117,7 +270240,7 @@
         t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(11), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t2 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 17, B.Color_Dun, _null), B.Clip_0, _null, _null, B.BoxDecoration_xgR, _null, 34, _null, _null, _null, _null, _null, 34),
         t3 = _this.altiCizili,
-        t4 = A.Text$(_this.etiket, _null, _null, _null, _null, A.refText(B.Color_BhF, t3 ? B.TextDecoration_1 : _null, _null, 0, 12, B.FontWeight_400), _null, _null),
+        t4 = A.Text$(_this.etiket, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, t3 ? B.TextDecoration_1 : _null, _null, 0, 12, B.FontWeight_400), _null, _null),
         t5 = _this.kucukDeger,
         t6 = t5 ? 2 : 1;
       if (t5)
@@ -270127,7 +270250,7 @@
         t3 = t5;
       }
       t5 = type$.JSArray_Widget;
-      t3 = A._setArrayType([t2, B.SizedBox_8_null_null_null, A.Expanded$(A.Column$(A._setArrayType([t4, B.SizedBox_null_2_null_null, A.Text$(_this.deger, t6, B.TextOverflow_2, _null, _null, t3, _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t5);
+      t3 = A._setArrayType([t2, B.SizedBox_8_null_null_null, A.Expanded$(A.Column$(A._setArrayType([t4, B.SizedBox_null_2_null_null, A.Text$(_this.deger, _null, t6, B.TextOverflow_2, _null, _null, t3, _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t5);
       if (_this.kilitli)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_6_null_null_null, A.Container$(B.Alignment_0_0, B.RefSvg_oNA, B.Clip_0, _null, _null, B.BoxDecoration_mfj, _null, 30, _null, _null, _null, _null, _null, 30)], t5));
       kutu = A.Container$(_null, A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_9_9_9, _null, _null, _null);
@@ -270146,14 +270269,14 @@
         t3 = this.ortalama,
         t4 = t3 == null,
         t5 = t4 ? "\u2014" : B.JSNumber_methods.toStringAsFixed$1(t3, 1);
-      t5 = A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 26, B.FontWeight_800), _null, _null);
+      t5 = A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 26, B.FontWeight_800), _null, _null);
       t6 = type$.JSArray_Widget;
       t7 = A._setArrayType([], t6);
       for (i = 1; i <= 5; ++i) {
         t8 = t4 ? 0 : t3;
         t7.push(new A.Padding(B.EdgeInsets_0_0_2_0, new A.RefSvg(t8 >= i - 0.5 ? "assets/svg/ic_starfill.svg" : "assets/svg/ic_starempty.svg", 17, B.Color_AuQ, _null), _null));
       }
-      t3 = A.Container$(_null, A.Column$(A._setArrayType([t5, B.SizedBox_null_4_null_null, A.Row$(t7, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.SizedBox_null_4_null_null, A.Text$("(" + toplam + " yorum)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_HoN, _null, _null, _null, _null, B.EdgeInsets_0_0_12_0, _null, _null, _null);
+      t3 = A.Container$(_null, A.Column$(A._setArrayType([t5, B.SizedBox_null_4_null_null, A.Row$(t7, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.SizedBox_null_4_null_null, A.Text$("(" + toplam + " yorum)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_HoN, _null, _null, _null, _null, B.EdgeInsets_0_0_12_0, _null, _null, _null);
       t4 = A._setArrayType([], t6);
       for (t5 = A._arrayInstanceType(t1), t7 = t5._eval$1("bool(1)"), t5 = t5._eval$1("WhereIterable<1>"), yildiz = 5; yildiz >= 1; --yildiz) {
         t8 = A._setArrayType([new A.PuanDagilimSatiri(yildiz, new A.WhereIterable(t1, t7._as(new A._PuanKarti_build_closure(yildiz)), t5).get$length(0), toplam, _null)], t6);
@@ -270323,28 +270446,28 @@
         t2 = _this._otp_screen$_otp,
         t3 = _this.get$_verify(),
         t4 = type$.JSArray_Widget,
-        t5 = A._setArrayType([A.Text$(_s17_, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_s58_, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_22_null_null, B.RefStepper_2_null_null, new A.RefVerifyHeader(_s32_, _this.get$_masked(), _null), new A.RefOtpBoxes(t3, new A._OtpScreenState_build_closure(_this), !_this._otp_screen$_busy, t2)], t4),
+        t5 = A._setArrayType([A.Text$(_s17_, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_s58_, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_22_null_null, B.RefStepper_2_null_null, new A.RefVerifyHeader(_s32_, _this.get$_masked(), _null), new A.RefOtpBoxes(t3, new A._OtpScreenState_build_closure(_this), !_this._otp_screen$_busy, t2)], t4),
         t6 = _this._otp_screen$_error;
       if (t6 != null)
-        t5.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t6, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
+        t5.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t6, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
       t6 = _this.get$_otp_screen$_left(0);
       t5.push(new A.RefResendRow(t6, _this._resending ? _null : _this.get$_resend(), _null));
       t6 = _this._otp_screen$_busy;
       t5.push(new A.RefPrimaryButton("Do\u011frula", _null, _this._kodUzunluk < 6 ? _null : new A._OtpScreenState_build_closure0(_this), t6, _null));
       if (saglayici)
-        t5.push(new A.RefInfoBox(A.Text$(_s48_, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null));
+        t5.push(new A.RefInfoBox(A.Text$(_s48_, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null));
       t5 = A.Column$(t5, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
       t6 = A.Align$(B.Alignment_m1_0, new A.Padding(B.EdgeInsets_12_4_0_0, new A.RefBackButton(new A._OtpScreenState_build_closure1(context), false, _null), _null), _null, _null, _null);
-      t2 = A._setArrayType([A.Text$(_s17_, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_s58_, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_22_null_null, B.RefStepper_2_null_null, new A.RefVerifyHeader(_s32_, _this.get$_masked(), _null), new A.RefOtpBoxes(t3, new A._OtpScreenState_build_closure2(_this), !_this._otp_screen$_busy, t2)], t4);
+      t2 = A._setArrayType([A.Text$(_s17_, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, A.Text$(_s58_, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_22_null_null, B.RefStepper_2_null_null, new A.RefVerifyHeader(_s32_, _this.get$_masked(), _null), new A.RefOtpBoxes(t3, new A._OtpScreenState_build_closure2(_this), !_this._otp_screen$_busy, t2)], t4);
       t3 = _this._otp_screen$_error;
       if (t3 != null)
-        t2.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
+        t2.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
       t3 = _this.get$_otp_screen$_left(0);
       t2.push(new A.RefResendRow(t3, _this._resending ? _null : _this.get$_resend(), _null));
       t3 = _this._otp_screen$_busy;
       t2.push(new A.RefPrimaryButton("Do\u011frula", _null, _this._kodUzunluk < 6 ? _null : new A._OtpScreenState_build_closure3(_this), t3, _null));
       if (saglayici)
-        t2.push(new A.RefInfoBox(A.Text$(_s48_, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null));
+        t2.push(new A.RefInfoBox(A.Text$(_s48_, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null));
       return A.Scaffold$(_null, t1, A.WebPanel$(_null, _null, A.SafeArea$(true, A.Column$(A._setArrayType([t6, A.Expanded$(new A.RefScroll(A.Column$(t2, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_20_8_20_36, _null), 1)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_0_0_0_0, true), t5), _null);
     }
   };
@@ -270996,9 +271119,9 @@
       t6 === $ && A.throwLateFieldNI("_phone");
       t3.push(A.RefTextField$(_this._profile_info_screen$_telefonKey, _null, t6, "Telefon", _this._fTelefon, false, _null, A._setArrayType([new A.TelefonBicimlendirici()], type$.JSArray_TextInputFormatter), B.TextInputType_2_false_false, _null, 1, false, new A._ProfileInfoScreenState_build_closure9(_this), _null, _null, B.TextCapitalization_10, B.TextInputAction_2, new A._ProfileInfoScreenState_build_closure10(_this), "5XX XXX XX XX", true));
       if (_this.get$_epostaDegisti())
-        t3.push(new A.RefInfoBox(A.Text$("Yeni e-posta adresinize do\u011frulama ba\u011flant\u0131s\u0131 g\xf6nderilir. Do\u011frulanana kadar bildirim ve hesap kurtarma iletileri ESK\u0130 adresinize gider.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
+        t3.push(new A.RefInfoBox(A.Text$("Yeni e-posta adresinize do\u011frulama ba\u011flant\u0131s\u0131 g\xf6nderilir. Do\u011frulanana kadar bildirim ve hesap kurtarma iletileri ESK\u0130 adresinize gider.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
       if (_this.get$_profile_info_screen$_telefonDegisti())
-        t3.push(new A.RefInfoBox(A.Text$("Numara do\u011frulanmadan telefon g\xfcncellemesi kaydedilmez.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
+        t3.push(new A.RefInfoBox(A.Text$("Numara do\u011frulanmadan telefon g\xfcncellemesi kaydedilmez.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, B.EdgeInsets_0_14_0_0, _null));
       t3.push(B.SizedBox_null_16_null_null);
       t7 = _this.get$_profile_info_screen$_telefonDegisti() || _this.get$_epostaDegisti() ? "Do\u011frula ve Kaydet" : "Bilgileri G\xfcncelle";
       t8 = _this._profile_info_screen$_busy;
@@ -271301,7 +271424,7 @@
       t3 = A.Icon$(t3, onayli ? B.Color_VDA : B.Color_byQ, _null, 18);
       t4 = onayli ? "E-posta onayl\u0131 \u2713" : "E-posta adresi onaylanmad\u0131";
       t5 = type$.JSArray_Widget;
-      t4 = A._setArrayType([A.Row$(A._setArrayType([t3, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t4, _null, _null, _null, _null, A.refText(onayli ? B.Color_VDA : B.Color_byQ, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null), 1)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t5);
+      t4 = A._setArrayType([A.Row$(A._setArrayType([t3, B.SizedBox_6_null_null_null, A.Expanded$(A.Text$(t4, _null, _null, _null, _null, _null, A.refText(onayli ? B.Color_VDA : B.Color_byQ, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null), 1)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t5);
       if (t1._epostaGonderildi && !onayli)
         B.JSArray_methods.addAll$1(t4, A._setArrayType([B.SizedBox_null_10_null_null, B.EpostaGonderildiKutusu_null, B.SizedBox_null_4_null_null], t5));
       if (!onayli && t2)
@@ -271562,13 +271685,13 @@
         t2 = A.BorderRadius$circular(14),
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t4 = type$.JSArray_Widget;
-      return A.Row$(A._setArrayType([new A.ProfilFotografi(t1, _this.fotoYolu, _null), B.SizedBox_14_null_null_null, A.Expanded$(new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t1, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null), B.SizedBox_null_7_null_null, new A._Satir0("assets/svg/ic_phone_f.svg", 16, _this.telefon, _null), B.SizedBox_null_7_null_null, new A._Satir0("assets/svg/ic_mail.svg", 17, _this.eposta, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_8_null_null_null, B.RefSvg_H95], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), _this.onTap, t2, _null, _null), 1)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      return A.Row$(A._setArrayType([new A.ProfilFotografi(t1, _this.fotoYolu, _null), B.SizedBox_14_null_null_null, A.Expanded$(new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([A.Expanded$(A.Column$(A._setArrayType([A.Text$(t1, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null), B.SizedBox_null_7_null_null, new A._Satir0("assets/svg/ic_phone_f.svg", 16, _this.telefon, _null), B.SizedBox_null_7_null_null, new A._Satir0("assets/svg/ic_mail.svg", 17, _this.eposta, _null)], t4), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_8_null_null_null, B.RefSvg_H95], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), _this.onTap, t2, _null, _null), 1)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
   };
   A._Satir0.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Row$(A._setArrayType([new A.RefSvg(this.asset, this.boyut, B.Color_BhF, _null), B.SizedBox_8_null_null_null, A.Expanded$(A.Text$(this.metin, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), 1)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      return A.Row$(A._setArrayType([new A.RefSvg(this.asset, this.boyut, B.Color_BhF, _null), B.SizedBox_8_null_null_null, A.Expanded$(A.Text$(this.metin, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), 1)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
   };
   A.ProviderReviewsScreen.prototype = {
@@ -271583,17 +271706,17 @@
       ortalama = t2.averageOf$1(t1);
       auth = A.Provider_of(context, true, type$.AuthController);
       t1 = type$.JSArray_Widget;
-      t2 = A._setArrayType([new A.Padding(B.EdgeInsets_14_12_14_4, A.Row$(A._setArrayType([B.RefBackButton_null_false_null, B.SizedBox_8_null_null_null, A.Expanded$(A.Text$(this.providerAdi + " \u2014 Yorumlar", 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), 1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t1);
+      t2 = A._setArrayType([new A.Padding(B.EdgeInsets_14_12_14_4, A.Row$(A._setArrayType([B.RefBackButton_null_false_null, B.SizedBox_8_null_null_null, A.Expanded$(A.Text$(this.providerAdi + " \u2014 Yorumlar", _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), 1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null)], t1);
       if (ortalama != null) {
         t1 = A._setArrayType([], t1);
         for (i = 1; i <= 5; ++i)
           t1.push(new A.Padding(B.EdgeInsets_0_0_2_0, new A.RefSvg(i <= B.JSNumber_methods.round$0(ortalama) ? "assets/svg/ic_starfill.svg" : "assets/svg/ic_starempty.svg", 16, B.Color_AuQ, _null), _null));
         t1.push(B.SizedBox_6_null_null_null);
-        t1.push(A.Text$(A.S(ortalama) + " \xb7 " + yorumlar.length + " de\u011ferlendirme", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null));
+        t1.push(A.Text$(A.S(ortalama) + " \xb7 " + yorumlar.length + " de\u011ferlendirme", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null));
         t2.push(new A.Padding(B.EdgeInsets_14_6_14_0, A.Row$(t1, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null));
       }
       t1 = yorumlar.length;
-      t2.push(A.Expanded$(t1 === 0 ? A.Center$(A.Text$("Bu hizmet veren i\xe7in hen\xfcz yorum yok.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null), _null, _null) : A.ListView$separated(new A.ProviderReviewsScreen_build_closure(yorumlar, auth), t1, B.EdgeInsets_14_12_14_20, _null, B.Axis_1, new A.ProviderReviewsScreen_build_closure0(), false), 1));
+      t2.push(A.Expanded$(t1 === 0 ? A.Center$(A.Text$("Bu hizmet veren i\xe7in hen\xfcz yorum yok.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null), _null, _null) : A.ListView$separated(new A.ProviderReviewsScreen_build_closure(yorumlar, auth), t1, B.EdgeInsets_14_12_14_20, _null, B.Axis_1, new A.ProviderReviewsScreen_build_closure0(), false), 1));
       return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(true, A.Column$(t2, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_0_0_0_0, true), _null);
     }
   };
@@ -271637,9 +271760,9 @@
       uzun = B.JSString_methods.trim$0(metin).length > 140;
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(14), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t2 = type$.JSArray_Widget;
-      t3 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Text$(ad, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, A.Text$(_this._widget.tarih, _null, _null, _null, _null, A.refText(B.Color_byQ, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2);
+      t3 = A._setArrayType([A.Row$(A._setArrayType([A.Expanded$(A.Text$(ad, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, A.Text$(_this._widget.tarih, _null, _null, _null, _null, _null, A.refText(B.Color_byQ, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2);
       if (hizmet != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(hizmet, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2));
       t3.push(B.SizedBox_null_5_null_null);
       t4 = A._setArrayType([], t2);
       for (i = 1; i <= 5; ++i)
@@ -271648,11 +271771,11 @@
       if (metin.length !== 0) {
         t4 = uzun && !_this._acik ? 3 : _null;
         t5 = uzun && !_this._acik ? B.TextOverflow_2 : B.TextOverflow_0;
-        t2 = A._setArrayType([B.SizedBox_null_8_null_null, A.Text$(metin, t4, t5, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null)], t2);
+        t2 = A._setArrayType([B.SizedBox_null_8_null_null, A.Text$(metin, _null, t4, t5, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null)], t2);
         if (uzun) {
           t4 = A.BorderRadius$circular(8);
           t5 = _this._acik ? "Daha az g\xf6ster" : "Devam\u0131n\u0131 oku";
-          t2.push(A.Align$(B.Alignment_1_0, new A.RefTap(new A.Padding(B.EdgeInsets_8_6_0_0, A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 12.5, B.FontWeight_700), _null, _null), _null), new A._YorumKartiState_build_closure(_this), t4, _null, _null), _null, _null, _null));
+          t2.push(A.Align$(B.Alignment_1_0, new A.RefTap(new A.Padding(B.EdgeInsets_8_6_0_0, A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 12.5, B.FontWeight_700), _null, _null), _null), new A._YorumKartiState_build_closure(_this), t4, _null, _null), _null, _null, _null));
         }
         B.JSArray_methods.addAll$1(t3, t2);
       }
@@ -271762,14 +271885,14 @@
       icon = t3._2;
       t3 = A.BoxDecoration$(A.Border_Border$all(color.withValues$1$alpha(0.35), 1), A.BorderRadius$circular(14), _null, bg, _null, _null, B.BoxShape_0);
       t4 = type$.JSArray_Widget;
-      t5 = A.Row$(A._setArrayType([new A.RefSvg(icon, 22, color, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t2.get$label(0), _null, _null, _null, _null, A.TextStyle$(_null, _null, color, _null, _null, _null, _null, _null, _null, _null, _null, 16, _null, _null, B.FontWeight_800, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), 1)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t5 = A.Row$(A._setArrayType([new A.RefSvg(icon, 22, color, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(t2.get$label(0), _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, color, _null, _null, _null, _null, _null, _null, _null, _null, 16, _null, _null, B.FontWeight_800, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), 1)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t6 = t1.message;
       t6 = t6.length !== 0 ? t6 : "Teklif verebilmek i\xe7in hesab\u0131n\u0131z\u0131n onaylanmas\u0131 gerekir.";
-      t6 = A._setArrayType([t5, B.SizedBox_null_10_null_null, A.Text$(t6, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_400), _null, _null)], t4);
+      t6 = A._setArrayType([t5, B.SizedBox_null_10_null_null, A.Text$(t6, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_400), _null, _null)], t4);
       t1 = t1.reason;
       if (t1 != null && B.JSString_methods.trim$0(t1).length !== 0) {
         t5 = A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-        B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_10_null_null, A.Container$(_null, A.Text$("Gerek\xe7e: " + t1, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_10_10_10_10, _null, _null, 1 / 0)], t4));
+        B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_10_null_null, A.Container$(_null, A.Text$("Gerek\xe7e: " + t1, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_10_10_10_10, _null, _null, 1 / 0)], t4));
       }
       if (t2 === B.ProviderApproval_2)
         B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_null_12_null_null, new A.RefSecondaryButton("Bilgilerimi g\xfcncelle ve yeniden ba\u015fvur", "assets/svg/ic_pen.svg", new A.ProviderStatusCard_build_closure(context), _null)], t4));
@@ -271808,11 +271931,11 @@
       t2.push(B.RefStepper_4_null_null);
       t2.push(B.Center_0We);
       t1 = saglayici ? "Tebrikler!" : "Hesab\u0131n\u0131z Ba\u015far\u0131yla Olu\u015fturuldu!";
-      t2.push(new A.Padding(B.EdgeInsets_10_0_10_12, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.25, 0, 25, B.FontWeight_700), B.TextAlign_2, _null), _null));
+      t2.push(new A.Padding(B.EdgeInsets_10_0_10_12, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.25, 0, 25, B.FontWeight_700), B.TextAlign_2, _null), _null));
       if (saglayici)
-        t2.push(new A.Padding(B.EdgeInsets_10_0_10_10, A.Text$("Hizmet sa\u011flay\u0131c\u0131 hesab\u0131n\u0131z ba\u015far\u0131yla olu\u015fturuldu.", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), _null));
+        t2.push(new A.Padding(B.EdgeInsets_10_0_10_10, A.Text$("Hizmet sa\u011flay\u0131c\u0131 hesab\u0131n\u0131z ba\u015far\u0131yla olu\u015fturuldu.", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), _null));
       t1 = saglayici ? "Art\u0131k HizmetCep'te ilanlar\u0131 g\xf6r\xfcnt\xfcleyebilir, ilanlara teklif verebilir ve yeni i\u015fler kazanabilirsiniz." : "Art\u0131k \xfccretsiz ilan verebilir ve profesyonellerden teklif alabilirsiniz.";
-      t2.push(new A.Padding(B.EdgeInsets_16_0_16_18, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null));
+      t2.push(new A.Padding(B.EdgeInsets_16_0_16_18, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 15, B.FontWeight_400), B.TextAlign_2, _null), _null));
       if (saglayici) {
         t1 = A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400);
         t2.push(new A.RefInfoBox(A.RichText$(_null, _null, _null, B.TextOverflow_0, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_700), "Bilgilendirme\n"), B.TextSpan_kW1], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, t1, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0), true, B.EdgeInsets_0_0_0_0, _null));
@@ -272267,7 +272390,7 @@
             case 0:
               // Function start
               $async$goto = 3;
-              return A._asyncAwait(A.RefBottomSheet_goster(c, A.Column$(A._setArrayType([A.Text$("" + pending._kayipFotograflar.length + " foto\u011fraf cihaz\u0131n\u0131zda bulunamad\u0131. Silinmi\u015f veya ta\u015f\u0131nm\u0131\u015f olabilir.\n\nEksik foto\u011fraflar\u0131 kald\u0131r\u0131p ilan\u0131 yay\u0131nlayabilir ya da vazge\xe7ip \u0130lanlar\u0131m ekran\u0131ndan yeniden foto\u011fraf se\xe7ebilirsiniz.", null, null, null, null, A.refText(B.Color_yKk, null, 1.5, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_16_null_null, A.RefWideButton$("Eksikleri Kald\u0131r ve Yay\u0131nla", false, new A._RegisterScreenState__eksikFotografKarari_closure(c)), B.SizedBox_null_8_null_null, A.Center$(A.RefTextButton$("\u015eimdi De\u011fil", new A._RegisterScreenState__eksikFotografKarari_closure0(c)), null, null), B.SizedBox_null_8_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), "Eksik Foto\u011fraf", type$.bool), $async$_eksikFotografKarari$2);
+              return A._asyncAwait(A.RefBottomSheet_goster(c, A.Column$(A._setArrayType([A.Text$("" + pending._kayipFotograflar.length + " foto\u011fraf cihaz\u0131n\u0131zda bulunamad\u0131. Silinmi\u015f veya ta\u015f\u0131nm\u0131\u015f olabilir.\n\nEksik foto\u011fraflar\u0131 kald\u0131r\u0131p ilan\u0131 yay\u0131nlayabilir ya da vazge\xe7ip \u0130lanlar\u0131m ekran\u0131ndan yeniden foto\u011fraf se\xe7ebilirsiniz.", null, null, null, null, null, A.refText(B.Color_yKk, null, 1.5, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_16_null_null, A.RefWideButton$("Eksikleri Kald\u0131r ve Yay\u0131nla", false, new A._RegisterScreenState__eksikFotografKarari_closure(c)), B.SizedBox_null_8_null_null, A.Center$(A.RefTextButton$("\u015eimdi De\u011fil", new A._RegisterScreenState__eksikFotografKarari_closure0(c)), null, null), B.SizedBox_null_8_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), "Eksik Foto\u011fraf", type$.bool), $async$_eksikFotografKarari$2);
             case 3:
               // returning from await.
               if ($async$result !== true || c._widget == null) {
@@ -272594,7 +272717,7 @@
     },
     _altAciklama$1(metin) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_4_0_4_11, A.Text$(metin, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_4_0_4_11, A.Text$(metin, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null);
     },
     _kategoriSec$1(context) {
       var $async$goto = 0,
@@ -272654,7 +272777,7 @@
         metin = zorunlu ? B.JSString_methods.trimRight$0(B.JSString_methods.substring$2(B.JSString_methods.trimRight$0(label), 0, B.JSString_methods.trimRight$0(label).length - 1)) : label,
         gri = A.refText(B.Color_Ldf, _null, _null, -0.1, 15, B.FontWeight_500);
       if (!zorunlu)
-        return A.Text$(metin, 1, B.TextOverflow_2, _null, _null, gri, _null, _null);
+        return A.Text$(metin, _null, 1, B.TextOverflow_2, _null, _null, gri, _null, _null);
       return A.RichText$(_null, _null, 1, B.TextOverflow_2, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, 15, B.FontWeight_700), "* "), A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, _null, metin)], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, gri, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0);
     },
     initState$0() {
@@ -272709,9 +272832,9 @@
         t1 = A.WebPanel_panelMi(context) ? B.Color_Edl : B.Color_wst,
         t2 = A.Align$(B.Alignment_m1_0, new A.Padding(B.EdgeInsets_0_4_0_0, new A.RefBackButton(new A._RegisterScreenState_build_closure(context), false, _null), _null), _null, _null, _null),
         t3 = _this._widget.role === B.Role_1 ? "Hizmet Veren Kayd\u0131" : "Hizmet Alan Kayd\u0131";
-      t3 = A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null);
+      t3 = A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null);
       t4 = _this._widget.role === B.Role_1 ? "Hizmet vermek i\xe7in hesab\u0131n\u0131z\u0131 olu\u015fturun ve hemen ba\u015flay\u0131n." : string$.Hizmetm;
-      t4 = A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null);
+      t4 = A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null);
       t5 = A.TextFormField$(_null, _this._register_screen$_first, _this._dec$2("Ad *", _s24_), _null, _this._fFirst, _null, _this._adKey, _null, _null, 1, false, new A._RegisterScreenState_build_closure0(_this), new A._RegisterScreenState_build_closure1(_this), _null, B.EdgeInsets_0_0_0_140, _null, B.TextCapitalization_00, B.TextInputAction_6, new A._RegisterScreenState_build_closure2(_this));
       t6 = A.TextFormField$(_null, _this._register_screen$_last, _this._dec$2("Soyad *", _s24_), _null, _this._fLast, _null, _this._soyadKey, _null, _null, 1, false, new A._RegisterScreenState_build_closure3(_this), new A._RegisterScreenState_build_closure4(_this), _null, B.EdgeInsets_0_0_0_140, _null, B.TextCapitalization_00, B.TextInputAction_6, new A._RegisterScreenState_build_closure5(_this));
       t7 = A.TextFormField$(_null, _this._phone, _this._dec$2("5XX XXX XX XX *", "assets/svg/ic_phone.svg"), _null, _this._fPhone, B.List_TelefonBicimlendirici, _this._telefonKey, B.TextInputType_2_false_false, _null, 1, false, new A._RegisterScreenState_build_closure6(_this), new A._RegisterScreenState_build_closure7(_this), _null, B.EdgeInsets_0_0_0_140, _null, B.TextCapitalization_30, B.TextInputAction_6, new A._RegisterScreenState_build_closure8(_this));
@@ -272735,7 +272858,7 @@
         t2 = A._setArrayType([t2, t3, A.RefRegDropdown$(_s23_, _null, "Hizmet Verilen \u0130l\xe7eler", _this._register_screen$_city == null ? _null : new A._RegisterScreenState_build_closure16(_this, context), t4), _this._altAciklama$1("Bir veya birden fazla il\xe7e se\xe7ebilirsiniz.")], t12);
         t3 = _this._chipsError;
         if (t3 != null)
-          t2.push(new A.Padding(B.EdgeInsets_4_8_0_0, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 11.5, B.FontWeight_600), _null, _null), _null));
+          t2.push(new A.Padding(B.EdgeInsets_4_8_0_0, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 11.5, B.FontWeight_600), _null, _null), _null));
         B.JSArray_methods.addAll$1(t11, t2);
       }
       t11.push(B.SizedBox_null_12_null_null);
@@ -273029,7 +273152,7 @@
               if (t4 != null && t1) {
                 t1 = A.ScaffoldMessenger_of(otpContext);
                 t1.clearSnackBars$0();
-                t1.showSnackBar$1(A.SnackBar$(null, null, null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, null, A.Text$(t4.get$message(t4), null, null, null, null, null, B.TextAlign_2, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
+                t1.showSnackBar$1(A.SnackBar$(null, null, null, B.Color_MXH, B.SnackBarBehavior_1, B.Clip_1, null, A.Text$(t4.get$message(t4), null, null, null, null, null, null, B.TextAlign_2, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
                 A.Navigator_of(otpContext, false).pop$1$1(0, null, type$.nullable_Object);
                 // goto return
                 $async$goto = 1;
@@ -273421,14 +273544,14 @@
     call$4$currentLength$isFocused$maxLength(_, currentLength, isFocused, maxLength) {
       return null;
     },
-    $signature: 167
+    $signature: 181
   };
   A._RegisterScreenState_build_closure18.prototype = {
     call$1(g) {
       var t1 = this.$this;
       return t1.setState$1(new A._RegisterScreenState_build__closure3(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._RegisterScreenState_build__closure3.prototype = {
     call$0() {
@@ -273479,14 +273602,14 @@
     call$4$currentLength$isFocused$maxLength(_, currentLength, isFocused, maxLength) {
       return null;
     },
-    $signature: 167
+    $signature: 181
   };
   A._RegisterScreenState_build_closure23.prototype = {
     call$1(g) {
       var t1 = this.$this;
       return t1.setState$1(new A._RegisterScreenState_build__closure2(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._RegisterScreenState_build__closure2.prototype = {
     call$0() {
@@ -273522,7 +273645,7 @@
       t1.setState$1(new A._RegisterScreenState_build___closure0(t1, A._asBool(v)));
       t1._tazele$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A._RegisterScreenState_build___closure0.prototype = {
     call$0() {
@@ -273536,7 +273659,7 @@
       t1.setState$1(new A._RegisterScreenState_build___closure(t1, A._asBool(v)));
       t1._tazele$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A._RegisterScreenState_build___closure.prototype = {
     call$0() {
@@ -273633,31 +273756,31 @@
       t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, new A.RefTap(A.Container$(B.Alignment_0_0, B.RefSvg_9sg, B.Clip_0, _null, _null, B.BoxDecoration_3vk, _null, 38, _null, _null, _null, _null, _null, 38), new A._ReviewScreenState_build_closure(context), t2, _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_3, B.MainAxisSize_1, 0, _null);
       t3 = done == null;
       t4 = t3 ? "Yorum Yaz" : "De\u011ferlendirmen";
-      t4 = A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 26, B.FontWeight_700), _null, _null);
+      t4 = A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 26, B.FontWeight_700), _null, _null);
       t5 = t3 ? string$.Ald___ : "Bu hizmet i\xe7in verdi\u011finiz puan ve yorum.";
-      t5 = A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null);
+      t5 = A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null);
       t6 = _this._widget;
       t6 = A._setArrayType([t2, B.SizedBox_null_6_null_null, t4, B.SizedBox_null_7_null_null, t5, new A._UstaKarti(t6.listingId, t6.offerId, _null)], t1);
       if (!t3) {
-        t2 = A.Text$("De\u011ferlendirmeniz", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null);
+        t2 = A.Text$("De\u011ferlendirmeniz", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null);
         t3 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(15), _null, B.Color_wst, _null, _null, B.BoxShape_0);
         t4 = A._setArrayType([], t1);
         for (t5 = done.stars, i = 1; i <= 5; ++i)
           t4.push(new A.Padding(B.EdgeInsets_0_0_2_0, new A._Yildiz(i <= t5, 20, _null), _null));
         t4.push(B.SizedBox_6_null_null_null);
-        t4.push(A.Text$("" + t5 + ".0", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null));
+        t4.push(A.Text$("" + t5 + ".0", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null));
         t4.push(B.Spacer_null);
-        t4.push(A.Text$(A._tarih(done.createdAt), _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
+        t4.push(A.Text$(A._tarih(done.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
         t4 = A.Row$(t4, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
         t5 = done.text;
         t7 = B.JSString_methods.trim$0(t5).length === 0;
         if (t7)
           t5 = "Yorum eklenmedi.";
         t8 = A.refText(t7 ? B.Color_Ldf : B.Color_yKk, _null, 1.55, 0, 13.5, B.FontWeight_400);
-        B.JSArray_methods.addAll$1(t6, A._setArrayType([new A.Padding(B.EdgeInsets_1_12_1_7, t2, _null), A.Container$(_null, A.Column$(A._setArrayType([t4, B.SizedBox_null_10_null_null, A.Text$(t5, _null, _null, _null, _null, t8.copyWith$1$fontStyle(t7 ? B.FontStyle_1 : B.FontStyle_0), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_15_15_15_15, _null, _null, _null)], t1));
+        B.JSArray_methods.addAll$1(t6, A._setArrayType([new A.Padding(B.EdgeInsets_1_12_1_7, t2, _null), A.Container$(_null, A.Column$(A._setArrayType([t4, B.SizedBox_null_10_null_null, A.Text$(t5, _null, _null, _null, _null, _null, t8.copyWith$1$fontStyle(t7 ? B.FontStyle_1 : B.FontStyle_0), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_15_15_15_15, _null, _null, _null)], t1));
       } else {
-        t2 = A.Text$("Puan\u0131n\u0131z", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null);
-        t3 = A.Text$("Hizmet kalitesini puanlay\u0131n", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
+        t2 = A.Text$("Puan\u0131n\u0131z", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null);
+        t3 = A.Text$("Hizmet kalitesini puanlay\u0131n", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
         t4 = A._setArrayType([], t1);
         for (i = 1; i <= 5; ++i) {
           t5 = A._setArrayType([], t1);
@@ -273668,15 +273791,15 @@
           B.JSArray_methods.addAll$1(t4, t5);
         }
         t4 = A.Row$(t4, B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null);
-        t5 = A.Text$("1 y\u0131ld\u0131z \xe7ok k\xf6t\xfc, 5 y\u0131ld\u0131z m\xfckemmel", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
-        t7 = A.Row$(A._setArrayType([A.Text$("Yorumunuz", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+        t5 = A.Text$("1 y\u0131ld\u0131z \xe7ok k\xf6t\xfc, 5 y\u0131ld\u0131z m\xfckemmel", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
+        t7 = A.Row$(A._setArrayType([A.Text$("Yorumunuz", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
         t8 = _this._review_screen$_text;
         t9 = A.RefTextField$(_null, new A._ReviewScreenState_build_closure1(), t8, _null, _null, false, "Deneyiminizi payla\u015fabilirsiniz...", _null, _null, 300, 6, false, new A._ReviewScreenState_build_closure2(_this), _null, _null, B.TextCapitalization_10, _null, _null, _null, false);
         t8 = t8._change_notifier$_value.text;
-        t1 = A._setArrayType([new A.Padding(B.EdgeInsets_1_20_1_4, t2, _null), t3, new A.Padding(B.EdgeInsets_0_14_0_0, t4, _null), new A.Padding(B.EdgeInsets_0_8_0_0, t5, _null), new A.Padding(B.EdgeInsets_1_20_1_4, t7, _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(10, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/300", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null), new A.RefInfoBox(A.Text$(string$.Verdi_, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null)], t1);
+        t1 = A._setArrayType([new A.Padding(B.EdgeInsets_1_20_1_4, t2, _null), t3, new A.Padding(B.EdgeInsets_0_14_0_0, t4, _null), new A.Padding(B.EdgeInsets_0_8_0_0, t5, _null), new A.Padding(B.EdgeInsets_1_20_1_4, t7, _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(10, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/300", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null), new A.RefInfoBox(A.Text$(string$.Verdi_, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null)], t1);
         t2 = _this._review_screen$_error;
         if (t2 != null)
-          t1.push(new A.Padding(B.EdgeInsets_0_14_0_0, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
+          t1.push(new A.Padding(B.EdgeInsets_0_14_0_0, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
         t1.push(B.SizedBox_null_14_null_null);
         t2 = _this._review_screen$_busy;
         t1.push(A.RefWideButton$("De\u011ferlendirmeyi G\xf6nder", t2, _this._review_screen$_stars < 1 ? _null : _this.get$_review_screen$_submit()));
@@ -273832,17 +273955,17 @@
       else
         t1 = prov._fotoVeren;
       if (B.JSString_methods.trim$0(t1 == null ? "" : t1).length === 0)
-        t1 = A.Container$(B.Alignment_0_0, A.Text$(harfler, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 32, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_4z6, _null, _null, _null, _null, _null, _null, _null, _null);
+        t1 = A.Container$(B.Alignment_0_0, A.Text$(harfler, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 32, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_4z6, _null, _null, _null, _null, _null, _null, _null, _null);
       else {
         t1 = prov._fotoVeren;
         t1 = new A.ProfilAvatari(ad, t1, 92, _null);
       }
       t1 = A.SizedBox$(t1, 92, 92);
       t2 = t2 ? "Hizmet Veren" : ad;
-      t2 = A.Text$(t2, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_700), _null, _null);
+      t2 = A.Text$(t2, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_700), _null, _null);
       t4 = avg == null ? "\u2014" : B.JSNumber_methods.toStringAsFixed$1(avg, 1);
       t5 = type$.JSArray_Widget;
-      return A.Container$(_null, A.Row$(A._setArrayType([t1, B.SizedBox_15_null_null_null, A.Expanded$(new A.Padding(B.EdgeInsets_0_2_0_0, A.Column$(A._setArrayType([t2, B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_f9D, B.SizedBox_5_null_null_null, A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_5_null_null_null, A.Text$("(" + revs.length + " yorum)", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_8zA, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(listing.title, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null), 1)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Ysl, B.SizedBox_5_null_null_null, A.Text$(A.binlikAyir(offer.amount) + " TL", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), 1)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, B.EdgeInsets_0_16_0_0, B.EdgeInsets_16_16_16_16, _null, _null, _null);
+      return A.Container$(_null, A.Row$(A._setArrayType([t1, B.SizedBox_15_null_null_null, A.Expanded$(new A.Padding(B.EdgeInsets_0_2_0_0, A.Column$(A._setArrayType([t2, B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_f9D, B.SizedBox_5_null_null_null, A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_5_null_null_null, A.Text$("(" + revs.length + " yorum)", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_8zA, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(listing.title, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null), 1)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Ysl, B.SizedBox_5_null_null_null, A.Text$(A.binlikAyir(offer.amount) + " TL", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), 1)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, B.EdgeInsets_0_16_0_0, B.EdgeInsets_16_16_16_16, _null, _null, _null);
     }
   };
   A._UstaKarti_build_closure.prototype = {
@@ -273974,16 +274097,16 @@
         t6 = t1 ? B.List_L13 : B.List_cch,
         t7 = t1 ? "assets/svg/ic_worker_w.svg" : "assets/svg/ic_home_w.svg",
         t8 = t1 ? "Hizmet\nVermek \u0130stiyorum" : "Hizmet\nAlmak \u0130stiyorum";
-      t8 = A.Text$(t8, _null, _null, _null, _null, A.refText(t1 ? B.Color_Uk6 : B.Color_ad6, _null, _null, -0.4, 16, B.FontWeight_700).copyWith$1$height(1.1875), _null, _null);
+      t8 = A.Text$(t8, _null, _null, _null, _null, _null, A.refText(t1 ? B.Color_Uk6 : B.Color_ad6, _null, _null, -0.4, 16, B.FontWeight_700).copyWith$1$height(1.1875), _null, _null);
       t9 = A.MediaQuery__maybeOf(context, B._MediaQueryAspect_6);
       t9 = t9 == null ? _null : t9.get$textScaler();
       t9 = (t9 == null ? B._LinearTextScaler_1 : t9).scale$1(0, 11.6);
       t1 = t1 ? "Hesap olu\u015fturun, i\u015f ilanlar\u0131n\u0131 g\xf6r\xfcnt\xfcleyin ve yeni i\u015fler kazan\u0131n." : "\xdccretsiz hesap olu\u015fturun, ilan\u0131n\u0131z\u0131 yay\u0131nlay\u0131n ve teklif al\u0131n.";
       t10 = type$.JSArray_Widget;
-      t10 = A._setArrayType([A.ClipRRect$(t3, new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([new A.RefGradientSquare(t5, t6, new A.RefSvg(t7, 19, B.Color_wst, _null), _null), B.SizedBox_null_12_null_null, t8, B.SizedBox_null_8_null_null, A.SizedBox$(A.Text$(t1, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_IF6, _null, _null, -0.2, 11.6, B.FontWeight_400).copyWith$1$height(1.25), _null, _null), t9 * 1.25 * 2, _null)], t10), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, t4, _null, _null, _null, _null, _null, _null, B.EdgeInsets_16_16_16_15, _null, _null, _null), this.onTap, _null, _null, _null))], t10);
+      t10 = A._setArrayType([A.ClipRRect$(t3, new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([new A.RefGradientSquare(t5, t6, new A.RefSvg(t7, 19, B.Color_wst, _null), _null), B.SizedBox_null_12_null_null, t8, B.SizedBox_null_8_null_null, A.SizedBox$(A.Text$(t1, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_IF6, _null, _null, -0.2, 11.6, B.FontWeight_400).copyWith$1$height(1.25), _null, _null), t9 * 1.25 * 2, _null)], t10), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, t4, _null, _null, _null, _null, _null, _null, B.EdgeInsets_16_16_16_15, _null, _null, _null), this.onTap, _null, _null, _null))], t10);
       if (this.aktif) {
         t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, B.Color_VDA, _null, _null, B.BoxShape_0);
-        t10.push(A.Positioned$(_null, A.Container$(_null, A.Text$("Aktif", _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 11, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null), _null, _null, _null, 10, 10, _null));
+        t10.push(A.Positioned$(_null, A.Container$(_null, A.Text$("Aktif", _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 11, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null), _null, _null, _null, 10, 10, _null));
       }
       return A.Stack$(B.AlignmentDirectional_m1_m1, t10, B.Clip_1, B.StackFit_0, new A.ValueKey(t2, type$.ValueKey_String));
     }
@@ -274069,8 +274192,8 @@
         t3.push(A.Expanded$(A.Center$(new A.Padding(B.EdgeInsets_20_0_20_0, new A._GecisKarti(simdiki, hedef, _null), _null), _null, _null), 1));
       else {
         t4 = A._setArrayType([new A._GecisKarti(simdiki, hedef, _null), B.SizedBox_null_18_null_null], t2);
-        t5 = A.Text$("Tamamlanmas\u0131 Gerekenler", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null);
-        t6 = A.Text$("Teklif verebilmek i\xe7in bu bilgiler gereklidir.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), _null, _null);
+        t5 = A.Text$("Tamamlanmas\u0131 Gerekenler", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_800), _null, _null);
+        t6 = A.Text$("Teklif verebilmek i\xe7in bu bilgiler gereklidir.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), _null, _null);
         t7 = _this._kategoriler;
         t8 = _this._role_switch_screen$_busy ? _null : _this.get$_role_switch_screen$_kategoriSec();
         t9 = _this._role_switch_screen$_il;
@@ -274353,7 +274476,7 @@
               t1.dogrulanan = null;
               $async$handler = 3;
               $async$goto = 6;
-              return A._asyncAwait(A.RefBottomSheet_goster($async$self.get$context(0), A.Column$(A._setArrayType([A.Text$("Hesab\u0131n\u0131za yeni rol eklemek i\xe7in \u015fifrenizi girin.", null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_14_null_null, new A.ValueListenableBuilder(hataNot, new A._RoleSwitchScreenState__sifreAl_closure(ctl, hataNot, doluNot), null, null, type$.ValueListenableBuilder_nullable_String), B.SizedBox_null_16_null_null, new A.Builder(new A._RoleSwitchScreenState__sifreAl_closure0(t1, doluNot, mesgulNot, auth, ctl, hataNot), null)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_0), "Kimli\u011finizi Do\u011frulay\u0131n", type$.void), $async$_sifreAl$1);
+              return A._asyncAwait(A.RefBottomSheet_goster($async$self.get$context(0), A.Column$(A._setArrayType([A.Text$("Hesab\u0131n\u0131za yeni rol eklemek i\xe7in \u015fifrenizi girin.", null, null, null, null, null, A.refText(B.Color_yKk, null, 1.55, 0, 13.5, B.FontWeight_400), null, null), B.SizedBox_null_14_null_null, new A.ValueListenableBuilder(hataNot, new A._RoleSwitchScreenState__sifreAl_closure(ctl, hataNot, doluNot), null, null, type$.ValueListenableBuilder_nullable_String), B.SizedBox_null_16_null_null, new A.Builder(new A._RoleSwitchScreenState__sifreAl_closure0(t1, doluNot, mesgulNot, auth, ctl, hataNot), null)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_0), "Kimli\u011finizi Do\u011frulay\u0131n", type$.void), $async$_sifreAl$1);
             case 6:
               // returning from await.
               $async$next.push(5);
@@ -274587,7 +274710,7 @@
         t2 = A.BoxDecoration$(_null, _null, _null, t1 ? B.Color_Dun : B.Color_FvK, _null, _null, B.BoxShape_1),
         t3 = t1 ? B.Color_wst : B.Color_BhF;
       t2 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 39, t3, _null), B.Clip_0, _null, _null, t2, _null, 83, _null, _null, _null, _null, _null, 83);
-      return A.Column$(A._setArrayType([t2, B.SizedBox_null_10_null_null, A.Text$(_this.ad, 1, B.TextOverflow_2, _null, _null, A.refText(t1 ? B.Color_Dun : B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_4_null_null, A.Text$(_this.etiket, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      return A.Column$(A._setArrayType([t2, B.SizedBox_null_10_null_null, A.Text$(_this.ad, _null, 1, B.TextOverflow_2, _null, _null, A.refText(t1 ? B.Color_Dun : B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_4_null_null, A.Text$(_this.etiket, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
     }
   };
   A._GereklilikSatiri.prototype = {
@@ -274604,9 +274727,9 @@
       t3 = A.BoxDecoration$(_null, _null, _null, tamam ? B.Color_AlF : B.Color_Fxh, _null, _null, B.BoxShape_1);
       t4 = tamam ? B.Color_VDA : B.Color_4VS;
       t3 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 18, t4, _null), B.Clip_0, _null, _null, t3, _null, 38, _null, _null, _null, _null, _null, 38);
-      t4 = A.Text$(_this.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
+      t4 = A.Text$(_this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
       t5 = type$.JSArray_Widget;
-      t5 = A._setArrayType([t3, B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([t4, B.SizedBox_null_2_null_null, A.Text$(ozet, 1, B.TextOverflow_2, _null, _null, A.refText(tamam ? B.Color_BhF : B.Color_4VS, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_8_null_null_null], t5);
+      t5 = A._setArrayType([t3, B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(A._setArrayType([t4, B.SizedBox_null_2_null_null, A.Text$(ozet, _null, 1, B.TextOverflow_2, _null, _null, A.refText(tamam ? B.Color_BhF : B.Color_4VS, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_8_null_null_null], t5);
       if (tamam)
         t5.push(B.RefSvg_OOj);
       else
@@ -274695,15 +274818,15 @@
         t1 = _this._widget,
         asamaEtiketleri = [t1.ilce, "Yak\u0131n \u0130l\xe7eler", t1.il + " Geneli"];
       t1 = type$.JSArray_Widget;
-      t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$("Hizmet Verenler Taran\u0131yor", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_lKU, new A._ScanningScreenState_build_closure(context), A.BorderRadius$circular(999), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$("Hizmet Verenler Taran\u0131yor", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_lKU, new A._ScanningScreenState_build_closure(context), A.BorderRadius$circular(999), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t3 = A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700);
       t3 = A.RichText$(_null, _null, _null, B.TextOverflow_0, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _this._widget.hizmet + " "), B.TextSpan_2h0], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, t3, _null), B.TextAlign_2, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0);
       t4 = _this._widget;
-      t4 = A.Column$(A._setArrayType([t3, B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_dEl, B.SizedBox_5_null_null_null, A.Text$(t4.ilce + " / " + t4.il, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1);
+      t4 = A.Column$(A._setArrayType([t3, B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_dEl, B.SizedBox_5_null_null_null, A.Text$(t4.ilce + " / " + t4.il, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1);
       t3 = _this.___ScanningScreenState__radar_F;
       t3 === $ && A.throwLateFieldNI("_radar");
       t3 = A.Expanded$(A.Center$(A.AnimatedBuilder$(t3, new A._ScanningScreenState_build_closure0(_this), _null), _null, _null), 1);
-      t5 = A.Text$(_this._widget.ilce + " ve \xe7evresi taran\u0131yor...", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_500), B.TextAlign_2, _null);
+      t5 = A.Text$(_this._widget.ilce + " ve \xe7evresi taran\u0131yor...", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_500), B.TextAlign_2, _null);
       t6 = A._setArrayType([], t1);
       for (i = 0; i < 3; ++i) {
         t7 = A._setArrayType([], t1);
@@ -274767,7 +274890,7 @@
         t3 = t2 ? B.Color_VDA : B.Color_wst;
       t3 = A.BoxDecoration$(A.Border_Border$all(renk, 2), _null, _null, t3, _null, _null, B.BoxShape_1);
       t3 = A.Container$(_null, t2 ? B.Icon_ds8 : _null, B.Clip_0, _null, _null, t3, _null, 12, _null, _null, _null, _null, _null, 12);
-      return A.Column$(A._setArrayType([t3, B.SizedBox_null_6_null_null, A.Text$(_this.etiket, _null, _null, _null, _null, A.refText(renk, _null, _null, 0, 11, t1 ? B.FontWeight_700 : B.FontWeight_500), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      return A.Column$(A._setArrayType([t3, B.SizedBox_null_6_null_null, A.Text$(_this.etiket, _null, _null, _null, _null, _null, A.refText(renk, _null, _null, 0, 11, t1 ? B.FontWeight_700 : B.FontWeight_500), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
     }
   };
   A._RadarDairesi.prototype = {
@@ -275022,19 +275145,19 @@
     },
     build$1(context) {
       var t4, t5, i, i0, t6, _this = this, _null = null,
-        bosAciklama = A.Text$("Se\xe7ti\u011finiz hizmeti bu b\xf6lgede sunan kay\u0131tl\u0131 hizmet veren bulunmuyor. \u0130lan vererek teklif toplayabilirsiniz.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null),
+        bosAciklama = A.Text$("Se\xe7ti\u011finiz hizmeti bu b\xf6lgede sunan kay\u0131tl\u0131 hizmet veren bulunmuyor. \u0130lan vererek teklif toplayabilirsiniz.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null),
         t1 = type$.JSArray_Widget,
-        t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$("En Uygun Hizmet Verenler", 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_lKU, _this.get$_cikisYap(), A.BorderRadius$circular(999), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
+        t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, A.Expanded$(A.Text$("En Uygun Hizmet Verenler", _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_lKU, _this.get$_cikisYap(), A.BorderRadius$circular(999), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
         t3 = A._setArrayType([], t1);
       if (_this._yukleniyor)
         t3.push(B.Padding_brk);
       else {
         t4 = _this._sonuclar_screen$_hata;
         if (t4 != null)
-          t3.push(new A.Padding(B.EdgeInsets_0_32_0_32, A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
+          t3.push(new A.Padding(B.EdgeInsets_0_32_0_32, A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), B.TextAlign_2, _null), _null));
         else {
           t4 = _this._sonuclar_screen$_sonuclar.length === 0 ? "Bu hizmet i\xe7in sonu\xe7 bulunamad\u0131" : "\u0130htiyac\u0131n\u0131za uygun hizmet verenler listelendi";
-          t4 = A._setArrayType([A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_14_null_null], t1);
+          t4 = A._setArrayType([A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_14_null_null], t1);
           t5 = _this._sonuclar_screen$_sonuclar.length;
           if (t5 === 0)
             t4.push(A.KalanAlandaOrtala$(20, bosAciklama));
@@ -275135,7 +275258,7 @@
           t2 = B.Text_vmY;
           break $label0$0;
         }
-        t2 = A.Text$("" + _0_0, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_700), _null, _null);
+        t2 = A.Text$("" + _0_0, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_700), _null, _null);
         break $label0$0;
       }
       t2 = A.SizedBox$(t2, _null, 22);
@@ -275915,28 +276038,28 @@
         _s11_ = "Teklif \u0130ste",
         _null = null,
         t1 = type$.JSArray_Widget,
-        t2 = A.Column$(A._setArrayType([A.Text$("Se\xe7ili Hizmet", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_4_null_null, A.Text$(_this._widget.kategori, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_500), _null, _null), A.Text$(_this._widget.hizmet, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1),
-        t3 = A.Row$(A._setArrayType([A.Text$("Hizmet Zaman\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Opsiyonel)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
-        t4 = A.Text$("Zaman tercihiniz varsa belirtin.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
+        t2 = A.Column$(A._setArrayType([A.Text$("Se\xe7ili Hizmet", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_4_null_null, A.Text$(_this._widget.kategori, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.5, B.FontWeight_500), _null, _null), A.Text$(_this._widget.hizmet, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1),
+        t3 = A.Row$(A._setArrayType([A.Text$("Hizmet Zaman\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Opsiyonel)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null),
+        t4 = A.Text$("Zaman tercihiniz varsa belirtin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
         t5 = _this._teklif_iste_screen$_isZamani,
-        t6 = A.Text$("A\xe7\u0131klama", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null),
-        t7 = A.Text$("Ne istedi\u011fini hizmet verene anlat.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
+        t6 = A.Text$("A\xe7\u0131klama", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null),
+        t7 = A.Text$("Ne istedi\u011fini hizmet verene anlat.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null),
         t8 = _this._aciklama,
         t9 = _this._aciklamaDokunuldu && _this.get$_teklif_iste_screen$_aciklamaAnlamsiz() ? new A.OutlineInputBorder(4, A.BorderRadius$circular(13), B.BorderSide_aFi) : _null;
       t9 = A.TextField$(_null, B.List_empty0, false, new A._TeklifIsteScreenState_build_closure(), true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t8, _null, _null, _null, _null, _null, 2, A.InputDecoration$(true, _null, _null, _null, _null, _null, _null, _null, true, t9, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _this._aciklamaDokunuldu && _this.get$_teklif_iste_screen$_aciklamaAnlamsiz() ? new A.OutlineInputBorder(4, A.BorderRadius$circular(13), B.BorderSide_q3i) : _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, "A\xe7\u0131klama yaz\u0131n.", _null, _null, _null, _null, _null, _null, _null, _null, _null, true, true, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), B.DragStartBehavior_1, true, _null, true, _null, false, _this._aciklamaOdak, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, 1000, _null, 6, _null, _null, false, "\u2022", _null, new A._TeklifIsteScreenState_build_closure0(_this), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_10, _null, _null, _null, _null);
       t10 = t8._change_notifier$_value.text;
-      t9 = A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(12, A.Text$("" + (t10.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t10)).get$length(0) + "/1000", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null, 14, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null);
-      t1 = A._setArrayType([B.Align_tEd, B.SizedBox_null_4_null_null, new A.RefPageTitle(_s11_, false, _null), new A.RefSubtitle("Talebin yaln\u0131z se\xe7ti\u011fin hizmet verene g\xf6nderilir.", _null), B.SizedBox_null_16_null_null, new A.RefFormCard(t2, 0, _null), B.SizedBox_null_12_null_null, new A.Builder(new A._TeklifIsteScreenState_build_closure1(_this), _null), new A.Builder(new A._TeklifIsteScreenState_build_closure2(_this), _null), new A.Padding(B.EdgeInsets_1_20_1_3, t3, _null), t4, B.SizedBox_null_10_null_null, new A.IsZamaniSecici(t5, new A._TeklifIsteScreenState_build_closure3(_this), _null), B.SizedBox_null_20_null_null, t6, B.SizedBox_null_6_null_null, t7, B.SizedBox_null_10_null_null, t9, new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$("A\xe7\u0131klaman\u0131z en az 3 kelime olmal\u0131d\u0131r", _null, _null, _null, _null, A.refText(!_this._aciklamaDokunuldu || B.JSString_methods.trim$0(t8._change_notifier$_value.text).length === 0 || _this._teklif_iste_screen$_kelimeSayisi$0() >= 3 ? B.Color_BhF : B.Color_wuX, _null, _null, 0, 12, B.FontWeight_500), _null, _null), _null)], t1);
+      t9 = A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(12, A.Text$("" + (t10.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t10)).get$length(0) + "/1000", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null, 14, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null);
+      t1 = A._setArrayType([B.Align_tEd, B.SizedBox_null_4_null_null, new A.RefPageTitle(_s11_, false, _null), new A.RefSubtitle("Talebin yaln\u0131z se\xe7ti\u011fin hizmet verene g\xf6nderilir.", _null), B.SizedBox_null_16_null_null, new A.RefFormCard(t2, 0, _null), B.SizedBox_null_12_null_null, new A.Builder(new A._TeklifIsteScreenState_build_closure1(_this), _null), new A.Builder(new A._TeklifIsteScreenState_build_closure2(_this), _null), new A.Padding(B.EdgeInsets_1_20_1_3, t3, _null), t4, B.SizedBox_null_10_null_null, new A.IsZamaniSecici(t5, new A._TeklifIsteScreenState_build_closure3(_this), _null), B.SizedBox_null_20_null_null, t6, B.SizedBox_null_6_null_null, t7, B.SizedBox_null_10_null_null, t9, new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$("A\xe7\u0131klaman\u0131z en az 3 kelime olmal\u0131d\u0131r", _null, _null, _null, _null, _null, A.refText(!_this._aciklamaDokunuldu || B.JSString_methods.trim$0(t8._change_notifier$_value.text).length === 0 || _this._teklif_iste_screen$_kelimeSayisi$0() >= 3 ? B.Color_BhF : B.Color_wuX, _null, _null, 0, 12, B.FontWeight_500), _null, _null), _null)], t1);
       if (_this._aciklamaDokunuldu && _this.get$_teklif_iste_screen$_aciklamaAnlamsiz())
-        t1.push(new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$(string$.Axe7_kla, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12, B.FontWeight_600), _null, _null), _null));
+        t1.push(new A.Padding(B.EdgeInsets_0_4_0_0, A.Text$(string$.Axe7_kla, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12, B.FontWeight_600), _null, _null), _null));
       t1.push(B.SizedBox_null_12_null_null);
-      t1.push(A.Text$("Foto\u011fraf (Opsiyonel)", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+      t1.push(A.Text$("Foto\u011fraf (Opsiyonel)", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
       t1.push(B.SizedBox_null_8_null_null);
       t2 = _this.___TeklifIsteScreenState__storageApi_F;
       t2 === $ && A.throwLateFieldNI("_storageApi");
       t1.push(A.ListingPhotoPicker$(true, new A._TeklifIsteScreenState_build_closure4(_this), _this._teklif_iste_screen$_photos, true, t2, true));
       t1.push(B.SizedBox_null_20_null_null);
-      t1.push(A.Text$("\u0130leti\u015fim Tercihi", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+      t1.push(A.Text$("\u0130leti\u015fim Tercihi", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
       t1.push(B.SizedBox_null_8_null_null);
       t1.push(A.RefAcilirSecici$(string$.Telefo, "Sadece Uygulama \u0130\xe7i Mesaj", "Hizmet veren telefonla da ula\u015fabilir.", "Telefon + Uygulama \u0130\xe7i Mesaj", _this._teklif_iste_screen$_iletisim === B.IletisimTercihi_0, new A._TeklifIsteScreenState_build_closure5(_this)));
       t1.push(B.SizedBox_null_24_null_null);
@@ -276042,9 +276165,9 @@
       yorumlar = reviews._reviews.byProvider$1(t2);
       t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t3 = type$.JSArray_Widget;
-      t4 = A._setArrayType([A.Text$("Yorumlar", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null], t3);
+      t4 = A._setArrayType([A.Text$("Yorumlar", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null], t3);
       if (yorumlar.length === 0)
-        t4.push(A.Text$("Hen\xfcz yorum yok.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null));
+        t4.push(A.Text$("Hen\xfcz yorum yok.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null));
       else {
         t3 = A._setArrayType([], t3);
         for (t5 = A.SubListIterable$(yorumlar, 0, A.checkNotNullable(3, "count", type$.int), A._arrayInstanceType(yorumlar)._precomputed1), t6 = t5.$ti, t5 = new A.ListIterator(t5, t5.get$length(0), t6._eval$1("ListIterator<ListIterable.E>")), t7 = type$.AuthController, t6 = t6._eval$1("ListIterable.E"); t5.moveNext$0();) {
@@ -276059,7 +276182,7 @@
         t5 = yorumlar.length;
         if (t5 > 3) {
           t6 = A.BorderRadius$circular(8);
-          t3.push(new A.RefTap(A.Text$("T\xfcm\xfcn\xfc G\xf6r (" + t5 + ")", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), new A._TeklifIsteScreenState_build__closure2(t1, context), t6, _null, _null));
+          t3.push(new A.RefTap(A.Text$("T\xfcm\xfcn\xfc G\xf6r (" + t5 + ")", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), new A._TeklifIsteScreenState_build__closure2(t1, context), t6, _null, _null));
         }
         B.JSArray_methods.addAll$1(t4, t3);
       }
@@ -276134,7 +276257,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._TeklifIsteScreenState_build__closure(t1, ilkSecili));
     },
-    $signature: 10
+    $signature: 11
   };
   A._TeklifIsteScreenState_build__closure.prototype = {
     call$0() {
@@ -276147,7 +276270,7 @@
     build$1(context) {
       var _null = null,
         t1 = type$.JSArray_Widget;
-      return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(true, A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_14_12_14_4, A.Row$(A._setArrayType([B.RefBackButton_null_false_null, B.SizedBox_8_null_null_null, A.Text$("Teklif \u0130stediklerim", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.Expanded_tEU], t1), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_0_0_0_0, true), _null);
+      return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(true, A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_14_12_14_4, A.Row$(A._setArrayType([B.RefBackButton_null_false_null, B.SizedBox_8_null_null_null, A.Text$("Teklif \u0130stediklerim", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.Expanded_tEU], t1), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.EdgeInsets_0_0_0_0, true), _null);
     }
   };
   A.TeklifIstediklerimListesi.prototype = {
@@ -276163,7 +276286,7 @@
       }
       t1 = talepler.length;
       if (t1 === 0)
-        return this.gomulu ? B.SizedBox_0_0_null_null : A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Text$('Hen\xfcz kimseden teklif istemedin.\n"Bul" \xfczerinden bir hizmet veren se\xe7ip teklif isteyebilirsin.', _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null), _null, _null);
+        return this.gomulu ? B.SizedBox_0_0_null_null : A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Text$('Hen\xfcz kimseden teklif istemedin.\n"Bul" \xfczerinden bir hizmet veren se\xe7ip teklif isteyebilirsin.', _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null), _null, _null);
       if (this.gomulu)
         return A.ListView$separated(new A.TeklifIstediklerimListesi_build_closure(talepler), t1, B.EdgeInsets_0_0_0_0, B.NeverScrollableScrollPhysics_null, B.Axis_1, new A.TeklifIstediklerimListesi_build_closure0(), true);
       return A.MasaustuListe$(t1, new A.TeklifIstediklerimListesi_build_closure1(talepler), B.EdgeInsets_14_8_14_20, _null);
@@ -276200,7 +276323,7 @@
     build$1(context) {
       var t4, t5, t6, t7, t8, _null = null,
         t1 = this.talep,
-        _0_0 = this._durumGoster$1(t1.durum),
+        _0_0 = t1.saglayiciReddetti ? B.Record2_H8h : this._durumGoster$1(t1.durum),
         renk = _0_0._1,
         t2 = t1.teklifTarihi,
         t3 = t1.saglayiciId,
@@ -276210,7 +276333,7 @@
       t3 = A.BorderRadius$circular(13);
       t4 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
       t5 = type$.JSArray_Widget;
-      t6 = A.Row$(A._setArrayType([A.Expanded$(A.Text$(t1.hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, new A.DurumRozeti(_0_0._0, renk, t1.durum === B.TeklifTalebiDurumu_0, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t6 = A.Row$(A._setArrayType([A.Expanded$(A.Text$(t1.hizmet, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), 1), B.SizedBox_8_null_null_null, new A.DurumRozeti(_0_0._0, renk, t1.durum === B.TeklifTalebiDurumu_0, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t2 = A.Expanded$(new A.SaglayiciOzetSatiri(ozet, t2 == null, _null), 1);
       t7 = A._setArrayType([], t5);
       t8 = t1.hizmetAlanId;
@@ -276218,7 +276341,7 @@
         B.JSArray_methods.addAll$1(t7, A._setArrayType([B.SizedBox_null_4_null_null, new A.YeniMesajSeridi(A.okunmamisMesajSayisi(t1, t8), _null)], t5));
       t1 = t1.teklifFiyati;
       if (t1 != null)
-        B.JSArray_methods.addAll$1(t7, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$(A.binlikAyir(t1) + " TL", _null, _null, _null, _null, A.refText(renk, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t5));
+        B.JSArray_methods.addAll$1(t7, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$(A.binlikAyir(t1) + " TL", _null, _null, _null, _null, _null, A.refText(renk, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t5));
       return new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_8_null_null, A.Row$(A._setArrayType([t2, B.SizedBox_8_null_null_null, A.Column$(t7, B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_0)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), new A._TalepKarti_build_closure(this, context), t3, _null, _null);
     },
     _durumGoster$1(d) {
@@ -276280,7 +276403,7 @@
       }
       t1 = talepler.length;
       if (t1 === 0)
-        return A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Text$("Hen\xfcz do\u011frudan bir teklif talebiniz yok.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null), _null, _null);
+        return A.Center$(new A.Padding(B.EdgeInsets_24_24_24_24, A.Text$("Hen\xfcz do\u011frudan bir teklif talebiniz yok.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), _null), _null, _null);
       return A.MasaustuListe$(t1, new A.TeklifIstekleriListesi_build_closure0(talepler, auth), B.EdgeInsets_14_8_14_20, _null);
     }
   };
@@ -276328,11 +276451,11 @@
       t3 = acik ? hizmetAlanAdi : A.maskeliAd(hizmetAlanAdi);
       t6 = t1.hizmetAlanId;
       t7 = type$.JSArray_Widget;
-      t3 = A._setArrayType([A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_3_null_null, A.Text$(t1.hizmet, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + A.hizmetAlanTamamlananIs(context, t6) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null], t7);
+      t3 = A._setArrayType([A.Text$(t3, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_null_3_null_null, A.Text$(t1.hizmet, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null), B.SizedBox_null_6_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + A.hizmetAlanTamamlananIs(context, t6) + " i\u015f tamamlad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null], t7);
       if (A.kullaniciKonumu(context, t6, true) != null) {
         t6 = A.kullaniciKonumu(context, t6, true);
         t6.toString;
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t6, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null), 1)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t7));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t6, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null), 1)], t7), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t7));
       }
       t3.push(B.SizedBox_null_8_null_null);
       t6 = A._setArrayType([new A.DurumRozeti(_0_0._0, _0_0._1, t1.durum === B.TeklifTalebiDurumu_0, _null)], t7);
@@ -276340,7 +276463,7 @@
       if (A.okunmamisMesajSayisi(t1, t8) > 0)
         B.JSArray_methods.addAll$1(t6, A._setArrayType([B.SizedBox_8_null_null_null, new A.Flexible(1, B.FlexFit_1, new A.YeniMesajSeridi(A.okunmamisMesajSayisi(t1, t8), _null), _null)], t7));
       t3.push(A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null));
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t2, B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, A.Text$(A.kisaTarih(t1.createdAt), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), new A._TalepKarti_build_closure0(_this, context), t4, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t2, B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1), B.SizedBox_8_null_null_null, A.Text$(A.kisaTarih(t1.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11, B.FontWeight_500), _null, _null)], t7), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null), new A._TalepKarti_build_closure0(_this, context), t4, _null, _null);
     },
     _teklif_istekleri_screen$_durumGoster$2$iptal(d, iptal) {
       var t1;
@@ -276540,7 +276663,7 @@
               t3 = type$.JSArray_Widget;
               t4 = type$.bool;
               $async$goto = 3;
-              return A._asyncAwait(A.RefBottomSheet_goster(t1, new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([B.RefSvg_MoM, B.SizedBox_10_null_null_null, A.Text$("Talebi Sil", null, null, null, null, A.refText(B.Color_wuX, null, null, 0, 14.5, B.FontWeight_700), null, null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._TeklifTalebiDetayScreenState__talepMenusu_closure($async$self), t2, null, null), "Talep Se\xe7enekleri", t4), $async$_talepMenusu$1);
+              return A._asyncAwait(A.RefBottomSheet_goster(t1, new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([B.RefSvg_MoM, B.SizedBox_10_null_null_null, A.Text$("Talebi Sil", null, null, null, null, null, A.refText(B.Color_wuX, null, null, 0, 14.5, B.FontWeight_700), null, null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._TeklifTalebiDetayScreenState__talepMenusu_closure($async$self), t2, null, null), "Talep Se\xe7enekleri", t4), $async$_talepMenusu$1);
             case 3:
               // returning from await.
               if ($async$result !== true || $async$self._framework$_element == null) {
@@ -276562,7 +276685,7 @@
               for (_i = 0; _i < 5; ++_i) {
                 r = B.List_m7T[_i];
                 t4 = new A.Radius(12, 12);
-                t2.push(new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(r, null, null, null, null, new A.TextStyle(true, B.Color_MXH, null, "Poppins", B.List_MNo, null, 14.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null), B.RefSvg_ptN], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._TeklifTalebiDetayScreenState__talepMenusu_closure1($async$self, r), new A.BorderRadius(t4, t4, t4, t4), null, null));
+                t2.push(new A.RefTap(new A.Padding(B.EdgeInsets_4_13_4_13, A.Row$(A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(r, null, null, null, null, null, new A.TextStyle(true, B.Color_MXH, null, "Poppins", B.List_MNo, null, 14.5, B.FontWeight_500, null, 0, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), null, null), null), B.RefSvg_ptN], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, null), null), new A._TeklifTalebiDetayScreenState__talepMenusu_closure1($async$self, r), new A.BorderRadius(t4, t4, t4, t4), null, null));
               }
               t3 = type$.String;
               $async$goto = 5;
@@ -276623,6 +276746,51 @@
       });
       return A._asyncStartSync($async$_talepMenusu$1, $async$completer);
     },
+    _saglayiciReddet$1(t) {
+      var $async$goto = 0,
+        $async$completer = A._makeAsyncAwaitCompleter(type$.void),
+        $async$returnValue, $async$self = this, err;
+      var $async$_saglayiciReddet$1 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
+        if ($async$errorCode === 1)
+          return A._asyncRethrow($async$result, $async$completer);
+        for (;;)
+          switch ($async$goto) {
+            case 0:
+              // Function start
+              $async$goto = 3;
+              return A._asyncAwait(A.showDialog(true, new A._TeklifTalebiDetayScreenState__saglayiciReddet_closure(), $async$self.get$context(0), type$.bool), $async$_saglayiciReddet$1);
+            case 3:
+              // returning from await.
+              if ($async$result !== true || $async$self._framework$_element == null) {
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$goto = 4;
+              return A._asyncAwait(A.Provider_of($async$self.get$context(0), false, type$.TeklifTalebiController).saglayiciReddet$1(t.id), $async$_saglayiciReddet$1);
+            case 4:
+              // returning from await.
+              err = $async$result;
+              if ($async$self._framework$_element == null) {
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              if (err != null) {
+                A.sysToastErr($async$self.get$context(0), B.SysKind_2, err.get$message(err));
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$self.get$context(0);
+              A.Navigator_of($async$self.get$context(0), false).maybePop$1$0(type$.nullable_Object);
+            case 1:
+              // return
+              return A._asyncReturn($async$returnValue, $async$completer);
+          }
+      });
+      return A._asyncStartSync($async$_saglayiciReddet$1, $async$completer);
+    },
     _tamamla$1(t) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.void),
@@ -276680,7 +276848,7 @@
       gerekenRol = benSaglayiciMi ? B.Role_1 : B.Role_0;
       if (me.activeRole !== gerekenRol)
         return gerekenRol === B.Role_1 ? new A.RoleGuard(B.Role_1, new A._TeklifTalebiDetayScreenState_build_closure(), _null) : new A.RoleGuard(B.Role_0, new A._TeklifTalebiDetayScreenState_build_closure0(), _null);
-      t1 = A.Text$("Teklif Talebi", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null);
+      t1 = A.Text$("Teklif Talebi", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null);
       t2 = type$.JSArray_Widget;
       t3 = A._setArrayType([B.RefBackButton_null_false_null, B.Spacer_null], t2);
       t4 = false;
@@ -276696,20 +276864,20 @@
       if (benSaglayiciMi)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([new A.Builder(new A._TeklifTalebiDetayScreenState_build_closure2(auth, t), _null), B.SizedBox_null_12_null_null, B.Divider_Lnq, B.SizedBox_null_12_null_null], t2));
       t3.push(A.IlanBaslikSatiri$(t.hizmet, _null));
-      t3.push(new A.Padding(B.EdgeInsets_0_14_0_7, A.Text$("Talep Detay\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null), _null));
+      t3.push(new A.Padding(B.EdgeInsets_0_14_0_7, A.Text$("Talep Detay\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null), _null));
       t3.push(B.BolumAyraci_null);
       t4 = t.isZamani;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$("Zaman tercihi", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_6_null_null, A.Align$(B.Alignment_m1_0, new A.IsZamaniRozeti(t4, _null), _null, _null, _null), B.BolumAyraci_null], t2));
-      t3.push(A.Text$("\u0130\u015fin detay\u0131", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Text$("Zaman tercihi", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_6_null_null, A.Align$(B.Alignment_m1_0, new A.IsZamaniRozeti(t4, _null), _null, _null, _null), B.BolumAyraci_null], t2));
+      t3.push(A.Text$("\u0130\u015fin detay\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
       t3.push(B.SizedBox_null_4_null_null);
-      t3.push(A.Text$(t.aciklama, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null));
+      t3.push(A.Text$(t.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 13.5, B.FontWeight_500), _null, _null));
       t3.push(new A.Builder(new A._TeklifTalebiDetayScreenState_build_closure3(t), _null));
       t4 = t.fotograflar;
       if (t4.length !== 0)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.BolumAyraci_null, A.Text$("Foto\u011fraflar", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_6_null_null, A.SizedBox$(A.ListView$separated(new A._TeklifTalebiDetayScreenState_build_closure4(context, t), t4.length, _null, _null, B.Axis_0, new A._TeklifTalebiDetayScreenState_build_closure5(), false), 64, _null)], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.BolumAyraci_null, A.Text$("Foto\u011fraflar", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.SizedBox_null_6_null_null, A.SizedBox$(A.ListView$separated(new A._TeklifTalebiDetayScreenState_build_closure4(context, t), t4.length, _null, _null, B.Axis_0, new A._TeklifTalebiDetayScreenState_build_closure5(), false), 64, _null)], t2));
       t3 = A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
-      t4 = benSaglayiciMi ? new A._SaglayiciAksiyonlari(t, _this._fiyat, _this._cevap, _this._gonderiliyor, _this._gonderimOnayi, new A._TeklifTalebiDetayScreenState_build_closure6(_this, t), new A._TeklifTalebiDetayScreenState_build_closure7(_this, t), _null) : new A._HizmetAlanAksiyonlari(t, new A._TeklifTalebiDetayScreenState_build_closure8(_this, t), new A._TeklifTalebiDetayScreenState_build_closure9(context, t), _null);
+      t4 = benSaglayiciMi ? new A._SaglayiciAksiyonlari(t, _this._fiyat, _this._cevap, _this._gonderiliyor, _this._gonderimOnayi, new A._TeklifTalebiDetayScreenState_build_closure6(_this, t), new A._TeklifTalebiDetayScreenState_build_closure7(_this, t), new A._TeklifTalebiDetayScreenState_build_closure8(_this, t), _null) : new A._HizmetAlanAksiyonlari(t, new A._TeklifTalebiDetayScreenState_build_closure9(_this, t), new A._TeklifTalebiDetayScreenState_build_closure10(context, t), _null);
       return A.Scaffold$(_null, B.Color_wst, A.SafeArea$(true, A.ListView$(A._setArrayType([t1, B.SizedBox_null_12_null_null, new A.MasaustuDetay(new A.RefFormCard(t3, 0, _null), A.Column$(A._setArrayType([new A.RefFormCard(new A._KarsiTarafBilgisi(t, benSaglayiciMi, auth, _null), 0, _null), B.SizedBox_null_20_null_null, new A.KeyedSubtree(t4, _this._teklifBolumu)], t2), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), 14, _null)], t2), _null, B.EdgeInsets_14_12_14_24, false), B.EdgeInsets_0_0_0_0, true), _null);
     }
   };
@@ -276783,10 +276951,10 @@
       var t1, t2, _null = null;
       type$.BuildContext._as(c);
       t1 = A.BorderRadius$circular(16);
-      t2 = A.Text$("Talep silinsin mi?", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null);
-      return A.AlertDialog$(A._setArrayType([A.TextButton$(B.Text_PBK, new A._TeklifTalebiDetayScreenState__talepMenusu__closure(c), _null), A.TextButton$(A.Text$("Sil", _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), new A._TeklifTalebiDetayScreenState__talepMenusu__closure0(c), _null)], type$.JSArray_Widget), _null, new A.RoundedRectangleBorder(t1, B.BorderSide_Ah5), t2);
+      t2 = A.Text$("Talep silinsin mi?", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null);
+      return A.AlertDialog$(A._setArrayType([A.TextButton$(B.Text_PBK, new A._TeklifTalebiDetayScreenState__talepMenusu__closure(c), _null), A.TextButton$(A.Text$("Sil", _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), new A._TeklifTalebiDetayScreenState__talepMenusu__closure0(c), _null)], type$.JSArray_Widget), _null, new A.RoundedRectangleBorder(t1, B.BorderSide_Ah5), t2);
     },
-    $signature: 237
+    $signature: 202
   };
   A._TeklifTalebiDetayScreenState__talepMenusu__closure.prototype = {
     call$0() {
@@ -276805,6 +276973,31 @@
   A._TeklifTalebiDetayScreenState__talepMenusu_closure1.prototype = {
     call$0() {
       return A.Navigator_of(this.$this.get$context(0), false).pop$1$1(0, this.r, type$.String);
+    },
+    $signature: 0
+  };
+  A._TeklifTalebiDetayScreenState__saglayiciReddet_closure.prototype = {
+    call$1(c) {
+      var t1, t2, t3, _null = null;
+      type$.BuildContext._as(c);
+      t1 = A.BorderRadius$circular(16);
+      t2 = A.Text$("Talep reddedilsin mi?", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 17, B.FontWeight_700), _null, _null);
+      t3 = A.Text$("Talep teklif isteklerinizden kald\u0131r\u0131l\u0131r ve hizmet alana talebini reddetti\u011finiz bildirilir.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null);
+      return A.AlertDialog$(A._setArrayType([A.TextButton$(B.Text_PBK, new A._TeklifTalebiDetayScreenState__saglayiciReddet__closure(c), _null), A.TextButton$(A.Text$("Reddet", _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), new A._TeklifTalebiDetayScreenState__saglayiciReddet__closure0(c), _null)], type$.JSArray_Widget), t3, new A.RoundedRectangleBorder(t1, B.BorderSide_Ah5), t2);
+    },
+    $signature: 202
+  };
+  A._TeklifTalebiDetayScreenState__saglayiciReddet__closure.prototype = {
+    call$0() {
+      A.Navigator_of(this.c, false).pop$1$1(0, false, type$.bool);
+      return null;
+    },
+    $signature: 0
+  };
+  A._TeklifTalebiDetayScreenState__saglayiciReddet__closure0.prototype = {
+    call$0() {
+      A.Navigator_of(this.c, false).pop$1$1(0, true, type$.bool);
+      return null;
     },
     $signature: 0
   };
@@ -276903,11 +277096,17 @@
   };
   A._TeklifTalebiDetayScreenState_build_closure8.prototype = {
     call$0() {
-      return this.$this._sec$1(this.t);
+      return this.$this._saglayiciReddet$1(this.t);
     },
     $signature: 0
   };
   A._TeklifTalebiDetayScreenState_build_closure9.prototype = {
+    call$0() {
+      return this.$this._sec$1(this.t);
+    },
+    $signature: 0
+  };
+  A._TeklifTalebiDetayScreenState_build_closure10.prototype = {
     call$0() {
       var t1 = type$.void,
         t2 = A.MaterialPageRoute$(new A._TeklifTalebiDetayScreenState_build__closure(this.t), false, null, t1);
@@ -276962,7 +277161,7 @@
       t1 = type$.JSArray_Widget;
       t3 = A._setArrayType([new A.Builder(new A._KarsiTarafBilgisi_build_closure1(_this, acik), _null), B.SizedBox_null_10_null_null, B.Divider_Lnq, B.SizedBox_null_10_null_null], t1);
       if (t2)
-        t3.push(A.Text$("Hizmet veren teklif verdi\u011finde kimli\u011fi ve mesajla\u015fma a\xe7\u0131lacak.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
+        t3.push(A.Text$("Hizmet veren teklif verdi\u011finde kimli\u011fi ve mesajla\u015fma a\xe7\u0131lacak.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
       if (t2)
         t3.push(B.SizedBox_null_8_null_null);
       if (sureDoldu)
@@ -276986,7 +277185,7 @@
       type$.BuildContext._as(_);
       return new A.TeklifTalebiSohbetScreen(this.$this.talep.id, this.baslik, null);
     },
-    $signature: 230
+    $signature: 235
   };
   A._KarsiTarafBilgisi_build_closure.prototype = {
     call$0() {
@@ -277056,9 +277255,9 @@
       reviews._gerekirseYukle$1(t2);
       yorumlar = reviews._reviews.byProvider$1(t2);
       t2 = type$.JSArray_Widget;
-      t3 = A._setArrayType([A.Text$("Hizmet Verenin Yorumlar\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_10_null_null], t2);
+      t3 = A._setArrayType([A.Text$("Hizmet Verenin Yorumlar\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_10_null_null], t2);
       if (yorumlar.length === 0)
-        t3.push(A.Text$("Hen\xfcz yorum yok.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null));
+        t3.push(A.Text$("Hen\xfcz yorum yok.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null));
       else {
         t2 = A._setArrayType([], t2);
         for (t4 = A.SubListIterable$(yorumlar, 0, A.checkNotNullable(3, "count", type$.int), A._arrayInstanceType(yorumlar)._precomputed1), t5 = t4.$ti, t4 = new A.ListIterator(t4, t4.get$length(0), t5._eval$1("ListIterator<ListIterable.E>")), t6 = type$.AuthController, t5 = t5._eval$1("ListIterable.E"); t4.moveNext$0();) {
@@ -277072,7 +277271,7 @@
         }
         if (this.acik && yorumlar.length > 3) {
           t4 = A.BorderRadius$circular(8);
-          t2.push(A.Align$(B.Alignment_1_0, new A.RefTap(A.Text$("T\xfcm\xfcn\xfc G\xf6r (" + yorumlar.length + ")", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), new A._KarsiTarafBilgisi_build__closure(t1, context), t4, _null, _null), _null, _null, _null));
+          t2.push(A.Align$(B.Alignment_1_0, new A.RefTap(A.Text$("T\xfcm\xfcn\xfc G\xf6r (" + yorumlar.length + ")", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13, B.FontWeight_700), _null, _null), new A._KarsiTarafBilgisi_build__closure(t1, context), t4, _null, _null), _null, _null, _null));
         }
         B.JSArray_methods.addAll$1(t3, t2);
       }
@@ -277099,7 +277298,7 @@
   };
   A._SaglayiciAksiyonlari.prototype = {
     build$1(context) {
-      var t2, t3, t4, _this = this, _null = null,
+      var t2, t3, t4, t5, t6, t7, t8, _this = this, _null = null,
         _s33_ = "Hizmet alan bu talebi iptal etti.",
         t1 = _this.talep;
       if (t1.teklifTarihi != null) {
@@ -277107,7 +277306,7 @@
         t3 = A._setArrayType([], t2);
         if (_this.gonderimOnayi) {
           t4 = A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, B.Color_xQ2, _null, _null, B.BoxShape_0);
-          B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_dQR, B.SizedBox_8_null_null_null, A.Text$("Teklifiniz g\xf6nderildi.", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null), B.SizedBox_null_12_null_null], t2));
+          B.JSArray_methods.addAll$1(t3, A._setArrayType([A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_dQR, B.SizedBox_8_null_null_null, A.Text$("Teklifiniz g\xf6nderildi.", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t4, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null), B.SizedBox_null_12_null_null], t2));
         }
         t4 = t1.teklifFiyati;
         t4.toString;
@@ -277121,18 +277320,27 @@
         if (t4 === B.TeklifTalebiDurumu_2) {
           t1 = B.Color_VDA.withValues$1$alpha(0.1);
           t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, t1, _null, _null, B.BoxShape_0);
-          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Container$(_null, A.Text$("Teklif kabul edildi \u2014 i\u015f aktif.", _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null), B.SizedBox_null_12_null_null, new A.RefPrimaryButton("\u0130\u015fi Tamamland\u0131 Olarak \u0130\u015faretle", _null, _this.onTamamla, false, _null)], t2));
+          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Container$(_null, A.Text$("Teklif kabul edildi \u2014 i\u015f aktif.", _null, _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_12_12_12, _null, _null, _null), B.SizedBox_null_12_null_null, new A.RefPrimaryButton("\u0130\u015fi Tamamland\u0131 Olarak \u0130\u015faretle", _null, _this.onTamamla, false, _null)], t2));
         } else if (t4 === B.TeklifTalebiDurumu_3) {
           t1 = t1.silindiAt != null ? _s33_ : "Hizmet alan bu teklifi reddetti.";
-          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null)], t2));
+          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null)], t2));
         } else if (t4 === B.TeklifTalebiDurumu_4)
-          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$("Teklifin s\xfcresi doldu.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null)], t2));
+          B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$("Teklifin s\xfcresi doldu.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null)], t2));
         return A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
       }
       if (t1.silindiAt != null)
-        return A.Text$(_s33_, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null);
-      t1 = type$.JSArray_Widget;
-      return A.Column$(A._setArrayType([A.Text$("Fiyat\u0131n\u0131z (TL)", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this.fiyatController, _null, _null, _null, _null, _null, 2, B.InputDecoration_UDw, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, B.List_TutarBicimlendirici, _null, B.TextInputType_2_false_false, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, _null, _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, _null, _null, _null), B.SizedBox_null_16_null_null, A.Row$(A._setArrayType([A.Text$("Notunuz", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Opsiyonel)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_8_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this.cevapController, _null, _null, _null, _null, _null, 2, B.InputDecoration_JWM, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 4, _null, _null, false, "\u2022", _null, _null, _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_10, _null, _null, _null, _null), B.SizedBox_null_20_null_null, new A.RefPrimaryButton("Teklif Ver", _null, _this.onTeklifVer, _this.gonderiliyor, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
+        return A.Text$(_s33_, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null);
+      if (t1.saglayiciReddetti)
+        return A.Text$("Bu talebi reddettiniz.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null);
+      t1 = A.Text$("Fiyat\u0131n\u0131z (TL)", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null);
+      t2 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this.fiyatController, _null, _null, _null, _null, _null, 2, B.InputDecoration_UDw, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, B.List_TutarBicimlendirici, _null, B.TextInputType_2_false_false, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, _null, _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, _null, _null, _null);
+      t3 = type$.JSArray_Widget;
+      t4 = A.Row$(A._setArrayType([A.Text$("Notunuz", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(Opsiyonel)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t5 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this.cevapController, _null, _null, _null, _null, _null, 2, B.InputDecoration_JWM, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 4, _null, _null, false, "\u2022", _null, _null, _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_10, _null, _null, _null, _null);
+      t6 = _this.gonderiliyor;
+      t7 = t6 ? _null : _this.onReddet;
+      t8 = A.OutlinedButton_styleFrom(_null, _null, _null, _null, _null, _null, _null, _null, _null, B.Color_wuX, _null, _null, B.EdgeInsets_0_13_0_13, _null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), B.BorderSide_aFi, _null, _null, _null, _null);
+      return A.Column$(A._setArrayType([t1, B.SizedBox_null_8_null_null, t2, B.SizedBox_null_16_null_null, t4, B.SizedBox_null_8_null_null, t5, B.SizedBox_null_20_null_null, new A.RefPrimaryButton("Teklif Ver", _null, _this.onTeklifVer, t6, _null), B.SizedBox_null_10_null_null, A.SizedBox$(A.OutlinedButton$(A.Text$("Talebi Reddet", _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), B.ValueKey_8Jv, t7, t8), _null, 1 / 0)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A._HizmetAlanAksiyonlari.prototype = {
@@ -277148,7 +277356,7 @@
           t1 = A._setArrayType([new A._GelenTeklif(t1, _null), B.SizedBox_null_10_null_null], type$.JSArray_Widget);
           if (kalan != null && B.JSInt_methods._tdivFast$1(kalan.inMicroseconds, 60000000) > 0) {
             t2 = kalan.inMicroseconds;
-            t1.push(A.Text$("Karar vermek i\xe7in " + B.JSInt_methods._tdivFast$1(t2, 3600000000) + " saat " + B.JSInt_methods.$mod(B.JSInt_methods._tdivFast$1(t2, 60000000), 60) + " dakikan var.", _null, _null, _null, _null, A.refText(B.Color_4VS, _null, _null, 0, 12, B.FontWeight_500), _null, _null));
+            t1.push(A.Text$("Karar vermek i\xe7in " + B.JSInt_methods._tdivFast$1(t2, 3600000000) + " saat " + B.JSInt_methods.$mod(B.JSInt_methods._tdivFast$1(t2, 60000000), 60) + " dakikan var.", _null, _null, _null, _null, _null, A.refText(B.Color_4VS, _null, _null, 0, 12, B.FontWeight_500), _null, _null));
           }
           t1.push(B.SizedBox_null_16_null_null);
           t1.push(A.SizedBox$(new A.RefPrimaryButton("Teklifi Se\xe7", _null, this.onSec, false, _null), _null, 1 / 0));
@@ -277156,7 +277364,7 @@
         case 2:
           return B.DurumSeridi_8JZ;
         case 3:
-          return new A._SonlananTeklif(t1, "Bu teklifi reddettin.", _null);
+          return new A._SonlananTeklif(t1, t1.saglayiciReddetti ? "Hizmet veren bu talebi reddetti." : "Bu teklifi reddettin.", _null);
         case 4:
           return new A._SonlananTeklif(t1, "Teklifin s\xfcresi doldu \u2014 art\u0131k se\xe7ilemez.", _null);
         case 5:
@@ -277197,7 +277405,7 @@
         t3 = this.talep;
       if (t3.teklifFiyati != null)
         B.JSArray_methods.addAll$1(t2, A._setArrayType([new A._GelenTeklif(t3, _null), B.SizedBox_null_10_null_null], t1));
-      t2.push(A.Text$(this.metin, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null));
+      t2.push(A.Text$(this.metin, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null));
       return A.Column$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
@@ -277219,14 +277427,14 @@
   A._IletisimKapandiNotu.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Text$("Teklifin s\xfcresi doldu; telefon ve mesajla\u015fma kapand\u0131.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null);
+      return A.Text$("Teklifin s\xfcresi doldu; telefon ve mesajla\u015fma kapand\u0131.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null);
     }
   };
   A._BeklemeGostergesi.prototype = {
     build$1(context) {
       var _null = null,
         t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(13), _null, B.Color_xQ2, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$("Teklif bekleniyor", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_4_null_null_null, B.Padding_7sY], type$.JSArray_Widget), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_12, _null, _null, _null);
+      return A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$("Teklif bekleniyor", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_4_null_null_null, B.Padding_7sY], type$.JSArray_Widget), B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_12, _null, _null, _null);
     }
   };
   A.TeklifTalebiSohbetScreen.prototype = {
@@ -277367,9 +277575,9 @@
         mesajlar = B.List_empty16;
       yazilabilir = !t1 && A.talepIletisimAcikMi(talep);
       t2 = type$.JSArray_Widget;
-      t3 = A.Stack$(B.Alignment_0_0, A._setArrayType([new A.Padding(B.EdgeInsets_46_0_46_0, A.Text$(_this._widget.baslik, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), _null), B.Align_tEd], t2), B.Clip_1, B.StackFit_0, _null);
+      t3 = A.Stack$(B.Alignment_0_0, A._setArrayType([new A.Padding(B.EdgeInsets_46_0_46_0, A.Text$(_this._widget.baslik, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), _null), B.Align_tEd], t2), B.Clip_1, B.StackFit_0, _null);
       if (mesajlar.length === 0)
-        t4 = A.Center$(A.Text$("Hen\xfcz mesaj yok.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null), _null, _null);
+        t4 = A.Center$(A.Text$("Hen\xfcz mesaj yok.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null), _null, _null);
       else {
         t4 = A._setArrayType([], t2);
         for (t5 = mesajlar.length, t6 = me == null, _i = 0; _i < mesajlar.length; mesajlar.length === t5 || (0, A.throwConcurrentModificationError)(mesajlar), ++_i) {
@@ -277382,7 +277590,7 @@
       t4 = A._setArrayType([new A.Padding(B.EdgeInsets_14_12_14_8, t3, _null), B.Divider_k2S, A.Expanded$(t4, 1)], t2);
       if (!yazilabilir) {
         t1 = (t1 ? _null : talep.durum) === B.TeklifTalebiDurumu_4 ? string$.Teklif : "Mesajla\u015fma \u015fu anda kapal\u0131.";
-        t4.push(A.SafeArea$(true, new A.Padding(B.EdgeInsets_14_14_14_14, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), _null), B.EdgeInsets_0_0_0_0, false));
+        t4.push(A.SafeArea$(true, new A.Padding(B.EdgeInsets_14_14_14_14, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), _null), B.EdgeInsets_0_0_0_0, false));
       } else {
         t1 = _this._teklif_talebi_sohbet_screen$_gonderiliyor;
         t3 = t1 ? _null : _this.get$_fotografSecVeGonder();
@@ -277472,7 +277680,7 @@
         t8.push(new A.Padding(B.EdgeInsets_0_0_0_6, new A._TeklifSohbetFotografi(t2, _null), _null));
       t1 = t1.metin;
       if (t1 != null)
-        t8.push(A.Text$(t1, _null, _null, _null, _null, A.refText(benim ? B.Color_wst : B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null));
+        t8.push(A.Text$(t1, _null, _null, _null, _null, _null, A.refText(benim ? B.Color_wst : B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null));
       if (benim)
         B.JSArray_methods.addAll$1(t8, A._setArrayType([B.SizedBox_null_4_null_null, t4.call$1$acikZemin(false)], t7));
       return A.Align$(t5, A.Container$(_null, A.Column$(t8, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, B.BoxConstraints_ktf, t6, _null, _null, _null, B.EdgeInsets_0_0_0_8, B.EdgeInsets_10_10_10_10, _null, _null, _null), _null, _null, _null);
@@ -277616,30 +277824,30 @@
       t2 = A.Row$(A._setArrayType([B.RefBackButton_null_false_null, new A.RefTap(A.Container$(B.Alignment_0_0, B.RefSvg_9sg, B.Clip_0, _null, _null, B.BoxDecoration_3vk, _null, 38, _null, _null, _null, _null, _null, 38), new A._TeklifTalebiYorumScreenState_build_closure(context), t2, _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_3, B.MainAxisSize_1, 0, _null);
       t3 = done == null;
       t4 = t3 ? "Yorum Yaz" : "De\u011ferlendirmen";
-      t4 = A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 26, B.FontWeight_700), _null, _null);
+      t4 = A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 26, B.FontWeight_700), _null, _null);
       t5 = t3 ? string$.Ald___ : "Bu hizmet i\xe7in verdi\u011finiz puan ve yorum.";
-      t5 = A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null);
+      t5 = A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), _null, _null);
       t6 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      t6 = A._setArrayType([t2, B.SizedBox_null_6_null_null, t4, B.SizedBox_null_7_null_null, t5, A.Container$(_null, A.Row$(A._setArrayType([new A.Builder(new A._TeklifTalebiYorumScreenState_build_closure0(_this), _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this._widget.talep.saglayiciAdi, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), A.Text$(_this._widget.talep.hizmet, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t6, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_13_13_13_13, _null, _null, _null)], t1);
+      t6 = A._setArrayType([t2, B.SizedBox_null_6_null_null, t4, B.SizedBox_null_7_null_null, t5, A.Container$(_null, A.Row$(A._setArrayType([new A.Builder(new A._TeklifTalebiYorumScreenState_build_closure0(_this), _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this._widget.talep.saglayiciAdi, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null), A.Text$(_this._widget.talep.hizmet, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t6, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_13_13_13_13, _null, _null, _null)], t1);
       if (!t3) {
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(15), _null, B.Color_wst, _null, _null, B.BoxShape_0);
         t3 = A._setArrayType([], t1);
         for (t4 = done.stars, i = 1; i <= 5; ++i)
           t3.push(new A.Padding(B.EdgeInsets_0_0_2_0, new A.RefSvg(i <= t4 ? _s26_ : _s27_, 20, B.Color_AuQ, _null), _null));
         t3.push(B.SizedBox_6_null_null_null);
-        t3.push(A.Text$("" + t4 + ".0", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null));
+        t3.push(A.Text$("" + t4 + ".0", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_700), _null, _null));
         t3.push(B.Spacer_null);
-        t3.push(A.Text$(_this._tarih$1(done.createdAt), _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
+        t3.push(A.Text$(_this._tarih$1(done.createdAt), _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null));
         t3 = A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
         t4 = done.text;
         t5 = B.JSString_methods.trim$0(t4).length === 0;
         if (t5)
           t4 = "Yorum eklenmedi.";
         t7 = A.refText(t5 ? B.Color_Ldf : B.Color_yKk, _null, 1.55, 0, 13.5, B.FontWeight_400);
-        B.JSArray_methods.addAll$1(t6, A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([t3, B.SizedBox_null_10_null_null, A.Text$(t4, _null, _null, _null, _null, t7.copyWith$1$fontStyle(t5 ? B.FontStyle_1 : B.FontStyle_0), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t2, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_15_15_15_15, _null, _null, _null)], t1));
+        B.JSArray_methods.addAll$1(t6, A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([t3, B.SizedBox_null_10_null_null, A.Text$(t4, _null, _null, _null, _null, _null, t7.copyWith$1$fontStyle(t5 ? B.FontStyle_1 : B.FontStyle_0), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t2, _null, _null, _null, B.EdgeInsets_0_14_0_0, B.EdgeInsets_15_15_15_15, _null, _null, _null)], t1));
       } else {
-        t2 = A.Text$("Puan\u0131n\u0131z", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null);
-        t3 = A.Text$("Hizmet kalitesini puanlay\u0131n", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
+        t2 = A.Text$("Puan\u0131n\u0131z", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null);
+        t3 = A.Text$("Hizmet kalitesini puanlay\u0131n", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 13, B.FontWeight_400), _null, _null);
         t4 = A._setArrayType([], t1);
         for (i = 1; i <= 5; ++i) {
           t5 = A._setArrayType([], t1);
@@ -277650,15 +277858,15 @@
           B.JSArray_methods.addAll$1(t4, t5);
         }
         t4 = A.Row$(t4, B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null);
-        t5 = A.Text$("1 y\u0131ld\u0131z \xe7ok k\xf6t\xfc, 5 y\u0131ld\u0131z m\xfckemmel", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
-        t7 = A.Row$(A._setArrayType([A.Text$("Yorumunuz", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+        t5 = A.Text$("1 y\u0131ld\u0131z \xe7ok k\xf6t\xfc, 5 y\u0131ld\u0131z m\xfckemmel", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
+        t7 = A.Row$(A._setArrayType([A.Text$("Yorumunuz", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null, A.Text$("(\u0130ste\u011fe Ba\u011fl\u0131)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_500), _null, _null)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
         t8 = _this._teklif_talebi_yorum_screen$_text;
         t9 = A.RefTextField$(_null, new A._TeklifTalebiYorumScreenState_build_closure2(), t8, _null, _null, false, "Deneyiminizi payla\u015fabilirsiniz...", _null, _null, 300, 6, false, new A._TeklifTalebiYorumScreenState_build_closure3(_this), _null, _null, B.TextCapitalization_10, _null, _null, _null, false);
         t8 = t8._change_notifier$_value.text;
-        t1 = A._setArrayType([new A.Padding(B.EdgeInsets_1_20_1_4, t2, _null), t3, new A.Padding(B.EdgeInsets_0_14_0_0, t4, _null), new A.Padding(B.EdgeInsets_0_8_0_0, t5, _null), new A.Padding(B.EdgeInsets_1_20_1_4, t7, _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(10, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/300", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null), new A.RefInfoBox(A.Text$(string$.Verdi_, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null)], t1);
+        t1 = A._setArrayType([new A.Padding(B.EdgeInsets_1_20_1_4, t2, _null), t3, new A.Padding(B.EdgeInsets_0_14_0_0, t4, _null), new A.Padding(B.EdgeInsets_0_8_0_0, t5, _null), new A.Padding(B.EdgeInsets_1_20_1_4, t7, _null), A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t9, A.Positioned$(10, A.Text$("" + (t8.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t8)).get$length(0) + "/300", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t1), B.Clip_1, B.StackFit_0, _null), new A.RefInfoBox(A.Text$(string$.Verdi_, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null)], t1);
         t2 = _this._teklif_talebi_yorum_screen$_error;
         if (t2 != null)
-          t1.push(new A.Padding(B.EdgeInsets_0_14_0_0, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
+          t1.push(new A.Padding(B.EdgeInsets_0_14_0_0, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null), _null));
         t1.push(B.SizedBox_null_14_null_null);
         t2 = _this._busy;
         t1.push(A.RefWideButton$("De\u011ferlendirmeyi G\xf6nder", t2, _this._stars < 1 ? _null : _this.get$_submit()));
@@ -277759,15 +277967,15 @@
       if (_this.acik) {
         t1 = _this.fotoYolu;
         t2 = _this.adSoyad;
-        t1 = B.JSString_methods.trim$0(t1).length !== 0 ? new A.ProfilAvatari(t2, t1, 46, _null) : A.Container$(B.Alignment_0_0, A.Text$(A.SahipKarti__basHarfler(t2), _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_A6u, _null, 46, _null, _null, _null, _null, _null, 46);
+        t1 = B.JSString_methods.trim$0(t1).length !== 0 ? new A.ProfilAvatari(t2, t1, 46, _null) : A.Container$(B.Alignment_0_0, A.Text$(A.SahipKarti__basHarfler(t2), _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, B.BoxDecoration_A6u, _null, 46, _null, _null, _null, _null, _null, 46);
       } else
         t1 = B.RefSvg_tbY;
       t1 = A.SizedBox$(t1, 46, 46);
       t2 = type$.JSArray_Widget;
-      t3 = A._setArrayType([A.Text$(_this.adSoyad, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0.3, 15.5, B.FontWeight_700), _null, _null), B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_M1g, B.SizedBox_5_null_null_null, A.Text$("" + _this.tamamlananIs + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null)], t2);
+      t3 = A._setArrayType([A.Text$(_this.adSoyad, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0.3, 15.5, B.FontWeight_700), _null, _null), B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_M1g, B.SizedBox_5_null_null_null, A.Text$("" + _this.tamamlananIs + " i\u015f tamamlad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null)], t2);
       t4 = _this.kayitTarihi;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_3_null_null, A.Text$(A.uyelikTarihiMetni(t4), _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_3_null_null, A.Text$(A.uyelikTarihiMetni(t4), _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 11.8, B.FontWeight_400), _null, _null)], t2));
       return A.Row$(A._setArrayType([t1, B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
   };
@@ -277792,7 +278000,7 @@
   A.BilgiSatiri.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.ikon, 17, B.Color_yKk, _null), B.SizedBox_8_null_null_null, A.Text$(this.etiket, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 12.8, B.FontWeight_400), _null, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(this.deger, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.8, B.FontWeight_600), B.TextAlign_1, _null), 1)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, B.BoxDecoration_Ahn, _null, _null, _null, _null, B.EdgeInsets_1_11_1_11, _null, _null, _null);
+      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.ikon, 17, B.Color_yKk, _null), B.SizedBox_8_null_null_null, A.Text$(this.etiket, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, _null, 0, 12.8, B.FontWeight_400), _null, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(this.deger, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.8, B.FontWeight_600), B.TextAlign_1, _null), 1)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, B.BoxDecoration_Ahn, _null, _null, _null, _null, B.EdgeInsets_1_11_1_11, _null, _null, _null);
     }
   };
   A.IletisimKutusu.prototype = {
@@ -277802,13 +278010,13 @@
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_W8O, 1), A.BorderRadius$circular(11), _null, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 17, B.Color_Dun, _null), B.Clip_0, _null, _null, B.BoxDecoration_xgR, _null, 34, _null, _null, _null, _null, _null, 34),
         t4 = type$.JSArray_Widget,
-        t5 = A._setArrayType([A.FittedBox$(B.Alignment_m1_0, A.Text$(_this.etiket, 1, _null, _null, false, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.Clip_0, B.BoxFit_6)], t4),
+        t5 = A._setArrayType([A.FittedBox$(B.Alignment_m1_0, A.Text$(_this.etiket, _null, 1, _null, _null, false, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null), B.Clip_0, B.BoxFit_6)], t4),
         t6 = _this.deger;
       if (t6 != null)
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(t6, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _this.altiCizili ? B.TextDecoration_1 : _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(t6, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _this.altiCizili ? B.TextDecoration_1 : _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t4));
       t6 = _this.not;
       if (t6 != null)
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(t6, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, 1.35, 0, 11, B.FontWeight_500), _null, _null)], t4));
+        B.JSArray_methods.addAll$1(t5, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(t6, _null, 2, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, 1.35, 0, 11, B.FontWeight_500), _null, _null)], t4));
       t3 = A._setArrayType([t3, B.SizedBox_8_null_null_null, A.Expanded$(A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t4);
       if (_this.kilitli)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_6_null_null_null, A.Container$(B.Alignment_0_0, B.RefSvg_xqt, B.Clip_0, _null, _null, B.BoxDecoration_mfj, _null, 30, _null, _null, _null, _null, _null, 30)], t4));
@@ -277822,7 +278030,7 @@
         t2 = t1.withValues$1$alpha(0.12);
       t2 = A.BoxDecoration$(_null, A.BorderRadius$circular(8), _null, t2, _null, _null, B.BoxShape_0);
       t3 = type$.JSArray_Widget;
-      t4 = A._setArrayType([A.Text$(this.metin, _null, _null, _null, _null, A.refText(t1, _null, _null, 0, 11, B.FontWeight_700), _null, _null)], t3);
+      t4 = A._setArrayType([A.Text$(this.metin, _null, _null, _null, _null, _null, A.refText(t1, _null, _null, 0, 11, B.FontWeight_700), _null, _null)], t3);
       if (this.bekliyor)
         B.JSArray_methods.addAll$1(t4, A._setArrayType([B.SizedBox_3_null_null_null, new A.Padding(B.EdgeInsets_0_0_0_2, new A.BekleyenNoktalar(t1, 3, _null), _null)], t3));
       return A.Container$(_null, A.Row$(t4, B.CrossAxisAlignment_1, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_Vzn, _null, _null, _null);
@@ -277960,10 +278168,10 @@
       var _null = null,
         t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(9), _null, B.Color_AlF, _null, _null, B.BoxShape_0),
         t2 = type$.JSArray_Widget,
-        t3 = A._setArrayType([B.RefSvg_aVG, B.SizedBox_7_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.metin, _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null)], t2),
+        t3 = A._setArrayType([B.RefSvg_aVG, B.SizedBox_7_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.metin, _null, _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null)], t2),
         t4 = this.aksiyon;
       if (t4 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_8_null_null_null, A.Text$(t4, _null, _null, _null, _null, A.refText(B.Color_VDA, B.TextDecoration_1, _null, 0, 12.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, B.RefSvg_jVW], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_8_null_null_null, A.Text$(t4, _null, _null, _null, _null, _null, A.refText(B.Color_VDA, B.TextDecoration_1, _null, 0, 12.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, B.RefSvg_jVW], t2));
       return new A.Padding(B.EdgeInsets_0_10_0_0, A.Align$(B.Alignment_0_0, A.Container$(_null, A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_8_14_8, _null, _null, _null), _null, _null, _null), _null);
     }
   };
@@ -277973,7 +278181,7 @@
         t1 = A.BorderRadius$circular(12);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_VDA.withValues$1$alpha(0.55), 1), t1, _null, B.Color_AlF, _null, _null, B.BoxShape_0);
       t2 = type$.JSArray_Widget;
-      return A.Container$(_null, A.Row$(A._setArrayType([A.Container$(_null, B.Icon_8eE, B.Clip_0, _null, _null, B.BoxDecoration_y22, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_14_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$("Do\u011frulama e-postas\u0131 g\xf6nderildi.", _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 15, B.FontWeight_800), _null, _null), B.SizedBox_null_4_null_null, A.Text$("E-posta kutunuzu kontrol edin.\nBulamazsan\u0131z spam klas\xf6r\xfcne bak\u0131n.", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, 1 / 0);
+      return A.Container$(_null, A.Row$(A._setArrayType([A.Container$(_null, B.Icon_8eE, B.Clip_0, _null, _null, B.BoxDecoration_y22, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_14_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$("Do\u011frulama e-postas\u0131 g\xf6nderildi.", _null, _null, _null, _null, _null, A.refText(B.Color_VDA, _null, _null, 0, 15, B.FontWeight_800), _null, _null), B.SizedBox_null_4_null_null, A.Text$("E-posta kutunuzu kontrol edin.\nBulamazsan\u0131z spam klas\xf6r\xfcne bak\u0131n.", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, 1 / 0);
     }
   };
   A.FotoGoruntuleyici.prototype = {
@@ -278018,7 +278226,7 @@
         value = _this.___FotoGoruntuleyiciState__aktif_AI;
         if (value === $)
           value = _this.___FotoGoruntuleyiciState__aktif_AI = _this._widget.baslangic;
-        t6.push(A.Container$(_null, A.Text$("" + (value + 1) + " / " + _this._widget.yollar.length, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_6_12_6, _null, _null, _null));
+        t6.push(A.Container$(_null, A.Text$("" + (value + 1) + " / " + _this._widget.yollar.length, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_12_6_12_6, _null, _null, _null));
       }
       return A.Scaffold$(_null, B.Color_vnR, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([new A.PageView(t4, t2, new A._FotoGoruntuleyiciState_build_closure0(_this), new A.SliverChildBuilderDelegate(new A._FotoGoruntuleyiciState_build_closure1(_this), t3, true, true, true, A.scroll_delegate___kDefaultSemanticIndexCallback$closure(), _null), _null), A.Positioned$(_null, A.SafeArea$(false, new A.Padding(B.EdgeInsets_8_4_8_4, A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.EdgeInsets_0_0_0_0, true), _null, _null, 0, 0, 0, _null)], t5), B.Clip_1, B.StackFit_0, _null), _null);
     }
@@ -278099,7 +278307,7 @@
     call$1(_) {
       var _null = null;
       type$.BuildContext._as(_);
-      return new A.Padding(B.EdgeInsets_32_32_32_32, A.Column$(A._setArrayType([B.RefSvg_yFA, B.SizedBox_null_12_null_null, A.Text$("Foto\u011fraf a\xe7\u0131lamad\u0131", _null, _null, _null, _null, A.refText(B.Color_xjI, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
+      return new A.Padding(B.EdgeInsets_32_32_32_32, A.Column$(A._setArrayType([B.RefSvg_yFA, B.SizedBox_null_12_null_null, A.Text$("Foto\u011fraf a\xe7\u0131lamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_xjI, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
     },
     $signature: 165
   };
@@ -278127,15 +278335,15 @@
       var t4, t5, _null = null,
         bilgi = A.hataBilgisi(this.hata),
         t1 = type$.JSArray_Widget,
-        t2 = A._setArrayType([A.Container$(B.Alignment_0_0, B.Icon_3lI, B.Clip_0, _null, _null, B.BoxDecoration_5mf, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_null_12_null_null, A.Text$(bilgi.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), B.TextAlign_2, _null)], t1),
+        t2 = A._setArrayType([A.Container$(B.Alignment_0_0, B.Icon_3lI, B.Clip_0, _null, _null, B.BoxDecoration_5mf, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_null_12_null_null, A.Text$(bilgi.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), B.TextAlign_2, _null)], t1),
         t3 = bilgi.aciklama;
       if (t3.length !== 0)
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_6_null_null, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null)], t1));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_6_null_null, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null)], t1));
       t3 = bilgi.eylem;
       if (t3 != null) {
         t4 = A.BorderRadius$circular(10);
         t5 = A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, B.Color_Dun, _null, _null, B.BoxShape_0);
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_16_null_null, new A.RefTap(A.Container$(_null, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 13, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_20_10_20_10, _null, _null, _null), this.onTekrar, t4, _null, _null)], t1));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_16_null_null, new A.RefTap(A.Container$(_null, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 13, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_20_10_20_10, _null, _null, _null), this.onTekrar, t4, _null, _null)], t1));
       }
       return new A.Padding(B.EdgeInsets_28_40_28_40, A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
     }
@@ -278152,7 +278360,7 @@
       var _null = null,
         t1 = B.Color_Dun.withValues$1$alpha(0.12);
       t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(20), _null, t1, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Text$("Teklif Verildi", _null, _null, _null, _null, A.TextStyle$(_null, _null, B.Color_Dun, _null, _null, _null, _null, _null, _null, _null, _null, 11, _null, _null, B.FontWeight_700, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_4_10_4, _null, _null, _null);
+      return A.Container$(_null, A.Text$("Teklif Verildi", _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, B.Color_Dun, _null, _null, _null, _null, _null, _null, _null, _null, 11, _null, _null, B.FontWeight_700, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_4_10_4, _null, _null, _null);
     }
   };
   A.HizmetAlanOzetSatiri.prototype = {
@@ -278160,10 +278368,10 @@
       var _null = null,
         t1 = this.ozet._values,
         t2 = type$.JSArray_Widget,
-        t3 = A._setArrayType([A.Text$(t1[0], 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t2);
+        t3 = A._setArrayType([A.Text$(t1[0], _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null)], t2);
       t1 = t1[2];
       if (t1 != null)
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t1, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2));
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_JXL, B.SizedBox_5_null_null_null, A.Expanded$(A.Text$(t1, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 11.5, B.FontWeight_400), _null, _null), 1)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2));
       return A.Row$(A._setArrayType([A.Expanded$(A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t2), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
   };
@@ -278172,7 +278380,7 @@
       var _null = null,
         t1 = this.baslik,
         t2 = type$.JSArray_Widget,
-        t3 = A._setArrayType([new A.Padding(B.EdgeInsets_0_1_0_0, A.Text$(t1, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15.5, B.FontWeight_700), _null, _null), _null)], t2),
+        t3 = A._setArrayType([new A.Padding(B.EdgeInsets_0_1_0_0, A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.2, 15.5, B.FontWeight_700), _null, _null), _null)], t2),
         t4 = this.meta;
       if (t4 != null)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_4_null_null, t4], t2));
@@ -278381,8 +278589,8 @@
         _s24_ = "assets/svg/ic_person.svg",
         _s21_ = "assets/svg/ic_pin.svg",
         v = _this._widget.veri,
-        t1 = A.Text$("Hizmet Alan Kayd\u0131", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null),
-        t2 = A.Text$(string$.Hizmetm, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
+        t1 = A.Text$("Hizmet Alan Kayd\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null),
+        t2 = A.Text$(string$.Hizmetm, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
         t3 = _this._alan$5$adSoyad("ad", _s24_, "Ad", v.ad, true),
         t4 = _this._alan$5$adSoyad("soyad", _s24_, "Soyad", v.soyad, true),
         t5 = _this._alan$5$klavye("eposta", "assets/svg/ic_mail.svg", "E-posta", v.eposta, B.TextInputType_5_null_null),
@@ -278409,7 +278617,7 @@
       t3 = adSoyad ? B.TextCapitalization_00 : B.TextCapitalization_30;
       t3 = A._setArrayType([A.RefFormField$(ctl, true, _null, false, t1, t2, ipucu, ikon, bicim, _null, klavye, false, _null, new A._IlanKayitAdimiState__alan_closure(this, id), _null, _null, t3, B.TextInputAction_6, _null, yerTutucu)], type$.JSArray_Widget);
       if (t2)
-        t3.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+        t3.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
       return new A.Padding(B.EdgeInsets_0_0_0_10, A.Column$(t3, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
     },
     _alan$5$adSoyad(id, ikon, ipucu, ctl, adSoyad) {
@@ -278431,7 +278639,7 @@
         t4 = id === B.JSArray_methods.get$last(B.List_UDN) ? B.TextInputAction_2 : B.TextInputAction_6;
       t4 = A._setArrayType([A.RefFormField$(ctl, true, _null, false, t1, t2, ipucu, "assets/svg/ic_lock.svg", _null, _null, _null, t3, _null, new A._IlanKayitAdimiState__sifre_closure(_this, id), _null, A.RefSifreGozu$(t3, new A._IlanKayitAdimiState__sifre_closure0(_this, id)), B.TextCapitalization_10, t4, _null, _null)], type$.JSArray_Widget);
       if (t2)
-        t4.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+        t4.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
       return new A.Padding(B.EdgeInsets_0_0_0_10, A.Column$(t4, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
     },
     _secim$5(id, ikon, secili, placeholder, onTap) {
@@ -278442,7 +278650,7 @@
       t2 = A.RefDropdownField$(_null, ikon, onTap, placeholder, secili, true);
       t2 = A._setArrayType([t1 ? A.Container$(_null, t2, B.Clip_0, _null, _null, A.BoxDecoration$(A.Border_Border$all(B.Color_wuX, 1.4), A.BorderRadius$circular(13), _null, _null, _null, _null, B.BoxShape_0), _null, _null, _null, _null, _null, _null, _null, _null) : t2], type$.JSArray_Widget);
       if (t1)
-        t2.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+        t2.push(new A.Padding(B.EdgeInsets_2_5_0_0, A.Text$(u, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
       return new A.Padding(B.EdgeInsets_0_0_0_10, A.Column$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
     }
   };
@@ -278619,14 +278827,14 @@
       this.v.sozlesme = A._asBool(x);
       this.$this._ilan_kayit_adimi$_degisti$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A._IlanKayitAdimiState_build_closure3.prototype = {
     call$1(x) {
       this.v.aydinlatma = A._asBool(x);
       this.$this._ilan_kayit_adimi$_degisti$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A._IlanKayitAdimiState__secici_closure.prototype = {
     call$1(_) {
@@ -278651,7 +278859,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._IlanKayitAdimiState__sifre__closure(t1, A._asBool(gizle), this.id));
     },
-    $signature: 10
+    $signature: 11
   };
   A._IlanKayitAdimiState__sifre__closure.prototype = {
     call$0() {
@@ -278670,7 +278878,7 @@
         t1 = B.JSString_methods.trim$0(this.no);
       if (t1.length === 0)
         return B.SizedBox_0_0_null_null;
-      return new A.Padding(B.EdgeInsets_0_0_0_4, A.Align$(B.Alignment_1_0, A.Text$("#" + t1, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, -0.2, 11, B.FontWeight_400), _null, _null), _null, _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_0_0_0_4, A.Align$(B.Alignment_1_0, A.Text$("#" + t1, _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, -0.2, 11, B.FontWeight_400), _null, _null), _null, _null, _null), _null);
     }
   };
   A.IlanOtpAdimi.prototype = {
@@ -278845,8 +279053,8 @@
     build$1(context) {
       var i, t6, _this = this, _null = null,
         t1 = A.Center$(A.Container$(B.Alignment_0_0, B.RefSvg_svH, B.Clip_0, _null, _null, B.BoxDecoration_xgR, _null, 96, _null, _null, _null, _null, _null, 96), _null, _null),
-        t2 = A.Text$("SMS Do\u011frulama", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null),
-        t3 = A.Text$(_this._widget.telefon + " numaras\u0131na g\xf6nderilen 6 haneli do\u011frulama kodunu girin.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
+        t2 = A.Text$("SMS Do\u011frulama", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null),
+        t3 = A.Text$(_this._widget.telefon + " numaras\u0131na g\xf6nderilen 6 haneli do\u011frulama kodunu girin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 13, B.FontWeight_400), B.TextAlign_2, _null),
         t4 = type$.JSArray_Widget,
         t5 = A._setArrayType([], t4);
       for (i = 0; i < 6; ++i) {
@@ -278859,17 +279067,17 @@
       t1 = A._setArrayType([B.SizedBox_null_8_null_null, t1, B.SizedBox_null_16_null_null, t2, B.SizedBox_null_8_null_null, t3, B.SizedBox_null_22_null_null, A.Row$(t5, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t4);
       t2 = _this._widget.veri.hata;
       if (t2 != null)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_10_null_null, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null)], t4));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_10_null_null, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), B.TextAlign_2, _null)], t4));
       t1.push(B.SizedBox_null_18_null_null);
       if (_this.get$_kalan() > 0)
-        t2 = A.Column$(A._setArrayType([A.Text$("Yeni kod isteyebilmek i\xe7in bekleyin", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_2_null_null, A.Text$(B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(B.JSInt_methods._tdivFast$1(_this.get$_kalan(), 60)), 2, "0") + ":" + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(B.JSInt_methods.$mod(_this.get$_kalan(), 60)), 2, "0"), _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
+        t2 = A.Column$(A._setArrayType([A.Text$("Yeni kod isteyebilmek i\xe7in bekleyin", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_2_null_null, A.Text$(B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(B.JSInt_methods._tdivFast$1(_this.get$_kalan(), 60)), 2, "0") + ":" + B.JSString_methods.padLeft$2(B.JSInt_methods.toString$0(B.JSInt_methods.$mod(_this.get$_kalan(), 60)), 2, "0"), _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
       else {
         t2 = A.BorderRadius$circular(10);
-        t2 = new A.RefTap(new A.Padding(B.EdgeInsets_10_6_10_6, A.Text$("Kodu Tekrar G\xf6nder", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14, B.FontWeight_700), _null, _null), _null), _this.get$_tekrarGonder(), t2, _null, _null);
+        t2 = new A.RefTap(new A.Padding(B.EdgeInsets_10_6_10_6, A.Text$("Kodu Tekrar G\xf6nder", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 14, B.FontWeight_700), _null, _null), _null), _this.get$_tekrarGonder(), t2, _null, _null);
       }
       t1.push(A.Center$(t2, _null, _null));
       t1.push(B.SizedBox_null_18_null_null);
-      t1.push(A.Text$("Do\u011frulama tamamland\u0131\u011f\u0131nda ilan\u0131n\u0131z tek sefer yay\u0131nlan\u0131r.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12, B.FontWeight_400), B.TextAlign_2, _null));
+      t1.push(A.Text$("Do\u011frulama tamamland\u0131\u011f\u0131nda ilan\u0131n\u0131z tek sefer yay\u0131nlan\u0131r.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12, B.FontWeight_400), B.TextAlign_2, _null));
       return A.Column$(t1, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     },
     _kutu$1(i) {
@@ -279113,7 +279321,7 @@
         return A.ioore(t2, i);
       h = t2[i];
       t1._widget.toString;
-      satir = A.Listener$(B.HitTestBehavior_2, new A.RefTap(new A.Padding(B.EdgeInsets_14_12_14_12, A.Text$(A.kategoriEtiketi(h.get$label(0)), _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), _null), new A._InlineSearchBoxState__panelGovdesi__closure(t1, h), _null, _null, _null), _null, _null, _null, _null, _null, _null, _null);
+      satir = A.Listener$(B.HitTestBehavior_2, new A.RefTap(new A.Padding(B.EdgeInsets_14_12_14_12, A.Text$(A.kategoriEtiketi(h.get$label(0)), _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_600), _null, _null), _null), new A._InlineSearchBoxState__panelGovdesi__closure(t1, h), _null, _null, _null), _null, _null, _null, _null, _null, _null, _null);
       t1._widget.toString;
       return new A.WebOneriDokunusu(new A._InlineSearchBoxState__panelGovdesi__closure0(t1, h), satir, _null);
     },
@@ -279166,7 +279374,7 @@
   A._InlineSearchBoxState_build_closure1.prototype = {
     call$3(_, yok, __) {
       var _null = null;
-      return A._asBool(yok) ? new A.Padding(B.EdgeInsets_4_10_0_0, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), _null) : B.SizedBox_0_0_null_null;
+      return A._asBool(yok) ? new A.Padding(B.EdgeInsets_4_10_0_0, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), _null) : B.SizedBox_0_0_null_null;
     },
     $signature: 895
   };
@@ -279202,7 +279410,7 @@
         t2 = B.Color_yKk;
       else
         t2 = acilMi ? B.Color_wst : renk;
-      return new A.RefTap(A.Container$(_null, A.Text$(t4, _null, _null, _null, _null, A.refText(t2, _null, _null, 0, 13.5, t5), _null, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_14_9_14_9, _null, _null, _null), new A.IsZamaniSecici__secenek_closure(this, aktif, z), t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Text$(t4, _null, _null, _null, _null, _null, A.refText(t2, _null, _null, 0, 13.5, t5), _null, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_14_9_14_9, _null, _null, _null), new A.IsZamaniSecici__secenek_closure(this, aktif, z), t1, _null, _null);
     }
   };
   A.IsZamaniSecici__secenek_closure.prototype = {
@@ -279222,7 +279430,7 @@
       t1 = acilMi ? B.Color_wuX : B.Color_xQ2;
       t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(10), _null, t1, _null, _null, B.BoxShape_0);
       t2 = z.get$etiket();
-      return A.Container$(_null, A.Text$(t2, _null, _null, _null, _null, A.refText(acilMi ? B.Color_wst : B.Color_Dun, _null, _null, 0, 12, B.FontWeight_600), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null);
+      return A.Container$(_null, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(acilMi ? B.Color_wst : B.Color_Dun, _null, _null, 0, 12, B.FontWeight_600), _null, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null);
     }
   };
   A.KategoriSecimPaneli.prototype = {
@@ -279282,7 +279490,7 @@
       A.debugCheckHasMediaQuery(context);
       mq = A.InheritedModel_inheritFrom(context, _null, type$.MediaQuery).data;
       _this._widget.toString;
-      t1 = A.Expanded$(A.Text$("Hizmet Kategorileri", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_800), _null, _null), 1);
+      t1 = A.Expanded$(A.Text$("Hizmet Kategorileri", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 19, B.FontWeight_800), _null, _null), 1);
       t2 = A.BorderRadius$circular(999);
       t3 = type$.JSArray_Widget;
       t2 = A.Row$(A._setArrayType([t1, new A.RefTap(A.Container$(B.Alignment_0_0, B.RefSvg_5LP, B.Clip_0, _null, _null, B.BoxDecoration_mfj, _null, 30, _null, _null, _null, _null, _null, 30), new A._KategoriSecimPaneliState_build_closure(context), t2, _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
@@ -279298,14 +279506,14 @@
       t4 = A._setArrayType([], t3);
       for (t5 = sonuc.length, _i = 0; _i < sonuc.length; sonuc.length === t5 || (0, A.throwConcurrentModificationError)(sonuc), ++_i) {
         r = sonuc[_i];
-        t6 = A.Text$(r._0, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
-        t4.push(new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_2_null_null, A.Text$(r._1, _null, _null, _null, _null, new A.TextStyle(true, B.Color_A9k, _null, _s7_, B.List_MNo, _null, 12, B.FontWeight_400, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_2Tw, _null, _null, _null, _null, B.EdgeInsets_18_11_18_11, _null, _null, 1 / 0), new A._KategoriSecimPaneliState_build_closure2(_this, r), _null, _null, _null));
+        t6 = A.Text$(r._0, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 14.5, B.FontWeight_700, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+        t4.push(new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([t6, B.SizedBox_null_2_null_null, A.Text$(r._1, _null, _null, _null, _null, _null, new A.TextStyle(true, B.Color_A9k, _null, _s7_, B.List_MNo, _null, 12, B.FontWeight_400, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, _null, _null, B.BoxDecoration_2Tw, _null, _null, _null, _null, B.EdgeInsets_18_11_18_11, _null, _null, 1 / 0), new A._KategoriSecimPaneliState_build_closure2(_this, r), _null, _null, _null));
       }
       t5 = _this.get$_kategori_secim_paneli$_secili();
-      t4.push(new A.Padding(B.EdgeInsets_18_14_18_0, A.Align$(B.Alignment_m1_0, A.Text$("Se\xe7ili Hizmetlerim (" + t5._collection$_length + ")", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null), _null, _null, _null), _null));
-      t4.push(new A.Padding(B.EdgeInsets_18_4_18_0, A.Align$(B.Alignment_m1_0, A.Text$("En az bir hizmet kategorisi se\xe7iniz", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null), _null));
+      t4.push(new A.Padding(B.EdgeInsets_18_14_18_0, A.Align$(B.Alignment_m1_0, A.Text$("Se\xe7ili Hizmetlerim (" + t5._collection$_length + ")", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_800), _null, _null), _null, _null, _null), _null));
+      t4.push(new A.Padding(B.EdgeInsets_18_4_18_0, A.Align$(B.Alignment_m1_0, A.Text$("En az bir hizmet kategorisi se\xe7iniz", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null, _null, _null), _null));
       if (t5._collection$_length === 0)
-        t6 = A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null);
+        t6 = A.Text$("Hen\xfcz hizmet se\xe7ilmedi.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null);
       else {
         t6 = A._setArrayType([], t3);
         for (t7 = A._LinkedHashSetIterator$(t5, t5._collection$_modifications, A._instanceType(t5)._precomputed1), t8 = t7.$ti._precomputed1; t7.moveNext$0();) {
@@ -279315,7 +279523,7 @@
           side = new A.BorderSide(B.Color_jIV, 1, B.BorderStyle_1, -1);
           t10 = new A.Radius(11, 11);
           t11 = new A.Radius(999, 999);
-          t6.push(A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(t9, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null), B.SizedBox_8_null_null_null, new A.RefTap(B.Padding_XRX, new A._KategoriSecimPaneliState_build_closure3(_this, t9), new A.BorderRadius(t11, t11, t11, t11), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, new A.BoxDecoration(B.Color_wst, _null, new A.Border(side, side, side, side), new A.BorderRadius(t10, t10, t10, t10), _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null));
+          t6.push(A.Container$(_null, A.Row$(A._setArrayType([new A.Flexible(1, B.FlexFit_1, A.Text$(t9, _null, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, B.Color_MXH, _null, _s7_, B.List_MNo, _null, 13, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null), _null), B.SizedBox_8_null_null_null, new A.RefTap(B.Padding_XRX, new A._KategoriSecimPaneliState_build_closure3(_this, t9), new A.BorderRadius(t11, t11, t11, t11), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, new A.BoxDecoration(B.Color_wst, _null, new A.Border(side, side, side, side), new A.BorderRadius(t10, t10, t10, t10), _null, _null, B.BoxShape_0), _null, _null, _null, _null, B.EdgeInsets_12_9_12_9, _null, _null, _null));
         }
         t6 = A.Wrap$(t6, B.WrapCrossAlignment_0, 9, 9);
       }
@@ -279484,7 +279692,7 @@
                 if ($async$self._framework$_element != null) {
                   t5 = $async$self.get$context(0);
                   A.debugCheckHasScaffoldMessenger(t5);
-                  t5.dependOnInheritedWidgetOfExactType$1$0(t4)._scaffoldMessengerState.showSnackBar$1(A.SnackBar$(null, null, null, null, null, B.Clip_1, null, A.Text$(err, null, null, null, null, null, null, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
+                  t5.dependOnInheritedWidgetOfExactType$1$0(t4)._scaffoldMessengerState.showSnackBar$1(A.SnackBar$(null, null, null, null, null, B.Clip_1, null, A.Text$(err, null, null, null, null, null, null, null, null), null, B.Duration_4000000, null, null, null, null, null, null, null, null, null, null));
                 }
                 // goto for update
                 $async$goto = 13;
@@ -279863,7 +280071,7 @@
         t1 = t1.enabled ? _this.get$_sheet() : _null;
         t4 = A.BorderRadius$circular(13);
         t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_6NG, 1.6), A.BorderRadius$circular(13), _null, B.Color_5L5, _null, _null, B.BoxShape_0);
-        t3.push(A.InkWell$(false, t4, true, A.Container$(_null, new A.Padding(B.EdgeInsets_0_26_0_26, A.Column$(A._setArrayType([B.RefSvg_WIF, B.SizedBox_null_6_null_null, A.Text$("Foto\u011fraf ekle", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 15, B.FontWeight_700), _null, _null), B.SizedBox_null_4_null_null, A.Text$("Galeriden se\xe7 veya kamera ile \xe7ek", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, _null, _null, _null, _null), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, t1, _null, _null, _null, _null));
+        t3.push(A.InkWell$(false, t4, true, A.Container$(_null, new A.Padding(B.EdgeInsets_0_26_0_26, A.Column$(A._setArrayType([B.RefSvg_WIF, B.SizedBox_null_6_null_null, A.Text$("Foto\u011fraf ekle", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 15, B.FontWeight_700), _null, _null), B.SizedBox_null_4_null_null, A.Text$("Galeriden se\xe7 veya kamera ile \xe7ek", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, _null, _null, _null, _null), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, t1, _null, _null, _null, _null));
       }
       return A.Column$(t3, B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     },
@@ -279886,7 +280094,7 @@
         t2 = B.Color_wuX.withValues$1$alpha(0.85);
         t3 = p.discardError;
         t3.toString;
-        t1.push(A.Positioned$(0, A.Container$(_null, A.Text$(t3, 2, B.TextOverflow_2, _null, _null, B.TextStyle_OJL, B.TextAlign_2, _null), B.Clip_0, t2, _null, _null, _null, _null, _null, _null, B.EdgeInsets_0_2_0_2, _null, _null, _null), _null, _null, 0, 0, _null, _null));
+        t1.push(A.Positioned$(0, A.Container$(_null, A.Text$(t3, _null, 2, B.TextOverflow_2, _null, _null, B.TextStyle_OJL, B.TextAlign_2, _null), B.Clip_0, t2, _null, _null, _null, _null, _null, _null, B.EdgeInsets_0_2_0_2, _null, _null, _null), _null, _null, 0, 0, _null, _null));
       }
       return A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, t1, B.Clip_1, B.StackFit_0, _null), 84, 84);
     }
@@ -280234,7 +280442,7 @@
       t1 = _this.fotoYolu;
       t2 = B.JSString_methods.trim$0(t1);
       t3 = A.BorderRadius$circular(999);
-      t1 = A._setArrayType([new A.RefTap(A.ClipOval$(A.Container$(B.Alignment_0_0, t2.length !== 0 ? A.yerelGorsel(t1, B.BoxFit_2, new A.ProfilFotografi_build_closure(harf), 96, 96) : A.Text$(harf, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 38, B.FontWeight_700), _null, _null), B.Clip_0, B.Color_xQ2, _null, _null, _null, 96, _null, _null, _null, _null, _null, 96)), new A.ProfilFotografi_build_closure0(_this, context), t3, _null, _null)], type$.JSArray_Widget);
+      t1 = A._setArrayType([new A.RefTap(A.ClipOval$(A.Container$(B.Alignment_0_0, t2.length !== 0 ? A.yerelGorsel(t1, B.BoxFit_2, new A.ProfilFotografi_build_closure(harf), 96, 96) : A.Text$(harf, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 38, B.FontWeight_700), _null, _null), B.Clip_0, B.Color_xQ2, _null, _null, _null, 96, _null, _null, _null, _null, _null, 96)), new A.ProfilFotografi_build_closure0(_this, context), t3, _null, _null)], type$.JSArray_Widget);
       t2 = A.BorderRadius$circular(999);
       t1.push(A.Positioned$(4, new A.RefTap(A.Container$(B.Alignment_0_0, B.RefSvg_8NR, B.Clip_0, _null, _null, A.BoxDecoration$(A.Border_Border$all(B.Color_wst, 3), _null, B.List_qWB, B.Color_Dun, _null, _null, B.BoxShape_1), _null, 28, _null, _null, _null, _null, _null, 28), new A.ProfilFotografi_build_closure1(_this, context), t2, _null, _null), _null, _null, _null, 0, _null, _null));
       return A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, t1, B.Clip_0, B.StackFit_0, _null), 100, 96);
@@ -280268,7 +280476,7 @@
     call$1(_) {
       var _null = null;
       type$.BuildContext._as(_);
-      return A.Text$(this.harf, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 38, B.FontWeight_700), _null, _null);
+      return A.Text$(this.harf, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 38, B.FontWeight_700), _null, _null);
     },
     $signature: 897
   };
@@ -280284,7 +280492,7 @@
         t1 = _this.toplam,
         oran = t1 === 0 ? 0 : _this.adet / t1;
       t1 = type$.JSArray_Widget;
-      return A.Row$(A._setArrayType([A.SizedBox$(A.Text$("" + _this.yildiz, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12, B.FontWeight_700), B.TextAlign_1, _null), _null, 8), B.SizedBox_6_null_null_null, B.RefSvg_Mzr, B.SizedBox_6_null_null_null, A.Expanded$(A.ClipRRect$(A.BorderRadius$circular(4), A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([B.Positioned_5Ow, A.FractionallySizedBox$(B.Alignment_0_0, B.ColoredBox_Sv4, 1, oran)], t1), B.Clip_1, B.StackFit_0, _null), 7, _null)), 1), B.SizedBox_6_null_null_null, A.SizedBox$(A.Text$("" + _this.adet, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12, B.FontWeight_600), B.TextAlign_1, _null), _null, 28)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      return A.Row$(A._setArrayType([A.SizedBox$(A.Text$("" + _this.yildiz, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12, B.FontWeight_700), B.TextAlign_1, _null), _null, 8), B.SizedBox_6_null_null_null, B.RefSvg_Mzr, B.SizedBox_6_null_null_null, A.Expanded$(A.ClipRRect$(A.BorderRadius$circular(4), A.SizedBox$(A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([B.Positioned_5Ow, A.FractionallySizedBox$(B.Alignment_0_0, B.ColoredBox_Sv4, 1, oran)], t1), B.Clip_1, B.StackFit_0, _null), 7, _null)), 1), B.SizedBox_6_null_null_null, A.SizedBox$(A.Text$("" + _this.adet, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12, B.FontWeight_600), B.TextAlign_1, _null), _null, 28)], t1), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
   };
   A.RegionPickerSheet.prototype = {
@@ -280311,7 +280519,7 @@
       A.debugCheckHasMediaQuery(context);
       t1 = A.InheritedModel_inheritFrom(context, B._MediaQueryAspect_0, t1).data;
       t3 = type$.JSArray_Widget;
-      t3 = A._setArrayType([B.SizedBox_null_10_null_null, A.Container$(_null, _null, B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(3), _null, B.Color_W8O, _null, _null, B.BoxShape_0), _null, 4, _null, _null, _null, _null, _null, 42), B.SizedBox_null_12_null_null, new A.Padding(B.EdgeInsets_18_0_10_0, A.Row$(A._setArrayType([A.Expanded$(A.Text$(_this._widget.title, _null, _null, _null, _null, B.TextStyle_AYI, B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_ZlH, new A.RegionPickerSheetState_build_closure0(context), A.BorderRadius$circular(999), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.SizedBox_null_12_null_null], t3);
+      t3 = A._setArrayType([B.SizedBox_null_10_null_null, A.Container$(_null, _null, B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(3), _null, B.Color_W8O, _null, _null, B.BoxShape_0), _null, 4, _null, _null, _null, _null, _null, 42), B.SizedBox_null_12_null_null, new A.Padding(B.EdgeInsets_18_0_10_0, A.Row$(A._setArrayType([A.Expanded$(A.Text$(_this._widget.title, _null, _null, _null, _null, _null, B.TextStyle_AYI, B.TextAlign_2, _null), 1), new A.RefTap(B.Padding_ZlH, new A.RegionPickerSheetState_build_closure0(context), A.BorderRadius$circular(999), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), B.SizedBox_null_12_null_null], t3);
       if (_this._widget.searchable)
         t3.push(new A.Padding(B.EdgeInsets_16_0_16_0, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _null, _null, _null, _null, _null, _null, 2, B.InputDecoration_W1n, B.DragStartBehavior_1, true, _null, true, _null, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A.RegionPickerSheetState_build_closure1(_this), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, _null, _null, _null), _null));
       t3.push(B.SizedBox_null_8_null_null);
@@ -280360,7 +280568,7 @@
       o = t1[i];
       sel = o === this.$this._widget.selected;
       t1 = sel ? B.FontWeight_700 : B.FontWeight_400;
-      t1 = A.Text$(o, _null, _null, _null, _null, A.TextStyle$(_null, _null, sel ? B.Color_Dun : B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 14.5, _null, _null, t1, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
+      t1 = A.Text$(o, _null, _null, _null, _null, _null, A.TextStyle$(_null, _null, sel ? B.Color_Dun : B.Color_MXH, _null, _null, _null, _null, _null, _null, _null, _null, 14.5, _null, _null, t1, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null), _null, _null);
       t2 = sel ? B.RefTik_VEB : _null;
       return new A.ListTile(t1, t2, new A.RegionPickerSheetState_build__closure(this.context, o), _null);
     },
@@ -280392,12 +280600,12 @@
         t3.push(new A.ProfilAvatari(t1[0], t1[1], 46, _null));
       t3.push(B.SizedBox_11_null_null_null);
       t4 = t4 ? A.maskeliAd(t1[0]) : t1[0];
-      t4 = A.Text$(t4, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
+      t4 = A.Text$(t4, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null);
       t5 = t1[5];
       t5 = t5 == null ? "\u2014" : B.JSNumber_methods.toStringAsFixed$1(t5, 1);
-      t1 = A._setArrayType([t4, B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_z3W, B.SizedBox_4_null_null_null, A.Text$(t5, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, A.Text$("(" + t1[7] + " yorum)", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + t1[6] + " i\u015f tamamlad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2);
+      t1 = A._setArrayType([t4, B.SizedBox_null_4_null_null, A.Row$(A._setArrayType([B.RefSvg_z3W, B.SizedBox_4_null_null_null, A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.5, B.FontWeight_700), _null, _null), B.SizedBox_4_null_null_null, A.Text$("(" + t1[7] + " yorum)", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_Xlb, B.SizedBox_5_null_null_null, A.Text$("" + t1[6] + " i\u015f tamamlad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2);
       if (konum != null)
-        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_CoJ, B.SizedBox_5_null_null_null, A.Text$(konum, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2));
+        B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_null_3_null_null, A.Row$(A._setArrayType([B.RefSvg_CoJ, B.SizedBox_5_null_null_null, A.Text$(konum, _null, _null, _null, _null, _null, A.refText(B.Color_Ldf, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null)], t2));
       t3.push(A.Expanded$(A.Column$(t1, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1));
       return A.Row$(t3, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
     }
@@ -280407,7 +280615,7 @@
       var _null = null,
         t1 = A.BorderRadius$circular(14);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), t1, _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_7_null_null, A.Text$(this.metin, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 14, B.FontWeight_400), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_13, _null, _null, 1 / 0);
+      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_7_null_null, A.Text$(this.metin, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, 1.55, 0, 14, B.FontWeight_400), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_13, _null, _null, 1 / 0);
     }
   };
   A.TeklifRozeti.prototype = {
@@ -280428,7 +280636,7 @@
       }
       t2 = A.BoxDecoration$(_null, A.BorderRadius$circular(8), _null, t1._0, _null, _null, B.BoxShape_0);
       t3 = _0_0 === 0 ? "Teklif verilmedi" : "" + _0_0 + " teklif verildi";
-      return A.Align$(B.Alignment_m1_0, A.Container$(_null, A.Row$(A._setArrayType([A.Text$(t3, _null, _null, _null, _null, A.refText(t1._1, _null, _null, 0, 11.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null), _null, _null, _null);
+      return A.Align$(B.Alignment_m1_0, A.Container$(_null, A.Row$(A._setArrayType([A.Text$(t3, _null, _null, _null, _null, _null, A.refText(t1._1, _null, _null, 0, 11.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_9_4_9_4, _null, _null, _null), _null, _null, _null);
     }
   };
   A.TeklifTutarKarti.prototype = {
@@ -280436,7 +280644,7 @@
       var _null = null,
         t1 = A.BorderRadius$circular(14);
       t1 = A.BoxDecoration$(A.Border_Border$all(B.Color_Dun.withValues$1$alpha(0.25), 1), t1, _null, B.Color_xQ2, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Verilen teklif", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 12.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_2_null_null, A.Text$(A.binlikAyir(this.tutar) + " TL", 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.4, 26, B.FontWeight_700), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_13, _null, _null, 1 / 0);
+      return A.Container$(_null, A.Column$(A._setArrayType([A.Text$("Verilen teklif", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 12.5, B.FontWeight_500), B.TextAlign_2, _null), B.SizedBox_null_2_null_null, A.Text$(A.binlikAyir(this.tutar) + " TL", _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.4, 26, B.FontWeight_700), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_14_12_14_13, _null, _null, 1 / 0);
     }
   };
   A.YanlisTarafKapisi.prototype = {
@@ -280470,7 +280678,7 @@
         t2 = this.sayi;
       t2 = t2 === 1 ? "Yeni mesaj" : "" + t2 + " yeni mesaj";
       t3 = type$.JSArray_Widget;
-      return A.Column$(A._setArrayType([A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_tTA, B.SizedBox_6_null_null_null, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11.5, B.FontWeight_700), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_6_10_6, _null, _null, _null), new A.Padding(B.EdgeInsets_11_0_0_0, A.CustomPaint$(_null, _null, _null, new A._KuyrukBoyaci(_null), B.Size_10_5), _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      return A.Column$(A._setArrayType([A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_tTA, B.SizedBox_6_null_null_null, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11.5, B.FontWeight_700), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, _null, _null, _null, B.EdgeInsets_10_6_10_6, _null, _null, _null), new A.Padding(B.EdgeInsets_11_0_0_0, A.CustomPaint$(_null, _null, _null, new A._KuyrukBoyaci(_null), B.Size_10_5), _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0);
     }
   };
   A._KuyrukBoyaci.prototype = {
@@ -280609,7 +280817,7 @@
         t1 = A._setArrayType([A.Align$(B.Alignment_m1_0, new A.RefBackButton(new A._YeniSifreScreenState_build_closure(context), false, _null), _null, _null, _null), B.SizedBox_null_6_null_null, B.RefPageTitle_222, B.RefSubtitle_YUM, B.SizedBox_null_10_null_null], type$.JSArray_Widget),
         t2 = _this._yetkiHatasi;
       if (t2 != null)
-        t1.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
+        t1.push(new A.Padding(B.EdgeInsets_0_0_0_12, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 13.5, B.FontWeight_600), _null, _null), _null));
       t2 = _this._yeni;
       t3 = _this._yeni_sifre_screen$_busy;
       t4 = _this._gizli1;
@@ -280619,7 +280827,7 @@
       t5 = _this._gizli2;
       t1.push(A.RefFormField$(t4, !t3, _null, true, _this._fTekrar, false, "Yeni \u015fifre tekrar", _s22_, _null, _null, _null, t5, new A._YeniSifreScreenState_build_closure4(_this), _null, _null, A.RefSifreGozu$(t5, new A._YeniSifreScreenState_build_closure5(_this)), B.TextCapitalization_10, B.TextInputAction_2, new A._YeniSifreScreenState_build_closure6(_this), _null));
       t1.push(B.SizedBox_null_8_null_null);
-      t1.push(new A.RefInfoBox(A.Text$("\u015eifreniz en az 8 karakter olmal\u0131d\u0131r. Ard\u0131\u015f\u0131k, tekrar eden ve yayg\u0131n \u015fifreler kabul edilmez.", _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null));
+      t1.push(new A.RefInfoBox(A.Text$("\u015eifreniz en az 8 karakter olmal\u0131d\u0131r. Ard\u0131\u015f\u0131k, tekrar eden ve yayg\u0131n \u015fifreler kabul edilmez.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), true, _null, _null));
       t1.push(B.SizedBox_null_16_null_null);
       t5 = _this._yeni_sifre_screen$_busy;
       t1.push(new A.RefPrimaryButton("\u015eifremi Yenile", _null, A.Validators_password(t2._change_notifier$_value.text) == null && t4._change_notifier$_value.text === t2._change_notifier$_value.text ? _this.get$_kaydet() : _null, t5, _null));
@@ -280714,7 +280922,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._YeniSifreScreenState_build__closure2(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._YeniSifreScreenState_build__closure2.prototype = {
     call$0() {
@@ -280752,7 +280960,7 @@
       var t1 = this.$this;
       return t1.setState$1(new A._YeniSifreScreenState_build__closure0(t1, A._asBool(g)));
     },
-    $signature: 10
+    $signature: 11
   };
   A._YeniSifreScreenState_build__closure0.prototype = {
     call$0() {
@@ -280811,11 +281019,11 @@
         mesaj = "HizmetCep k\u0131sa s\xfcreli bak\u0131mda. L\xfctfen daha sonra tekrar deneyin.";
       bitis = A.bakimBitisMetni(t1.bitis);
       t1 = type$.JSArray_Widget;
-      t2 = A._setArrayType([A._girisKapisi(_this._widget.onGiris, A.SizedBox$(A.AnimatedBuilder$(_this.get$_a(), new A._BakimEkraniState_build_closure(_this), _null), 168, 168)), B.SizedBox_null_18_null_null, A.Image$asset("assets/logo/wordmark.png", B.FilterQuality_2, _null, 30, _null), B.SizedBox_null_26_null_null, B.Text_bHv, B.SizedBox_null_10_null_null, A.Text$(mesaj, _null, _null, _null, _null, B.TextStyle_TqZ, B.TextAlign_2, _null)], t1);
+      t2 = A._setArrayType([A._girisKapisi(_this._widget.onGiris, A.SizedBox$(A.AnimatedBuilder$(_this.get$_a(), new A._BakimEkraniState_build_closure(_this), _null), 168, 168)), B.SizedBox_null_18_null_null, A.Image$asset("assets/logo/wordmark.png", B.FilterQuality_2, _null, 30, _null), B.SizedBox_null_26_null_null, B.Text_bHv, B.SizedBox_null_10_null_null, A.Text$(mesaj, _null, _null, _null, _null, _null, B.TextStyle_TqZ, B.TextAlign_2, _null)], t1);
       if (bitis != null)
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_12_null_null, A.Text$("Tahmini biti\u015f: " + bitis, _null, _null, _null, _null, B.TextStyle_R0f, B.TextAlign_2, _null)], t1));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_12_null_null, A.Text$("Tahmini biti\u015f: " + bitis, _null, _null, _null, _null, _null, B.TextStyle_R0f, B.TextAlign_2, _null)], t1));
       t2.push(B.SizedBox_null_24_null_null);
-      t2.push(A.OutlinedButton$(B.Text_qY5, _this._widget.onYenile, _null));
+      t2.push(A.OutlinedButton$(B.Text_qY5, _null, _this._widget.onYenile, _null));
       return A.Material$(false, B.Duration_200000, true, _null, A.SafeArea$(true, A.Center$(A.SingleChildScrollView$(A.ConstrainedBox$(A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.BoxConstraints_sHx), B.EdgeInsets_28_24_28_24, _null), _null, _null), B.EdgeInsets_0_0_0_0, true), B.Clip_0, B.Color_wst, 0, _null, _null, _null, _null, _null, B.MaterialType_0);
     },
     $isTickerProvider: 1
@@ -281172,7 +281380,7 @@
       }
       t8.push(A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, 1.45, 0, 13.5, B.FontWeight_600), "  *"));
       t1 = type$.JSArray_Widget;
-      return A.Opacity$(new A.Padding(B.EdgeInsets_2_6_2_18, A.Row$(A._setArrayType([new A.RefTap(t6, t3, t4, _null, _null), B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.RichText$(_null, _null, _null, B.TextOverflow_0, _null, _null, true, _null, A.TextSpan$0(t8, _null, _null, _null, _null, _null, _null, _null, _null, t7, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0), B.SizedBox_null_4_null_null, A.Text$(_this.altYazi, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t2);
+      return A.Opacity$(new A.Padding(B.EdgeInsets_2_6_2_18, A.Row$(A._setArrayType([new A.RefTap(t6, t3, t4, _null, _null), B.SizedBox_11_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.RichText$(_null, _null, _null, B.TextOverflow_0, _null, _null, true, _null, A.TextSpan$0(t8, _null, _null, _null, _null, _null, _null, _null, _null, t7, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0), B.SizedBox_null_4_null_null, A.Text$(_this.altYazi, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 12.5, B.FontWeight_400), _null, _null)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1)], t1), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t2);
     }
   };
   A._OnaySatiri_build_closure.prototype = {
@@ -281745,14 +281953,14 @@
         t1 = A.BorderRadius$circular(13),
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), B.List_1H2, B.Color_wst, _null, _null, B.BoxShape_0),
         t3 = type$.JSArray_Widget;
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_E1e, B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(this.title, 1, B.TextOverflow_0, _null, _null, A.refText(B.Color_Ikf, _null, 1.15, -0.3, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_3_null_null, A.Text$(this.subtitle, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Rin, _null, 1.2, -0.25, 9.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.RefSvg_MnX], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, 53, _null, _null, B.EdgeInsets_11_0_11_0, _null, _null, _null), this.onTap, t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([B.RefSvg_E1e, B.SizedBox_10_null_null_null, A.Expanded$(A.Column$(A._setArrayType([A.Text$(this.title, _null, 1, B.TextOverflow_0, _null, _null, A.refText(B.Color_Ikf, _null, 1.15, -0.3, 14.5, B.FontWeight_400), _null, _null), B.SizedBox_null_3_null_null, A.Text$(this.subtitle, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_Rin, _null, 1.2, -0.25, 9.5, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_10_null_null_null, B.RefSvg_MnX], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, 53, _null, _null, B.EdgeInsets_11_0_11_0, _null, _null, _null), this.onTap, t1, _null, _null);
     }
   };
   A.RefWhiteCta.prototype = {
     build$1(context) {
       var _null = null,
         t1 = A.BoxDecoration$(_null, A.BorderRadius$circular(9), B.List_eqh, B.Color_wst, _null, _null, B.BoxShape_0);
-      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.iconAsset, 17, this.iconColor, _null), B.SizedBox_8_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.label, 1, B.TextOverflow_2, _null, false, A.refText(B.Color_MXH, _null, _null, -0.3, 11.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_8_null_null_null, B.RefSvg_CyQ], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, 31, _null, _null, B.EdgeInsets_12_0_12_0, _null, _null, _null);
+      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.iconAsset, 17, this.iconColor, _null), B.SizedBox_8_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.label, _null, 1, B.TextOverflow_2, _null, false, A.refText(B.Color_MXH, _null, _null, -0.3, 11.5, B.FontWeight_700), _null, _null), _null), B.SizedBox_8_null_null_null, B.RefSvg_CyQ], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t1, _null, 31, _null, _null, B.EdgeInsets_12_0_12_0, _null, _null, _null);
     }
   };
   A.RefGradientSquare.prototype = {
@@ -281864,7 +282072,7 @@
         t7 = _this.iconAsset;
         if (t7 != null)
           B.JSArray_methods.addAll$1(t6, A._setArrayType([new A.RefSvg(t7, 18, B.Color_wst, _null), B.SizedBox_8_null_null_null], t5));
-        t6.push(new A.Flexible(1, B.FlexFit_1, A.Text$(_this.label, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null));
+        t6.push(new A.Flexible(1, B.FlexFit_1, A.Text$(_this.label, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null));
         t5 = A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null);
       }
       return A.Opacity$(A.ClipRRect$(t3, A.Material$(false, B.Duration_200000, true, _null, A.InkWell$(false, _null, true, A.Ink$(A.Container$(B.Alignment_0_0, t5, B.Clip_0, _null, _null, _null, _null, _null, _null, _null, B.EdgeInsets_16_16_16_16, _null, _null, 1 / 0), B.BoxDecoration_Lxl), _null, true, t4, _null, _null, _null, _null, _null, _null, _null, t1, _null, _null, _null, _null), B.Clip_0, B.Color_Edl, 0, _null, _null, _null, _null, _null, B.MaterialType_0)), t2);
@@ -281879,7 +282087,7 @@
         t4 = A._setArrayType([], type$.JSArray_Widget);
       t4.push(new A.RefSvg(this.iconAsset, 20, _null, _null));
       t4.push(B.SizedBox_11_null_null_null);
-      t4.push(A.Text$(this.label, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_600), _null, _null));
+      t4.push(A.Text$(this.label, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_600), _null, _null));
       return A.Opacity$(A.Material$(false, B.Duration_200000, true, t1, A.InkWell$(false, t2, true, A.Container$(_null, A.Row$(t4, B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_14_14_14_14, _null, _null, 1 / 0), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, this.onPressed, _null, _null, _null, _null), B.Clip_0, B.Color_wst, 0, _null, _null, _null, _null, _null, B.MaterialType_0), 1);
     }
   };
@@ -281893,7 +282101,7 @@
       A.debugCheckHasMediaQuery(context);
       t1 = A.InheritedModel_inheritFrom(context, B._MediaQueryAspect_0, t1).data;
       t3 = type$.JSArray_Widget;
-      return A.Material$(false, B.Duration_200000, true, _null, A.DefaultTextStyle$(new A.Padding(new A.EdgeInsets(0, 0, 0, klavye), A.Container$(_null, A.SafeArea$(true, A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_18_12_10_6, A.Row$(A._setArrayType([A.Expanded$(A.Text$(this.title, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), 1), new A.RefTap(B.Padding_ZlH, new A.RefBottomSheet_build_closure(context), A.BorderRadius$circular(999), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), new A.Flexible(1, B.FlexFit_1, A.SingleChildScrollView$(this.child, B.EdgeInsets_18_0_18_14, _null), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.EdgeInsets_0_0_0_0, false), B.Clip_0, _null, new A.BoxConstraints(0, 1 / 0, 0, (t1.size._dy - klavye) * 0.8), B.BoxDecoration_O3X, _null, _null, _null, _null, _null, _null, _null, _null), _null), _null, _null, B.TextOverflow_0, true, t2, _null, _null, B.TextWidthBasis_0), B.Clip_0, _null, 0, _null, _null, _null, _null, _null, B.MaterialType_4);
+      return A.Material$(false, B.Duration_200000, true, _null, A.DefaultTextStyle$(new A.Padding(new A.EdgeInsets(0, 0, 0, klavye), A.Container$(_null, A.SafeArea$(true, A.Column$(A._setArrayType([new A.Padding(B.EdgeInsets_18_12_10_6, A.Row$(A._setArrayType([A.Expanded$(A.Text$(this.title, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), 1), new A.RefTap(B.Padding_ZlH, new A.RefBottomSheet_build_closure(context), A.BorderRadius$circular(999), _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), new A.Flexible(1, B.FlexFit_1, A.SingleChildScrollView$(this.child, B.EdgeInsets_18_0_18_14, _null), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.EdgeInsets_0_0_0_0, false), B.Clip_0, _null, new A.BoxConstraints(0, 1 / 0, 0, (t1.size._dy - klavye) * 0.8), B.BoxDecoration_O3X, _null, _null, _null, _null, _null, _null, _null, _null), _null), _null, _null, B.TextOverflow_0, true, t2, _null, _null, B.TextWidthBasis_0), B.Clip_0, _null, 0, _null, _null, _null, _null, _null, B.MaterialType_4);
     }
   };
   A.RefBottomSheet_goster_closure.prototype = {
@@ -281959,14 +282167,14 @@
         t2 = A._setArrayType([], t1);
       if (okVar)
         B.JSArray_methods.addAll$1(t2, A._setArrayType([B.Align_tEd, B.SizedBox_null_6_null_null], t1));
-      t2.push(A.Text$(this.text, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null));
+      t2.push(A.Text$(this.text, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null));
       return new A.Padding(B.EdgeInsets_0_0_0_16, A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
     }
   };
   A.RefSectionTitle.prototype = {
     build$1(context) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_1_18_1_9, A.Text$(this.text, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null);
+      return new A.Padding(B.EdgeInsets_1_18_1_9, A.Text$(this.text, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null);
     }
   };
   A.RefRowGroup.prototype = {
@@ -281991,8 +282199,8 @@
         t1 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.iconAsset, 22, _null, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, A.BorderRadius$circular(12), _null, _this.iconBg, _null, _null, B.BoxShape_0), _null, 44, _null, _null, _null, _null, _null, 44),
         t2 = _this.titleColor,
         t3 = type$.JSArray_Widget;
-      t2 = A._setArrayType([A.Text$(_this.title, _null, _null, _null, _null, A.refText(t2 == null ? B.Color_MXH : t2, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null)], t3);
-      B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(_this.subtitle, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.4, 0, 12, B.FontWeight_400), _null, _null)], t3));
+      t2 = A._setArrayType([A.Text$(_this.title, _null, _null, _null, _null, _null, A.refText(t2 == null ? B.Color_MXH : t2, _null, _null, 0, 14.5, B.FontWeight_700), _null, _null)], t3);
+      B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_2_null_null, A.Text$(_this.subtitle, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.4, 0, 12, B.FontWeight_400), _null, _null)], t3));
       t1 = A._setArrayType([t1, B.SizedBox_12_null_null_null, A.Expanded$(A.Column$(t2, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1)], t3);
       B.JSArray_methods.addAll$1(t1, A._setArrayType([B.SizedBox_8_null_null_null, B.RefSvg_5Bl], t3));
       return new A.RefTap(new A.Padding(B.EdgeInsets_13_13_13_13, A.Row$(t1, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), _this.onTap, _null, _null, _null);
@@ -282005,7 +282213,7 @@
       t1 = A.BoxDecoration$(A.Border_Border$all(this.halkaRengi, 2), t1, _null, B.Color_wuX, _null, _null, B.BoxShape_0);
       t2 = this.sayi;
       t2 = t2 > 99 ? "99+" : "" + t2;
-      return A.Container$(B.Alignment_0_0, A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 9.5, B.FontWeight_700), B.TextAlign_2, _null), B.Clip_0, _null, B.BoxConstraints_vFn, t1, _null, _null, _null, _null, B.EdgeInsets_VwR, _null, _null, _null);
+      return A.Container$(B.Alignment_0_0, A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 9.5, B.FontWeight_700), B.TextAlign_2, _null), B.Clip_0, _null, B.BoxConstraints_vFn, t1, _null, _null, _null, _null, B.EdgeInsets_VwR, _null, _null, _null);
     }
   };
   A.RefSegmentTabs.prototype = {
@@ -282022,7 +282230,7 @@
         t13 = t5[i];
         t14 = t11 ? B.Color_wst : B.Color_MXH;
         t15 = t11 ? B.Color_wst : B.Color_MXH;
-        t12 = A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([new A.RefSvg(t13._0, 20, t14, _null), B.SizedBox_null_5_null_null, new A.FittedBox(B.BoxFit_6, B.Alignment_0_0, B.Clip_0, A.Text$(t13._1, 1, _null, _null, _null, new A.TextStyle(true, t15, _null, "Poppins", B.List_MNo, _null, 11.5, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), B.TextAlign_2, _null), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, t12, _null, _null, _null, _null, _null, _null, B.EdgeInsets_4_10_4_10, _null, _null, _null)], t3);
+        t12 = A._setArrayType([A.Container$(_null, A.Column$(A._setArrayType([new A.RefSvg(t13._0, 20, t14, _null), B.SizedBox_null_5_null_null, new A.FittedBox(B.BoxFit_6, B.Alignment_0_0, B.Clip_0, A.Text$(t13._1, _null, 1, _null, _null, _null, new A.TextStyle(true, t15, _null, "Poppins", B.List_MNo, _null, 11.5, B.FontWeight_600, _null, 0, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), B.TextAlign_2, _null), _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), B.Clip_0, t12, _null, _null, _null, _null, _null, _null, B.EdgeInsets_4_10_4_10, _null, _null, _null)], t3);
         if (t8 && i < 3 && t7[i] > 0) {
           if (!(i < 3))
             return A.ioore(t7, i);
@@ -282046,13 +282254,13 @@
       var _null = null,
         t1 = A.BorderRadius$circular(10),
         t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_ZWy, 1), A.BorderRadius$circular(10), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.iconAsset, 18, B.Color_MXH, _null), B.SizedBox_5_null_null_null, A.Text$(this.label, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_11_7_11_7, _null, _null, _null), this.onTap, t1, _null, _null);
+      return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(this.iconAsset, 18, B.Color_MXH, _null), B.SizedBox_5_null_null_null, A.Text$(this.label, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_11_7_11_7, _null, _null, _null), this.onTap, t1, _null, _null);
     }
   };
   A.RefListCount.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Text$(this.text, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null);
+      return A.Text$(this.text, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_500), _null, _null);
     }
   };
   A.RefBottomNav.prototype = {
@@ -282089,7 +282297,7 @@
       t5 = t4[4];
       t6 = A.BorderRadius$circular(10);
       t7 = A.BoxDecoration$(_null, _null, A._setArrayType([A.BoxShadow$(10, B.BlurStyle_0, B.Color_Dun.withValues$1$alpha(0.28), B.Offset_0_3, 0)], type$.JSArray_BoxShadow), B.Color_Dun, _null, _null, B.BoxShape_1);
-      return A.SizedBox$(A.Stack$(B.Alignment_0_1, A._setArrayType([t3, A.Positioned$(t1, new A.RefTap(A.Column$(A._setArrayType([A.Container$(_null, A.Center$(new A.RefSvg(t4[0], 21, B.Color_wst, _null), _null, _null), B.Clip_0, _null, _null, t7, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_null_4_null_null, A.Text$(t4[3], 1, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11, B.FontWeight_600), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), t5, t6, _null, _null), _null, _null, _null, _null, _null, _null)], t2), B.Clip_0, B.StackFit_0, _null), 64 + safeBottom + 16, _null);
+      return A.SizedBox$(A.Stack$(B.Alignment_0_1, A._setArrayType([t3, A.Positioned$(t1, new A.RefTap(A.Column$(A._setArrayType([A.Container$(_null, A.Center$(new A.RefSvg(t4[0], 21, B.Color_wst, _null), _null, _null), B.Clip_0, _null, _null, t7, _null, 46, _null, _null, _null, _null, _null, 46), B.SizedBox_null_4_null_null, A.Text$(t4[3], _null, 1, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 11, B.FontWeight_600), _null, _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), t5, t6, _null, _null), _null, _null, _null, _null, _null, _null)], t2), B.Clip_0, B.StackFit_0, _null), 64 + safeBottom + 16, _null);
     },
     _duzBar$2(ogeler, safeBottom) {
       var t1, t2, t3, _i, it, _null = null;
@@ -282125,7 +282333,7 @@
         t5.push(A.Positioned$(_null, new A.RefSayiRozeti(t3, B.Color_wst, _null), _null, _null, _null, -14, -11, _null));
       t3 = A.Stack$(B.AlignmentDirectional_m1_m1, t5, B.Clip_0, B.StackFit_0, _null);
       t1 = t1[3];
-      return new A.RefTap(new A.Padding(B.EdgeInsets_0_2_0_2, A.Column$(A._setArrayType([t3, B.SizedBox_null_4_null_null, A.Text$(t1, 1, _null, _null, _null, A.refText(t4 ? B.Color_Dun : B.Color_byQ, _null, _null, 0, 11, B.FontWeight_600), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null), t2, _null, _null, _null);
+      return new A.RefTap(new A.Padding(B.EdgeInsets_0_2_0_2, A.Column$(A._setArrayType([t3, B.SizedBox_null_4_null_null, A.Text$(t1, _null, 1, _null, _null, _null, A.refText(t4 ? B.Color_Dun : B.Color_byQ, _null, _null, 0, 11, B.FontWeight_600), _null, _null)], t6), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null), t2, _null, _null, _null);
     }
   };
   A._CentikliKenar.prototype = {
@@ -282186,13 +282394,13 @@
   A.RefSubtitle.prototype = {
     build$1(context) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_0_6_0_0, A.Text$(this.text, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), _null);
+      return new A.Padding(B.EdgeInsets_0_6_0_0, A.Text$(this.text, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null), _null);
     }
   };
   A.RefCardTitle.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Text$("Mevcut Adresiniz", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null);
+      return A.Text$("Mevcut Adresiniz", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), _null, _null);
     }
   };
   A.RefNextButton.prototype = {
@@ -282210,7 +282418,7 @@
         t5 = type$.JSArray_Widget;
         t6 = A._setArrayType([], t5);
         B.JSArray_methods.addAll$1(t6, A._setArrayType([new A.RefSvg(_this.iconAsset, 18, B.Color_wst, _null), B.SizedBox_9_null_null_null], t5));
-        t6.push(A.Text$(_this.label, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+        t6.push(A.Text$(_this.label, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
         t5 = A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null);
       }
       return A.Opacity$(A.ClipRRect$(t3, A.Material$(false, B.Duration_200000, true, _null, A.InkWell$(false, _null, true, A.Ink$(A.Container$(B.Alignment_0_0, t5, B.Clip_0, _null, _null, _null, _null, _null, _null, _null, B.EdgeInsets_15_15_15_15, _null, _null, 1 / 0), B.BoxDecoration_Lxl), _null, true, t4, _null, _null, _null, _null, _null, _null, _null, t1, _null, _null, _null, _null), B.Clip_0, B.Color_Edl, 0, _null, _null, _null, _null, _null, B.MaterialType_0)), t2);
@@ -282249,7 +282457,7 @@
   A.RefRedirectNotice.prototype = {
     build$1(context) {
       var _null = null;
-      return new A.Padding(B.EdgeInsets_0_38_0_0, A.Column$(A._setArrayType([B.SizedBox_aUd, B.SizedBox_null_14_null_null, A.Text$("Y\xf6nlendiriliyorsunuz...", _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_600), _null, _null), B.SizedBox_null_4_null_null, A.Text$("2 saniye sonra otomatik ge\xe7i\u015f yap\u0131lacak.", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
+      return new A.Padding(B.EdgeInsets_0_38_0_0, A.Column$(A._setArrayType([B.SizedBox_aUd, B.SizedBox_null_14_null_null, A.Text$("Y\xf6nlendiriliyorsunuz...", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 15, B.FontWeight_600), _null, _null), B.SizedBox_null_4_null_null, A.Text$("2 saniye sonra otomatik ge\xe7i\u015f yap\u0131lacak.", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
     }
   };
   A.RefDetailHeader.prototype = {
@@ -282261,7 +282469,7 @@
         t1.push(A.Align$(B.Alignment_m1_0, new A.RefBackButton(new A.RefDetailHeader_build_closure(context), false, _null), _null, _null, _null));
       if (okVar)
         t1.push(B.SizedBox_null_6_null_null);
-      t1.push(A.Text$(this.title, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null));
+      t1.push(A.Text$(this.title, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null));
       return A.Column$(t1, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0);
     }
   };
@@ -282293,8 +282501,8 @@
       var _null = null,
         t1 = A._setArrayType([], type$.JSArray_Widget);
       if (this.zorunlu)
-        t1.push(A.Text$("* ", _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null));
-      t1.push(A.Text$(this.text, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null));
+        t1.push(A.Text$("* ", _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null));
+      t1.push(A.Text$(this.text, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null));
       return new A.Padding(new A.EdgeInsets(1, 0, 1, 7), A.Row$(t1, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null);
     }
   };
@@ -282311,10 +282519,10 @@
       if (t6 != null)
         B.JSArray_methods.addAll$1(t5, A._setArrayType([A.SizedBox$(A.Center$(new A.RefSvg(t6, 20, _null, _null), _null, _null), _null, 22), B.SizedBox_12_null_null_null], t4));
       if (bos)
-        B.JSArray_methods.addAll$1(t5, A._setArrayType([A.Text$("*", _null, _null, _null, _null, A.refText(B.Color_Df4, _null, 1, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null], t4));
+        B.JSArray_methods.addAll$1(t5, A._setArrayType([A.Text$("*", _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, 1, 0, 14.5, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null], t4));
       if (bos)
         t1 = _this.placeholder;
-      t5.push(A.Expanded$(A.Text$(t1, 1, B.TextOverflow_2, _null, _null, A.refText(bos ? B.Color_Ldf : B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_500), _null, _null), 1));
+      t5.push(A.Expanded$(A.Text$(t1, _null, 1, B.TextOverflow_2, _null, _null, A.refText(bos ? B.Color_Ldf : B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_500), _null, _null), 1));
       t5.push(B.SizedBox_10_null_null_null);
       t5.push(B.RefSvg_H95);
       alan = new A.RefTap(A.Container$(_null, A.Row$(t5, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, 1 / 0), _this.onTap, t2, _null, _null);
@@ -282360,7 +282568,7 @@
         t4 = B.SizedBox_kVn;
       else {
         t4 = A._setArrayType([], type$.JSArray_Widget);
-        t4.push(A.Text$(_this.label, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+        t4.push(A.Text$(_this.label, _null, _null, _null, _null, _null, A.refText(B.Color_wst, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
         t4 = A.Row$(t4, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null);
       }
       return A.Container$(_null, A.Opacity$(A.ClipRRect$(t3, A.Material$(false, B.Duration_200000, true, _null, A.InkWell$(false, _null, true, A.Ink$(A.Container$(B.Alignment_0_0, t4, B.Clip_0, _null, _null, _null, _null, _null, _null, _null, B.EdgeInsets_15_15_15_15, _null, _null, 1 / 0), B.BoxDecoration_Lxl), _null, true, _null, _null, _null, _null, _null, _null, _null, _null, t1, _null, _null, _null, _null), B.Clip_0, B.Color_Edl, 0, _null, _null, _null, _null, _null, B.MaterialType_0)), t2), B.Clip_0, _null, _null, _null, _null, _null, _null, new A.EdgeInsets(0, 0, 0, 0), _null, _null, _null, _null);
@@ -282391,7 +282599,7 @@
         t8 = i <= t4;
         t9 = t8 ? B.FontWeight_700 : B.FontWeight_500;
         t8 = t8 ? B.Color_Dun : B.Color_byQ;
-        t6 = A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(t6, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, t8, _null, "Poppins", B.List_MNo, _null, t7, t9, _null, 0, _null, _null, 1.2, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), B.TextAlign_2, _null), _null)], t1);
+        t6 = A._setArrayType([new A.Expanded(1, B.FlexFit_0, A.Text$(t6, _null, 2, B.TextOverflow_2, _null, _null, new A.TextStyle(true, t8, _null, "Poppins", B.List_MNo, _null, t7, t9, _null, 0, _null, _null, 1.2, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null), B.TextAlign_2, _null), _null)], t1);
         if (i < n)
           t6.push(B.SizedBox_18_null_null_null);
         B.JSArray_methods.addAll$1(t3, t6);
@@ -282410,7 +282618,7 @@
       if (tamam)
         t2 = B.RefTik_8aK;
       else
-        t2 = A.Text$("" + i, _null, _null, _null, _null, A.refText(etkin ? B.Color_wst : B.Color_BhF, _null, _null, 0, 15, B.FontWeight_700), _null, _null);
+        t2 = A.Text$("" + i, _null, _null, _null, _null, _null, A.refText(etkin ? B.Color_wst : B.Color_BhF, _null, _null, 0, 15, B.FontWeight_700), _null, _null);
       return A.Container$(B.Alignment_0_0, t2, B.Clip_0, _null, _null, t1, _null, 38, _null, _null, _null, _null, _null, 38);
     },
     $signature: 296
@@ -282426,7 +282634,7 @@
   A.RefVerifyHeader.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Column$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_of2, B.Clip_0, _null, _null, B.BoxDecoration_xgR, _null, 80, _null, B.EdgeInsets_0_24_0_18, _null, _null, _null, 80), A.Text$(this.label, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), B.SizedBox_null_5_null_null, A.Text$(this.value, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 1, 20, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_22_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1);
+      return A.Column$(A._setArrayType([A.Container$(B.Alignment_0_0, B.RefSvg_of2, B.Clip_0, _null, _null, B.BoxDecoration_xgR, _null, 80, _null, B.EdgeInsets_0_24_0_18, _null, _null, _null, 80), A.Text$(this.label, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_400), B.TextAlign_2, _null), B.SizedBox_null_5_null_null, A.Text$(this.value, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 1, 20, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_22_null_null], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A.RefOtpBoxes.prototype = {
@@ -282719,13 +282927,13 @@
       t1 = t1 > 0;
       t2 = t1 ? "Yeni kod isteyebilmek i\xe7in bekleyin" : "Kod gelmedi mi?";
       t3 = type$.JSArray_Widget;
-      t2 = A._setArrayType([A.Text$(t2, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_2_null_null], t3);
+      t2 = A._setArrayType([A.Text$(t2, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_2_null_null], t3);
       if (t1)
-        t2.push(A.Text$(dk + ":" + sn, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
+        t2.push(A.Text$(dk + ":" + sn, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null));
       else {
-        t1 = A.Text$("Numaran\u0131z\u0131n do\u011fru oldu\u011fundan emin olun.", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
+        t1 = A.Text$("Numaran\u0131z\u0131n do\u011fru oldu\u011fundan emin olun.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), B.TextAlign_2, _null);
         t4 = A.BorderRadius$circular(8);
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([t1, B.SizedBox_null_2_null_null, new A.RefTap(new A.Padding(B.EdgeInsets_8_4_8_4, A.Text$("Tekrar G\xf6nder", _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null), this.onResend, t4, _null, _null)], t3));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([t1, B.SizedBox_null_2_null_null, new A.RefTap(new A.Padding(B.EdgeInsets_8_4_8_4, A.Text$("Tekrar G\xf6nder", _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 16, B.FontWeight_700), _null, _null), _null), this.onResend, t4, _null, _null)], t3));
       }
       return new A.Padding(B.EdgeInsets_0_0_0_20, A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
     }
@@ -282734,7 +282942,7 @@
     build$1(context) {
       var _null = null,
         t1 = A.BorderRadius$circular(8);
-      return new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$(this.label, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), this.onPressed, t1, _null, _null);
+      return new A.RefTap(new A.Padding(B.EdgeInsets_10_8_10_8, A.Text$(this.label, _null, _null, _null, _null, _null, A.refText(B.Color_Dun, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), _null), this.onPressed, t1, _null, _null);
     }
   };
   A.RefCheckRow.prototype = {
@@ -282744,7 +282952,7 @@
         t2 = A.BorderRadius$circular(12),
         t3 = _this.value,
         t4 = type$.JSArray_Widget,
-        t5 = A._setArrayType([A.Text$(_this.label, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, t3 ? B.FontWeight_700 : B.FontWeight_500), _null, _null)], t4);
+        t5 = A._setArrayType([A.Text$(_this.label, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14.5, t3 ? B.FontWeight_700 : B.FontWeight_500), _null, _null)], t4);
       return new A.RefTap(new A.Padding(B.EdgeInsets_3_12_3_12, A.Row$(A._setArrayType([A.Expanded$(A.Column$(t5, B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1), B.SizedBox_12_null_null_null, new A.RefCheckBox(t3, _null)], t4), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), _null), t1, t2, _null, _null);
     }
   };
@@ -282775,9 +282983,9 @@
         t5 = type$.JSArray_Widget,
         t6 = A._setArrayType([], t5);
       if (!secili)
-        B.JSArray_methods.addAll$1(t6, A._setArrayType([A.Text$("*", _null, _null, _null, _null, A.refText(B.Color_Df4, _null, 1, 0, 15, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null], t5));
+        B.JSArray_methods.addAll$1(t6, A._setArrayType([A.Text$("*", _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, 1, 0, 15, B.FontWeight_700), _null, _null), B.SizedBox_6_null_null_null], t5));
       t1 = secili ? t1 : _this.label;
-      t6.push(A.Expanded$(A.Text$(t1, 1, B.TextOverflow_2, _null, _null, A.refText(secili ? B.Color_MXH : B.Color_byQ, _null, _null, 0, 15, B.FontWeight_500), _null, _null), 1));
+      t6.push(A.Expanded$(A.Text$(t1, _null, 1, B.TextOverflow_2, _null, _null, A.refText(secili ? B.Color_MXH : B.Color_byQ, _null, _null, 0, 15, B.FontWeight_500), _null, _null), 1));
       return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t4, B.SizedBox_12_null_null_null, A.Expanded$(A.Row$(t6, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), 1), B.RefSvg_8bs], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, B.EdgeInsets_0_0_0_12, B.EdgeInsets_15_14_15_14, _null, _null, _null), _this.onTap, t2, _null, _null);
     }
   };
@@ -282831,7 +283039,7 @@
       A.debugCheckHasMediaQuery(context);
       t1 = A.InheritedModel_inheritFrom(context, B._MediaQueryAspect_0, t1).data;
       t2 = type$.JSArray_Widget;
-      t3 = A.Row$(A._setArrayType([A.Expanded$(A.Text$(_this._widget.title, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), 1), new A.RefTap(B.Padding_uzX, new A._RefMultiSelectSheetState_build_closure(context), A.BorderRadius$circular(999), "Kapat", _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
+      t3 = A.Row$(A._setArrayType([A.Expanded$(A.Text$(_this._widget.title, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), _null, _null), 1), new A.RefTap(B.Padding_uzX, new A._RefMultiSelectSheetState_build_closure(context), A.BorderRadius$circular(999), "Kapat", _null)], t2), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null);
       t4 = _this._ara;
       t5 = A.refText(B.Color_MXH, _null, _null, 0, 14.5, B.FontWeight_500);
       t6 = A.refText(B.Color_Ldf, _null, _null, 0, 14.5, B.FontWeight_400);
@@ -282860,7 +283068,7 @@
         t2.push(new A.RefCheckRow(_this.get$_secili().contains$1(0, o), o, new A._RefMultiSelectSheetState_build_closure2(_this, o), _null));
       }
       if (t4 === 0)
-        t2.push(new A.Padding(B.EdgeInsets_0_24_0_24, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_500), B.TextAlign_2, _null), _null));
+        t2.push(new A.Padding(B.EdgeInsets_0_24_0_24, A.Text$("Sonu\xe7 bulunamad\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 14, B.FontWeight_500), B.TextAlign_2, _null), _null));
       t5.push(new A.Flexible(1, B.FlexFit_1, A.ListView$(t2, _null, B.EdgeInsets_14_0_14_0, true), _null));
       t5.push(new A.Padding(B.EdgeInsets_18_10_18_16, A.RefWideButton$("TAMAM", false, new A._RefMultiSelectSheetState_build_closure3(_this, context)), _null));
       return A.SafeArea$(true, new A.Padding(new A.EdgeInsets(0, 0, 0, klavye), A.ConstrainedBox$(A.Column$(t5, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), new A.BoxConstraints(0, 1 / 0, 0, (t1.size._dy - klavye) * 0.72)), _null), B.EdgeInsets_0_0_0_0, false);
@@ -282907,14 +283115,14 @@
     call$1(_) {
       return this.$this._tumunuDegistir$0();
     },
-    $signature: 10
+    $signature: 11
   };
   A._RefMultiSelectSheetState_build_closure2.prototype = {
     call$1(v) {
       var t1 = this.$this;
       return t1.setState$1(new A._RefMultiSelectSheetState_build__closure(t1, this.o, v));
     },
-    $signature: 10
+    $signature: 11
   };
   A._RefMultiSelectSheetState_build__closure.prototype = {
     call$0() {
@@ -282944,7 +283152,7 @@
     build$1(context) {
       var _this = this, _null = null,
         t1 = type$.JSArray_Widget,
-        t2 = A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 26, _null, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, _this.ikonZemin, _null, _null, B.BoxShape_1), _null, 58, _null, _null, _null, _null, _null, 58), B.SizedBox_null_12_null_null, A.Text$(_this.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_8_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], t1);
+        t2 = A._setArrayType([A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 26, _null, _null), B.Clip_0, _null, _null, A.BoxDecoration$(_null, _null, _null, _this.ikonZemin, _null, _null, B.BoxShape_1), _null, 58, _null, _null, _null, _null, _null, 58), B.SizedBox_null_12_null_null, A.Text$(_this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16.5, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_8_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], t1);
       B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_14_null_null, _this.altKisim], t1));
       return new A.Padding(B.EdgeInsets_4_6_4_2, A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0), _null);
     }
@@ -282978,7 +283186,7 @@
         hata = "L\xfctfen en az 10 karakter yaz\u0131n";
       } else
         hata = _null;
-      t1 = A.Text$(_this._widget.aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null);
+      t1 = A.Text$(_this._widget.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null);
       t2 = _this._ctl;
       _this._widget.toString;
       t3 = hata != null;
@@ -282987,9 +283195,9 @@
       t5 = (t5.length === 0 ? B.StringCharacters_GVp : new A.StringCharacters(t5)).get$length(0);
       _this._widget.toString;
       t6 = type$.JSArray_Widget;
-      t6 = A._setArrayType([t1, B.SizedBox_null_12_null_null, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t4, A.Positioned$(10, A.Text$("" + t5 + "/300", _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t6), B.Clip_1, B.StackFit_0, _null)], t6);
+      t6 = A._setArrayType([t1, B.SizedBox_null_12_null_null, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([t4, A.Positioned$(10, A.Text$("" + t5 + "/300", _null, _null, _null, _null, _null, A.refText(B.Color_A9k, _null, _null, 0, 12, B.FontWeight_400), _null, _null), _null, _null, _null, 13, _null, _null)], t6), B.Clip_1, B.StackFit_0, _null)], t6);
       if (t3)
-        t6.push(new A.Padding(B.EdgeInsets_2_6_0_0, A.Text$(hata, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
+        t6.push(new A.Padding(B.EdgeInsets_2_6_0_0, A.Text$(hata, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null));
       t6.push(B.SizedBox_null_14_null_null);
       t1 = B.JSString_methods.trim$0(t2._change_notifier$_value.text);
       _this._widget.toString;
@@ -283096,7 +283304,7 @@
       t5 = t2 ? B.Color_wst : B.Color_BhF;
       t4 = A.Container$(B.Alignment_0_0, new A.RefSvg(_this.ikon, 16, t5, _null), B.Clip_0, _null, _null, t4, _null, 32, _null, _null, _null, _null, _null, 32);
       t5 = type$.JSArray_Widget;
-      t6 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this.baslik, _null, _null, _null, _null, A.refText(t2 ? B.Color_Dun : B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1);
+      t6 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(_this.baslik, _null, _null, _null, _null, _null, A.refText(t2 ? B.Color_Dun : B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(_this.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t5), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), 1);
       t7 = t2 ? B.Color_Dun : B.Color_Edl;
       t7 = A.BoxDecoration$(A.Border_Border$all(t2 ? B.Color_Dun : B.Color_MPk, 2), _null, _null, t7, _null, _null, B.BoxShape_1);
       return new A.RefTap(A.Container$(_null, A.Row$(A._setArrayType([t4, B.SizedBox_10_null_null_null, t6, B.SizedBox_8_null_null_null, A.Container$(B.Alignment_0_0, t2 ? B.RefTik_BTL : _null, B.Clip_0, _null, _null, t7, _null, 20, _null, _null, _null, _null, _null, 20)], t5), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t3, _null, _null, _null, _null, B.EdgeInsets_10_9_10_9, _null, _null, _null), _this.onTap, t1, _null, _null);
@@ -283117,7 +283325,7 @@
       _0_0 = B.List_n72[B.JSInt_methods.$mod(Math.abs(B.JSString_methods.get$hashCode(t)), 5)];
       t1 = this.cap;
       t2 = A.BoxDecoration$(_null, _null, _null, _0_0._0, _null, _null, B.BoxShape_1);
-      basHarf = A.Container$(B.Alignment_0_0, A.Text$(harf, _null, _null, _null, _null, A.refText(_0_0._1, _null, _null, 0, t1 * 19 / 44, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t2, _null, t1, _null, _null, _null, _null, _null, t1);
+      basHarf = A.Container$(B.Alignment_0_0, A.Text$(harf, _null, _null, _null, _null, _null, A.refText(_0_0._1, _null, _null, 0, t1 * 19 / 44, B.FontWeight_700), _null, _null), B.Clip_0, _null, _null, t2, _null, t1, _null, _null, _null, _null, _null, t1);
       yol = B.JSString_methods.trim$0(this.fotoYolu);
       if (yol.length === 0)
         return basHarf;
@@ -283140,7 +283348,7 @@
       t3 = t1 ? "assets/svg/ic_wrenchp.svg" : "assets/svg/ic_pshield.svg";
       t4 = t1 ? B.Color_Dun : B.Color_VDA;
       t5 = t1 ? "Hizmet Veren" : "Hizmet Alan";
-      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(t3, 13, t4, _null), B.SizedBox_6_null_null_null, A.Text$(t5, _null, _null, _null, _null, A.refText(t1 ? B.Color_Dun : B.Color_VDA, _null, _null, 0, 12, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_10_5_10_5, _null, _null, _null);
+      return A.Container$(_null, A.Row$(A._setArrayType([new A.RefSvg(t3, 13, t4, _null), B.SizedBox_6_null_null_null, A.Text$(t5, _null, _null, _null, _null, _null, A.refText(t1 ? B.Color_Dun : B.Color_VDA, _null, _null, 0, 12, B.FontWeight_700), _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_0, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_10_5_10_5, _null, _null, _null);
     }
   };
   A.RefAcilirSecici.prototype = {
@@ -283163,14 +283371,14 @@
       t1 = A.BorderRadius$circular(13);
       t2 = A.BoxDecoration$(A.Border_Border$all(B.Color_Dun, 1), A.BorderRadius$circular(13), _null, B.Color_xQ2, _null, _null, B.BoxShape_0);
       t3 = type$.JSArray_Widget;
-      t4 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(aciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1);
+      t4 = A.Expanded$(A.Column$(A._setArrayType([A.Text$(baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), 1);
       t2 = A.Container$(_null, A.Row$(A._setArrayType([t4, B.SizedBox_8_null_null_null, new A.AnimatedRotation(B.RefSvg_GGU, _this._ref_widgets$_acik ? 0.5 : 0, B.C__Linear, B.Duration_150000, _null, _null)], t3), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1, 0, _null), B.Clip_0, _null, _null, t2, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, _null);
       if (!_this._ref_widgets$_acik)
         t4 = B.SizedBox_E5U;
       else {
         t4 = A.BorderRadius$circular(13);
         t5 = A.BoxDecoration$(A.Border_Border$all(B.Color_5fT, 1), A.BorderRadius$circular(13), _null, B.Color_wst, _null, _null, B.BoxShape_0);
-        t4 = new A.Padding(B.EdgeInsets_0_8_0_0, new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([A.Text$(digerBaslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(digerAciklama, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, 1 / 0), new A._RefAcilirSeciciState_build_closure(_this), t4, _null, _null), _null);
+        t4 = new A.Padding(B.EdgeInsets_0_8_0_0, new A.RefTap(A.Container$(_null, A.Column$(A._setArrayType([A.Text$(digerBaslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13.5, B.FontWeight_700), _null, _null), B.SizedBox_null_2_null_null, A.Text$(digerAciklama, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12, B.FontWeight_400), _null, _null)], t3), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_1), B.Clip_0, _null, _null, t5, _null, _null, _null, _null, B.EdgeInsets_13_13_13_13, _null, _null, 1 / 0), new A._RefAcilirSeciciState_build_closure(_this), t4, _null, _null), _null);
       }
       return A.Column$(A._setArrayType([new A.RefTap(t2, new A._RefAcilirSeciciState_build_closure0(_this), t1, _null, _null), A.AnimatedSize$(t4, B.C__Linear, B.Duration_150000)], t3), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
@@ -283225,7 +283433,7 @@
       t1 = _this.hataNot;
       t2 = _this.ctl;
       t3 = _this.doluNot;
-      return A.Column$(A._setArrayType([A.Text$(_this.aciklama, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.55, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_14_null_null, new A.ValueListenableBuilder(t1, new A.sifreIleDogrula__closure(t2, t1, t3), _null, _null, type$.ValueListenableBuilder_nullable_String), B.SizedBox_null_16_null_null, new A.ValueListenableBuilder(t3, new A.sifreIleDogrula__closure0(_this._box_0, c, t2, t1, _this.renk), _null, _null, type$.ValueListenableBuilder_bool)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_0);
+      return A.Column$(A._setArrayType([A.Text$(_this.aciklama, _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.55, 0, 13.5, B.FontWeight_400), _null, _null), B.SizedBox_null_14_null_null, new A.ValueListenableBuilder(t1, new A.sifreIleDogrula__closure(t2, t1, t3), _null, _null, type$.ValueListenableBuilder_nullable_String), B.SizedBox_null_16_null_null, new A.ValueListenableBuilder(t3, new A.sifreIleDogrula__closure0(_this._box_0, c, t2, t1, _this.renk), _null, _null, type$.ValueListenableBuilder_bool)], type$.JSArray_Widget), B.CrossAxisAlignment_3, B.MainAxisAlignment_0, B.MainAxisSize_0);
     },
     $signature: 912
   };
@@ -283252,7 +283460,7 @@
         t1 = !A._asBool(dolu) ? _null : new A.sifreIleDogrula___closure(_this._box_0, _this.c, _this.ctl, _this.hataNot),
         t2 = _this.renk,
         t3 = A.OutlinedButton_styleFrom(_null, _null, _null, _null, _null, _null, _null, _null, _null, t2, _null, _null, B.EdgeInsets_0_13_0_13, _null, new A.RoundedRectangleBorder(A.BorderRadius$circular(12), B.BorderSide_Ah5), new A.BorderSide(t2, 1.4, B.BorderStyle_1, -1), _null, _null, _null, _null);
-      return A.OutlinedButton$(A.Text$("Do\u011frula", _null, _null, _null, _null, A.refText(t2, _null, _null, 0, 14, B.FontWeight_700), _null, _null), t1, t3);
+      return A.OutlinedButton$(A.Text$("Do\u011frula", _null, _null, _null, _null, _null, A.refText(t2, _null, _null, 0, 14, B.FontWeight_700), _null, _null), _null, t1, t3);
     },
     $signature: 913
   };
@@ -283398,7 +283606,7 @@
         t2 = this.acc,
         t3 = t2.name,
         t4 = t2.activeRole === B.Role_1 ? t2._fotoVeren : t2._fotoAlan;
-      return new A.RefTap(new A.Padding(B.EdgeInsets_6_10_6_10, A.Column$(A._setArrayType([new A.RefBasHarfAvatar(t3, t4, 64, _null), B.SizedBox_null_10_null_null, A.Text$(t3, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, new A._KimlikSatiri("assets/svg/ic_phone.svg", A.telefonGoster(t2.phone), _null), B.SizedBox_null_4_null_null, new A._KimlikSatiri("assets/svg/ic_mail.svg", t2.email, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), new A._Kimlik_build_closure(), t1, _null, _null);
+      return new A.RefTap(new A.Padding(B.EdgeInsets_6_10_6_10, A.Column$(A._setArrayType([new A.RefBasHarfAvatar(t3, t4, 64, _null), B.SizedBox_null_10_null_null, A.Text$(t3, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 16, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_6_null_null, new A._KimlikSatiri("assets/svg/ic_phone.svg", A.telefonGoster(t2.phone), _null), B.SizedBox_null_4_null_null, new A._KimlikSatiri("assets/svg/ic_mail.svg", t2.email, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), new A._Kimlik_build_closure(), t1, _null, _null);
     }
   };
   A._Kimlik_build_closure.prototype = {
@@ -283411,7 +283619,7 @@
   A._KimlikSatiri.prototype = {
     build$1(context) {
       var _null = null;
-      return A.Row$(A._setArrayType([new A.RefSvg(this.ikon, 14, B.Color_byQ, _null), B.SizedBox_6_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.metin, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_0, 0, _null);
+      return A.Row$(A._setArrayType([new A.RefSvg(this.ikon, 14, B.Color_byQ, _null), B.SizedBox_6_null_null_null, new A.Flexible(1, B.FlexFit_1, A.Text$(this.metin, _null, 1, B.TextOverflow_2, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_400), _null, _null), _null)], type$.JSArray_Widget), B.CrossAxisAlignment_2, B.MainAxisAlignment_2, B.MainAxisSize_0, 0, _null);
     }
   };
   A._Ayrac.prototype = {
@@ -283431,7 +283639,7 @@
       t3 = t2 ? B.Color_xQ2 : B.Color_Edl;
       t4 = A.BorderRadius$circular(9);
       t3 = A.BoxDecoration$(new A.Border(B.BorderSide_Ah5, B.BorderSide_Ah5, B.BorderSide_Ah5, new A.BorderSide(t2 ? B.Color_Dun : B.Color_Edl, 3, B.BorderStyle_1, -1)), t4, _null, t3, _null, _null, B.BoxShape_0);
-      t4 = A._setArrayType([new A.RefSvg(_this.ikon, 18, renk, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(_this.baslik, 1, B.TextOverflow_2, _null, _null, A.refText(renk, _null, _null, 0, 13.5, t2 ? B.FontWeight_700 : B.FontWeight_500), _null, _null), 1)], type$.JSArray_Widget);
+      t4 = A._setArrayType([new A.RefSvg(_this.ikon, 18, renk, _null), B.SizedBox_10_null_null_null, A.Expanded$(A.Text$(_this.baslik, _null, 1, B.TextOverflow_2, _null, _null, A.refText(renk, _null, _null, 0, 13.5, t2 ? B.FontWeight_700 : B.FontWeight_500), _null, _null), 1)], type$.JSArray_Widget);
       t2 = _this.sayi;
       if (t2 > 0)
         t4.push(new A.RefSayiRozeti(t2, B.Color_wst, _null));
@@ -283626,10 +283834,10 @@
     build$1(context) {
       var _null = null,
         t1 = type$.JSArray_Widget,
-        t2 = A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null)], t1),
+        t2 = A._setArrayType([A.Text$(this.baslik, _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 18, B.FontWeight_700), B.TextAlign_2, _null)], t1),
         t3 = this.altYazi;
       if (t3 != null)
-        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$(t3, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], t1));
+        B.JSArray_methods.addAll$1(t2, A._setArrayType([B.SizedBox_null_4_null_null, A.Text$(t3, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, _null, 0, 13, B.FontWeight_400), B.TextAlign_2, _null)], t1));
       return new A.Padding(B.EdgeInsets_20_14_20_12, A.Stack$(B.AlignmentDirectional_m1_m1, A._setArrayType([new A.Padding(B.EdgeInsets_32_0_32_0, A.Column$(t2, B.CrossAxisAlignment_2, B.MainAxisAlignment_0, B.MainAxisSize_1), _null), A.Positioned$(_null, new A.RefTap(B.Padding_zUe, new A._Baslik_build_closure(context), A.BorderRadius$circular(999), "Kapat", _null), _null, _null, _null, 0, 0, _null)], t1), B.Clip_1, B.StackFit_0, _null), _null);
     }
   };
@@ -283833,17 +284041,17 @@
       var t1, t2, t3, t4, t5, t6, _this = this, _null = null;
       type$.BuildContext._as(d);
       t1 = _this.baslik;
-      t2 = A.Text$(t1 + " g\xfcncellendi", _null, _null, _null, _null, _null, _null, _null);
+      t2 = A.Text$(t1 + " g\xfcncellendi", _null, _null, _null, _null, _null, _null, _null, _null);
       t3 = _this.ozet;
       t4 = t3 != null;
-      t3 = t4 ? A.ConstrainedBox$(A.SingleChildScrollView$(A.Column$(A._setArrayType([B.Text_R95, B.SizedBox_null_8_null_null, A.Text$(t3, _null, _null, _null, _null, _null, _null, _null), B.SizedBox_null_12_null_null, B.Text_TVJ], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null, _null), B.BoxConstraints_HdK) : B.Text_9LR;
+      t3 = t4 ? A.ConstrainedBox$(A.SingleChildScrollView$(A.Column$(A._setArrayType([B.Text_R95, B.SizedBox_null_8_null_null, A.Text$(t3, _null, _null, _null, _null, _null, _null, _null, _null), B.SizedBox_null_12_null_null, B.Text_TVJ], type$.JSArray_Widget), B.CrossAxisAlignment_0, B.MainAxisAlignment_0, B.MainAxisSize_0), _null, _null), B.BoxConstraints_HdK) : B.Text_9LR;
       t5 = A._setArrayType([], type$.JSArray_Widget);
       t6 = _this.pdf;
       if (t6 != null)
         t5.push(A.TextButton$(B.Text_E33, new A._YasalKabulKapisiState__sor__closure(t6), _null));
       else
         t5.push(A.TextButton$(B.Text_IMp, new A._YasalKabulKapisiState__sor__closure0(_this.slug, t1), _null));
-      t5.push(A.FilledButton$(A.Text$(t4 ? "Tamam" : "Kabul Et ve Devam Et", _null, _null, _null, _null, _null, _null, _null), new A._YasalKabulKapisiState__sor__closure1(_this.api, _this.slug, _this.b, d), _null));
+      t5.push(A.FilledButton$(A.Text$(t4 ? "Tamam" : "Kabul Et ve Devam Et", _null, _null, _null, _null, _null, _null, _null, _null), new A._YasalKabulKapisiState__sor__closure1(_this.api, _this.slug, _this.b, d), _null));
       return A.PopScope$(false, A.AlertDialog$(t5, t3, _null, t2), _null, type$.dynamic);
     },
     $signature: 915
@@ -284007,7 +284215,7 @@
     call$1(key) {
       return B.JSString_methods.get$hashCode(A._asString(key).toLowerCase());
     },
-    $signature: 206
+    $signature: 208
   };
   A.BaseResponse.prototype = {
     BaseResponse$7$contentLength$headers$isRedirect$persistentConnection$reasonPhrase$request(statusCode, contentLength, headers, isRedirect, persistentConnection, reasonPhrase, request) {
@@ -300708,7 +300916,7 @@
     _instance_0_u(_ = A.FallbackFontService.prototype, "get$__engine$_process", "__engine$_process$0", 0);
     _instance_1_u(_, "get$_startDownloadTask", "_startDownloadTask$1", 1045);
     _instance_0_u(A.FrameService.prototype, "get$_dispose", "_dispose$0", 0);
-    _instance_1_u(_ = A.KeyboardBinding.prototype, "get$_onKeyData", "_onKeyData$1", 203);
+    _instance_1_u(_ = A.KeyboardBinding.prototype, "get$_onKeyData", "_onKeyData$1", 204);
     _instance_0_u(_, "get$_reset", "_reset$0", 0);
     _instance_1_u(A.NWayCanvas.prototype, "get$addCanvas", "addCanvas$1", 961);
     _instance_1_i(A.MultiEntriesBrowserHistory.prototype, "get$onPopState", "onPopState$1", 33);
@@ -300716,9 +300924,9 @@
     _instance_0_u(_ = A.EnginePlatformDispatcher.prototype, "get$dispose", "dispose$0", 0);
     _instance_1_u(_, "get$invokeOnViewFocusChange", "invokeOnViewFocusChange$1", 310);
     _instance_1_u(_, "get$_setAppLifecycleState", "_setAppLifecycleState$1", 311);
-    _instance_1_u(_, "get$_updatePlatformBrightness", "_updatePlatformBrightness$1", 10);
-    _instance_1_u(_, "get$_updateHighContrast", "_updateHighContrast$1", 10);
-    _instance_1_u(_, "get$_updateReducedMotion", "_updateReducedMotion$1", 10);
+    _instance_1_u(_, "get$_updatePlatformBrightness", "_updatePlatformBrightness$1", 11);
+    _instance_1_u(_, "get$_updateHighContrast", "_updateHighContrast$1", 11);
+    _instance_1_u(_, "get$_updateReducedMotion", "_updateReducedMotion$1", 11);
     _instance_1_u(A._BrowserAppLifecycleState.prototype, "get$_onViewCountChanged", "_onViewCountChanged$1", 35);
     _instance_1_u(A.MediaQueryManager.prototype, "get$__engine$_removeListeners", "__engine$_removeListeners$1", 6);
     _instance_1_u(A._MediaQueryListeners.prototype, "get$__engine$_removeListener", "__engine$_removeListener$1", 944);
@@ -300830,7 +301038,7 @@
     _instance_1_u(A._CustomZone.prototype, "get$scheduleMicrotask", "scheduleMicrotask$1", 69);
     _instance_1_u(A._RootZone.prototype, "get$scheduleMicrotask", "scheduleMicrotask$1", 69);
     _static_2(A, "collection___defaultEquals$closure", "_defaultEquals", 168);
-    _static_1(A, "collection___defaultHashCode$closure", "_defaultHashCode", 181);
+    _static_1(A, "collection___defaultHashCode$closure", "_defaultHashCode", 182);
     _static_2(A, "collection_ListBase__compareAny$closure", "ListBase__compareAny", 155);
     _static_2(A, "collection___dynamicCompare$closure", "_dynamicCompare", 155);
     _instance_1_i(A._LinkedCustomHashMap.prototype, "get$containsKey", "containsKey$1", 31);
@@ -300842,12 +301050,12 @@
     _instance_1_i(A.MapView.prototype, "get$containsKey", "containsKey$1", 31);
     _instance(_ = A.SplayTreeSet.prototype, "get$_newSet", 0, 0, null, ["call$1$0", "call$0"], ["_newSet$1$0", "_newSet$0"], 126, 0, 0);
     _instance_1_i(_, "get$contains", "contains$1", 31);
-    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 209);
+    _static_1(A, "convert___defaultToEncodable$closure", "_defaultToEncodable", 210);
     _instance_0_i(A._JsonDecoderSink.prototype, "get$close", "close$0", 0);
     _instance_1_i(_ = A._ByteCallbackSink.prototype, "get$add", "add$1", 33);
     _instance_0_i(_, "get$close", "close$0", 0);
     _instance_0_i(A._StringSinkConversionSink.prototype, "get$close", "close$0", 0);
-    _static_1(A, "core__identityHashCode$closure", "identityHashCode", 181);
+    _static_1(A, "core__identityHashCode$closure", "identityHashCode", 182);
     _static_2(A, "core__identical$closure", "identical", 168);
     _static_2(A, "core_Comparable_compare$closure", "Comparable_compare", 1025);
     _static_0(A, "core_DateTime___now_tearOff$closure", "DateTime___now_tearOff", 276);
@@ -300869,7 +301077,7 @@
     _instance(_ = A.HashUrlStrategy.prototype, "get$pushState", 1, 3, null, ["call$3"], ["pushState$3"], 321, 0, 0);
     _instance(_, "get$replaceState", 1, 3, null, ["call$3"], ["replaceState$3"], 321, 0, 0);
     _instance_2_u(_ = A.DeepCollectionEquality.prototype, "get$equals", "equals$2", 168);
-    _instance_1_i(_, "get$hash", "hash$1", 181);
+    _instance_1_i(_, "get$hash", "hash$1", 182);
     _instance_1_u(_, "get$isValidKey", "isValidKey$1", 31);
     _static_1(A, "utils__parseConnectivityResults$closure", "parseConnectivityResults", 1031);
     _instance_0_i(A.XFileBase.prototype, "get$length", "length$0", 352);
@@ -300904,7 +301112,7 @@
     _instance(_, "get$_button$_handleTap", 0, 0, function() {
       return [null];
     }, ["call$1", "call$0"], ["_button$_handleTap$1", "_button$_handleTap$0"], 290, 0, 0);
-    _instance_1_u(_, "get$_onShowFocusHighlight", "_onShowFocusHighlight$1", 10);
+    _instance_1_u(_, "get$_onShowFocusHighlight", "_onShowFocusHighlight$1", 11);
     _instance_1_u(_ = A._CupertinoDesktopTextSelectionToolbarButtonState.prototype, "get$_onEnter", "_onEnter$1", 81);
     _instance_1_u(_, "get$_onExit", "_onExit$1", 71);
     _instance_0_u(A._CupertinoTextMagnifierState.prototype, "get$_magnifier0$_determineMagnifierPositionAndFocalPoint", "_magnifier0$_determineMagnifierPositionAndFocalPoint$0", 0);
@@ -300934,10 +301142,10 @@
     _instance_0_u(_, "get$dispose", "dispose$0", 0);
     _instance_0_u(_, "get$notifyListeners", "notifyListeners$0", 0);
     _instance_1_i(A.DiagnosticPropertiesBuilder.prototype, "get$add", "add$1", 166);
-    _instance_1_u(_ = A.FlutterMemoryAllocations.prototype, "get$_imageOnCreate", "_imageOnCreate$1", 213);
-    _instance_1_u(_, "get$_pictureOnCreate", "_pictureOnCreate$1", 211);
-    _instance_1_u(_, "get$_imageOnDispose", "_imageOnDispose$1", 213);
-    _instance_1_u(_, "get$_pictureOnDispose", "_pictureOnDispose$1", 211);
+    _instance_1_u(_ = A.FlutterMemoryAllocations.prototype, "get$_imageOnCreate", "_imageOnCreate$1", 219);
+    _instance_1_u(_, "get$_pictureOnCreate", "_pictureOnCreate$1", 213);
+    _instance_1_u(_, "get$_imageOnDispose", "_imageOnDispose$1", 219);
+    _instance_1_u(_, "get$_pictureOnDispose", "_pictureOnDispose$1", 213);
     _static(A, "print__debugPrintThrottled$closure", 1, function() {
       return {wrapWidth: null};
     }, ["call$2$wrapWidth", "call$1"], ["debugPrintThrottled", function(message) {
@@ -300995,7 +301203,7 @@
     _instance(_, "get$simulateTap", 0, 0, null, ["call$1", "call$0"], ["simulateTap$1", "simulateTap$0"], 290, 0, 0);
     _instance_0_u(_, "get$handleStatesControllerChange", "handleStatesControllerChange$0", 0);
     _instance_1_u(_, "get$handleFocusHighlightModeChange", "handleFocusHighlightModeChange$1", 283);
-    _instance_1_u(_, "get$handleFocusUpdate", "handleFocusUpdate$1", 10);
+    _instance_1_u(_, "get$handleFocusUpdate", "handleFocusUpdate$1", 11);
     _instance_1_u(_, "get$handleTapDown", "handleTapDown$1", 58);
     _instance_1_u(_, "get$handleTapUp", "handleTapUp$1", 139);
     _instance_1_u(_, "get$handleSecondaryTapDown", "handleSecondaryTapDown$1", 58);
@@ -301088,10 +301296,10 @@
     _instance_0_u(_, "get$_showHideCursor", "_showHideCursor$0", 0);
     _instance_1_u(_, "get$_handleSetText", "_handleSetText$1", 6);
     _instance_1_u(_, "get$_handleSetSelection", "_handleSetSelection$1", 373);
-    _instance_1_u(_, "get$_handleMoveCursorForwardByCharacter", "_handleMoveCursorForwardByCharacter$1", 10);
-    _instance_1_u(_, "get$_handleMoveCursorBackwardByCharacter", "_handleMoveCursorBackwardByCharacter$1", 10);
-    _instance_1_u(_, "get$_handleMoveCursorForwardByWord", "_handleMoveCursorForwardByWord$1", 10);
-    _instance_1_u(_, "get$_handleMoveCursorBackwardByWord", "_handleMoveCursorBackwardByWord$1", 10);
+    _instance_1_u(_, "get$_handleMoveCursorForwardByCharacter", "_handleMoveCursorForwardByCharacter$1", 11);
+    _instance_1_u(_, "get$_handleMoveCursorBackwardByCharacter", "_handleMoveCursorBackwardByCharacter$1", 11);
+    _instance_1_u(_, "get$_handleMoveCursorForwardByWord", "_handleMoveCursorForwardByWord$1", 11);
+    _instance_1_u(_, "get$_handleMoveCursorBackwardByWord", "_handleMoveCursorBackwardByWord$1", 11);
     _instance_1_u(_, "get$computeMinIntrinsicWidth", "computeMinIntrinsicWidth$1", 2);
     _instance_1_u(_, "get$computeMaxIntrinsicWidth", "computeMaxIntrinsicWidth$1", 2);
     _instance_1_u(_, "get$computeMinIntrinsicHeight", "computeMinIntrinsicHeight$1", 2);
@@ -301117,7 +301325,7 @@
     _instance_0_u(_, "get$markNeedsPaint", "markNeedsPaint$0", 0);
     _instance(_, "get$paint", 0, 2, null, ["call$2"], ["paint$2"], 28, 0, 1);
     _instance_0_u(_, "get$markNeedsSemanticsUpdate", "markNeedsSemanticsUpdate$0", 0);
-    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 182, 0, 0);
+    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 167, 0, 0);
     _instance_1_u(_ = A.ContainerRenderObjectMixin.prototype, "get$childBefore", "childBefore$1", "ContainerRenderObjectMixin.0?(Object?)");
     _instance_1_u(_, "get$childAfter", "childAfter$1", "ContainerRenderObjectMixin.0?(Object?)");
     _instance_0_u(A.RelayoutWhenSystemFontsChangeMixin.prototype, "get$_scheduleSystemFontsUpdate", "_scheduleSystemFontsUpdate$0", 0);
@@ -301209,7 +301417,7 @@
     _instance_1_u(_, "get$computeMinIntrinsicHeight", "computeMinIntrinsicHeight$1", 2);
     _instance_1_u(_, "get$computeMaxIntrinsicHeight", "computeMaxIntrinsicHeight$1", 2);
     _instance_2_u(_, "get$_paintContents", "_paintContents$2", 28);
-    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 182, 0, 0);
+    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 167, 0, 0);
     _static_1(A, "wrap_RenderWrap__getChildSize$closure", "RenderWrap__getChildSize", 350);
     _static_2(A, "wrap_RenderWrap__setChildPosition$closure", "RenderWrap__setChildPosition", 351);
     _instance_1_u(_ = A.RenderWrap.prototype, "get$computeMinIntrinsicWidth", "computeMinIntrinsicWidth$1", 2);
@@ -301218,7 +301426,7 @@
     _instance_1_u(_, "get$computeMaxIntrinsicHeight", "computeMaxIntrinsicHeight$1", 2);
     _static_2(A, "binding2_SchedulerBinding__taskSorter$closure", "SchedulerBinding__taskSorter", 1056);
     _static(A, "binding2__defaultSchedulingStrategy$closure", 0, null, ["call$2$priority$scheduler"], ["defaultSchedulingStrategy"], 1057, 0);
-    _instance_1_u(_ = A.SchedulerBinding.prototype, "get$_executeTimingsCallbacks", "_executeTimingsCallbacks$1", 196);
+    _instance_1_u(_ = A.SchedulerBinding.prototype, "get$_executeTimingsCallbacks", "_executeTimingsCallbacks$1", 211);
     _instance_0_u(_, "get$_runTasks", "_runTasks$0", 0);
     _instance_1_u(_, "get$_handleBeginFrame", "_handleBeginFrame$1", 4);
     _instance_0_u(_, "get$_handleDrawFrame", "_handleDrawFrame$0", 0);
@@ -301262,7 +301470,7 @@
     _instance_1_u(_, "get$_handleLifecycleMessage", "_handleLifecycleMessage$1", 437);
     _instance_1_u(_, "get$_handlePlatformMessage", "_handlePlatformMessage$1", 143);
     _instance_0_u(A.HardwareKeyboard.prototype, "get$_debugPressedKeysDetails", "_debugPressedKeysDetails$0", 142);
-    _instance_1_u(_ = A.KeyEventManager.prototype, "get$handleKeyData", "handleKeyData$1", 203);
+    _instance_1_u(_ = A.KeyEventManager.prototype, "get$handleKeyData", "handleKeyData$1", 204);
     _instance_1_u(_, "get$handleRawKeyMessage", "handleRawKeyMessage$1", 441);
     _instance_1_u(_, "get$_convertRawEventAndStore", "_convertRawEventAndStore$1", 442);
     _instance_1_u(_ = A.RestorationManager.prototype, "get$_methodHandler", "_methodHandler$1", 152);
@@ -301280,7 +301488,7 @@
     _instance_1_u(_ = A._FocusableActionDetectorState.prototype, "get$_handleFocusHighlightModeChange", "_handleFocusHighlightModeChange$1", 283);
     _instance_1_u(_, "get$_actions$_handleMouseEnter", "_actions$_handleMouseEnter$1", 81);
     _instance_1_u(_, "get$_actions$_handleMouseExit", "_actions$_handleMouseExit$1", 71);
-    _instance_1_u(_, "get$_actions$_handleFocusChange", "_actions$_handleFocusChange$1", 10);
+    _instance_1_u(_, "get$_actions$_handleFocusChange", "_actions$_handleFocusChange$1", 11);
     _instance_1_u(_ = A._WidgetsAppState.prototype, "get$_defaultOnNavigationNotification", "_defaultOnNavigationNotification$1", 323);
     _instance_1_u(_, "get$_onGenerateRoute", "_onGenerateRoute$1", 472);
     _instance_1_u(_, "get$_onUnknownRoute", "_onUnknownRoute$1", 473);
@@ -301425,7 +301633,7 @@
     _static(A, "pages___defaultTransitionsBuilder$closure", 4, null, ["call$4"], ["_defaultTransitionsBuilder"], 338, 0);
     _instance_1_u(A.DefaultPlatformMenuDelegate.prototype, "get$_methodCallHandler", "_methodCallHandler$1", 152);
     _instance_1_u(_ = A._PlatformViewLinkState.prototype, "get$_onPlatformViewCreated", "_onPlatformViewCreated$1", 35);
-    _instance_1_u(_, "get$_handleFrameworkFocusChanged", "_handleFrameworkFocusChanged$1", 10);
+    _instance_1_u(_, "get$_handleFrameworkFocusChanged", "_handleFrameworkFocusChanged$1", 11);
     _instance_1_u(_ = A.RawTooltipState.prototype, "get$_raw_tooltip$_handleStatusChanged", "_raw_tooltip$_handleStatusChanged$1", 19);
     _instance_1_u(_, "get$_raw_tooltip$_handlePointerDown", "_raw_tooltip$_handlePointerDown$1", 66);
     _instance_1_u(_, "get$_handleGlobalPointerEvent", "_handleGlobalPointerEvent$1", 44);
@@ -301461,7 +301669,7 @@
     _instance_0_u(_ = A.ScrollPosition.prototype, "get$didUpdateScrollMetrics", "didUpdateScrollMetrics$0", 0);
     _instance_0_u(_, "get$dispose", "dispose$0", 0);
     _instance_0_u(A.ScrollPositionWithSingleContext.prototype, "get$dispose", "dispose$0", 0);
-    _instance_1_u(_ = A.ScrollableState.prototype, "get$_handleDragDown", "_handleDragDown$1", 210);
+    _instance_1_u(_ = A.ScrollableState.prototype, "get$_handleDragDown", "_handleDragDown$1", 195);
     _instance_1_u(_, "get$_scrollable$_handleDragStart", "_scrollable$_handleDragStart$1", 67);
     _instance_1_u(_, "get$_scrollable$_handleDragUpdate", "_scrollable$_handleDragUpdate$1", 42);
     _instance_1_u(_, "get$_scrollable$_handleDragEnd", "_scrollable$_handleDragEnd$1", 57);
@@ -301481,7 +301689,7 @@
     _instance_1_u(_, "get$handleTrackTapDown", "handleTrackTapDown$1", 58);
     _instance_1_u(_, "get$_scrollbar$_handleScrollMetricsNotification", "_scrollbar$_handleScrollMetricsNotification$1", 194);
     _instance_1_u(_, "get$_handleScrollNotification", "_handleScrollNotification$1", 62);
-    _instance_1_u(_, "get$_handleThumbDragDown", "_handleThumbDragDown$1", 210);
+    _instance_1_u(_, "get$_handleThumbDragDown", "_handleThumbDragDown$1", 195);
     _instance_1_u(_, "get$_handleThumbDragStart", "_handleThumbDragStart$1", 67);
     _instance_1_u(_, "get$_handleThumbDragUpdate", "_handleThumbDragUpdate$1", 42);
     _instance_1_u(_, "get$_handleThumbDragEnd", "_handleThumbDragEnd$1", 57);
@@ -301489,7 +301697,7 @@
     _instance_1_u(_, "get$_initThumbDragGestureRecognizer", "_initThumbDragGestureRecognizer$1", 626);
     _instance_1_u(_, "get$_handlePointerScroll", "_handlePointerScroll$1", 44);
     _instance_1_u(_, "get$_scrollbar$_receivedPointerSignal", "_scrollbar$_receivedPointerSignal$1", 190);
-    _static_2(A, "selectable_region_MultiSelectableSelectionContainerDelegate__compareScreenOrder$closure", "MultiSelectableSelectionContainerDelegate__compareScreenOrder", 226);
+    _static_2(A, "selectable_region_MultiSelectableSelectionContainerDelegate__compareScreenOrder$closure", "MultiSelectableSelectionContainerDelegate__compareScreenOrder", 229);
     _instance_1_u(_ = A.StaticSelectionContainerDelegate.prototype, "get$clearInternalSelectionStateForSelectable", "clearInternalSelectionStateForSelectable$1", 78);
     _instance_1_i(_, "get$remove", "remove$1", 78);
     _instance_0_u(_, "get$dispose", "dispose$0", 0);
@@ -301505,12 +301713,12 @@
     _instance_1_u(_, "get$computeMaxIntrinsicWidth", "computeMaxIntrinsicWidth$1", 2);
     _instance_1_u(_, "get$computeMinIntrinsicHeight", "computeMinIntrinsicHeight$1", 2);
     _instance_1_u(_, "get$computeMaxIntrinsicHeight", "computeMaxIntrinsicHeight$1", 2);
-    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 182, 0, 0);
+    _instance(_, "get$showOnScreen", 0, 0, null, ["call$4$curve$descendant$duration$rect", "call$0", "call$1$rect", "call$3$curve$duration$rect", "call$2$descendant$rect"], ["showOnScreen$4$curve$descendant$duration$rect", "showOnScreen$0", "showOnScreen$1$rect", "showOnScreen$3$curve$duration$rect", "showOnScreen$2$descendant$rect"], 167, 0, 0);
     _instance_1_u(A.SliverMultiBoxAdaptorElement.prototype, "get$removeChild", "removeChild$1", 640);
     _instance_0_u(A._RenderSnapshotWidget.prototype, "get$_onRasterValueChanged", "_onRasterValueChanged$0", 0);
     _instance_0_u(A._DefaultSnapshotPainter.prototype, "get$dispose", "dispose$0", 0);
     _instance_1_u(A.RenderTapRegionSurface.prototype, "get$_handleSemanticsAction", "_handleSemanticsAction$1", 177);
-    _static_2(A, "text__SelectableTextContainerDelegate__compareScreenOrder$closure", "_SelectableTextContainerDelegate__compareScreenOrder", 226);
+    _static_2(A, "text__SelectableTextContainerDelegate__compareScreenOrder$closure", "_SelectableTextContainerDelegate__compareScreenOrder", 229);
     _instance_0_u(_ = A.TextSelectionOverlay.prototype, "get$_updateTextSelectionOverlayVisibilities", "_updateTextSelectionOverlayVisibilities$0", 0);
     _instance_1_u(_, "get$_handleSelectionEndHandleDragStart", "_handleSelectionEndHandleDragStart$1", 67);
     _instance_1_u(_, "get$_handleSelectionEndHandleDragUpdate", "_handleSelectionEndHandleDragUpdate$1", 42);
@@ -301602,7 +301810,7 @@
     _instance_1_u(_, "get$_onFrameStart", "_onFrameStart$1", 4);
     _instance_1_u(_, "get$_onFrameEnd", "_onFrameEnd$1", 4);
     _instance_0_u(_ = A._WidgetInspectorState.prototype, "get$_selectionInformationChanged", "_selectionInformationChanged$0", 0);
-    _instance_1_u(_, "get$_handlePanDown", "_handlePanDown$1", 210);
+    _instance_1_u(_, "get$_handlePanDown", "_handlePanDown$1", 195);
     _instance_1_u(_, "get$_handlePanUpdate", "_handlePanUpdate$1", 42);
     _instance_1_u(_, "get$_handlePanEnd", "_handlePanEnd$1", 57);
     _instance_0_u(_, "get$_widget_inspector$_handleTap", "_widget_inspector$_handleTap$0", 0);
@@ -301681,7 +301889,7 @@
     _instance_0_u(_, "get$_sifreSifirla", "_sifreSifirla$0", 3);
     _instance(_ = A._ChatScreenState.prototype, "get$_chat_screen$_send", 0, 0, null, ["call$1$imagePath", "call$0"], ["_chat_screen$_send$1$imagePath", "_chat_screen$_send$0"], 801, 0, 0);
     _instance_0_u(_, "get$_pickPhoto", "_pickPhoto$0", 3);
-    _instance(A._SohbetFotografi.prototype, "get$_hata", 0, 3, null, ["call$3"], ["_hata$3"], 205, 0, 0);
+    _instance(A._SohbetFotografi.prototype, "get$_hata", 0, 3, null, ["call$3"], ["_hata$3"], 206, 0, 0);
     _instance_0_u(_ = A._CreateListingScreenState.prototype, "get$_kayitKoduGonder", "_kayitKoduGonder$0", 93);
     _instance_0_u(_, "get$_geriAdim", "_geriAdim$0", 0);
     _instance_0_u(_, "get$_create_listing_screen$_next", "_create_listing_screen$_next$0", 0);
@@ -301830,9 +302038,9 @@
     _static_2(A, "layout_helper_ChildLayoutHelper_layoutChild$closure", "ChildLayoutHelper_layoutChild", 77);
     _static(A, "layout_helper_ChildLayoutHelper_getDryBaseline$closure", 3, null, ["call$3"], ["ChildLayoutHelper_getDryBaseline"], 364, 0);
     _static(A, "layout_helper_ChildLayoutHelper_getBaseline$closure", 3, null, ["call$3"], ["ChildLayoutHelper_getBaseline"], 364, 0);
-    _static_2(A, "failure_joiner__selectFirst$closure", "selectFirst", 195);
-    _static_2(A, "failure_joiner__selectLast$closure", "selectLast", 195);
-    _static_2(A, "failure_joiner__selectFarthest$closure", "selectFarthest", 195);
+    _static_2(A, "failure_joiner__selectFirst$closure", "selectFirst", 196);
+    _static_2(A, "failure_joiner__selectLast$closure", "selectLast", 196);
+    _static_2(A, "failure_joiner__selectFarthest$closure", "selectFarthest", 196);
     _static_2(A, "parsers___parseSvgMatrix$closure", "_parseSvgMatrix", 83);
     _static_2(A, "parsers___parseSvgSkewX$closure", "_parseSvgSkewX", 83);
     _static_2(A, "parsers___parseSvgSkewY$closure", "_parseSvgSkewY", 83);
@@ -301847,8 +302055,8 @@
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
     _inheritMany(A.Object, [A.AlarmClock, A.AppBootstrap, A.Closure, A.Arena, A.CkCanvas, A.ManagedSkColorFilter, A.CkColorFilter, A.SkiaFontCollection, A.RegisteredFont, A.UnregisteredFont, A.FontDownloadResult, A.SkiaFallbackRegistry, A.ResizingCodec, A.HtmlImageElementCodec, A.CkImageDelegate, A.CkImageFilter, A.CkAnimatedImage, A.BrowserImageDecoder, A.UniqueRef, A.CountedRef, A.CkPaint, A.CkPath, A.CkPathBuilder, A.CkPathConstructors, A.CkPicture, A.CkPictureRecorder, A.Renderer, A.SimpleCkShader, A.CkImageShader, A.Surface, A.CkParagraphStyle, A.CkTextStyle, A.CkStrutStyle, A.CkParagraph, A.CkLineMetrics, A.CkParagraphBuilder, A.CkVertices, A.WebParagraphPainter, A.ClipboardMessageHandler, A.ClipboardStrategy, A._Enum, A.EngineColorFilter, A.CanvasProvider, A.Composition, A.CompositionEntity, A.DisplayCanvasFactory, A.Rasterizer, A.ViewRasterizer, A.DisplayCanvas, A.RenderQueue, A.SurfaceProvider, A.FlutterConfiguration, A.Display, A.ScreenOrientation, A.HttpFetchResponseImpl, A.HttpFetchPayloadImpl, A.HttpFetchNoPayloadError, A.HttpFetchError, A.DomSubscription, A.DomPoint, A._DomListIterator, A.Iterable, A.DomIteratorWrapper, A.FallbackFontService, A.FontFallbackManager, A._UnicodePropertyLookup, A.FontAsset, A.FontFamily, A.FontManifest, A.Error, A.AssetFontsResult, A.FrameService, A.FrameTimingRecorder, A._HtmlCodecDisposedException, A.SingleFrameInfo, A.AnimatedImageFrameInfo, A.ImageCodecException, A.ImageDecodingManager, A.ImageDecodingRequest, A.ImageDecodingCancelledException, A._WebpHeaderReader, A._GifHeaderReader, A.KeyboardBinding, A.FlutterHtmlKeyboardEvent, A.KeyboardConverter, A.Layer, A.LayerScene, A.LayerSceneBuilder, A.LayerTree, A.Frame, A.CompositorContext, A.LayerVisitor, A.NWayCanvas, A.ContextMenu, A.MouseCursor0, A.NativeMemoryFinalizer, A.BrowserHistory, A.NotoFont, A.FallbackFontComponent, A.OcclusionMapEmpty, A.OcclusionMapLeaf, A.OcclusionMapBranch, A.OcclusionMap, A.PlatformDispatcher, A.ViewConfiguration0, A.PlatformConfiguration, A.NavigationTarget, A.AppLifecycleState0, A.MediaQueryManager, A._MediaQueryListeners, A.ViewFocusBinding, A.PlatformViewManager, A.PlatformViewEmbedder, A.ViewClipChain, A.EmbeddedViewParams, A.Mutator, A.SceneElement, A.EmbedderFrameContext, A.PlatformViewMessageHandler, A.SafariPointerEventWorkaround, A.PointerBinding, A.ClickDebouncer, A.PointerSupportDetector, A.Listener, A._BaseAdapter, A._WheelEventListenerMixin, A._SanitizedDetails, A._ButtonSanitizer, A._PointerDeviceState, A._GlobalPointerState, A.PointerDataConverter, A.EngineImage, A.ImageSource, A.MoveToCommand, A.LineToCommand, A.RelativeLineToCommand, A.QuadraticBezierToCommand, A.CubicToCommand, A.ConicToCommand, A.ArcToCommand, A.ArcToPointCommand, A.AddRectCommand, A.AddOvalCommand, A.AddArcCommand, A.AddPolygonCommand, A.AddRRectCommand, A.AddRSuperellipseCommand, A.ShiftInPlaceCommand, A.AddPathCommand, A.ClosePathCommand, A.EnginePath, A.Profiler, A.RawKeyboard, A.AccessibilityAnnouncements, A.SemanticRole, A.SemanticBehavior, A.AccessibilityFocusManager, A.LabelRepresentationBehavior, A.EngineAccessibilityFeatures, A.SemanticsUpdate, A.SemanticsNodeUpdate, A.SemanticsObject, A.EngineSemantics, A.EngineSemanticsOwner, A.SemanticsHelper, A.SemanticsEnabler, A._DefaultTextEditingStrategy_Object_CompositionAwareMixin, A.ListBase, A.MethodCall, A.PlatformException, A.StringCodec, A.JSONMessageCodec, A.JSONMethodCodec, A.StandardMessageCodec, A.StandardMethodCodec, A.WriteBuffer0, A.ReadBuffer0, A.TestHistoryEntry, A.TestUrlStrategy, A.LineBreakFragment, A.EngineLineMetrics, A.BrowserAutofillHints, A.CompositionAwareMixin, A.EngineInputAction, A.EngineInputType, A.TextCapitalizationConfig, A.EngineAutofillForm, A.FieldItem, A.AutofillInfo, A.TextEditingDeltaState, A.EditingState, A.InputConfiguration, A.TextInputCommand, A.TextEditingChannel, A.HybridTextEditing, A.EditableTextStyle, A.EditableTextGeometry, A.LruCache, A.BitmapSize, A.Matrix40, A.DimensionsProvider, A.DisplayDprStream, A.DomManager, A.CustomElementEmbeddingStrategy, A.FullPageEmbeddingStrategy, A.FlutterViewManager, A.GlobalHtmlAttributes, A.HotRestartCacheHandler, A.BidiRun, A.AllCodeUnitFlags, A.WebFontCollection, A.TextLayout, A._TextClusterMapping, A.WebCluster, A.LineBlock, A.TextLine, A.WebParagraphStyle, A.SharedTextStyle, A.ClusterRange, A.TextRange, A.WebParagraph, A.WebParagraphBuilder, A.StyleNode, A.TextWrapper, A._LineBuilder, A.EngineFlutterView, A.ViewPadding, A.ViewConstraints, A.JS_CONST, A.HttpException, J.Interceptor, A.SafeToStringHook, J.ArrayIterator, A.CastIterator, A.MapBase, A.SentinelValue, A.ListIterator, A.MappedIterator, A.WhereIterator, A.ExpandIterator, A.TakeIterator, A.SkipIterator, A.SkipWhileIterator, A.EmptyIterator, A.FollowedByIterator, A.WhereTypeIterator, A.NonNullsIterator, A.IndexedIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.Symbol, A._Record, A.MapView, A.ConstantMap, A._KeysOrValuesOrElementsIterator, A.SetBase, A.JSInvocationMirror, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A._Required, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.LinkedHashMapValueIterator, A.LinkedHashMapEntryIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A.StringMatch, A._StringAllMatchesIterator, A._Cell, A._InitializedCell, A._UnmodifiableNativeByteBufferView, A.Rti, A._FunctionParameters, A._Type, A._StringStream, A.LocaleKeymap, A.EmbeddedTestFont, A._TimerImpl, A._AsyncAwaitCompleter, A._SyncStarIterator, A.AsyncError, A.Stream, A._BufferingStreamSubscription, A._BroadcastStreamController, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamController, A._SyncStreamControllerDispatch, A._AsyncStreamControllerDispatch, A._DelayedEvent, A._DelayedDone, A._PendingEvents, A._DoneStreamSubscription, A._StreamIterator, A._ZoneRun, A._ZoneRunUnary, A._ZoneRunBinary, A._ZoneRegisterCallback, A._ZoneRegisterUnaryCallback, A._ZoneRegisterBinaryCallback, A._ZoneErrorCallback, A._ZoneScheduleMicrotask, A._ZoneCreateTimer, A._ZoneCreatePeriodicTimer, A._ZonePrint, A._ZoneFork, A._ZoneHandleUncaughtError, A._ZoneValues, A._Zone, A._ZoneDelegate, A.ZoneSpecification, A._HashMapKeyIterator, A._HashSetIterator, A._LinkedHashSetCell, A._LinkedHashSetIterator, A._LinkedListIterator, A.LinkedListEntry, A._MapBaseValueIterator, A._UnmodifiableMapMixin, A._DoubleLinkedQueueEntry, A._DoubleLinkedQueueIterator, A._ListQueueIterator, A._SplayTreeNode, A._SplayTree, A._SplayTreeIterator, A.StringConversionSink, A.Codec, A.Converter, A._Base64Encoder, A.ByteConversionSink, A._Base64Decoder, A.ChunkedConversionSink, A._SimpleCallbackSink, A._JsonStringifier, A._JsonPrettyPrintMixin, A._ClosableStringSink, A._StringConversionSinkAsStringSinkAdapter, A._Utf8Encoder, A._Utf8Decoder, A._WeakReferenceWrapper, A.DateTime, A.Duration, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.Stopwatch, A.RuneIterator, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.Expando, A._FakeUserTag, A.ServiceExtensionResponse, A.TimelineTask, A._AsyncBlock, A._SyncBlock, A.CssStyleDeclarationBase, A.EventStreamProvider, A._EventStreamSubscription0, A.ImmutableListMixin, A.FixedSizeListIterator, A._AcceptStructuredClone, A.NullRejectionException, A._JSRandom, A._JSSecureRandom, A.Endian, A._ChannelCallbackRecord, A._StoredMessage, A._Channel, A.ChannelBuffers, A.OffsetBase, A.Rect, A.Radius, A._RRectLike, A.KeyData, A.Color, A.MaskFilter, A._IdentityColorTransform, A._ClampTransform, A._P3ToSrgbTransform, A._SrgbToP3Transform, A.ImageFilter, A.Shadow, A.ImmutableBuffer, A.ImageDescriptor, A.FrameTiming, A.Locale, A.SemanticsActionEvent, A.ViewFocusEvent, A.HitTestResponse, A.PointerData, A.PointerDataPacket, A._ConicParam, A._RSuperellipseOctant, A._RSuperellipseQuadrant, A._RSuperellipsePathBuilder, A._RSuperellipseCacheKey, A._RSuperellipseCache, A.SemanticsAction, A.SemanticsFlags, A.SemanticsUpdateBuilder, A.FontWeight, A.FontVariation, A.GlyphInfo, A.TextDecoration, A.TextHeightBehavior, A.TextBox, A.TextPosition, A.ParagraphConstraints, A.CallbackHandle, A.FrameData, A.GestureSettings, A.AssetManager, A.BrowserDetection, A.BrowserPlatformLocation, A.HashUrlStrategy, A.PlatformViewRegistry, A.TestEnvironment, A.StringCharacterRange, A.Breaks, A.BackBreaks, A.CanonicalizedMap, A.DefaultEquality, A.ListEquality, A._UnorderedEquality, A._MapEntry, A.MapEquality, A.DeepCollectionEquality, A.HeapPriorityQueue, A.Connectivity, A.PlatformInterface, A.XFileBase, A.Digest, A.DigestSink, A.HashSink, A.ConfirmationResult, A.FirebaseException, A.RecaptchaVerifier0, A.User, A.UserCredential, A.AdditionalUserInfo, A.AuthCredential, A.AuthProvider, A._ValueWrapper, A.PigeonMultiFactorSession, A.PigeonPhoneMultiFactorAssertion, A.PigeonMultiFactorInfo, A.AuthPigeonFirebaseApp, A.PigeonActionCodeInfoData, A.PigeonActionCodeInfo, A.PigeonAdditionalUserInfo, A.PigeonAuthCredential, A.PigeonUserInfo, A.PigeonUserDetails, A.PigeonUserCredential, A.PigeonActionCodeSettings, A.PigeonFirebaseAuthSettings, A.PigeonSignInProvider, A.PigeonVerifyPhoneNumberRequest, A.PigeonIdTokenResult, A.PigeonUserProfile, A.PigeonTotpSecret, A.StandardMessageCodec0, A.FirebaseAuthHostApi, A.FirebaseAuthUserHostApi, A.MultiFactorUserHostApi, A.MultiFactoResolverHostApi, A.MultiFactorInfo, A.UserInfo, A.UserMetadata, A.JsObjectWrapper, A.FirebaseApp, A.FirebaseOptions, A.CoreFirebaseOptions, A.CoreInitializeResponse, A.FirebaseCoreHostApi, A.FirebaseAppHostApi, A.FirebaseWebService, A.TrustedTypesException, A.Listenable, A.Simulation, A._AnimationStyle_Object_Diagnosticable, A.AnimationWithParentMixin, A.ParametricCurve, A.AnimationLazyListenerMixin, A.AnimationEagerListenerMixin, A.AnimationLocalListenersMixin, A.AnimationLocalStatusListenersMixin, A.Animatable, A.TweenSequenceItem, A._Interval, A._DiagnosticableTree_Object_Diagnosticable, A._State_Object_Diagnosticable, A._CupertinoDynamicColor_Object_Diagnosticable, A.TextSelectionControls, A._IconThemeData_Object_Diagnosticable, A.LocalizationsDelegate, A.DefaultCupertinoLocalizations, A._CupertinoBackGestureController, A._Decoration_Object_Diagnosticable, A.BoxPainter, A.PageTransitionsBuilder, A._RenderObject_Object_DiagnosticableTreeMixin, A._CupertinoTextThemeData_Object_Diagnosticable, A._TextThemeDefaultsBuilder, A.NoDefaultCupertinoThemeData, A._CupertinoThemeDefaults, A._CupertinoTextThemeDefaults, A.PartialStackFrame, A.StackFilter, A.DiagnosticsNode, A._FlutterErrorDetails_Object_Diagnosticable, A.BindingBase, A.ChangeNotifier, A.TextTreeConfiguration, A._PrefixedStringBuilder, A._NoDefaultValue, A.TextTreeRenderer, A.DiagnosticPropertiesBuilder, A.Diagnosticable, A.DiagnosticableTreeMixin, A.Key, A.LicenseEntry, A.ObjectEvent, A.FlutterMemoryAllocations, A.PersistentHashMap, A._TrieNode, A.WriteBuffer, A.ReadBuffer, A.StackFrame, A.SynchronousFuture, A.GestureArenaMember, A.GestureArenaEntry, A._GestureArena, A.GestureArenaManager, A.SamplingClock, A._Resampler, A.GestureBinding, A._DragDownDetails_Object_Diagnosticable, A._DragStartDetails_Object_Diagnosticable, A._DragUpdateDetails_Object_Diagnosticable, A._DragEndDetails_Object_Diagnosticable, A._PointerEvent_Object_Diagnosticable, A._PointerEventDescription, A._AbstractPointerEvent, A._CopyPointerAddedEvent, A._CopyPointerRemovedEvent, A._CopyPointerHoverEvent, A._CopyPointerEnterEvent, A._CopyPointerExitEvent, A._CopyPointerDownEvent, A._CopyPointerMoveEvent, A._CopyPointerUpEvent, A._RespondablePointerEvent, A._CopyPointerScrollEvent, A._CopyPointerScrollInertiaCancelEvent, A._CopyPointerScaleEvent, A._CopyPointerPanZoomStartEvent, A._CopyPointerPanZoomUpdateEvent, A._CopyPointerPanZoomEndEvent, A._CopyPointerCancelEvent, A._ForcePressDetails_Object_Diagnosticable, A.DeviceGestureSettings, A.HitTestEntry, A._TransformPart, A.HitTestResult, A._LongPressStartDetails_Object_Diagnosticable, A._LongPressMoveUpdateDetails_Object_Diagnosticable, A._LongPressEndDetails_Object_Diagnosticable, A._Vector, A._Matrix, A.PolynomialFit, A.LeastSquaresSolver, A._CountdownZoned, A._TapTracker, A.PointerRouter, A.PointerSignalResolver, A.OffsetPair, A._RecognizerEventData, A._PointerPanZoomData, A._ScaleStartDetails_Object_Diagnosticable, A._ScaleUpdateDetails_Object_Diagnosticable, A._ScaleEndDetails_Object_Diagnosticable, A._LineBetweenPointers, A._TapDownDetails_Object_Diagnosticable, A._TapUpDetails_Object_Diagnosticable, A.TapMoveDetails, A._TapDragDownDetails_Object_Diagnosticable, A._TapDragUpDetails_Object_Diagnosticable, A._TapDragStartDetails_Object_Diagnosticable, A._TapDragUpdateDetails_Object_Diagnosticable, A._TapDragEndDetails_Object_Diagnosticable, A._TapStatusTrackerMixin, A._CombiningGestureArenaEntry, A.GestureArenaTeam, A.Velocity, A.VelocityEstimate, A._PointAtTime, A.VelocityTracker, A._ActionIconThemeData_Object_Diagnosticable, A.ScrollBehavior, A.SingleChildLayoutDelegate, A._AppBarThemeData_Object_Diagnosticable, A._Diagonal, A._BadgeThemeData_Object_Diagnosticable, A._MaterialBannerThemeData_Object_Diagnosticable, A._BottomAppBarThemeData_Object_Diagnosticable, A._BottomNavigationBarThemeData_Object_Diagnosticable, A._BottomSheetThemeData_Object_Diagnosticable, A._ButtonBarThemeData_Object_Diagnosticable, A._ButtonStyle_Object_Diagnosticable, A._MouseCursor_Object_Diagnosticable, A._ButtonThemeData_Object_Diagnosticable, A._CardThemeData_Object_Diagnosticable, A._CarouselViewThemeData_Object_Diagnosticable, A._CheckboxThemeData_Object_Diagnosticable, A._ChipThemeData_Object_Diagnosticable, A._ColorScheme_Object_Diagnosticable, A._DataTableThemeData_Object_Diagnosticable, A._DatePickerThemeData_Object_Diagnosticable, A.RouteSettings, A._RoutePlaceholder, A._DialogThemeData_Object_Diagnosticable, A._DividerThemeData_Object_Diagnosticable, A._DrawerThemeData_Object_Diagnosticable, A._DropdownMenuThemeData_Object_Diagnosticable, A._ElevatedButtonThemeData_Object_Diagnosticable, A._ElevationOpacity, A._ExpansionTileThemeData_Object_Diagnosticable, A._FilledButtonThemeData_Object_Diagnosticable, A.FloatingActionButtonLocation, A.FabFloatOffsetY, A.FabEndOffsetX, A.FloatingActionButtonAnimator, A._FloatingActionButtonThemeData_Object_Diagnosticable, A._IconButtonThemeData_Object_Diagnosticable, A.InkFeature, A.InteractiveInkFeatureFactory, A.ShapeBorder, A.FloatingLabelAlignment, A._Decoration, A._RenderDecorationLayout, A.InputDecoration, A._InputDecorationThemeData_Object_Diagnosticable, A.WidgetStateProperty, A._ListTileThemeData_Object_Diagnosticable, A.DefaultMaterialLocalizations, A._MenuThemeData_Object_Diagnosticable, A._MenuButtonThemeData_Object_Diagnosticable, A._MenuStyle_Object_Diagnosticable, A._NavigationBarThemeData_Object_Diagnosticable, A._NavigationDrawerThemeData_Object_Diagnosticable, A._NavigationRailThemeData_Object_Diagnosticable, A._OutlinedButtonThemeData_Object_Diagnosticable, A.MaterialRouteTransitionMixin, A._PageTransitionsTheme_Object_Diagnosticable, A._ZoomTransitionBase, A._PopupMenuThemeData_Object_Diagnosticable, A._ProgressIndicatorThemeData_Object_Diagnosticable, A._RadioThemeData_Object_Diagnosticable, A.ScaffoldPrelayoutGeometry, A.ScaffoldGeometry, A.Constraints, A.MultiChildLayoutDelegate, A._Action_Object_Diagnosticable, A.ScaffoldFeatureController, A._ScrollbarThemeData_Object_Diagnosticable, A._SearchBarThemeData_Object_Diagnosticable, A._SearchViewThemeData_Object_Diagnosticable, A._SegmentedButtonThemeData_Object_Diagnosticable, A._SliderThemeData_Object_Diagnosticable, A._SnackBarThemeData_Object_Diagnosticable, A._SwitchThemeData_Object_Diagnosticable, A._TabBarThemeData_Object_Diagnosticable, A._TextButtonThemeData_Object_Diagnosticable, A.TextSelectionGestureDetectorBuilder, A._TextSelectionThemeData_Object_Diagnosticable, A._TextTheme_Object_Diagnosticable, A._ThemeData_Object_Diagnosticable, A.CupertinoBasedMaterialThemeData, A._IdentityThemeDataCacheKey, A._FifoCache, A._VisualDensity_Object_Diagnosticable, A._TimePickerThemeData_Object_Diagnosticable, A._ToggleButtonsThemeData_Object_Diagnosticable, A._TooltipThemeData_Object_Diagnosticable, A._Typography_Object_Diagnosticable, A.ImageProvider, A._ImageStreamCompleter_Object_Diagnosticable, A.WebImageInfo, A.AlignmentGeometry, A.TextAlignVertical, A.PaintingBinding, A.BorderRadiusGeometry, A._BorderSide_Object_Diagnosticable, A.FittedSizes, A.ClipContext, A.HSVColor, A.HSLColor, A.ImageSizeInfo, A._BlendedDecorationImage, A._BlendedDecorationImagePainter, A.EdgeInsetsGeometry, A._ColorsAndStops, A.Gradient, A.ImageCache, A._CachedImageBase, A._PendingImage, A.ImageConfiguration, A.AssetBundleImageKey, A.NetworkImageLoadException, A.ImageInfo, A.ImageStreamListener, A._ImageStream_Object_Diagnosticable, A.ImageStreamCompleterHandle, A.Accumulator, A.InlineSpanSemanticsInformation, A._RRectLikeBorder, A._StrutStyle_Object_Diagnosticable, A.PlaceholderDimensions, A.TextBoundary, A._TextLayout, A._TextPainterLayoutCacheWithOffset, A._LineCaretMetrics, A.TextPainter, A.TextScaler, A._LinearTextScaler, A._TextStyle_Object_Diagnosticable, A.SpringDescription, A._CriticalSolution, A._OverdampedSolution, A._UnderdampedSolution, A.Tolerance, A.RendererBinding, A._PipelineOwner_Object_DiagnosticableTreeMixin, A.ParentData, A._DryLayout, A._Baseline, A._LayoutCacheStorage, A.RenderBoxContainerDefaultsMixin, A._OverflowRegionData, A.DebugOverflowIndicatorMixin, A.TextSelectionPoint, A.VerticalCaretMovementRun, A._LayoutSizes, A.ImageFilterConfig, A.AnnotationEntry, A.AnnotationResult, A._Layer_Object_DiagnosticableTreeMixin, A.LayerHandle, A.LayerLink, A._MouseState, A.__MouseTrackerUpdateDetails_Object_Diagnosticable, A.RenderObjectWithChildMixin, A.RenderObjectWithLayoutCallbackMixin, A.ContainerParentDataMixin, A.ContainerRenderObjectMixin, A.RelayoutWhenSystemFontsChangeMixin, A.SemanticsAnnotationsMixin, A._SemanticsParentData, A._SemanticsConfigurationProvider, A._SemanticsFragment, A._SemanticsGeometry, A.SemanticsTag, A.RenderInlineChildrenContainerDefaults, A.__SelectableFragment_Object_Selectable, A._PlatformViewGestureMixin, A.RenderProxyBoxMixin, A.RenderAnimatedOpacityMixin, A.Selectable0, A.SelectionRegistrant, A.SelectionEvent, A._SelectionGeometry_Object_Diagnosticable, A._SelectionPoint_Object_Diagnosticable, A.SliverLayoutDimensions, A._SliverGeometry_Object_Diagnosticable, A.RenderSliverHelpers, A.SliverGridGeometry, A.SliverGridLayout, A.SliverGridDelegate, A.KeepAliveParentDataMixin, A.RenderSliverWithKeepAliveMixin, A.RelativeRect, A.ViewConfiguration, A.ScrollCacheExtent, A.RevealedOffset, A._RunMetrics, A._FrameCallbackEntry, A.PerformanceModeRequestHandle, A.SchedulerBinding, A.Ticker, A.TickerFuture, A.TickerCanceled, A.SemanticsBinding, A.SemanticsHandle, A.ChildSemanticsConfigurationsResult, A.ChildSemanticsConfigurationsResultBuilder, A.CustomSemanticsAction, A.AttributedString, A._SemanticsData_Object_Diagnosticable, A._SemanticsNode_Object_DiagnosticableTreeMixin, A._BoxEdge, A._SemanticsSortGroup, A._TraversalSortNode, A.SemanticsConfiguration, A._SemanticsSortKey_Object_Diagnosticable, A.SemanticsEvent, A.AssetBundle, A._AssetManifestBin, A.AssetMetadata, A.AutofillConfiguration, A.BinaryMessenger, A.ServicesBinding, A.SystemContextMenuClient, A.BrowserContextMenu, A.ClipboardData, A._KeyEvent_Object_Diagnosticable, A.HardwareKeyboard, A.KeyMessage, A.KeyEventManager, A.KeyboardInsertedContent, A._KeyboardKey_Object_Diagnosticable, A.MethodCall0, A.PlatformException0, A.MissingPluginException, A.StringCodec0, A.JSONMessageCodec0, A.JSONMethodCodec0, A.StandardMethodCodec0, A.MouseCursorManager, A.MouseCursorSession, A._ProfiledBinaryMessenger, A._PlatformChannelStats, A.BasicMessageChannel, A.MethodChannel, A.EventChannel, A.PlatformViewsRegistry, A.PlatformViewController, A.PredictiveBackEvent, A.ProcessTextAction, A.DefaultProcessTextService, A._RawKeyEventData_Object_Diagnosticable, A._RawKeyEvent_Object_Diagnosticable, A.RawKeyboard0, A._ModifierSidePair, A.RestorationBucket, A.SuggestionSpan, A.SpellCheckResults, A.ApplicationSwitcherDescription, A._SystemUiOverlayStyle_Object_Diagnosticable, A._TextEditingDelta_Object_Diagnosticable, A.TextInputFormatter, A._MutableTextRange, A._TextEditingValueAccumulator, A.TextInputType, A.TextInputConfiguration, A.RawFloatingCursorPoint, A.TextEditingValue, A.TextSelectionDelegate, A.TextInputClient, A.SelectionRect, A._TextInputStyle_Object_Diagnosticable, A.TextInputConnection, A.TextInput, A.TextInputControl, A.__PlatformTextInputControl_Object_TextInputControl, A._SystemContextMenuController_Object_SystemContextMenuClient, A.IOSSystemContextMenuItemData, A.UndoManager, A.UndoManagerClient, A.Violation, A.EvaluationResult, A.AccessibilityEvaluation, A._ContrastReport, A.DialogWindowControllerDelegate, A.WindowingOwner, A.WindowEntry, A._Intent_Object_Diagnosticable, A._ActionDispatcher_Object_Diagnosticable, A._OverridableActionMixin, A._AppLifecycleListener_Object_WidgetsBindingObserver, A.Notification0, A.AutomaticKeepAliveClientMixin, A.WidgetsBindingObserver, A.WidgetsBinding, A.ContextMenuButtonItem, A.ContextMenuController, A.DisposableBuildContext, A.ToolbarOptions, A._KeyFrame, A.ScrollPhysics, A._ScribbleCacheKey, A._Autofocus, A.FocusAttachment, A._FocusNode_Object_DiagnosticableTreeMixin, A._FocusManager_Object_DiagnosticableTreeMixin, A._HighlightModeManager, A._FocusTraversalGroupInfo, A._FocusTraversalPolicy_Object_Diagnosticable, A._DirectionalPolicyDataEntry, A._DirectionalPolicyData, A.DirectionalFocusTraversalPolicyMixin, A.__ReadingOrderSortData_Object_Diagnosticable, A.__ReadingOrderDirectionalGroupData_Object_Diagnosticable, A._InactiveElements, A.BuildScope, A.BuildOwner, A.NotifiableElementMixin, A._NotificationNode, A.RootElementMixin, A.DebugCreator, A.IndexedSlot, A.GestureRecognizerFactory, A.SemanticsGestureDelegate, A._HeroFlightManifest, A._HeroFlight, A.NavigatorObserver, A.IconData, A.CapturedThemes, A.RenderAbstractLayoutBuilderMixin, A._Pending, A.DefaultWidgetsLocalizations, A.MagnifierInfo, A.TextMagnifierConfiguration, A.MagnifierController, A.MagnifierDecoration, A.MediaQueryData, A._UnspecifiedTextScaler1, A.RouteTransitionRecord, A.TransitionDelegate, A._NavigatorObservation, A._RestorationInformation, A.OverlayEntry, A._RenderTheaterMixin, A.OverlayPortalController, A._StorageEntryIdentifier, A.PageStorageBucket, A._FixedScrollMetrics_Object_ScrollMetrics, A.MenuSerializableShortcut, A.PlatformMenuDelegate, A.PlatformViewCreationParams, A.TooltipPositionContext, A.RestorationMixin, A.RouteInformation, A.LocalHistoryRoute, A.ScrollActivity, A.ScrollDragController, A._WrappedScrollBehavior, A.SliverChildDelegate, A.ScrollMetrics, A.ViewportNotificationMixin, A.ViewportElementMixin, A.SelectionContainerDelegate, A.ScrollableDetails, A.EdgeDraggingAutoScroller, A._SingleActivator_Object_Diagnosticable, A.__ActivatorIntentPair_Object_Diagnosticable, A._ShortcutManager_Object_Diagnosticable, A._ShortcutRegistry_Object_ChangeNotifier, A.SlottedMultiChildRenderObjectWidgetMixin, A.SlottedContainerRenderObjectMixin, A._DefaultSnapshotPainter, A.SpellCheckConfiguration, A.IOSSystemContextMenuItem, A.TextSelectionOverlay, A.SelectionOverlay, A.TextSelectionHandleControls, A.TextSelectionToolbarAnchors, A.SingleTickerProviderStateMixin, A.TickerProviderStateMixin, A.TickerModeData, A._ConstantTickerModeDataListenable, A.UndoHistoryValue, A._UndoStack, A._MulticastCanvas, A._ScreenshotData, A._DiagnosticsPathNode, A.InspectorReferenceData, A.__WidgetInspectorService_Object_WidgetInspectorService, A.WidgetInspectorService, A._ElementLocationStatsTracker, A._InspectorSelection_Object_ChangeNotifier, A._TransformedRect, A._InspectorOverlayRenderState, A.InspectorSerializationDelegate, A.WeakMap, A.WidgetStatesConstraint, A.__AnyWidgetStates_Object_WidgetStatesConstraint, A._LerpSides, A._LerpProperties, A._WidgetStatePropertyWith, A._WidgetStateMapper_Object_Diagnosticable, A.WidgetStatePropertyAll, A.FlutterSecureStorage, A.Options, A.Cache, A.SvgTheme, A.BytesLoader, A.SvgCacheKey, A._AssetByteLoaderCacheKey, A.Svg, A.BootResult, A.CihazKimligi, A._SysText, A.KatalogKaynagi, A.HizmetAlani, A.LegalDoc, A.LegalCache, A.MockSaglayici, A.Address, A.Account, A.ChatMessage, A.Listing, A.AppNotification, A.Offer, A.PendingListing, A.ProviderApprovalState, A.Neighborhood, A.District, A.City, A.RegionTree, A.Review, A.SupportInfo, A.TeklifMesaj, A.TeklifTalebi, A.ApiRegionPort, A.MockRegionPort, A.AccountApi, A.AuthApi, A.ChatApi, A.ConfigApi, A.ContactApi, A.LegalApi, A.ListingApi, A.NotificationApi, A.OfferApi, A.ProfileApi, A.RegionApi, A.ReviewApi, A.SaglayiciApi, A.DiscardUploadResult, A.StorageApi, A.ApiClient, A.ApiFailure, A.FirebaseKimlik, A._Bekleyen, A.TokenStore, A.WsAuth, A.WsClient, A.IncelenenIlanStore, A.OturumTercihi, A.PendingListingStore, A.ServiceAlias, A.ListingExpiryService, A.MockOtpService, A.SearchHit, A.ShareService, A.DomainError, A.HataBilgisi, A._Aralik, A._KosuParcasi, A.OtpChallenge, A.ProfilMenuOgesi, A.ProfilMenuBolumu, A.KoordinatTabanliYakinlikSaglayici, A.IlBazliYakinlikSaglayici, A.AppPorts, A.MockDepolar, A.PreLoginListingArgs, A.KayitVerisi, A.OtpVerisi, A.PhotoItem, A.ClientException, A.BaseClient, A.BaseRequest, A.BaseResponse, A.MediaType, A.ImagePicker, A.ImageResizer, A.ImageOptions, A.MultiImagePickerOptions, A.Level, A.LogRecord, A.Logger, A.DynamicColor, A.DynamicScheme, A.ContrastCurve, A.ToneDeltaPair, A.Cam16, A.Hct, A.ViewingConditions, A.TonalPalette, A.KeyColor, A.TemperatureCache, A.SingleChildWidgetElementMixin, A.Context0, A.Style, A.ParsedPath, A.PathException, A._PathOffset, A.SvgPathStringSource, A.PathSegmentData, A.SvgPathNormalizer, A.Context, A.ParserException, A.Parser, A.Token, A.MatchesIterator, A.CharacterPredicate, A.ProviderNode, A.ProviderBinding, A._Delegate, A._DelegateState, A.ProviderNullException, A.ProviderNotFoundException, A.SharePlus, A.ShareParams, A.ShareResult, A.OptionBuilder, A.EventEmitter, A._Backoff, A.Destroyable, A.Encoder, A.BinaryReconstructor, A.SourceFile, A.SourceLocationMixin, A.SourceSpanMixin, A.Highlighter, A._Highlight, A._Line, A.SourceLocation, A.SourceSpanException, A.StringScanner, A.WebViewConfiguration, A.BrowserConfiguration, A.InAppWebViewConfiguration, A.InAppBrowserConfiguration, A.LaunchOptions, A.RNG, A.Uuid, A.PictureInfo, A._PatternConfig, A._PatternState, A._DefaultPictureFactory, A.VectorGraphicsCodecListener, A._TextPosition, A._TextConfig, A._PendingTextDraw, A.VectorGraphicsDecodeException, A.RasterKey, A.RasterData, A._PictureData, A._PictureKey, A.DecodeResponse, A.VectorGraphicsCodec, A.VectorGraphicsBuffer, A._ReadBuffer, A.DrawCommandBuilder, A.Point, A.Rect0, A.ImageData, A.DrawImageData, A.AffineMatrix, A.PathCommand0, A.PathBuilder, A.Path, A._CircularIntervalList, A._PathDasher, A.PatternData, A.ImageSizeData, A.Color0, A.Gradient0, A.Paint, A.Stroke, A.Fill, A.TextPosition0, A.TextConfig, A.TextDecoration0, A.Node0, A._SvgGroupTuple, A.SvgParser, A._Resolver, A._Viewport, A.SvgAttributes, A.DoubleOrPercentage, A.SvgStrokeAttributes, A.SvgFillAttributes, A.ColorOrNone, A.Visitor, A.SvgTheme0, A.ErrorOnUnResolvedNode, A.VectorInstructions, A.DrawCommand, A.Matrix41, A.Vector40, A.Matrix3, A.Matrix4, A.Quad, A.Quaternion, A.Vector3, A.Vector4, A.EventStreamProvider0, A._EventStreamSubscription, A.DtdExternalId, A.XmlEntityMapping, A.XmlException, A.XmlFormatException, A.XmlCache, A.XmlAnnotator, A.XmlHasBuffer, A.XmlHasLocation, A.XmlHasName, A.XmlHasParent, A.__XmlEventEncoderSink_Object_XmlEventVisitor, A._XmlEvent_Object_XmlHasParent, A.XmlEventIterator, A.XmlEventParser, A.ConversionSink, A._XmlEventAttribute_Object_XmlHasName, A.XmlEventVisitor]);
-    _inheritMany(A.Closure, [A.Closure0Args, A.AppBootstrap_prepareEngineInitializer_closure0, A.AppBootstrap__prepareAppRunner_closure, A.AppBootstrap__prepareFlutterApp_closure, A.AppBootstrap__prepareFlutterApp_closure0, A.CkCanvas_saveLayerWithFilter_closure, A._canvasKitJsUrls_closure, A.CkColorFilter_filterBounds_closure, A.SkiaFontCollection_registerDownloadedFonts_makeRegisterFont, A.CkImageFilter_filterBounds_closure, A._CkComposeImageFilter_withSkImageFilter_closure, A._CkComposeImageFilter_withSkImageFilter__closure, A.CkUniqueRef_closure, A.CkCountedRef_closure, A.CkPaint_toSkPaint_closure, A.CanvasKitRenderer__createRasterizer_closure, A.CanvasKitRenderer__createRasterizer_closure0, A._computeCombinedFontFamilies_closure, A.CkVertices_CkVertices$raw_closure, A.ClipboardMessageHandler_setDataMethodCall_closure, A.ClipboardMessageHandler_setDataMethodCall_closure0, A.ClipboardMessageHandler_getDataMethodCall_closure, A.ClipboardMessageHandler_getDataMethodCall_closure0, A.ClipboardMessageHandler_hasStringsMethodCall_closure, A.ClipboardMessageHandler_hasStringsMethodCall_closure0, A.CanvasProvider_acquireCanvas_closure, A.DomConsole_get_warn_closure, A.createImageBitmap_closure, A.DomNavigator_get_languages_closure, A.rawHttpGet_closure, A.DomResponse_arrayBuffer_closure, A._DomStreamReader_read_closure, A.DomFontFace_load_closure, A.DomClipboard_readText_closure, A.DomOffscreenCanvas_convertToBlob_closure, A.Closure2Args, A._ttPolicy_closure, A.sendFontChangeMessage_closure, A.sendFontChangeMessage__closure, A.FallbackFontService_addMissingCodePoints_closure, A.FallbackFontService__process__closure1, A.FallbackFontService__process__closure0, A.FallbackFontService__process__closure, A.FallbackFontService__findFontsForComponents_closure, A.FallbackFontService__selectBestFont_closure, A.FallbackFontService__selectBestFont_closure0, A.FallbackFontService__selectBestFont_closure1, A.FallbackFontService__findFontsWithMaxCoverage_closure, A.fetchFontManifest_closure, A.fetchFontManifest_closure0, A.fetchFontManifest_closure1, A.fetchFontManifest__closure, A.FrameService_scheduleFrame_closure, A.HtmlImageElementCodec__waitForMetadata_closure, A.HtmlImageElementCodec__waitForMetadata_closure0, A.FlutterApp_constructor__closure, A.FlutterEngineInitializer_constructor__closure, A.FlutterAppRunner_constructor__closure, A.CustomFutureOfJSAnyToJSPromise_get_toPromise__closure, A._kLogicalKeyToModifierGetter_closure, A._kLogicalKeyToModifierGetter_closure0, A._kLogicalKeyToModifierGetter_closure1, A._kLogicalKeyToModifierGetter_closure2, A._kLogicalKeyToModifierGetter_closure3, A._kLogicalKeyToModifierGetter_closure4, A._kLogicalKeyToModifierGetter_closure5, A._kLogicalKeyToModifierGetter_closure6, A.KeyboardBinding$__closure, A.KeyboardBinding$__closure0, A.KeyboardBinding__addEventListener_loggedHandler, A.KeyboardBinding__onKeyData_closure, A.KeyboardConverter__scheduleAsyncEvent_closure, A.KeyboardConverter_handleEvent_closure, A.preventDefaultListener_closure, A.NativeMemoryFinalizer_closure, A.UniqueRef_finalizer_closure, A.CountedRef_debugGetStackTraces__closure, A.MultiEntriesBrowserHistory_onPopState_closure, A.SingleEntryBrowserHistory_onPopState_closure, A.SingleEntryBrowserHistory_onPopState_closure0, A.EnginePlatformDispatcher_closure, A.EnginePlatformDispatcher__zonedPlatformMessageResponseCallback_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure1, A.EnginePlatformDispatcher__sendPlatformMessage_closure2, A.EnginePlatformDispatcher__sendPlatformMessage_closure3, A.EnginePlatformDispatcher__addLocaleChangedListener_closure, A.EnginePlatformDispatcher__setAppLifecycleState_closure, A.EnginePlatformDispatcher_replyToPlatformMessage_closure, A.EnginePlatformDispatcher__addNavigationFocusHandler_closure, A._BrowserAppLifecycleState__focusListener_closure, A._BrowserAppLifecycleState__blurListener_closure, A._BrowserAppLifecycleState__visibilityChangeListener_closure, A.MediaQueryManager_addListener_closure, A.ViewFocusBinding__handleFocusin_closure, A.ViewFocusBinding__handleFocusout_closure, A.ViewFocusBinding__handleKeyDown_closure, A.ViewFocusBinding__handleKeyUp_closure, A.PlatformViewEmbedder_submitFrame_closure, A.PlatformViewEmbedder_submitFrame_closure0, A.PlatformViewEmbedder__updateDomForNewComposition_closure, A.SafariPointerEventWorkaround_workAroundMissingPointerEvents_closure, A._BaseAdapter_addEventListener_loggedHandler, A._WheelEventListenerMixin__convertWheelEventToPointerData_closure, A._PointerAdapter__addPointerEventListener_closure, A._PointerAdapter_setup_closure, A._PointerAdapter_setup_closure0, A._PointerAdapter_setup_closure1, A._PointerAdapter_setup_closure2, A._PointerAdapter_setup_closure3, A._PointerAdapter_setup_closure4, A._PointerAdapter_setup_closure5, A._PointerAdapter_setup_closure6, A.EngineImage_closure, A.EngineImage_closure0, A.RawKeyboard_handleHtmlEvent_closure0, A.AccessibilityFocusManager_manage_closure, A.AccessibilityFocusManager_manage_closure0, A.SemanticIncrementable_closure, A.SemanticIncrementable_closure0, A._computeLabelValue_closure, A.SemanticMenu__updateMenuItemId_closure, A.SemanticMenuBar__updateMenuItemId_closure, A.SemanticRouteBase__setDefaultFocus_closure, A.SemanticScrollable_update_closure0, A.SemanticScrollable_update_closure1, A.SemanticRole_addSemanticBehavior_closure, A.SemanticRole__updateTraversalParent_closure, A.SemanticsObject__debugVisitRenderedSemanticNodesDepthFirst_closure, A.EngineSemanticsOwner__finalizeTree_closure, A.EngineSemanticsOwner__computeNodeMapConsistencyMessage_closure, A.DesktopSemanticsEnabler__prepareAccessibilityPlaceholder_closure, A.MobileSemanticsEnabler__prepareAccessibilityPlaceholder_closure, A.Tappable_update_closure, A.SemanticTextField__initializeEditableElement_closure, A.SemanticTextField__initializeEditableElement_closure0, A.SemanticTextField__initializeEditableElement_closure1, A.TestUrlStrategy__nextEventLoop_closure, A.EngineAutofillForm_addInputEventListeners_addSubscriptionForKey, A.EngineAutofillForm_addInputEventListeners_addSubscriptionForKey_closure, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure0, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure1, A.IOSTextEditingStrategy_addEventHandlers_closure, A.IOSTextEditingStrategy__addTapListener_closure, A.FirefoxTextEditingStrategy_addEventHandlers_closure, A.TextEditingChannel_onFocusReceived_closure, A.HybridTextEditing__startEditing_closure, A.EditableTextGeometry_EditableTextGeometry$fromFrameworkMessage_closure, A.bytesToHexString_closure, A.Matrix4_toString_closure_fmt, A.CustomElementDimensionsProvider_closure, A.VisualOrder_inVisualOrder_closure, A.ViewConstraints_toString_describe, A.HttpDate__parse_expectChar, A.HttpDate__parse_expectNum, A.CastSet_removeWhere_closure, A.CastMap_entries_closure, A.Instantiation, A.TearOffClosure, A.assertInteropArgs_closure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._StringStream__goalToEventCode_closure, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._SyncBroadcastStreamController__sendData_closure, A._SyncBroadcastStreamController__sendError_closure, A._SyncBroadcastStreamController__sendDone_closure, A.Future_wait_closure, A.FutureExtensions_onError_closure, A._Future__chainForeignFuture_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure1, A.Stream_length_closure, A.Stream_first_closure0, A._CustomZone_bindUnaryCallback_closure, A._CustomZone_bindUnaryCallbackGuarded_closure, A._RootZone_bindUnaryCallback_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._HashMap_values_closure, A._CustomHashMap_closure, A._LinkedCustomHashMap_closure, A.MapBase_entries_closure, A._JsonMap_values_closure, A.DateTime_parse_parseIntOrZero, A.DateTime_parse_parseMilliAndMicroseconds, A._Uri__splitQueryStringAll_parsePair, A._EventStreamSubscription_closure0, A._EventStreamSubscription_onData_closure0, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.KeyData__quotedCharCode_closure, A._Transform_makeComposite_closure, A._Transform_makeTranslate_closure, A._Transform_makeScale_closure, A._Transform_kFlip_closure, A.bootstrapEngine_closure, A.BrowserPlatformLocation_getOrCreateDomEventListener_closure0, A.HashUrlStrategy_addPopStateListener_wrappedFn, A.HashUrlStrategy__waitForPopState_closure, A.EventChannelExtension_receiveGuardedBroadcastStream_closure, A.CanonicalizedMap_entries_closure, A.CanonicalizedMap_keys_closure, A.CanonicalizedMap_values_closure, A.DartHtmlConnectivityPlugin_onConnectivityChanged_closure, A.DartHtmlConnectivityPlugin_onConnectivityChanged_closure0, A.MethodChannelConnectivity_onConnectivityChanged_closure, A.MethodChannelConnectivity_checkConnectivity_closure, A.parseConnectivityResults_closure, A.XFile__blob_closure, A.XFile__blob_closure0, A.MethodChannelFirebaseAuth_closure, A.MethodChannelFirebaseAuth__closure0, A.MethodChannelFirebaseAuth_closure0, A.MethodChannelFirebaseAuth__closure, A.multiFactorInfoPigeonToObject_closure, A.FirebaseAuthWeb_registerWith_closure, A.FirebaseAuthWeb__createStreamListener_closure0, A.FirebaseAuthWeb__createStreamListener_closure1, A.FirebaseAuthWeb__createStreamListener_closure3, A.FirebaseAuthWeb__createStreamListener_closure4, A.UserWeb_closure, A.User_providerData_closure, A.User_getIdToken_closure, A.User_linkWithCredential_closure, A.Auth_onWaitInitState_closure, A.Auth_onWaitInitState_closure0, A.Auth_onAuthStateChanged_closure, A.Auth_onAuthStateChanged_closure0, A.Auth_onIdTokenChanged_closure, A.Auth_onIdTokenChanged_closure0, A.Auth_signInWithCustomToken_closure, A.Auth_signInWithEmailAndPassword_closure, A.ConfirmationResult_confirm_closure, A.MultiFactorResolver_hints_closure, A._deepEquals_closure, A._deepEquals_closure0, A.FirebaseCoreWeb__ignoredServiceScripts_closure, A.FirebaseCoreWeb_injectSrcScript_closure, A.FirebaseCoreWeb_injectSrcScript_closure1, A.FirebaseCoreWeb__initializeCore_closure, A.FirebaseCoreWeb_initializeApp_closure1, A._CupertinoButtonState__defaultCursor_closure, A._CupertinoButtonState__animate_closure, A._CupertinoButtonState_build_closure0, A._CupertinoBackGestureDetectorState_dispose_closure, A._CupertinoBackGestureController_dragEnd_closure, A._CupertinoEdgeShadowDecoration_lerp_closure, A._CupertinoEdgeShadowDecoration_lerp_closure0, A._CupertinoScrollbarState_handleThumbPress_closure, A._CupertinoTextSelectionToolbarContentState_build_closure, A._CupertinoTextSelectionToolbarItemsElement_mount_closure, A._RenderCupertinoTextSelectionToolbarItems_performLayout_closure, A._RenderCupertinoTextSelectionToolbarItems_performLayout_closure0, A._RenderCupertinoTextSelectionToolbarItems_paint_closure, A._RenderCupertinoTextSelectionToolbarItems_redepthChildren_closure, A._RenderCupertinoTextSelectionToolbarItems_visitChildrenForSemantics_closure, A._RenderCupertinoTextSelectionToolbarItems_debugDescribeChildren_closure, A.CupertinoThemeData_resolveFrom_convertColor, A.NoDefaultCupertinoThemeData_resolveFrom_convertColor, A._CupertinoThemeDefaults_resolveFrom_convertColor, A.FlutterErrorDetails_summary_closure, A.FlutterErrorDetails_debugFillProperties_closure, A.FlutterError_FlutterError_closure, A.FlutterError$fromParts__closure, A.FlutterError_defaultStackFilter_closure, A.FlutterError_defaultStackFilter_closure0, A.FlutterError_toString_closure, A.debugPrintStack_closure, A.BindingBase_initServiceExtensions_closure1, A.BindingBase_initServiceExtensions_closure3, A.BindingBase_initServiceExtensions__closure, A.BindingBase_initServiceExtensions__closure0, A.BindingBase_registerSignalServiceExtension_closure, A.BindingBase_registerBoolServiceExtension_closure, A.BindingBase_registerNumericServiceExtension_closure, A.BindingBase_registerStringServiceExtension_closure, A._PrefixedStringBuilder__wordWrapLine_noWrap, A.TextTreeRenderer__debugRender_visitor, A.TextTreeRenderer__debugRender_closure, A.DiagnosticsNode_toJsonList_closure, A.DiagnosticsNode__toJson_closure, A.IterableProperty_valueToString_closure, A.IterableProperty_toJsonMap_closure, A.FlagsSummary__hasNonNullEntry_closure, A.FlagsSummary__formattedValues_closure, A.FlagsSummary__formattedValues_closure0, A.FlutterMemoryAllocations__tryDefragmentListeners_closure, A.FlutterMemoryAllocations_hasListeners_closure, A.HashedObserverList_toList_closure, A.debugPrintThrottled_closure, A.StackFrame_fromStackString_closure, A.SynchronousFuture_whenComplete_closure, A._GestureArena_toString_closure, A.GestureBinding__handleHitTest_closure, A.PointerEventConverter_expand_closure, A.PointerEventConverter_expand_closure0, A.HitTestResult__debugVectorMoreOrLessEquals__closure, A.PolynomialFit_toString_closure, A.ScaleGestureRecognizer__reconfigure_closure, A.ScaleGestureRecognizer_acceptGesture_closure, A.BackButtonIcon_build_closure, A.BackButtonIcon_build_closure0, A.BackButtonIcon_build_closure1, A.EndDrawerButtonIcon_build_closure, A.EndDrawerButtonIcon_build_closure0, A.EndDrawerButtonIcon_build_closure1, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure0, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure1, A._MaterialAppState__materialBuilder_closure, A._MaterialAppState__buildWidgetApp_closure, A.AppBarThemeData_debugFillProperties_closure, A.MaterialRectArcTween__initialize_closure, A._ButtonStyleState_build_effectiveValue, A._ButtonStyleState_build_resolve, A._ButtonStyleState_build_resolve_closure, A._ButtonStyleState_build_closure, A._ButtonStyleState_build_closure0, A._ButtonStyleState_build_closure1, A._ButtonStyleState_build_closure2, A._ButtonStyleState_build_closure3, A._ButtonStyleState_build_closure4, A._ButtonStyleState_build_closure5, A._ButtonStyleState_build_closure6, A._ButtonStyleState_build_closure7, A._ButtonStyleState_build_closure8, A._ButtonStyleState_build_closure9, A._ButtonStyleState_build_closure10, A._ButtonStyleState_build_closure11, A._ButtonStyleState_build_closure21, A._ButtonStyleState_build__closure0, A._ButtonStyleState_build_closure22, A._ButtonStyleState_build__closure, A._ButtonStyleState_build_closure12, A._ButtonStyleState_build_closure13, A._ButtonStyleState_build_closure14, A._ButtonStyleState_build_closure15, A._ButtonStyleState_build_closure16, A._ButtonStyleState_build_closure17, A._ButtonStyleState_build_closure18, A._ButtonStyleState_build_closure19, A._ButtonStyleState_build_closure20, A._DialogPopScope_build_closure, A._DialogContentPage_createRoute_closure, A.showDialog_closure, A.showDialog__closure, A.DialogRoute_closure, A._ElevatedButtonDefaultsM3_backgroundColor_closure, A._ElevatedButtonDefaultsM3_foregroundColor_closure, A._ElevatedButtonDefaultsM3_overlayColor_closure, A._ElevatedButtonDefaultsM3_elevation_closure, A._ElevatedButtonDefaultsM3_iconColor_closure, A._FilledButtonDefaultsM3_backgroundColor_closure, A._FilledButtonDefaultsM3_foregroundColor_closure, A._FilledButtonDefaultsM3_overlayColor_closure, A._FilledButtonDefaultsM3_elevation_closure, A._FilledButtonDefaultsM3_iconColor_closure, A._IconButtonDefaultsM3_foregroundColor_closure, A._IconButtonDefaultsM3_overlayColor_closure, A._FilledIconButtonDefaultsM3_backgroundColor_closure, A._FilledIconButtonDefaultsM3_foregroundColor_closure, A._FilledIconButtonDefaultsM3_overlayColor_closure, A._FilledTonalIconButtonDefaultsM3_backgroundColor_closure, A._FilledTonalIconButtonDefaultsM3_foregroundColor_closure, A._FilledTonalIconButtonDefaultsM3_overlayColor_closure, A._OutlinedIconButtonDefaultsM3_backgroundColor_closure, A._OutlinedIconButtonDefaultsM3_foregroundColor_closure, A._OutlinedIconButtonDefaultsM3_overlayColor_closure, A._OutlinedIconButtonDefaultsM3_side_closure, A._InkResponseState_highlightsExist_closure, A._InkResponseState_build_getHighlightColorForType, A._HelperErrorState__buildError_closure, A._RenderDecoration_paint_doPaint, A._RenderDecoration__childSemanticsConfigurationDelegate_closure, A._InputDecoratorState_build_closure, A._InputDecoratorDefaultsM3_hintStyle_closure, A._InputDecoratorDefaultsM3_fillColor_closure, A._InputDecoratorDefaultsM3_activeIndicatorBorder_closure, A._InputDecoratorDefaultsM3_outlineBorder_closure, A._InputDecoratorDefaultsM3_prefixIconColor_closure, A._InputDecoratorDefaultsM3_suffixIconColor_closure, A._InputDecoratorDefaultsM3_labelStyle_closure, A._InputDecoratorDefaultsM3_floatingLabelStyle_closure, A._InputDecoratorDefaultsM3_helperStyle_closure, A._InputDecoratorDefaultsM3_errorStyle_closure, A.ListTile_build_resolveColor, A.ListTile__findIntermediateWidget_closure, A._RenderListTile_paint_doPaint, A.TextMagnifier_adaptiveMagnifierConfiguration_closure, A._MaterialState_build_closure, A._MaterialInteriorState_forEachTween_closure, A._MaterialInteriorState_forEachTween_closure0, A._MaterialInteriorState_forEachTween_closure1, A._MaterialInteriorState_forEachTween_closure2, A._OutlinedButtonDefaultsM3_foregroundColor_closure, A._OutlinedButtonDefaultsM3_overlayColor_closure, A._OutlinedButtonDefaultsM3_iconColor_closure, A._OutlinedButtonDefaultsM3_side_closure, A._ZoomPageTransition_build_closure, A._ZoomPageTransition_build_closure0, A._FadeForwardsPageTransition_build_closure, A._FadeForwardsPageTransition_build_closure0, A.FadeForwardsPageTransitionsBuilder__delegatedTransition_closure, A.FadeForwardsPageTransitionsBuilder__delegatedTransition_closure0, A.ZoomPageTransitionsBuilder_delegatedTransition_closure, A.ZoomPageTransitionsBuilder__snapshotAwareDelegatedTransition_closure, A.ZoomPageTransitionsBuilder__snapshotAwareDelegatedTransition_closure0, A.PageTransitionsTheme__all_closure, A.PredictiveBackPageTransitionsBuilder_buildTransitions_closure, A._CircularProgressIndicatorState_build_closure, A.RefreshIndicatorState__show_closure, A.ScaffoldMessengerState_hideCurrentSnackBar_closure, A.ScaffoldState_build_closure, A._HitTestableAtOrigin_hitTestableAtOrigin_closure, A._MaterialScrollbarState__trackVisibility_closure, A._MaterialScrollbarState__thumbColor_closure, A._MaterialScrollbarState__trackColor_closure, A._MaterialScrollbarState__trackBorderColor_closure, A._MaterialScrollbarState__thickness_closure, A._SnackBarState_build_closure_message, A._SnackBarState_build_closure0, A._SnackBarState_build_closure2, A._SnackBarState_build_closure3, A._SnackbarDefaultsM3_actionTextColor_closure, A._TextButtonDefaultsM3_foregroundColor_closure, A._TextButtonDefaultsM3_overlayColor_closure, A._TextButtonDefaultsM3_iconColor_closure, A._TextFieldState_build_closure7, A._TextFieldState_build_closure8, A._m3StateInputStyle_closure, A.TextFormField_closure, A.TextFormField_closure_onChangedHandler, A._RenderTextSelectionToolbarItemsLayout__layoutChildren_closure, A._RenderTextSelectionToolbarItemsLayout__placeChildrenHorizontally_closure, A._RenderTextSelectionToolbarItemsLayout__placeChildrenVertically_closure, A._RenderTextSelectionToolbarItemsLayout__resizeChildrenWhenOverflow_closure, A._RenderTextSelectionToolbarItemsLayout_paint_closure, A._RenderTextSelectionToolbarItemsLayout_visitChildrenForSemantics_closure, A._AnimatedThemeState_forEachTween_closure, A.ThemeData__lerpThemeExtensions_closure0, A.TimePickerThemeData_dayPeriodColor_closure, A.NetworkImage__fetchImageBytes_closure, A.NetworkImage__fetchImageBytes_closure0, A._ForwardingImageStreamCompleter_closure, A._ForwardingImageStreamCompleter_listener_closure0, A._CompoundBorder_closure, A._CompoundBorder_scale_closure, A._CompoundBorder_preferPaintInterior_closure, A._CompoundBorder_toString_closure, A.ClipContext_clipPathAndPaint_closure, A.ClipContext_clipRRectAndPaint_closure, A.ClipContext_clipRectAndPaint_closure, A.paintImage_closure1, A._sample_closure, A._interpolateColorsAndStops_closure, A.LinearGradient_scale_closure, A.SweepGradient_scale_closure, A._CachedImageBase_dispose_closure, A.ImageProvider_resolve_closure0, A.ImageProvider__createErrorHandlerAndKey_closure, A.AssetImage_obtainKey_closure, A.ImageStreamCompleter_reportError_closure, A.ImageStreamCompleter_reportImageChunkEvent_closure, A.InlineSpan_getSpanForPosition_closure, A.InlineSpan_codeUnitAt_closure, A._ShapeDecorationPainter__precache_closure, A._ShapeDecorationPainter__precache_closure0, A._ShapeDecorationPainter__precache_closure1, A._ShapeDecorationPainter__paintShadows_debugHandleDisabledShadowStart, A.StrutStyle_debugFillProperties_closure, A.TextPainter_inlinePlaceholderBoxes_closure, A.TextPainter_setPlaceholderDimensions__closure, A.TextPainter_getBoxesForSelection_closure, A.TextPainter_computeLineMetrics_closure, A.TextSpan_debugDescribeChildren_closure, A.TextStyle_lerp__closure, A.TextStyle_debugFillProperties_closure, A.FrictionSimulation_closure, A.RendererBinding_pipelineOwner_closure1, A.RendererBinding__handleWebFirstFrame_closure, A.RendererBinding__scheduleMouseTrackerUpdate_closure0, A.RendererBinding__forceRepaint_closure, A.BoxConstraints_debugAssertIsValid_closure_throwError, A.BoxConstraints_toString_describe, A.RenderBox_getDistanceToActualBaseline_closure, A.RenderEditable_getBoxesForSelection_closure, A.RenderEditable_describeSemanticsConfiguration_closure, A.RenderFlex__computeDryDistanceToHighestBaseline_constraintsForChild, A.RenderFlex__computeDryDistanceToFirstBaseline_constraintsForChild, A.TransformLayer_transform_closure, A.LayerLink__debugScheduleLeadersCleanUpCheck__closure, A.MouseTracker__handleDeviceUpdate_closure, A.MouseTracker__handleDeviceUpdateMouseEvents_closure0, A.PipelineOwner_flushSemantics_closure0, A.PipelineOwner_flushSemantics_closure3, A.RenderObject_reassemble_closure, A.RenderObject__updateCompositingBits_closure, A.RenderObject__updateCompositingBits_closure0, A.RenderObject__paintWithContext__closure, A.RenderObject_clearSemantics_closure, A.RenderObjectWithLayoutCallbackMixin_runLayoutCallback_closure, A.RelayoutWhenSystemFontsChangeMixin__scheduleSystemFontsUpdate_closure, A._SemanticsConfigurationProvider_absorbAll_closure, A._RenderObjectSemantics_debugCheckForParentData_debugCheckParentDataNotDirty, A._RenderObjectSemantics_isBlockingPreviousSibling_closure, A._RenderObjectSemantics_updateChildren_closure, A._RenderObjectSemantics_updateChildren_closure0, A._RenderObjectSemantics_updateChildren_closure1, A._RenderObjectSemantics_updateChildren_closure2, A._RenderObjectSemantics_updateChildren_closure3, A._RenderObjectSemantics_updateChildren_closure4, A._RenderObjectSemantics__getNonBlockedChildren_closure, A._RenderObjectSemantics__collectChildMergeUpAndSiblingGroup_closure, A._RenderObjectSemantics__collectChildMergeUpAndSiblingGroup_closure0, A._RenderObjectSemantics__updateChildGeometry_closure, A._RenderObjectSemantics__updateChildGeometry_closure0, A._RenderObjectSemantics__buildSemanticsSubtree_closure, A._RenderObjectSemantics__mergeSiblingGroup_closure, A._RenderObjectSemantics__mergeSiblingGroup_closure0, A._RenderObjectSemantics_debugDescribeChildren_closure, A.RenderParagraph_markNeedsLayout_closure, A.RenderParagraph_selectionColor_closure, A.RenderParagraph_performLayout_closure, A._factoriesTypeSet_closure, A._PlatformViewGestureRecognizer_closure, A.RenderFittedBox__updatePaintData_closure, A.SliverConstraints_debugAssertIsValid_closure_verifyDouble, A.SliverGeometry_debugAssertIsValid_closure_verify, A.RenderSliverHelpers_hitTestBoxChild_closure, A.RenderSliverMultiBoxAdaptor__createOrObtainChild_closure, A.RenderSliverMultiBoxAdaptor_collectGarbage_closure, A.RenderSliverMultiBoxAdaptor_collectGarbage__closure, A.RenderSliverMultiBoxAdaptor_collectGarbage__closure0, A.RenderSliverEdgeInsetsPadding_performLayout_paintOffset, A.RenderSliverEdgeInsetsPadding_performLayout_cacheOffset, A.RenderStack_computeMinIntrinsicWidth_closure, A.RenderStack_computeMaxIntrinsicWidth_closure, A.RenderStack_computeMinIntrinsicHeight_closure, A.RenderStack_computeMaxIntrinsicHeight_closure, A.RenderViewportBase_visitChildrenForSemantics_closure, A.RenderViewportBase_hitTestChildren_closure, A.RenderWrap_computeDryBaseline_getChildSize, A.SchedulerBinding_endOfFrame_closure, A.SchedulerBinding__handleDrawFrame_closure, A.TickerFuture_whenCompleteOrCancel_thunk, A._DebugSemanticsRoleChecks__semanticsTabBar_closure, A._DebugSemanticsRoleChecks__semanticsTable_closure, A._DebugSemanticsRoleChecks__semanticsRow_closure, A._DebugSemanticsRoleChecks__semanticsRadioGroup_validateRadioGroupChildren, A.SemanticsData_debugFillProperties_closure, A.SemanticsNode__replaceChildren_closure, A.SemanticsNode__replaceChildren__closure, A.SemanticsNode_detach_closure0, A.SemanticsNode_getSemanticsData_closure, A.SemanticsNode__childrenIdInHitTestOrder_closure, A.SemanticsNode__childrenInTraversalOrder_closure, A.SemanticsNode_sendEvent_closure, A.SemanticsNode_debugFillProperties_closure, A.SemanticsNode_debugFillProperties_closure0, A.SemanticsNode_debugFillProperties_closure1, A.SemanticsNode_debugFillProperties_closure2, A.SemanticsNode_debugDescribeChildren_closure, A._SemanticsSortGroup_sortedWithinVerticalGroup_closure, A._SemanticsSortGroup_sortedWithinKnot_search, A._SemanticsSortGroup_sortedWithinKnot_closure0, A._SemanticsSortGroup_sortedWithinKnot_closure1, A._childrenInDefaultOrder_closure, A.SemanticsOwner_sendSemanticsUpdate_closure_findInvisibleNodes, A.SemanticsOwner_sendSemanticsUpdate_closure_nodeToMessage, A.SemanticsOwner_sendSemanticsUpdate_closure0, A.SemanticsOwner_sendSemanticsUpdate_closure3, A.SemanticsOwner__getSemanticsActionHandlerForId_closure, A.SemanticsConfiguration__addArgumentlessAction_closure, A.SemanticsConfiguration_onScrollToOffset_closure, A.SemanticsConfiguration_onMoveCursorForwardByCharacter_closure, A.SemanticsConfiguration_onMoveCursorBackwardByCharacter_closure, A.SemanticsConfiguration_onMoveCursorForwardByWord_closure, A.SemanticsConfiguration_onMoveCursorBackwardByWord_closure, A.SemanticsConfiguration_onSetSelection_closure, A.SemanticsConfiguration_onSetText_closure, A.CachingAssetBundle_loadStructuredData_closure, A.PlatformAssetBundle_load_closure, A.AssetManifest_loadFromAssetBundle_closure, A._AssetManifestBin_getAssetVariants_closure, A.ServicesBinding__initKeyboard_closure, A._DefaultBinaryMessenger_send_closure, A.LogicalKeyboardKey_expandSynonyms_closure, A.BasicMessageChannel_setMessageHandler_closure, A.MethodChannel_setMethodCallHandler_closure, A.EventChannel_receiveBroadcastStream__closure, A.RestorationManager_handleRestorationUpdateFromEngine_closure, A.RestorationManager_scheduleSerializationFor_closure, A.RestorationBucket__debugAssertIntegrity__closure, A.RestorationBucket__visitChildren_closure, A.SystemChrome_setSystemUIOverlayStyle__closure, A.FilteringTextInputFormatter__processRegion_adjustIndex, A.TextEditingValue_replaced_adjustIndex, A.TextInput__handleTextInputInvocation_closure, A.TextInput__handleTextInputInvocation_closure0, A.TextInput__handleTextInputInvocation_closure1, A._PlatformTextInputControl_attach_closure, A._PlatformTextInputControl_detach_closure, A._PlatformTextInputControl_updateConfig_closure, A._PlatformTextInputControl_setEditingState_closure, A._PlatformTextInputControl_show_closure, A._PlatformTextInputControl_hide_closure, A._PlatformTextInputControl_setEditableSizeAndTransform_closure, A._PlatformTextInputControl_setComposingRect_closure, A._PlatformTextInputControl_setCaretRect_closure, A._PlatformTextInputControl_setSelectionRects_closure, A._PlatformTextInputControl_setSelectionRects_closure0, A._PlatformTextInputControl_updateStyle_closure, A._PlatformTextInputControl_requestAutofill_closure, A.SystemContextMenuController_showWithItems_closure, A.UndoManager__setUndoState_closure, A.MinimumTapTargetEvaluation__traverse_closure, A.LabeledTapTargetEvaluation__traverse_closure, A._ContrastEvaluation__evaluateNode_closure, A._colorsWithinRect_getPixel, A._colorsWithinRect_closure, A._collectElementsByText_closure, A.HtmlElementViewImpl_get__createController_closure, A.HtmlElementViewImpl__createController_closure, A.ImgElementPlatformView__register_closure, A.WindowScope_updateShouldNotifyDependent_closure, A._WindowManagerState_build__closure, A._getParent_closure, A.Actions__findDispatcher_closure, A.Actions_maybeFind_closure, A.Actions__maybeFindWithoutDependingOn_closure, A.Actions_invoke_closure0, A.Actions_maybeInvoke_closure, A._FocusableActionDetectorState_initState_closure, A._FocusableActionDetectorState__mayTriggerCallback_shouldShowHoverHighlight, A._FocusableActionDetectorState__mayTriggerCallback_canRequestFocus, A._FocusableActionDetectorState__mayTriggerCallback_shouldShowFocusHighlight, A._FocusableActionDetectorState_didUpdateWidget_closure, A._WidgetsAppState__onGenerateRoute_closure, A._WidgetsAppState_build_closure, A._WidgetsAppState_build__closure, A._AutomaticKeepAliveState__addClient_closure, A._AutomaticKeepAliveState__getChildElement_closure, A._UbiquitousInheritedElement_notifyClients_closure, A._UbiquitousInheritedElement__recurseChildren_closure, A.ClipPath_shape_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure7, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure9, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure11, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure13, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_initInstances__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initInstances_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions__closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure7, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions__closure0, A.WidgetsBinding__formatEvaluationResult_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure0, A.ContextMenuController_show_closure, A.DefaultSelectionStyle_merge_closure, A.showRawDialog_closure, A._DialogWindowRoute_install_closure, A.DisplayFeatureSubScreen_avoidBounds_closure, A.DisplayFeatureSubScreen_avoidBounds_closure0, A.EditableTextState_cutSelection_closure, A.EditableTextState__pasteText_closure, A.EditableTextState__startLiveTextInput_closure, A.EditableTextState__isPasswordInput_closure, A.EditableTextState_didChangeDependencies_closure, A.EditableTextState_didChangeDependencies_closure0, A.EditableTextState_didUpdateWidget_closure, A.EditableTextState_didUpdateWidget_closure0, A.EditableTextState_didUpdateWidget_closure1, A.EditableTextState_didUpdateWidget_closure2, A.EditableTextState__scheduleShowCaretOnScreen_closure, A.EditableTextState_didChangeMetrics_closure, A.EditableTextState__startCursorBlink_closure, A.EditableTextState__onCursorTick_closure1, A.EditableTextState_build_closure, A.EditableTextState_build__closure, A.EditableTextState_build__closure5, A.EditableTextState_build__closure2, A.EditableTextState_build__closure1, A.EditableTextState_build__closure3, A._ScribbleFocusableState_isInScribbleRect_closure, A._OverridingTextStyleTextSpanUtils__applyTextStyleOverrides_closure0, A.FocusNode_traversalDescendants_closure, A.FocusNode__removeChild_closure, A.FocusNode_debugDescribeChildren_closure, A.FocusScopeNode_debugFillProperties_closure, A._getAncestor_closure, A.FocusTraversalPolicy__findInitialFocus_closure, A.FocusTraversalPolicy__sortAllDescendants_visitGroups, A.FocusTraversalPolicy__sortAllDescendants_closure, A._ReadingOrderTraversalPolicy_FocusTraversalPolicy_DirectionalFocusTraversalPolicyMixin_changedScope_closure, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure0, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure1, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure2, A.DirectionalFocusTraversalPolicyMixin__popPolicyDataIfNeeded_popOrInvalidate, A._ReadingOrderSortData_commonDirectionalityOf_closure, A._ReadingOrderSortData_directionalAncestors_getDirectionalityAncestors, A._ReadingOrderDirectionalGroupData_rect_closure, A._ReadingOrderDirectionalGroupData_debugFillProperties_closure, A.ReadingOrderTraversalPolicy__pickNext_inBand_closure, A.FormState__fieldDidChange_closure, A.FormState_build_closure, A.FormFieldState_didChangeDependencies_closure, A.FormFieldState_build_closure, A._InactiveElements__unmount_closure0, A.BuildScope__flushDirtyElements__closure, A.BuildOwner__debugVerifyGlobalKeyReservation____closure, A.BuildOwner__debugVerifyGlobalKeyReservation____closure0, A.BuildOwner_finalizeTree__closure, A.BuildOwner_finalizeTree__closure0, A.BuildOwner_finalizeTree__closure1, A.BuildOwner_finalizeTree__closure2, A.Element_reassemble_closure, A.Element_renderObjectAttachingChild_closure, A.Element_describeMissingAncestor_closure, A.Element_describeElements_closure, A.Element_updateChildren_replaceWithNullIfForgotten, A.Element_updateChildren_closure, A.Element_updateSlotForChild_visit, A.Element__updateDepth_closure, A.Element__updateBuildScopeRecursively_closure, A.Element_detachRenderObject_closure, A.Element_attachRenderObject_closure, A.Element_debugFillProperties_closure0, A.Element_debugDescribeChildren_closure, A.ParentDataElement__applyParentData_applyParentDataToChild, A.RenderObjectElement__debugCheckCompetingAncestors__closure, A.RenderObjectElement__findAncestorParentDataElements_closure, A.MultiChildRenderObjectElement_children_closure, A.GestureDetector_build_closure0, A.GestureDetector_build_closure2, A.GestureDetector_build_closure4, A.GestureDetector_build_closure6, A.GestureDetector_build_closure8, A.GestureDetector_build_closure10, A.GestureDetector_build_closure12, A.RawGestureDetectorState_debugFillProperties_closure, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure0, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure1, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure0, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure1, A.Hero__allHeroesFor_visitor, A.HeroController_didStopUserGesture_isInvalidFlight, A.HeroController__maybeStartHeroTransition_closure, A.IconTheme_merge_closure, A._ImageState__replaceImage_closure, A.ImplicitlyAnimatedWidgetState_initState_closure, A.ImplicitlyAnimatedWidgetState_didUpdateWidget_closure, A.ImplicitlyAnimatedWidgetState__constructTweens_closure, A._AnimatedContainerState_forEachTween_closure, A._AnimatedContainerState_forEachTween_closure0, A._AnimatedContainerState_forEachTween_closure1, A._AnimatedContainerState_forEachTween_closure2, A._AnimatedContainerState_forEachTween_closure3, A._AnimatedContainerState_forEachTween_closure4, A._AnimatedContainerState_forEachTween_closure5, A._AnimatedContainerState_forEachTween_closure6, A._AnimatedPaddingState_forEachTween_closure, A._AnimatedAlignState_forEachTween_closure, A._AnimatedPositionedState_forEachTween_closure, A._AnimatedPositionedState_forEachTween_closure0, A._AnimatedPositionedState_forEachTween_closure1, A._AnimatedPositionedState_forEachTween_closure2, A._AnimatedPositionedState_forEachTween_closure3, A._AnimatedPositionedState_forEachTween_closure4, A._AnimatedRotationState_forEachTween_closure, A._AnimatedOpacityState_forEachTween_closure, A._AnimatedDefaultTextStyleState_forEachTween_closure, A._AnimatedPhysicalModelState_forEachTween_closure, A._AnimatedPhysicalModelState_forEachTween_closure0, A._AnimatedPhysicalModelState_forEachTween_closure1, A._AnimatedPhysicalModelState_forEachTween_closure2, A.Visibility_of_closure, A.InheritedTheme_capture_closure0, A._loadAll_closure, A._loadAll_closure0, A._loadAll_closure1, A.Localizations_closure, A._LocalizationsState_load_closure, A._LocalizationsState_load_closure0, A.LocalizationsResolver__debugCheckLocalizations__closure, A.LookupBoundary_findAncestorWidgetOfExactType_closure, A.LookupBoundary_findAncestorRenderObjectOfType_closure, A.LookupBoundary_debugIsHidingAncestorWidgetOfExactType__closure, A.LookupBoundary_debugIsHidingAncestorStateOfType__closure, A.LookupBoundary_debugIsHidingAncestorRenderObjectOfType__closure, A.MagnifierController_show_closure, A.MediaQueryData_removeDisplayFeatures_closure, A.MediaQuery_updateShouldNotifyDependent_closure, A.Route_didPush_closure, A.Route_didAdd_closure, A.Navigator_defaultGenerateInitialRoutes_closure2, A._RouteEntry_handleDidPopNext_closure, A._RouteEntry_dispose_closure, A._RouteEntry_dispose__closure, A._RouteEntry_isRoutePredicate_closure, A.NavigatorState__handleHistoryChanged_closure, A.NavigatorState_restoreState_closure, A.NavigatorState__forcedDisposeAllRouteEntries_closure, A.NavigatorState__updateHeroController__closure, A.NavigatorState__afterNavigation_closure, A.NavigatorState_build_closure, A.OverlayEntry_remove_closure, A.OverlayState_rearrange_closure, A.OverlayState_rearrange_closure0, A._RenderTheater_computeMinIntrinsicWidth_closure, A._RenderTheater_computeMaxIntrinsicWidth_closure, A._RenderTheater_computeMinIntrinsicHeight_closure, A._RenderTheater_computeMaxIntrinsicHeight_closure, A._RenderTheater_debugDescribeChildren_closure, A.OverlayPortal$overlayChildLayoutBuilder_closure, A._RenderTheaterMarker__rootRenderTheaterMarkerOf_closure, A._RenderDeferredLayoutBox__childrenInPaintOrder_closure, A._RenderDeferredLayoutBox__doLayoutFrom_closure, A._RenderLayoutBuilder__childrenInPaintOrder_closure, A.PageStorageBucket__allKeys_closure, A._PageViewState_build_closure, A._PlatformViewPlaceholderBox_performLayout_closure, A._extension_0_disposePostFrame_closure, A.RawTooltipState__handleMouseEnter_closure, A._RootRestorationScopeState__loadRootBucketIfNecessary_closure, A.RestorationMixin_registerForRestoration_closure, A.RestorationMixin__doRestore__closure, A._RouterState__processParsedRouteInformation_closure, A._RouterState__handleRoutePopped_closure, A.TransitionRoute__updateSecondaryAnimation_jumpOnAnimationEnd, A.TransitionRoute__setSecondaryAnimation_closure, A.TransitionRoute__handleDragEnd_closure, A._ModalScopeStatus_updateShouldNotifyDependent_closure, A._ModalScopeState_build_closure0, A._ModalScopeState_build__closure, A.ModalRoute__maybeDispatchNavigationNotification_closure, A.ScrollAwareImageProvider_resolveStreamForKey_closure, A.ScrollBehavior_velocityTrackerBuilder_closure, A.ScrollBehavior_velocityTrackerBuilder_closure0, A.ScrollBehavior_velocityTrackerBuilder_closure1, A.ScrollNotificationObserverState_build_closure, A.ScrollNotificationObserverState_build_closure0, A.ScrollPosition_forcePixels_closure, A.Scrollable_ensureVisible_closure, A.ScrollableState_setCanDrag_closure0, A.ScrollableState_setCanDrag_closure2, A._ScrollableSelectionContainerDelegate__scheduleLayoutChange_closure, A.ScrollbarPainter__debugAssertIsValidOrientation_closure_isVerticalOrientation, A.RawScrollbarState__debugScheduleCheckHasValidScrollPosition_closure, A.RawScrollbarState__gestures_closure2, A.RawScrollbarState_build_closure, A.RawScrollbarState_build_closure0, A.StaticSelectionContainerDelegate_didChangeSelectables_closure, A.StaticSelectionContainerDelegate_didChangeSelectables_closure0, A.MultiSelectableSelectionContainerDelegate__scheduleSelectableUpdate_runScheduledTask, A.MultiSelectableSelectionContainerDelegate_getSelectionGeometry_closure, A.MultiSelectableSelectionContainerDelegate_getSelectionGeometry_closure0, A.ShortcutMapProperty_valueToString_closure, A.SliverMultiBoxAdaptorElement_performRebuild_processElement, A.SliverMultiBoxAdaptorElement_visitChildren_closure, A._SystemContextMenuState_build_closure, A.RenderTapRegionSurface__classifyRegions_closure, A._OverridingTextStyleTextSpanUtils__applyTextStyleOverrides_closure, A.SelectionOverlay_showMagnifier_closure, A.SelectionOverlay_showHandles_closure, A.SelectionOverlay_showHandles_closure0, A.SelectionOverlay_showToolbar_closure, A.SelectionOverlay_markNeedsBuild_closure, A.SelectionOverlay__buildToolbar_closure, A._SelectionHandleOverlayState_build_closure0, A.TextSelectionGestureDetectorBuilder_onTapDown_closure, A._TextSelectionGestureDetectorState_build_closure0, A._TextSelectionGestureDetectorState_build_closure2, A._TextSelectionGestureDetectorState_build_closure4, A._TextSelectionGestureDetectorState_build_closure6, A._TextSelectionGestureDetectorState_build_closure8, A.UndoHistoryState_initState_closure, A._throttle_closure, A._MultiChildComponentElement__debugCheckMustAttachRenderObject_closure, A._calculateSubtreeBoundsHelper_closure, A.WidgetInspectorService__registerSignalServiceExtension_closure, A.WidgetInspectorService__registerObjectGroupServiceExtension_closure, A.WidgetInspectorService__registerBoolServiceExtension_closure, A.WidgetInspectorService__registerServiceExtensionWithArg_closure, A.WidgetInspectorService__registerServiceExtensionVarArgs_closure, A.WidgetInspectorService_initServiceExtensions_closure1, A.WidgetInspectorService_initServiceExtensions_closure3, A.WidgetInspectorService_initServiceExtensions_closure5, A.WidgetInspectorService_initServiceExtensions_closure7, A.WidgetInspectorService_initServiceExtensions_closure8, A.WidgetInspectorService_initServiceExtensions_closure9, A.WidgetInspectorService_initServiceExtensions_closure10, A.WidgetInspectorService_initServiceExtensions_closure11, A.WidgetInspectorService_addPubRootDirectories_closure, A.WidgetInspectorService_removePubRootDirectories_closure, A.WidgetInspectorService__truncateNodes_closure, A._WidgetInspectorState_hitTest_area, A._filterInspectorHitCandidatesToModalRouteScope_closure, A._filterInspectorHitCandidatesToModalRouteScope_closure0, A._InspectorOverlayLayer__isInInspectorRenderObjectTree_closure, A._WidgetInspectorButtonState_build_closure, A._WidgetInspectorButtonState_build_closure0, A.InspectorSerializationDelegate_filterProperties_closure, A.WidgetSpan_extractFromInlineSpan_visitSubtree, A.Cache_putIfAbsent_closure, A.SvgLoader__load_closure, A.SvgLoader__load__closure, A.Registrar_send_closure, A.BakimDurumu_baslat_closure, A.geriGit_closure, A._OfflineBannerState_initState_closure, A._OfflineBannerState_initState__closure, A.yerelGorsel_closure, A.yerelGorsel_closure0, A.RoleGuard_build_closure, A.RoleGuard_build__closure, A.kaliciDegisince_closure, A.Validators_anlamsizKelimeVarMi_closure, A.Validators_anlamsizKelimeVarMi_closure0, A.PendingListingController_kayipOlanlar_closure, A.RegionController_cityNames_closure, A.TeklifTalebiController_gorulmemisTalepSayisi_closure, A.TeklifTalebiController_yeniTeklifSayisi_closure, A.mockSaglayicilariBul_siraHesapla, A.Account_toJson_closure, A.Account_Account$fromJson_closure, A.District_neighborhoodNames_closure, A.District_neighborhoodNames_closure0, A.City_districtNames_closure, A.RegionTree_siraliSehirler_closure, A.RegionTree_siraliSehirler_closure1, A.ApiAuthPort_setNotificationPrefs_closure, A.ApiListingPort_byOwner_closure, A.MockListingPort_delete_closure, A.MockListingPort__tamamlanmisIs_closure, A.MockOfferPort_placeOffer_closure, A.MockRegionPort_regionTree_closure, A.MockRegionPort_regionTree__closure, A.defaultOnlineChecker_closure, A.ApiTeklifTalebiPort_yenile_closure, A.ApiTeklifTalebiPort_byHizmetAlan_closure, A.ApiTeklifTalebiPort_bySaglayici_closure, A.ApiTeklifTalebiPort__talep_closure, A.FirebaseKimlik_epostaBaglaVeDogrulamaGonder_closure, A.FirebaseKimlik_sifreGuncelle_closure, A.FirebaseKimlik_yeniSifreyleYenidenBaglan_closure, A.Mappers_account_closure, A.ApiChatRepository__bindRealtime_closure, A.ApiChatRepository__bindRealtime_closure0, A.ApiChatRepository__bindRealtime__closure0, A.ApiChatRepository__bindRealtime_closure1, A.ApiChatRepository__bindRealtime_closure2, A.ApiChatRepository_loadThread_closure0, A.ApiChatRepository__sendWithKey_closure2, A.ApiChatRepository__sendWithKey_closure3, A.ApiReviewRepository_loadForProvider_closure0, A.ApiNotificationRepository_load_closure0, A.ApiNotificationRepository_load_closure1, A.ApiAuthRepository_profilFotografiniKaydet_closure0, A.ApiAuthRepository_profilFotografiniKaydet_closure1, A.ApiListingRepository__teklifleriAyikla_closure, A.ApiListingRepository_teklifIlanlariniAl_closure, A.ApiListingRepository__merge_closure, A.ApiListingRepository_loadOne_closure0, A.ApiListingRepository_loadOne_closure1, A.ApiListingRepository_remove_closure0, A.ApiOfferRepository_forListing_closure, A.ApiOfferRepository_byProvider_closure, A.WsClient_connect__closure, A.WsClient_connect__closure0, A.WsClient_connect__closure1, A.WsClient_connect__closure2, A.WsClient_connect__closure3, A.WsClient_connect__closure4, A.YuklemeAdresi_izinliHostlar_closure, A.YuklemeAdresi_izinliHostlar_closure0, A.YuklemeAdresi_denetle_closure, A.YuklemeAdresi__amzTarihi_g, A.AuthRepository_saglayicilarKimSunuyor_closure, A.ListingRepository_byOwner_closure, A.NotificationRepository_forUser_closure, A.OfferRepository_sekmeKayitlariniYukle_closure, A.OfferRepository_forListing_closure, A.OfferRepository_byProvider_closure, A.ReviewRepository_sekmeKayitlariniYukle_closure, A.ReviewRepository_byProvider_closure, A.ReviewRepository_byProvider_closure0, A.ilanCoz_closure, A.talepCoz_closure, A.TeklifTalebiRepository_sekmeKayitlariniYukle_closure, A.TeklifTalebiRepository_byHizmetAlan_closure, A.TeklifTalebiRepository_bySaglayici_closure, A.SearchService__sorguParcalari_closure, A.SearchService_services_skor, A.SearchService_services_aliasSkor, A.ShareService_closure, A.rolOkunmamisSayisi_closure, A.hizmetAlanTamamlananIs_closure, A.hizmetAlanTamamlananIs_closure0, A._sayiCoz_closure, A.PasswordHasher__hex_closure, A.tamamlananIsSayisi_closure, A.okunmamisSohbetMesaji_closure, A.okunmamisMesajSayisi_closure, A.KoordinatTabanliYakinlikSaglayici_yakinIlceler_closure, A.IlBazliYakinlikSaglayici_yakinIlceler_closure, A.kisaYazarAdi_closure, A.main__closure0, A.main_closure2, A.main_hesaplariYukle_closure, A.main_closure3, A.main__closure, A.main_closure5, A.main_closure7, A.main_closure8, A.main_closure9, A.main_closure10, A.main_closure11, A.main_closure12, A.main_closure13, A.main_closure14, A.main_closure15, A.main_closure16, A.main_closure17, A.main_closure18, A.HizmetCepApp_build_closure, A.HizmetCepApp_build_closure0, A.HizmetCepApp_build_closure1, A.HizmetCepApp_build__closure24, A.HizmetCepApp_build_closure2, A.HizmetCepApp_build__closure23, A.HizmetCepApp_build_closure3, A.HizmetCepApp_build__closure22, A.HizmetCepApp_build_closure4, A.HizmetCepApp_build__closure21, A.HizmetCepApp_build_closure5, A.HizmetCepApp_build__closure20, A.HizmetCepApp_build_closure6, A.HizmetCepApp_build__closure19, A.HizmetCepApp_build_closure7, A.HizmetCepApp_build__closure18, A.HizmetCepApp_build_closure8, A.HizmetCepApp_build__closure17, A.HizmetCepApp_build_closure9, A.HizmetCepApp_build__closure0, A.HizmetCepApp_build__closure1, A.HizmetCepApp_build__closure2, A.HizmetCepApp_build___closure12, A.HizmetCepApp_build__closure3, A.HizmetCepApp_build___closure11, A.HizmetCepApp_build__closure4, A.HizmetCepApp_build___closure10, A.HizmetCepApp_build__closure5, A.HizmetCepApp_build___closure9, A.HizmetCepApp_build__closure6, A.HizmetCepApp_build___closure8, A.HizmetCepApp_build__closure7, A.HizmetCepApp_build___closure7, A.HizmetCepApp_build__closure8, A.HizmetCepApp_build___closure6, A.HizmetCepApp_build__closure9, A.HizmetCepApp_build___closure5, A.HizmetCepApp_build__closure10, A.HizmetCepApp_build___closure4, A.HizmetCepApp_build__closure11, A.HizmetCepApp_build___closure3, A.HizmetCepApp_build__closure12, A.HizmetCepApp_build___closure2, A.HizmetCepApp_build__closure13, A.HizmetCepApp_build___closure1, A.HizmetCepApp_build__closure14, A.HizmetCepApp_build___closure0, A.HizmetCepApp_build__closure15, A.HizmetCepApp_build___closure, A.HizmetCepApp_build__closure16, A.HizmetCepApp_build_closure10, A.HizmetCepApp_build__closure, A.MockDepolar_sekmedenYukle_liste, A.MockDepolar_sekmedenYukle_closure, A._AccountSettingsScreenState__freeze_closure0, A._AccountSettingsScreenState__requestDeletion_closure1, A._AccountSettingsScreenState__requestDeletion__closure, A._AccountSettingsScreenState__devamEdenIsVar_closure, A._AccountSettingsScreenState__devamEdenIsVar_closure0, A._AccountSettingsScreenState__bildirimKarti_closure, A._AccountSettingsScreenState__bildirimKarti_closure0, A._AccountSettingsScreenState__bildirimKarti_closure1, A._AccountSettingsScreenState__bildirimKarti_closure2, A._AddressesScreenState_didChangeDependencies_closure, A._AddressesScreenState__showPicker_closure, A._AppRateScreenState__formGorunum_closure, A._BaglaniyorEkraniState__bekle_closure, A.BulunamadiScreen_build__closure, A._CategoryScreenState_build_startFlow, A._CategoryScreenState_build_startFlow_closure, A.sunucuIkonlariniAyarla_closure, A._ChangePasswordScreenState_build_closure, A._ChangePasswordScreenState_build_closure1, A._ChangePasswordScreenState_build_closure2, A._ChangePasswordScreenState_build__closure5, A._ChangePasswordScreenState_build_closure3, A._ChangePasswordScreenState_build_closure5, A._ChangePasswordScreenState_build_closure6, A._ChangePasswordScreenState_build__closure2, A._ChangePasswordScreenState_build_closure7, A._ChangePasswordScreenState_build_closure8, A._ChangePasswordScreenState_build_closure9, A._ChangePasswordScreenState_build__closure, A._ChangePasswordScreenState__sifreSifirla_closure, A._ChatScreenState_initState_closure, A._ChatScreenState_build_closure, A._ChatScreenState_build_closure_durumSatiri, A._ChatScreenState_build_closure2, A._ChatScreenState_build_closure3, A._KonusmaListesi_build___closure, A._SohbetFotografi_build__closure, A._SohbetFotografi__gorsel_closure, A._CreateListingScreenState_initState_closure, A._CreateListingScreenState_initState_closure0, A._CreateListingScreenState__photosUploading_closure, A._CreateListingScreenState__photosFailed_closure, A._CreateListingScreenState_dispose_closure, A._CreateListingScreenState_dispose_closure0, A._CreateListingScreenState_dispose_closure1, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure1, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure2, A._CreateListingScreenState__publish_closure0, A._CreateListingScreenState__adim1_closure, A._CreateListingScreenState__kelimeSayisi_closure, A._CreateListingScreenState__adim2_closure1, A._CreateListingScreenState__adim2_closure, A._CreateListingScreenState__adim2_closure0, A._CreateListingScreenState__adim2_closure2, A._CreateListingScreenState__adim2_closure3, A._CreateListingScreenState__adim3___closure, A._CreateListingScreenState__adim3__closure, A._FindProviderScreenState_initState_closure, A._FindProviderScreenState__ara_closure, A._HizmetAramaAlaniState__sorgula__closure, A._HizmetAramaAlaniState_build_closure, A._ForgotPasswordScreenState__telefonKodIste_closure3, A._ForgotPasswordScreenState__telefonKodIste__closure0, A._ForgotPasswordScreenState__telefonKodIste___closure, A._ForgotPasswordScreenState_build_closure0, A._ForgotPasswordScreenState_build_closure1, A._ForgotPasswordScreenState_build_closure3, A._ForgotPasswordScreenState_build_closure4, A._HizmetAlaniScreenState__kategoriler__closure, A._HizmetAlaniScreenState_build_closure1, A._HizmetSonucSatiri_build__closure, A._KategoriSatiri_build__closure, A.hizmetSecildi_closure, A._AlanKarti__govde__closure, A._AlanKarti__govde_closure0, A._AlanKarti__govde_closure, A._JobDetailScreenState_initState_closure, A._JobDetailScreenState_build_closure, A._JobDetailScreenState_build__closure5, A._JobDetailScreenState_build_closure2, A._JobDetailScreenState_build_closure3, A._JobDetailScreenState_build___closure, A.maskeliAd_closure, A.maskeliAd_closure0, A._JobsScreenState_initState_closure, A._JobsScreenState_initState_closure0, A._JobsScreenState__siralaMenu_closure, A._JobsScreenState__filtreMenu_closure, A._JobsScreenState_build_acikVeBaskasinin, A._JobsScreenState_build_ilceUygun, A._JobsScreenState_build_ilceUygun_closure, A._JobsScreenState_build_oncelik, A._JobsScreenState_build_kategoriUygun, A._JobsScreenState_build_teklifVermedim, A._JobsScreenState_build_closure, A._JobsScreenState_build_closure0, A._JobsScreenState_build_closure1, A._JobsScreenState_build_closure2, A._JobsScreenState_build_closure3, A._JobsScreenState_build_closure4, A._JobsScreenState_build_grupYeni, A._JobsScreenState_build_grupTeklifsiz, A._JobsScreenState_build_closure6, A._JobsScreenState_build_closure7, A._JobsScreenState_build_closure9, A._JobsScreenState_build___closure, A._JobsScreenState_build__closure0, A._JobsScreenState__kazanilanTalepKarti__closure, A._JobsScreenState__kazanilanTalepKarti_closure, A._JobsScreenState__jobCard__closure, A._JobsScreenState__jobCard_closure, A._ListingDetailScreenState_initState_closure, A._ListingDetailScreenState_initState_closure0, A._ListingDetailScreenState__silOnayi_closure, A._ListingDetailScreenState_build_closure, A._ListingDetailScreenState_build__closure0, A._ListingDetailScreenState_build__closure, A._Fotograflar_build_closure, A._TeklifKarti__ad_closure, A._TeklifKarti_build_closure, A._LoginScreenState__kilidiTazele_closure0, A._LoginScreenState_initState_closure0, A._LoginScreenState__girisSonrasiYonlendir_closure, A._LoginScreenState__formu_closure0, A._LoginScreenState__formu_closure1, A._LoginScreenState__formu_closure2, A._LoginScreenState__formu_closure3, A._LoginScreenState__formu_closure4, A._LoginScreenState__formu_closure5, A._LoginScreenState__formu_closure7, A._LoginScreenState__formu_closure6, A._LoginScreenState__formu__closure, A._MyAreasScreenState_initState_closure, A._MyAreasScreenState__visible_norm, A._MyAreasScreenState__visible_closure, A._MyAreasScreenState_build_closure, A._MyAreasScreenState_build__closure, A._MyCategoriesScreenState_build_closure, A._MyListingsScreenState_initState_closure, A._MyListingsScreenState_build_closure, A._MyListingsScreenState_build_closure0, A._MyListingsScreenState_build_teklif, A._MyListingsScreenState_build_closure1, A._MyListingsScreenState_build_closure3, A._MyListingsScreenState_build_closure4, A._MyListingsScreenState_build_closure5, A._MyListingsScreenState_build__closure0, A._MyListingsScreenState_build__closure, A._MyListingsScreenState__siralaMenu_closure, A._MyListingsScreenState__filtreMenu_closure, A._MyReviewsScreenState__load__closure0, A._MyReviewsScreenState__stars_closure, A.custNavItems__closure0, A.custNavItems__closure, A.NotificationsScreen_hedefeGit_closure, A.NotificationsScreen_hedefeGit_closure0, A.NotificationsScreen_hedefeGit_closure1, A.NotificationsScreen_hedefeGit_closure2, A.NotificationsScreen_hedefeGit_closure3, A.NotificationsScreen_hedefeGit_closure4, A._NotificationsScreenState_initState_closure, A._NotificationsScreenState_build_closure, A._NotificationsScreenState_build__closure, A._OfferDetailScreenState_build_closure, A._OfferDetailScreenState_build_closure1, A._OfferDetailScreenState_build__closure5, A._OfferDetailScreenState_build__closure0, A._OfferDetailScreenState_build__closure, A._basHarfler_closure, A._basHarfler_closure0, A._saglayiciAdi_closure, A._olumluOran_closure, A._PuanKarti_build_closure, A._OtpScreenState__sayaciBaslat_closure, A._OtpScreenState_build_closure, A._OtpScreenState_build_closure2, A._ProfileInfoScreenState_initState_closure, A._ProfileInfoScreenState__save_closure4, A._ProfileInfoScreenState__save__closure0, A._ProfileInfoScreenState_build_closure, A._ProfileInfoScreenState_build_closure1, A._ProfileInfoScreenState_build__closure3, A._ProfileInfoScreenState_build_closure2, A._ProfileInfoScreenState_build_closure4, A._ProfileInfoScreenState_build__closure1, A._ProfileInfoScreenState_build_closure5, A._ProfileInfoScreenState_build_closure7, A._ProfileInfoScreenState_build_closure8, A._ProfileInfoScreenState_build_closure9, A._ProfileInfoScreenState_build_closure10, A.ProfileScreen__rolDegistir_closure, A.ProfileScreen__cikis_closure, A._ProviderStatusScreenState_initState_closure, A._RegisterDoneScreenState__bitir_closure, A._RegisterScreenState_didChangeDependencies_closure, A._RegisterScreenState__ilSec_closure, A._RegisterScreenState__ilSec__closure, A._RegisterScreenState__ilceSec_closure, A._RegisterScreenState__ilceSec__closure, A._RegisterScreenState__mahalleSec_closure, A._RegisterScreenState__mahalleSec__closure, A._RegisterScreenState__next_closure4, A._RegisterScreenState__next__closure0, A._RegisterScreenState__next___closure, A._RegisterScreenState__kategoriSec_closure, A._RegisterScreenState__ilceSecCoklu_closure, A._RegisterScreenState__ilceSecCoklu__closure, A._RegisterScreenState_build_closure0, A._RegisterScreenState_build_closure2, A._RegisterScreenState_build__closure6, A._RegisterScreenState_build_closure3, A._RegisterScreenState_build_closure5, A._RegisterScreenState_build__closure5, A._RegisterScreenState_build_closure6, A._RegisterScreenState_build_closure8, A._RegisterScreenState_build_closure9, A._RegisterScreenState_build_closure11, A._RegisterScreenState_build_closure14, A._RegisterScreenState_build_closure19, A._RegisterScreenState_build_closure17, A._RegisterScreenState_build_closure18, A._RegisterScreenState_build_closure21, A._RegisterScreenState_build_closure24, A._RegisterScreenState_build_closure25, A._RegisterScreenState_build_closure22, A._RegisterScreenState_build_closure23, A._RegisterScreenState_build_closure26, A._RegisterScreenState_build__closure1, A._RegisterScreenState_build_closure27, A._RegisterScreenState_build__closure, A._RegisterScreenState_build__closure0, A._RegisterScreenState_build_closure28, A._ReviewScreenState_build__closure1, A._ReviewScreenState_build_closure1, A._ReviewScreenState_build_closure2, A._UstaKarti_build_closure, A._UstaKarti_build_closure0, A._UstaKarti_build_closure1, A.RoleSelectScreen_startRegister_closure, A.RoleSelectScreen__rolDegistir_closure, A._RoleSwitchScreenState__kategoriSec_closure, A._RoleSwitchScreenState__ilSec_closure, A._RoleSwitchScreenState__bolgeSec_closure, A._RoleSwitchScreenState__bolgeSec__closure, A._RoleSwitchScreenState__gec_closure3, A._RoleSwitchScreenState__sifreAl_closure, A._RoleSwitchScreenState__sifreAl__closure0, A._RoleSwitchScreenState__sifreAl_closure0, A._RoleSwitchScreenState__sifreAl__closure, A._RoleSwitchScreenState__sifreAl___closure, A._RoleSwitchScreenState__sifreAl_closure1, A._ScanningScreenState__taramaTamamlaninca_closure, A._ScanningScreenState_build__closure, A._SonuclarScreenState_initState_closure, A._SonuclarScreenState__teklifIste_closure, A._SonuclarScreenState__cikisYap_closure, A._SplashScreenState_initState_closure, A._SplashScreenState__bootGuvenli_closure, A._SplashScreenState__gercekYonlendir_closure, A._SplashScreenState__navSonrasiKareyiBekle_closure, A._SplashScreenState__bloke_closure, A._SplashScreenState__bloke___closure, A._TeklifIsteScreenState__kelimeSayisi_closure, A._TeklifIsteScreenState__gonder_closure, A._TeklifIsteScreenState__gonder_closure0, A._TeklifIsteScreenState__gonder_closure2, A._TeklifIsteScreenState__gonder_closure4, A._TeklifIsteScreenState__gonder_closure5, A._TeklifIsteScreenState_build_closure1, A._TeklifIsteScreenState_build_closure2, A._TeklifIsteScreenState_build___closure, A._TeklifIsteScreenState_build_closure3, A._TeklifIsteScreenState_build_closure0, A._TeklifIsteScreenState_build_closure, A._TeklifIsteScreenState_build_closure4, A._TeklifIsteScreenState_build_closure5, A._TalepKarti_build__closure, A.TeklifIstekleriListesi_build_closure, A._TalepKarti_build__closure0, A._TeklifTalebiDetayScreenState__teklifeKaydir_closure, A._TeklifTalebiDetayScreenState_initState_closure, A._TeklifTalebiDetayScreenState__talepMenusu_closure0, A._TeklifTalebiDetayScreenState_build_closure, A._TeklifTalebiDetayScreenState_build_closure0, A._TeklifTalebiDetayScreenState_build_closure2, A._TeklifTalebiDetayScreenState_build_closure3, A._TeklifTalebiDetayScreenState_build__closure, A._KarsiTarafBilgisi__sohbeteGit_closure, A._KarsiTarafBilgisi_build_closure1, A._KarsiTarafBilgisi_build_closure3, A._KarsiTarafBilgisi_build_closure4, A._KarsiTarafBilgisi_build___closure, A._TeklifTalebiSohbetScreenState_initState_closure, A._TeklifTalebiSohbetScreenState_build_closure, A._MesajBalonu_build_durumSatiri, A._TeklifSohbetFotografi_build__closure, A._TeklifTalebiYorumScreenState_build__closure1, A._TeklifTalebiYorumScreenState_build_closure0, A._TeklifTalebiYorumScreenState_build_closure2, A._TeklifTalebiYorumScreenState_build_closure3, A.SahipKarti__basHarfler_closure, A.SahipKarti__basHarfler_closure0, A.FotoGoruntuleyici_ac_closure, A._FotoGoruntuleyiciState_build_closure0, A._SayfaState_build_closure0, A._SayfaState_build_closure, A.KayitVerisi_alanlarGecerli_closure, A._IlanKayitAdimiState_build_closure2, A._IlanKayitAdimiState_build_closure3, A._IlanKayitAdimiState__secici_closure, A._IlanKayitAdimiState__sifre_closure0, A._IlanOtpAdimiState_initState_closure, A._IlanOtpAdimiState__sayacBaslat_closure, A._IlanOtpAdimiState__kutu_closure, A._InlineSearchBoxState__ac_closure0, A._InlineSearchBoxState_build_closure, A._InlineSearchBoxState_build_closure0, A._InlineSearchBoxState_build_closure1, A._InlineSearchBoxState__webSarmala_closure, A._KategoriSecimPaneliState_build_closure0, A._ListingPhotoPickerState__tile_closure, A.ProfilFotografi_build_closure, A.RegionPickerSheetState_build_closure, A.RegionPickerSheetState_build_closure1, A._YanlisTarafKapisiState_initState_closure, A._YeniSifreScreenState__kaydet_closure3, A._YeniSifreScreenState_build_closure0, A._YeniSifreScreenState_build_closure3, A._YeniSifreScreenState_build_closure2, A._YeniSifreScreenState_build_closure4, A._YeniSifreScreenState_build_closure6, A._YeniSifreScreenState_build__closure, A._YeniSifreScreenState_build_closure5, A.altPanelGoster_closure, A.bakimBitisMetni_iki, A._girisKapisi_closure0, A.GlobalWebKabugu__icerik_closure, A.GlobalWebKabugu__icerik__closure0, A.GlobalWebKabugu__icerik_closure0, A._KalanAlandaOrtalaState_build_closure, A.panelRotasi_closure, A.panelRotasi_closure0, A.akisiKapat_closure, A.akisiKapat_closure0, A._PushKapisiState_didChangeDependencies_closure, A._PushKapisiState__baslat_closure, A._PushKapisiState__bekleyeniIsle_closure, A.RefBottomSheet_goster_closure, A.RefBottomSheet_goster_closure0, A.RefBottomNav_build_closure, A.RefDetailHeader_build__closure, A.RefStepper_build_nokta, A.RefStepper_build_cizgi, A.RefOtpBoxesState_build_closure, A._RefMultiSelectSheetState__gorunen_closure, A._RefMultiSelectSheetState_build_closure0, A._RefMultiSelectSheetState_build_closure1, A._RefMultiSelectSheetState_build_closure2, A._RefSerbestNedenSayfasiState_initState_closure, A._RefSerbestNedenSayfasiState_build_closure, A._RefSerbestNedenSayfasiState_build_closure0, A.RefAramaTemizle_build_closure, A.RefSifreGozu_build_closure0, A.RefSifreGozu_build_closure1, A.RefSifreGozu_build_closure, A.RefBasHarfAvatar_build_closure, A.sayfaBildirimleriniOku_closure, A.sifreIleDogrula__closure, A.sifreIleDogrula___closure0, A.sifreIleDogrula__closure0, A.sifreIleDogrula_closure0, A.WebKenarCubugu_build_closure, A._WebOneriDokunusuState_build_closure0, A._WebOneriDokunusuState_build_closure1, A._WebOneriDokunusuState_build_closure2, A._WebOneriDokunusuState_build_closure, A.webKapat_closure, A.WebPanel_build_closure, A._YasalKabulKapisiState_didChangeDependencies_closure, A._YasalKabulKapisiState__sor_closure, A._YasalKabulKapisiState__sor_closure0, A.put_closure, A.BaseRequest_closure0, A.BrowserClient_send_closure, A._bodyToStream_closure, A.ByteStream_toBytes_closure, A.MediaType_toString__closure, A.expectQuotedString_closure, A.ImagePickerPlugin_getMultiImageWithOptions_closure, A.ImagePickerPlugin__getSelectedXFiles_closure, A.ImagePickerPlugin__getSelectedXFiles__closure, A.ImagePickerPlugin__getSelectedXFiles_closure0, A.ImagePickerPlugin__getSelectedXFiles_closure1, A.ImageResizer_loadImage_closure, A.ImageResizer_loadImage_closure0, A.ImageResizer_writeCanvasToFile_closure, A.MethodChannelImagePicker_getMultiImageWithOptions_closure, A.MaterialDynamicColors_background_closure, A.MaterialDynamicColors_background_closure0, A.MaterialDynamicColors_onBackground_closure0, A.MaterialDynamicColors_onBackground_closure1, A.MaterialDynamicColors_onBackground_closure, A.MaterialDynamicColors_surface_closure, A.MaterialDynamicColors_surface_closure0, A.MaterialDynamicColors_surfaceDim_closure, A.MaterialDynamicColors_surfaceDim_closure0, A.MaterialDynamicColors_surfaceBright_closure, A.MaterialDynamicColors_surfaceBright_closure0, A.MaterialDynamicColors_surfaceContainerLowest_closure, A.MaterialDynamicColors_surfaceContainerLowest_closure0, A.MaterialDynamicColors_surfaceContainerLow_closure, A.MaterialDynamicColors_surfaceContainerLow_closure0, A.MaterialDynamicColors_surfaceContainer_closure, A.MaterialDynamicColors_surfaceContainer_closure0, A.MaterialDynamicColors_surfaceContainerHigh_closure, A.MaterialDynamicColors_surfaceContainerHigh_closure0, A.MaterialDynamicColors_surfaceContainerHighest_closure, A.MaterialDynamicColors_surfaceContainerHighest_closure0, A.MaterialDynamicColors_onSurface_closure, A.MaterialDynamicColors_onSurface_closure0, A.MaterialDynamicColors_surfaceVariant_closure, A.MaterialDynamicColors_surfaceVariant_closure0, A.MaterialDynamicColors_onSurfaceVariant_closure, A.MaterialDynamicColors_onSurfaceVariant_closure0, A.MaterialDynamicColors_inverseSurface_closure, A.MaterialDynamicColors_inverseSurface_closure0, A.MaterialDynamicColors_inverseOnSurface_closure0, A.MaterialDynamicColors_inverseOnSurface_closure1, A.MaterialDynamicColors_inverseOnSurface_closure, A.MaterialDynamicColors_outline_closure, A.MaterialDynamicColors_outline_closure0, A.MaterialDynamicColors_outlineVariant_closure, A.MaterialDynamicColors_outlineVariant_closure0, A.MaterialDynamicColors_shadow_closure, A.MaterialDynamicColors_shadow_closure0, A.MaterialDynamicColors_scrim_closure, A.MaterialDynamicColors_scrim_closure0, A.MaterialDynamicColors_primary_closure, A.MaterialDynamicColors_primary_closure0, A.MaterialDynamicColors_primary_closure1, A.MaterialDynamicColors_onPrimary_closure0, A.MaterialDynamicColors_onPrimary_closure1, A.MaterialDynamicColors_onPrimary_closure, A.MaterialDynamicColors_primaryContainer_closure, A.MaterialDynamicColors_primaryContainer_closure0, A.MaterialDynamicColors_primaryContainer_closure1, A.MaterialDynamicColors_onPrimaryContainer_closure0, A.MaterialDynamicColors_onPrimaryContainer_closure1, A.MaterialDynamicColors_onPrimaryContainer_closure, A.MaterialDynamicColors_inversePrimary_closure0, A.MaterialDynamicColors_inversePrimary_closure1, A.MaterialDynamicColors_inversePrimary_closure, A.MaterialDynamicColors_secondary_closure, A.MaterialDynamicColors_secondary_closure0, A.MaterialDynamicColors_secondary_closure1, A.MaterialDynamicColors_onSecondary_closure0, A.MaterialDynamicColors_onSecondary_closure1, A.MaterialDynamicColors_onSecondary_closure, A.MaterialDynamicColors_secondaryContainer_closure, A.MaterialDynamicColors_secondaryContainer_closure0, A.MaterialDynamicColors_secondaryContainer_closure1, A.MaterialDynamicColors_onSecondaryContainer_closure0, A.MaterialDynamicColors_onSecondaryContainer_closure1, A.MaterialDynamicColors_onSecondaryContainer_closure, A.MaterialDynamicColors_tertiary_closure, A.MaterialDynamicColors_tertiary_closure0, A.MaterialDynamicColors_tertiary_closure1, A.MaterialDynamicColors_onTertiary_closure0, A.MaterialDynamicColors_onTertiary_closure1, A.MaterialDynamicColors_onTertiary_closure, A.MaterialDynamicColors_tertiaryContainer_closure, A.MaterialDynamicColors_tertiaryContainer_closure0, A.MaterialDynamicColors_tertiaryContainer_closure1, A.MaterialDynamicColors_onTertiaryContainer_closure0, A.MaterialDynamicColors_onTertiaryContainer_closure1, A.MaterialDynamicColors_onTertiaryContainer_closure, A.MaterialDynamicColors_error_closure, A.MaterialDynamicColors_error_closure0, A.MaterialDynamicColors_error_closure1, A.MaterialDynamicColors_onError_closure0, A.MaterialDynamicColors_onError_closure1, A.MaterialDynamicColors_onError_closure, A.MaterialDynamicColors_errorContainer_closure, A.MaterialDynamicColors_errorContainer_closure0, A.MaterialDynamicColors_errorContainer_closure1, A.MaterialDynamicColors_onErrorContainer_closure0, A.MaterialDynamicColors_onErrorContainer_closure1, A.MaterialDynamicColors_onErrorContainer_closure, A.MaterialDynamicColors_primaryFixed_closure, A.MaterialDynamicColors_primaryFixed_closure0, A.MaterialDynamicColors_primaryFixed_closure1, A.MaterialDynamicColors_primaryFixedDim_closure, A.MaterialDynamicColors_primaryFixedDim_closure0, A.MaterialDynamicColors_primaryFixedDim_closure1, A.MaterialDynamicColors_onPrimaryFixed_closure0, A.MaterialDynamicColors_onPrimaryFixed_closure2, A.MaterialDynamicColors_onPrimaryFixed_closure, A.MaterialDynamicColors_onPrimaryFixed_closure1, A.MaterialDynamicColors_onPrimaryFixedVariant_closure0, A.MaterialDynamicColors_onPrimaryFixedVariant_closure2, A.MaterialDynamicColors_onPrimaryFixedVariant_closure, A.MaterialDynamicColors_onPrimaryFixedVariant_closure1, A.MaterialDynamicColors_secondaryFixed_closure, A.MaterialDynamicColors_secondaryFixed_closure0, A.MaterialDynamicColors_secondaryFixed_closure1, A.MaterialDynamicColors_secondaryFixedDim_closure, A.MaterialDynamicColors_secondaryFixedDim_closure0, A.MaterialDynamicColors_secondaryFixedDim_closure1, A.MaterialDynamicColors_onSecondaryFixed_closure0, A.MaterialDynamicColors_onSecondaryFixed_closure2, A.MaterialDynamicColors_onSecondaryFixed_closure, A.MaterialDynamicColors_onSecondaryFixed_closure1, A.MaterialDynamicColors_onSecondaryFixedVariant_closure0, A.MaterialDynamicColors_onSecondaryFixedVariant_closure2, A.MaterialDynamicColors_onSecondaryFixedVariant_closure, A.MaterialDynamicColors_onSecondaryFixedVariant_closure1, A.MaterialDynamicColors_tertiaryFixed_closure, A.MaterialDynamicColors_tertiaryFixed_closure0, A.MaterialDynamicColors_tertiaryFixed_closure1, A.MaterialDynamicColors_tertiaryFixedDim_closure, A.MaterialDynamicColors_tertiaryFixedDim_closure0, A.MaterialDynamicColors_tertiaryFixedDim_closure1, A.MaterialDynamicColors_onTertiaryFixed_closure0, A.MaterialDynamicColors_onTertiaryFixed_closure2, A.MaterialDynamicColors_onTertiaryFixed_closure, A.MaterialDynamicColors_onTertiaryFixed_closure1, A.MaterialDynamicColors_onTertiaryFixedVariant_closure0, A.MaterialDynamicColors_onTertiaryFixedVariant_closure2, A.MaterialDynamicColors_onTertiaryFixedVariant_closure, A.MaterialDynamicColors_onTertiaryFixedVariant_closure1, A._NestedHookElement_injectedChild_closure, A._SingleChildStatelessElement_StatelessElement_SingleChildWidgetElementMixin_activate_closure, A.__NestedElement_StatelessElement_SingleChildWidgetElementMixin_activate_closure, A.Context_joinAll_closure, A.Context_split_closure, A._validateArgList_closure, A._createParser_closure, A._createParser_closure0, A.toReadableString_closure, A.optimizedString_closure, A.RecordParserExtension2_map2_closure, A.RecordParserExtension3_map3_closure, A.RecordParserExtension4_map4_closure, A.RecordParserExtension5_map5_closure, A.RecordParserExtension8_map8_closure, A._InheritedProviderElement_debugFillProperties_closure, A._InheritedProviderScopeElement_getElementForInheritedWidgetOfExactType_closure, A.MultiProvider__collapseProviders_closure, A.MultiProvider__collapseProviders_closure0, A.Provider_debugCheckInvalidValueType_closure, A.SharePlusWebPlugin__fallback_closure, A.Socket_setTransport_closure, A.Socket_setTransport_closure0, A.Socket_setTransport_closure1, A.Socket_setTransport_closure2, A.Socket_probe_onTransportOpen, A.Socket_probe_onTransportOpen_closure, A.Socket_probe_onerror, A.Socket_probe_onTransportClose, A.Socket_probe_onclose, A.Socket_probe_onupgrade, A.Socket_close_cleanupAndClose, A.Socket_close_closure, A.Socket_filterUpgrades_closure, A.JSONPTransport_closure, A.JSONPTransport_doPoll_closure, A.JSONPTransport_doWrite_closure, A.PollingTransport_pause_closure, A.PollingTransport_pause_closure0, A.PollingTransport_onData_callback, A.PollingTransport_doClose_close, A.PollingTransport_write_callbackfn, A.PollingTransport_write_closure, A.WebSocketTransport_addEventListeners_closure, A.WebSocketTransport_addEventListeners_closure0, A.WebSocketTransport_addEventListeners_closure1, A.WebSocketTransport_addEventListeners_closure2, A.WebSocketTransport_write_closure, A.XHRTransport_doWrite_closure, A.XHRTransport_doPoll_closure, A.XHRTransport_doPoll_closure0, A.Request_create_closure0, A.Manager_connect_closure, A.Manager_connect_closure0, A.Manager_reconnect__closure, A.Socket_ack_closure, A.PacketParser_encodePayload_closure, A.PacketParser_encodePayload__closure, A.Binary__reconstructPacket_closure, A.EventEmitter_emit_closure, A.EventEmitter_emit_closure0, A.EventEmitter_emit_closure1, A.Highlighter$__closure, A.Highlighter$___closure, A.Highlighter$__closure0, A.Highlighter__collateLines_closure, A.Highlighter__collateLines_closure1, A.Highlighter__collateLines__closure, A.Highlighter_highlight_closure, A.MethodChannelUrlLauncher_launch_closure, A.decodeVectorGraphics_process_closure0, A.decodeVectorGraphics_closure0, A.decodeVectorGraphics_closure1, A.decodeVectorGraphics_closure2, A.FlutterVectorGraphicsListener_onDrawText_buildParagraph, A.FlutterVectorGraphicsListener_onImage__closure, A._VectorGraphicWidgetState__loadPicture_closure, A._VectorGraphicWidgetState__loadPicture_closure0, A.CubicToCommand_computeLength_compute, A._CircularIntervalList_closure, A._PathDasher_closure, A._Resolver_getClipPath_extractPathsFromNode, A._Resolver_getClipPath_closure, A.SvgAttributes_heritable_closure, A.CommandBuilderVisitor_visitResolvedTextPositionNode_closure, A._EventStreamSubscription_closure, A._EventStreamSubscription_onData_closure, A._asNumericCharacterReferences_closure, A.XmlEventParser_characterData_closure, A.XmlEventParser_startElement_closure, A.XmlEventParser_attribute_closure, A.XmlEventParser_attributeAssignment_closure, A.XmlEventParser_attributeValueDoubleQuote_closure, A.XmlEventParser_attributeValueSingleQuote_closure, A.XmlEventParser_attributeValueNoQuote_closure, A.XmlEventParser_endElement_closure, A.XmlEventParser_comment_closure, A.XmlEventParser_cdata_closure, A.XmlEventParser_declaration_closure, A.XmlEventParser_processing_closure0, A.XmlEventParser_doctype_closure, A.XmlEventParser_doctypeExternalIdSystem_closure, A.XmlEventParser_doctypeExternalIdPublic_closure, A.XmlEventParser_doctypeIntSubset_closure, A.eventParserCache_closure]);
-    _inheritMany(A.Closure0Args, [A.AppBootstrap_prepareEngineInitializer_closure, A.SkiaFontCollection__registerWithFontProvider_closure, A.SkiaFontCollection__registerWithFontProvider_closure0, A.CkPaint_toString_closure, A.CkPicture_dispose_closure, A.CkPicture__initStackTrace_closure, A.CanvasKitRenderer_initialize_closure, A.CkGradientLinear_closure, A.CkImageShader_debugDisposed_closure, A.CkParagraphStyle_toString_closure, A.CkTextStyle_skTextStyle_closure, A.CkTextStyle_toString_closure, A.CkParagraphBuilder_pop_closure, A.DisplayCanvasFactory_closure, A.MultiSurfaceRasterizer_createViewRasterizer_closure, A.OffscreenCanvasRasterizer_createViewRasterizer_closure, A.OffscreenCanvasViewRasterizer_displayFactory_closure, A.FlutterConfiguration$legacy_closure, A.FallbackFontService__process_closure, A.FallbackFontService__process_closure0, A.FallbackFontService__process_closure1, A.FallbackFontService__notifyFontsChanged_closure, A.FrameService_scheduleWarmUpFrame_closure, A.FrameService_scheduleWarmUpFrame_closure0, A.initializeEngineServices_closure, A.initializeEngineServices_initializeRendererCallback, A.initializeEngineUi_closure, A.FlutterEngineInitializer_constructor__closure0, A._cached_closure, A.KeyboardBinding_initInstance_closure, A.KeyboardConverter__scheduleAsyncEvent_closure0, A.KeyboardConverter__startGuardingKey_closure, A.KeyboardConverter__startGuardingKey_closure0, A.KeyboardConverter__handleEvent_closure, A.KeyboardConverter__handleEvent_closure0, A.KeyboardConverter__handleEvent_closure1, A.Frame_raster_closure, A.Frame_raster_closure0, A.PaintVisitor_visitPicture_closure, A.CountedRef_closure, A.CountedRef_debugGetStackTraces_closure, A.EnginePlatformDispatcher_invokeOnKeyData_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure0, A.EnginePlatformDispatcher_invokeOnSemanticsAction_sendActionToFramework, A.invoke2_closure, A.MediaQueryManager_addListener_closure0, A.PlatformViewManager_renderContent_closure, A.PlatformViewEmbedder__compositeWithParams_closure, A.PointerBinding_closure, A.ClickDebouncer_closure, A._PointerAdapter__ensureSanitizer_closure, A._PointerAdapter_setup__closure, A._GlobalPointerState_closure, A._GlobalPointerState_ensurePointerDeviceState_closure, A.EngineImage__init_closure, A.RawKeyboard$__closure, A.RawKeyboard_handleHtmlEvent_closure, A.AccessibilityAnnouncements_announce_closure, A.AccessibilityAnnouncements_announce_closure0, A.AccessibilityFocusManager_changeFocus_closure, A.AccessibilityFocusManager_changeFocus_closure0, A.SemanticRouteBase_closure, A.SemanticRouteBase_update_closure, A.RouteName_update_closure, A.SemanticScrollable_update_closure, A.SemanticRole__updateControls_closure, A.SemanticsObject_toString_closure, A.EngineSemantics__now_closure, A.EngineSemantics__getGestureModeClock_closure, A.EngineSemanticsOwner_closure, A.EngineSemanticsOwner_updateSemantics_closure, A.EngineSemanticsOwner_updateSemantics_closure0, A.MobileSemanticsEnabler_tryEnableSemantics_closure, A.SemanticTextField_update_closure, A.TestUrlStrategy_go_closure, A.TestUrlStrategy_addPopStateListener_closure, A.TestUrlStrategy_addPopStateListener__closure, A.EngineLineMetrics_toString_closure, A.fontWeightIndexToCss_closure, A.EditingState_toString_closure, A.IOSTextEditingStrategy__schedulePlacement_closure, A.TextEditingChannel_handleTextInput_closure, A.Matrix4_toString_closure, A.CustomElementDimensionsProvider_closure1, A.FullPageEmbeddingStrategy__applyViewportMeta_closure, A.FlutterViewManager_safeBlur_closure, A.FlutterViewManager_safeRemove_closure, A._hotRestartCache_closure, A._hotRestartCache__closure, A.applyGlobalCssRulesToSheet_closure, A.WebParagraphDebug_log_closure, A.WebParagraphDebug_apiTrace_closure, A.WebFontCollection_loadAssetFonts_closure, A.TextLayout_addLine_closure, A.WebParagraphPainter_paint_closure, A.WebParagraphStyle_toString_closure, A.WebTextStyle_toString_closure, A._LineBuilder_hasPendingText_closure, A.EngineFlutterView__computePhysicalSize_closure, A.EngineFlutterWindow_handleNavigationMessage_closure, A.HttpDate__parse_throwError, A.HttpDate__parse_expectWeekday, A.HttpDate__parse_expectMonth, A.CastMap_putIfAbsent_closure, A.nullFuture_closure, A.Primitives_initTicker_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A._TimerImpl$periodic_closure, A.Future_Future_closure, A.Future_Future$delayed_closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainForeignFuture_closure1, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A._Future_timeout_closure0, A.Stream_length_closure0, A.Stream_first_closure, A._StreamController__subscribe_closure, A._StreamController__recordCancel_complete, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._MultiStream_listen_closure, A._cancelAndValue_closure, A._CustomZone_bindCallback_closure, A._CustomZone_bindCallbackGuarded_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._rootHandleError_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A.DateTime$_internal_closure, A._performance_closure, A._json_closure, A.ChannelBuffers_push_closure, A.ChannelBuffers_push_closure0, A.ChannelBuffers_setListener_closure, A.ChannelBuffers_allowOverflow_closure, A.bootstrapEngine_closure0, A.BrowserPlatformLocation_getOrCreateDomEventListener_closure, A.HashUrlStrategy_addPopStateListener_closure, A.CanonicalizedMap_putIfAbsent_closure, A.FirebaseAuth_FirebaseAuth$instanceFor_closure, A.MethodChannelFirebaseAuth_delegateFor_closure, A.FirebaseAuthWeb__createStreamListener_closure, A.FirebaseAuthWeb__createStreamListener_closure2, A.FirebaseAuthWeb__createStreamListener_closure5, A.FirebaseAuthWeb_sendPasswordResetEmail_closure, A.FirebaseAuthWeb_setPersistence_closure, A.FirebaseAuthWeb_signInWithCustomToken_closure, A.FirebaseAuthWeb_signInWithEmailAndPassword_closure, A.FirebaseAuthWeb_signInWithPhoneNumber_closure, A.ConfirmationResultWeb_confirm_closure, A.UserWeb_getIdToken_closure, A.UserWeb_linkWithCredential_closure, A.UserWeb_sendEmailVerification_closure, A.UserWeb_updatePassword_closure, A.UserWeb_updatePhoneNumber_closure, A.Auth_onAuthStateChanged_startListen, A.Auth_onAuthStateChanged_stopListen, A.Auth_onIdTokenChanged_startListen, A.Auth_onIdTokenChanged_stopListen, A.FirebaseCoreWeb_registerService_closure, A.FirebaseCoreWeb_initializeApp_closure, A.FirebaseCoreWeb_initializeApp_closure0, A.FirebaseCoreWeb_app_closure, A.AnimationController_forward_closure, A.AnimationController_reverse_closure, A.AnimationController_animateTo_closure, A.AnimationController_animateBack_closure, A.AnimationController_repeat_closure, A.AnimationController_dispose_closure, A.AnimationController_toStringDetails_closure, A.CurvedAnimation_value_closure, A.AnimationLocalListenersMixin_notifyListeners_closure, A.AnimationLocalListenersMixin_notifyListeners__closure, A.AnimationLocalStatusListenersMixin_notifyStatusListeners_closure, A.AnimationLocalStatusListenersMixin_notifyStatusListeners__closure, A.Tween_lerp_closure, A.__CupertinoActivityIndicatorState_State_SingleTickerProviderStateMixin_dispose_closure, A._CupertinoButtonState__handleTapDown_closure, A._CupertinoButtonState__handleTapUp_closure, A._CupertinoButtonState__handleTapCancel_closure, A._CupertinoButtonState__onShowFocusHighlight_closure, A._CupertinoButtonState_build_closure, A.__CupertinoButtonState_State_SingleTickerProviderStateMixin_dispose_closure, A.CupertinoDynamicColor_resolveFrom_closure, A.debugCheckHasCupertinoLocalizations_closure, A._CupertinoDesktopTextSelectionToolbarButtonState__onEnter_closure, A._CupertinoDesktopTextSelectionToolbarButtonState__onExit_closure, A._CupertinoTextMagnifierState_initState_closure, A._CupertinoTextMagnifierState_initState__closure, A._CupertinoTextMagnifierState__determineMagnifierPositionAndFocalPoint_closure, A.__CupertinoTextMagnifierState_State_SingleTickerProviderStateMixin_dispose_closure, A.CupertinoRouteTransitionMixin__startPopGesture_closure0, A.CupertinoRouteTransitionMixin__startPopGesture_closure, A.CupertinoRouteTransitionMixin_buildPageTransitions_closure, A.CupertinoRouteTransitionMixin_buildPageTransitions_closure0, A._CupertinoScrollbarState_initState_closure, A._RenderCupertinoTextSelectionToolbarShape_debugPaintSize_closure, A._CupertinoTextSelectionToolbarContentState__statusListener_closure, A.__CupertinoTextSelectionToolbarContentState_State_TickerProviderStateMixin_dispose_closure, A._CupertinoTextSelectionToolbarButtonState__onTapDown_closure, A._CupertinoTextSelectionToolbarButtonState__onTapUp_closure, A._CupertinoTextSelectionToolbarButtonState__onTapCancel_closure, A._testPlatform_closure, A.FlutterErrorDetails_summary_formatException, A.FlutterErrorDetails_summary_closure0, A.FlutterError$fromParts_closure, A.FlutterError_dumpErrorToConsole_closure, A.BindingBase_closure, A.BindingBase_initInstances_closure, A.BindingBase_checkInstance_closure, A.BindingBase_debugCheckZone_closure, A.BindingBase_initServiceExtensions_closure, A.BindingBase_initServiceExtensions_closure0, A.BindingBase_initServiceExtensions_closure2, A.BindingBase_initServiceExtensions_closure4, A.BindingBase_initServiceExtensions_closure5, A.BindingBase_lockEvents_closure, A.BindingBase_registerServiceExtension__closure, A.BindingBase_registerServiceExtension__closure0, A.ChangeNotifier_debugAssertNotDisposed_closure, A.ChangeNotifier_maybeDispatchObjectCreation_closure, A.ChangeNotifier_dispose_closure, A.ChangeNotifier_notifyListeners_closure, A.debugInstrumentAction_closure, A.DiagnosticsNode_toJsonMap_closure, A.DiagnosticsNode_toJsonMapIterative_closure, A.DiagnosticsNode_toString_closure, A.DiagnosticsNode_toStringDeep_closure, A.DiagnosticableNode_builder_closure, A.DiagnosticableNode_toDescription_closure, A.DiagnosticPropertiesBuilder_add_closure, A.Diagnosticable_toString_closure, A.FlutterMemoryAllocations_dispatchObjectEvent_closure, A.objectRuntimeType_closure, A.GestureArenaManager_add_closure, A.GestureArenaManager__tryToResolveArena_closure, A.GestureArenaManager__debugLogDiagnostic_closure, A.GestureBinding__handlePointerEventImmediately_closure, A.GestureBinding__handlePointerEventImmediately_closure0, A.GestureBinding_dispatchEvent_closure, A.GestureBinding_dispatchEvent_closure0, A.GestureBinding_samplingClock_closure, A.ForcePressGestureRecognizer_handleEvent_closure, A.ForcePressGestureRecognizer_acceptGesture_closure, A.ForcePressGestureRecognizer_didStopTrackingLastPointer_closure, A.HitTestResult__debugVectorMoreOrLessEquals_closure, A.LongPressGestureRecognizer__checkLongPressStart_closure, A.LongPressGestureRecognizer__checkLongPressMoveUpdate_closure, A.LongPressGestureRecognizer__checkLongPressEnd_closure, A.DragGestureRecognizer__checkDown_closure, A.DragGestureRecognizer__checkStart_closure, A.DragGestureRecognizer__checkUpdate_closure, A.DragGestureRecognizer__checkEnd_closure, A.DragGestureRecognizer__checkEnd_closure0, A.DragGestureRecognizer__checkEnd_closure1, A.DragGestureRecognizer__checkEnd_closure2, A.DoubleTapGestureRecognizer_addAllowedPointer_closure, A.PointerRouter_addRoute_closure, A.PointerRouter__dispatch_closure, A.PointerRouter__dispatch__closure, A.PointerSignalResolver_resolve_closure, A.PointerSignalResolver_resolve__closure, A.GestureRecognizer_invokeCallback_closure, A.GestureRecognizer_invokeCallback_closure0, A.GestureRecognizer_invokeCallback__closure, A.PrimaryPointerGestureRecognizer_addAllowedPointer_closure, A.ScaleGestureRecognizer__reconfigure_closure1, A.ScaleGestureRecognizer__reconfigure_closure2, A.ScaleGestureRecognizer__advanceStateMachine_closure, A.ScaleGestureRecognizer__dispatchOnStartCallbackIfNeeded_closure, A.TapGestureRecognizer_handleTapDown_closure, A.TapGestureRecognizer_handleTapDown_closure0, A.TapGestureRecognizer_handleTapUp_closure, A.TapGestureRecognizer_handleTapUp_closure0, A.TapGestureRecognizer_handleTapUp_closure1, A.TapGestureRecognizer_handleTapMove_closure, A.BaseTapAndDragGestureRecognizer__handleDragUpdateThrottled_closure, A.BaseTapAndDragGestureRecognizer_addAllowedPointer_closure, A.BaseTapAndDragGestureRecognizer__checkTapDown_closure, A.BaseTapAndDragGestureRecognizer__checkTapUp_closure, A.BaseTapAndDragGestureRecognizer__checkDragStart_closure, A.BaseTapAndDragGestureRecognizer__checkDragUpdate_closure, A.BaseTapAndDragGestureRecognizer__checkDragEnd_closure, A.GestureArenaTeam_add_closure, A.VelocityTracker_getVelocityEstimate_closure, A.VelocityTracker_getVelocityEstimate_closure0, A.IOSScrollViewFlingVelocityTracker_addPosition_closure, A._ActionButton_build_closure, A._MaterialAppState_build_closure, A.AppBar__getEffectiveCenterTitle_platformCenter, A._AppBarState__handleScrollNotification_closure, A.MaterialPointArcTween__initialize_sweepAngle, A._ButtonStyleState_handleStatesControllerChange_closure, A._ButtonStyleState_build_effectiveIconColor, A._ButtonStyleState_build__closure1, A.__ButtonStyleState_State_TickerProviderStateMixin_dispose_closure, A.debugCheckHasMaterial_closure, A.debugCheckHasMaterialLocalizations_closure, A.debugCheckHasScaffoldMessenger_closure, A._getClipCallback_closure0, A._getClipCallback_closure, A._InkResponseState_activateOnIntent_closure, A._InkResponseState_handleStatesControllerChange_closure, A._InkResponseState_updateHighlight_handleInkRemoval, A._InkResponseState__createSplash_onRemoved, A._InkResponseState_handleFocusHighlightModeChange_closure, A._HelperErrorState__handleChange_closure, A._RenderDecoration__childSemanticsConfigurationDelegate_closure0, A._InputDecoratorState__handleChange_closure, A.__HelperErrorState_State_SingleTickerProviderStateMixin_dispose_closure, A.__BorderContainerState_State_TickerProviderStateMixin_dispose_closure, A.__InputDecoratorState_State_TickerProviderStateMixin_dispose_closure, A.ListTile__debugCheckBackgroundIsHidden_closure, A.ListTile__debugCheckBackgroundIsHidden__closure, A._RenderListTile__computeSizes_closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint_closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint__closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint_closure0, A.Material_of_closure, A.InkFeature_dispose_closure, A.__MaterialState_State_TickerProviderStateMixin_dispose_closure, A._PredictiveBackGestureDetectorState_phase_closure, A._PredictiveBackGestureDetectorState_startBackEvent_closure, A._PredictiveBackGestureDetectorState_currentBackEvent_closure, A.__PredictiveBackSharedElementPageTransitionState_State_SingleTickerProviderStateMixin_dispose_closure, A.__CircularProgressIndicatorState_State_SingleTickerProviderStateMixin_dispose_closure, A.RefreshIndicatorState__handleScrollNotification_closure, A.RefreshIndicatorState__dismiss_closure, A.RefreshIndicatorState__dismiss_closure0, A.RefreshIndicatorState__show__closure, A.RefreshIndicatorState__show__closure0, A.RefreshIndicatorState_build_closure, A._RefreshIndicatorState_State_TickerProviderStateMixin_dispose_closure, A.ScaffoldMessengerState_showSnackBar_closure, A.ScaffoldMessengerState_showSnackBar_closure0, A.ScaffoldMessengerState_showSnackBar_closure1, A.ScaffoldMessengerState__handleSnackBarStatusChanged_closure, A.ScaffoldMessengerState__handleSnackBarStatusChanged_closure0, A.ScaffoldMessengerState_build_closure, A._ScaffoldLayout_performLayout_closure, A._FloatingActionButtonTransitionState__handlePreviousAnimationStatusChanged_closure, A.ScaffoldState__updateSnackBar_closure, A.ScaffoldState__updateMaterialBanner_closure, A._ScaffoldMessengerState_State_TickerProviderStateMixin_dispose_closure, A._ScaffoldState_State_TickerProviderStateMixin_dispose_closure, A.__FloatingActionButtonTransitionState_State_TickerProviderStateMixin_dispose_closure, A._MaterialScrollbarState_initState_closure, A._MaterialScrollbarState_handleThumbPressStart_closure, A._MaterialScrollbarState_handleThumbPressEnd_closure, A._MaterialScrollbarState_handleHover_closure, A._MaterialScrollbarState_handleHover_closure0, A._MaterialScrollbarState_handleHoverExit_closure, A._SnackBarState_build_closure, A._SnackBarState_build_closure1, A._TextFieldState__handleFocusChanged_closure, A._TextFieldState__handleSelectionChanged_closure, A._TextFieldState__handleHover_closure, A._TextFieldState__handleStatesControllerChange_closure, A._TextFieldState_build_closure, A._TextFieldState_build_closure0, A._TextFieldState_build_closure1, A._TextFieldState_build_closure2, A._TextFieldState_build_closure3, A._TextFieldState_build_closure4, A._TextFieldState_build__closure0, A._TextFieldState_build__closure, A._TextSelectionToolbarOverflowableState_build_closure, A._TextSelectionToolbarOverflowableState_build__closure, A.__TextSelectionToolbarOverflowableState_State_TickerProviderStateMixin_dispose_closure, A.ThemeData_copyWith_closure, A.ThemeData_localize_closure, A._TooltipState_State_SingleTickerProviderStateMixin_dispose_closure, A.NetworkImage__imageStreamInformationCollector_closure, A.NetworkImage__imageStreamInformationCollector__closure, A.NetworkImage__loadAsync_loadViaDecode, A.NetworkImage__loadAsync_loadViaImgElement, A.Border_paint_closure, A.Border_paint_closure0, A.Border_paint_closure1, A._BoxDecorationPainter__paintShadows_closure, A._BoxDecorationPainter__paintShadows_closure0, A.BoxShadow_toPaint_closure, A.debugCheckCanResolveTextDirection_closure, A.paintImage_closure0, A.ImageCache__trackLiveImage_closure, A.ImageCache__trackLiveImage__closure, A._LiveImage_closure, A.ImageProvider_resolve__closure, A.ImageProvider_resolve___closure, A.ImageProvider_resolveStreamForKey_closure, A.ImageProvider_resolveStreamForKey_closure0, A.AssetBundleImageProvider_loadImage_closure, A.AssetBundleImageProvider_loadImage__closure, A.AssetBundleImageProvider_loadBuffer_closure, A.AssetBundleImageProvider_loadBuffer__closure, A.MultiFrameImageStreamCompleter__handleAppFrame_closure, A._TextLayout__computeEndOfTextCaretAnchorOffset_closure, A.TextPainter_markNeedsLayout_closure, A.TextPainter_textWidthBasis_closure, A.TextPainter_setPlaceholderDimensions_closure, A.TextPainter__createParagraph_closure, A.TextPainter_layout_closure, A.TextPainter_paint_closure, A.TextPainter_debugDisposed_closure, A.TextPainter_dispose_closure, A.TextSpan_debugAssertIsValid_closure, A.TextStyle_copyWith_closure, A.TextStyle_apply_closure, A.TextStyle_merge_closure, A.TextStyle_lerp_closure, A.TextStyle_lerp_closure0, A.RenderAnimatedSize_closure, A.RendererBinding_pipelineOwner_closure, A.RendererBinding_pipelineOwner_closure0, A.RendererBinding__scheduleMouseTrackerUpdate_closure, A.RendererBinding__scheduleMouseTrackerUpdate__closure, A.BoxConstraints__debugPropagateDebugSize_closure, A.BoxConstraints_constrain_closure, A.BoxConstraints_constrainSizeAndAttemptToPreserveAspectRatio_closure, A.BoxConstraints_constrainSizeAndAttemptToPreserveAspectRatio_closure0, A.BoxConstraints_debugAssertIsValid_closure, A._DryLayout_memoize_closure, A._Baseline_memoize_ifAbsent, A._IntrinsicDimension_memoize_closure, A.RenderBox__computeIntrinsics_closure, A.RenderBox__computeWithTimeline_closure, A.RenderBox_getMinIntrinsicWidth_closure, A.RenderBox_getMaxIntrinsicWidth_closure, A.RenderBox_getMinIntrinsicHeight_closure, A.RenderBox_getMaxIntrinsicHeight_closure, A.RenderBox__computeDryLayout_closure, A.RenderBox__computeDryLayout_closure0, A.RenderBox__computeDryBaseline_closure, A.RenderBox__computeDryBaseline_closure0, A.RenderBox_debugCannotComputeDryLayout_closure, A.RenderBox_size_closure, A.RenderBox_size_closure0, A.RenderBox_size_closure1, A.RenderBox_size_closure2, A.RenderBox_debugAdoptSize_closure, A.RenderBox_debugAssertDoesMeetConstraints_closure, A.RenderBox_performLayout_closure, A.RenderBox_hitTest_closure, A.RenderBox_applyPaintTransform_closure, A.RenderBox_debugHandleEvent_closure, A.RenderBox_debugPaint_closure, A.RenderBox_debugPaintSize_closure, A.RenderBox_debugPaintBaselines_closure, A.MultiChildLayoutDelegate_layoutChild_closure, A.MultiChildLayoutDelegate_positionChild_closure, A.MultiChildLayoutDelegate__callPerformLayout_closure, A.MultiChildLayoutDelegate__callPerformLayout_closure0, A.MultiChildLayoutDelegate__callPerformLayout_closure1, A.MultiChildLayoutDelegate__callPerformLayout_closure2, A.MultiChildLayoutDelegate__callPerformLayout_closure3, A.RenderCustomPaint__paintWithPainter_closure, A.RenderCustomPaint__paintWithPainter_closure0, A.RenderCustomPaint_assembleSemanticsNode_closure, A.RenderCustomPaint__updateSemanticsChildren_closure, A.RenderCustomPaint__updateSemanticsChildren_closure0, A.debugPaintPadding_closure, A.debugCheckHasBoundedAxis_closure, A.DebugOverflowIndicatorMixin__reportOverflow_closure, A.RenderEditable__createShowOnScreenFor_closure, A.RenderErrorBox__initBackgroundColor_closure, A.RenderErrorBox__initTextStyle_closure, A._RenderFlex_RenderBox_ContainerRenderObjectMixin_RenderBoxContainerDefaultsMixin_DebugOverflowIndicatorMixin_reassemble_closure, A.RenderFlex_computeDryLayout_closure, A.RenderFlex__debugCheckConstraints_closure, A.RenderFlex_performLayout_closure, A.RenderFlex_paint_closure, A.Layer_addCompositionCallback_closure, A.Layer_addCompositionCallback__closure, A.Layer_addCompositionCallback__closure0, A.Layer_addCompositionCallback_closure0, A.Layer_debugDisposed_closure, A.Layer_debugHandleCount_closure, A.Layer_dispose_closure, A.ContainerLayer_append_closure, A.ContainerLayer__adoptChild_closure, A.ClipRectLayer_addToScene_closure, A.ClipRRectLayer_addToScene_closure, A.ClipPathLayer_addToScene_closure, A.OpacityLayer_addToScene_closure, A.LayerLink__registerLeader_closure, A.LayerLink__debugScheduleLeadersCleanUpCheck_closure, A.MouseTracker__deviceUpdatePhase_closure, A.MouseTracker__deviceUpdatePhase_closure0, A.MouseTracker_updateWithEvent_closure, A.MouseTracker_updateWithEvent__closure, A.MouseTracker_updateAllDevices_closure, A.PaintingContext__repaintCompositedChild_closure, A.PaintingContext__repaintCompositedChild_closure0, A.PaintingContext__repaintCompositedChild_closure1, A.PaintingContext_updateLayerProperties_closure, A.PaintingContext_debugInstrumentRepaintCompositedChild_closure, A.PaintingContext_paintChild_closure, A.PaintingContext__compositeChild_closure, A.PaintingContext__isRecording_closure, A.PaintingContext_stopRecordingIfNeeded_closure, A.PaintingContext_pushClipRect_closure, A.PaintingContext_pushClipRRect_closure, A.PaintingContext_pushClipPath_closure, A.PipelineOwner_flushLayout_closure, A.PipelineOwner_flushLayout_closure0, A.PipelineOwner_flushLayout_closure2, A.PipelineOwner_flushLayout_closure3, A.PipelineOwner__enableMutationsToDirtySubtrees_closure, A.PipelineOwner__enableMutationsToDirtySubtrees_closure0, A.PipelineOwner_flushPaint_closure, A.PipelineOwner_flushPaint_closure0, A.PipelineOwner_flushPaint_closure2, A.PipelineOwner_flushSemantics_closure, A.PipelineOwner_flushSemantics_closure2, A.PipelineOwner_flushSemantics_closure5, A.PipelineOwner_flushSemantics_closure6, A.RenderObject_debugDisposed_closure, A.RenderObject_dispose_closure, A.RenderObject_adoptChild_closure, A.RenderObject__reportException_closure, A.RenderObject__withDebugActiveLayoutCleared_closure, A.RenderObject__withDebugActiveLayoutCleared_closure0, A.RenderObject__debugCanPerformMutations_closure, A.RenderObject_debugLayoutParent_closure, A.RenderObject_markNeedsLayout_closure, A.RenderObject_scheduleInitialLayout_closure, A.RenderObject__layoutWithoutResize_closure, A.RenderObject__layoutWithoutResize_closure0, A.RenderObject_layout_closure, A.RenderObject_layout_closure0, A.RenderObject_layout_closure1, A.RenderObject_layout_closure2, A.RenderObject_layout_closure3, A.RenderObject_layout_closure4, A.RenderObject_layout_closure5, A.RenderObject_layout_closure6, A.RenderObject_layout_closure7, A.RenderObject_layout_closure8, A.RenderObject_layout_closure9, A.RenderObject_invokeLayoutCallback_closure, A.RenderObject_debugLayer_closure, A.RenderObject_markNeedsPaint_closure, A.RenderObject_markNeedsPaint_closure0, A.RenderObject__paintWithContext_closure, A.RenderObject__paintWithContext_closure0, A.RenderObject__paintWithContext_closure1, A.RenderObject__paintWithContext_closure2, A.RenderObject__paintWithContext_closure3, A.RenderObject_toStringDeep_closure, A.RenderObjectWithChildMixin_debugValidateChild_closure, A.ContainerRenderObjectMixin_debugValidateChild_closure, A.RenderInlineChildrenContainerDefaults_positionInlineChildren_closure, A.RenderParagraph_paint_closure, A.RenderParagraph_paint_closure0, A.RenderParagraph__createShowOnScreenFor_closure, A.RenderConstrainedBox_debugPaintSize_closure, A.RenderAspectRatio__applyAspectRatio_closure, A.RenderBackdropFilter_paint_closure, A._RenderCustomClip_debugPaintSize_closure, A.RenderClipRect_debugPaintSize_closure, A.RenderClipRRect_debugPaintSize_closure, A.RenderClipOval_debugPaintSize_closure, A.RenderClipPath_debugPaintSize_closure, A.RenderPhysicalModel_paint_closure, A.RenderPhysicalModel_paint_closure1, A.RenderPhysicalShape_paint_closure, A.RenderPhysicalShape_paint_closure1, A.RenderDecoratedBox_paint_closure, A.RenderDecoratedBox_paint_closure0, A.RenderTransform_paint_closure, A.RenderRepaintBoundary_debugRegisterRepaintBoundaryPaint_closure, A.RenderRepaintBoundary_debugFillProperties_closure, A.RenderLeaderLayer_paint_closure, A.RenderFollowerLayer_paint_closure, A.RenderPadding_debugPaintSize_closure, A.RenderPositionedBox_debugPaintSize_closure, A.SliverConstraints_debugAssertIsValid_closure, A.SliverGeometry_debugAssertIsValid_closure, A.RenderSliver_geometry_closure, A.RenderSliver_debugAssertDoesMeetConstraints_closure, A.RenderSliver_debugAssertDoesMeetConstraints_closure0, A.RenderSliver_applyPaintTransform_closure, A.RenderSliver__debugDrawArrow_closure, A.RenderSliver_debugPaint_closure, A.RenderSliverFixedExtentBoxAdaptor_debugAssertDoesMeetConstraints_closure, A.RenderSliverList_performLayout_advance, A.RenderSliverMultiBoxAdaptor_closure, A.RenderSliverMultiBoxAdaptor_debugChildIntegrityEnabled_closure, A.RenderSliverMultiBoxAdaptor_move_closure, A.RenderSliverMultiBoxAdaptor_move_closure0, A.RenderSliverMultiBoxAdaptor_remove_closure, A.RenderSliverMultiBoxAdaptor_debugAssertChildListIsNonEmptyAndContiguous_closure, A.RenderSliverEdgeInsetsPadding_debugPaint_closure, A.RenderView_paint_closure, A.RenderView_compositeFrame_closure, A.RenderView_debugFillProperties_closure, A.RenderViewportBase_debugThrowIfNotCheckingIntrinsics_closure, A.RenderViewportBase_debugPaintSize_closure, A.RenderViewport_performLayout_closure, A.RenderShrinkWrappingViewport_debugThrowIfNotCheckingIntrinsics_closure, A.RenderShrinkWrappingViewport__debugCheckHasBoundedCrossAxis_closure, A._FrameCallbackEntry_closure, A._FrameCallbackEntry__closure, A.SchedulerBinding__executeTimingsCallbacks_closure, A.SchedulerBinding__executeTimingsCallbacks__closure, A.SchedulerBinding_handleEventLoopCallback_closure, A.SchedulerBinding_addPostFrameCallback_closure, A.SchedulerBinding_scheduleFrame_closure, A.SchedulerBinding_scheduleForcedFrame_closure, A.SchedulerBinding_scheduleWarmUpFrame_closure, A.SchedulerBinding_scheduleWarmUpFrame_closure0, A.SchedulerBinding_scheduleWarmUpFrame_closure1, A.SchedulerBinding_handleBeginFrame_closure, A.SchedulerBinding_handleDrawFrame_closure, A.SchedulerBinding__invokeFrameCallback_closure, A.SchedulerBinding__invokeFrameCallback_closure0, A.SchedulerBinding__invokeFrameCallback_closure1, A.Ticker_closure, A.Ticker_start_closure, A.Ticker_dispose_closure, A.Ticker_toString_closure, A.Ticker_toString_closure0, A.SemanticsBinding_disableAnimations_closure, A.ChildSemanticsConfigurationsResultBuilder_build_closure, A.AttributedString_closure, A.SemanticsNode__replaceChildren_closure0, A.SemanticsNode__replaceChildren_closure1, A.SemanticsNode__adoptChild_closure, A.SemanticsNode__addToUpdate_closure, A.SemanticsNode_sendEvent__closure, A.SemanticsNode__debugIsActionBlocked_closure, A.SemanticsOwner_sendSemanticsUpdate_closure, A.SemanticsOwner_sendSemanticsUpdate_closure5, A.CachingAssetBundle_loadString_closure, A.ServicesBinding__addLicenses_closure, A.ServicesBinding__generateStateTransitions_closure, A.HardwareKeyboard__logEventIfIrregular_closure, A.HardwareKeyboard__logEventIfIrregular__closure, A.HardwareKeyboard__logEventIfIrregular__closure0, A.HardwareKeyboard__logEventIfIrregular__closure1, A.HardwareKeyboard__dispatchKeyEvent_closure, A.HardwareKeyboard__dispatchKeyEvent__closure, A.HardwareKeyboard_handleKeyEvent_closure, A.HardwareKeyboard_handleKeyEvent_closure0, A.HardwareKeyboard_handleKeyEvent_closure1, A.KeyEventManager__dispatchKeyMessage_closure, A.KeyEventManager__dispatchKeyMessage__closure, A.LogicalKeyboardKey_debugName_closure, A.PhysicalKeyboardKey_debugName_closure, A.EventChannel_receiveBroadcastStream_closure, A.EventChannel_receiveBroadcastStream_closure0, A.RawKeyEventData_modifiersPressed_closure, A.RawKeyEvent_RawKeyEvent$fromMessage_dataFromWeb, A.RawKeyboard_handleRawKeyEvent_closure, A.RawKeyboard_handleRawKeyEvent__closure, A.RawKeyboard__synchronizeModifiers_closure, A.RestorationManager__doSerialization_closure, A.RestorationManager__doSerialization_closure0, A.RestorationBucket$empty_closure, A.RestorationBucket$root_closure, A.RestorationBucket$child_closure, A.RestorationBucket__rawChildren_closure, A.RestorationBucket__rawValues_closure, A.RestorationBucket__debugAssertIntegrity_closure, A.RestorationBucket__addChildData_closure, A.RestorationBucket__debugAssertNotDisposed_closure, A.debugIsSerializableForRestoration_closure, A.SystemChrome_setSystemUIOverlayStyle_closure, A.SystemChrome_handleAppLifecycleStateChanged_closure, A.TextInput__debugEnsureInputActionWorksOnPlatform_closure, A.TextInput__loudlyHandleTextInputInvocation_closure, A.TextInput__handleTextInputInvocation_closure2, A.TextInput__scheduleHide_closure, A._colorsWithinRect_closure0, A.Actions_maybeFind_closure0, A.Actions_invoke_closure, A._ActionsState__handleActionChanged_closure, A._FocusableActionDetectorState__updateHighlightMode_closure, A._FocusableActionDetectorState__handleMouseEnter_closure, A._FocusableActionDetectorState__handleMouseExit_closure, A._FocusableActionDetectorState__handleFocusChange_closure, A._OverridableActionMixin__invokeOverride_closure, A._OverridableActionMixin__invokeOverride_closure0, A._OverridableActionMixin__isOverrideActionEnabled_closure, A._OverridableActionMixin__isOverrideActionEnabled_closure0, A._OverridableActionMixin_isEnabled_closure, A._OverridableActionMixin_isEnabled_closure0, A._OverridableActionMixin_consumesKey_closure, A._OverridableActionMixin_consumesKey_closure0, A._OverridableContextAction__invokeOverride_closure, A._OverridableContextAction__invokeOverride_closure0, A.__AnimatedSizeState_State_SingleTickerProviderStateMixin_dispose_closure, A._WidgetsAppState__onUnknownRoute_closure, A._WidgetsAppState__onUnknownRoute_closure0, A._WidgetsAppState_build_closure0, A.AppLifecycleListener_dispose_closure, A.AppLifecycleListener__debugAssertNotDisposed_closure, A._AutomaticKeepAliveState__createCallback_closure, A._AutomaticKeepAliveState__createCallback__closure, A._AutomaticKeepAliveState__createCallback__closure0, A._AutomaticKeepAliveState__createCallback__closure1, A._AutomaticKeepAliveState__createCallback___closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure8, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure10, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure12, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initInstances_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure8, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions__closure, A.WidgetsBinding__handleBuildScheduled_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure2, A.WidgetsBinding_scheduleAttachRootWidget_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_performReassemble_closure, A.RootWidget_attach_closure, A.RootWidget_attach_closure0, A.debugChildrenHaveDuplicateKeys_closure, A.debugCheckHasMediaQuery_closure, A.debugCheckHasDirectionality_closure, A.debugWidgetBuilderValue_closure, A.debugCheckHasWidgetsLocalizations_closure, A.debugCheckHasOverlay_closure, A._DismissibleState__handleDragStart_closure, A._DismissibleState__handleDragUpdate_closure, A._DismissibleState_build_closure, A.__DismissibleState_State_TickerProviderStateMixin_dispose_closure, A._DiscreteKeyFrameSimulation$__closure, A.EditableTextState__onChangedClipboardStatus_closure, A.EditableTextState__inferSpellCheckConfiguration_closure, A.EditableTextState_buttonItemsForToolbarOptions_closure, A.EditableTextState_buttonItemsForToolbarOptions_closure0, A.EditableTextState_buttonItemsForToolbarOptions_closure1, A.EditableTextState_buttonItemsForToolbarOptions_closure2, A.EditableTextState_contextMenuButtonItems_closure, A.EditableTextState_contextMenuButtonItems_closure0, A.EditableTextState_contextMenuButtonItems_closure1, A.EditableTextState_contextMenuButtonItems_closure2, A.EditableTextState_contextMenuButtonItems_closure3, A.EditableTextState_contextMenuButtonItems_closure4, A.EditableTextState_contextMenuButtonItems_closure5, A.EditableTextState_contextMenuButtonItems_closure6, A.EditableTextState__textProcessingActionButtonItems_closure, A.EditableTextState__onCursorTick_closure, A.EditableTextState__onCursorTick_closure0, A.EditableTextState__didChangeTextEditingValue_closure, A.EditableTextState__handleFocusChanged_closure, A.EditableTextState_insertTextPlaceholder_closure, A.EditableTextState_removeTextPlaceholder_closure, A.EditableTextState_showAutocorrectionPromptRect_closure, A.EditableTextState__semanticsOnCopy_closure, A.EditableTextState__semanticsOnCut_closure, A.EditableTextState__semanticsOnPaste_closure, A.EditableTextState_build___closure, A._EditableTextState_State_AutomaticKeepAliveClientMixin_WidgetsBindingObserver_TickerProviderStateMixin_dispose_closure, A._Autofocus_applyIfValid_closure, A._Autofocus_applyIfValid_closure0, A.FocusAttachment_detach_closure, A.FocusAttachment_detach_closure0, A.FocusNode_debugLabel_closure, A.FocusNode_unfocus_closure, A.FocusNode_unfocus_closure0, A.FocusNode__doRequestFocus_closure, A.FocusNode__doRequestFocus_closure0, A.FocusNode__setAsFocusedChildForScope_closure, A.FocusNode__setAsFocusedChildForScope_closure0, A.FocusScopeNode_setFirstFocus_closure, A.FocusScopeNode_setFirstFocus_closure0, A.FocusScopeNode_autofocus_closure, A.FocusManager__appLifecycleChange_closure, A.FocusManager__appLifecycleChange_closure0, A.FocusManager__appLifecycleChange_closure1, A.FocusManager__markDetached_closure, A.FocusManager__markPropertiesChanged_closure, A.FocusManager__markNeedsUpdate_closure, A.FocusManager_applyFocusChangesIfNeeded_closure, A.FocusManager_applyFocusChangesIfNeeded_closure0, A.FocusManager_applyFocusChangesIfNeeded_closure1, A.FocusManager_applyFocusChangesIfNeeded_closure2, A.FocusManager_applyFocusChangesIfNeeded_closure3, A._HighlightModeManager_notifyListeners_closure, A._HighlightModeManager_notifyListeners__closure, A._HighlightModeManager_handleKeyMessage_closure, A._HighlightModeManager_handleKeyMessage_closure0, A._HighlightModeManager_handleKeyMessage_closure1, A._HighlightModeManager_handleKeyMessage_closure2, A._HighlightModeManager_handleKeyMessage_closure3, A._HighlightModeManager_handleKeyMessage_closure4, A._HighlightModeManager_handleKeyMessage_closure5, A._HighlightModeManager_handleKeyMessage_closure6, A._HighlightModeManager_handleKeyMessage_closure7, A._FocusState_didUpdateWidget_closure, A._FocusState__handleFocusChanged_closure, A._FocusState__handleFocusChanged_closure0, A._FocusState__handleFocusChanged_closure1, A._FocusState__handleFocusChanged_closure2, A._FocusState_build_closure, A.FocusTraversalPolicy__sortAllDescendants_closure0, A.FocusTraversalGroup_of_closure, A.FormState__forceRebuild_closure, A.FormState__validate_closure, A.FormFieldState_validate_closure, A.FormFieldState_didChange_closure, A.FormFieldState_build__closure, A.State_context_closure, A.State_setState_closure, A.State_setState_closure0, A.State_dispose_closure, A.State_debugFillProperties_closure, A._InactiveElements__unmount_closure, A._InactiveElements__deactivateRecursively_closure, A.BuildScope__tryRebuild_closure, A.BuildScope__tryRebuild_closure0, A.BuildScope__flushDirtyElements_closure, A.BuildScope__dirtyElementIndexAfter_closure, A.BuildOwner_scheduleBuildFor_closure, A.BuildOwner_scheduleBuildFor_closure0, A.BuildOwner_scheduleBuildFor_closure1, A.BuildOwner_lockState_closure, A.BuildOwner_lockState_closure0, A.BuildOwner_buildScope_closure, A.BuildOwner_buildScope_closure0, A.BuildOwner_buildScope_closure1, A.BuildOwner_buildScope_closure2, A.BuildOwner_buildScope_closure3, A.BuildOwner__debugTrackElementThatWillNeedToBeRebuiltDueToGlobalKeyShenanigans_closure, A.BuildOwner__debugRemoveGlobalKeyReservationFor_closure, A.BuildOwner__registerGlobalKey_closure, A.BuildOwner__unregisterGlobalKey_closure, A.BuildOwner__debugReserveGlobalKeyFor_closure, A.BuildOwner__debugVerifyGlobalKeyReservation_closure, A.BuildOwner__debugVerifyIllFatedPopulation_closure, A.BuildOwner__debugVerifyIllFatedPopulation__closure, A.BuildOwner_finalizeTree_closure, A.Element_depth_closure, A.Element_debugIsDefunct_closure, A.Element_debugIsActive_closure, A.Element_visitChildElements_closure, A.Element_updateChild_closure, A.Element_updateChild_closure0, A.Element_updateChild_closure1, A.Element_updateChild_closure2, A.Element_update_closure, A.Element__retakeInactiveElement_closure, A.Element__retakeInactiveElement_closure0, A.Element_inflateWidget_closure, A.Element_inflateWidget_closure0, A.Element__debugCheckForCycles_closure, A.Element_deactivateChild_closure, A.Element_forgetChild_closure, A.Element__activateWithParent_closure, A.Element_findRenderObject_closure, A.Element_size_closure, A.Element_size_closure0, A.Element__debugCheckStateIsActiveForAncestorLookup_closure, A.Element__debugCheckOwnerBuildTargetExists_closure, A.Element_markNeedsBuild_closure, A.Element_rebuild_closure, A.Element_rebuild_closure0, A.Element_rebuild_closure1, A.ErrorWidget__defaultErrorWidgetBuilder_closure, A.ComponentElement_performRebuild_closure, A.ComponentElement_performRebuild_closure0, A.ComponentElement_performRebuild_closure1, A.ComponentElement_performRebuild_closure2, A.StatefulElement_closure, A.StatefulElement__firstBuild_closure, A.StatefulElement__firstBuild_closure0, A.StatefulElement__firstBuild_closure1, A.StatefulElement_update_closure, A.StatefulElement_unmount_closure, A.StatefulElement_dependOnInheritedElement_closure, A.ParentDataElement_debugParentDataType_closure, A.InheritedElement_notifyClients_closure, A.RenderObjectElement__findAncestorRenderObjectElement_closure, A.RenderObjectElement__findAncestorRenderObjectElement_closure0, A.RenderObjectElement__debugCheckCompetingAncestors_closure, A.RenderObjectElement__findAncestorParentDataElements_closure0, A.RenderObjectElement_mount_closure, A.RenderObjectElement_mount_closure0, A.RenderObjectElement_mount_closure1, A.RenderObjectElement_update_closure, A.RenderObjectElement__debugUpdateRenderObjectOwner_closure, A.RenderObjectElement__performRebuild_closure, A.RenderObjectElement__performRebuild_closure0, A.RenderObjectElement__updateParentData_closure, A.RenderObjectElement_attachRenderObject_closure, A.MultiChildRenderObjectElement__debugCheckHasAssociatedRenderObject_closure, A.GestureDetector_closure, A.GestureDetector_build_closure, A.GestureDetector_build_closure1, A.GestureDetector_build_closure3, A.GestureDetector_build_closure5, A.GestureDetector_build_closure7, A.GestureDetector_build_closure9, A.GestureDetector_build_closure11, A.RawGestureDetectorState_replaceGestureRecognizers_closure, A.RawGestureDetectorState_replaceSemanticsActions_closure, A._DefaultSemanticsGestureDelegate__getTapHandler_closure, A._DefaultSemanticsGestureDelegate__getLongPressHandler_closure, A.Hero__allHeroesFor_inviteHero_closure, A._HeroState_startFlight_closure, A._HeroState_endFlight_closure, A._HeroFlight__handleAnimationUpdate_delayedPerformAnimationUpdate, A._HeroFlight_start_closure, A._ImageState_didChangeAccessibilityFeatures_closure, A._ImageState__getListener__closure, A._ImageState__getListener__closure0, A._ImageState__handleImageFrame_closure, A._ImageState__updateSourceStream_closure, A._ImageState__updateSourceStream_closure0, A.AnimatedWidgetBaseState__handleAnimationChanged_closure, A._ImplicitlyAnimatedWidgetState_State_SingleTickerProviderStateMixin_dispose_closure, A.InheritedTheme_capture_closure, A.InheritedTheme_capture__closure, A._InteractiveViewerState__handleTransformation_closure, A.__InteractiveViewerState_State_TickerProviderStateMixin_dispose_closure, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback_closure, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback_closure0, A._RenderLayoutBuilder__debugThrowIfNotCheckingIntrinsics_closure, A._LocalizationsState_load__closure, A.LocalizationsResolver__debugCheckLocalizations_closure, A.LocalizationsResolver__debugCheckLocalizations__closure0, A.LookupBoundary_debugIsHidingAncestorWidgetOfExactType_closure, A.LookupBoundary_debugIsHidingAncestorStateOfType_closure, A.LookupBoundary_debugIsHidingAncestorRenderObjectOfType_closure, A._MediaQueryFromViewState__updateData_closure, A.ModalBarrier_build_handleDismiss, A.TransitionDelegate__transition_closure, A.Navigator_of_closure, A.Navigator_defaultGenerateInitialRoutes_closure, A.Navigator_defaultGenerateInitialRoutes_closure0, A.Navigator_defaultGenerateInitialRoutes_closure1, A._RouteEntry_handlePush_closure, A._RouteEntry_handlePush__closure, A._RouteEntry_handlePush__closure0, A._RouteEntry_dispose_closure0, A._RouteEntry_dispose__closure0, A._RouteEntry_markForPop_closure, A.NavigatorState_restoreState_closure0, A.NavigatorState_restoreState_closure1, A.NavigatorState__updateHeroController_closure, A.NavigatorState_didUpdateWidget_closure, A.NavigatorState__debugCheckDuplicatedPageKeys_closure, A.NavigatorState_dispose_closure, A.NavigatorState__updatePages_closure, A.NavigatorState__updatePages_closure0, A.NavigatorState__updatePages_closure1, A.NavigatorState__updatePages_closure2, A.NavigatorState__updatePages_closure3, A.NavigatorState__updatePages_closure4, A.NavigatorState__updatePages_closure5, A.NavigatorState__updatePages_closure6, A.NavigatorState__updatePages_closure7, A.NavigatorState__routeNamed_closure, A.NavigatorState__routeNamed_closure0, A.NavigatorState__routeNamed_closure1, A.NavigatorState__pushEntry_closure, A.NavigatorState__pushEntry_closure0, A.NavigatorState__pushReplacementEntry_closure, A.NavigatorState__pushReplacementEntry_closure0, A.NavigatorState__pushEntryAndRemoveUntil_closure, A.NavigatorState__pushEntryAndRemoveUntil_closure0, A.NavigatorState_pop_closure, A.NavigatorState_pop_closure0, A.NavigatorState_pop_closure1, A.NavigatorState_finalizeRoute_closure, A.NavigatorState_finalizeRoute_closure0, A.NavigatorState__cancelActivePointers_closure, A._NavigatorState_State_TickerProviderStateMixin_dispose_closure, A._RenderOverflowBar_performLayout_nextChild, A._OverlayEntryWidgetState__markNeedsBuild_closure, A.Overlay_of_closure, A.OverlayState_insert_closure, A.OverlayState_insertAll_closure, A.OverlayState_rearrange_closure1, A.OverlayState__markDirty_closure, A.OverlayState__didChangeEntryOpacity_closure, A._TheaterElement_moveRenderObjectChild_closure, A._OverlayPortalState__getLocation_closure, A._OverlayPortalState_show_closure, A._OverlayPortalState_hide_closure, A._OverlayEntryLocation__debugMarkLocationInvalid_closure, A._RenderDeferredLayoutBox_performLayout_closure, A._RenderDeferredLayoutBox_performLayout_closure0, A._RenderLayoutSurrogateProxyBox_attach_closure, A._RenderLayoutBuilder__computeNewLayoutInfo_closure, A._OverlayState_State_TickerProviderStateMixin_dispose_closure, A._GlowController_pull_closure, A._StretchController_animate_closure, A._StretchController_animate_closure0, A.__GlowingOverscrollIndicatorState_State_TickerProviderStateMixin_dispose_closure, A.__StretchingOverscrollIndicatorState_State_TickerProviderStateMixin_dispose_closure, A._PlatformViewLinkState__onPlatformViewCreated_closure, A.PrimaryScrollController_of_closure, A.RawTooltipState__scheduleShowTooltip_show, A._RawTooltipState_State_SingleTickerProviderStateMixin_dispose_closure, A._RootRestorationScopeState__loadRootBucketIfNecessary__closure, A.RestorationMixin_registerForRestoration_listener, A.RestorationMixin_registerForRestoration_closure0, A.RestorationMixin__doRestore_closure, A.RestorationMixin__doRestore_closure0, A.RestorationMixin__unregister_closure, A._RouterState_restoreState_closure, A._RouterState_restoreState_closure0, A._RouterState_didChangeDependencies_closure, A._RouterState__handleRouteInformationProviderNotification_closure, A._RouterState__rebuild_closure, A._RouterState__handleRouterDelegateNotification_closure, A.TransitionRoute_debugTransitionCompleted_closure, A.TransitionRoute__updateSecondaryAnimation_closure, A.TransitionRoute__updateSecondaryAnimation_closure0, A._ModalScopeState__forceRebuildPage_closure, A.ModalRoute_offstage_closure, A.ModalRoute_changedInternalState_closure, A.ScrollAwareImageProvider_resolveStreamForKey__closure, A._SelectionKeepAliveState_listensTo_closure, A.ScrollNotificationObserverState__debugAssertNotDisposed_closure, A.ScrollNotificationObserverState__notifyListeners_closure, A.ClampingScrollPhysics_applyBoundaryConditions_closure, A.ScrollPosition_setPixels_closure, A.ScrollPosition_applyBoundaryConditions_closure, A.ClampingScrollSimulation__flingDistance_closure, A.ScrollView_buildViewport_closure, A.ScrollableState_setCanDrag_closure, A.ScrollableState_setCanDrag_closure1, A._ScrollableState_State_TickerProviderStateMixin_dispose_closure, A.ScrollAction_invoke_closure, A.ScrollbarPainter__debugAssertIsValidOrientation_closure, A.RawScrollbarState__debugCheckHasValidScrollPosition_closure, A.RawScrollbarState__debugCheckHasValidScrollPosition_closure0, A.RawScrollbarState__maybeStartFadeoutTimer_closure, A.RawScrollbarState__handleScrollMetricsNotification_closure, A.RawScrollbarState__handleScrollMetricsNotification_closure0, A.RawScrollbarState__gestures_closure, A.RawScrollbarState__gestures_closure0, A.RawScrollbarState__gestures_closure1, A._RawScrollbarState_State_TickerProviderStateMixin_dispose_closure, A.MultiSelectableSelectionContainerDelegate__adjustSelection_closure, A.SingleActivator_debugDescribeKeys_closure, A.ShortcutManager__indexShortcuts__closure, A.ShortcutManager_handleKeypress_closure, A.SizeChangedLayoutNotifier_createRenderObject_closure, A.SliverMultiBoxAdaptorElement_performRebuild_closure, A.SliverMultiBoxAdaptorElement_performRebuild_closure0, A.SliverMultiBoxAdaptorElement_createChild_closure, A.SliverMultiBoxAdaptorElement_removeChild_closure, A.SliverMultiBoxAdaptorElement_insertRenderObjectChild_closure, A.SlottedRenderObjectElement__updateChildren_closure, A.SlottedRenderObjectElement__updateChildren_closure0, A.SlottedRenderObjectElement__updateChildren__closure, A.SystemContextMenu_SystemContextMenu$editableText_closure, A.RenderTapRegionSurface_handleEvent_closure, A._SelectableTextContainerDelegate__adjustSelection_closure, A._SelectionHandleOverlayState_build_closure, A._TextSelectionGestureDetectorState_build_closure, A._TextSelectionGestureDetectorState_build_closure1, A._TextSelectionGestureDetectorState_build_closure3, A._TextSelectionGestureDetectorState_build_closure5, A._TextSelectionGestureDetectorState_build_closure7, A.__SelectionHandleOverlayState_State_SingleTickerProviderStateMixin_dispose_closure, A.__SelectionToolbarWrapperState_State_SingleTickerProviderStateMixin_dispose_closure, A.SingleTickerProviderStateMixin_createTicker_closure, A._AnimatedState__handleChange_closure, A._throttle__closure, A._ValueListenableBuilderState__valueChanged_closure, A.View_of_closure, A._RawViewElement__updateChild_closure, A._ScreenshotPaintingContext__isScreenshotRecording_closure, A._WidgetInspectorService_closure, A.WidgetInspectorService_isStructuredErrorsEnabled_closure, A.WidgetInspectorService_initServiceExtensions_closure, A.WidgetInspectorService_initServiceExtensions_closure0, A.WidgetInspectorService_initServiceExtensions_closure2, A.WidgetInspectorService_initServiceExtensions_closure4, A.WidgetInspectorService_toId_closure, A.WidgetInspectorService__getParentChain_createDelegate, A._ElementLocationStatsTracker_exportToJson_closure, A._ElementLocationStatsTracker_exportToJson_closure0, A._WidgetInspectorState__selectionInformationChanged_closure, A._InspectorOverlayLayer_closure, A._WidgetInspectorButtonGroupState__moveExitWidgetSelectionButton_closure, A._WidgetInspectorButtonGroupState__moveExitWidgetSelectionButton_closure0, A._WidgetInspectorButtonGroupState__exitWidgetSelectionButton_closure, A._WidgetInspectorButtonGroupState__changeButtonGroupAlignment_closure, A._WidgetInspectorButtonGroupState__changeTooltipMessage_closure, A._WidgetInspectorButtonState_build_closure1, A._WidgetInspectorButtonState__tooltipVisibilityChangedAfter_closure, A._WidgetInspectorButtonState__tooltipVisibilityChangedAfter_closure0, A._parseDiagnosticsNode_closure, A._parseDiagnosticsNode__closure, A.SvgLoader_loadBytes_closure, A._OfflineBannerState_initState__closure0, A.RoleGuard_build_closure0, A.RoleGuard_build_closure1, A.Validators_name_bad, A.AuthController_girisEposta_closure, A.AuthController_girisTelefonSifre_closure, A.AuthController_register_closure, A.AuthController_telefonDegisimiDogrula_closure, A.AuthController_kurtarmaSifreBelirle_closure, A.AuthController_switchRole_closure, A.AuthController_addRole_closure, A.AuthController_changePassword_closure, A.AuthController_verifyPassword_closure, A.AuthController_sifreSifirlamaIste_closure, A.ChatController_openThread_closure, A.ChatController_sendDelivered_closure, A.ContactController_openShared_closure, A.ContactController_openShared_closure0, A.ListingController_loadMine_closure, A.ListingController_loadAvailable_closure, A.ListingController_loadOne_closure, A.ListingController_publish_closure, A.ListingController_publish_closure0, A.ListingController_delete_closure, A.ListingController_delete_closure0, A.NotificationController_load_closure, A.NotificationController_markRead_closure, A.OfferController_loadMine_closure, A.OfferController_loadForListing_closure, A.OfferController_placeOffer_closure, A.OfferController_placeOffer_closure0, A.OfferController_selectOffer_closure, A.OfferController_selectOffer_closure0, A.ProfileController_updateProfile_closure, A.ProfileController_epostaDegisimiBaslat_closure, A.ProfileController_mevcutEpostaDogrulamaGonder_closure, A.ProfileController_saveAddress_closure, A.ProfileController_setCategories_closure, A.ProfileController_setDistricts_closure, A.ReviewController__gerekirseYukle_closure, A.ReviewController_submit_closure, A.TeklifTalebiController_gonder_closure, A.TeklifTalebiController_teklifVer_closure, A.TeklifTalebiController_secToVer_closure, A.TeklifTalebiController_sil_closure, A.TeklifTalebiController_tamamla_closure, A.TeklifTalebiController_mesajGonder_closure, A.ApiAuthPort__ozetGerekirseIste_closure, A.ApiClient__refreshOnce_closure, A.ApiTeklifTalebiPort_gonder_closure, A.ApiTeklifTalebiPort_teklifVer_closure, A.ApiTeklifTalebiPort_secToVer_closure, A.ApiTeklifTalebiPort_sil_closure, A.ApiTeklifTalebiPort_tamamla_closure, A.ApiTeklifTalebiPort_mesajGonder_closure, A.ApiChatRepository__bindRealtime__closure, A.ApiChatRepository_loadThread_closure, A.ApiChatRepository__sendWithKey_closure, A.ApiChatRepository__sendWithKey_closure0, A.ApiChatRepository__sendWithKey_closure1, A.ApiChatRepository_markRead_closure, A.ApiReviewRepository_loadForProvider_closure, A.ApiReviewRepository_submit_closure, A.ApiReviewRepository_submitTalep_closure, A.ApiNotificationRepository_load_closure, A.ApiNotificationRepository_loadUnreadCount_closure, A.ApiNotificationRepository_markRead_closure, A.ApiNotificationRepository_sayfaGoruldu_closure, A.ApiAuthRepository_bildirimTercihleriniKaydet_closure, A.ApiAuthRepository_kurumsalEpostaGonder_closure, A.ApiAuthRepository_epostaOnayiniEsitle_closure, A.ApiAuthRepository_login_closure, A.ApiAuthRepository_kisiOzeti_closure, A.ApiAuthRepository_loadMe_closure, A.ApiAuthRepository_loadMe_closure0, A.ApiAuthRepository_register_closure, A.ApiAuthRepository_firebaseOturum_closure, A.ApiAuthRepository_forgotCompleteFirebase_closure, A.ApiAuthRepository_changePhoneFirebase_closure, A.ApiAuthRepository_switchRole_closure, A.ApiAuthRepository_addRole_closure, A.ApiAuthRepository_changePassword_closure, A.ApiAuthRepository_verifyPassword_closure, A.ApiAuthRepository_updateProfile_closure, A.ApiAuthRepository_profilFotografiniKaydet_closure, A.ApiAuthRepository_profilFotografiniKaydet_closure2, A.ApiAuthRepository_providerApproval_closure, A.ApiAuthRepository_saveAddress_closure, A.ApiAuthRepository_saveProviderProfile_closure, A.ApiAuthRepository_logout_closure, A.ApiListingRepository_loadMine_closure, A.ApiListingRepository_loadAvailable_closure, A.ApiListingRepository_loadOne_closure, A.ApiListingRepository_create_closure, A.ApiListingRepository_remove_closure, A.ApiOfferRepository_loadMine_closure, A.ApiOfferRepository_create_closure, A.ApiOfferRepository_select_closure, A.ApiContactRepository_refresh_closure, A.ApiContactRepository_open_closure, A.WsClient_connect_closure, A.ChatRepository_threadFor_closure, A.ChatRepository_send_closure, A.OturumTercihi_hatirlaniyor_closure, A.OturumTercihi_telefon_closure, A._sayiBelirtec_closure, A.PasswordHasher_hash_closure, A.main_closure1, A.main_hesaplariYukle, A.main_closure4, A.main_acilisRotasi, A.main_closure6, A.MockDepolar__kaydetIste_closure, A._AccountSettingsScreenState__load_closure, A._AccountSettingsScreenState__load_closure0, A._AccountSettingsScreenState__load_closure1, A._AccountSettingsScreenState__load_closure2, A._AccountSettingsScreenState__freeze_closure, A._AccountSettingsScreenState__freeze_closure1, A._AccountSettingsScreenState__requestDeletion_closure, A._AccountSettingsScreenState__requestDeletion_closure0, A._AccountSettingsScreenState__requestDeletion_closure2, A._AccountSettingsScreenState__cancelDeletion_closure, A._AccountSettingsScreenState__cancelDeletion_closure0, A._AccountSettingsScreenState__cancelDeletion_closure1, A._AccountSettingsScreenState_build_closure, A._AccountSettingsScreenState__onayPaneli_closure, A._AccountSettingsScreenState__onayPaneli_closure0, A._AccountSettingsScreenState__onayPaneli_closure1, A._AccountSettingsScreenState__dondurPaneli_closure, A._AccountSettingsScreenState__bildirimSatiri_closure, A._AddressesScreenState__save_closure, A._AddressesScreenState__save_closure0, A._AddressesScreenState__save_closure1, A._AddressesScreenState__pickCity_closure, A._AddressesScreenState__pickDistrict_closure, A._AddressesScreenState__pickNeighborhood_closure, A._AppRateScreenState__load_closure, A._AppRateScreenState__load_closure0, A._AppRateScreenState__load_closure1, A._AppRateScreenState__load_closure2, A._AppRateScreenState__submit_closure, A._AppRateScreenState__submit_closure0, A._AppRateScreenState__submit_closure1, A._AppRateScreenState__submit_closure2, A._AppRateScreenState__submit_closure3, A._AppRateScreenState__formGorunum__closure, A._MagazaKarti_build_closure, A.BulunamadiScreen_build_closure, A._CategoryScreenState_build_closure, A._CategoryScreenState_build_closure0, A._CategoryScreenState_build__closure, A._CategoryScreenState_build_closure1, A._ChangePasswordScreenState__hepsiniDenetle_closure, A._ChangePasswordScreenState_initState_closure, A._ChangePasswordScreenState_initState__closure, A._ChangePasswordScreenState__save_closure, A._ChangePasswordScreenState__save_closure0, A._ChangePasswordScreenState__save_closure1, A._ChangePasswordScreenState__save_closure2, A._ChangePasswordScreenState_build__closure7, A._ChangePasswordScreenState_build_closure0, A._ChangePasswordScreenState_build__closure6, A._ChangePasswordScreenState_build__closure4, A._ChangePasswordScreenState_build_closure4, A._ChangePasswordScreenState_build__closure3, A._ChangePasswordScreenState_build__closure1, A._ChangePasswordScreenState_build__closure0, A._ChangePasswordScreenState__sifreSifirla_closure0, A._ChangePasswordScreenState__sifreSifirla_closure1, A._ChangePasswordScreenState__sifreSifirla_closure2, A._ChatScreenState_initState__closure, A._ChatScreenState__send_closure, A._ChatScreenState__send_closure0, A._ChatScreenState_build_closure0, A._ChatScreenState_build__durumSatiri_closure, A._KonusmaListesi_build__closure, A._SohbetFotografi_build_closure, A._FotografTamEkran_build_closure, A._CreateListingScreenState_initState__closure1, A._CreateListingScreenState_initState__closure0, A._CreateListingScreenState_initState_closure1, A._CreateListingScreenState_initState__closure, A._CreateListingScreenState__kaydolVeYayinla_closure, A._CreateListingScreenState__kaydolVeYayinla_closure0, A._CreateListingScreenState__kaydolVeYayinla_closure1, A._CreateListingScreenState__kaydolVeYayinla_closure2, A._CreateListingScreenState__kategoriSec_closure, A._CreateListingScreenState__geriAdim_closure, A._CreateListingScreenState__next_closure, A._CreateListingScreenState__next_closure0, A._CreateListingScreenState__next_closure1, A._CreateListingScreenState__next_closure2, A._CreateListingScreenState__next_closure3, A._CreateListingScreenState__next_closure4, A._CreateListingScreenState__smsAdiminaGec_closure, A._CreateListingScreenState__smsAdiminaGec_closure0, A._CreateListingScreenState__otpDogrulaVeKaydol_closure, A._CreateListingScreenState__otpDogrulaVeKaydol_closure0, A._CreateListingScreenState__otpDogrulaVeKaydol_closure1, A._CreateListingScreenState__otpDogrulaVeKaydol_closure2, A._CreateListingScreenState__otpDogrulaVeKaydol_closure3, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure0, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure3, A._CreateListingScreenState__publish_closure, A._CreateListingScreenState__publish_closure1, A._CreateListingScreenState__publish_closure2, A._CreateListingScreenState_build_closure, A._CreateListingScreenState_build_closure1, A._CreateListingScreenState_build__closure0, A._CreateListingScreenState_build_closure2, A._CreateListingScreenState_build__closure, A._CreateListingScreenState__adim1__closure0, A._CreateListingScreenState__adim1_closure0, A._CreateListingScreenState__adim1__closure, A._CreateListingScreenState__adim2__closure1, A._CreateListingScreenState__adim2__closure2, A._CreateListingScreenState__adim2__closure0, A._CreateListingScreenState__adim2__closure, A._CreateListingScreenState__adim3__closure0, A._OneriPaneli_build_closure, A._FindProviderScreenState__hizmetSecildi_closure, A._FindProviderScreenState__secimSifirla_closure, A._HizmetAramaAlaniState__sorgula_closure, A._HizmetAramaAlaniState_build_closure0, A._HizmetAramaAlaniState_build__closure0, A._HizmetAramaAlaniState_build__closure, A._HizmetAramaAlaniState_build___closure, A._ForgotPasswordScreenState_initState_closure, A._ForgotPasswordScreenState_initState__closure, A._ForgotPasswordScreenState__telefonDegisti_closure, A._ForgotPasswordScreenState__denetle_closure, A._ForgotPasswordScreenState__baglantiGonder_closure, A._ForgotPasswordScreenState__baglantiGonder_closure0, A._ForgotPasswordScreenState__baglantiGonder_closure1, A._ForgotPasswordScreenState__baglantiGonder_closure2, A._ForgotPasswordScreenState__baglantiGonder_closure3, A._ForgotPasswordScreenState__telefonKodIste_closure, A._ForgotPasswordScreenState__telefonKodIste_closure0, A._ForgotPasswordScreenState__telefonKodIste_closure1, A._ForgotPasswordScreenState__telefonKodIste_closure2, A._ForgotPasswordScreenState__telefonKodIste__closure1, A._ForgotPasswordScreenState_build_closure, A._ForgotPasswordScreenState_build__closure1, A._ForgotPasswordScreenState_build_closure2, A._ForgotPasswordScreenState_build__closure0, A._ForgotPasswordScreenState_build_closure5, A._ForgotPasswordScreenState_build__closure, A._HizmetAlaniScreenState__kategoriler_closure, A._HizmetAlaniScreenState_build_closure, A._HizmetAlaniScreenState_build_closure0, A._HizmetAlaniScreenState_build__closure0, A._HizmetAlaniScreenState_build_closure2, A._HizmetAlaniScreenState_build__closure, A._HizmetSonucSatiri_build_closure, A._KategoriSatiri_build_closure, A.hizmetSecildi_publicForma, A.HomeScreen_build_closure0, A.HomeScreen_build_closure1, A._Header_build_closure, A._AlanKarti__govde_closure1, A._JobDetailScreenState__loadApproval_closure, A._JobDetailScreenState__placeOffer_closure, A._JobDetailScreenState__placeOffer_closure0, A._JobDetailScreenState__placeOffer_closure1, A._JobDetailScreenState__placeOffer_closure2, A._JobDetailScreenState__placeOffer_closure3, A._JobDetailScreenState_build__closure6, A._JobDetailScreenState_build__closure4, A._JobDetailScreenState_build__closure3, A._JobDetailScreenState_build_closure4, A._JobDetailScreenState_build__closure1, A._JobDetailScreenState_build__closure2, A._JobDetailScreenState_build_closure5, A._JobDetailScreenState_build__closure, A._JobDetailScreenState_build__closure0, A._JobsScreenState__siralaMenu__closure, A._JobsScreenState__filtreMenu__closure, A._JobsScreenState__secimSheet_closure, A._JobsScreenState_build__closure1, A._JobsScreenState_build__closure, A._JobsScreenState__kazanilanTalepKarti_closure0, A._JobsScreenState__jobCard_closure0, A._LegalScreenState__load_closure, A._LegalScreenState__load_closure0, A._LegalScreenState__load_closure1, A._LegalScreenState__load_closure2, A._LegalScreenState__load_closure3, A._LegalScreenState_build_closure, A._ListingDetailScreenState__run_closure, A._ListingDetailScreenState__run_closure0, A._ListingDetailScreenState__silOnayi__closure, A._ListingDetailScreenState__silOnayi__closure0, A._ListingDetailScreenState__ilanMenusu_closure, A._ListingDetailScreenState__nedenSor_closure, A._ListingDetailScreenState__nedenSor_closure0, A._ListingDetailScreenState_build_closure0, A._ListingDetailScreenState_build_closure1, A._ListingDetailScreenState_build_closure2, A._Fotograflar_build_closure0, A._LoginScreenState__kilidiTazele_closure, A._LoginScreenState_initState_closure, A._LoginScreenState_initState__closure, A._LoginScreenState__degerDegisti_closure, A._LoginScreenState__kimlikHatasiniTemizle_closure, A._LoginScreenState__moduDegistir_closure, A._LoginScreenState__submit_closure, A._LoginScreenState__submit_closure0, A._LoginScreenState__submit_closure1, A._LoginScreenState__formu_closure, A._LoginScreenState__formu__closure0, A._LoginScreenState__formu_closure8, A._LoginScreenState__formu_closure9, A._MyAreasScreenState__ilSec_closure, A._MyAreasScreenState__ilSec_closure0, A._MyAreasScreenState__toggle_closure, A._MyAreasScreenState__selectAll_closure, A._MyAreasScreenState__clearAll_closure, A._MyAreasScreenState__save_closure, A._MyAreasScreenState__save_closure0, A._MyAreasScreenState__save_closure1, A._MyAreasScreenState__save_closure2, A._MyAreasScreenState_build__closure0, A._MyAreasScreenState_build_closure0, A._MyCategoriesScreenState__toggle_closure, A._MyCategoriesScreenState__save_closure, A._MyCategoriesScreenState__save_closure0, A._MyCategoriesScreenState__save_closure1, A._MyCategoriesScreenState__save_closure2, A._MyCategoriesScreenState_build__closure, A._MyCategoriesScreenState_build_closure0, A._MyCategoriesScreenState_build_closure1, A._MyCategoriesScreenState_build_closure2, A._MyListingsScreenState_build__closure1, A._MyListingsScreenState_build_closure7, A._MyListingsScreenState_build_closure8, A._MyListingsScreenState__siralaMenu__closure, A._MyListingsScreenState__filtreMenu__closure, A._MyListingsScreenState__secimSheet_closure, A._MyReviewsScreenState__load_closure, A._MyReviewsScreenState__load_closure0, A._MyReviewsScreenState__load_closure1, A._MyReviewsScreenState__load_closure2, A._MyReviewsScreenState__load_closure3, A._MyReviewsScreenState__loadMore_closure, A._MyReviewsScreenState__loadMore_closure0, A._MyReviewsScreenState__loadMore_closure1, A._MyReviewsScreenState__loadMore_closure2, A._MyReviewsScreenState__body_closure, A._MyReviewsScreenState__body_closure0, A._MyReviewsScreenState__body_closure2, A.custNavItems_closure, A.custNavItems_closure0, A.custNavItems_closure1, A.custNavItems_closure2, A.custNavItems_closure3, A.custNavItems_closure4, A._NotificationsScreenState_build_closure0, A._NotificationsScreenState_build_closure1, A._OfferDetailScreenState_build_closure2, A._OfferDetailScreenState_build_closure3, A._OfferDetailScreenState_build_closure4, A._OfferDetailScreenState_build__closure3, A._OfferDetailScreenState_build__closure4, A._OfferDetailScreenState_build_closure5, A._OfferDetailScreenState_build__closure1, A._OfferDetailScreenState_build__closure2, A._OfferDetailScreenState_build_closure6, A._OfferDetailScreenState_build_closure7, A._OtpScreenState__sayaciBaslat__closure, A._OtpScreenState__verify_closure, A._OtpScreenState__verify_closure0, A._OtpScreenState__verify_closure1, A._OtpScreenState__resend_closure, A._OtpScreenState__resend_closure0, A._OtpScreenState__resend_closure1, A._OtpScreenState_build__closure0, A._OtpScreenState_build_closure0, A._OtpScreenState_build_closure1, A._OtpScreenState_build__closure, A._OtpScreenState_build_closure3, A._ProfileInfoScreenState__hepsiniDenetle_closure, A._ProfileInfoScreenState__epostaOnayiniEsitle_closure, A._ProfileInfoScreenState_initState_closure0, A._ProfileInfoScreenState_initState__closure, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure0, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure1, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure0, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure1, A._ProfileInfoScreenState__save_closure, A._ProfileInfoScreenState__save_closure0, A._ProfileInfoScreenState__save_closure1, A._ProfileInfoScreenState__save_closure2, A._ProfileInfoScreenState__save_closure3, A._ProfileInfoScreenState__save__closure1, A._ProfileInfoScreenState__save_closure5, A._ProfileInfoScreenState_build__closure4, A._ProfileInfoScreenState_build_closure0, A._ProfileInfoScreenState_build__closure2, A._ProfileInfoScreenState_build_closure3, A._ProfileInfoScreenState_build__closure0, A._ProfileInfoScreenState_build_closure6, A._ProfileInfoScreenState_build__closure, A.ProfileScreen_build_closure, A.ProfileScreen_build_closure0, A.ProfileScreen__musteriSatirlari_closure, A.ProfileScreen__musteriSatirlari_closure0, A.ProfileScreen__saglayiciSatirlari_closure, A.ProfileScreen__saglayiciSatirlari_closure0, A.ProfileScreen__saglayiciSatirlari_closure1, A.ProfileScreen__saglayiciSatirlari_closure2, A.ProfileScreen__digerSatirlar_closure, A.ProfileScreen__digerSatirlar_closure0, A.ProfileScreen__digerSatirlar_closure1, A.ProfileScreen__digerSatirlar_closure2, A.ProfileScreen__digerSatirlar_closure3, A.ProfileScreen__digerSatirlar_closure4, A._YorumKartiState_build_closure, A._YorumKartiState_build__closure, A._ProviderStatusScreenState__load_closure, A._ProviderStatusScreenState__load_closure0, A.ProviderStatusCard_build_closure, A._RegisterDoneScreenState_initState_closure, A._RegisterScreenState__eksikFotografKarari_closure, A._RegisterScreenState__eksikFotografKarari_closure0, A._RegisterScreenState__ilSec_closure0, A._RegisterScreenState__ilceSec_closure0, A._RegisterScreenState__mahalleSec_closure0, A._RegisterScreenState__next_closure, A._RegisterScreenState__next_closure0, A._RegisterScreenState__next_closure1, A._RegisterScreenState__next_closure2, A._RegisterScreenState__next_closure3, A._RegisterScreenState__next__closure1, A._RegisterScreenState__kategoriSec_closure0, A._RegisterScreenState__ilceSecCoklu_closure0, A._RegisterScreenState_initState_closure, A._RegisterScreenState_initState__closure, A._RegisterScreenState_initState__closure0, A._RegisterScreenState_build_closure, A._RegisterScreenState_build_closure1, A._RegisterScreenState_build_closure4, A._RegisterScreenState_build_closure7, A._RegisterScreenState_build_closure10, A._RegisterScreenState_build__closure4, A._RegisterScreenState_build_closure12, A._RegisterScreenState_build_closure13, A._RegisterScreenState_build_closure15, A._RegisterScreenState_build_closure16, A._RegisterScreenState_build_closure20, A._RegisterScreenState_build__closure3, A._RegisterScreenState_build__closure2, A._RegisterScreenState_build___closure0, A._RegisterScreenState_build___closure, A._ReviewScreenState__submit_closure, A._ReviewScreenState__submit_closure0, A._ReviewScreenState__submit_closure1, A._ReviewScreenState__submit_closure2, A._ReviewScreenState_build_closure, A._ReviewScreenState_build_closure0, A._ReviewScreenState_build__closure0, A._ReviewScreenState_build__closure, A.RoleSelectScreen_build_closure, A.RoleSelectScreen_build_closure0, A.RoleSelectScreen_build_closure1, A.RoleSelectScreen_build_closure2, A._RoleSwitchScreenState__kategoriSec_closure0, A._RoleSwitchScreenState__ilSec_closure0, A._RoleSwitchScreenState__bolgeSec_closure0, A._RoleSwitchScreenState__gec_closure, A._RoleSwitchScreenState__gec_closure0, A._RoleSwitchScreenState__gec_closure1, A._RoleSwitchScreenState__gec_closure2, A._RoleSwitchScreenState__sifreAl____closure, A._ScanningScreenState__asamalariBaslat_closure, A._ScanningScreenState_build_closure, A.__ScanningScreenState_State_SingleTickerProviderStateMixin_dispose_closure, A._SonuclarScreenState__sunucudanYukle_closure, A._SonuclarScreenState__sunucudanYukle_closure0, A._SonuclarScreenState__sunucudanYukle_closure1, A._SonuclarScreenState_build_closure, A._SplashScreenState__bloke__closure, A._SplashScreenState__boot_closure, A.BootBlockedScreen_build_closure, A.BootBlockedScreen_build__closure, A.BootBlockedScreen_build_closure0, A._TeklifIsteScreenState_initState_closure, A._TeklifIsteScreenState_initState__closure, A._TeklifIsteScreenState__gonder_closure1, A._TeklifIsteScreenState__gonder_closure3, A._TeklifIsteScreenState_build__closure2, A._TeklifIsteScreenState_build__closure1, A._TeklifIsteScreenState_build__closure3, A._TeklifIsteScreenState_build__closure0, A._TeklifIsteScreenState_build__closure, A._TalepKarti_build_closure, A._TalepKarti_build_closure0, A._TeklifTalebiDetayScreenState_initState__closure, A._TeklifTalebiDetayScreenState__teklifVer_closure, A._TeklifTalebiDetayScreenState__teklifVer_closure0, A._TeklifTalebiDetayScreenState__teklifVer_closure1, A._TeklifTalebiDetayScreenState__teklifVer_closure2, A._TeklifTalebiDetayScreenState__teklifVer__closure, A._TeklifTalebiDetayScreenState__talepMenusu_closure, A._TeklifTalebiDetayScreenState__talepMenusu__closure, A._TeklifTalebiDetayScreenState__talepMenusu__closure0, A._TeklifTalebiDetayScreenState__talepMenusu_closure1, A._TeklifTalebiDetayScreenState_build_closure1, A._TeklifTalebiDetayScreenState_build__closure0, A._TeklifTalebiDetayScreenState_build_closure6, A._TeklifTalebiDetayScreenState_build_closure7, A._TeklifTalebiDetayScreenState_build_closure8, A._TeklifTalebiDetayScreenState_build_closure9, A._KarsiTarafBilgisi_build_closure, A._KarsiTarafBilgisi_build_closure0, A._KarsiTarafBilgisi_build__closure0, A._KarsiTarafBilgisi_build_closure2, A._KarsiTarafBilgisi_build__closure, A._TeklifTalebiSohbetScreenState__gonder_closure, A._TeklifTalebiSohbetScreenState__gonder_closure0, A._TeklifTalebiSohbetScreenState_build_closure0, A._TeklifSohbetFotografi_build_closure, A._TeklifFotografTamEkran_build_closure, A._TeklifTalebiYorumScreenState__submit_closure, A._TeklifTalebiYorumScreenState__submit_closure0, A._TeklifTalebiYorumScreenState__submit_closure1, A._TeklifTalebiYorumScreenState__submit_closure2, A._TeklifTalebiYorumScreenState_build_closure, A._TeklifTalebiYorumScreenState_build_closure1, A._TeklifTalebiYorumScreenState_build__closure0, A._TeklifTalebiYorumScreenState_build__closure, A.__BekleyenNoktalarState_State_SingleTickerProviderStateMixin_dispose_closure, A._FotoGoruntuleyiciState_build__closure, A._FotoGoruntuleyiciState_build_closure, A.fotografKaynagiSec_closure, A.fotografKaynagiSec_closure0, A._IlanKayitAdimiState_initState_closure, A._IlanKayitAdimiState_initState__closure, A._IlanKayitAdimiState_initState__closure0, A._IlanKayitAdimiState__degisti_closure, A._IlanKayitAdimiState_build_closure, A._IlanKayitAdimiState_build_closure0, A._IlanKayitAdimiState_build_closure1, A._IlanKayitAdimiState__alan_closure, A._IlanKayitAdimiState__sifre_closure, A._IlanKayitAdimiState__sifre__closure, A._IlanOtpAdimiState__tekrarGonder_closure, A._IlanOtpAdimiState__sayacBaslat__closure, A._IlanOtpAdimiState__girdi_closure, A._IlanOtpAdimiState__girdi_closure0, A._IlanOtpAdimiState__girdi_closure1, A._IlanOtpAdimiState__girdi_closure2, A._InlineSearchBoxState_initState_closure, A._InlineSearchBoxState__ac_closure, A._InlineSearchBoxState__sec_closure, A._InlineSearchBoxState__webKapat_closure, A._InlineSearchBoxState__panelGovdesi__closure, A._InlineSearchBoxState__panelGovdesi__closure0, A._InlineSearchBoxState__temizleDugmesi_closure, A._InlineSearchBoxState__temizleDugmesi__closure, A.IsZamaniSecici__secenek_closure, A._KategoriSecimPaneliState__kaldir_closure, A._KategoriSecimPaneliState__ekle_closure, A._KategoriSecimPaneliState_build_closure, A._KategoriSecimPaneliState_build__closure, A._KategoriSecimPaneliState_build_closure1, A._KategoriSecimPaneliState_build_closure2, A._KategoriSecimPaneliState_build_closure3, A._KategoriSecimPaneliState_build_closure4, A._ListingPhotoPickerState__upload_closure, A._ListingPhotoPickerState__upload_closure0, A._ListingPhotoPickerState__upload_closure1, A._ListingPhotoPickerState__upload_closure2, A._ListingPhotoPickerState__upload_closure3, A._ListingPhotoPickerState__remove_closure, A._ListingPhotoPickerState__remove_closure0, A._ListingPhotoPickerState__remove_closure1, A._ListingPhotoPickerState__remove_closure2, A._ListingPhotoPickerState__remove_closure3, A._ListingPhotoPickerState__remove_closure4, A._ListingPhotoPickerState__remove_closure5, A._ListingPhotoPickerState__tile_closure0, A._ListingPhotoPickerState__tile_closure1, A.ProfilAvatari_build_closure, A.ProfilFotografi__fotoMenusu_closure, A.ProfilFotografi__fotoMenusu_closure0, A.ProfilFotografi__fotoMenusu_closure1, A.ProfilFotografi_build_closure0, A.ProfilFotografi_build_closure1, A.RegionPickerSheetState_build_closure0, A.RegionPickerSheetState_build__closure0, A.RegionPickerSheetState_build__closure, A._YeniSifreScreenState_initState_closure, A._YeniSifreScreenState_initState__closure, A._YeniSifreScreenState__hepsiniDenetle_closure, A._YeniSifreScreenState__kaydet_closure, A._YeniSifreScreenState__kaydet_closure0, A._YeniSifreScreenState__kaydet_closure1, A._YeniSifreScreenState__kaydet_closure2, A._YeniSifreScreenState_build_closure, A._YeniSifreScreenState_build_closure1, A._YeniSifreScreenState_build__closure3, A._YeniSifreScreenState_build__closure2, A._YeniSifreScreenState_build__closure1, A._YeniSifreScreenState_build__closure0, A._girisKapisi_closure, A.BakimKapisi_build__closure0, A.BakimKapisi_build__closure, A.__BakimEkraniState_State_SingleTickerProviderStateMixin_dispose_closure, A.destekMerkeziPaneliniAc_closure, A.GlobalWebKabugu__icerik__closure, A._KalanAlandaOrtalaState__olc_closure, A.KullanimSozlesmesiOnayi_build_closure, A.KullanimSozlesmesiOnayi_build_closure0, A._OnaySatiri_build_closure, A.RefBackButton_build_closure, A.RefBottomSheet_build_closure, A.RefSegmentTabs_build_closure, A.RefStars_build_closure, A.RefDetailHeader_build_closure, A.RefOtpBoxesState_clear_closure, A.RefOtpBoxesState__degisti_closure, A.RefOtpBoxesState__degisti_closure0, A.RefOtpBoxesState__degisti_closure1, A.RefOtpBoxesState__degisti_closure2, A.RefOtpBoxesState__tus_closure, A.RefCheckRow_build_closure, A._RefMultiSelectSheetState__tumunuDegistir_closure, A._RefMultiSelectSheetState_build_closure, A._RefMultiSelectSheetState_build__closure0, A._RefMultiSelectSheetState_build__closure, A._RefMultiSelectSheetState_build_closure3, A._RefSerbestNedenSayfasiState_build__closure, A._RefSerbestNedenSayfasiState_build_closure1, A.RefSifreGozu_build_closure2, A.RefSifreGozu_build_closure3, A._RefAcilirSeciciState_build_closure0, A._RefAcilirSeciciState_build__closure, A._RefAcilirSeciciState_build_closure, A._RefAcilirSeciciState_build__closure0, A.sifreIleDogrula___closure, A.WebKenarCubugu_build_closure0, A.WebKenarCubugu_build_closure1, A._Kimlik_build_closure, A._Baslik_build_closure, A._SadeceKapat_build_closure, A._YasalKabulKapisiState__sor__closure, A._YasalKabulKapisiState__sor__closure0, A._YasalKabulKapisiState__sor__closure1, A._readStreamBody_closure, A._readStreamBody_closure0, A.MediaType_MediaType$parse_closure, A.ImagePickerPlugin_getFiles_closure, A.Logger_Logger_closure, A.KeyColor__maxChroma_closure, A.ListenableProvider__startListening_closure, A._InheritedProviderScopeElement_notifyDependent_closure, A._InheritedProviderScopeElement_notifyDependent_closure0, A._InheritedProviderScopeElement_update_closure, A._InheritedProviderScopeElement__debugSetInheritedLock_closure, A._InheritedProviderScopeElement_dependOnInheritedElement_closure, A._CreateInheritedProviderState_value_closure, A._CreateInheritedProviderState_value_closure0, A._CreateInheritedProviderState_value_closure1, A._CreateInheritedProviderState_value_closure2, A.Provider$value_closure, A.Provider_debugCheckInvalidValueType__closure, A.Socket_open_closure, A.Socket_probe_onTransportOpen__closure, A.Socket_probe_freezeTransport, A.Socket_probe_closure, A.Socket_resetPingTimeout_closure, A.Socket_close_close, A.Socket_close_waitForUpgrade, A.JSONPTransport_doPoll_closure0, A.JSONPTransport_doWrite_initIframe, A.PollingTransport_pause_pause, A.WebSocketTransport_write_done, A.WebSocketTransport_write_done_closure, A.Request_create__closure, A.Request_create_closure1, A.Manager_connect_closure2, A.Manager_connect_closure1, A.Manager_reconnect_closure0, A.Manager_reconnect_closure, A.on_closure, A.EventEmitter_on_closure, A.EventEmitter_once_closure, A.Highlighter_closure, A.Highlighter__writeFileStart_closure, A.Highlighter__writeMultilineHighlights_closure, A.Highlighter__writeMultilineHighlights_closure0, A.Highlighter__writeMultilineHighlights_closure1, A.Highlighter__writeMultilineHighlights_closure2, A.Highlighter__writeMultilineHighlights__closure, A.Highlighter__writeMultilineHighlights__closure0, A.Highlighter__writeHighlightedText_closure, A.Highlighter__writeIndicator_closure, A.Highlighter__writeIndicator_closure0, A.Highlighter__writeIndicator_closure1, A.Highlighter__writeSidebar_closure, A._Highlight_closure, A.decodeVectorGraphics_closure, A.decodeVectorGraphics_process, A.decodeVectorGraphics_process_closure, A.decodeVectorGraphics_process__closure, A.FlutterVectorGraphicsListener_onImage_closure, A._VectorGraphicWidgetState__loadPicture_closure1, A._VectorGraphicWidgetState__handleError_closure, A._VectorGraphicWidgetState__loadAssetBytes_closure, A._VectorGraphicWidgetState__loadAssetBytes_closure0, A.DrawCommandBuilder__getOrGenerateId_closure, A.SvgParser__parseTree_closure, A.SvgParser__parseRawWidthHeight_closure, A._Resolver_addDeferredGradient_closure, A._Resolver_addClipPath_closure, A._Resolver_addDrawable_closure, A.main_closure0, A.main_closure]);
+    _inheritMany(A.Closure, [A.Closure0Args, A.AppBootstrap_prepareEngineInitializer_closure0, A.AppBootstrap__prepareAppRunner_closure, A.AppBootstrap__prepareFlutterApp_closure, A.AppBootstrap__prepareFlutterApp_closure0, A.CkCanvas_saveLayerWithFilter_closure, A._canvasKitJsUrls_closure, A.CkColorFilter_filterBounds_closure, A.SkiaFontCollection_registerDownloadedFonts_makeRegisterFont, A.CkImageFilter_filterBounds_closure, A._CkComposeImageFilter_withSkImageFilter_closure, A._CkComposeImageFilter_withSkImageFilter__closure, A.CkUniqueRef_closure, A.CkCountedRef_closure, A.CkPaint_toSkPaint_closure, A.CanvasKitRenderer__createRasterizer_closure, A.CanvasKitRenderer__createRasterizer_closure0, A._computeCombinedFontFamilies_closure, A.CkVertices_CkVertices$raw_closure, A.ClipboardMessageHandler_setDataMethodCall_closure, A.ClipboardMessageHandler_setDataMethodCall_closure0, A.ClipboardMessageHandler_getDataMethodCall_closure, A.ClipboardMessageHandler_getDataMethodCall_closure0, A.ClipboardMessageHandler_hasStringsMethodCall_closure, A.ClipboardMessageHandler_hasStringsMethodCall_closure0, A.CanvasProvider_acquireCanvas_closure, A.DomConsole_get_warn_closure, A.createImageBitmap_closure, A.DomNavigator_get_languages_closure, A.rawHttpGet_closure, A.DomResponse_arrayBuffer_closure, A._DomStreamReader_read_closure, A.DomFontFace_load_closure, A.DomClipboard_readText_closure, A.DomOffscreenCanvas_convertToBlob_closure, A.Closure2Args, A._ttPolicy_closure, A.sendFontChangeMessage_closure, A.sendFontChangeMessage__closure, A.FallbackFontService_addMissingCodePoints_closure, A.FallbackFontService__process__closure1, A.FallbackFontService__process__closure0, A.FallbackFontService__process__closure, A.FallbackFontService__findFontsForComponents_closure, A.FallbackFontService__selectBestFont_closure, A.FallbackFontService__selectBestFont_closure0, A.FallbackFontService__selectBestFont_closure1, A.FallbackFontService__findFontsWithMaxCoverage_closure, A.fetchFontManifest_closure, A.fetchFontManifest_closure0, A.fetchFontManifest_closure1, A.fetchFontManifest__closure, A.FrameService_scheduleFrame_closure, A.HtmlImageElementCodec__waitForMetadata_closure, A.HtmlImageElementCodec__waitForMetadata_closure0, A.FlutterApp_constructor__closure, A.FlutterEngineInitializer_constructor__closure, A.FlutterAppRunner_constructor__closure, A.CustomFutureOfJSAnyToJSPromise_get_toPromise__closure, A._kLogicalKeyToModifierGetter_closure, A._kLogicalKeyToModifierGetter_closure0, A._kLogicalKeyToModifierGetter_closure1, A._kLogicalKeyToModifierGetter_closure2, A._kLogicalKeyToModifierGetter_closure3, A._kLogicalKeyToModifierGetter_closure4, A._kLogicalKeyToModifierGetter_closure5, A._kLogicalKeyToModifierGetter_closure6, A.KeyboardBinding$__closure, A.KeyboardBinding$__closure0, A.KeyboardBinding__addEventListener_loggedHandler, A.KeyboardBinding__onKeyData_closure, A.KeyboardConverter__scheduleAsyncEvent_closure, A.KeyboardConverter_handleEvent_closure, A.preventDefaultListener_closure, A.NativeMemoryFinalizer_closure, A.UniqueRef_finalizer_closure, A.CountedRef_debugGetStackTraces__closure, A.MultiEntriesBrowserHistory_onPopState_closure, A.SingleEntryBrowserHistory_onPopState_closure, A.SingleEntryBrowserHistory_onPopState_closure0, A.EnginePlatformDispatcher_closure, A.EnginePlatformDispatcher__zonedPlatformMessageResponseCallback_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure1, A.EnginePlatformDispatcher__sendPlatformMessage_closure2, A.EnginePlatformDispatcher__sendPlatformMessage_closure3, A.EnginePlatformDispatcher__addLocaleChangedListener_closure, A.EnginePlatformDispatcher__setAppLifecycleState_closure, A.EnginePlatformDispatcher_replyToPlatformMessage_closure, A.EnginePlatformDispatcher__addNavigationFocusHandler_closure, A._BrowserAppLifecycleState__focusListener_closure, A._BrowserAppLifecycleState__blurListener_closure, A._BrowserAppLifecycleState__visibilityChangeListener_closure, A.MediaQueryManager_addListener_closure, A.ViewFocusBinding__handleFocusin_closure, A.ViewFocusBinding__handleFocusout_closure, A.ViewFocusBinding__handleKeyDown_closure, A.ViewFocusBinding__handleKeyUp_closure, A.PlatformViewEmbedder_submitFrame_closure, A.PlatformViewEmbedder_submitFrame_closure0, A.PlatformViewEmbedder__updateDomForNewComposition_closure, A.SafariPointerEventWorkaround_workAroundMissingPointerEvents_closure, A._BaseAdapter_addEventListener_loggedHandler, A._WheelEventListenerMixin__convertWheelEventToPointerData_closure, A._PointerAdapter__addPointerEventListener_closure, A._PointerAdapter_setup_closure, A._PointerAdapter_setup_closure0, A._PointerAdapter_setup_closure1, A._PointerAdapter_setup_closure2, A._PointerAdapter_setup_closure3, A._PointerAdapter_setup_closure4, A._PointerAdapter_setup_closure5, A._PointerAdapter_setup_closure6, A.EngineImage_closure, A.EngineImage_closure0, A.RawKeyboard_handleHtmlEvent_closure0, A.AccessibilityFocusManager_manage_closure, A.AccessibilityFocusManager_manage_closure0, A.SemanticIncrementable_closure, A.SemanticIncrementable_closure0, A._computeLabelValue_closure, A.SemanticMenu__updateMenuItemId_closure, A.SemanticMenuBar__updateMenuItemId_closure, A.SemanticRouteBase__setDefaultFocus_closure, A.SemanticScrollable_update_closure0, A.SemanticScrollable_update_closure1, A.SemanticRole_addSemanticBehavior_closure, A.SemanticRole__updateTraversalParent_closure, A.SemanticsObject__debugVisitRenderedSemanticNodesDepthFirst_closure, A.EngineSemanticsOwner__finalizeTree_closure, A.EngineSemanticsOwner__computeNodeMapConsistencyMessage_closure, A.DesktopSemanticsEnabler__prepareAccessibilityPlaceholder_closure, A.MobileSemanticsEnabler__prepareAccessibilityPlaceholder_closure, A.Tappable_update_closure, A.SemanticTextField__initializeEditableElement_closure, A.SemanticTextField__initializeEditableElement_closure0, A.SemanticTextField__initializeEditableElement_closure1, A.TestUrlStrategy__nextEventLoop_closure, A.EngineAutofillForm_addInputEventListeners_addSubscriptionForKey, A.EngineAutofillForm_addInputEventListeners_addSubscriptionForKey_closure, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure0, A.DefaultTextEditingStrategy_preventDefaultForMouseEvents_closure1, A.IOSTextEditingStrategy_addEventHandlers_closure, A.IOSTextEditingStrategy__addTapListener_closure, A.FirefoxTextEditingStrategy_addEventHandlers_closure, A.TextEditingChannel_onFocusReceived_closure, A.HybridTextEditing__startEditing_closure, A.EditableTextGeometry_EditableTextGeometry$fromFrameworkMessage_closure, A.bytesToHexString_closure, A.Matrix4_toString_closure_fmt, A.CustomElementDimensionsProvider_closure, A.VisualOrder_inVisualOrder_closure, A.ViewConstraints_toString_describe, A.HttpDate__parse_expectChar, A.HttpDate__parse_expectNum, A.CastSet_removeWhere_closure, A.CastMap_entries_closure, A.Instantiation, A.TearOffClosure, A.assertInteropArgs_closure, A.JsLinkedHashMap_containsValue_closure, A.initHooks_closure, A.initHooks_closure1, A._StringStream__goalToEventCode_closure, A._AsyncRun__initializeScheduleImmediate_internalCallback, A._AsyncRun__initializeScheduleImmediate_closure, A._awaitOnObject_closure, A._SyncBroadcastStreamController__sendData_closure, A._SyncBroadcastStreamController__sendError_closure, A._SyncBroadcastStreamController__sendDone_closure, A.Future_wait_closure, A.FutureExtensions_onError_closure, A._Future__chainForeignFuture_closure, A._Future__propagateToListeners_handleWhenCompleteCallback_closure, A._Future_timeout_closure1, A.Stream_length_closure, A.Stream_first_closure0, A._CustomZone_bindUnaryCallback_closure, A._CustomZone_bindUnaryCallbackGuarded_closure, A._RootZone_bindUnaryCallback_closure, A._RootZone_bindUnaryCallbackGuarded_closure, A._HashMap_values_closure, A._CustomHashMap_closure, A._LinkedCustomHashMap_closure, A.MapBase_entries_closure, A._JsonMap_values_closure, A.DateTime_parse_parseIntOrZero, A.DateTime_parse_parseMilliAndMicroseconds, A._Uri__splitQueryStringAll_parsePair, A._EventStreamSubscription_closure0, A._EventStreamSubscription_onData_closure0, A.jsify__convert, A.promiseToFuture_closure, A.promiseToFuture_closure0, A.dartify_convert, A.KeyData__quotedCharCode_closure, A._Transform_makeComposite_closure, A._Transform_makeTranslate_closure, A._Transform_makeScale_closure, A._Transform_kFlip_closure, A.bootstrapEngine_closure, A.BrowserPlatformLocation_getOrCreateDomEventListener_closure0, A.HashUrlStrategy_addPopStateListener_wrappedFn, A.HashUrlStrategy__waitForPopState_closure, A.EventChannelExtension_receiveGuardedBroadcastStream_closure, A.CanonicalizedMap_entries_closure, A.CanonicalizedMap_keys_closure, A.CanonicalizedMap_values_closure, A.DartHtmlConnectivityPlugin_onConnectivityChanged_closure, A.DartHtmlConnectivityPlugin_onConnectivityChanged_closure0, A.MethodChannelConnectivity_onConnectivityChanged_closure, A.MethodChannelConnectivity_checkConnectivity_closure, A.parseConnectivityResults_closure, A.XFile__blob_closure, A.XFile__blob_closure0, A.MethodChannelFirebaseAuth_closure, A.MethodChannelFirebaseAuth__closure0, A.MethodChannelFirebaseAuth_closure0, A.MethodChannelFirebaseAuth__closure, A.multiFactorInfoPigeonToObject_closure, A.FirebaseAuthWeb_registerWith_closure, A.FirebaseAuthWeb__createStreamListener_closure0, A.FirebaseAuthWeb__createStreamListener_closure1, A.FirebaseAuthWeb__createStreamListener_closure3, A.FirebaseAuthWeb__createStreamListener_closure4, A.UserWeb_closure, A.User_providerData_closure, A.User_getIdToken_closure, A.User_linkWithCredential_closure, A.Auth_onWaitInitState_closure, A.Auth_onWaitInitState_closure0, A.Auth_onAuthStateChanged_closure, A.Auth_onAuthStateChanged_closure0, A.Auth_onIdTokenChanged_closure, A.Auth_onIdTokenChanged_closure0, A.Auth_signInWithCustomToken_closure, A.Auth_signInWithEmailAndPassword_closure, A.ConfirmationResult_confirm_closure, A.MultiFactorResolver_hints_closure, A._deepEquals_closure, A._deepEquals_closure0, A.FirebaseCoreWeb__ignoredServiceScripts_closure, A.FirebaseCoreWeb_injectSrcScript_closure, A.FirebaseCoreWeb_injectSrcScript_closure1, A.FirebaseCoreWeb__initializeCore_closure, A.FirebaseCoreWeb_initializeApp_closure1, A._CupertinoButtonState__defaultCursor_closure, A._CupertinoButtonState__animate_closure, A._CupertinoButtonState_build_closure0, A._CupertinoBackGestureDetectorState_dispose_closure, A._CupertinoBackGestureController_dragEnd_closure, A._CupertinoEdgeShadowDecoration_lerp_closure, A._CupertinoEdgeShadowDecoration_lerp_closure0, A._CupertinoScrollbarState_handleThumbPress_closure, A._CupertinoTextSelectionToolbarContentState_build_closure, A._CupertinoTextSelectionToolbarItemsElement_mount_closure, A._RenderCupertinoTextSelectionToolbarItems_performLayout_closure, A._RenderCupertinoTextSelectionToolbarItems_performLayout_closure0, A._RenderCupertinoTextSelectionToolbarItems_paint_closure, A._RenderCupertinoTextSelectionToolbarItems_redepthChildren_closure, A._RenderCupertinoTextSelectionToolbarItems_visitChildrenForSemantics_closure, A._RenderCupertinoTextSelectionToolbarItems_debugDescribeChildren_closure, A.CupertinoThemeData_resolveFrom_convertColor, A.NoDefaultCupertinoThemeData_resolveFrom_convertColor, A._CupertinoThemeDefaults_resolveFrom_convertColor, A.FlutterErrorDetails_summary_closure, A.FlutterErrorDetails_debugFillProperties_closure, A.FlutterError_FlutterError_closure, A.FlutterError$fromParts__closure, A.FlutterError_defaultStackFilter_closure, A.FlutterError_defaultStackFilter_closure0, A.FlutterError_toString_closure, A.debugPrintStack_closure, A.BindingBase_initServiceExtensions_closure1, A.BindingBase_initServiceExtensions_closure3, A.BindingBase_initServiceExtensions__closure, A.BindingBase_initServiceExtensions__closure0, A.BindingBase_registerSignalServiceExtension_closure, A.BindingBase_registerBoolServiceExtension_closure, A.BindingBase_registerNumericServiceExtension_closure, A.BindingBase_registerStringServiceExtension_closure, A._PrefixedStringBuilder__wordWrapLine_noWrap, A.TextTreeRenderer__debugRender_visitor, A.TextTreeRenderer__debugRender_closure, A.DiagnosticsNode_toJsonList_closure, A.DiagnosticsNode__toJson_closure, A.IterableProperty_valueToString_closure, A.IterableProperty_toJsonMap_closure, A.FlagsSummary__hasNonNullEntry_closure, A.FlagsSummary__formattedValues_closure, A.FlagsSummary__formattedValues_closure0, A.FlutterMemoryAllocations__tryDefragmentListeners_closure, A.FlutterMemoryAllocations_hasListeners_closure, A.HashedObserverList_toList_closure, A.debugPrintThrottled_closure, A.StackFrame_fromStackString_closure, A.SynchronousFuture_whenComplete_closure, A._GestureArena_toString_closure, A.GestureBinding__handleHitTest_closure, A.PointerEventConverter_expand_closure, A.PointerEventConverter_expand_closure0, A.HitTestResult__debugVectorMoreOrLessEquals__closure, A.PolynomialFit_toString_closure, A.ScaleGestureRecognizer__reconfigure_closure, A.ScaleGestureRecognizer_acceptGesture_closure, A.BackButtonIcon_build_closure, A.BackButtonIcon_build_closure0, A.BackButtonIcon_build_closure1, A.EndDrawerButtonIcon_build_closure, A.EndDrawerButtonIcon_build_closure0, A.EndDrawerButtonIcon_build_closure1, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure0, A.AdaptiveTextSelectionToolbar_getAdaptiveButtons_closure1, A._MaterialAppState__materialBuilder_closure, A._MaterialAppState__buildWidgetApp_closure, A.AppBarThemeData_debugFillProperties_closure, A.MaterialRectArcTween__initialize_closure, A._ButtonStyleState_build_effectiveValue, A._ButtonStyleState_build_resolve, A._ButtonStyleState_build_resolve_closure, A._ButtonStyleState_build_closure, A._ButtonStyleState_build_closure0, A._ButtonStyleState_build_closure1, A._ButtonStyleState_build_closure2, A._ButtonStyleState_build_closure3, A._ButtonStyleState_build_closure4, A._ButtonStyleState_build_closure5, A._ButtonStyleState_build_closure6, A._ButtonStyleState_build_closure7, A._ButtonStyleState_build_closure8, A._ButtonStyleState_build_closure9, A._ButtonStyleState_build_closure10, A._ButtonStyleState_build_closure11, A._ButtonStyleState_build_closure21, A._ButtonStyleState_build__closure0, A._ButtonStyleState_build_closure22, A._ButtonStyleState_build__closure, A._ButtonStyleState_build_closure12, A._ButtonStyleState_build_closure13, A._ButtonStyleState_build_closure14, A._ButtonStyleState_build_closure15, A._ButtonStyleState_build_closure16, A._ButtonStyleState_build_closure17, A._ButtonStyleState_build_closure18, A._ButtonStyleState_build_closure19, A._ButtonStyleState_build_closure20, A._DialogPopScope_build_closure, A._DialogContentPage_createRoute_closure, A.showDialog_closure, A.showDialog__closure, A.DialogRoute_closure, A._ElevatedButtonDefaultsM3_backgroundColor_closure, A._ElevatedButtonDefaultsM3_foregroundColor_closure, A._ElevatedButtonDefaultsM3_overlayColor_closure, A._ElevatedButtonDefaultsM3_elevation_closure, A._ElevatedButtonDefaultsM3_iconColor_closure, A._FilledButtonDefaultsM3_backgroundColor_closure, A._FilledButtonDefaultsM3_foregroundColor_closure, A._FilledButtonDefaultsM3_overlayColor_closure, A._FilledButtonDefaultsM3_elevation_closure, A._FilledButtonDefaultsM3_iconColor_closure, A._IconButtonDefaultsM3_foregroundColor_closure, A._IconButtonDefaultsM3_overlayColor_closure, A._FilledIconButtonDefaultsM3_backgroundColor_closure, A._FilledIconButtonDefaultsM3_foregroundColor_closure, A._FilledIconButtonDefaultsM3_overlayColor_closure, A._FilledTonalIconButtonDefaultsM3_backgroundColor_closure, A._FilledTonalIconButtonDefaultsM3_foregroundColor_closure, A._FilledTonalIconButtonDefaultsM3_overlayColor_closure, A._OutlinedIconButtonDefaultsM3_backgroundColor_closure, A._OutlinedIconButtonDefaultsM3_foregroundColor_closure, A._OutlinedIconButtonDefaultsM3_overlayColor_closure, A._OutlinedIconButtonDefaultsM3_side_closure, A._InkResponseState_highlightsExist_closure, A._InkResponseState_build_getHighlightColorForType, A._HelperErrorState__buildError_closure, A._RenderDecoration_paint_doPaint, A._RenderDecoration__childSemanticsConfigurationDelegate_closure, A._InputDecoratorState_build_closure, A._InputDecoratorDefaultsM3_hintStyle_closure, A._InputDecoratorDefaultsM3_fillColor_closure, A._InputDecoratorDefaultsM3_activeIndicatorBorder_closure, A._InputDecoratorDefaultsM3_outlineBorder_closure, A._InputDecoratorDefaultsM3_prefixIconColor_closure, A._InputDecoratorDefaultsM3_suffixIconColor_closure, A._InputDecoratorDefaultsM3_labelStyle_closure, A._InputDecoratorDefaultsM3_floatingLabelStyle_closure, A._InputDecoratorDefaultsM3_helperStyle_closure, A._InputDecoratorDefaultsM3_errorStyle_closure, A.ListTile_build_resolveColor, A.ListTile__findIntermediateWidget_closure, A._RenderListTile_paint_doPaint, A.TextMagnifier_adaptiveMagnifierConfiguration_closure, A._MaterialState_build_closure, A._MaterialInteriorState_forEachTween_closure, A._MaterialInteriorState_forEachTween_closure0, A._MaterialInteriorState_forEachTween_closure1, A._MaterialInteriorState_forEachTween_closure2, A._OutlinedButtonDefaultsM3_foregroundColor_closure, A._OutlinedButtonDefaultsM3_overlayColor_closure, A._OutlinedButtonDefaultsM3_iconColor_closure, A._OutlinedButtonDefaultsM3_side_closure, A._ZoomPageTransition_build_closure, A._ZoomPageTransition_build_closure0, A._FadeForwardsPageTransition_build_closure, A._FadeForwardsPageTransition_build_closure0, A.FadeForwardsPageTransitionsBuilder__delegatedTransition_closure, A.FadeForwardsPageTransitionsBuilder__delegatedTransition_closure0, A.ZoomPageTransitionsBuilder_delegatedTransition_closure, A.ZoomPageTransitionsBuilder__snapshotAwareDelegatedTransition_closure, A.ZoomPageTransitionsBuilder__snapshotAwareDelegatedTransition_closure0, A.PageTransitionsTheme__all_closure, A.PredictiveBackPageTransitionsBuilder_buildTransitions_closure, A._CircularProgressIndicatorState_build_closure, A.RefreshIndicatorState__show_closure, A.ScaffoldMessengerState_hideCurrentSnackBar_closure, A.ScaffoldState_build_closure, A._HitTestableAtOrigin_hitTestableAtOrigin_closure, A._MaterialScrollbarState__trackVisibility_closure, A._MaterialScrollbarState__thumbColor_closure, A._MaterialScrollbarState__trackColor_closure, A._MaterialScrollbarState__trackBorderColor_closure, A._MaterialScrollbarState__thickness_closure, A._SnackBarState_build_closure_message, A._SnackBarState_build_closure0, A._SnackBarState_build_closure2, A._SnackBarState_build_closure3, A._SnackbarDefaultsM3_actionTextColor_closure, A._TextButtonDefaultsM3_foregroundColor_closure, A._TextButtonDefaultsM3_overlayColor_closure, A._TextButtonDefaultsM3_iconColor_closure, A._TextFieldState_build_closure7, A._TextFieldState_build_closure8, A._m3StateInputStyle_closure, A.TextFormField_closure, A.TextFormField_closure_onChangedHandler, A._RenderTextSelectionToolbarItemsLayout__layoutChildren_closure, A._RenderTextSelectionToolbarItemsLayout__placeChildrenHorizontally_closure, A._RenderTextSelectionToolbarItemsLayout__placeChildrenVertically_closure, A._RenderTextSelectionToolbarItemsLayout__resizeChildrenWhenOverflow_closure, A._RenderTextSelectionToolbarItemsLayout_paint_closure, A._RenderTextSelectionToolbarItemsLayout_visitChildrenForSemantics_closure, A._AnimatedThemeState_forEachTween_closure, A.ThemeData__lerpThemeExtensions_closure0, A.TimePickerThemeData_dayPeriodColor_closure, A.NetworkImage__fetchImageBytes_closure, A.NetworkImage__fetchImageBytes_closure0, A._ForwardingImageStreamCompleter_closure, A._ForwardingImageStreamCompleter_listener_closure0, A._CompoundBorder_closure, A._CompoundBorder_scale_closure, A._CompoundBorder_preferPaintInterior_closure, A._CompoundBorder_toString_closure, A.ClipContext_clipPathAndPaint_closure, A.ClipContext_clipRRectAndPaint_closure, A.ClipContext_clipRectAndPaint_closure, A.paintImage_closure1, A._sample_closure, A._interpolateColorsAndStops_closure, A.LinearGradient_scale_closure, A.SweepGradient_scale_closure, A._CachedImageBase_dispose_closure, A.ImageProvider_resolve_closure0, A.ImageProvider__createErrorHandlerAndKey_closure, A.AssetImage_obtainKey_closure, A.ImageStreamCompleter_reportError_closure, A.ImageStreamCompleter_reportImageChunkEvent_closure, A.InlineSpan_getSpanForPosition_closure, A.InlineSpan_codeUnitAt_closure, A._ShapeDecorationPainter__precache_closure, A._ShapeDecorationPainter__precache_closure0, A._ShapeDecorationPainter__precache_closure1, A._ShapeDecorationPainter__paintShadows_debugHandleDisabledShadowStart, A.StrutStyle_debugFillProperties_closure, A.TextPainter_inlinePlaceholderBoxes_closure, A.TextPainter_setPlaceholderDimensions__closure, A.TextPainter_getBoxesForSelection_closure, A.TextPainter_computeLineMetrics_closure, A.TextSpan_debugDescribeChildren_closure, A.TextStyle_lerp__closure, A.TextStyle_debugFillProperties_closure, A.FrictionSimulation_closure, A.RendererBinding_pipelineOwner_closure1, A.RendererBinding__handleWebFirstFrame_closure, A.RendererBinding__scheduleMouseTrackerUpdate_closure0, A.RendererBinding__forceRepaint_closure, A.BoxConstraints_debugAssertIsValid_closure_throwError, A.BoxConstraints_toString_describe, A.RenderBox_getDistanceToActualBaseline_closure, A.RenderEditable_getBoxesForSelection_closure, A.RenderEditable_describeSemanticsConfiguration_closure, A.RenderFlex__computeDryDistanceToHighestBaseline_constraintsForChild, A.RenderFlex__computeDryDistanceToFirstBaseline_constraintsForChild, A.TransformLayer_transform_closure, A.LayerLink__debugScheduleLeadersCleanUpCheck__closure, A.MouseTracker__handleDeviceUpdate_closure, A.MouseTracker__handleDeviceUpdateMouseEvents_closure0, A.PipelineOwner_flushSemantics_closure0, A.PipelineOwner_flushSemantics_closure3, A.RenderObject_reassemble_closure, A.RenderObject__updateCompositingBits_closure, A.RenderObject__updateCompositingBits_closure0, A.RenderObject__paintWithContext__closure, A.RenderObject_clearSemantics_closure, A.RenderObjectWithLayoutCallbackMixin_runLayoutCallback_closure, A.RelayoutWhenSystemFontsChangeMixin__scheduleSystemFontsUpdate_closure, A._SemanticsConfigurationProvider_absorbAll_closure, A._RenderObjectSemantics_debugCheckForParentData_debugCheckParentDataNotDirty, A._RenderObjectSemantics_isBlockingPreviousSibling_closure, A._RenderObjectSemantics_updateChildren_closure, A._RenderObjectSemantics_updateChildren_closure0, A._RenderObjectSemantics_updateChildren_closure1, A._RenderObjectSemantics_updateChildren_closure2, A._RenderObjectSemantics_updateChildren_closure3, A._RenderObjectSemantics_updateChildren_closure4, A._RenderObjectSemantics__getNonBlockedChildren_closure, A._RenderObjectSemantics__collectChildMergeUpAndSiblingGroup_closure, A._RenderObjectSemantics__collectChildMergeUpAndSiblingGroup_closure0, A._RenderObjectSemantics__updateChildGeometry_closure, A._RenderObjectSemantics__updateChildGeometry_closure0, A._RenderObjectSemantics__buildSemanticsSubtree_closure, A._RenderObjectSemantics__mergeSiblingGroup_closure, A._RenderObjectSemantics__mergeSiblingGroup_closure0, A._RenderObjectSemantics_debugDescribeChildren_closure, A.RenderParagraph_markNeedsLayout_closure, A.RenderParagraph_selectionColor_closure, A.RenderParagraph_performLayout_closure, A._factoriesTypeSet_closure, A._PlatformViewGestureRecognizer_closure, A.RenderFittedBox__updatePaintData_closure, A.SliverConstraints_debugAssertIsValid_closure_verifyDouble, A.SliverGeometry_debugAssertIsValid_closure_verify, A.RenderSliverHelpers_hitTestBoxChild_closure, A.RenderSliverMultiBoxAdaptor__createOrObtainChild_closure, A.RenderSliverMultiBoxAdaptor_collectGarbage_closure, A.RenderSliverMultiBoxAdaptor_collectGarbage__closure, A.RenderSliverMultiBoxAdaptor_collectGarbage__closure0, A.RenderSliverEdgeInsetsPadding_performLayout_paintOffset, A.RenderSliverEdgeInsetsPadding_performLayout_cacheOffset, A.RenderStack_computeMinIntrinsicWidth_closure, A.RenderStack_computeMaxIntrinsicWidth_closure, A.RenderStack_computeMinIntrinsicHeight_closure, A.RenderStack_computeMaxIntrinsicHeight_closure, A.RenderViewportBase_visitChildrenForSemantics_closure, A.RenderViewportBase_hitTestChildren_closure, A.RenderWrap_computeDryBaseline_getChildSize, A.SchedulerBinding_endOfFrame_closure, A.SchedulerBinding__handleDrawFrame_closure, A.TickerFuture_whenCompleteOrCancel_thunk, A._DebugSemanticsRoleChecks__semanticsTabBar_closure, A._DebugSemanticsRoleChecks__semanticsTable_closure, A._DebugSemanticsRoleChecks__semanticsRow_closure, A._DebugSemanticsRoleChecks__semanticsRadioGroup_validateRadioGroupChildren, A.SemanticsData_debugFillProperties_closure, A.SemanticsNode__replaceChildren_closure, A.SemanticsNode__replaceChildren__closure, A.SemanticsNode_detach_closure0, A.SemanticsNode_getSemanticsData_closure, A.SemanticsNode__childrenIdInHitTestOrder_closure, A.SemanticsNode__childrenInTraversalOrder_closure, A.SemanticsNode_sendEvent_closure, A.SemanticsNode_debugFillProperties_closure, A.SemanticsNode_debugFillProperties_closure0, A.SemanticsNode_debugFillProperties_closure1, A.SemanticsNode_debugFillProperties_closure2, A.SemanticsNode_debugDescribeChildren_closure, A._SemanticsSortGroup_sortedWithinVerticalGroup_closure, A._SemanticsSortGroup_sortedWithinKnot_search, A._SemanticsSortGroup_sortedWithinKnot_closure0, A._SemanticsSortGroup_sortedWithinKnot_closure1, A._childrenInDefaultOrder_closure, A.SemanticsOwner_sendSemanticsUpdate_closure_findInvisibleNodes, A.SemanticsOwner_sendSemanticsUpdate_closure_nodeToMessage, A.SemanticsOwner_sendSemanticsUpdate_closure0, A.SemanticsOwner_sendSemanticsUpdate_closure3, A.SemanticsOwner__getSemanticsActionHandlerForId_closure, A.SemanticsConfiguration__addArgumentlessAction_closure, A.SemanticsConfiguration_onScrollToOffset_closure, A.SemanticsConfiguration_onMoveCursorForwardByCharacter_closure, A.SemanticsConfiguration_onMoveCursorBackwardByCharacter_closure, A.SemanticsConfiguration_onMoveCursorForwardByWord_closure, A.SemanticsConfiguration_onMoveCursorBackwardByWord_closure, A.SemanticsConfiguration_onSetSelection_closure, A.SemanticsConfiguration_onSetText_closure, A.CachingAssetBundle_loadStructuredData_closure, A.PlatformAssetBundle_load_closure, A.AssetManifest_loadFromAssetBundle_closure, A._AssetManifestBin_getAssetVariants_closure, A.ServicesBinding__initKeyboard_closure, A._DefaultBinaryMessenger_send_closure, A.LogicalKeyboardKey_expandSynonyms_closure, A.BasicMessageChannel_setMessageHandler_closure, A.MethodChannel_setMethodCallHandler_closure, A.EventChannel_receiveBroadcastStream__closure, A.RestorationManager_handleRestorationUpdateFromEngine_closure, A.RestorationManager_scheduleSerializationFor_closure, A.RestorationBucket__debugAssertIntegrity__closure, A.RestorationBucket__visitChildren_closure, A.SystemChrome_setSystemUIOverlayStyle__closure, A.FilteringTextInputFormatter__processRegion_adjustIndex, A.TextEditingValue_replaced_adjustIndex, A.TextInput__handleTextInputInvocation_closure, A.TextInput__handleTextInputInvocation_closure0, A.TextInput__handleTextInputInvocation_closure1, A._PlatformTextInputControl_attach_closure, A._PlatformTextInputControl_detach_closure, A._PlatformTextInputControl_updateConfig_closure, A._PlatformTextInputControl_setEditingState_closure, A._PlatformTextInputControl_show_closure, A._PlatformTextInputControl_hide_closure, A._PlatformTextInputControl_setEditableSizeAndTransform_closure, A._PlatformTextInputControl_setComposingRect_closure, A._PlatformTextInputControl_setCaretRect_closure, A._PlatformTextInputControl_setSelectionRects_closure, A._PlatformTextInputControl_setSelectionRects_closure0, A._PlatformTextInputControl_updateStyle_closure, A._PlatformTextInputControl_requestAutofill_closure, A.SystemContextMenuController_showWithItems_closure, A.UndoManager__setUndoState_closure, A.MinimumTapTargetEvaluation__traverse_closure, A.LabeledTapTargetEvaluation__traverse_closure, A._ContrastEvaluation__evaluateNode_closure, A._colorsWithinRect_getPixel, A._colorsWithinRect_closure, A._collectElementsByText_closure, A.HtmlElementViewImpl_get__createController_closure, A.HtmlElementViewImpl__createController_closure, A.ImgElementPlatformView__register_closure, A.WindowScope_updateShouldNotifyDependent_closure, A._WindowManagerState_build__closure, A._getParent_closure, A.Actions__findDispatcher_closure, A.Actions_maybeFind_closure, A.Actions__maybeFindWithoutDependingOn_closure, A.Actions_invoke_closure0, A.Actions_maybeInvoke_closure, A._FocusableActionDetectorState_initState_closure, A._FocusableActionDetectorState__mayTriggerCallback_shouldShowHoverHighlight, A._FocusableActionDetectorState__mayTriggerCallback_canRequestFocus, A._FocusableActionDetectorState__mayTriggerCallback_shouldShowFocusHighlight, A._FocusableActionDetectorState_didUpdateWidget_closure, A._WidgetsAppState__onGenerateRoute_closure, A._WidgetsAppState_build_closure, A._WidgetsAppState_build__closure, A._AutomaticKeepAliveState__addClient_closure, A._AutomaticKeepAliveState__getChildElement_closure, A._UbiquitousInheritedElement_notifyClients_closure, A._UbiquitousInheritedElement__recurseChildren_closure, A.ClipPath_shape_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure7, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure9, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure11, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure13, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_initInstances__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initInstances_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions__closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure2, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure4, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure6, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure7, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions__closure0, A.WidgetsBinding__formatEvaluationResult_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure0, A.ContextMenuController_show_closure, A.DefaultSelectionStyle_merge_closure, A.showRawDialog_closure, A._DialogWindowRoute_install_closure, A.DisplayFeatureSubScreen_avoidBounds_closure, A.DisplayFeatureSubScreen_avoidBounds_closure0, A.EditableTextState_cutSelection_closure, A.EditableTextState__pasteText_closure, A.EditableTextState__startLiveTextInput_closure, A.EditableTextState__isPasswordInput_closure, A.EditableTextState_didChangeDependencies_closure, A.EditableTextState_didChangeDependencies_closure0, A.EditableTextState_didUpdateWidget_closure, A.EditableTextState_didUpdateWidget_closure0, A.EditableTextState_didUpdateWidget_closure1, A.EditableTextState_didUpdateWidget_closure2, A.EditableTextState__scheduleShowCaretOnScreen_closure, A.EditableTextState_didChangeMetrics_closure, A.EditableTextState__startCursorBlink_closure, A.EditableTextState__onCursorTick_closure1, A.EditableTextState_build_closure, A.EditableTextState_build__closure, A.EditableTextState_build__closure5, A.EditableTextState_build__closure2, A.EditableTextState_build__closure1, A.EditableTextState_build__closure3, A._ScribbleFocusableState_isInScribbleRect_closure, A._OverridingTextStyleTextSpanUtils__applyTextStyleOverrides_closure0, A.FocusNode_traversalDescendants_closure, A.FocusNode__removeChild_closure, A.FocusNode_debugDescribeChildren_closure, A.FocusScopeNode_debugFillProperties_closure, A._getAncestor_closure, A.FocusTraversalPolicy__findInitialFocus_closure, A.FocusTraversalPolicy__sortAllDescendants_visitGroups, A.FocusTraversalPolicy__sortAllDescendants_closure, A._ReadingOrderTraversalPolicy_FocusTraversalPolicy_DirectionalFocusTraversalPolicyMixin_changedScope_closure, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure0, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure1, A.DirectionalFocusTraversalPolicyMixin__findNextFocusInDirection_closure2, A.DirectionalFocusTraversalPolicyMixin__popPolicyDataIfNeeded_popOrInvalidate, A._ReadingOrderSortData_commonDirectionalityOf_closure, A._ReadingOrderSortData_directionalAncestors_getDirectionalityAncestors, A._ReadingOrderDirectionalGroupData_rect_closure, A._ReadingOrderDirectionalGroupData_debugFillProperties_closure, A.ReadingOrderTraversalPolicy__pickNext_inBand_closure, A.FormState__fieldDidChange_closure, A.FormState_build_closure, A.FormFieldState_didChangeDependencies_closure, A.FormFieldState_build_closure, A._InactiveElements__unmount_closure0, A.BuildScope__flushDirtyElements__closure, A.BuildOwner__debugVerifyGlobalKeyReservation____closure, A.BuildOwner__debugVerifyGlobalKeyReservation____closure0, A.BuildOwner_finalizeTree__closure, A.BuildOwner_finalizeTree__closure0, A.BuildOwner_finalizeTree__closure1, A.BuildOwner_finalizeTree__closure2, A.Element_reassemble_closure, A.Element_renderObjectAttachingChild_closure, A.Element_describeMissingAncestor_closure, A.Element_describeElements_closure, A.Element_updateChildren_replaceWithNullIfForgotten, A.Element_updateChildren_closure, A.Element_updateSlotForChild_visit, A.Element__updateDepth_closure, A.Element__updateBuildScopeRecursively_closure, A.Element_detachRenderObject_closure, A.Element_attachRenderObject_closure, A.Element_debugFillProperties_closure0, A.Element_debugDescribeChildren_closure, A.ParentDataElement__applyParentData_applyParentDataToChild, A.RenderObjectElement__debugCheckCompetingAncestors__closure, A.RenderObjectElement__findAncestorParentDataElements_closure, A.MultiChildRenderObjectElement_children_closure, A.GestureDetector_build_closure0, A.GestureDetector_build_closure2, A.GestureDetector_build_closure4, A.GestureDetector_build_closure6, A.GestureDetector_build_closure8, A.GestureDetector_build_closure10, A.GestureDetector_build_closure12, A.RawGestureDetectorState_debugFillProperties_closure, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure0, A._DefaultSemanticsGestureDelegate__getHorizontalDragUpdateHandler_closure1, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure0, A._DefaultSemanticsGestureDelegate__getVerticalDragUpdateHandler_closure1, A.Hero__allHeroesFor_visitor, A.HeroController_didStopUserGesture_isInvalidFlight, A.HeroController__maybeStartHeroTransition_closure, A.IconTheme_merge_closure, A._ImageState__replaceImage_closure, A.ImplicitlyAnimatedWidgetState_initState_closure, A.ImplicitlyAnimatedWidgetState_didUpdateWidget_closure, A.ImplicitlyAnimatedWidgetState__constructTweens_closure, A._AnimatedContainerState_forEachTween_closure, A._AnimatedContainerState_forEachTween_closure0, A._AnimatedContainerState_forEachTween_closure1, A._AnimatedContainerState_forEachTween_closure2, A._AnimatedContainerState_forEachTween_closure3, A._AnimatedContainerState_forEachTween_closure4, A._AnimatedContainerState_forEachTween_closure5, A._AnimatedContainerState_forEachTween_closure6, A._AnimatedPaddingState_forEachTween_closure, A._AnimatedAlignState_forEachTween_closure, A._AnimatedPositionedState_forEachTween_closure, A._AnimatedPositionedState_forEachTween_closure0, A._AnimatedPositionedState_forEachTween_closure1, A._AnimatedPositionedState_forEachTween_closure2, A._AnimatedPositionedState_forEachTween_closure3, A._AnimatedPositionedState_forEachTween_closure4, A._AnimatedRotationState_forEachTween_closure, A._AnimatedOpacityState_forEachTween_closure, A._AnimatedDefaultTextStyleState_forEachTween_closure, A._AnimatedPhysicalModelState_forEachTween_closure, A._AnimatedPhysicalModelState_forEachTween_closure0, A._AnimatedPhysicalModelState_forEachTween_closure1, A._AnimatedPhysicalModelState_forEachTween_closure2, A.Visibility_of_closure, A.InheritedTheme_capture_closure0, A._loadAll_closure, A._loadAll_closure0, A._loadAll_closure1, A.Localizations_closure, A._LocalizationsState_load_closure, A._LocalizationsState_load_closure0, A.LocalizationsResolver__debugCheckLocalizations__closure, A.LookupBoundary_findAncestorWidgetOfExactType_closure, A.LookupBoundary_findAncestorRenderObjectOfType_closure, A.LookupBoundary_debugIsHidingAncestorWidgetOfExactType__closure, A.LookupBoundary_debugIsHidingAncestorStateOfType__closure, A.LookupBoundary_debugIsHidingAncestorRenderObjectOfType__closure, A.MagnifierController_show_closure, A.MediaQueryData_removeDisplayFeatures_closure, A.MediaQuery_updateShouldNotifyDependent_closure, A.Route_didPush_closure, A.Route_didAdd_closure, A.Navigator_defaultGenerateInitialRoutes_closure2, A._RouteEntry_handleDidPopNext_closure, A._RouteEntry_dispose_closure, A._RouteEntry_dispose__closure, A._RouteEntry_isRoutePredicate_closure, A.NavigatorState__handleHistoryChanged_closure, A.NavigatorState_restoreState_closure, A.NavigatorState__forcedDisposeAllRouteEntries_closure, A.NavigatorState__updateHeroController__closure, A.NavigatorState__afterNavigation_closure, A.NavigatorState_build_closure, A.OverlayEntry_remove_closure, A.OverlayState_rearrange_closure, A.OverlayState_rearrange_closure0, A._RenderTheater_computeMinIntrinsicWidth_closure, A._RenderTheater_computeMaxIntrinsicWidth_closure, A._RenderTheater_computeMinIntrinsicHeight_closure, A._RenderTheater_computeMaxIntrinsicHeight_closure, A._RenderTheater_debugDescribeChildren_closure, A.OverlayPortal$overlayChildLayoutBuilder_closure, A._RenderTheaterMarker__rootRenderTheaterMarkerOf_closure, A._RenderDeferredLayoutBox__childrenInPaintOrder_closure, A._RenderDeferredLayoutBox__doLayoutFrom_closure, A._RenderLayoutBuilder__childrenInPaintOrder_closure, A.PageStorageBucket__allKeys_closure, A._PageViewState_build_closure, A._PlatformViewPlaceholderBox_performLayout_closure, A._extension_0_disposePostFrame_closure, A.RawTooltipState__handleMouseEnter_closure, A._RootRestorationScopeState__loadRootBucketIfNecessary_closure, A.RestorationMixin_registerForRestoration_closure, A.RestorationMixin__doRestore__closure, A._RouterState__processParsedRouteInformation_closure, A._RouterState__handleRoutePopped_closure, A.TransitionRoute__updateSecondaryAnimation_jumpOnAnimationEnd, A.TransitionRoute__setSecondaryAnimation_closure, A.TransitionRoute__handleDragEnd_closure, A._ModalScopeStatus_updateShouldNotifyDependent_closure, A._ModalScopeState_build_closure0, A._ModalScopeState_build__closure, A.ModalRoute__maybeDispatchNavigationNotification_closure, A.ScrollAwareImageProvider_resolveStreamForKey_closure, A.ScrollBehavior_velocityTrackerBuilder_closure, A.ScrollBehavior_velocityTrackerBuilder_closure0, A.ScrollBehavior_velocityTrackerBuilder_closure1, A.ScrollNotificationObserverState_build_closure, A.ScrollNotificationObserverState_build_closure0, A.ScrollPosition_forcePixels_closure, A.Scrollable_ensureVisible_closure, A.ScrollableState_setCanDrag_closure0, A.ScrollableState_setCanDrag_closure2, A._ScrollableSelectionContainerDelegate__scheduleLayoutChange_closure, A.ScrollbarPainter__debugAssertIsValidOrientation_closure_isVerticalOrientation, A.RawScrollbarState__debugScheduleCheckHasValidScrollPosition_closure, A.RawScrollbarState__gestures_closure2, A.RawScrollbarState_build_closure, A.RawScrollbarState_build_closure0, A.StaticSelectionContainerDelegate_didChangeSelectables_closure, A.StaticSelectionContainerDelegate_didChangeSelectables_closure0, A.MultiSelectableSelectionContainerDelegate__scheduleSelectableUpdate_runScheduledTask, A.MultiSelectableSelectionContainerDelegate_getSelectionGeometry_closure, A.MultiSelectableSelectionContainerDelegate_getSelectionGeometry_closure0, A.ShortcutMapProperty_valueToString_closure, A.SliverMultiBoxAdaptorElement_performRebuild_processElement, A.SliverMultiBoxAdaptorElement_visitChildren_closure, A._SystemContextMenuState_build_closure, A.RenderTapRegionSurface__classifyRegions_closure, A._OverridingTextStyleTextSpanUtils__applyTextStyleOverrides_closure, A.SelectionOverlay_showMagnifier_closure, A.SelectionOverlay_showHandles_closure, A.SelectionOverlay_showHandles_closure0, A.SelectionOverlay_showToolbar_closure, A.SelectionOverlay_markNeedsBuild_closure, A.SelectionOverlay__buildToolbar_closure, A._SelectionHandleOverlayState_build_closure0, A.TextSelectionGestureDetectorBuilder_onTapDown_closure, A._TextSelectionGestureDetectorState_build_closure0, A._TextSelectionGestureDetectorState_build_closure2, A._TextSelectionGestureDetectorState_build_closure4, A._TextSelectionGestureDetectorState_build_closure6, A._TextSelectionGestureDetectorState_build_closure8, A.UndoHistoryState_initState_closure, A._throttle_closure, A._MultiChildComponentElement__debugCheckMustAttachRenderObject_closure, A._calculateSubtreeBoundsHelper_closure, A.WidgetInspectorService__registerSignalServiceExtension_closure, A.WidgetInspectorService__registerObjectGroupServiceExtension_closure, A.WidgetInspectorService__registerBoolServiceExtension_closure, A.WidgetInspectorService__registerServiceExtensionWithArg_closure, A.WidgetInspectorService__registerServiceExtensionVarArgs_closure, A.WidgetInspectorService_initServiceExtensions_closure1, A.WidgetInspectorService_initServiceExtensions_closure3, A.WidgetInspectorService_initServiceExtensions_closure5, A.WidgetInspectorService_initServiceExtensions_closure7, A.WidgetInspectorService_initServiceExtensions_closure8, A.WidgetInspectorService_initServiceExtensions_closure9, A.WidgetInspectorService_initServiceExtensions_closure10, A.WidgetInspectorService_initServiceExtensions_closure11, A.WidgetInspectorService_addPubRootDirectories_closure, A.WidgetInspectorService_removePubRootDirectories_closure, A.WidgetInspectorService__truncateNodes_closure, A._WidgetInspectorState_hitTest_area, A._filterInspectorHitCandidatesToModalRouteScope_closure, A._filterInspectorHitCandidatesToModalRouteScope_closure0, A._InspectorOverlayLayer__isInInspectorRenderObjectTree_closure, A._WidgetInspectorButtonState_build_closure, A._WidgetInspectorButtonState_build_closure0, A.InspectorSerializationDelegate_filterProperties_closure, A.WidgetSpan_extractFromInlineSpan_visitSubtree, A.Cache_putIfAbsent_closure, A.SvgLoader__load_closure, A.SvgLoader__load__closure, A.Registrar_send_closure, A.BakimDurumu_baslat_closure, A.geriGit_closure, A._OfflineBannerState_initState_closure, A._OfflineBannerState_initState__closure, A.yerelGorsel_closure, A.yerelGorsel_closure0, A.RoleGuard_build_closure, A.RoleGuard_build__closure, A.kaliciDegisince_closure, A.Validators_anlamsizKelimeVarMi_closure, A.Validators_anlamsizKelimeVarMi_closure0, A.PendingListingController_kayipOlanlar_closure, A.RegionController_cityNames_closure, A.TeklifTalebiController_gorulmemisTalepSayisi_closure, A.TeklifTalebiController_yeniTeklifSayisi_closure, A.mockSaglayicilariBul_siraHesapla, A.Account_toJson_closure, A.Account_Account$fromJson_closure, A.District_neighborhoodNames_closure, A.District_neighborhoodNames_closure0, A.City_districtNames_closure, A.RegionTree_siraliSehirler_closure, A.RegionTree_siraliSehirler_closure1, A.ApiAuthPort_setNotificationPrefs_closure, A.ApiListingPort_byOwner_closure, A.MockListingPort_delete_closure, A.MockListingPort__tamamlanmisIs_closure, A.MockOfferPort_placeOffer_closure, A.MockRegionPort_regionTree_closure, A.MockRegionPort_regionTree__closure, A.defaultOnlineChecker_closure, A.ApiTeklifTalebiPort_yenile_closure, A.ApiTeklifTalebiPort_byHizmetAlan_closure, A.ApiTeklifTalebiPort_bySaglayici_closure, A.ApiTeklifTalebiPort__talep_closure, A.FirebaseKimlik_epostaBaglaVeDogrulamaGonder_closure, A.FirebaseKimlik_sifreGuncelle_closure, A.FirebaseKimlik_yeniSifreyleYenidenBaglan_closure, A.Mappers_account_closure, A.ApiChatRepository__bindRealtime_closure, A.ApiChatRepository__bindRealtime_closure0, A.ApiChatRepository__bindRealtime__closure0, A.ApiChatRepository__bindRealtime_closure1, A.ApiChatRepository__bindRealtime_closure2, A.ApiChatRepository_loadThread_closure0, A.ApiChatRepository__sendWithKey_closure2, A.ApiChatRepository__sendWithKey_closure3, A.ApiReviewRepository_loadForProvider_closure0, A.ApiNotificationRepository_load_closure0, A.ApiNotificationRepository_load_closure1, A.ApiAuthRepository_profilFotografiniKaydet_closure0, A.ApiAuthRepository_profilFotografiniKaydet_closure1, A.ApiListingRepository__teklifleriAyikla_closure, A.ApiListingRepository_teklifIlanlariniAl_closure, A.ApiListingRepository__merge_closure, A.ApiListingRepository_loadOne_closure0, A.ApiListingRepository_loadOne_closure1, A.ApiListingRepository_remove_closure0, A.ApiOfferRepository_forListing_closure, A.ApiOfferRepository_byProvider_closure, A.WsClient_connect__closure, A.WsClient_connect__closure0, A.WsClient_connect__closure1, A.WsClient_connect__closure2, A.WsClient_connect__closure3, A.WsClient_connect__closure4, A.YuklemeAdresi_izinliHostlar_closure, A.YuklemeAdresi_izinliHostlar_closure0, A.YuklemeAdresi_denetle_closure, A.YuklemeAdresi__amzTarihi_g, A.AuthRepository_saglayicilarKimSunuyor_closure, A.ListingRepository_byOwner_closure, A.NotificationRepository_forUser_closure, A.OfferRepository_sekmeKayitlariniYukle_closure, A.OfferRepository_forListing_closure, A.OfferRepository_byProvider_closure, A.ReviewRepository_sekmeKayitlariniYukle_closure, A.ReviewRepository_byProvider_closure, A.ReviewRepository_byProvider_closure0, A.ilanCoz_closure, A.talepCoz_closure, A.TeklifTalebiRepository_sekmeKayitlariniYukle_closure, A.TeklifTalebiRepository_byHizmetAlan_closure, A.TeklifTalebiRepository_bySaglayici_closure, A.SearchService__sorguParcalari_closure, A.SearchService_services_skor, A.SearchService_services_aliasSkor, A.ShareService_closure, A.rolOkunmamisSayisi_closure, A.hizmetAlanTamamlananIs_closure, A.hizmetAlanTamamlananIs_closure0, A._sayiCoz_closure, A.PasswordHasher__hex_closure, A.tamamlananIsSayisi_closure, A.okunmamisSohbetMesaji_closure, A.okunmamisMesajSayisi_closure, A.KoordinatTabanliYakinlikSaglayici_yakinIlceler_closure, A.IlBazliYakinlikSaglayici_yakinIlceler_closure, A.kisaYazarAdi_closure, A.main__closure0, A.main_closure2, A.main_hesaplariYukle_closure, A.main_closure3, A.main__closure, A.main_closure5, A.main_closure7, A.main_closure8, A.main_closure9, A.main_closure10, A.main_closure11, A.main_closure12, A.main_closure13, A.main_closure14, A.main_closure15, A.main_closure16, A.main_closure17, A.main_closure18, A.HizmetCepApp_build_closure, A.HizmetCepApp_build_closure0, A.HizmetCepApp_build_closure1, A.HizmetCepApp_build__closure24, A.HizmetCepApp_build_closure2, A.HizmetCepApp_build__closure23, A.HizmetCepApp_build_closure3, A.HizmetCepApp_build__closure22, A.HizmetCepApp_build_closure4, A.HizmetCepApp_build__closure21, A.HizmetCepApp_build_closure5, A.HizmetCepApp_build__closure20, A.HizmetCepApp_build_closure6, A.HizmetCepApp_build__closure19, A.HizmetCepApp_build_closure7, A.HizmetCepApp_build__closure18, A.HizmetCepApp_build_closure8, A.HizmetCepApp_build__closure17, A.HizmetCepApp_build_closure9, A.HizmetCepApp_build__closure0, A.HizmetCepApp_build__closure1, A.HizmetCepApp_build__closure2, A.HizmetCepApp_build___closure12, A.HizmetCepApp_build__closure3, A.HizmetCepApp_build___closure11, A.HizmetCepApp_build__closure4, A.HizmetCepApp_build___closure10, A.HizmetCepApp_build__closure5, A.HizmetCepApp_build___closure9, A.HizmetCepApp_build__closure6, A.HizmetCepApp_build___closure8, A.HizmetCepApp_build__closure7, A.HizmetCepApp_build___closure7, A.HizmetCepApp_build__closure8, A.HizmetCepApp_build___closure6, A.HizmetCepApp_build__closure9, A.HizmetCepApp_build___closure5, A.HizmetCepApp_build__closure10, A.HizmetCepApp_build___closure4, A.HizmetCepApp_build__closure11, A.HizmetCepApp_build___closure3, A.HizmetCepApp_build__closure12, A.HizmetCepApp_build___closure2, A.HizmetCepApp_build__closure13, A.HizmetCepApp_build___closure1, A.HizmetCepApp_build__closure14, A.HizmetCepApp_build___closure0, A.HizmetCepApp_build__closure15, A.HizmetCepApp_build___closure, A.HizmetCepApp_build__closure16, A.HizmetCepApp_build_closure10, A.HizmetCepApp_build__closure, A.MockDepolar_sekmedenYukle_liste, A.MockDepolar_sekmedenYukle_closure, A._AccountSettingsScreenState__freeze_closure0, A._AccountSettingsScreenState__requestDeletion_closure1, A._AccountSettingsScreenState__requestDeletion__closure, A._AccountSettingsScreenState__devamEdenIsVar_closure, A._AccountSettingsScreenState__devamEdenIsVar_closure0, A._AccountSettingsScreenState__bildirimKarti_closure, A._AccountSettingsScreenState__bildirimKarti_closure0, A._AccountSettingsScreenState__bildirimKarti_closure1, A._AccountSettingsScreenState__bildirimKarti_closure2, A._AddressesScreenState_didChangeDependencies_closure, A._AddressesScreenState__showPicker_closure, A._AppRateScreenState__formGorunum_closure, A._BaglaniyorEkraniState__bekle_closure, A.BulunamadiScreen_build__closure, A._CategoryScreenState_build_startFlow, A._CategoryScreenState_build_startFlow_closure, A.sunucuIkonlariniAyarla_closure, A._ChangePasswordScreenState_build_closure, A._ChangePasswordScreenState_build_closure1, A._ChangePasswordScreenState_build_closure2, A._ChangePasswordScreenState_build__closure5, A._ChangePasswordScreenState_build_closure3, A._ChangePasswordScreenState_build_closure5, A._ChangePasswordScreenState_build_closure6, A._ChangePasswordScreenState_build__closure2, A._ChangePasswordScreenState_build_closure7, A._ChangePasswordScreenState_build_closure8, A._ChangePasswordScreenState_build_closure9, A._ChangePasswordScreenState_build__closure, A._ChangePasswordScreenState__sifreSifirla_closure, A._ChatScreenState_initState_closure, A._ChatScreenState_build_closure, A._ChatScreenState_build_closure_durumSatiri, A._ChatScreenState_build_closure2, A._ChatScreenState_build_closure3, A._KonusmaListesi_build___closure, A._SohbetFotografi_build__closure, A._SohbetFotografi__gorsel_closure, A._CreateListingScreenState_initState_closure, A._CreateListingScreenState_initState_closure0, A._CreateListingScreenState__photosUploading_closure, A._CreateListingScreenState__photosFailed_closure, A._CreateListingScreenState_dispose_closure, A._CreateListingScreenState_dispose_closure0, A._CreateListingScreenState_dispose_closure1, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure1, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure2, A._CreateListingScreenState__publish_closure0, A._CreateListingScreenState__adim1_closure, A._CreateListingScreenState__kelimeSayisi_closure, A._CreateListingScreenState__adim2_closure1, A._CreateListingScreenState__adim2_closure, A._CreateListingScreenState__adim2_closure0, A._CreateListingScreenState__adim2_closure2, A._CreateListingScreenState__adim2_closure3, A._CreateListingScreenState__adim3___closure, A._CreateListingScreenState__adim3__closure, A._FindProviderScreenState_initState_closure, A._FindProviderScreenState__ara_closure, A._HizmetAramaAlaniState__sorgula__closure, A._HizmetAramaAlaniState_build_closure, A._ForgotPasswordScreenState__telefonKodIste_closure3, A._ForgotPasswordScreenState__telefonKodIste__closure0, A._ForgotPasswordScreenState__telefonKodIste___closure, A._ForgotPasswordScreenState_build_closure0, A._ForgotPasswordScreenState_build_closure1, A._ForgotPasswordScreenState_build_closure3, A._ForgotPasswordScreenState_build_closure4, A._HizmetAlaniScreenState__kategoriler__closure, A._HizmetAlaniScreenState_build_closure1, A._HizmetSonucSatiri_build__closure, A._KategoriSatiri_build__closure, A.hizmetSecildi_closure, A._AlanKarti__govde__closure, A._AlanKarti__govde_closure0, A._AlanKarti__govde_closure, A._JobDetailScreenState_initState_closure, A._JobDetailScreenState_build_closure, A._JobDetailScreenState_build__closure5, A._JobDetailScreenState_build_closure2, A._JobDetailScreenState_build_closure3, A._JobDetailScreenState_build___closure, A.maskeliAd_closure, A.maskeliAd_closure0, A._JobsScreenState_initState_closure, A._JobsScreenState_initState_closure0, A._JobsScreenState__siralaMenu_closure, A._JobsScreenState__filtreMenu_closure, A._JobsScreenState_build_acikVeBaskasinin, A._JobsScreenState_build_ilceUygun, A._JobsScreenState_build_ilceUygun_closure, A._JobsScreenState_build_oncelik, A._JobsScreenState_build_kategoriUygun, A._JobsScreenState_build_teklifVermedim, A._JobsScreenState_build_closure, A._JobsScreenState_build_closure0, A._JobsScreenState_build_closure1, A._JobsScreenState_build_closure2, A._JobsScreenState_build_closure3, A._JobsScreenState_build_closure4, A._JobsScreenState_build_grupYeni, A._JobsScreenState_build_grupTeklifsiz, A._JobsScreenState_build_closure6, A._JobsScreenState_build_closure7, A._JobsScreenState_build_closure9, A._JobsScreenState_build___closure, A._JobsScreenState_build__closure0, A._JobsScreenState__kazanilanTalepKarti__closure, A._JobsScreenState__kazanilanTalepKarti_closure, A._JobsScreenState__jobCard__closure, A._JobsScreenState__jobCard_closure, A._ListingDetailScreenState_initState_closure, A._ListingDetailScreenState_initState_closure0, A._ListingDetailScreenState__silOnayi_closure, A._ListingDetailScreenState_build_closure, A._ListingDetailScreenState_build__closure0, A._ListingDetailScreenState_build__closure, A._Fotograflar_build_closure, A._TeklifKarti__ad_closure, A._TeklifKarti_build_closure, A._LoginScreenState__kilidiTazele_closure0, A._LoginScreenState_initState_closure0, A._LoginScreenState__girisSonrasiYonlendir_closure, A._LoginScreenState__formu_closure0, A._LoginScreenState__formu_closure1, A._LoginScreenState__formu_closure2, A._LoginScreenState__formu_closure3, A._LoginScreenState__formu_closure4, A._LoginScreenState__formu_closure5, A._LoginScreenState__formu_closure7, A._LoginScreenState__formu_closure6, A._LoginScreenState__formu__closure, A._MyAreasScreenState_initState_closure, A._MyAreasScreenState__visible_norm, A._MyAreasScreenState__visible_closure, A._MyAreasScreenState_build_closure, A._MyAreasScreenState_build__closure, A._MyCategoriesScreenState_build_closure, A._MyListingsScreenState_initState_closure, A._MyListingsScreenState_build_closure, A._MyListingsScreenState_build_closure0, A._MyListingsScreenState_build_teklif, A._MyListingsScreenState_build_closure1, A._MyListingsScreenState_build_closure3, A._MyListingsScreenState_build_closure4, A._MyListingsScreenState_build_closure5, A._MyListingsScreenState_build__closure0, A._MyListingsScreenState_build__closure, A._MyListingsScreenState__siralaMenu_closure, A._MyListingsScreenState__filtreMenu_closure, A._MyReviewsScreenState__load__closure0, A._MyReviewsScreenState__stars_closure, A.custNavItems__closure0, A.custNavItems__closure, A.NotificationsScreen_hedefeGit_closure, A.NotificationsScreen_hedefeGit_closure0, A.NotificationsScreen_hedefeGit_closure1, A.NotificationsScreen_hedefeGit_closure2, A.NotificationsScreen_hedefeGit_closure3, A.NotificationsScreen_hedefeGit_closure4, A._NotificationsScreenState_initState_closure, A._NotificationsScreenState_build_closure, A._NotificationsScreenState_build__closure, A._OfferDetailScreenState_build_closure, A._OfferDetailScreenState_build_closure1, A._OfferDetailScreenState_build__closure5, A._OfferDetailScreenState_build__closure0, A._OfferDetailScreenState_build__closure, A._basHarfler_closure, A._basHarfler_closure0, A._saglayiciAdi_closure, A._olumluOran_closure, A._PuanKarti_build_closure, A._OtpScreenState__sayaciBaslat_closure, A._OtpScreenState_build_closure, A._OtpScreenState_build_closure2, A._ProfileInfoScreenState_initState_closure, A._ProfileInfoScreenState__save_closure4, A._ProfileInfoScreenState__save__closure0, A._ProfileInfoScreenState_build_closure, A._ProfileInfoScreenState_build_closure1, A._ProfileInfoScreenState_build__closure3, A._ProfileInfoScreenState_build_closure2, A._ProfileInfoScreenState_build_closure4, A._ProfileInfoScreenState_build__closure1, A._ProfileInfoScreenState_build_closure5, A._ProfileInfoScreenState_build_closure7, A._ProfileInfoScreenState_build_closure8, A._ProfileInfoScreenState_build_closure9, A._ProfileInfoScreenState_build_closure10, A.ProfileScreen__rolDegistir_closure, A.ProfileScreen__cikis_closure, A._ProviderStatusScreenState_initState_closure, A._RegisterDoneScreenState__bitir_closure, A._RegisterScreenState_didChangeDependencies_closure, A._RegisterScreenState__ilSec_closure, A._RegisterScreenState__ilSec__closure, A._RegisterScreenState__ilceSec_closure, A._RegisterScreenState__ilceSec__closure, A._RegisterScreenState__mahalleSec_closure, A._RegisterScreenState__mahalleSec__closure, A._RegisterScreenState__next_closure4, A._RegisterScreenState__next__closure0, A._RegisterScreenState__next___closure, A._RegisterScreenState__kategoriSec_closure, A._RegisterScreenState__ilceSecCoklu_closure, A._RegisterScreenState__ilceSecCoklu__closure, A._RegisterScreenState_build_closure0, A._RegisterScreenState_build_closure2, A._RegisterScreenState_build__closure6, A._RegisterScreenState_build_closure3, A._RegisterScreenState_build_closure5, A._RegisterScreenState_build__closure5, A._RegisterScreenState_build_closure6, A._RegisterScreenState_build_closure8, A._RegisterScreenState_build_closure9, A._RegisterScreenState_build_closure11, A._RegisterScreenState_build_closure14, A._RegisterScreenState_build_closure19, A._RegisterScreenState_build_closure17, A._RegisterScreenState_build_closure18, A._RegisterScreenState_build_closure21, A._RegisterScreenState_build_closure24, A._RegisterScreenState_build_closure25, A._RegisterScreenState_build_closure22, A._RegisterScreenState_build_closure23, A._RegisterScreenState_build_closure26, A._RegisterScreenState_build__closure1, A._RegisterScreenState_build_closure27, A._RegisterScreenState_build__closure, A._RegisterScreenState_build__closure0, A._RegisterScreenState_build_closure28, A._ReviewScreenState_build__closure1, A._ReviewScreenState_build_closure1, A._ReviewScreenState_build_closure2, A._UstaKarti_build_closure, A._UstaKarti_build_closure0, A._UstaKarti_build_closure1, A.RoleSelectScreen_startRegister_closure, A.RoleSelectScreen__rolDegistir_closure, A._RoleSwitchScreenState__kategoriSec_closure, A._RoleSwitchScreenState__ilSec_closure, A._RoleSwitchScreenState__bolgeSec_closure, A._RoleSwitchScreenState__bolgeSec__closure, A._RoleSwitchScreenState__gec_closure3, A._RoleSwitchScreenState__sifreAl_closure, A._RoleSwitchScreenState__sifreAl__closure0, A._RoleSwitchScreenState__sifreAl_closure0, A._RoleSwitchScreenState__sifreAl__closure, A._RoleSwitchScreenState__sifreAl___closure, A._RoleSwitchScreenState__sifreAl_closure1, A._ScanningScreenState__taramaTamamlaninca_closure, A._ScanningScreenState_build__closure, A._SonuclarScreenState_initState_closure, A._SonuclarScreenState__teklifIste_closure, A._SonuclarScreenState__cikisYap_closure, A._SplashScreenState_initState_closure, A._SplashScreenState__bootGuvenli_closure, A._SplashScreenState__gercekYonlendir_closure, A._SplashScreenState__navSonrasiKareyiBekle_closure, A._SplashScreenState__bloke_closure, A._SplashScreenState__bloke___closure, A._TeklifIsteScreenState__kelimeSayisi_closure, A._TeklifIsteScreenState__gonder_closure, A._TeklifIsteScreenState__gonder_closure0, A._TeklifIsteScreenState__gonder_closure2, A._TeklifIsteScreenState__gonder_closure4, A._TeklifIsteScreenState__gonder_closure5, A._TeklifIsteScreenState_build_closure1, A._TeklifIsteScreenState_build_closure2, A._TeklifIsteScreenState_build___closure, A._TeklifIsteScreenState_build_closure3, A._TeklifIsteScreenState_build_closure0, A._TeklifIsteScreenState_build_closure, A._TeklifIsteScreenState_build_closure4, A._TeklifIsteScreenState_build_closure5, A._TalepKarti_build__closure, A.TeklifIstekleriListesi_build_closure, A._TalepKarti_build__closure0, A._TeklifTalebiDetayScreenState__teklifeKaydir_closure, A._TeklifTalebiDetayScreenState_initState_closure, A._TeklifTalebiDetayScreenState__talepMenusu_closure0, A._TeklifTalebiDetayScreenState__saglayiciReddet_closure, A._TeklifTalebiDetayScreenState_build_closure, A._TeklifTalebiDetayScreenState_build_closure0, A._TeklifTalebiDetayScreenState_build_closure2, A._TeklifTalebiDetayScreenState_build_closure3, A._TeklifTalebiDetayScreenState_build__closure, A._KarsiTarafBilgisi__sohbeteGit_closure, A._KarsiTarafBilgisi_build_closure1, A._KarsiTarafBilgisi_build_closure3, A._KarsiTarafBilgisi_build_closure4, A._KarsiTarafBilgisi_build___closure, A._TeklifTalebiSohbetScreenState_initState_closure, A._TeklifTalebiSohbetScreenState_build_closure, A._MesajBalonu_build_durumSatiri, A._TeklifSohbetFotografi_build__closure, A._TeklifTalebiYorumScreenState_build__closure1, A._TeklifTalebiYorumScreenState_build_closure0, A._TeklifTalebiYorumScreenState_build_closure2, A._TeklifTalebiYorumScreenState_build_closure3, A.SahipKarti__basHarfler_closure, A.SahipKarti__basHarfler_closure0, A.FotoGoruntuleyici_ac_closure, A._FotoGoruntuleyiciState_build_closure0, A._SayfaState_build_closure0, A._SayfaState_build_closure, A.KayitVerisi_alanlarGecerli_closure, A._IlanKayitAdimiState_build_closure2, A._IlanKayitAdimiState_build_closure3, A._IlanKayitAdimiState__secici_closure, A._IlanKayitAdimiState__sifre_closure0, A._IlanOtpAdimiState_initState_closure, A._IlanOtpAdimiState__sayacBaslat_closure, A._IlanOtpAdimiState__kutu_closure, A._InlineSearchBoxState__ac_closure0, A._InlineSearchBoxState_build_closure, A._InlineSearchBoxState_build_closure0, A._InlineSearchBoxState_build_closure1, A._InlineSearchBoxState__webSarmala_closure, A._KategoriSecimPaneliState_build_closure0, A._ListingPhotoPickerState__tile_closure, A.ProfilFotografi_build_closure, A.RegionPickerSheetState_build_closure, A.RegionPickerSheetState_build_closure1, A._YanlisTarafKapisiState_initState_closure, A._YeniSifreScreenState__kaydet_closure3, A._YeniSifreScreenState_build_closure0, A._YeniSifreScreenState_build_closure3, A._YeniSifreScreenState_build_closure2, A._YeniSifreScreenState_build_closure4, A._YeniSifreScreenState_build_closure6, A._YeniSifreScreenState_build__closure, A._YeniSifreScreenState_build_closure5, A.altPanelGoster_closure, A.bakimBitisMetni_iki, A._girisKapisi_closure0, A.GlobalWebKabugu__icerik_closure, A.GlobalWebKabugu__icerik__closure0, A.GlobalWebKabugu__icerik_closure0, A._KalanAlandaOrtalaState_build_closure, A.panelRotasi_closure, A.panelRotasi_closure0, A.akisiKapat_closure, A.akisiKapat_closure0, A._PushKapisiState_didChangeDependencies_closure, A._PushKapisiState__baslat_closure, A._PushKapisiState__bekleyeniIsle_closure, A.RefBottomSheet_goster_closure, A.RefBottomSheet_goster_closure0, A.RefBottomNav_build_closure, A.RefDetailHeader_build__closure, A.RefStepper_build_nokta, A.RefStepper_build_cizgi, A.RefOtpBoxesState_build_closure, A._RefMultiSelectSheetState__gorunen_closure, A._RefMultiSelectSheetState_build_closure0, A._RefMultiSelectSheetState_build_closure1, A._RefMultiSelectSheetState_build_closure2, A._RefSerbestNedenSayfasiState_initState_closure, A._RefSerbestNedenSayfasiState_build_closure, A._RefSerbestNedenSayfasiState_build_closure0, A.RefAramaTemizle_build_closure, A.RefSifreGozu_build_closure0, A.RefSifreGozu_build_closure1, A.RefSifreGozu_build_closure, A.RefBasHarfAvatar_build_closure, A.sayfaBildirimleriniOku_closure, A.sifreIleDogrula__closure, A.sifreIleDogrula___closure0, A.sifreIleDogrula__closure0, A.sifreIleDogrula_closure0, A.WebKenarCubugu_build_closure, A._WebOneriDokunusuState_build_closure0, A._WebOneriDokunusuState_build_closure1, A._WebOneriDokunusuState_build_closure2, A._WebOneriDokunusuState_build_closure, A.webKapat_closure, A.WebPanel_build_closure, A._YasalKabulKapisiState_didChangeDependencies_closure, A._YasalKabulKapisiState__sor_closure, A._YasalKabulKapisiState__sor_closure0, A.put_closure, A.BaseRequest_closure0, A.BrowserClient_send_closure, A._bodyToStream_closure, A.ByteStream_toBytes_closure, A.MediaType_toString__closure, A.expectQuotedString_closure, A.ImagePickerPlugin_getMultiImageWithOptions_closure, A.ImagePickerPlugin__getSelectedXFiles_closure, A.ImagePickerPlugin__getSelectedXFiles__closure, A.ImagePickerPlugin__getSelectedXFiles_closure0, A.ImagePickerPlugin__getSelectedXFiles_closure1, A.ImageResizer_loadImage_closure, A.ImageResizer_loadImage_closure0, A.ImageResizer_writeCanvasToFile_closure, A.MethodChannelImagePicker_getMultiImageWithOptions_closure, A.MaterialDynamicColors_background_closure, A.MaterialDynamicColors_background_closure0, A.MaterialDynamicColors_onBackground_closure0, A.MaterialDynamicColors_onBackground_closure1, A.MaterialDynamicColors_onBackground_closure, A.MaterialDynamicColors_surface_closure, A.MaterialDynamicColors_surface_closure0, A.MaterialDynamicColors_surfaceDim_closure, A.MaterialDynamicColors_surfaceDim_closure0, A.MaterialDynamicColors_surfaceBright_closure, A.MaterialDynamicColors_surfaceBright_closure0, A.MaterialDynamicColors_surfaceContainerLowest_closure, A.MaterialDynamicColors_surfaceContainerLowest_closure0, A.MaterialDynamicColors_surfaceContainerLow_closure, A.MaterialDynamicColors_surfaceContainerLow_closure0, A.MaterialDynamicColors_surfaceContainer_closure, A.MaterialDynamicColors_surfaceContainer_closure0, A.MaterialDynamicColors_surfaceContainerHigh_closure, A.MaterialDynamicColors_surfaceContainerHigh_closure0, A.MaterialDynamicColors_surfaceContainerHighest_closure, A.MaterialDynamicColors_surfaceContainerHighest_closure0, A.MaterialDynamicColors_onSurface_closure, A.MaterialDynamicColors_onSurface_closure0, A.MaterialDynamicColors_surfaceVariant_closure, A.MaterialDynamicColors_surfaceVariant_closure0, A.MaterialDynamicColors_onSurfaceVariant_closure, A.MaterialDynamicColors_onSurfaceVariant_closure0, A.MaterialDynamicColors_inverseSurface_closure, A.MaterialDynamicColors_inverseSurface_closure0, A.MaterialDynamicColors_inverseOnSurface_closure0, A.MaterialDynamicColors_inverseOnSurface_closure1, A.MaterialDynamicColors_inverseOnSurface_closure, A.MaterialDynamicColors_outline_closure, A.MaterialDynamicColors_outline_closure0, A.MaterialDynamicColors_outlineVariant_closure, A.MaterialDynamicColors_outlineVariant_closure0, A.MaterialDynamicColors_shadow_closure, A.MaterialDynamicColors_shadow_closure0, A.MaterialDynamicColors_scrim_closure, A.MaterialDynamicColors_scrim_closure0, A.MaterialDynamicColors_primary_closure, A.MaterialDynamicColors_primary_closure0, A.MaterialDynamicColors_primary_closure1, A.MaterialDynamicColors_onPrimary_closure0, A.MaterialDynamicColors_onPrimary_closure1, A.MaterialDynamicColors_onPrimary_closure, A.MaterialDynamicColors_primaryContainer_closure, A.MaterialDynamicColors_primaryContainer_closure0, A.MaterialDynamicColors_primaryContainer_closure1, A.MaterialDynamicColors_onPrimaryContainer_closure0, A.MaterialDynamicColors_onPrimaryContainer_closure1, A.MaterialDynamicColors_onPrimaryContainer_closure, A.MaterialDynamicColors_inversePrimary_closure0, A.MaterialDynamicColors_inversePrimary_closure1, A.MaterialDynamicColors_inversePrimary_closure, A.MaterialDynamicColors_secondary_closure, A.MaterialDynamicColors_secondary_closure0, A.MaterialDynamicColors_secondary_closure1, A.MaterialDynamicColors_onSecondary_closure0, A.MaterialDynamicColors_onSecondary_closure1, A.MaterialDynamicColors_onSecondary_closure, A.MaterialDynamicColors_secondaryContainer_closure, A.MaterialDynamicColors_secondaryContainer_closure0, A.MaterialDynamicColors_secondaryContainer_closure1, A.MaterialDynamicColors_onSecondaryContainer_closure0, A.MaterialDynamicColors_onSecondaryContainer_closure1, A.MaterialDynamicColors_onSecondaryContainer_closure, A.MaterialDynamicColors_tertiary_closure, A.MaterialDynamicColors_tertiary_closure0, A.MaterialDynamicColors_tertiary_closure1, A.MaterialDynamicColors_onTertiary_closure0, A.MaterialDynamicColors_onTertiary_closure1, A.MaterialDynamicColors_onTertiary_closure, A.MaterialDynamicColors_tertiaryContainer_closure, A.MaterialDynamicColors_tertiaryContainer_closure0, A.MaterialDynamicColors_tertiaryContainer_closure1, A.MaterialDynamicColors_onTertiaryContainer_closure0, A.MaterialDynamicColors_onTertiaryContainer_closure1, A.MaterialDynamicColors_onTertiaryContainer_closure, A.MaterialDynamicColors_error_closure, A.MaterialDynamicColors_error_closure0, A.MaterialDynamicColors_error_closure1, A.MaterialDynamicColors_onError_closure0, A.MaterialDynamicColors_onError_closure1, A.MaterialDynamicColors_onError_closure, A.MaterialDynamicColors_errorContainer_closure, A.MaterialDynamicColors_errorContainer_closure0, A.MaterialDynamicColors_errorContainer_closure1, A.MaterialDynamicColors_onErrorContainer_closure0, A.MaterialDynamicColors_onErrorContainer_closure1, A.MaterialDynamicColors_onErrorContainer_closure, A.MaterialDynamicColors_primaryFixed_closure, A.MaterialDynamicColors_primaryFixed_closure0, A.MaterialDynamicColors_primaryFixed_closure1, A.MaterialDynamicColors_primaryFixedDim_closure, A.MaterialDynamicColors_primaryFixedDim_closure0, A.MaterialDynamicColors_primaryFixedDim_closure1, A.MaterialDynamicColors_onPrimaryFixed_closure0, A.MaterialDynamicColors_onPrimaryFixed_closure2, A.MaterialDynamicColors_onPrimaryFixed_closure, A.MaterialDynamicColors_onPrimaryFixed_closure1, A.MaterialDynamicColors_onPrimaryFixedVariant_closure0, A.MaterialDynamicColors_onPrimaryFixedVariant_closure2, A.MaterialDynamicColors_onPrimaryFixedVariant_closure, A.MaterialDynamicColors_onPrimaryFixedVariant_closure1, A.MaterialDynamicColors_secondaryFixed_closure, A.MaterialDynamicColors_secondaryFixed_closure0, A.MaterialDynamicColors_secondaryFixed_closure1, A.MaterialDynamicColors_secondaryFixedDim_closure, A.MaterialDynamicColors_secondaryFixedDim_closure0, A.MaterialDynamicColors_secondaryFixedDim_closure1, A.MaterialDynamicColors_onSecondaryFixed_closure0, A.MaterialDynamicColors_onSecondaryFixed_closure2, A.MaterialDynamicColors_onSecondaryFixed_closure, A.MaterialDynamicColors_onSecondaryFixed_closure1, A.MaterialDynamicColors_onSecondaryFixedVariant_closure0, A.MaterialDynamicColors_onSecondaryFixedVariant_closure2, A.MaterialDynamicColors_onSecondaryFixedVariant_closure, A.MaterialDynamicColors_onSecondaryFixedVariant_closure1, A.MaterialDynamicColors_tertiaryFixed_closure, A.MaterialDynamicColors_tertiaryFixed_closure0, A.MaterialDynamicColors_tertiaryFixed_closure1, A.MaterialDynamicColors_tertiaryFixedDim_closure, A.MaterialDynamicColors_tertiaryFixedDim_closure0, A.MaterialDynamicColors_tertiaryFixedDim_closure1, A.MaterialDynamicColors_onTertiaryFixed_closure0, A.MaterialDynamicColors_onTertiaryFixed_closure2, A.MaterialDynamicColors_onTertiaryFixed_closure, A.MaterialDynamicColors_onTertiaryFixed_closure1, A.MaterialDynamicColors_onTertiaryFixedVariant_closure0, A.MaterialDynamicColors_onTertiaryFixedVariant_closure2, A.MaterialDynamicColors_onTertiaryFixedVariant_closure, A.MaterialDynamicColors_onTertiaryFixedVariant_closure1, A._NestedHookElement_injectedChild_closure, A._SingleChildStatelessElement_StatelessElement_SingleChildWidgetElementMixin_activate_closure, A.__NestedElement_StatelessElement_SingleChildWidgetElementMixin_activate_closure, A.Context_joinAll_closure, A.Context_split_closure, A._validateArgList_closure, A._createParser_closure, A._createParser_closure0, A.toReadableString_closure, A.optimizedString_closure, A.RecordParserExtension2_map2_closure, A.RecordParserExtension3_map3_closure, A.RecordParserExtension4_map4_closure, A.RecordParserExtension5_map5_closure, A.RecordParserExtension8_map8_closure, A._InheritedProviderElement_debugFillProperties_closure, A._InheritedProviderScopeElement_getElementForInheritedWidgetOfExactType_closure, A.MultiProvider__collapseProviders_closure, A.MultiProvider__collapseProviders_closure0, A.Provider_debugCheckInvalidValueType_closure, A.SharePlusWebPlugin__fallback_closure, A.Socket_setTransport_closure, A.Socket_setTransport_closure0, A.Socket_setTransport_closure1, A.Socket_setTransport_closure2, A.Socket_probe_onTransportOpen, A.Socket_probe_onTransportOpen_closure, A.Socket_probe_onerror, A.Socket_probe_onTransportClose, A.Socket_probe_onclose, A.Socket_probe_onupgrade, A.Socket_close_cleanupAndClose, A.Socket_close_closure, A.Socket_filterUpgrades_closure, A.JSONPTransport_closure, A.JSONPTransport_doPoll_closure, A.JSONPTransport_doWrite_closure, A.PollingTransport_pause_closure, A.PollingTransport_pause_closure0, A.PollingTransport_onData_callback, A.PollingTransport_doClose_close, A.PollingTransport_write_callbackfn, A.PollingTransport_write_closure, A.WebSocketTransport_addEventListeners_closure, A.WebSocketTransport_addEventListeners_closure0, A.WebSocketTransport_addEventListeners_closure1, A.WebSocketTransport_addEventListeners_closure2, A.WebSocketTransport_write_closure, A.XHRTransport_doWrite_closure, A.XHRTransport_doPoll_closure, A.XHRTransport_doPoll_closure0, A.Request_create_closure0, A.Manager_connect_closure, A.Manager_connect_closure0, A.Manager_reconnect__closure, A.Socket_ack_closure, A.PacketParser_encodePayload_closure, A.PacketParser_encodePayload__closure, A.Binary__reconstructPacket_closure, A.EventEmitter_emit_closure, A.EventEmitter_emit_closure0, A.EventEmitter_emit_closure1, A.Highlighter$__closure, A.Highlighter$___closure, A.Highlighter$__closure0, A.Highlighter__collateLines_closure, A.Highlighter__collateLines_closure1, A.Highlighter__collateLines__closure, A.Highlighter_highlight_closure, A.MethodChannelUrlLauncher_launch_closure, A.decodeVectorGraphics_process_closure0, A.decodeVectorGraphics_closure0, A.decodeVectorGraphics_closure1, A.decodeVectorGraphics_closure2, A.FlutterVectorGraphicsListener_onDrawText_buildParagraph, A.FlutterVectorGraphicsListener_onImage__closure, A._VectorGraphicWidgetState__loadPicture_closure, A._VectorGraphicWidgetState__loadPicture_closure0, A.CubicToCommand_computeLength_compute, A._CircularIntervalList_closure, A._PathDasher_closure, A._Resolver_getClipPath_extractPathsFromNode, A._Resolver_getClipPath_closure, A.SvgAttributes_heritable_closure, A.CommandBuilderVisitor_visitResolvedTextPositionNode_closure, A._EventStreamSubscription_closure, A._EventStreamSubscription_onData_closure, A._asNumericCharacterReferences_closure, A.XmlEventParser_characterData_closure, A.XmlEventParser_startElement_closure, A.XmlEventParser_attribute_closure, A.XmlEventParser_attributeAssignment_closure, A.XmlEventParser_attributeValueDoubleQuote_closure, A.XmlEventParser_attributeValueSingleQuote_closure, A.XmlEventParser_attributeValueNoQuote_closure, A.XmlEventParser_endElement_closure, A.XmlEventParser_comment_closure, A.XmlEventParser_cdata_closure, A.XmlEventParser_declaration_closure, A.XmlEventParser_processing_closure0, A.XmlEventParser_doctype_closure, A.XmlEventParser_doctypeExternalIdSystem_closure, A.XmlEventParser_doctypeExternalIdPublic_closure, A.XmlEventParser_doctypeIntSubset_closure, A.eventParserCache_closure]);
+    _inheritMany(A.Closure0Args, [A.AppBootstrap_prepareEngineInitializer_closure, A.SkiaFontCollection__registerWithFontProvider_closure, A.SkiaFontCollection__registerWithFontProvider_closure0, A.CkPaint_toString_closure, A.CkPicture_dispose_closure, A.CkPicture__initStackTrace_closure, A.CanvasKitRenderer_initialize_closure, A.CkGradientLinear_closure, A.CkImageShader_debugDisposed_closure, A.CkParagraphStyle_toString_closure, A.CkTextStyle_skTextStyle_closure, A.CkTextStyle_toString_closure, A.CkParagraphBuilder_pop_closure, A.DisplayCanvasFactory_closure, A.MultiSurfaceRasterizer_createViewRasterizer_closure, A.OffscreenCanvasRasterizer_createViewRasterizer_closure, A.OffscreenCanvasViewRasterizer_displayFactory_closure, A.FlutterConfiguration$legacy_closure, A.FallbackFontService__process_closure, A.FallbackFontService__process_closure0, A.FallbackFontService__process_closure1, A.FallbackFontService__notifyFontsChanged_closure, A.FrameService_scheduleWarmUpFrame_closure, A.FrameService_scheduleWarmUpFrame_closure0, A.initializeEngineServices_closure, A.initializeEngineServices_initializeRendererCallback, A.initializeEngineUi_closure, A.FlutterEngineInitializer_constructor__closure0, A._cached_closure, A.KeyboardBinding_initInstance_closure, A.KeyboardConverter__scheduleAsyncEvent_closure0, A.KeyboardConverter__startGuardingKey_closure, A.KeyboardConverter__startGuardingKey_closure0, A.KeyboardConverter__handleEvent_closure, A.KeyboardConverter__handleEvent_closure0, A.KeyboardConverter__handleEvent_closure1, A.Frame_raster_closure, A.Frame_raster_closure0, A.PaintVisitor_visitPicture_closure, A.CountedRef_closure, A.CountedRef_debugGetStackTraces_closure, A.EnginePlatformDispatcher_invokeOnKeyData_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure, A.EnginePlatformDispatcher__sendPlatformMessage_closure0, A.EnginePlatformDispatcher_invokeOnSemanticsAction_sendActionToFramework, A.invoke2_closure, A.MediaQueryManager_addListener_closure0, A.PlatformViewManager_renderContent_closure, A.PlatformViewEmbedder__compositeWithParams_closure, A.PointerBinding_closure, A.ClickDebouncer_closure, A._PointerAdapter__ensureSanitizer_closure, A._PointerAdapter_setup__closure, A._GlobalPointerState_closure, A._GlobalPointerState_ensurePointerDeviceState_closure, A.EngineImage__init_closure, A.RawKeyboard$__closure, A.RawKeyboard_handleHtmlEvent_closure, A.AccessibilityAnnouncements_announce_closure, A.AccessibilityAnnouncements_announce_closure0, A.AccessibilityFocusManager_changeFocus_closure, A.AccessibilityFocusManager_changeFocus_closure0, A.SemanticRouteBase_closure, A.SemanticRouteBase_update_closure, A.RouteName_update_closure, A.SemanticScrollable_update_closure, A.SemanticRole__updateControls_closure, A.SemanticsObject_toString_closure, A.EngineSemantics__now_closure, A.EngineSemantics__getGestureModeClock_closure, A.EngineSemanticsOwner_closure, A.EngineSemanticsOwner_updateSemantics_closure, A.EngineSemanticsOwner_updateSemantics_closure0, A.MobileSemanticsEnabler_tryEnableSemantics_closure, A.SemanticTextField_update_closure, A.TestUrlStrategy_go_closure, A.TestUrlStrategy_addPopStateListener_closure, A.TestUrlStrategy_addPopStateListener__closure, A.EngineLineMetrics_toString_closure, A.fontWeightIndexToCss_closure, A.EditingState_toString_closure, A.IOSTextEditingStrategy__schedulePlacement_closure, A.TextEditingChannel_handleTextInput_closure, A.Matrix4_toString_closure, A.CustomElementDimensionsProvider_closure1, A.FullPageEmbeddingStrategy__applyViewportMeta_closure, A.FlutterViewManager_safeBlur_closure, A.FlutterViewManager_safeRemove_closure, A._hotRestartCache_closure, A._hotRestartCache__closure, A.applyGlobalCssRulesToSheet_closure, A.WebParagraphDebug_log_closure, A.WebParagraphDebug_apiTrace_closure, A.WebFontCollection_loadAssetFonts_closure, A.TextLayout_addLine_closure, A.WebParagraphPainter_paint_closure, A.WebParagraphStyle_toString_closure, A.WebTextStyle_toString_closure, A._LineBuilder_hasPendingText_closure, A.EngineFlutterView__computePhysicalSize_closure, A.EngineFlutterWindow_handleNavigationMessage_closure, A.HttpDate__parse_throwError, A.HttpDate__parse_expectWeekday, A.HttpDate__parse_expectMonth, A.CastMap_putIfAbsent_closure, A.nullFuture_closure, A.Primitives_initTicker_closure, A._AsyncRun__scheduleImmediateJsOverride_internalCallback, A._AsyncRun__scheduleImmediateWithSetImmediate_internalCallback, A._TimerImpl_internalCallback, A._TimerImpl$periodic_closure, A.Future_Future_closure, A.Future_Future$delayed_closure, A._Future__addListener_closure, A._Future__prependListeners_closure, A._Future__chainForeignFuture_closure1, A._Future__chainCoreFuture_closure, A._Future__asyncCompleteWithValue_closure, A._Future__asyncCompleteErrorObject_closure, A._Future__propagateToListeners_handleWhenCompleteCallback, A._Future__propagateToListeners_handleValueCallback, A._Future__propagateToListeners_handleError, A._Future_timeout_closure, A._Future_timeout_closure0, A.Stream_length_closure0, A.Stream_first_closure, A._StreamController__subscribe_closure, A._StreamController__recordCancel_complete, A._BufferingStreamSubscription__sendError_sendError, A._BufferingStreamSubscription__sendDone_sendDone, A._PendingEvents_schedule_closure, A._MultiStream_listen_closure, A._cancelAndValue_closure, A._CustomZone_bindCallback_closure, A._CustomZone_bindCallbackGuarded_closure, A._RootZone_bindCallback_closure, A._RootZone_bindCallbackGuarded_closure, A._rootHandleError_closure, A._Utf8Decoder__decoder_closure, A._Utf8Decoder__decoderNonfatal_closure, A.DateTime$_internal_closure, A._performance_closure, A._json_closure, A.ChannelBuffers_push_closure, A.ChannelBuffers_push_closure0, A.ChannelBuffers_setListener_closure, A.ChannelBuffers_allowOverflow_closure, A.bootstrapEngine_closure0, A.BrowserPlatformLocation_getOrCreateDomEventListener_closure, A.HashUrlStrategy_addPopStateListener_closure, A.CanonicalizedMap_putIfAbsent_closure, A.FirebaseAuth_FirebaseAuth$instanceFor_closure, A.MethodChannelFirebaseAuth_delegateFor_closure, A.FirebaseAuthWeb__createStreamListener_closure, A.FirebaseAuthWeb__createStreamListener_closure2, A.FirebaseAuthWeb__createStreamListener_closure5, A.FirebaseAuthWeb_sendPasswordResetEmail_closure, A.FirebaseAuthWeb_setPersistence_closure, A.FirebaseAuthWeb_signInWithCustomToken_closure, A.FirebaseAuthWeb_signInWithEmailAndPassword_closure, A.FirebaseAuthWeb_signInWithPhoneNumber_closure, A.ConfirmationResultWeb_confirm_closure, A.UserWeb_getIdToken_closure, A.UserWeb_linkWithCredential_closure, A.UserWeb_sendEmailVerification_closure, A.UserWeb_updatePassword_closure, A.UserWeb_updatePhoneNumber_closure, A.Auth_onAuthStateChanged_startListen, A.Auth_onAuthStateChanged_stopListen, A.Auth_onIdTokenChanged_startListen, A.Auth_onIdTokenChanged_stopListen, A.FirebaseCoreWeb_registerService_closure, A.FirebaseCoreWeb_initializeApp_closure, A.FirebaseCoreWeb_initializeApp_closure0, A.FirebaseCoreWeb_app_closure, A.AnimationController_forward_closure, A.AnimationController_reverse_closure, A.AnimationController_animateTo_closure, A.AnimationController_animateBack_closure, A.AnimationController_repeat_closure, A.AnimationController_dispose_closure, A.AnimationController_toStringDetails_closure, A.CurvedAnimation_value_closure, A.AnimationLocalListenersMixin_notifyListeners_closure, A.AnimationLocalListenersMixin_notifyListeners__closure, A.AnimationLocalStatusListenersMixin_notifyStatusListeners_closure, A.AnimationLocalStatusListenersMixin_notifyStatusListeners__closure, A.Tween_lerp_closure, A.__CupertinoActivityIndicatorState_State_SingleTickerProviderStateMixin_dispose_closure, A._CupertinoButtonState__handleTapDown_closure, A._CupertinoButtonState__handleTapUp_closure, A._CupertinoButtonState__handleTapCancel_closure, A._CupertinoButtonState__onShowFocusHighlight_closure, A._CupertinoButtonState_build_closure, A.__CupertinoButtonState_State_SingleTickerProviderStateMixin_dispose_closure, A.CupertinoDynamicColor_resolveFrom_closure, A.debugCheckHasCupertinoLocalizations_closure, A._CupertinoDesktopTextSelectionToolbarButtonState__onEnter_closure, A._CupertinoDesktopTextSelectionToolbarButtonState__onExit_closure, A._CupertinoTextMagnifierState_initState_closure, A._CupertinoTextMagnifierState_initState__closure, A._CupertinoTextMagnifierState__determineMagnifierPositionAndFocalPoint_closure, A.__CupertinoTextMagnifierState_State_SingleTickerProviderStateMixin_dispose_closure, A.CupertinoRouteTransitionMixin__startPopGesture_closure0, A.CupertinoRouteTransitionMixin__startPopGesture_closure, A.CupertinoRouteTransitionMixin_buildPageTransitions_closure, A.CupertinoRouteTransitionMixin_buildPageTransitions_closure0, A._CupertinoScrollbarState_initState_closure, A._RenderCupertinoTextSelectionToolbarShape_debugPaintSize_closure, A._CupertinoTextSelectionToolbarContentState__statusListener_closure, A.__CupertinoTextSelectionToolbarContentState_State_TickerProviderStateMixin_dispose_closure, A._CupertinoTextSelectionToolbarButtonState__onTapDown_closure, A._CupertinoTextSelectionToolbarButtonState__onTapUp_closure, A._CupertinoTextSelectionToolbarButtonState__onTapCancel_closure, A._testPlatform_closure, A.FlutterErrorDetails_summary_formatException, A.FlutterErrorDetails_summary_closure0, A.FlutterError$fromParts_closure, A.FlutterError_dumpErrorToConsole_closure, A.BindingBase_closure, A.BindingBase_initInstances_closure, A.BindingBase_checkInstance_closure, A.BindingBase_debugCheckZone_closure, A.BindingBase_initServiceExtensions_closure, A.BindingBase_initServiceExtensions_closure0, A.BindingBase_initServiceExtensions_closure2, A.BindingBase_initServiceExtensions_closure4, A.BindingBase_initServiceExtensions_closure5, A.BindingBase_lockEvents_closure, A.BindingBase_registerServiceExtension__closure, A.BindingBase_registerServiceExtension__closure0, A.ChangeNotifier_debugAssertNotDisposed_closure, A.ChangeNotifier_maybeDispatchObjectCreation_closure, A.ChangeNotifier_dispose_closure, A.ChangeNotifier_notifyListeners_closure, A.debugInstrumentAction_closure, A.DiagnosticsNode_toJsonMap_closure, A.DiagnosticsNode_toJsonMapIterative_closure, A.DiagnosticsNode_toString_closure, A.DiagnosticsNode_toStringDeep_closure, A.DiagnosticableNode_builder_closure, A.DiagnosticableNode_toDescription_closure, A.DiagnosticPropertiesBuilder_add_closure, A.Diagnosticable_toString_closure, A.FlutterMemoryAllocations_dispatchObjectEvent_closure, A.objectRuntimeType_closure, A.GestureArenaManager_add_closure, A.GestureArenaManager__tryToResolveArena_closure, A.GestureArenaManager__debugLogDiagnostic_closure, A.GestureBinding__handlePointerEventImmediately_closure, A.GestureBinding__handlePointerEventImmediately_closure0, A.GestureBinding_dispatchEvent_closure, A.GestureBinding_dispatchEvent_closure0, A.GestureBinding_samplingClock_closure, A.ForcePressGestureRecognizer_handleEvent_closure, A.ForcePressGestureRecognizer_acceptGesture_closure, A.ForcePressGestureRecognizer_didStopTrackingLastPointer_closure, A.HitTestResult__debugVectorMoreOrLessEquals_closure, A.LongPressGestureRecognizer__checkLongPressStart_closure, A.LongPressGestureRecognizer__checkLongPressMoveUpdate_closure, A.LongPressGestureRecognizer__checkLongPressEnd_closure, A.DragGestureRecognizer__checkDown_closure, A.DragGestureRecognizer__checkStart_closure, A.DragGestureRecognizer__checkUpdate_closure, A.DragGestureRecognizer__checkEnd_closure, A.DragGestureRecognizer__checkEnd_closure0, A.DragGestureRecognizer__checkEnd_closure1, A.DragGestureRecognizer__checkEnd_closure2, A.DoubleTapGestureRecognizer_addAllowedPointer_closure, A.PointerRouter_addRoute_closure, A.PointerRouter__dispatch_closure, A.PointerRouter__dispatch__closure, A.PointerSignalResolver_resolve_closure, A.PointerSignalResolver_resolve__closure, A.GestureRecognizer_invokeCallback_closure, A.GestureRecognizer_invokeCallback_closure0, A.GestureRecognizer_invokeCallback__closure, A.PrimaryPointerGestureRecognizer_addAllowedPointer_closure, A.ScaleGestureRecognizer__reconfigure_closure1, A.ScaleGestureRecognizer__reconfigure_closure2, A.ScaleGestureRecognizer__advanceStateMachine_closure, A.ScaleGestureRecognizer__dispatchOnStartCallbackIfNeeded_closure, A.TapGestureRecognizer_handleTapDown_closure, A.TapGestureRecognizer_handleTapDown_closure0, A.TapGestureRecognizer_handleTapUp_closure, A.TapGestureRecognizer_handleTapUp_closure0, A.TapGestureRecognizer_handleTapUp_closure1, A.TapGestureRecognizer_handleTapMove_closure, A.BaseTapAndDragGestureRecognizer__handleDragUpdateThrottled_closure, A.BaseTapAndDragGestureRecognizer_addAllowedPointer_closure, A.BaseTapAndDragGestureRecognizer__checkTapDown_closure, A.BaseTapAndDragGestureRecognizer__checkTapUp_closure, A.BaseTapAndDragGestureRecognizer__checkDragStart_closure, A.BaseTapAndDragGestureRecognizer__checkDragUpdate_closure, A.BaseTapAndDragGestureRecognizer__checkDragEnd_closure, A.GestureArenaTeam_add_closure, A.VelocityTracker_getVelocityEstimate_closure, A.VelocityTracker_getVelocityEstimate_closure0, A.IOSScrollViewFlingVelocityTracker_addPosition_closure, A._ActionButton_build_closure, A._MaterialAppState_build_closure, A.AppBar__getEffectiveCenterTitle_platformCenter, A._AppBarState__handleScrollNotification_closure, A.MaterialPointArcTween__initialize_sweepAngle, A._ButtonStyleState_handleStatesControllerChange_closure, A._ButtonStyleState_build_effectiveIconColor, A._ButtonStyleState_build__closure1, A.__ButtonStyleState_State_TickerProviderStateMixin_dispose_closure, A.debugCheckHasMaterial_closure, A.debugCheckHasMaterialLocalizations_closure, A.debugCheckHasScaffoldMessenger_closure, A._getClipCallback_closure0, A._getClipCallback_closure, A._InkResponseState_activateOnIntent_closure, A._InkResponseState_handleStatesControllerChange_closure, A._InkResponseState_updateHighlight_handleInkRemoval, A._InkResponseState__createSplash_onRemoved, A._InkResponseState_handleFocusHighlightModeChange_closure, A._HelperErrorState__handleChange_closure, A._RenderDecoration__childSemanticsConfigurationDelegate_closure0, A._InputDecoratorState__handleChange_closure, A.__HelperErrorState_State_SingleTickerProviderStateMixin_dispose_closure, A.__BorderContainerState_State_TickerProviderStateMixin_dispose_closure, A.__InputDecoratorState_State_TickerProviderStateMixin_dispose_closure, A.ListTile__debugCheckBackgroundIsHidden_closure, A.ListTile__debugCheckBackgroundIsHidden__closure, A._RenderListTile__computeSizes_closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint_closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint__closure, A._TextMagnifierState__determineMagnifierPositionAndFocalPoint_closure0, A.Material_of_closure, A.InkFeature_dispose_closure, A.__MaterialState_State_TickerProviderStateMixin_dispose_closure, A._PredictiveBackGestureDetectorState_phase_closure, A._PredictiveBackGestureDetectorState_startBackEvent_closure, A._PredictiveBackGestureDetectorState_currentBackEvent_closure, A.__PredictiveBackSharedElementPageTransitionState_State_SingleTickerProviderStateMixin_dispose_closure, A.__CircularProgressIndicatorState_State_SingleTickerProviderStateMixin_dispose_closure, A.RefreshIndicatorState__handleScrollNotification_closure, A.RefreshIndicatorState__dismiss_closure, A.RefreshIndicatorState__dismiss_closure0, A.RefreshIndicatorState__show__closure, A.RefreshIndicatorState__show__closure0, A.RefreshIndicatorState_build_closure, A._RefreshIndicatorState_State_TickerProviderStateMixin_dispose_closure, A.ScaffoldMessengerState_showSnackBar_closure, A.ScaffoldMessengerState_showSnackBar_closure0, A.ScaffoldMessengerState_showSnackBar_closure1, A.ScaffoldMessengerState__handleSnackBarStatusChanged_closure, A.ScaffoldMessengerState__handleSnackBarStatusChanged_closure0, A.ScaffoldMessengerState_build_closure, A._ScaffoldLayout_performLayout_closure, A._FloatingActionButtonTransitionState__handlePreviousAnimationStatusChanged_closure, A.ScaffoldState__updateSnackBar_closure, A.ScaffoldState__updateMaterialBanner_closure, A._ScaffoldMessengerState_State_TickerProviderStateMixin_dispose_closure, A._ScaffoldState_State_TickerProviderStateMixin_dispose_closure, A.__FloatingActionButtonTransitionState_State_TickerProviderStateMixin_dispose_closure, A._MaterialScrollbarState_initState_closure, A._MaterialScrollbarState_handleThumbPressStart_closure, A._MaterialScrollbarState_handleThumbPressEnd_closure, A._MaterialScrollbarState_handleHover_closure, A._MaterialScrollbarState_handleHover_closure0, A._MaterialScrollbarState_handleHoverExit_closure, A._SnackBarState_build_closure, A._SnackBarState_build_closure1, A._TextFieldState__handleFocusChanged_closure, A._TextFieldState__handleSelectionChanged_closure, A._TextFieldState__handleHover_closure, A._TextFieldState__handleStatesControllerChange_closure, A._TextFieldState_build_closure, A._TextFieldState_build_closure0, A._TextFieldState_build_closure1, A._TextFieldState_build_closure2, A._TextFieldState_build_closure3, A._TextFieldState_build_closure4, A._TextFieldState_build__closure0, A._TextFieldState_build__closure, A._TextSelectionToolbarOverflowableState_build_closure, A._TextSelectionToolbarOverflowableState_build__closure, A.__TextSelectionToolbarOverflowableState_State_TickerProviderStateMixin_dispose_closure, A.ThemeData_copyWith_closure, A.ThemeData_localize_closure, A._TooltipState_State_SingleTickerProviderStateMixin_dispose_closure, A.NetworkImage__imageStreamInformationCollector_closure, A.NetworkImage__imageStreamInformationCollector__closure, A.NetworkImage__loadAsync_loadViaDecode, A.NetworkImage__loadAsync_loadViaImgElement, A.Border_paint_closure, A.Border_paint_closure0, A.Border_paint_closure1, A._BoxDecorationPainter__paintShadows_closure, A._BoxDecorationPainter__paintShadows_closure0, A.BoxShadow_toPaint_closure, A.debugCheckCanResolveTextDirection_closure, A.paintImage_closure0, A.ImageCache__trackLiveImage_closure, A.ImageCache__trackLiveImage__closure, A._LiveImage_closure, A.ImageProvider_resolve__closure, A.ImageProvider_resolve___closure, A.ImageProvider_resolveStreamForKey_closure, A.ImageProvider_resolveStreamForKey_closure0, A.AssetBundleImageProvider_loadImage_closure, A.AssetBundleImageProvider_loadImage__closure, A.AssetBundleImageProvider_loadBuffer_closure, A.AssetBundleImageProvider_loadBuffer__closure, A.MultiFrameImageStreamCompleter__handleAppFrame_closure, A._TextLayout__computeEndOfTextCaretAnchorOffset_closure, A.TextPainter_markNeedsLayout_closure, A.TextPainter_textWidthBasis_closure, A.TextPainter_setPlaceholderDimensions_closure, A.TextPainter__createParagraph_closure, A.TextPainter_layout_closure, A.TextPainter_paint_closure, A.TextPainter_debugDisposed_closure, A.TextPainter_dispose_closure, A.TextSpan_debugAssertIsValid_closure, A.TextStyle_copyWith_closure, A.TextStyle_apply_closure, A.TextStyle_merge_closure, A.TextStyle_lerp_closure, A.TextStyle_lerp_closure0, A.RenderAnimatedSize_closure, A.RendererBinding_pipelineOwner_closure, A.RendererBinding_pipelineOwner_closure0, A.RendererBinding__scheduleMouseTrackerUpdate_closure, A.RendererBinding__scheduleMouseTrackerUpdate__closure, A.BoxConstraints__debugPropagateDebugSize_closure, A.BoxConstraints_constrain_closure, A.BoxConstraints_constrainSizeAndAttemptToPreserveAspectRatio_closure, A.BoxConstraints_constrainSizeAndAttemptToPreserveAspectRatio_closure0, A.BoxConstraints_debugAssertIsValid_closure, A._DryLayout_memoize_closure, A._Baseline_memoize_ifAbsent, A._IntrinsicDimension_memoize_closure, A.RenderBox__computeIntrinsics_closure, A.RenderBox__computeWithTimeline_closure, A.RenderBox_getMinIntrinsicWidth_closure, A.RenderBox_getMaxIntrinsicWidth_closure, A.RenderBox_getMinIntrinsicHeight_closure, A.RenderBox_getMaxIntrinsicHeight_closure, A.RenderBox__computeDryLayout_closure, A.RenderBox__computeDryLayout_closure0, A.RenderBox__computeDryBaseline_closure, A.RenderBox__computeDryBaseline_closure0, A.RenderBox_debugCannotComputeDryLayout_closure, A.RenderBox_size_closure, A.RenderBox_size_closure0, A.RenderBox_size_closure1, A.RenderBox_size_closure2, A.RenderBox_debugAdoptSize_closure, A.RenderBox_debugAssertDoesMeetConstraints_closure, A.RenderBox_performLayout_closure, A.RenderBox_hitTest_closure, A.RenderBox_applyPaintTransform_closure, A.RenderBox_debugHandleEvent_closure, A.RenderBox_debugPaint_closure, A.RenderBox_debugPaintSize_closure, A.RenderBox_debugPaintBaselines_closure, A.MultiChildLayoutDelegate_layoutChild_closure, A.MultiChildLayoutDelegate_positionChild_closure, A.MultiChildLayoutDelegate__callPerformLayout_closure, A.MultiChildLayoutDelegate__callPerformLayout_closure0, A.MultiChildLayoutDelegate__callPerformLayout_closure1, A.MultiChildLayoutDelegate__callPerformLayout_closure2, A.MultiChildLayoutDelegate__callPerformLayout_closure3, A.RenderCustomPaint__paintWithPainter_closure, A.RenderCustomPaint__paintWithPainter_closure0, A.RenderCustomPaint_assembleSemanticsNode_closure, A.RenderCustomPaint__updateSemanticsChildren_closure, A.RenderCustomPaint__updateSemanticsChildren_closure0, A.debugPaintPadding_closure, A.debugCheckHasBoundedAxis_closure, A.DebugOverflowIndicatorMixin__reportOverflow_closure, A.RenderEditable__createShowOnScreenFor_closure, A.RenderErrorBox__initBackgroundColor_closure, A.RenderErrorBox__initTextStyle_closure, A._RenderFlex_RenderBox_ContainerRenderObjectMixin_RenderBoxContainerDefaultsMixin_DebugOverflowIndicatorMixin_reassemble_closure, A.RenderFlex_computeDryLayout_closure, A.RenderFlex__debugCheckConstraints_closure, A.RenderFlex_performLayout_closure, A.RenderFlex_paint_closure, A.Layer_addCompositionCallback_closure, A.Layer_addCompositionCallback__closure, A.Layer_addCompositionCallback__closure0, A.Layer_addCompositionCallback_closure0, A.Layer_debugDisposed_closure, A.Layer_debugHandleCount_closure, A.Layer_dispose_closure, A.ContainerLayer_append_closure, A.ContainerLayer__adoptChild_closure, A.ClipRectLayer_addToScene_closure, A.ClipRRectLayer_addToScene_closure, A.ClipPathLayer_addToScene_closure, A.OpacityLayer_addToScene_closure, A.LayerLink__registerLeader_closure, A.LayerLink__debugScheduleLeadersCleanUpCheck_closure, A.MouseTracker__deviceUpdatePhase_closure, A.MouseTracker__deviceUpdatePhase_closure0, A.MouseTracker_updateWithEvent_closure, A.MouseTracker_updateWithEvent__closure, A.MouseTracker_updateAllDevices_closure, A.PaintingContext__repaintCompositedChild_closure, A.PaintingContext__repaintCompositedChild_closure0, A.PaintingContext__repaintCompositedChild_closure1, A.PaintingContext_updateLayerProperties_closure, A.PaintingContext_debugInstrumentRepaintCompositedChild_closure, A.PaintingContext_paintChild_closure, A.PaintingContext__compositeChild_closure, A.PaintingContext__isRecording_closure, A.PaintingContext_stopRecordingIfNeeded_closure, A.PaintingContext_pushClipRect_closure, A.PaintingContext_pushClipRRect_closure, A.PaintingContext_pushClipPath_closure, A.PipelineOwner_flushLayout_closure, A.PipelineOwner_flushLayout_closure0, A.PipelineOwner_flushLayout_closure2, A.PipelineOwner_flushLayout_closure3, A.PipelineOwner__enableMutationsToDirtySubtrees_closure, A.PipelineOwner__enableMutationsToDirtySubtrees_closure0, A.PipelineOwner_flushPaint_closure, A.PipelineOwner_flushPaint_closure0, A.PipelineOwner_flushPaint_closure2, A.PipelineOwner_flushSemantics_closure, A.PipelineOwner_flushSemantics_closure2, A.PipelineOwner_flushSemantics_closure5, A.PipelineOwner_flushSemantics_closure6, A.RenderObject_debugDisposed_closure, A.RenderObject_dispose_closure, A.RenderObject_adoptChild_closure, A.RenderObject__reportException_closure, A.RenderObject__withDebugActiveLayoutCleared_closure, A.RenderObject__withDebugActiveLayoutCleared_closure0, A.RenderObject__debugCanPerformMutations_closure, A.RenderObject_debugLayoutParent_closure, A.RenderObject_markNeedsLayout_closure, A.RenderObject_scheduleInitialLayout_closure, A.RenderObject__layoutWithoutResize_closure, A.RenderObject__layoutWithoutResize_closure0, A.RenderObject_layout_closure, A.RenderObject_layout_closure0, A.RenderObject_layout_closure1, A.RenderObject_layout_closure2, A.RenderObject_layout_closure3, A.RenderObject_layout_closure4, A.RenderObject_layout_closure5, A.RenderObject_layout_closure6, A.RenderObject_layout_closure7, A.RenderObject_layout_closure8, A.RenderObject_layout_closure9, A.RenderObject_invokeLayoutCallback_closure, A.RenderObject_debugLayer_closure, A.RenderObject_markNeedsPaint_closure, A.RenderObject_markNeedsPaint_closure0, A.RenderObject__paintWithContext_closure, A.RenderObject__paintWithContext_closure0, A.RenderObject__paintWithContext_closure1, A.RenderObject__paintWithContext_closure2, A.RenderObject__paintWithContext_closure3, A.RenderObject_toStringDeep_closure, A.RenderObjectWithChildMixin_debugValidateChild_closure, A.ContainerRenderObjectMixin_debugValidateChild_closure, A.RenderInlineChildrenContainerDefaults_positionInlineChildren_closure, A.RenderParagraph_paint_closure, A.RenderParagraph_paint_closure0, A.RenderParagraph__createShowOnScreenFor_closure, A.RenderConstrainedBox_debugPaintSize_closure, A.RenderAspectRatio__applyAspectRatio_closure, A.RenderBackdropFilter_paint_closure, A._RenderCustomClip_debugPaintSize_closure, A.RenderClipRect_debugPaintSize_closure, A.RenderClipRRect_debugPaintSize_closure, A.RenderClipOval_debugPaintSize_closure, A.RenderClipPath_debugPaintSize_closure, A.RenderPhysicalModel_paint_closure, A.RenderPhysicalModel_paint_closure1, A.RenderPhysicalShape_paint_closure, A.RenderPhysicalShape_paint_closure1, A.RenderDecoratedBox_paint_closure, A.RenderDecoratedBox_paint_closure0, A.RenderTransform_paint_closure, A.RenderRepaintBoundary_debugRegisterRepaintBoundaryPaint_closure, A.RenderRepaintBoundary_debugFillProperties_closure, A.RenderLeaderLayer_paint_closure, A.RenderFollowerLayer_paint_closure, A.RenderPadding_debugPaintSize_closure, A.RenderPositionedBox_debugPaintSize_closure, A.SliverConstraints_debugAssertIsValid_closure, A.SliverGeometry_debugAssertIsValid_closure, A.RenderSliver_geometry_closure, A.RenderSliver_debugAssertDoesMeetConstraints_closure, A.RenderSliver_debugAssertDoesMeetConstraints_closure0, A.RenderSliver_applyPaintTransform_closure, A.RenderSliver__debugDrawArrow_closure, A.RenderSliver_debugPaint_closure, A.RenderSliverFixedExtentBoxAdaptor_debugAssertDoesMeetConstraints_closure, A.RenderSliverList_performLayout_advance, A.RenderSliverMultiBoxAdaptor_closure, A.RenderSliverMultiBoxAdaptor_debugChildIntegrityEnabled_closure, A.RenderSliverMultiBoxAdaptor_move_closure, A.RenderSliverMultiBoxAdaptor_move_closure0, A.RenderSliverMultiBoxAdaptor_remove_closure, A.RenderSliverMultiBoxAdaptor_debugAssertChildListIsNonEmptyAndContiguous_closure, A.RenderSliverEdgeInsetsPadding_debugPaint_closure, A.RenderView_paint_closure, A.RenderView_compositeFrame_closure, A.RenderView_debugFillProperties_closure, A.RenderViewportBase_debugThrowIfNotCheckingIntrinsics_closure, A.RenderViewportBase_debugPaintSize_closure, A.RenderViewport_performLayout_closure, A.RenderShrinkWrappingViewport_debugThrowIfNotCheckingIntrinsics_closure, A.RenderShrinkWrappingViewport__debugCheckHasBoundedCrossAxis_closure, A._FrameCallbackEntry_closure, A._FrameCallbackEntry__closure, A.SchedulerBinding__executeTimingsCallbacks_closure, A.SchedulerBinding__executeTimingsCallbacks__closure, A.SchedulerBinding_handleEventLoopCallback_closure, A.SchedulerBinding_addPostFrameCallback_closure, A.SchedulerBinding_scheduleFrame_closure, A.SchedulerBinding_scheduleForcedFrame_closure, A.SchedulerBinding_scheduleWarmUpFrame_closure, A.SchedulerBinding_scheduleWarmUpFrame_closure0, A.SchedulerBinding_scheduleWarmUpFrame_closure1, A.SchedulerBinding_handleBeginFrame_closure, A.SchedulerBinding_handleDrawFrame_closure, A.SchedulerBinding__invokeFrameCallback_closure, A.SchedulerBinding__invokeFrameCallback_closure0, A.SchedulerBinding__invokeFrameCallback_closure1, A.Ticker_closure, A.Ticker_start_closure, A.Ticker_dispose_closure, A.Ticker_toString_closure, A.Ticker_toString_closure0, A.SemanticsBinding_disableAnimations_closure, A.ChildSemanticsConfigurationsResultBuilder_build_closure, A.AttributedString_closure, A.SemanticsNode__replaceChildren_closure0, A.SemanticsNode__replaceChildren_closure1, A.SemanticsNode__adoptChild_closure, A.SemanticsNode__addToUpdate_closure, A.SemanticsNode_sendEvent__closure, A.SemanticsNode__debugIsActionBlocked_closure, A.SemanticsOwner_sendSemanticsUpdate_closure, A.SemanticsOwner_sendSemanticsUpdate_closure5, A.CachingAssetBundle_loadString_closure, A.ServicesBinding__addLicenses_closure, A.ServicesBinding__generateStateTransitions_closure, A.HardwareKeyboard__logEventIfIrregular_closure, A.HardwareKeyboard__logEventIfIrregular__closure, A.HardwareKeyboard__logEventIfIrregular__closure0, A.HardwareKeyboard__logEventIfIrregular__closure1, A.HardwareKeyboard__dispatchKeyEvent_closure, A.HardwareKeyboard__dispatchKeyEvent__closure, A.HardwareKeyboard_handleKeyEvent_closure, A.HardwareKeyboard_handleKeyEvent_closure0, A.HardwareKeyboard_handleKeyEvent_closure1, A.KeyEventManager__dispatchKeyMessage_closure, A.KeyEventManager__dispatchKeyMessage__closure, A.LogicalKeyboardKey_debugName_closure, A.PhysicalKeyboardKey_debugName_closure, A.EventChannel_receiveBroadcastStream_closure, A.EventChannel_receiveBroadcastStream_closure0, A.RawKeyEventData_modifiersPressed_closure, A.RawKeyEvent_RawKeyEvent$fromMessage_dataFromWeb, A.RawKeyboard_handleRawKeyEvent_closure, A.RawKeyboard_handleRawKeyEvent__closure, A.RawKeyboard__synchronizeModifiers_closure, A.RestorationManager__doSerialization_closure, A.RestorationManager__doSerialization_closure0, A.RestorationBucket$empty_closure, A.RestorationBucket$root_closure, A.RestorationBucket$child_closure, A.RestorationBucket__rawChildren_closure, A.RestorationBucket__rawValues_closure, A.RestorationBucket__debugAssertIntegrity_closure, A.RestorationBucket__addChildData_closure, A.RestorationBucket__debugAssertNotDisposed_closure, A.debugIsSerializableForRestoration_closure, A.SystemChrome_setSystemUIOverlayStyle_closure, A.SystemChrome_handleAppLifecycleStateChanged_closure, A.TextInput__debugEnsureInputActionWorksOnPlatform_closure, A.TextInput__loudlyHandleTextInputInvocation_closure, A.TextInput__handleTextInputInvocation_closure2, A.TextInput__scheduleHide_closure, A._colorsWithinRect_closure0, A.Actions_maybeFind_closure0, A.Actions_invoke_closure, A._ActionsState__handleActionChanged_closure, A._FocusableActionDetectorState__updateHighlightMode_closure, A._FocusableActionDetectorState__handleMouseEnter_closure, A._FocusableActionDetectorState__handleMouseExit_closure, A._FocusableActionDetectorState__handleFocusChange_closure, A._OverridableActionMixin__invokeOverride_closure, A._OverridableActionMixin__invokeOverride_closure0, A._OverridableActionMixin__isOverrideActionEnabled_closure, A._OverridableActionMixin__isOverrideActionEnabled_closure0, A._OverridableActionMixin_isEnabled_closure, A._OverridableActionMixin_isEnabled_closure0, A._OverridableActionMixin_consumesKey_closure, A._OverridableActionMixin_consumesKey_closure0, A._OverridableContextAction__invokeOverride_closure, A._OverridableContextAction__invokeOverride_closure0, A.__AnimatedSizeState_State_SingleTickerProviderStateMixin_dispose_closure, A._WidgetsAppState__onUnknownRoute_closure, A._WidgetsAppState__onUnknownRoute_closure0, A._WidgetsAppState_build_closure0, A.AppLifecycleListener_dispose_closure, A.AppLifecycleListener__debugAssertNotDisposed_closure, A._AutomaticKeepAliveState__createCallback_closure, A._AutomaticKeepAliveState__createCallback__closure, A._AutomaticKeepAliveState__createCallback__closure0, A._AutomaticKeepAliveState__createCallback__closure1, A._AutomaticKeepAliveState__createCallback___closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure8, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure10, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions__closure12, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_initServiceExtensions_closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions__closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_initServiceExtensions_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initInstances_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initInstances_closure0, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure3, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure5, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions_closure8, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_initServiceExtensions__closure, A.WidgetsBinding__handleBuildScheduled_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure1, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_drawFrame_closure2, A.WidgetsBinding_scheduleAttachRootWidget_closure, A._WidgetsFlutterBinding_BindingBase_GestureBinding_SchedulerBinding_ServicesBinding_PaintingBinding_SemanticsBinding_RendererBinding_WidgetsBinding_performReassemble_closure, A.RootWidget_attach_closure, A.RootWidget_attach_closure0, A.debugChildrenHaveDuplicateKeys_closure, A.debugCheckHasMediaQuery_closure, A.debugCheckHasDirectionality_closure, A.debugWidgetBuilderValue_closure, A.debugCheckHasWidgetsLocalizations_closure, A.debugCheckHasOverlay_closure, A._DismissibleState__handleDragStart_closure, A._DismissibleState__handleDragUpdate_closure, A._DismissibleState_build_closure, A.__DismissibleState_State_TickerProviderStateMixin_dispose_closure, A._DiscreteKeyFrameSimulation$__closure, A.EditableTextState__onChangedClipboardStatus_closure, A.EditableTextState__inferSpellCheckConfiguration_closure, A.EditableTextState_buttonItemsForToolbarOptions_closure, A.EditableTextState_buttonItemsForToolbarOptions_closure0, A.EditableTextState_buttonItemsForToolbarOptions_closure1, A.EditableTextState_buttonItemsForToolbarOptions_closure2, A.EditableTextState_contextMenuButtonItems_closure, A.EditableTextState_contextMenuButtonItems_closure0, A.EditableTextState_contextMenuButtonItems_closure1, A.EditableTextState_contextMenuButtonItems_closure2, A.EditableTextState_contextMenuButtonItems_closure3, A.EditableTextState_contextMenuButtonItems_closure4, A.EditableTextState_contextMenuButtonItems_closure5, A.EditableTextState_contextMenuButtonItems_closure6, A.EditableTextState__textProcessingActionButtonItems_closure, A.EditableTextState__onCursorTick_closure, A.EditableTextState__onCursorTick_closure0, A.EditableTextState__didChangeTextEditingValue_closure, A.EditableTextState__handleFocusChanged_closure, A.EditableTextState_insertTextPlaceholder_closure, A.EditableTextState_removeTextPlaceholder_closure, A.EditableTextState_showAutocorrectionPromptRect_closure, A.EditableTextState__semanticsOnCopy_closure, A.EditableTextState__semanticsOnCut_closure, A.EditableTextState__semanticsOnPaste_closure, A.EditableTextState_build___closure, A._EditableTextState_State_AutomaticKeepAliveClientMixin_WidgetsBindingObserver_TickerProviderStateMixin_dispose_closure, A._Autofocus_applyIfValid_closure, A._Autofocus_applyIfValid_closure0, A.FocusAttachment_detach_closure, A.FocusAttachment_detach_closure0, A.FocusNode_debugLabel_closure, A.FocusNode_unfocus_closure, A.FocusNode_unfocus_closure0, A.FocusNode__doRequestFocus_closure, A.FocusNode__doRequestFocus_closure0, A.FocusNode__setAsFocusedChildForScope_closure, A.FocusNode__setAsFocusedChildForScope_closure0, A.FocusScopeNode_setFirstFocus_closure, A.FocusScopeNode_setFirstFocus_closure0, A.FocusScopeNode_autofocus_closure, A.FocusManager__appLifecycleChange_closure, A.FocusManager__appLifecycleChange_closure0, A.FocusManager__appLifecycleChange_closure1, A.FocusManager__markDetached_closure, A.FocusManager__markPropertiesChanged_closure, A.FocusManager__markNeedsUpdate_closure, A.FocusManager_applyFocusChangesIfNeeded_closure, A.FocusManager_applyFocusChangesIfNeeded_closure0, A.FocusManager_applyFocusChangesIfNeeded_closure1, A.FocusManager_applyFocusChangesIfNeeded_closure2, A.FocusManager_applyFocusChangesIfNeeded_closure3, A._HighlightModeManager_notifyListeners_closure, A._HighlightModeManager_notifyListeners__closure, A._HighlightModeManager_handleKeyMessage_closure, A._HighlightModeManager_handleKeyMessage_closure0, A._HighlightModeManager_handleKeyMessage_closure1, A._HighlightModeManager_handleKeyMessage_closure2, A._HighlightModeManager_handleKeyMessage_closure3, A._HighlightModeManager_handleKeyMessage_closure4, A._HighlightModeManager_handleKeyMessage_closure5, A._HighlightModeManager_handleKeyMessage_closure6, A._HighlightModeManager_handleKeyMessage_closure7, A._FocusState_didUpdateWidget_closure, A._FocusState__handleFocusChanged_closure, A._FocusState__handleFocusChanged_closure0, A._FocusState__handleFocusChanged_closure1, A._FocusState__handleFocusChanged_closure2, A._FocusState_build_closure, A.FocusTraversalPolicy__sortAllDescendants_closure0, A.FocusTraversalGroup_of_closure, A.FormState__forceRebuild_closure, A.FormState__validate_closure, A.FormFieldState_validate_closure, A.FormFieldState_didChange_closure, A.FormFieldState_build__closure, A.State_context_closure, A.State_setState_closure, A.State_setState_closure0, A.State_dispose_closure, A.State_debugFillProperties_closure, A._InactiveElements__unmount_closure, A._InactiveElements__deactivateRecursively_closure, A.BuildScope__tryRebuild_closure, A.BuildScope__tryRebuild_closure0, A.BuildScope__flushDirtyElements_closure, A.BuildScope__dirtyElementIndexAfter_closure, A.BuildOwner_scheduleBuildFor_closure, A.BuildOwner_scheduleBuildFor_closure0, A.BuildOwner_scheduleBuildFor_closure1, A.BuildOwner_lockState_closure, A.BuildOwner_lockState_closure0, A.BuildOwner_buildScope_closure, A.BuildOwner_buildScope_closure0, A.BuildOwner_buildScope_closure1, A.BuildOwner_buildScope_closure2, A.BuildOwner_buildScope_closure3, A.BuildOwner__debugTrackElementThatWillNeedToBeRebuiltDueToGlobalKeyShenanigans_closure, A.BuildOwner__debugRemoveGlobalKeyReservationFor_closure, A.BuildOwner__registerGlobalKey_closure, A.BuildOwner__unregisterGlobalKey_closure, A.BuildOwner__debugReserveGlobalKeyFor_closure, A.BuildOwner__debugVerifyGlobalKeyReservation_closure, A.BuildOwner__debugVerifyIllFatedPopulation_closure, A.BuildOwner__debugVerifyIllFatedPopulation__closure, A.BuildOwner_finalizeTree_closure, A.Element_depth_closure, A.Element_debugIsDefunct_closure, A.Element_debugIsActive_closure, A.Element_visitChildElements_closure, A.Element_updateChild_closure, A.Element_updateChild_closure0, A.Element_updateChild_closure1, A.Element_updateChild_closure2, A.Element_update_closure, A.Element__retakeInactiveElement_closure, A.Element__retakeInactiveElement_closure0, A.Element_inflateWidget_closure, A.Element_inflateWidget_closure0, A.Element__debugCheckForCycles_closure, A.Element_deactivateChild_closure, A.Element_forgetChild_closure, A.Element__activateWithParent_closure, A.Element_findRenderObject_closure, A.Element_size_closure, A.Element_size_closure0, A.Element__debugCheckStateIsActiveForAncestorLookup_closure, A.Element__debugCheckOwnerBuildTargetExists_closure, A.Element_markNeedsBuild_closure, A.Element_rebuild_closure, A.Element_rebuild_closure0, A.Element_rebuild_closure1, A.ErrorWidget__defaultErrorWidgetBuilder_closure, A.ComponentElement_performRebuild_closure, A.ComponentElement_performRebuild_closure0, A.ComponentElement_performRebuild_closure1, A.ComponentElement_performRebuild_closure2, A.StatefulElement_closure, A.StatefulElement__firstBuild_closure, A.StatefulElement__firstBuild_closure0, A.StatefulElement__firstBuild_closure1, A.StatefulElement_update_closure, A.StatefulElement_unmount_closure, A.StatefulElement_dependOnInheritedElement_closure, A.ParentDataElement_debugParentDataType_closure, A.InheritedElement_notifyClients_closure, A.RenderObjectElement__findAncestorRenderObjectElement_closure, A.RenderObjectElement__findAncestorRenderObjectElement_closure0, A.RenderObjectElement__debugCheckCompetingAncestors_closure, A.RenderObjectElement__findAncestorParentDataElements_closure0, A.RenderObjectElement_mount_closure, A.RenderObjectElement_mount_closure0, A.RenderObjectElement_mount_closure1, A.RenderObjectElement_update_closure, A.RenderObjectElement__debugUpdateRenderObjectOwner_closure, A.RenderObjectElement__performRebuild_closure, A.RenderObjectElement__performRebuild_closure0, A.RenderObjectElement__updateParentData_closure, A.RenderObjectElement_attachRenderObject_closure, A.MultiChildRenderObjectElement__debugCheckHasAssociatedRenderObject_closure, A.GestureDetector_closure, A.GestureDetector_build_closure, A.GestureDetector_build_closure1, A.GestureDetector_build_closure3, A.GestureDetector_build_closure5, A.GestureDetector_build_closure7, A.GestureDetector_build_closure9, A.GestureDetector_build_closure11, A.RawGestureDetectorState_replaceGestureRecognizers_closure, A.RawGestureDetectorState_replaceSemanticsActions_closure, A._DefaultSemanticsGestureDelegate__getTapHandler_closure, A._DefaultSemanticsGestureDelegate__getLongPressHandler_closure, A.Hero__allHeroesFor_inviteHero_closure, A._HeroState_startFlight_closure, A._HeroState_endFlight_closure, A._HeroFlight__handleAnimationUpdate_delayedPerformAnimationUpdate, A._HeroFlight_start_closure, A._ImageState_didChangeAccessibilityFeatures_closure, A._ImageState__getListener__closure, A._ImageState__getListener__closure0, A._ImageState__handleImageFrame_closure, A._ImageState__updateSourceStream_closure, A._ImageState__updateSourceStream_closure0, A.AnimatedWidgetBaseState__handleAnimationChanged_closure, A._ImplicitlyAnimatedWidgetState_State_SingleTickerProviderStateMixin_dispose_closure, A.InheritedTheme_capture_closure, A.InheritedTheme_capture__closure, A._InteractiveViewerState__handleTransformation_closure, A.__InteractiveViewerState_State_TickerProviderStateMixin_dispose_closure, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback_closure, A._LayoutBuilderElement__rebuildWithConstraints_updateChildCallback_closure0, A._RenderLayoutBuilder__debugThrowIfNotCheckingIntrinsics_closure, A._LocalizationsState_load__closure, A.LocalizationsResolver__debugCheckLocalizations_closure, A.LocalizationsResolver__debugCheckLocalizations__closure0, A.LookupBoundary_debugIsHidingAncestorWidgetOfExactType_closure, A.LookupBoundary_debugIsHidingAncestorStateOfType_closure, A.LookupBoundary_debugIsHidingAncestorRenderObjectOfType_closure, A._MediaQueryFromViewState__updateData_closure, A.ModalBarrier_build_handleDismiss, A.TransitionDelegate__transition_closure, A.Navigator_of_closure, A.Navigator_defaultGenerateInitialRoutes_closure, A.Navigator_defaultGenerateInitialRoutes_closure0, A.Navigator_defaultGenerateInitialRoutes_closure1, A._RouteEntry_handlePush_closure, A._RouteEntry_handlePush__closure, A._RouteEntry_handlePush__closure0, A._RouteEntry_dispose_closure0, A._RouteEntry_dispose__closure0, A._RouteEntry_markForPop_closure, A.NavigatorState_restoreState_closure0, A.NavigatorState_restoreState_closure1, A.NavigatorState__updateHeroController_closure, A.NavigatorState_didUpdateWidget_closure, A.NavigatorState__debugCheckDuplicatedPageKeys_closure, A.NavigatorState_dispose_closure, A.NavigatorState__updatePages_closure, A.NavigatorState__updatePages_closure0, A.NavigatorState__updatePages_closure1, A.NavigatorState__updatePages_closure2, A.NavigatorState__updatePages_closure3, A.NavigatorState__updatePages_closure4, A.NavigatorState__updatePages_closure5, A.NavigatorState__updatePages_closure6, A.NavigatorState__updatePages_closure7, A.NavigatorState__routeNamed_closure, A.NavigatorState__routeNamed_closure0, A.NavigatorState__routeNamed_closure1, A.NavigatorState__pushEntry_closure, A.NavigatorState__pushEntry_closure0, A.NavigatorState__pushReplacementEntry_closure, A.NavigatorState__pushReplacementEntry_closure0, A.NavigatorState__pushEntryAndRemoveUntil_closure, A.NavigatorState__pushEntryAndRemoveUntil_closure0, A.NavigatorState_pop_closure, A.NavigatorState_pop_closure0, A.NavigatorState_pop_closure1, A.NavigatorState_finalizeRoute_closure, A.NavigatorState_finalizeRoute_closure0, A.NavigatorState__cancelActivePointers_closure, A._NavigatorState_State_TickerProviderStateMixin_dispose_closure, A._RenderOverflowBar_performLayout_nextChild, A._OverlayEntryWidgetState__markNeedsBuild_closure, A.Overlay_of_closure, A.OverlayState_insert_closure, A.OverlayState_insertAll_closure, A.OverlayState_rearrange_closure1, A.OverlayState__markDirty_closure, A.OverlayState__didChangeEntryOpacity_closure, A._TheaterElement_moveRenderObjectChild_closure, A._OverlayPortalState__getLocation_closure, A._OverlayPortalState_show_closure, A._OverlayPortalState_hide_closure, A._OverlayEntryLocation__debugMarkLocationInvalid_closure, A._RenderDeferredLayoutBox_performLayout_closure, A._RenderDeferredLayoutBox_performLayout_closure0, A._RenderLayoutSurrogateProxyBox_attach_closure, A._RenderLayoutBuilder__computeNewLayoutInfo_closure, A._OverlayState_State_TickerProviderStateMixin_dispose_closure, A._GlowController_pull_closure, A._StretchController_animate_closure, A._StretchController_animate_closure0, A.__GlowingOverscrollIndicatorState_State_TickerProviderStateMixin_dispose_closure, A.__StretchingOverscrollIndicatorState_State_TickerProviderStateMixin_dispose_closure, A._PlatformViewLinkState__onPlatformViewCreated_closure, A.PrimaryScrollController_of_closure, A.RawTooltipState__scheduleShowTooltip_show, A._RawTooltipState_State_SingleTickerProviderStateMixin_dispose_closure, A._RootRestorationScopeState__loadRootBucketIfNecessary__closure, A.RestorationMixin_registerForRestoration_listener, A.RestorationMixin_registerForRestoration_closure0, A.RestorationMixin__doRestore_closure, A.RestorationMixin__doRestore_closure0, A.RestorationMixin__unregister_closure, A._RouterState_restoreState_closure, A._RouterState_restoreState_closure0, A._RouterState_didChangeDependencies_closure, A._RouterState__handleRouteInformationProviderNotification_closure, A._RouterState__rebuild_closure, A._RouterState__handleRouterDelegateNotification_closure, A.TransitionRoute_debugTransitionCompleted_closure, A.TransitionRoute__updateSecondaryAnimation_closure, A.TransitionRoute__updateSecondaryAnimation_closure0, A._ModalScopeState__forceRebuildPage_closure, A.ModalRoute_offstage_closure, A.ModalRoute_changedInternalState_closure, A.ScrollAwareImageProvider_resolveStreamForKey__closure, A._SelectionKeepAliveState_listensTo_closure, A.ScrollNotificationObserverState__debugAssertNotDisposed_closure, A.ScrollNotificationObserverState__notifyListeners_closure, A.ClampingScrollPhysics_applyBoundaryConditions_closure, A.ScrollPosition_setPixels_closure, A.ScrollPosition_applyBoundaryConditions_closure, A.ClampingScrollSimulation__flingDistance_closure, A.ScrollView_buildViewport_closure, A.ScrollableState_setCanDrag_closure, A.ScrollableState_setCanDrag_closure1, A._ScrollableState_State_TickerProviderStateMixin_dispose_closure, A.ScrollAction_invoke_closure, A.ScrollbarPainter__debugAssertIsValidOrientation_closure, A.RawScrollbarState__debugCheckHasValidScrollPosition_closure, A.RawScrollbarState__debugCheckHasValidScrollPosition_closure0, A.RawScrollbarState__maybeStartFadeoutTimer_closure, A.RawScrollbarState__handleScrollMetricsNotification_closure, A.RawScrollbarState__handleScrollMetricsNotification_closure0, A.RawScrollbarState__gestures_closure, A.RawScrollbarState__gestures_closure0, A.RawScrollbarState__gestures_closure1, A._RawScrollbarState_State_TickerProviderStateMixin_dispose_closure, A.MultiSelectableSelectionContainerDelegate__adjustSelection_closure, A.SingleActivator_debugDescribeKeys_closure, A.ShortcutManager__indexShortcuts__closure, A.ShortcutManager_handleKeypress_closure, A.SizeChangedLayoutNotifier_createRenderObject_closure, A.SliverMultiBoxAdaptorElement_performRebuild_closure, A.SliverMultiBoxAdaptorElement_performRebuild_closure0, A.SliverMultiBoxAdaptorElement_createChild_closure, A.SliverMultiBoxAdaptorElement_removeChild_closure, A.SliverMultiBoxAdaptorElement_insertRenderObjectChild_closure, A.SlottedRenderObjectElement__updateChildren_closure, A.SlottedRenderObjectElement__updateChildren_closure0, A.SlottedRenderObjectElement__updateChildren__closure, A.SystemContextMenu_SystemContextMenu$editableText_closure, A.RenderTapRegionSurface_handleEvent_closure, A._SelectableTextContainerDelegate__adjustSelection_closure, A._SelectionHandleOverlayState_build_closure, A._TextSelectionGestureDetectorState_build_closure, A._TextSelectionGestureDetectorState_build_closure1, A._TextSelectionGestureDetectorState_build_closure3, A._TextSelectionGestureDetectorState_build_closure5, A._TextSelectionGestureDetectorState_build_closure7, A.__SelectionHandleOverlayState_State_SingleTickerProviderStateMixin_dispose_closure, A.__SelectionToolbarWrapperState_State_SingleTickerProviderStateMixin_dispose_closure, A.SingleTickerProviderStateMixin_createTicker_closure, A._AnimatedState__handleChange_closure, A._throttle__closure, A._ValueListenableBuilderState__valueChanged_closure, A.View_of_closure, A._RawViewElement__updateChild_closure, A._ScreenshotPaintingContext__isScreenshotRecording_closure, A._WidgetInspectorService_closure, A.WidgetInspectorService_isStructuredErrorsEnabled_closure, A.WidgetInspectorService_initServiceExtensions_closure, A.WidgetInspectorService_initServiceExtensions_closure0, A.WidgetInspectorService_initServiceExtensions_closure2, A.WidgetInspectorService_initServiceExtensions_closure4, A.WidgetInspectorService_toId_closure, A.WidgetInspectorService__getParentChain_createDelegate, A._ElementLocationStatsTracker_exportToJson_closure, A._ElementLocationStatsTracker_exportToJson_closure0, A._WidgetInspectorState__selectionInformationChanged_closure, A._InspectorOverlayLayer_closure, A._WidgetInspectorButtonGroupState__moveExitWidgetSelectionButton_closure, A._WidgetInspectorButtonGroupState__moveExitWidgetSelectionButton_closure0, A._WidgetInspectorButtonGroupState__exitWidgetSelectionButton_closure, A._WidgetInspectorButtonGroupState__changeButtonGroupAlignment_closure, A._WidgetInspectorButtonGroupState__changeTooltipMessage_closure, A._WidgetInspectorButtonState_build_closure1, A._WidgetInspectorButtonState__tooltipVisibilityChangedAfter_closure, A._WidgetInspectorButtonState__tooltipVisibilityChangedAfter_closure0, A._parseDiagnosticsNode_closure, A._parseDiagnosticsNode__closure, A.SvgLoader_loadBytes_closure, A._OfflineBannerState_initState__closure0, A.RoleGuard_build_closure0, A.RoleGuard_build_closure1, A.Validators_name_bad, A.AuthController_girisEposta_closure, A.AuthController_girisTelefonSifre_closure, A.AuthController_register_closure, A.AuthController_telefonDegisimiDogrula_closure, A.AuthController_kurtarmaSifreBelirle_closure, A.AuthController_switchRole_closure, A.AuthController_addRole_closure, A.AuthController_changePassword_closure, A.AuthController_verifyPassword_closure, A.AuthController_sifreSifirlamaIste_closure, A.ChatController_openThread_closure, A.ChatController_sendDelivered_closure, A.ContactController_openShared_closure, A.ContactController_openShared_closure0, A.ListingController_loadMine_closure, A.ListingController_loadAvailable_closure, A.ListingController_loadOne_closure, A.ListingController_publish_closure, A.ListingController_publish_closure0, A.ListingController_delete_closure, A.ListingController_delete_closure0, A.NotificationController_load_closure, A.NotificationController_markRead_closure, A.OfferController_loadMine_closure, A.OfferController_loadForListing_closure, A.OfferController_placeOffer_closure, A.OfferController_placeOffer_closure0, A.OfferController_selectOffer_closure, A.OfferController_selectOffer_closure0, A.ProfileController_updateProfile_closure, A.ProfileController_epostaDegisimiBaslat_closure, A.ProfileController_mevcutEpostaDogrulamaGonder_closure, A.ProfileController_saveAddress_closure, A.ProfileController_setCategories_closure, A.ProfileController_setDistricts_closure, A.ReviewController__gerekirseYukle_closure, A.ReviewController_submit_closure, A.TeklifTalebiController_gonder_closure, A.TeklifTalebiController_teklifVer_closure, A.TeklifTalebiController_secToVer_closure, A.TeklifTalebiController_saglayiciReddet_closure, A.TeklifTalebiController_sil_closure, A.TeklifTalebiController_tamamla_closure, A.TeklifTalebiController_mesajGonder_closure, A.ApiAuthPort__ozetGerekirseIste_closure, A.ApiClient__refreshOnce_closure, A.ApiTeklifTalebiPort_gonder_closure, A.ApiTeklifTalebiPort_teklifVer_closure, A.ApiTeklifTalebiPort_secToVer_closure, A.ApiTeklifTalebiPort_saglayiciReddet_closure, A.ApiTeklifTalebiPort_sil_closure, A.ApiTeklifTalebiPort_tamamla_closure, A.ApiTeklifTalebiPort_mesajGonder_closure, A.ApiChatRepository__bindRealtime__closure, A.ApiChatRepository_loadThread_closure, A.ApiChatRepository__sendWithKey_closure, A.ApiChatRepository__sendWithKey_closure0, A.ApiChatRepository__sendWithKey_closure1, A.ApiChatRepository_markRead_closure, A.ApiReviewRepository_loadForProvider_closure, A.ApiReviewRepository_submit_closure, A.ApiReviewRepository_submitTalep_closure, A.ApiNotificationRepository_load_closure, A.ApiNotificationRepository_loadUnreadCount_closure, A.ApiNotificationRepository_markRead_closure, A.ApiNotificationRepository_sayfaGoruldu_closure, A.ApiAuthRepository_bildirimTercihleriniKaydet_closure, A.ApiAuthRepository_kurumsalEpostaGonder_closure, A.ApiAuthRepository_epostaOnayiniEsitle_closure, A.ApiAuthRepository_login_closure, A.ApiAuthRepository_kisiOzeti_closure, A.ApiAuthRepository_loadMe_closure, A.ApiAuthRepository_loadMe_closure0, A.ApiAuthRepository_register_closure, A.ApiAuthRepository_firebaseOturum_closure, A.ApiAuthRepository_forgotCompleteFirebase_closure, A.ApiAuthRepository_changePhoneFirebase_closure, A.ApiAuthRepository_switchRole_closure, A.ApiAuthRepository_addRole_closure, A.ApiAuthRepository_changePassword_closure, A.ApiAuthRepository_verifyPassword_closure, A.ApiAuthRepository_updateProfile_closure, A.ApiAuthRepository_profilFotografiniKaydet_closure, A.ApiAuthRepository_profilFotografiniKaydet_closure2, A.ApiAuthRepository_providerApproval_closure, A.ApiAuthRepository_saveAddress_closure, A.ApiAuthRepository_saveProviderProfile_closure, A.ApiAuthRepository_logout_closure, A.ApiListingRepository_loadMine_closure, A.ApiListingRepository_loadAvailable_closure, A.ApiListingRepository_loadOne_closure, A.ApiListingRepository_create_closure, A.ApiListingRepository_remove_closure, A.ApiOfferRepository_loadMine_closure, A.ApiOfferRepository_create_closure, A.ApiOfferRepository_select_closure, A.ApiContactRepository_refresh_closure, A.ApiContactRepository_open_closure, A.WsClient_connect_closure, A.ChatRepository_threadFor_closure, A.ChatRepository_send_closure, A.OturumTercihi_hatirlaniyor_closure, A.OturumTercihi_telefon_closure, A._sayiBelirtec_closure, A.PasswordHasher_hash_closure, A.main_closure1, A.main_hesaplariYukle, A.main_closure4, A.main_acilisRotasi, A.main_closure6, A.MockDepolar__kaydetIste_closure, A._AccountSettingsScreenState__load_closure, A._AccountSettingsScreenState__load_closure0, A._AccountSettingsScreenState__load_closure1, A._AccountSettingsScreenState__load_closure2, A._AccountSettingsScreenState__freeze_closure, A._AccountSettingsScreenState__freeze_closure1, A._AccountSettingsScreenState__requestDeletion_closure, A._AccountSettingsScreenState__requestDeletion_closure0, A._AccountSettingsScreenState__requestDeletion_closure2, A._AccountSettingsScreenState__cancelDeletion_closure, A._AccountSettingsScreenState__cancelDeletion_closure0, A._AccountSettingsScreenState__cancelDeletion_closure1, A._AccountSettingsScreenState_build_closure, A._AccountSettingsScreenState__onayPaneli_closure, A._AccountSettingsScreenState__onayPaneli_closure0, A._AccountSettingsScreenState__onayPaneli_closure1, A._AccountSettingsScreenState__dondurPaneli_closure, A._AccountSettingsScreenState__bildirimSatiri_closure, A._AddressesScreenState__save_closure, A._AddressesScreenState__save_closure0, A._AddressesScreenState__save_closure1, A._AddressesScreenState__pickCity_closure, A._AddressesScreenState__pickDistrict_closure, A._AddressesScreenState__pickNeighborhood_closure, A._AppRateScreenState__load_closure, A._AppRateScreenState__load_closure0, A._AppRateScreenState__load_closure1, A._AppRateScreenState__load_closure2, A._AppRateScreenState__submit_closure, A._AppRateScreenState__submit_closure0, A._AppRateScreenState__submit_closure1, A._AppRateScreenState__submit_closure2, A._AppRateScreenState__submit_closure3, A._AppRateScreenState__formGorunum__closure, A._MagazaKarti_build_closure, A.BulunamadiScreen_build_closure, A._CategoryScreenState_build_closure, A._CategoryScreenState_build_closure0, A._CategoryScreenState_build__closure, A._CategoryScreenState_build_closure1, A._ChangePasswordScreenState__hepsiniDenetle_closure, A._ChangePasswordScreenState_initState_closure, A._ChangePasswordScreenState_initState__closure, A._ChangePasswordScreenState__save_closure, A._ChangePasswordScreenState__save_closure0, A._ChangePasswordScreenState__save_closure1, A._ChangePasswordScreenState__save_closure2, A._ChangePasswordScreenState_build__closure7, A._ChangePasswordScreenState_build_closure0, A._ChangePasswordScreenState_build__closure6, A._ChangePasswordScreenState_build__closure4, A._ChangePasswordScreenState_build_closure4, A._ChangePasswordScreenState_build__closure3, A._ChangePasswordScreenState_build__closure1, A._ChangePasswordScreenState_build__closure0, A._ChangePasswordScreenState__sifreSifirla_closure0, A._ChangePasswordScreenState__sifreSifirla_closure1, A._ChangePasswordScreenState__sifreSifirla_closure2, A._ChatScreenState_initState__closure, A._ChatScreenState__send_closure, A._ChatScreenState__send_closure0, A._ChatScreenState_build_closure0, A._ChatScreenState_build__durumSatiri_closure, A._KonusmaListesi_build__closure, A._SohbetFotografi_build_closure, A._FotografTamEkran_build_closure, A._CreateListingScreenState_initState__closure1, A._CreateListingScreenState_initState__closure0, A._CreateListingScreenState_initState_closure1, A._CreateListingScreenState_initState__closure, A._CreateListingScreenState__kaydolVeYayinla_closure, A._CreateListingScreenState__kaydolVeYayinla_closure0, A._CreateListingScreenState__kaydolVeYayinla_closure1, A._CreateListingScreenState__kaydolVeYayinla_closure2, A._CreateListingScreenState__kategoriSec_closure, A._CreateListingScreenState__geriAdim_closure, A._CreateListingScreenState__next_closure, A._CreateListingScreenState__next_closure0, A._CreateListingScreenState__next_closure1, A._CreateListingScreenState__next_closure2, A._CreateListingScreenState__next_closure3, A._CreateListingScreenState__next_closure4, A._CreateListingScreenState__smsAdiminaGec_closure, A._CreateListingScreenState__smsAdiminaGec_closure0, A._CreateListingScreenState__otpDogrulaVeKaydol_closure, A._CreateListingScreenState__otpDogrulaVeKaydol_closure0, A._CreateListingScreenState__otpDogrulaVeKaydol_closure1, A._CreateListingScreenState__otpDogrulaVeKaydol_closure2, A._CreateListingScreenState__otpDogrulaVeKaydol_closure3, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure0, A._CreateListingScreenState__taslakKaydetVeKayitaGec_closure3, A._CreateListingScreenState__publish_closure, A._CreateListingScreenState__publish_closure1, A._CreateListingScreenState__publish_closure2, A._CreateListingScreenState_build_closure, A._CreateListingScreenState_build_closure1, A._CreateListingScreenState_build__closure0, A._CreateListingScreenState_build_closure2, A._CreateListingScreenState_build__closure, A._CreateListingScreenState__adim1__closure0, A._CreateListingScreenState__adim1_closure0, A._CreateListingScreenState__adim1__closure, A._CreateListingScreenState__adim2__closure1, A._CreateListingScreenState__adim2__closure2, A._CreateListingScreenState__adim2__closure0, A._CreateListingScreenState__adim2__closure, A._CreateListingScreenState__adim3__closure0, A._OneriPaneli_build_closure, A._FindProviderScreenState__hizmetSecildi_closure, A._FindProviderScreenState__secimSifirla_closure, A._HizmetAramaAlaniState__sorgula_closure, A._HizmetAramaAlaniState_build_closure0, A._HizmetAramaAlaniState_build__closure0, A._HizmetAramaAlaniState_build__closure, A._HizmetAramaAlaniState_build___closure, A._ForgotPasswordScreenState_initState_closure, A._ForgotPasswordScreenState_initState__closure, A._ForgotPasswordScreenState__telefonDegisti_closure, A._ForgotPasswordScreenState__denetle_closure, A._ForgotPasswordScreenState__baglantiGonder_closure, A._ForgotPasswordScreenState__baglantiGonder_closure0, A._ForgotPasswordScreenState__baglantiGonder_closure1, A._ForgotPasswordScreenState__baglantiGonder_closure2, A._ForgotPasswordScreenState__baglantiGonder_closure3, A._ForgotPasswordScreenState__telefonKodIste_closure, A._ForgotPasswordScreenState__telefonKodIste_closure0, A._ForgotPasswordScreenState__telefonKodIste_closure1, A._ForgotPasswordScreenState__telefonKodIste_closure2, A._ForgotPasswordScreenState__telefonKodIste__closure1, A._ForgotPasswordScreenState_build_closure, A._ForgotPasswordScreenState_build__closure1, A._ForgotPasswordScreenState_build_closure2, A._ForgotPasswordScreenState_build__closure0, A._ForgotPasswordScreenState_build_closure5, A._ForgotPasswordScreenState_build__closure, A._HizmetAlaniScreenState__kategoriler_closure, A._HizmetAlaniScreenState_build_closure, A._HizmetAlaniScreenState_build_closure0, A._HizmetAlaniScreenState_build__closure0, A._HizmetAlaniScreenState_build_closure2, A._HizmetAlaniScreenState_build__closure, A._HizmetSonucSatiri_build_closure, A._KategoriSatiri_build_closure, A.hizmetSecildi_publicForma, A.HomeScreen_build_closure0, A.HomeScreen_build_closure1, A._Header_build_closure, A._AlanKarti__govde_closure1, A._JobDetailScreenState__loadApproval_closure, A._JobDetailScreenState__placeOffer_closure, A._JobDetailScreenState__placeOffer_closure0, A._JobDetailScreenState__placeOffer_closure1, A._JobDetailScreenState__placeOffer_closure2, A._JobDetailScreenState__placeOffer_closure3, A._JobDetailScreenState_build__closure6, A._JobDetailScreenState_build__closure4, A._JobDetailScreenState_build__closure3, A._JobDetailScreenState_build_closure4, A._JobDetailScreenState_build__closure1, A._JobDetailScreenState_build__closure2, A._JobDetailScreenState_build_closure5, A._JobDetailScreenState_build__closure, A._JobDetailScreenState_build__closure0, A._JobsScreenState__siralaMenu__closure, A._JobsScreenState__filtreMenu__closure, A._JobsScreenState__secimSheet_closure, A._JobsScreenState_build__closure1, A._JobsScreenState_build__closure, A._JobsScreenState__kazanilanTalepKarti_closure0, A._JobsScreenState__jobCard_closure0, A._LegalScreenState__load_closure, A._LegalScreenState__load_closure0, A._LegalScreenState__load_closure1, A._LegalScreenState__load_closure2, A._LegalScreenState__load_closure3, A._LegalScreenState_build_closure, A._ListingDetailScreenState__run_closure, A._ListingDetailScreenState__run_closure0, A._ListingDetailScreenState__silOnayi__closure, A._ListingDetailScreenState__silOnayi__closure0, A._ListingDetailScreenState__ilanMenusu_closure, A._ListingDetailScreenState__nedenSor_closure, A._ListingDetailScreenState__nedenSor_closure0, A._ListingDetailScreenState_build_closure0, A._ListingDetailScreenState_build_closure1, A._ListingDetailScreenState_build_closure2, A._Fotograflar_build_closure0, A._LoginScreenState__kilidiTazele_closure, A._LoginScreenState_initState_closure, A._LoginScreenState_initState__closure, A._LoginScreenState__degerDegisti_closure, A._LoginScreenState__kimlikHatasiniTemizle_closure, A._LoginScreenState__moduDegistir_closure, A._LoginScreenState__submit_closure, A._LoginScreenState__submit_closure0, A._LoginScreenState__submit_closure1, A._LoginScreenState__formu_closure, A._LoginScreenState__formu__closure0, A._LoginScreenState__formu_closure8, A._LoginScreenState__formu_closure9, A._MyAreasScreenState__ilSec_closure, A._MyAreasScreenState__ilSec_closure0, A._MyAreasScreenState__toggle_closure, A._MyAreasScreenState__selectAll_closure, A._MyAreasScreenState__clearAll_closure, A._MyAreasScreenState__save_closure, A._MyAreasScreenState__save_closure0, A._MyAreasScreenState__save_closure1, A._MyAreasScreenState__save_closure2, A._MyAreasScreenState_build__closure0, A._MyAreasScreenState_build_closure0, A._MyCategoriesScreenState__toggle_closure, A._MyCategoriesScreenState__save_closure, A._MyCategoriesScreenState__save_closure0, A._MyCategoriesScreenState__save_closure1, A._MyCategoriesScreenState__save_closure2, A._MyCategoriesScreenState_build__closure, A._MyCategoriesScreenState_build_closure0, A._MyCategoriesScreenState_build_closure1, A._MyCategoriesScreenState_build_closure2, A._MyListingsScreenState_build__closure1, A._MyListingsScreenState_build_closure7, A._MyListingsScreenState_build_closure8, A._MyListingsScreenState__siralaMenu__closure, A._MyListingsScreenState__filtreMenu__closure, A._MyListingsScreenState__secimSheet_closure, A._MyReviewsScreenState__load_closure, A._MyReviewsScreenState__load_closure0, A._MyReviewsScreenState__load_closure1, A._MyReviewsScreenState__load_closure2, A._MyReviewsScreenState__load_closure3, A._MyReviewsScreenState__loadMore_closure, A._MyReviewsScreenState__loadMore_closure0, A._MyReviewsScreenState__loadMore_closure1, A._MyReviewsScreenState__loadMore_closure2, A._MyReviewsScreenState__body_closure, A._MyReviewsScreenState__body_closure0, A._MyReviewsScreenState__body_closure2, A.custNavItems_closure, A.custNavItems_closure0, A.custNavItems_closure1, A.custNavItems_closure2, A.custNavItems_closure3, A.custNavItems_closure4, A._NotificationsScreenState_build_closure0, A._NotificationsScreenState_build_closure1, A._OfferDetailScreenState_build_closure2, A._OfferDetailScreenState_build_closure3, A._OfferDetailScreenState_build_closure4, A._OfferDetailScreenState_build__closure3, A._OfferDetailScreenState_build__closure4, A._OfferDetailScreenState_build_closure5, A._OfferDetailScreenState_build__closure1, A._OfferDetailScreenState_build__closure2, A._OfferDetailScreenState_build_closure6, A._OfferDetailScreenState_build_closure7, A._OtpScreenState__sayaciBaslat__closure, A._OtpScreenState__verify_closure, A._OtpScreenState__verify_closure0, A._OtpScreenState__verify_closure1, A._OtpScreenState__resend_closure, A._OtpScreenState__resend_closure0, A._OtpScreenState__resend_closure1, A._OtpScreenState_build__closure0, A._OtpScreenState_build_closure0, A._OtpScreenState_build_closure1, A._OtpScreenState_build__closure, A._OtpScreenState_build_closure3, A._ProfileInfoScreenState__hepsiniDenetle_closure, A._ProfileInfoScreenState__epostaOnayiniEsitle_closure, A._ProfileInfoScreenState_initState_closure0, A._ProfileInfoScreenState_initState__closure, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure0, A._ProfileInfoScreenState__mevcutEpostaDogrulamaGonder_closure1, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure0, A._ProfileInfoScreenState__yeniEpostaDogrulamaGonder_closure1, A._ProfileInfoScreenState__save_closure, A._ProfileInfoScreenState__save_closure0, A._ProfileInfoScreenState__save_closure1, A._ProfileInfoScreenState__save_closure2, A._ProfileInfoScreenState__save_closure3, A._ProfileInfoScreenState__save__closure1, A._ProfileInfoScreenState__save_closure5, A._ProfileInfoScreenState_build__closure4, A._ProfileInfoScreenState_build_closure0, A._ProfileInfoScreenState_build__closure2, A._ProfileInfoScreenState_build_closure3, A._ProfileInfoScreenState_build__closure0, A._ProfileInfoScreenState_build_closure6, A._ProfileInfoScreenState_build__closure, A.ProfileScreen_build_closure, A.ProfileScreen_build_closure0, A.ProfileScreen__musteriSatirlari_closure, A.ProfileScreen__musteriSatirlari_closure0, A.ProfileScreen__saglayiciSatirlari_closure, A.ProfileScreen__saglayiciSatirlari_closure0, A.ProfileScreen__saglayiciSatirlari_closure1, A.ProfileScreen__saglayiciSatirlari_closure2, A.ProfileScreen__digerSatirlar_closure, A.ProfileScreen__digerSatirlar_closure0, A.ProfileScreen__digerSatirlar_closure1, A.ProfileScreen__digerSatirlar_closure2, A.ProfileScreen__digerSatirlar_closure3, A.ProfileScreen__digerSatirlar_closure4, A._YorumKartiState_build_closure, A._YorumKartiState_build__closure, A._ProviderStatusScreenState__load_closure, A._ProviderStatusScreenState__load_closure0, A.ProviderStatusCard_build_closure, A._RegisterDoneScreenState_initState_closure, A._RegisterScreenState__eksikFotografKarari_closure, A._RegisterScreenState__eksikFotografKarari_closure0, A._RegisterScreenState__ilSec_closure0, A._RegisterScreenState__ilceSec_closure0, A._RegisterScreenState__mahalleSec_closure0, A._RegisterScreenState__next_closure, A._RegisterScreenState__next_closure0, A._RegisterScreenState__next_closure1, A._RegisterScreenState__next_closure2, A._RegisterScreenState__next_closure3, A._RegisterScreenState__next__closure1, A._RegisterScreenState__kategoriSec_closure0, A._RegisterScreenState__ilceSecCoklu_closure0, A._RegisterScreenState_initState_closure, A._RegisterScreenState_initState__closure, A._RegisterScreenState_initState__closure0, A._RegisterScreenState_build_closure, A._RegisterScreenState_build_closure1, A._RegisterScreenState_build_closure4, A._RegisterScreenState_build_closure7, A._RegisterScreenState_build_closure10, A._RegisterScreenState_build__closure4, A._RegisterScreenState_build_closure12, A._RegisterScreenState_build_closure13, A._RegisterScreenState_build_closure15, A._RegisterScreenState_build_closure16, A._RegisterScreenState_build_closure20, A._RegisterScreenState_build__closure3, A._RegisterScreenState_build__closure2, A._RegisterScreenState_build___closure0, A._RegisterScreenState_build___closure, A._ReviewScreenState__submit_closure, A._ReviewScreenState__submit_closure0, A._ReviewScreenState__submit_closure1, A._ReviewScreenState__submit_closure2, A._ReviewScreenState_build_closure, A._ReviewScreenState_build_closure0, A._ReviewScreenState_build__closure0, A._ReviewScreenState_build__closure, A.RoleSelectScreen_build_closure, A.RoleSelectScreen_build_closure0, A.RoleSelectScreen_build_closure1, A.RoleSelectScreen_build_closure2, A._RoleSwitchScreenState__kategoriSec_closure0, A._RoleSwitchScreenState__ilSec_closure0, A._RoleSwitchScreenState__bolgeSec_closure0, A._RoleSwitchScreenState__gec_closure, A._RoleSwitchScreenState__gec_closure0, A._RoleSwitchScreenState__gec_closure1, A._RoleSwitchScreenState__gec_closure2, A._RoleSwitchScreenState__sifreAl____closure, A._ScanningScreenState__asamalariBaslat_closure, A._ScanningScreenState_build_closure, A.__ScanningScreenState_State_SingleTickerProviderStateMixin_dispose_closure, A._SonuclarScreenState__sunucudanYukle_closure, A._SonuclarScreenState__sunucudanYukle_closure0, A._SonuclarScreenState__sunucudanYukle_closure1, A._SonuclarScreenState_build_closure, A._SplashScreenState__bloke__closure, A._SplashScreenState__boot_closure, A.BootBlockedScreen_build_closure, A.BootBlockedScreen_build__closure, A.BootBlockedScreen_build_closure0, A._TeklifIsteScreenState_initState_closure, A._TeklifIsteScreenState_initState__closure, A._TeklifIsteScreenState__gonder_closure1, A._TeklifIsteScreenState__gonder_closure3, A._TeklifIsteScreenState_build__closure2, A._TeklifIsteScreenState_build__closure1, A._TeklifIsteScreenState_build__closure3, A._TeklifIsteScreenState_build__closure0, A._TeklifIsteScreenState_build__closure, A._TalepKarti_build_closure, A._TalepKarti_build_closure0, A._TeklifTalebiDetayScreenState_initState__closure, A._TeklifTalebiDetayScreenState__teklifVer_closure, A._TeklifTalebiDetayScreenState__teklifVer_closure0, A._TeklifTalebiDetayScreenState__teklifVer_closure1, A._TeklifTalebiDetayScreenState__teklifVer_closure2, A._TeklifTalebiDetayScreenState__teklifVer__closure, A._TeklifTalebiDetayScreenState__talepMenusu_closure, A._TeklifTalebiDetayScreenState__talepMenusu__closure, A._TeklifTalebiDetayScreenState__talepMenusu__closure0, A._TeklifTalebiDetayScreenState__talepMenusu_closure1, A._TeklifTalebiDetayScreenState__saglayiciReddet__closure, A._TeklifTalebiDetayScreenState__saglayiciReddet__closure0, A._TeklifTalebiDetayScreenState_build_closure1, A._TeklifTalebiDetayScreenState_build__closure0, A._TeklifTalebiDetayScreenState_build_closure6, A._TeklifTalebiDetayScreenState_build_closure7, A._TeklifTalebiDetayScreenState_build_closure8, A._TeklifTalebiDetayScreenState_build_closure9, A._TeklifTalebiDetayScreenState_build_closure10, A._KarsiTarafBilgisi_build_closure, A._KarsiTarafBilgisi_build_closure0, A._KarsiTarafBilgisi_build__closure0, A._KarsiTarafBilgisi_build_closure2, A._KarsiTarafBilgisi_build__closure, A._TeklifTalebiSohbetScreenState__gonder_closure, A._TeklifTalebiSohbetScreenState__gonder_closure0, A._TeklifTalebiSohbetScreenState_build_closure0, A._TeklifSohbetFotografi_build_closure, A._TeklifFotografTamEkran_build_closure, A._TeklifTalebiYorumScreenState__submit_closure, A._TeklifTalebiYorumScreenState__submit_closure0, A._TeklifTalebiYorumScreenState__submit_closure1, A._TeklifTalebiYorumScreenState__submit_closure2, A._TeklifTalebiYorumScreenState_build_closure, A._TeklifTalebiYorumScreenState_build_closure1, A._TeklifTalebiYorumScreenState_build__closure0, A._TeklifTalebiYorumScreenState_build__closure, A.__BekleyenNoktalarState_State_SingleTickerProviderStateMixin_dispose_closure, A._FotoGoruntuleyiciState_build__closure, A._FotoGoruntuleyiciState_build_closure, A.fotografKaynagiSec_closure, A.fotografKaynagiSec_closure0, A._IlanKayitAdimiState_initState_closure, A._IlanKayitAdimiState_initState__closure, A._IlanKayitAdimiState_initState__closure0, A._IlanKayitAdimiState__degisti_closure, A._IlanKayitAdimiState_build_closure, A._IlanKayitAdimiState_build_closure0, A._IlanKayitAdimiState_build_closure1, A._IlanKayitAdimiState__alan_closure, A._IlanKayitAdimiState__sifre_closure, A._IlanKayitAdimiState__sifre__closure, A._IlanOtpAdimiState__tekrarGonder_closure, A._IlanOtpAdimiState__sayacBaslat__closure, A._IlanOtpAdimiState__girdi_closure, A._IlanOtpAdimiState__girdi_closure0, A._IlanOtpAdimiState__girdi_closure1, A._IlanOtpAdimiState__girdi_closure2, A._InlineSearchBoxState_initState_closure, A._InlineSearchBoxState__ac_closure, A._InlineSearchBoxState__sec_closure, A._InlineSearchBoxState__webKapat_closure, A._InlineSearchBoxState__panelGovdesi__closure, A._InlineSearchBoxState__panelGovdesi__closure0, A._InlineSearchBoxState__temizleDugmesi_closure, A._InlineSearchBoxState__temizleDugmesi__closure, A.IsZamaniSecici__secenek_closure, A._KategoriSecimPaneliState__kaldir_closure, A._KategoriSecimPaneliState__ekle_closure, A._KategoriSecimPaneliState_build_closure, A._KategoriSecimPaneliState_build__closure, A._KategoriSecimPaneliState_build_closure1, A._KategoriSecimPaneliState_build_closure2, A._KategoriSecimPaneliState_build_closure3, A._KategoriSecimPaneliState_build_closure4, A._ListingPhotoPickerState__upload_closure, A._ListingPhotoPickerState__upload_closure0, A._ListingPhotoPickerState__upload_closure1, A._ListingPhotoPickerState__upload_closure2, A._ListingPhotoPickerState__upload_closure3, A._ListingPhotoPickerState__remove_closure, A._ListingPhotoPickerState__remove_closure0, A._ListingPhotoPickerState__remove_closure1, A._ListingPhotoPickerState__remove_closure2, A._ListingPhotoPickerState__remove_closure3, A._ListingPhotoPickerState__remove_closure4, A._ListingPhotoPickerState__remove_closure5, A._ListingPhotoPickerState__tile_closure0, A._ListingPhotoPickerState__tile_closure1, A.ProfilAvatari_build_closure, A.ProfilFotografi__fotoMenusu_closure, A.ProfilFotografi__fotoMenusu_closure0, A.ProfilFotografi__fotoMenusu_closure1, A.ProfilFotografi_build_closure0, A.ProfilFotografi_build_closure1, A.RegionPickerSheetState_build_closure0, A.RegionPickerSheetState_build__closure0, A.RegionPickerSheetState_build__closure, A._YeniSifreScreenState_initState_closure, A._YeniSifreScreenState_initState__closure, A._YeniSifreScreenState__hepsiniDenetle_closure, A._YeniSifreScreenState__kaydet_closure, A._YeniSifreScreenState__kaydet_closure0, A._YeniSifreScreenState__kaydet_closure1, A._YeniSifreScreenState__kaydet_closure2, A._YeniSifreScreenState_build_closure, A._YeniSifreScreenState_build_closure1, A._YeniSifreScreenState_build__closure3, A._YeniSifreScreenState_build__closure2, A._YeniSifreScreenState_build__closure1, A._YeniSifreScreenState_build__closure0, A._girisKapisi_closure, A.BakimKapisi_build__closure0, A.BakimKapisi_build__closure, A.__BakimEkraniState_State_SingleTickerProviderStateMixin_dispose_closure, A.destekMerkeziPaneliniAc_closure, A.GlobalWebKabugu__icerik__closure, A._KalanAlandaOrtalaState__olc_closure, A.KullanimSozlesmesiOnayi_build_closure, A.KullanimSozlesmesiOnayi_build_closure0, A._OnaySatiri_build_closure, A.RefBackButton_build_closure, A.RefBottomSheet_build_closure, A.RefSegmentTabs_build_closure, A.RefStars_build_closure, A.RefDetailHeader_build_closure, A.RefOtpBoxesState_clear_closure, A.RefOtpBoxesState__degisti_closure, A.RefOtpBoxesState__degisti_closure0, A.RefOtpBoxesState__degisti_closure1, A.RefOtpBoxesState__degisti_closure2, A.RefOtpBoxesState__tus_closure, A.RefCheckRow_build_closure, A._RefMultiSelectSheetState__tumunuDegistir_closure, A._RefMultiSelectSheetState_build_closure, A._RefMultiSelectSheetState_build__closure0, A._RefMultiSelectSheetState_build__closure, A._RefMultiSelectSheetState_build_closure3, A._RefSerbestNedenSayfasiState_build__closure, A._RefSerbestNedenSayfasiState_build_closure1, A.RefSifreGozu_build_closure2, A.RefSifreGozu_build_closure3, A._RefAcilirSeciciState_build_closure0, A._RefAcilirSeciciState_build__closure, A._RefAcilirSeciciState_build_closure, A._RefAcilirSeciciState_build__closure0, A.sifreIleDogrula___closure, A.WebKenarCubugu_build_closure0, A.WebKenarCubugu_build_closure1, A._Kimlik_build_closure, A._Baslik_build_closure, A._SadeceKapat_build_closure, A._YasalKabulKapisiState__sor__closure, A._YasalKabulKapisiState__sor__closure0, A._YasalKabulKapisiState__sor__closure1, A._readStreamBody_closure, A._readStreamBody_closure0, A.MediaType_MediaType$parse_closure, A.ImagePickerPlugin_getFiles_closure, A.Logger_Logger_closure, A.KeyColor__maxChroma_closure, A.ListenableProvider__startListening_closure, A._InheritedProviderScopeElement_notifyDependent_closure, A._InheritedProviderScopeElement_notifyDependent_closure0, A._InheritedProviderScopeElement_update_closure, A._InheritedProviderScopeElement__debugSetInheritedLock_closure, A._InheritedProviderScopeElement_dependOnInheritedElement_closure, A._CreateInheritedProviderState_value_closure, A._CreateInheritedProviderState_value_closure0, A._CreateInheritedProviderState_value_closure1, A._CreateInheritedProviderState_value_closure2, A.Provider$value_closure, A.Provider_debugCheckInvalidValueType__closure, A.Socket_open_closure, A.Socket_probe_onTransportOpen__closure, A.Socket_probe_freezeTransport, A.Socket_probe_closure, A.Socket_resetPingTimeout_closure, A.Socket_close_close, A.Socket_close_waitForUpgrade, A.JSONPTransport_doPoll_closure0, A.JSONPTransport_doWrite_initIframe, A.PollingTransport_pause_pause, A.WebSocketTransport_write_done, A.WebSocketTransport_write_done_closure, A.Request_create__closure, A.Request_create_closure1, A.Manager_connect_closure2, A.Manager_connect_closure1, A.Manager_reconnect_closure0, A.Manager_reconnect_closure, A.on_closure, A.EventEmitter_on_closure, A.EventEmitter_once_closure, A.Highlighter_closure, A.Highlighter__writeFileStart_closure, A.Highlighter__writeMultilineHighlights_closure, A.Highlighter__writeMultilineHighlights_closure0, A.Highlighter__writeMultilineHighlights_closure1, A.Highlighter__writeMultilineHighlights_closure2, A.Highlighter__writeMultilineHighlights__closure, A.Highlighter__writeMultilineHighlights__closure0, A.Highlighter__writeHighlightedText_closure, A.Highlighter__writeIndicator_closure, A.Highlighter__writeIndicator_closure0, A.Highlighter__writeIndicator_closure1, A.Highlighter__writeSidebar_closure, A._Highlight_closure, A.decodeVectorGraphics_closure, A.decodeVectorGraphics_process, A.decodeVectorGraphics_process_closure, A.decodeVectorGraphics_process__closure, A.FlutterVectorGraphicsListener_onImage_closure, A._VectorGraphicWidgetState__loadPicture_closure1, A._VectorGraphicWidgetState__handleError_closure, A._VectorGraphicWidgetState__loadAssetBytes_closure, A._VectorGraphicWidgetState__loadAssetBytes_closure0, A.DrawCommandBuilder__getOrGenerateId_closure, A.SvgParser__parseTree_closure, A.SvgParser__parseRawWidthHeight_closure, A._Resolver_addDeferredGradient_closure, A._Resolver_addClipPath_closure, A._Resolver_addDrawable_closure, A.main_closure0, A.main_closure]);
     _inheritMany(A.CkColorFilter, [A.CkBlendModeColorFilter, A.CkMatrixColorFilter, A.CkLinearToSrgbGammaColorFilter, A.CkSrgbToLinearGammaColorFilter, A.CkComposeColorFilter]);
     _inherit(A.CkResizingCodec, A.ResizingCodec);
     _inherit(A.HtmlBlobCodec, A.HtmlImageElementCodec);
@@ -303281,7 +303489,7 @@
     typeUniverse: {eC: new Map(), tR: {}, eT: {}, tPV: {}, sEA: []},
     mangledGlobalNames: {int: "int", double: "double", num: "num", String: "String", bool: "bool", Null: "Null", List: "List", Object: "Object", Map: "Map", JSObject: "JSObject"},
     mangledNames: {},
-    types: ["~()", "bool()", "double(double)", "Future<~>()", "~(Duration)", "~(JSObject)", "~(String)", "double(DynamicScheme)", "TonalPalette(DynamicScheme)", "String()", "~(bool)", "Future<DomainError?>()", "Future<Map<String,@>>()", "List<DiagnosticsNode>()", "String?(String?)", "bool(String)", "Null()", "Color(Set<WidgetState>)", "Null(@)", "~(AnimationStatus)", "Null(~)", "~(@)", "bool(Route<@>)", "~(Element)", "DynamicColor(DynamicScheme)", "~(RenderObject)", "RoleGuard(BuildContext)", "FlutterError?(SemanticsNode)", "~(PaintingContext,Offset)", "bool(Element)", "Widget(BuildContext)", "bool(Object?)", "Future<bool>()", "~(Object?)", "Null(Object,StackTrace)", "~(int)", "~(Object,StackTrace)", "bool(Listing)", "String(String)", "bool(BoxHitTestResult,Offset)", "bool(SemanticsNode)", "Future<~>(bool)", "~(DragUpdateDetails)", "ToneDeltaPair(DynamicScheme)", "~(PointerEvent)", "Future<Map<String,@>>(Map<String,String>)", "bool(Offer)", "Null(JSObject)", "~(ByteData?)", "~(String,@)", "String(int)", "~(Timer)", "bool(TeklifTalebi)", "Tween<double>(@)", "~(SvgParser,bool)", "Future<Map<String,Object?>>(Map<String,String>)", "int()", "~(DragEndDetails)", "~(TapDownDetails)", "bool(NotoFont)", "bool(FocusNode)", "int(int)", "bool(ScrollNotification)", "double(RenderBox)", "~(SemanticsConfiguration)", "bool(FlutterHtmlKeyboardEvent)", "~(PointerDownEvent)", "~(DragStartDetails)", "0&()", "~(~())", "bool(int)", "~(PointerExitEvent)", "Widget(BuildContext,Widget?)", "~(Event)", "~(RestorableProperty<Object?>,~())", "SizedBox(BuildContext,int)", "int(FocusNode,FocusNode)", "Size(RenderBox,BoxConstraints)", "~(Selectable0)", "bool(Review)", "TeklifTalebiDetayScreen(BuildContext)", "~(PointerEnterEvent)", "bool(PhotoItem)", "AffineMatrix(List<double>,AffineMatrix)", "KeyEventResult(FocusNode,KeyEvent)", "Future<Map<String,Object>>(Map<String,String>)", "bool(DiagnosticsNode)", "~(Map<String,@>)", "int(RenderObject,RenderObject)", "Parser<String>()", "bool(double)", "TextStyle(Set<WidgetState>)", "double(RenderBox,double)", "Future<String?>()", "RefTap(BuildContext,int)", "Path(SvgParser)", "TextBoundary()", "Parser<@>()", "bool(RenderObject)", "String(PhotoItem)", "Color(Color)", "bool(InheritedElement)", "bool(AppNotification)", "Parser<+(String,XmlAttributeType)>()", "Future<List<@>>()", "Future<String>()", "Null(BuildContext{currentLength!int,isFocused!bool,maxLength!int?})", "ChatScreen(BuildContext)", "Consumer<RegionController>(BuildContext)", "String(Match)", "~(Object)", "Container(BuildContext)", "bool(OverlayEntry)", "bool(_RouteEntry)", "Color?(Set<WidgetState>)", "List<ChatMessage>()", "JSObject(Object?)", "ColorTween(@)", "~(NavigatorObserver)", "~(TapDragDownDetails)", "~(ForcePressDetails)", "List<Object>(String?,String)", "Widget(BuildContext,Animation<double>,Animation<double>)", "JobDetailScreen(BuildContext)", "Widget(BuildContext,int)", "int(Listing)", "Set<0^>()<Object?>", "~(Object?,Object?)", "List<_RouteEntry>()", "int(Offer,Offer)", "UserCredential0(Object?)", "List<Object>()", "~(double)", "String(Object?)", "int(TeklifTalebi,TeklifTalebi)", "~(String,String)", "bool(ChatMessage)", "Future<~>(String)", "WidgetStateProperty<Color?>?(ButtonStyle?)", "~(TapUpDetails)", "Null(String)", "~(Object,StackTrace?)", "List<String>()", "Future<@>(MethodCall0)", "Null(Object)", "bool(InlineSpan)", "Divider(BuildContext,int)", "JSObject()", "Future<UserCredential0>()", "String(@)", "Offset(Offset)", "~(SemanticsUpdate0)", "Future<~>(MethodCall0)", "Future<@>()", "Null(JavaScriptObject?)", "int(@,@)", "ListingDetailScreen(BuildContext)", "CreateListingScreen(BuildContext)", "JSObject?(int)", "MouseCursor(Set<WidgetState>)", "TapGestureRecognizer()", "~(TapGestureRecognizer)", "ReviewScreen(BuildContext)", "RegionPickerSheet(BuildContext,RegionController,Widget?)", "bool(UserInfo)", "Padding(BuildContext)", "~(DiagnosticsNode)", "Null(BuildContext{currentLength!int,isFocused!bool,maxLength:int?})", "bool(Object?,Object?)", "bool(FocusableActionDetector)", "Null(bool)", "SizedBox(BuildContext)", "~(PointerUpEvent)", "FadeTransition(BuildContext,Animation<double>,Widget?)", "ColoredBox(BuildContext)", "BorderSide(Set<WidgetState>)", "~(String,String?)", "~(SemanticsActionEvent)", "Matrix4(double)", "LongPressGestureRecognizer()", "~(LongPressGestureRecognizer)", "int(Object?)", "~({curve:Curve,descendant:RenderObject?,duration:Duration,rect:Rect?})", "TextBox(TextBox)", "OtpScreen(BuildContext)", "double(Set<WidgetState>)", "Future<String?>(String)", "AlignmentGeometryTween(@)", "bool(RenderBox)", "EdgeInsetsGeometryTween(@)", "~(PointerSignalEvent)", "~(bool,Object?)", "~(@,@)", "Parser<DtdExternalId>()", "bool(ScrollMetricsNotification)", "Failure(Failure,Failure)", "~(List<FrameTiming>)", "WidgetStateProperty<Size?>?(ButtonStyle?)", "int(Listing,Listing)", "double()", "int(SemanticsNode,SemanticsNode)", "bool(_Highlight)", "Future<Null>(List<String>)", "bool(KeyData)", "double(double,double)", "Widget(BuildContext,Object,StackTrace?)", "int(String)", "~(ImageInfo,bool)", "bool(HitTestEntry<HitTestTarget>)", "@(@)", "~(DragDownDetails)", "~(Picture)", "bool(~(ObjectEvent)?)", "~(Image0)", "String(Offer)", "bool(Pattern[int])", "Future<Null>()", "int(City,City)", "bool(City)", "int(int,Review)", "Null(Object?)", "Role(@)", "String(double,double,String)", "Map<String,@>(Review)", "@(String)", "~(UserWeb?)", "int(Selectable0,Selectable0)", "bool(ConnectivityResult)", "double(_PointerPanZoomData)", "MapEntry<String,TeklifTalebi>(TeklifTalebi)", "TeklifTalebiSohbetScreen(BuildContext)", "PolynomialFit?()", "Widget(BuildContext)?(ActionIconThemeData?)", "IconData(BuildContext)", "String(MaterialLocalizations)", "Uint8List()", "Map<String,Object?>?(String?,String)", "AlertDialog(BuildContext)", "Future<JSObject>([JSObject?])", "~(TapDragEndDetails)", "~(TapDragUpdateDetails)", "~(TapDragStartDetails)", "HizmetAlanOzetSatiri(BuildContext)", "List<JSObject>()", "~(LongPressEndDetails)", "~(ScrollNotification)", "Future<bool>(PendingListing,List<String>)", "~(LongPressMoveUpdateDetails)", "~(LongPressStartDetails)", "~(TapDragUpDetails)", "Rect(Matrix4,Rect)", "WidgetStateProperty<double?>?(ButtonStyle?)", "Color?(Color?)", "KeyData()", "bool(Selectable0)", "JSObject([JSObject?])", "bool(Selectable0,double)", "TeklifTalebi(Map<String,@>)", "KategoriSecimPaneli(BuildContext)", "Widget(BuildContext,EditableTextState)", "~(String?)", "ProviderReviewsScreen(BuildContext)", "RenderBox(int)", "RefMultiSelectSheet(BuildContext,RegionController,Widget?)", "double(RenderBox,BoxConstraints)", "@()", "CategoryScreen(BuildContext)", "Future<Null>(@)", "Widget(BuildContext,Set<WidgetState>,Widget?)?(ButtonStyle?)", "int(String?)", "RefPrimaryButton(BuildContext,bool,Widget?)", "TextField(BuildContext,String?,Widget?)", "DecorationTween(@)", "~(BuildContext,String)", "Future<ServiceExtensionResponse>(String,Map<String,String>)", "_TalepKarti(BuildContext,int)", "DateTime()", "~(SemanticsObject)", "Tween<@>?(Tween<@>?,@,Tween<@>(@))", "Rect()", "~(PanGestureRecognizer)", "PanGestureRecognizer()", "~(HorizontalDragGestureRecognizer)", "~(FocusHighlightMode)", "HorizontalDragGestureRecognizer()", "~(VerticalDragGestureRecognizer)", "VerticalDragGestureRecognizer()", "ChildSemanticsConfigurationsResult(List<SemanticsConfiguration>)", "Widget(BuildContext,TextEditingValue,Widget?)", "~(RenderBox?)", "~([Intent?])", "Offer(@)", "bool(SemanticsObject)", "~(GestureMode)", "Stack(BuildContext,Widget?)", "bool(ParentDataElement<ParentData>)", "Widget(int)", "UserWeb?(User0?)", "int(_ReadingOrderSortData,_ReadingOrderSortData)", "Timer(Zone,ZoneDelegate,Zone,Duration,~(Timer))", "Timer(Zone,ZoneDelegate,Zone,Duration,~())", "Path?(SvgParser)", "_ZoomEnterTransition(BuildContext,Animation<double>,Widget?)", "_ZoomExitTransition(BuildContext,Animation<double>,Widget?)", "bool(String,Offer)", "~(List<PhotoItem>)", "Object?(Object?)", "InlineSpan(InlineSpan)", "bool(Account)", "_Channel()", "~(ViewFocusEvent)", "~(AppLifecycleState)", "TextPosition(TextPosition,bool,TextBoundary)", "Actions(BuildContext)", "~(IsZamani?)", "~([Duration?])", "bool(DisplayFeature)", "Align(BuildContext,double,Widget?)", "~(PointerCancelEvent)", "Future<~>(@)", "~(~)", "~(Object?,String,String)", "+(String,XmlAttributeType)(String,String,String)", "bool(NavigationNotification)", "Future<~>(FirebaseWebService)", "Future<+arg,argRota,rota(Object?,String?,String)>()", "bool(Object)", "JSObject(int{params:Object?})", "String(String,String)", "Future<ImageStreamCompleter>()", "Map<Object?,Object?>()", "bool(String?)", "~(RestorationBucket)", "~(List<JSObject>,JSObject)", "bool(FormFieldState<@>)", "Future<ByteData?>(ByteData?)", "bool(ShapeBorder)", "JobsScreen(BuildContext)", "Widget(BuildContext,Animation<double>,Animation<double>,Widget)", "RoleSwitchScreen(BuildContext)", "List<SemanticsNode>(_SemanticsSortGroup)", "int(SemanticsNode)", "bool(Object,Set<SemanticsNode>)", "bool(Object,SemanticsNode)", "~(SemanticsNode)", "ImageStreamCompleter()", "Widget?(BuildContext,Animation<double>,Animation<double>,bool,Widget?)", "~(ImageStreamListener)", "OfferDetailScreen(BuildContext)", "Widget(Widget?)", "Size(RenderBox)", "~(Offset,RenderBox)", "Future<int>()", "Widget({acikZemin!bool})", "double({from!double,to!double})", "Null([@])", "~(SliverConstraints)", "bool(BoxHitTestResult)", "+boundaryEnd,boundaryStart(TextPosition,TextPosition)(TextPosition)", "~(_SelectableFragment)", "~([@])", "_SemanticsFragment(SemanticsConfiguration)", "~(_RenderObjectSemantics)", "ForgotPasswordScreen(BuildContext)", "double?(RenderBox,BoxConstraints,TextBaseline)", "List<@(@)>()", "bool(MapEntry<String,String>)", "RegionPickerSheet(BuildContext)", "double?(+(BoxConstraints,TextBaseline))", "BoxConstraints(RenderBox)", "VelocityTracker(PointerEvent)", "bool(+asset,belirginRozetSayisi,key,label,onTap,rozet(String,int,String,String,~(),bool))", "IgnorePointer(BuildContext,Widget?)", "~(TextSelection)", "DiagnosticsNode(RenderBox)", "MouseCursor(MouseTrackerAnnotation)", "~(MouseTrackerAnnotation,Matrix4)", "bool(MouseTrackerAnnotation)", "Size(BoxConstraints)", "double?()", "int(_RenderObjectSemantics,_RenderObjectSemantics)", "Size()", "HitTestResult(Offset,int)", "~(List<_SemanticsFragment>{isMergeUp:bool})", "DiagnosticsNode(InlineSpan)", "SemanticsConfiguration?(_SemanticsFragment)", "LineMetrics(LineMetrics)", "List<_SemanticsFragment>(List<_SemanticsFragment>)", "List<_RenderObjectSemantics>(_RenderObjectSemantics)", "Set<SemanticsTag>?(_SemanticsFragment)", "Set<SemanticsTag>(Set<SemanticsTag>)", "DiagnosticsNode(_RenderObjectSemantics)", "GlyphInfo?()", "bool(_SelectableFragment)", "bool(int,bool)", "+boundaryEnd,boundaryStart(TextPosition,TextPosition)(TextPosition,String)", "OneSequenceGestureRecognizer(Factory<OneSequenceGestureRecognizer>)", "TransformLayer?(PaintingContext,Offset)", "~(bool,String)", "~(double,String{mustBeNegative:bool,mustBePositive:bool})", "~(bool,String{details:List<DiagnosticsNode>?})", "bool(SliverHitTestResult{crossAxisPosition!double,mainAxisPosition!double})", "bool(Canvas,BoxShadow)", "bool(Canvas,BoxShadow,Path0)", "Path0(BoxShadow)", "Rect(BoxShadow)", "Paint0(BoxShadow)", "bool(RenderSliver)", "~(Codec0)", "~(ImageChunkEvent)?(ImageStreamListener)", "~(Object,StackTrace?)?(ImageStreamListener)", "~(FrameTiming)", "~(int,_FrameCallbackEntry)", "~(ImageInfo)", "Null(AssetManifest)", "~(List<SemanticsConfiguration>)", "String?(int)", "Future<~>(Object,StackTrace?)", "~(ImageInfo?,bool)", "_LiveImage()", "Color(double)", "SemanticsNode(_TraversalSortNode)", "String(SemanticsTag)", "String(SemanticsAction)", "String?(CustomSemanticsAction)", "DiagnosticsNode(SemanticsNode)", "double(double,FlutterView)", "String(ShapeBorder)", "SemanticsNode(int)", "List<DiagnosticsNode>(SemanticsNode)", "Set<SemanticsNode>()", "~(SemanticsTag)", "~(SemanticsAction,~(Object?))", "ByteData(ByteData?)", "Future<_AssetManifestBin>(String)", "AssetMetadata(Map<Object?,Object?>)", "Stream<LicenseEntry>()", "Future<String?>(String?)", "ShapeBorder(ShapeBorder)", "Future<~>(ByteData?,~(ByteData?))", "EdgeInsetsGeometry(EdgeInsetsGeometry,ShapeBorder)", "Future<Map<String,@>>(@)", "~(RawKeyEvent)", "Set<LogicalKeyboardKey>(LogicalKeyboardKey)", "int(_PlatformChannelStats,_PlatformChannelStats)", "Future<Codec0>(ImmutableBuffer{getTargetSize:TargetImageSize(int,int)?})", "Future<Null>(ByteData?)", "RawKeyEventData()", "Future<Codec0>(ImmutableBuffer{allowUpscaling:bool,cacheHeight:int?,cacheWidth:int?})", "~(ImageChunkEvent)", "Null(ImageStreamCompleter)", "ErrorDescription(RestorationBucket)", "List<RestorationBucket>()", "List<RestorationBucket>(List<RestorationBucket>)", "double(num)", "List<@>(String)", "List<num>(SelectionRect)", "Map<String,@>(IOSSystemContextMenuItemData)", "int(ByteData,int,int)", "MapEntry<Color,int>(int,int)", "FadeTransition(BuildContext,Animation<double>)", "PlatformViewSurface(BuildContext,PlatformViewController)", "_HtmlElementViewController(PlatformViewCreationParams)", "Future<~>(PointerEvent)", "Offset(TooltipPositionContext)", "WindowScope(BuildContext,Widget?)", "bool(MapEntry<Object,ThemeExtension<@>>)", "StatelessWidget(WindowEntry)", "MapEntry<Object,ThemeExtension<@>>(Object,ThemeExtension<@>)", "~(Action<Intent>)", "ThemeData()", "AppBarThemeData()", "Route<@>?(RouteSettings)", "Route<@>(RouteSettings)", "Widget(BuildContext,bool,Widget?)", "ThemeDataTween(@)", "Localizations(BuildContext,Widget?)", "bool(KeepAliveNotification)", "ClipPath(BuildContext)", "UnmanagedRestorationScope(FormFieldState<String>)", "Semantics(BuildContext,Widget?)", "Future<double>()", "Future<~>(double)", "InputDecorator(BuildContext,Widget?)", "Future<bool>(MethodCall0)", "Future<Map<String,List<Map<String,String>>>>(Map<String,String>)", "Map<String,String>(Violation)", "DefaultSelectionStyle(BuildContext)", "~(TextSelection,SelectionChangedCause?)", "Future<~>(AnimationStatus)", "~(DismissDirection)", "Rect(DisplayFeature)", "~(Layer0)", "bool(Set<WidgetState>)", "ModalBarrier(BuildContext,Widget?)", "bool(OverscrollIndicatorNotification)", "~(TransposeCharactersIntent)", "~(ReplaceTextIntent)", "~(ScrollToDocumentBoundaryIntent)", "~(ScrollIntent)", "~(UpdateSelectionIntent)", "Object?(DismissIntent)", "TextEditingValue(TextEditingValue,TextInputFormatter)", "Transform(BuildContext,Widget?)", "TextFieldTapRegion(BuildContext)", "Widget(BuildContext,_PredictiveBackPhase,PredictiveBackEvent?,PredictiveBackEvent?)", "~(TextEditingValue)", "bool(TextEditingValue?,TextEditingValue)", "TextEditingValue(TextEditingValue)", "CompositedTransformTarget(BuildContext,ViewportOffset)", "PageTransitionsBuilder?(TargetPlatform)", "Widget(BuildContext,Animation<double>,Animation<double>,bool,Widget?)", "~([FocusNode?])", "IgnorePointer(BuildContext,Animation<double>,Widget?)", "DiagnosticsNode(FocusNode)", "String(FocusNode)", "Set<FocusNode>()", "bool(KeyMessage)", "~(_FocusTraversalGroupInfo)", "bool(_DirectionalPolicyDataEntry)", "ShapeBorderTween(@)", "bool(TraversalDirection)", "Set<Directionality>(_ReadingOrderSortData)", "bool(LayoutChangedNotification)", "List<Directionality>(BuildContext)", "Rect(_ReadingOrderSortData)", "int(_ReadingOrderDirectionalGroupData,_ReadingOrderDirectionalGroupData)", "String(_ReadingOrderSortData)", "List<_ReadingOrderSortData>(_ReadingOrderSortData,Iterable<_ReadingOrderSortData>)", "bool(_ReadingOrderSortData)", "StatefulWidget?(BuildContext,MagnifierController,ValueNotifier<MagnifierInfo>)", "HashSet<GlobalKey<State<StatefulWidget>>>()", "~(Element,Map<Element,GlobalKey<State<StatefulWidget>>>)", "~(Element,GlobalKey<State<StatefulWidget>>)", "Set<Element>()", "String(GlobalKey<State<StatefulWidget>>)", "String(Element)", "DiagnosticsProperty<Element>(Element)", "Element?(Element)", "Object?(int,Element?)", "int(InheritedElement,InheritedElement)", "DiagnosticsNode(InheritedElement)", "Color?(Color?,Color?,Color?[Color?])", "DoubleTapGestureRecognizer()", "~(DoubleTapGestureRecognizer)", "List<SemanticsConfiguration>()", "bool(SemanticsTag)", "Semantics(BuildContext)", "Color(_HighlightType)", "bool(InkHighlight?)", "~(Intent?)", "bool(BuildContext)", "Rect()?(RenderBox)", "ScaleGestureRecognizer()", "~(ScaleGestureRecognizer)", "~(PointerPanZoomStartEvent)", "~(RenderSemanticsGestureHandler)", "String(GestureRecognizer)", "~(StatefulElement,Object)", "Positioned(BuildContext,Widget?)", "~(_HeroFlight)", "Widget(BuildContext,Animation<double>,HeroFlightDirection,BuildContext,BuildContext)", "bool(_HeroFlight)", "MediaQuery(BuildContext,Widget?)", "IconTheme(BuildContext)", "BorderSide?(Set<WidgetState>)", "_FullWindowDialogWrapper(BuildContext)", "Directionality(BuildContext)", "bool(Route<@>,@)", "BoxConstraintsTween(@)", "Matrix4Tween(@)", "TextStyleTween(@)", "BorderRadiusTween(@)", "~(ScaleStartDetails)", "~(ScaleUpdateDetails)", "~(ScaleEndDetails)", "_NavigatorShim(BuildContext)", "~(Constraints)", "Future<@>(_Pending)", "Map<Type,@>(List<@>)", "bool(LocalizationsDelegate<@>)", "Map<Type,@>(Map<Type,@>)", "Null(Map<Type,@>)", "Type(LocalizationsDelegate<@>)", "~(RouteTransitionRecord?,bool)", "bool(Route<@>?)", "InteractiveInkFeatureFactory?(ButtonStyle?)", "AlignmentGeometry?(ButtonStyle?)", "bool?(ButtonStyle?)", "Duration?(ButtonStyle?)", "~([0^?])<Object?>", "_RouteEntry(Route<@>)", "MaterialTapTargetSize?(ButtonStyle?)", "MapEntry<String?,List<Object>>(@,@)", "RenderBox?()", "_OverlayChildLayoutBuilder(BuildContext)", "_RenderTheaterMarker()", "VisualDensity?(ButtonStyle?)", "~(BoxConstraints)", "ClipRect(BuildContext,Widget?)", "Viewport(BuildContext,ViewportOffset)", "~(Size,Offset)", "Widget(BuildContext,+(Size,Matrix4,Size))", "bool(RawTooltipState)", "Null(RestorationBucket?)", "~(RestorableProperty<Object?>)", "String?(RestorableProperty<Object?>)", "ErrorDescription(RestorableProperty<Object?>)", "SynchronousFuture<bool>(bool)", "bool(_ModalRouteAspect)", "RestorationScope(BuildContext,Widget?)", "Rect(Rect?,TextBox)", "IOSScrollViewFlingVelocityTracker(PointerEvent)", "MacOSScrollViewFlingVelocityTracker(PointerEvent)", "Color?(ButtonStyle?)", "MouseCursor?(ButtonStyle?)", "MouseCursor?(Set<WidgetState>)", "Widget(BuildContext,ViewportOffset)", "Widget?(BuildContext,int)", "int?(Widget,int)", "Null(List<~>)", "WidgetStateProperty<OutlinedBorder?>?(ButtonStyle?)", "WidgetStateProperty<BorderSide?>?(ButtonStyle?)", "~(Offset)", "~(String,Object?)", "bool(ScrollbarOrientation)", "~(DragGestureRecognizer)", "_HorizontalThumbDragGestureRecognizer()", "_VerticalThumbDragGestureRecognizer()", "_TrackTapGestureRecognizer()", "~(_TrackTapGestureRecognizer)", "~(PointerHoverEvent)", "WidgetStateProperty<EdgeInsetsGeometry?>?(ButtonStyle?)", "Rect(Rect)", "bool(Rect)", "String(ShortcutActivator)", "~(ShortcutActivator,Intent)", "List<_ActivatorIntentPair>()", "Action<Intent>?()", "_SingleChildViewport(BuildContext,ViewportOffset)", "~(RenderBox)", "Element?()", "bool(Element?)", "List<Element>()", "IOSSystemContextMenuItemData(IOSSystemContextMenuItem)", "bool(RenderTapRegion)", "_SelectionToolbarWrapper(BuildContext)", "WidgetStateProperty<TextStyle?>?(ButtonStyle?)", "Color?()", "0^?(WidgetStateProperty<0^>?(ButtonStyle?))<Object?>", "0^?(0^?(ButtonStyle?))<Object?>", "double(_Diagonal)", "MaterialPageRoute<0^>(RouteSettings,Widget(BuildContext))<Object?>", "Widget(BuildContext{onPressed!~(),selectionOnTapEnabled!bool,semanticsLabel!String})", "Widget(BuildContext{onPressed!~(),semanticsLabel!String,usesDefaultAlignment:bool})", "Widget(BuildContext{key!GlobalKey<State<StatefulWidget>>,onPressed!~(),semanticsLabel!String})", "TapAndHorizontalDragGestureRecognizer()", "~(TapAndHorizontalDragGestureRecognizer)", "TapAndPanGestureRecognizer()", "~(TapAndPanGestureRecognizer)", "ForcePressGestureRecognizer()", "~(ForcePressGestureRecognizer)", "~(UndoTextIntent)", "~(RedoTextIntent)", "_ViewScope(BuildContext,PipelineOwner)", "~(FlutterErrorDetails)", "~(InspectorReferenceData)", "bool([String?])", "bool(String?[String?])", "List<Object?>(String?,String)", "MaterialRectArcTween(Rect?,Rect?)", "Map<String,Object?>?(String)", "Map<String,Object?>?(String{addAdditionalPropertiesCallback:Map<String,Object>?(DiagnosticsNode,InspectorSerializationDelegate)?})", "CupertinoDesktopTextSelectionToolbarButton(ContextMenuButtonItem)", "DesktopTextSelectionToolbarButton(ContextMenuButtonItem)", "Future<Null>(String)", "Future<Null>(String?,String)", "CupertinoTextSelectionToolbarButton(ContextMenuButtonItem)", "Set<InspectorReferenceData>()", "InspectorSerializationDelegate()", "Map<String,Object>?(DiagnosticsNode,InspectorSerializationDelegate)", "Map<String,Object>(DiagnosticsNode,InspectorSerializationDelegate)", "List<int>()", "Map<String,List<Object?>>()", "double(RenderObject)", "~({selectionOnTapEnabled:bool?})", "Null(ByteData)", "Future<ByteData>()", "Future<~>(String,ByteData?,~(ByteData?)?)", "_CombiningGestureArenaMember()", "~(List<ConnectivityResult>)", "~(~(PointerEvent),Matrix4?)", "Semantics(BuildContext,BoxConstraints)", "Map<~(PointerEvent),Matrix4?>()", "Null(String,String)", "~(_TapTracker)", "String(City)", "String(double)", "_PointerEventDescription?(PointerData)", "int(+saglayici,yakinlikSirasi(MockSaglayici,int),+saglayici,yakinlikSirasi(MockSaglayici,int))", "String(Role)", "bool(PointerData)", "bool(Neighborhood)", "String(Neighborhood)", "String(District)", "double?(int)", "HitTestResponse(HitTestRequest)", "Null(DomainError?)", "~(PointerDataPacket)", "_GestureArena()", "String(GestureArenaMember)", "Iterable<String>(String)", "~(Map<String,Object?>)", "District(String)", "Neighborhood(String)", "Review?(String)", "Map<String,Object?>(DiagnosticsNode)", "~({callback!Future<Map<String,@>>(Map<String,String>),name!String})", "String(DiagnosticsNode)", "ErrorDescription(String)", "TeklifMesaj(Map<String,@>)", "bool(StackFrame)", "bool(DiagnosticsNode?)", "Element(int)", "Center(Widget)", "ChatMessage(@)", "Review(@)", "Future<~>(~)", "String(String,Color)", "Future<Map<String,@>?>()", "Null(DiscardUploadResult)", "~(List<Listing>)", "~(TapMoveDetails)", "MapEntry<String,Listing>(Listing)", "Listing(@)", "~(String,List<Offer>)", "~(_AnimationDirection)", "TickerFuture({from:double?})", "int(AppNotification,AppNotification)", "MapEntry<String,Offer>(Offer)", "MapEntry<String,Review>(Review)", "App()", "int(Review,Review)", "int(String{kategoriUzerinden!bool})", "int(+hit,sira,skor(SearchHit,int,int),+hit,sira,skor(SearchHit,int,int))", "Future<ShareResult>(String)", "int(String,String)", "String(List<String>)", "int(_Aralik,_Aralik)", "bool(TeklifMesaj)", "int(+ilce,km(String,double),+ilce,km(String,double))", "Map<String,@>(Account)", "String(String,String?)", "AuthController(BuildContext)", "IncelenenIlanController(BuildContext)", "PendingListingController(BuildContext)", "ProfileController(BuildContext)", "RegionController(BuildContext)", "OfferController(BuildContext)", "ListingController(BuildContext)", "ContactController(BuildContext)", "ChatController(BuildContext)", "TeklifTalebiController(BuildContext)", "ReviewController(BuildContext)", "NotificationController(BuildContext)", "PushKapisi(BuildContext,Widget?)", "HomeScreen(BuildContext)", "BaglaniyorEkrani(BuildContext)", "FirebaseWebService()", "NotificationsScreen(BuildContext)", "bool(MapEntry<Object?,Object?>)", "ProviderStatusScreen(BuildContext)", "MyReviewsScreen(BuildContext)", "MyListingsScreen(BuildContext)", "FindProviderScreen(BuildContext)", "Route<~>?(RouteSettings)", "LoginScreen(BuildContext)", "RoleSelectScreen(BuildContext)", "bool(+(int,@))", "ProfileInfoScreen(BuildContext)", "AddressesScreen(BuildContext)", "ChangePasswordScreen(BuildContext)", "AccountSettingsScreen(BuildContext)", "AppRateScreen(BuildContext)", "MyCategoriesScreen(BuildContext)", "MyAreasScreen(BuildContext)", "~(CoreInitializeResponse)", "0&(@,@)", "MultiFactorInfo0<JavaScriptObject>(Object?)", "UserInfo0<JavaScriptObject>(@)", "Map<String,@>(UserInfo0<JavaScriptObject>)", "Future<ConfirmationResult0>()", "LegalScreen(BuildContext)", "MaterialPageRoute<~>(RouteSettings)", "BulunamadiScreen(BuildContext)", "List<Map<String,@>>(String)", "Widget(Map<String,@>)", "Future<~>(App)", "MultiFactorInfo(PigeonMultiFactorInfo)", "MethodChannelFirebaseAuth()", "FirebaseAuth()", "Future<~>({imagePath:String?})", "Future<~>(Duration)", "Align(BuildContext,int)", "Future<Uint8List>(JSObject)", "ConnectivityResult(String)", "List<ConnectivityResult>(List<String>?)", "List<String>(@)", "_FotografTamEkran(BuildContext)", "bool(List<ConnectivityResult>,List<ConnectivityResult>)", "@(Object)", "JavaScriptFunction()", "String?(PhotoItem)", "OverflowBox(BuildContext,BoxConstraints)", "Future<~>([JSObject?])", "~({allowPlatformDefault!bool})", "@(@,@)", "JSObject?()", "~(int,int,int)", "ScanningScreen(BuildContext)", "bool(SearchHit)", "0&(String,int?)", "Map<String,String>(Map<String,String>,String)", "~([Object?])", "YeniSifreScreen(BuildContext)", "String(+hizmet,kategori(String,String))", "~(Symbol0,@)", "SizedBox(BuildContext,BoxConstraints)", "Padding(BuildContext,int)", "Widget(BuildContext,BoxConstraints)", "HizmetAlaniScreen(BuildContext)", "Widget(BuildContext,Widget,int?,bool)", "Image(BuildContext,Object,StackTrace?)", "IntrinsicHeight()", "~(@,StackTrace)", "~(Object[StackTrace?])", "int(+talep,tarih,teklif,tutar(TeklifTalebi?,DateTime,Offer?,int),+talep,tarih,teklif,tutar(TeklifTalebi?,DateTime,Offer?,int))", "~(int,@)", "Null(@,StackTrace)", "SingleChildScrollView(BuildContext,BoxConstraints)", "SingleChildRenderObjectWidget(BuildContext)", "Null(~())", "MapEntry<int,String>(MapEntry<String,String>)", "RefCheckRow(BuildContext,int)", "+listing,talep(Listing,TeklifTalebi?)(Listing)", "+listing,talep(Listing?,TeklifTalebi)(TeklifTalebi)", "int(+listing,talep(Listing?,TeklifTalebi?),+listing,talep(Listing?,TeklifTalebi?))", "@(@,String)", "RefSvg(int)", "StatefulWidget(BuildContext)", "~(Size?)", "bool(InlineSpanSemanticsInformation)", "int(int,int)", "StatelessWidget(BuildContext)", "int(WebCluster,WebCluster)", "YorumKarti(BuildContext,int)", "Future<+(String,FontLoadError?)>()", "BidiRun(JSObject)", "HotRestartCacheHandler?()", "Future<~>(BuildContext,String)", "RegisterDoneScreen(BuildContext)", "double(@)", "~(EditingState?,TextEditingDeltaState?)", "RefRegDropdown(BuildContext)", "KullanimSozlesmesiOnayi(BuildContext,bool,Widget?)", "~(String,EngineAutofillForm)", "RegisterScreen(BuildContext)", "RefMultiSelectSheet(BuildContext)", "~(@,String,String?)", "ValueListenableBuilder<bool>(BuildContext)", "ValueListenableBuilder<bool>(BuildContext,bool,Widget?)", "SonuclarScreen(BuildContext)", "_RadarDairesi(BuildContext,Widget?)", "List<String>(String)", "TeklifIsteScreen(BuildContext)", "BootBlockedScreen(BuildContext)", "SplashScreen(BuildContext)", "BakimEkrani()", "TeklifIstediklerimScreen(BuildContext)", "~(@,String,String)", "~(@,Object?)", "~(int?,SemanticsObject)", "_TalepKarti0(BuildContext,int)", "SahipKarti(BuildContext)", "TeklifTalebiYorumScreen(BuildContext)", "SaglayiciOzetSatiri(BuildContext)", "IletisimKutusu(BuildContext)", "RenderObjectWidget(BuildContext,BoxConstraints)", "_TeklifFotografTamEkran(BuildContext)", "ProfilAvatari(BuildContext)", "Row(BuildContext,Widget?)", "FotoGoruntuleyici(BuildContext)", "_Sayfa(BuildContext,int)", "bool(SemanticBehavior)", "SingleChildRenderObjectWidget(BuildContext,List<SearchHit>,Widget?)", "SingleChildRenderObjectWidget(BuildContext,bool,Widget?)", "Widget(PhotoItem)", "Text(BuildContext)", "ListTile(BuildContext,int)", "Dialog(BuildContext)", "~(EngineImage)", "Widget(BuildContext,String?,Widget?)", "~(ProfilEylemi)", "MerkezliIcerik(BuildContext,String?,Widget?)", "MultiChildRenderObjectWidget(BuildContext,BoxConstraints)", "FadeTransition(BuildContext,Animation<double>,Animation<double>,Widget)", "BackdropFilter(BuildContext,Widget?)", "RefBottomSheet(BuildContext,Animation<double>,Animation<double>)", "Stack(BuildContext,Animation<double>,Animation<double>,Widget)", "AppNotification(@)", "~(BackendImage)", "_PointerDeviceState()", "Column(BuildContext,~(~()))", "OutlinedButton(BuildContext,bool,Widget?)", "~(PointerMoveEvent)", "PopScope<@>(BuildContext)", "Future<Response>(Client0)", "bool(String,String)", "Null(String,String[Object?])", "~(MultiStreamController<List<int>>)", "~(List<int>)", "MediaType()", "_ButtonSanitizer()", "Future<XFile>(XFile)", "XFile(JSObject)", "XFile(@)", "Logger()", "~({allowPlatformDefault:bool})", "~(JSObject,List<PointerData>)", "~(CompositionCanvas,int)", "Picture(PictureRecorder)", "int(Hct,Hct)", "String(String?)", "RangeCharPredicate(String)", "RangeCharPredicate(String,String,String)", "RangeCharPredicate(int)", "int(RangeCharPredicate,RangeCharPredicate)", "DisplayCanvas(CompositionCanvas)", "~(0^)<Object?>", "String(MapEntry<String,String>)", "bool?(@[@,@])", "ViewClipChain()", "~(CloseEvent)", "~(MessageEvent)", "~(JavaScriptFunction)", "~(String[@])", "~(@(@))", "~(@(String,@))", "_MediaQueryListeners()", "String?()", "int(_Line)", "bool(double?,double)", "Object(_Line)", "Object(_Highlight)", "int(_Highlight,_Highlight)", "List<_Line>(MapEntry<Object,List<_Highlight>>)", "SourceSpanWithContext()", "bool(bool?)", "Future<PictureInfo>()", "PictureInfo(~)", "~(Zone,ZoneDelegate,Zone,~())", "~(LayerCanvas)", "List<PictureLayer>()", "Paragraph(int)", "OneFrameImageStreamCompleter()", "Future<ImageInfo>(ImmutableBuffer)", "Future<PictureInfo>(ByteData)", "_PictureData(PictureInfo)", "double(Point,Point,Point,Point,double)", "AttributedNode?(String)", "List<Path>(String)", "~(Node0?)", "Path(PathBuilder)", "List<Gradient0>()", "List<Node0>()", "AttributedNode()", "~(Node0)", "Parser<XmlEvent>()", "Parser<XmlTextEvent>()", "Parser<XmlStartElementEvent>()", "Parser<List<XmlEventAttribute>>()", "Parser<XmlEventAttribute>()", "bool(int,int)", "Parser<XmlEndElementEvent>()", "Parser<XmlCommentEvent>()", "Parser<XmlCDATAEvent>()", "Parser<XmlDeclarationEvent>()", "Parser<XmlProcessingEvent>()", "Parser<XmlDoctypeEvent>()", "~(int,bool(FlutterHtmlKeyboardEvent))", "~(String,JavaScriptFunction)", "Null(JavaScriptFunction,JavaScriptFunction)", "XmlRawTextEvent(String)", "XmlStartElementEvent(String,String,List<XmlEventAttribute>,String,String)", "XmlEventAttribute(String,String,+(String,XmlAttributeType))", "+(String,XmlAttributeType)(String,String,String,+(String,XmlAttributeType))", "FontAsset(@)", "+(String,XmlAttributeType)(String)", "XmlEndElementEvent(String,String,String,String)", "XmlCommentEvent(String,String,String)", "XmlCDATAEvent(String,String,String)", "XmlDeclarationEvent(String,List<XmlEventAttribute>,String,String)", "FontFamily(@)", "XmlProcessingEvent(String,String,String,String)", "XmlDoctypeEvent(String,String,String,DtdExternalId?,String,String?,String,String)", "DtdExternalId(String,String,+(String,XmlAttributeType))", "DtdExternalId(String,String,+(String,XmlAttributeType),String,+(String,XmlAttributeType))", "String(String,String,String)", "Parser<XmlEvent>(XmlEntityMapping)", "~(XmlEvent)", "~(NativeUint8List)", "0&(String,int,int)", "~(List<Object?>)", "~(Object?[Object?])", "~(Zone?,ZoneDelegate?,Zone,Object,StackTrace)", "0^(Zone?,ZoneDelegate?,Zone,0^())<Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^),1^)<Object?,Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^,2^),1^,2^)<Object?,Object?,Object?>", "0^()(Zone,ZoneDelegate,Zone,0^())<Object?>", "0^(1^)(Zone,ZoneDelegate,Zone,0^(1^))<Object?,Object?>", "0^(1^,2^)(Zone,ZoneDelegate,Zone,0^(1^,2^))<Object?,Object?,Object?>", "AsyncError?(Zone,ZoneDelegate,Zone,Object,StackTrace?)", "~(Zone?,ZoneDelegate?,Zone,~())", "~(Zone,ZoneDelegate,Zone,String)", "Zone(Zone?,ZoneDelegate?,Zone,ZoneSpecification?,Map<Object?,Object?>?)", "int(Comparable<@>,Comparable<@>)", "List<String>(String,List<String>)", "0^(0^,0^)<num>", "Size?(Size?,Size?,double)", "double?(num?,num?,double)", "Color?(Color?,Color?,double)", "List<ConnectivityResult>(List<String>)", "PigeonMultiFactorInfo(Object)", "MultiFactorInfo(MultiFactorInfo0<JavaScriptObject>)", "FirebaseApp(FirebaseAppPlatform)", "FirebaseAppPlatform(App)", "0&(Object,StackTrace)", "App(JavaScriptObject)", "int(NotoFont,NotoFont)", "Widget(BuildContext,Offset,Offset,Widget)", "~(FlutterErrorDetails{forceReport:bool})", "DiagnosticsNode(String)", "~(String?{wrapWidth:int?})", "StackFrame?(String)", "double(double,double,double)", "Future<~>(NotoFont)", "String?(String)", "~(RenderBox,Offset)", "Widget(BuildContext,Animation<double>)", "bool?(bool?,bool?,double)", "Null(JSArray<Object?>,JSObject)", "Widget(BuildContext,Widget)", "OutlinedBorder?(OutlinedBorder?,OutlinedBorder?,double)", "EdgeInsetsGeometry?(EdgeInsetsGeometry?,EdgeInsetsGeometry?,double)", "ByteBuffer(Object?)", "TextStyle?(TextStyle?,TextStyle?,double)", "int(_TaskEntry<@>,_TaskEntry<@>)", "bool({priority!int,scheduler!SchedulerBinding})", "RenderCanvas()", "List<LicenseEntry>(String)", "~(FocusNode{alignment:double?,alignmentPolicy:ScrollPositionAlignmentPolicy?,curve:Curve?,duration:Duration?})", "int(Element,Element)", "IconThemeData(IconThemeData?,IconThemeData?,double)", "Widget?(BuildContext,MagnifierController,ValueNotifier<MagnifierInfo>)", "List<Route<@>>(NavigatorState,String)", "int(Widget,int)", "OffscreenCanvasViewRasterizer()", "Iterable<DiagnosticsNode>(Iterable<DiagnosticsNode>)", "Neighborhood(Map<String,@>)", "District(Map<String,@>)", "City(Map<String,@>)", "MultiSurfaceViewRasterizer()", "Map<String,@>(Listing)", "Listing(Map<String,@>)", "Map<String,@>(Offer)", "Offer(Map<String,@>)", "Map<String,@>(ChatMessage)", "ChatMessage(Map<String,@>)", "Map<String,@>(AppNotification)", "AppNotification?(Map<String,@>)", "Review(Map<String,@>)", "Map<String,@>(TeklifTalebi)", "~(BuildContext,ChangeNotifier?)", "~()(InheritedContext<Listenable?>,Listenable?)", "CkOffscreenSurface(OffscreenCanvasProvider)", "CkOnscreenSurface(OnscreenCanvasProvider)", "RegisteredFont?(ByteBuffer,String,String)", "JSObject(int)", "0&(Object,StackTrace{fromPigeon:bool})", "int(JSObject)", "Future<JSObject>()", "int(Review)"],
+    types: ["~()", "bool()", "double(double)", "Future<~>()", "~(Duration)", "~(JSObject)", "~(String)", "double(DynamicScheme)", "TonalPalette(DynamicScheme)", "String()", "Future<DomainError?>()", "~(bool)", "Future<Map<String,@>>()", "List<DiagnosticsNode>()", "String?(String?)", "bool(String)", "Null()", "Color(Set<WidgetState>)", "Null(@)", "~(AnimationStatus)", "Null(~)", "~(@)", "bool(Route<@>)", "~(Element)", "DynamicColor(DynamicScheme)", "~(RenderObject)", "RoleGuard(BuildContext)", "FlutterError?(SemanticsNode)", "~(PaintingContext,Offset)", "bool(Element)", "Widget(BuildContext)", "bool(Object?)", "Future<bool>()", "~(Object?)", "Null(Object,StackTrace)", "~(int)", "~(Object,StackTrace)", "bool(Listing)", "String(String)", "bool(BoxHitTestResult,Offset)", "bool(SemanticsNode)", "Future<~>(bool)", "~(DragUpdateDetails)", "ToneDeltaPair(DynamicScheme)", "~(PointerEvent)", "Future<Map<String,@>>(Map<String,String>)", "bool(Offer)", "Null(JSObject)", "~(ByteData?)", "~(String,@)", "String(int)", "~(Timer)", "bool(TeklifTalebi)", "Tween<double>(@)", "~(SvgParser,bool)", "Future<Map<String,Object?>>(Map<String,String>)", "int()", "~(DragEndDetails)", "~(TapDownDetails)", "bool(NotoFont)", "bool(FocusNode)", "int(int)", "bool(ScrollNotification)", "double(RenderBox)", "~(SemanticsConfiguration)", "bool(FlutterHtmlKeyboardEvent)", "~(PointerDownEvent)", "~(DragStartDetails)", "0&()", "~(~())", "bool(int)", "~(PointerExitEvent)", "Widget(BuildContext,Widget?)", "~(Event)", "~(RestorableProperty<Object?>,~())", "SizedBox(BuildContext,int)", "int(FocusNode,FocusNode)", "Size(RenderBox,BoxConstraints)", "~(Selectable0)", "bool(Review)", "TeklifTalebiDetayScreen(BuildContext)", "~(PointerEnterEvent)", "bool(PhotoItem)", "AffineMatrix(List<double>,AffineMatrix)", "KeyEventResult(FocusNode,KeyEvent)", "Future<Map<String,Object>>(Map<String,String>)", "bool(DiagnosticsNode)", "~(Map<String,@>)", "int(RenderObject,RenderObject)", "Parser<String>()", "bool(double)", "TextStyle(Set<WidgetState>)", "double(RenderBox,double)", "Future<String?>()", "RefTap(BuildContext,int)", "Path(SvgParser)", "TextBoundary()", "Parser<@>()", "bool(RenderObject)", "String(PhotoItem)", "Color(Color)", "bool(InheritedElement)", "bool(AppNotification)", "Parser<+(String,XmlAttributeType)>()", "Future<List<@>>()", "Future<String>()", "Null(BuildContext{currentLength!int,isFocused!bool,maxLength!int?})", "ChatScreen(BuildContext)", "Consumer<RegionController>(BuildContext)", "String(Match)", "~(Object)", "Container(BuildContext)", "bool(OverlayEntry)", "bool(_RouteEntry)", "Color?(Set<WidgetState>)", "List<ChatMessage>()", "JSObject(Object?)", "ColorTween(@)", "~(NavigatorObserver)", "~(TapDragDownDetails)", "~(ForcePressDetails)", "List<Object>(String?,String)", "Widget(BuildContext,Animation<double>,Animation<double>)", "JobDetailScreen(BuildContext)", "Widget(BuildContext,int)", "int(Listing)", "Set<0^>()<Object?>", "~(Object?,Object?)", "List<_RouteEntry>()", "int(Offer,Offer)", "UserCredential0(Object?)", "List<Object>()", "~(double)", "String(Object?)", "int(TeklifTalebi,TeklifTalebi)", "~(String,String)", "bool(ChatMessage)", "Future<~>(String)", "WidgetStateProperty<Color?>?(ButtonStyle?)", "~(TapUpDetails)", "Null(String)", "~(Object,StackTrace?)", "List<String>()", "Future<@>(MethodCall0)", "Null(Object)", "bool(InlineSpan)", "Divider(BuildContext,int)", "JSObject()", "Future<UserCredential0>()", "String(@)", "Offset(Offset)", "~(SemanticsUpdate0)", "Future<~>(MethodCall0)", "Future<@>()", "Null(JavaScriptObject?)", "int(@,@)", "ListingDetailScreen(BuildContext)", "CreateListingScreen(BuildContext)", "JSObject?(int)", "MouseCursor(Set<WidgetState>)", "TapGestureRecognizer()", "~(TapGestureRecognizer)", "ReviewScreen(BuildContext)", "RegionPickerSheet(BuildContext,RegionController,Widget?)", "bool(UserInfo)", "Padding(BuildContext)", "~(DiagnosticsNode)", "~({curve:Curve,descendant:RenderObject?,duration:Duration,rect:Rect?})", "bool(Object?,Object?)", "bool(FocusableActionDetector)", "Null(bool)", "SizedBox(BuildContext)", "~(PointerUpEvent)", "FadeTransition(BuildContext,Animation<double>,Widget?)", "ColoredBox(BuildContext)", "BorderSide(Set<WidgetState>)", "~(String,String?)", "~(SemanticsActionEvent)", "Matrix4(double)", "LongPressGestureRecognizer()", "~(LongPressGestureRecognizer)", "Null(BuildContext{currentLength!int,isFocused!bool,maxLength:int?})", "int(Object?)", "TextBox(TextBox)", "OtpScreen(BuildContext)", "double(Set<WidgetState>)", "Future<String?>(String)", "AlignmentGeometryTween(@)", "bool(RenderBox)", "EdgeInsetsGeometryTween(@)", "~(PointerSignalEvent)", "~(bool,Object?)", "~(@,@)", "Parser<DtdExternalId>()", "bool(ScrollMetricsNotification)", "~(DragDownDetails)", "Failure(Failure,Failure)", "WidgetStateProperty<Size?>?(ButtonStyle?)", "int(Listing,Listing)", "double()", "int(SemanticsNode,SemanticsNode)", "bool(_Highlight)", "AlertDialog(BuildContext)", "Future<Null>(List<String>)", "bool(KeyData)", "double(double,double)", "Widget(BuildContext,Object,StackTrace?)", "~(ImageInfo,bool)", "int(String)", "bool(HitTestEntry<HitTestTarget>)", "@(@)", "~(List<FrameTiming>)", "bool(~(ObjectEvent)?)", "~(Picture)", "String(Offer)", "bool(Pattern[int])", "Future<Null>()", "int(City,City)", "bool(City)", "~(Image0)", "int(int,Review)", "Role(@)", "Null(Object?)", "Map<String,@>(Review)", "@(String)", "~(UserWeb?)", "String(double,double,String)", "bool(ConnectivityResult)", "double(_PointerPanZoomData)", "int(Selectable0,Selectable0)", "MapEntry<String,TeklifTalebi>(TeklifTalebi)", "PolynomialFit?()", "Widget(BuildContext)?(ActionIconThemeData?)", "IconData(BuildContext)", "String(MaterialLocalizations)", "TeklifTalebiSohbetScreen(BuildContext)", "Map<String,Object?>?(String?,String)", "Uint8List()", "Future<JSObject>([JSObject?])", "~(TapDragEndDetails)", "~(TapDragUpdateDetails)", "~(TapDragStartDetails)", "HizmetAlanOzetSatiri(BuildContext)", "List<JSObject>()", "~(LongPressEndDetails)", "~(ScrollNotification)", "Future<bool>(PendingListing,List<String>)", "~(LongPressMoveUpdateDetails)", "~(LongPressStartDetails)", "~(TapDragUpDetails)", "Rect(Matrix4,Rect)", "WidgetStateProperty<double?>?(ButtonStyle?)", "Color?(Color?)", "KeyData()", "bool(Selectable0)", "JSObject([JSObject?])", "bool(Selectable0,double)", "TeklifTalebi(Map<String,@>)", "KategoriSecimPaneli(BuildContext)", "Widget(BuildContext,EditableTextState)", "~(String?)", "ProviderReviewsScreen(BuildContext)", "RenderBox(int)", "RefMultiSelectSheet(BuildContext,RegionController,Widget?)", "double(RenderBox,BoxConstraints)", "@()", "CategoryScreen(BuildContext)", "Future<Null>(@)", "Widget(BuildContext,Set<WidgetState>,Widget?)?(ButtonStyle?)", "int(String?)", "RefPrimaryButton(BuildContext,bool,Widget?)", "TextField(BuildContext,String?,Widget?)", "DecorationTween(@)", "~(BuildContext,String)", "Future<ServiceExtensionResponse>(String,Map<String,String>)", "_TalepKarti(BuildContext,int)", "DateTime()", "~(SemanticsObject)", "Tween<@>?(Tween<@>?,@,Tween<@>(@))", "Rect()", "~(PanGestureRecognizer)", "PanGestureRecognizer()", "~(HorizontalDragGestureRecognizer)", "~(FocusHighlightMode)", "HorizontalDragGestureRecognizer()", "~(VerticalDragGestureRecognizer)", "VerticalDragGestureRecognizer()", "ChildSemanticsConfigurationsResult(List<SemanticsConfiguration>)", "Widget(BuildContext,TextEditingValue,Widget?)", "~(RenderBox?)", "~([Intent?])", "Offer(@)", "bool(SemanticsObject)", "~(GestureMode)", "Stack(BuildContext,Widget?)", "bool(ParentDataElement<ParentData>)", "Widget(int)", "UserWeb?(User0?)", "int(_ReadingOrderSortData,_ReadingOrderSortData)", "Timer(Zone,ZoneDelegate,Zone,Duration,~(Timer))", "Timer(Zone,ZoneDelegate,Zone,Duration,~())", "Path?(SvgParser)", "_ZoomEnterTransition(BuildContext,Animation<double>,Widget?)", "_ZoomExitTransition(BuildContext,Animation<double>,Widget?)", "bool(String,Offer)", "~(List<PhotoItem>)", "Object?(Object?)", "InlineSpan(InlineSpan)", "bool(Account)", "_Channel()", "~(ViewFocusEvent)", "~(AppLifecycleState)", "TextPosition(TextPosition,bool,TextBoundary)", "Actions(BuildContext)", "~(IsZamani?)", "~([Duration?])", "bool(DisplayFeature)", "Align(BuildContext,double,Widget?)", "~(PointerCancelEvent)", "Future<~>(@)", "~(~)", "~(Object?,String,String)", "+(String,XmlAttributeType)(String,String,String)", "bool(NavigationNotification)", "Future<~>(FirebaseWebService)", "Future<+arg,argRota,rota(Object?,String?,String)>()", "bool(Object)", "JSObject(int{params:Object?})", "String(String,String)", "Future<ImageStreamCompleter>()", "Map<Object?,Object?>()", "bool(String?)", "~(RestorationBucket)", "~(List<JSObject>,JSObject)", "bool(FormFieldState<@>)", "Future<ByteData?>(ByteData?)", "bool(ShapeBorder)", "JobsScreen(BuildContext)", "Widget(BuildContext,Animation<double>,Animation<double>,Widget)", "RoleSwitchScreen(BuildContext)", "List<SemanticsNode>(_SemanticsSortGroup)", "int(SemanticsNode)", "bool(Object,Set<SemanticsNode>)", "bool(Object,SemanticsNode)", "~(SemanticsNode)", "ImageStreamCompleter()", "Widget?(BuildContext,Animation<double>,Animation<double>,bool,Widget?)", "~(ImageStreamListener)", "OfferDetailScreen(BuildContext)", "Widget(Widget?)", "Size(RenderBox)", "~(Offset,RenderBox)", "Future<int>()", "Widget({acikZemin!bool})", "double({from!double,to!double})", "Null([@])", "~(SliverConstraints)", "bool(BoxHitTestResult)", "+boundaryEnd,boundaryStart(TextPosition,TextPosition)(TextPosition)", "~(_SelectableFragment)", "~([@])", "_SemanticsFragment(SemanticsConfiguration)", "~(_RenderObjectSemantics)", "ForgotPasswordScreen(BuildContext)", "double?(RenderBox,BoxConstraints,TextBaseline)", "List<@(@)>()", "bool(MapEntry<String,String>)", "RegionPickerSheet(BuildContext)", "double?(+(BoxConstraints,TextBaseline))", "BoxConstraints(RenderBox)", "VelocityTracker(PointerEvent)", "bool(+asset,belirginRozetSayisi,key,label,onTap,rozet(String,int,String,String,~(),bool))", "IgnorePointer(BuildContext,Widget?)", "~(TextSelection)", "DiagnosticsNode(RenderBox)", "MouseCursor(MouseTrackerAnnotation)", "~(MouseTrackerAnnotation,Matrix4)", "bool(MouseTrackerAnnotation)", "Size(BoxConstraints)", "double?()", "int(_RenderObjectSemantics,_RenderObjectSemantics)", "Size()", "HitTestResult(Offset,int)", "~(List<_SemanticsFragment>{isMergeUp:bool})", "DiagnosticsNode(InlineSpan)", "SemanticsConfiguration?(_SemanticsFragment)", "LineMetrics(LineMetrics)", "List<_SemanticsFragment>(List<_SemanticsFragment>)", "List<_RenderObjectSemantics>(_RenderObjectSemantics)", "Set<SemanticsTag>?(_SemanticsFragment)", "Set<SemanticsTag>(Set<SemanticsTag>)", "DiagnosticsNode(_RenderObjectSemantics)", "GlyphInfo?()", "bool(_SelectableFragment)", "bool(int,bool)", "+boundaryEnd,boundaryStart(TextPosition,TextPosition)(TextPosition,String)", "OneSequenceGestureRecognizer(Factory<OneSequenceGestureRecognizer>)", "TransformLayer?(PaintingContext,Offset)", "~(bool,String)", "~(double,String{mustBeNegative:bool,mustBePositive:bool})", "~(bool,String{details:List<DiagnosticsNode>?})", "bool(SliverHitTestResult{crossAxisPosition!double,mainAxisPosition!double})", "bool(Canvas,BoxShadow)", "bool(Canvas,BoxShadow,Path0)", "Path0(BoxShadow)", "Rect(BoxShadow)", "Paint0(BoxShadow)", "bool(RenderSliver)", "~(Codec0)", "~(ImageChunkEvent)?(ImageStreamListener)", "~(Object,StackTrace?)?(ImageStreamListener)", "~(FrameTiming)", "~(int,_FrameCallbackEntry)", "~(ImageInfo)", "Null(AssetManifest)", "~(List<SemanticsConfiguration>)", "String?(int)", "Future<~>(Object,StackTrace?)", "~(ImageInfo?,bool)", "_LiveImage()", "Color(double)", "SemanticsNode(_TraversalSortNode)", "String(SemanticsTag)", "String(SemanticsAction)", "String?(CustomSemanticsAction)", "DiagnosticsNode(SemanticsNode)", "double(double,FlutterView)", "String(ShapeBorder)", "SemanticsNode(int)", "List<DiagnosticsNode>(SemanticsNode)", "Set<SemanticsNode>()", "~(SemanticsTag)", "~(SemanticsAction,~(Object?))", "ByteData(ByteData?)", "Future<_AssetManifestBin>(String)", "AssetMetadata(Map<Object?,Object?>)", "Stream<LicenseEntry>()", "Future<String?>(String?)", "ShapeBorder(ShapeBorder)", "Future<~>(ByteData?,~(ByteData?))", "EdgeInsetsGeometry(EdgeInsetsGeometry,ShapeBorder)", "Future<Map<String,@>>(@)", "~(RawKeyEvent)", "Set<LogicalKeyboardKey>(LogicalKeyboardKey)", "int(_PlatformChannelStats,_PlatformChannelStats)", "Future<Codec0>(ImmutableBuffer{getTargetSize:TargetImageSize(int,int)?})", "Future<Null>(ByteData?)", "RawKeyEventData()", "Future<Codec0>(ImmutableBuffer{allowUpscaling:bool,cacheHeight:int?,cacheWidth:int?})", "~(ImageChunkEvent)", "Null(ImageStreamCompleter)", "ErrorDescription(RestorationBucket)", "List<RestorationBucket>()", "List<RestorationBucket>(List<RestorationBucket>)", "double(num)", "List<@>(String)", "List<num>(SelectionRect)", "Map<String,@>(IOSSystemContextMenuItemData)", "int(ByteData,int,int)", "MapEntry<Color,int>(int,int)", "FadeTransition(BuildContext,Animation<double>)", "PlatformViewSurface(BuildContext,PlatformViewController)", "_HtmlElementViewController(PlatformViewCreationParams)", "Future<~>(PointerEvent)", "Offset(TooltipPositionContext)", "WindowScope(BuildContext,Widget?)", "bool(MapEntry<Object,ThemeExtension<@>>)", "StatelessWidget(WindowEntry)", "MapEntry<Object,ThemeExtension<@>>(Object,ThemeExtension<@>)", "~(Action<Intent>)", "ThemeData()", "AppBarThemeData()", "Route<@>?(RouteSettings)", "Route<@>(RouteSettings)", "Widget(BuildContext,bool,Widget?)", "ThemeDataTween(@)", "Localizations(BuildContext,Widget?)", "bool(KeepAliveNotification)", "ClipPath(BuildContext)", "UnmanagedRestorationScope(FormFieldState<String>)", "Semantics(BuildContext,Widget?)", "Future<double>()", "Future<~>(double)", "InputDecorator(BuildContext,Widget?)", "Future<bool>(MethodCall0)", "Future<Map<String,List<Map<String,String>>>>(Map<String,String>)", "Map<String,String>(Violation)", "DefaultSelectionStyle(BuildContext)", "~(TextSelection,SelectionChangedCause?)", "Future<~>(AnimationStatus)", "~(DismissDirection)", "Rect(DisplayFeature)", "~(Layer0)", "bool(Set<WidgetState>)", "ModalBarrier(BuildContext,Widget?)", "bool(OverscrollIndicatorNotification)", "~(TransposeCharactersIntent)", "~(ReplaceTextIntent)", "~(ScrollToDocumentBoundaryIntent)", "~(ScrollIntent)", "~(UpdateSelectionIntent)", "Object?(DismissIntent)", "TextEditingValue(TextEditingValue,TextInputFormatter)", "Transform(BuildContext,Widget?)", "TextFieldTapRegion(BuildContext)", "Widget(BuildContext,_PredictiveBackPhase,PredictiveBackEvent?,PredictiveBackEvent?)", "~(TextEditingValue)", "bool(TextEditingValue?,TextEditingValue)", "TextEditingValue(TextEditingValue)", "CompositedTransformTarget(BuildContext,ViewportOffset)", "PageTransitionsBuilder?(TargetPlatform)", "Widget(BuildContext,Animation<double>,Animation<double>,bool,Widget?)", "~([FocusNode?])", "IgnorePointer(BuildContext,Animation<double>,Widget?)", "DiagnosticsNode(FocusNode)", "String(FocusNode)", "Set<FocusNode>()", "bool(KeyMessage)", "~(_FocusTraversalGroupInfo)", "bool(_DirectionalPolicyDataEntry)", "ShapeBorderTween(@)", "bool(TraversalDirection)", "Set<Directionality>(_ReadingOrderSortData)", "bool(LayoutChangedNotification)", "List<Directionality>(BuildContext)", "Rect(_ReadingOrderSortData)", "int(_ReadingOrderDirectionalGroupData,_ReadingOrderDirectionalGroupData)", "String(_ReadingOrderSortData)", "List<_ReadingOrderSortData>(_ReadingOrderSortData,Iterable<_ReadingOrderSortData>)", "bool(_ReadingOrderSortData)", "StatefulWidget?(BuildContext,MagnifierController,ValueNotifier<MagnifierInfo>)", "HashSet<GlobalKey<State<StatefulWidget>>>()", "~(Element,Map<Element,GlobalKey<State<StatefulWidget>>>)", "~(Element,GlobalKey<State<StatefulWidget>>)", "Set<Element>()", "String(GlobalKey<State<StatefulWidget>>)", "String(Element)", "DiagnosticsProperty<Element>(Element)", "Element?(Element)", "Object?(int,Element?)", "int(InheritedElement,InheritedElement)", "DiagnosticsNode(InheritedElement)", "Color?(Color?,Color?,Color?[Color?])", "DoubleTapGestureRecognizer()", "~(DoubleTapGestureRecognizer)", "List<SemanticsConfiguration>()", "bool(SemanticsTag)", "Semantics(BuildContext)", "Color(_HighlightType)", "bool(InkHighlight?)", "~(Intent?)", "bool(BuildContext)", "Rect()?(RenderBox)", "ScaleGestureRecognizer()", "~(ScaleGestureRecognizer)", "~(PointerPanZoomStartEvent)", "~(RenderSemanticsGestureHandler)", "String(GestureRecognizer)", "~(StatefulElement,Object)", "Positioned(BuildContext,Widget?)", "~(_HeroFlight)", "Widget(BuildContext,Animation<double>,HeroFlightDirection,BuildContext,BuildContext)", "bool(_HeroFlight)", "MediaQuery(BuildContext,Widget?)", "IconTheme(BuildContext)", "BorderSide?(Set<WidgetState>)", "_FullWindowDialogWrapper(BuildContext)", "Directionality(BuildContext)", "bool(Route<@>,@)", "BoxConstraintsTween(@)", "Matrix4Tween(@)", "TextStyleTween(@)", "BorderRadiusTween(@)", "~(ScaleStartDetails)", "~(ScaleUpdateDetails)", "~(ScaleEndDetails)", "_NavigatorShim(BuildContext)", "~(Constraints)", "Future<@>(_Pending)", "Map<Type,@>(List<@>)", "bool(LocalizationsDelegate<@>)", "Map<Type,@>(Map<Type,@>)", "Null(Map<Type,@>)", "Type(LocalizationsDelegate<@>)", "~(RouteTransitionRecord?,bool)", "bool(Route<@>?)", "InteractiveInkFeatureFactory?(ButtonStyle?)", "AlignmentGeometry?(ButtonStyle?)", "bool?(ButtonStyle?)", "Duration?(ButtonStyle?)", "~([0^?])<Object?>", "_RouteEntry(Route<@>)", "MaterialTapTargetSize?(ButtonStyle?)", "MapEntry<String?,List<Object>>(@,@)", "RenderBox?()", "_OverlayChildLayoutBuilder(BuildContext)", "_RenderTheaterMarker()", "VisualDensity?(ButtonStyle?)", "~(BoxConstraints)", "ClipRect(BuildContext,Widget?)", "Viewport(BuildContext,ViewportOffset)", "~(Size,Offset)", "Widget(BuildContext,+(Size,Matrix4,Size))", "bool(RawTooltipState)", "Null(RestorationBucket?)", "~(RestorableProperty<Object?>)", "String?(RestorableProperty<Object?>)", "ErrorDescription(RestorableProperty<Object?>)", "SynchronousFuture<bool>(bool)", "bool(_ModalRouteAspect)", "RestorationScope(BuildContext,Widget?)", "Rect(Rect?,TextBox)", "IOSScrollViewFlingVelocityTracker(PointerEvent)", "MacOSScrollViewFlingVelocityTracker(PointerEvent)", "Color?(ButtonStyle?)", "MouseCursor?(ButtonStyle?)", "MouseCursor?(Set<WidgetState>)", "Widget(BuildContext,ViewportOffset)", "Widget?(BuildContext,int)", "int?(Widget,int)", "Null(List<~>)", "WidgetStateProperty<OutlinedBorder?>?(ButtonStyle?)", "WidgetStateProperty<BorderSide?>?(ButtonStyle?)", "~(Offset)", "~(String,Object?)", "bool(ScrollbarOrientation)", "~(DragGestureRecognizer)", "_HorizontalThumbDragGestureRecognizer()", "_VerticalThumbDragGestureRecognizer()", "_TrackTapGestureRecognizer()", "~(_TrackTapGestureRecognizer)", "~(PointerHoverEvent)", "WidgetStateProperty<EdgeInsetsGeometry?>?(ButtonStyle?)", "Rect(Rect)", "bool(Rect)", "String(ShortcutActivator)", "~(ShortcutActivator,Intent)", "List<_ActivatorIntentPair>()", "Action<Intent>?()", "_SingleChildViewport(BuildContext,ViewportOffset)", "~(RenderBox)", "Element?()", "bool(Element?)", "List<Element>()", "IOSSystemContextMenuItemData(IOSSystemContextMenuItem)", "bool(RenderTapRegion)", "_SelectionToolbarWrapper(BuildContext)", "WidgetStateProperty<TextStyle?>?(ButtonStyle?)", "Color?()", "0^?(WidgetStateProperty<0^>?(ButtonStyle?))<Object?>", "0^?(0^?(ButtonStyle?))<Object?>", "double(_Diagonal)", "MaterialPageRoute<0^>(RouteSettings,Widget(BuildContext))<Object?>", "Widget(BuildContext{onPressed!~(),selectionOnTapEnabled!bool,semanticsLabel!String})", "Widget(BuildContext{onPressed!~(),semanticsLabel!String,usesDefaultAlignment:bool})", "Widget(BuildContext{key!GlobalKey<State<StatefulWidget>>,onPressed!~(),semanticsLabel!String})", "TapAndHorizontalDragGestureRecognizer()", "~(TapAndHorizontalDragGestureRecognizer)", "TapAndPanGestureRecognizer()", "~(TapAndPanGestureRecognizer)", "ForcePressGestureRecognizer()", "~(ForcePressGestureRecognizer)", "~(UndoTextIntent)", "~(RedoTextIntent)", "_ViewScope(BuildContext,PipelineOwner)", "~(FlutterErrorDetails)", "~(InspectorReferenceData)", "bool([String?])", "bool(String?[String?])", "List<Object?>(String?,String)", "MaterialRectArcTween(Rect?,Rect?)", "Map<String,Object?>?(String)", "Map<String,Object?>?(String{addAdditionalPropertiesCallback:Map<String,Object>?(DiagnosticsNode,InspectorSerializationDelegate)?})", "CupertinoDesktopTextSelectionToolbarButton(ContextMenuButtonItem)", "DesktopTextSelectionToolbarButton(ContextMenuButtonItem)", "Future<Null>(String)", "Future<Null>(String?,String)", "CupertinoTextSelectionToolbarButton(ContextMenuButtonItem)", "Set<InspectorReferenceData>()", "InspectorSerializationDelegate()", "Map<String,Object>?(DiagnosticsNode,InspectorSerializationDelegate)", "Map<String,Object>(DiagnosticsNode,InspectorSerializationDelegate)", "List<int>()", "Map<String,List<Object?>>()", "double(RenderObject)", "~({selectionOnTapEnabled:bool?})", "Null(ByteData)", "Future<ByteData>()", "Future<~>(String,ByteData?,~(ByteData?)?)", "_CombiningGestureArenaMember()", "~(List<ConnectivityResult>)", "~(~(PointerEvent),Matrix4?)", "Semantics(BuildContext,BoxConstraints)", "Map<~(PointerEvent),Matrix4?>()", "Null(String,String)", "~(_TapTracker)", "String(City)", "String(double)", "_PointerEventDescription?(PointerData)", "int(+saglayici,yakinlikSirasi(MockSaglayici,int),+saglayici,yakinlikSirasi(MockSaglayici,int))", "String(Role)", "bool(PointerData)", "bool(Neighborhood)", "String(Neighborhood)", "String(District)", "double?(int)", "HitTestResponse(HitTestRequest)", "Null(DomainError?)", "~(PointerDataPacket)", "_GestureArena()", "String(GestureArenaMember)", "Iterable<String>(String)", "~(Map<String,Object?>)", "District(String)", "Neighborhood(String)", "Review?(String)", "Map<String,Object?>(DiagnosticsNode)", "~({callback!Future<Map<String,@>>(Map<String,String>),name!String})", "String(DiagnosticsNode)", "ErrorDescription(String)", "TeklifMesaj(Map<String,@>)", "bool(StackFrame)", "bool(DiagnosticsNode?)", "Element(int)", "Center(Widget)", "ChatMessage(@)", "Review(@)", "Future<~>(~)", "String(String,Color)", "Future<Map<String,@>?>()", "Null(DiscardUploadResult)", "~(List<Listing>)", "~(TapMoveDetails)", "MapEntry<String,Listing>(Listing)", "Listing(@)", "~(String,List<Offer>)", "~(_AnimationDirection)", "TickerFuture({from:double?})", "int(AppNotification,AppNotification)", "MapEntry<String,Offer>(Offer)", "MapEntry<String,Review>(Review)", "App()", "int(Review,Review)", "int(String{kategoriUzerinden!bool})", "int(+hit,sira,skor(SearchHit,int,int),+hit,sira,skor(SearchHit,int,int))", "Future<ShareResult>(String)", "int(String,String)", "String(List<String>)", "int(_Aralik,_Aralik)", "bool(TeklifMesaj)", "int(+ilce,km(String,double),+ilce,km(String,double))", "Map<String,@>(Account)", "String(String,String?)", "AuthController(BuildContext)", "IncelenenIlanController(BuildContext)", "PendingListingController(BuildContext)", "ProfileController(BuildContext)", "RegionController(BuildContext)", "OfferController(BuildContext)", "ListingController(BuildContext)", "ContactController(BuildContext)", "ChatController(BuildContext)", "TeklifTalebiController(BuildContext)", "ReviewController(BuildContext)", "NotificationController(BuildContext)", "PushKapisi(BuildContext,Widget?)", "HomeScreen(BuildContext)", "BaglaniyorEkrani(BuildContext)", "FirebaseWebService()", "NotificationsScreen(BuildContext)", "bool(MapEntry<Object?,Object?>)", "ProviderStatusScreen(BuildContext)", "MyReviewsScreen(BuildContext)", "MyListingsScreen(BuildContext)", "FindProviderScreen(BuildContext)", "Route<~>?(RouteSettings)", "LoginScreen(BuildContext)", "RoleSelectScreen(BuildContext)", "bool(+(int,@))", "ProfileInfoScreen(BuildContext)", "AddressesScreen(BuildContext)", "ChangePasswordScreen(BuildContext)", "AccountSettingsScreen(BuildContext)", "AppRateScreen(BuildContext)", "MyCategoriesScreen(BuildContext)", "MyAreasScreen(BuildContext)", "~(CoreInitializeResponse)", "0&(@,@)", "MultiFactorInfo0<JavaScriptObject>(Object?)", "UserInfo0<JavaScriptObject>(@)", "Map<String,@>(UserInfo0<JavaScriptObject>)", "Future<ConfirmationResult0>()", "LegalScreen(BuildContext)", "MaterialPageRoute<~>(RouteSettings)", "BulunamadiScreen(BuildContext)", "List<Map<String,@>>(String)", "Widget(Map<String,@>)", "Future<~>(App)", "MultiFactorInfo(PigeonMultiFactorInfo)", "MethodChannelFirebaseAuth()", "FirebaseAuth()", "Future<~>({imagePath:String?})", "Future<~>(Duration)", "Align(BuildContext,int)", "Future<Uint8List>(JSObject)", "ConnectivityResult(String)", "List<ConnectivityResult>(List<String>?)", "List<String>(@)", "_FotografTamEkran(BuildContext)", "bool(List<ConnectivityResult>,List<ConnectivityResult>)", "@(Object)", "JavaScriptFunction()", "String?(PhotoItem)", "OverflowBox(BuildContext,BoxConstraints)", "Future<~>([JSObject?])", "~({allowPlatformDefault!bool})", "@(@,@)", "JSObject?()", "~(int,int,int)", "ScanningScreen(BuildContext)", "bool(SearchHit)", "0&(String,int?)", "Map<String,String>(Map<String,String>,String)", "~([Object?])", "YeniSifreScreen(BuildContext)", "String(+hizmet,kategori(String,String))", "~(Symbol0,@)", "SizedBox(BuildContext,BoxConstraints)", "Padding(BuildContext,int)", "Widget(BuildContext,BoxConstraints)", "HizmetAlaniScreen(BuildContext)", "Widget(BuildContext,Widget,int?,bool)", "Image(BuildContext,Object,StackTrace?)", "IntrinsicHeight()", "~(@,StackTrace)", "~(Object[StackTrace?])", "int(+talep,tarih,teklif,tutar(TeklifTalebi?,DateTime,Offer?,int),+talep,tarih,teklif,tutar(TeklifTalebi?,DateTime,Offer?,int))", "~(int,@)", "Null(@,StackTrace)", "SingleChildScrollView(BuildContext,BoxConstraints)", "SingleChildRenderObjectWidget(BuildContext)", "Null(~())", "MapEntry<int,String>(MapEntry<String,String>)", "RefCheckRow(BuildContext,int)", "+listing,talep(Listing,TeklifTalebi?)(Listing)", "+listing,talep(Listing?,TeklifTalebi)(TeklifTalebi)", "int(+listing,talep(Listing?,TeklifTalebi?),+listing,talep(Listing?,TeklifTalebi?))", "@(@,String)", "RefSvg(int)", "StatefulWidget(BuildContext)", "~(Size?)", "bool(InlineSpanSemanticsInformation)", "int(int,int)", "StatelessWidget(BuildContext)", "int(WebCluster,WebCluster)", "YorumKarti(BuildContext,int)", "Future<+(String,FontLoadError?)>()", "BidiRun(JSObject)", "HotRestartCacheHandler?()", "Future<~>(BuildContext,String)", "RegisterDoneScreen(BuildContext)", "double(@)", "~(EditingState?,TextEditingDeltaState?)", "RefRegDropdown(BuildContext)", "KullanimSozlesmesiOnayi(BuildContext,bool,Widget?)", "~(String,EngineAutofillForm)", "RegisterScreen(BuildContext)", "RefMultiSelectSheet(BuildContext)", "~(@,String,String?)", "ValueListenableBuilder<bool>(BuildContext)", "ValueListenableBuilder<bool>(BuildContext,bool,Widget?)", "SonuclarScreen(BuildContext)", "_RadarDairesi(BuildContext,Widget?)", "List<String>(String)", "TeklifIsteScreen(BuildContext)", "BootBlockedScreen(BuildContext)", "SplashScreen(BuildContext)", "BakimEkrani()", "TeklifIstediklerimScreen(BuildContext)", "~(@,String,String)", "~(@,Object?)", "~(int?,SemanticsObject)", "_TalepKarti0(BuildContext,int)", "SahipKarti(BuildContext)", "TeklifTalebiYorumScreen(BuildContext)", "SaglayiciOzetSatiri(BuildContext)", "IletisimKutusu(BuildContext)", "RenderObjectWidget(BuildContext,BoxConstraints)", "_TeklifFotografTamEkran(BuildContext)", "ProfilAvatari(BuildContext)", "Row(BuildContext,Widget?)", "FotoGoruntuleyici(BuildContext)", "_Sayfa(BuildContext,int)", "bool(SemanticBehavior)", "SingleChildRenderObjectWidget(BuildContext,List<SearchHit>,Widget?)", "SingleChildRenderObjectWidget(BuildContext,bool,Widget?)", "Widget(PhotoItem)", "Text(BuildContext)", "ListTile(BuildContext,int)", "Dialog(BuildContext)", "~(EngineImage)", "Widget(BuildContext,String?,Widget?)", "~(ProfilEylemi)", "MerkezliIcerik(BuildContext,String?,Widget?)", "MultiChildRenderObjectWidget(BuildContext,BoxConstraints)", "FadeTransition(BuildContext,Animation<double>,Animation<double>,Widget)", "BackdropFilter(BuildContext,Widget?)", "RefBottomSheet(BuildContext,Animation<double>,Animation<double>)", "Stack(BuildContext,Animation<double>,Animation<double>,Widget)", "AppNotification(@)", "~(BackendImage)", "_PointerDeviceState()", "Column(BuildContext,~(~()))", "OutlinedButton(BuildContext,bool,Widget?)", "~(PointerMoveEvent)", "PopScope<@>(BuildContext)", "Future<Response>(Client0)", "bool(String,String)", "Null(String,String[Object?])", "~(MultiStreamController<List<int>>)", "~(List<int>)", "MediaType()", "_ButtonSanitizer()", "Future<XFile>(XFile)", "XFile(JSObject)", "XFile(@)", "Logger()", "~({allowPlatformDefault:bool})", "~(JSObject,List<PointerData>)", "~(CompositionCanvas,int)", "Picture(PictureRecorder)", "int(Hct,Hct)", "String(String?)", "RangeCharPredicate(String)", "RangeCharPredicate(String,String,String)", "RangeCharPredicate(int)", "int(RangeCharPredicate,RangeCharPredicate)", "DisplayCanvas(CompositionCanvas)", "~(0^)<Object?>", "String(MapEntry<String,String>)", "bool?(@[@,@])", "ViewClipChain()", "~(CloseEvent)", "~(MessageEvent)", "~(JavaScriptFunction)", "~(String[@])", "~(@(@))", "~(@(String,@))", "_MediaQueryListeners()", "String?()", "int(_Line)", "bool(double?,double)", "Object(_Line)", "Object(_Highlight)", "int(_Highlight,_Highlight)", "List<_Line>(MapEntry<Object,List<_Highlight>>)", "SourceSpanWithContext()", "bool(bool?)", "Future<PictureInfo>()", "PictureInfo(~)", "~(Zone,ZoneDelegate,Zone,~())", "~(LayerCanvas)", "List<PictureLayer>()", "Paragraph(int)", "OneFrameImageStreamCompleter()", "Future<ImageInfo>(ImmutableBuffer)", "Future<PictureInfo>(ByteData)", "_PictureData(PictureInfo)", "double(Point,Point,Point,Point,double)", "AttributedNode?(String)", "List<Path>(String)", "~(Node0?)", "Path(PathBuilder)", "List<Gradient0>()", "List<Node0>()", "AttributedNode()", "~(Node0)", "Parser<XmlEvent>()", "Parser<XmlTextEvent>()", "Parser<XmlStartElementEvent>()", "Parser<List<XmlEventAttribute>>()", "Parser<XmlEventAttribute>()", "bool(int,int)", "Parser<XmlEndElementEvent>()", "Parser<XmlCommentEvent>()", "Parser<XmlCDATAEvent>()", "Parser<XmlDeclarationEvent>()", "Parser<XmlProcessingEvent>()", "Parser<XmlDoctypeEvent>()", "~(int,bool(FlutterHtmlKeyboardEvent))", "~(String,JavaScriptFunction)", "Null(JavaScriptFunction,JavaScriptFunction)", "XmlRawTextEvent(String)", "XmlStartElementEvent(String,String,List<XmlEventAttribute>,String,String)", "XmlEventAttribute(String,String,+(String,XmlAttributeType))", "+(String,XmlAttributeType)(String,String,String,+(String,XmlAttributeType))", "FontAsset(@)", "+(String,XmlAttributeType)(String)", "XmlEndElementEvent(String,String,String,String)", "XmlCommentEvent(String,String,String)", "XmlCDATAEvent(String,String,String)", "XmlDeclarationEvent(String,List<XmlEventAttribute>,String,String)", "FontFamily(@)", "XmlProcessingEvent(String,String,String,String)", "XmlDoctypeEvent(String,String,String,DtdExternalId?,String,String?,String,String)", "DtdExternalId(String,String,+(String,XmlAttributeType))", "DtdExternalId(String,String,+(String,XmlAttributeType),String,+(String,XmlAttributeType))", "String(String,String,String)", "Parser<XmlEvent>(XmlEntityMapping)", "~(XmlEvent)", "~(NativeUint8List)", "0&(String,int,int)", "~(List<Object?>)", "~(Object?[Object?])", "~(Zone?,ZoneDelegate?,Zone,Object,StackTrace)", "0^(Zone?,ZoneDelegate?,Zone,0^())<Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^),1^)<Object?,Object?>", "0^(Zone?,ZoneDelegate?,Zone,0^(1^,2^),1^,2^)<Object?,Object?,Object?>", "0^()(Zone,ZoneDelegate,Zone,0^())<Object?>", "0^(1^)(Zone,ZoneDelegate,Zone,0^(1^))<Object?,Object?>", "0^(1^,2^)(Zone,ZoneDelegate,Zone,0^(1^,2^))<Object?,Object?,Object?>", "AsyncError?(Zone,ZoneDelegate,Zone,Object,StackTrace?)", "~(Zone?,ZoneDelegate?,Zone,~())", "~(Zone,ZoneDelegate,Zone,String)", "Zone(Zone?,ZoneDelegate?,Zone,ZoneSpecification?,Map<Object?,Object?>?)", "int(Comparable<@>,Comparable<@>)", "List<String>(String,List<String>)", "0^(0^,0^)<num>", "Size?(Size?,Size?,double)", "double?(num?,num?,double)", "Color?(Color?,Color?,double)", "List<ConnectivityResult>(List<String>)", "PigeonMultiFactorInfo(Object)", "MultiFactorInfo(MultiFactorInfo0<JavaScriptObject>)", "FirebaseApp(FirebaseAppPlatform)", "FirebaseAppPlatform(App)", "0&(Object,StackTrace)", "App(JavaScriptObject)", "int(NotoFont,NotoFont)", "Widget(BuildContext,Offset,Offset,Widget)", "~(FlutterErrorDetails{forceReport:bool})", "DiagnosticsNode(String)", "~(String?{wrapWidth:int?})", "StackFrame?(String)", "double(double,double,double)", "Future<~>(NotoFont)", "String?(String)", "~(RenderBox,Offset)", "Widget(BuildContext,Animation<double>)", "bool?(bool?,bool?,double)", "Null(JSArray<Object?>,JSObject)", "Widget(BuildContext,Widget)", "OutlinedBorder?(OutlinedBorder?,OutlinedBorder?,double)", "EdgeInsetsGeometry?(EdgeInsetsGeometry?,EdgeInsetsGeometry?,double)", "ByteBuffer(Object?)", "TextStyle?(TextStyle?,TextStyle?,double)", "int(_TaskEntry<@>,_TaskEntry<@>)", "bool({priority!int,scheduler!SchedulerBinding})", "RenderCanvas()", "List<LicenseEntry>(String)", "~(FocusNode{alignment:double?,alignmentPolicy:ScrollPositionAlignmentPolicy?,curve:Curve?,duration:Duration?})", "int(Element,Element)", "IconThemeData(IconThemeData?,IconThemeData?,double)", "Widget?(BuildContext,MagnifierController,ValueNotifier<MagnifierInfo>)", "List<Route<@>>(NavigatorState,String)", "int(Widget,int)", "OffscreenCanvasViewRasterizer()", "Iterable<DiagnosticsNode>(Iterable<DiagnosticsNode>)", "Neighborhood(Map<String,@>)", "District(Map<String,@>)", "City(Map<String,@>)", "MultiSurfaceViewRasterizer()", "Map<String,@>(Listing)", "Listing(Map<String,@>)", "Map<String,@>(Offer)", "Offer(Map<String,@>)", "Map<String,@>(ChatMessage)", "ChatMessage(Map<String,@>)", "Map<String,@>(AppNotification)", "AppNotification?(Map<String,@>)", "Review(Map<String,@>)", "Map<String,@>(TeklifTalebi)", "~(BuildContext,ChangeNotifier?)", "~()(InheritedContext<Listenable?>,Listenable?)", "CkOffscreenSurface(OffscreenCanvasProvider)", "CkOnscreenSurface(OnscreenCanvasProvider)", "RegisteredFont?(ByteBuffer,String,String)", "JSObject(int)", "0&(Object,StackTrace{fromPigeon:bool})", "int(JSObject)", "Future<JSObject>()", "int(Review)"],
     interceptorsByTag: null,
     leafTags: null,
     arrayRti: Symbol("$ti"),
@@ -308315,6 +308523,26 @@
     B.StrokeCap_10 = new A.StrokeCap(1, "round");
     B.StrokeCap_20 = new A.StrokeCap(2, "square");
     B.List_s5R = makeConstList([B.StrokeCap_0, B.StrokeCap_10, B.StrokeCap_20], A.findType("JSArray<StrokeCap>"));
+    B.NotifType_0 = new A.NotifType(0, "newOffer");
+    B.NotifType_1 = new A.NotifType(1, "offerSelected");
+    B.NotifType_2 = new A.NotifType(2, "refund");
+    B.NotifType_3 = new A.NotifType(3, "contactOpened");
+    B.NotifType_4 = new A.NotifType(4, "newMessage");
+    B.NotifType_5 = new A.NotifType(5, "listingExpired");
+    B.NotifType_6 = new A.NotifType(6, "accountStatus");
+    B.NotifType_7 = new A.NotifType(7, "categoryRequest");
+    B.NotifType_8 = new A.NotifType(8, "announcement");
+    B.NotifType_9 = new A.NotifType(9, "newListing");
+    B.NotifType_10 = new A.NotifType(10, "teklifTalebiGeldi");
+    B.NotifType_11 = new A.NotifType(11, "teklifVerildi");
+    B.NotifType_12 = new A.NotifType(12, "teklifSecildi");
+    B.NotifType_13 = new A.NotifType(13, "teklifReddedildi");
+    B.NotifType_14 = new A.NotifType(14, "teklifSuresiDoldu");
+    B.NotifType_15 = new A.NotifType(15, "teklifIsiTamamlandi");
+    B.NotifType_16 = new A.NotifType(16, "teklifYeniMesaj");
+    B.NotifType_17 = new A.NotifType(17, "talepSaglayiciReddetti");
+    B.NotifType_18 = new A.NotifType(18, "unknown");
+    B.List_s9O = makeConstList([B.NotifType_0, B.NotifType_1, B.NotifType_2, B.NotifType_3, B.NotifType_4, B.NotifType_5, B.NotifType_6, B.NotifType_7, B.NotifType_8, B.NotifType_9, B.NotifType_10, B.NotifType_11, B.NotifType_12, B.NotifType_13, B.NotifType_14, B.NotifType_15, B.NotifType_16, B.NotifType_17, B.NotifType_18], A.findType("JSArray<NotifType>"));
     B.ModifierKey_0 = new A.ModifierKey(0, "controlModifier");
     B.ModifierKey_1 = new A.ModifierKey(1, "shiftModifier");
     B.ModifierKey_2 = new A.ModifierKey(2, "altModifier");
@@ -308351,25 +308579,6 @@
     B.StrokeJoin_10 = new A.StrokeJoin(1, "round");
     B.StrokeJoin_20 = new A.StrokeJoin(2, "bevel");
     B.List_ykM = makeConstList([B.StrokeJoin_0, B.StrokeJoin_10, B.StrokeJoin_20], A.findType("JSArray<StrokeJoin>"));
-    B.NotifType_0 = new A.NotifType(0, "newOffer");
-    B.NotifType_1 = new A.NotifType(1, "offerSelected");
-    B.NotifType_2 = new A.NotifType(2, "refund");
-    B.NotifType_3 = new A.NotifType(3, "contactOpened");
-    B.NotifType_4 = new A.NotifType(4, "newMessage");
-    B.NotifType_5 = new A.NotifType(5, "listingExpired");
-    B.NotifType_6 = new A.NotifType(6, "accountStatus");
-    B.NotifType_7 = new A.NotifType(7, "categoryRequest");
-    B.NotifType_8 = new A.NotifType(8, "announcement");
-    B.NotifType_9 = new A.NotifType(9, "newListing");
-    B.NotifType_10 = new A.NotifType(10, "teklifTalebiGeldi");
-    B.NotifType_11 = new A.NotifType(11, "teklifVerildi");
-    B.NotifType_12 = new A.NotifType(12, "teklifSecildi");
-    B.NotifType_13 = new A.NotifType(13, "teklifReddedildi");
-    B.NotifType_14 = new A.NotifType(14, "teklifSuresiDoldu");
-    B.NotifType_15 = new A.NotifType(15, "teklifIsiTamamlandi");
-    B.NotifType_16 = new A.NotifType(16, "teklifYeniMesaj");
-    B.NotifType_17 = new A.NotifType(17, "unknown");
-    B.List_ywP = makeConstList([B.NotifType_0, B.NotifType_1, B.NotifType_2, B.NotifType_3, B.NotifType_4, B.NotifType_5, B.NotifType_6, B.NotifType_7, B.NotifType_8, B.NotifType_9, B.NotifType_10, B.NotifType_11, B.NotifType_12, B.NotifType_13, B.NotifType_14, B.NotifType_15, B.NotifType_16, B.NotifType_17], A.findType("JSArray<NotifType>"));
     B.List_z39 = makeConstList([0.015176349177441876, 0.045529047532325624, 0.07588174588720938, 0.10623444424209313, 0.13658714259697685, 0.16693984095186062, 0.19729253930674434, 0.2276452376616281, 0.2579979360165119, 0.28835063437139563, 0.3188300904430532, 0.350925934958123, 0.3848314933096426, 0.42057480301049466, 0.458183274052838, 0.4976837250274023, 0.5391024159806381, 0.5824650784040898, 0.6277969426914107, 0.6751227633498623, 0.7244668422128921, 0.775853049866786, 0.829304845476233, 0.8848452951698498, 0.942497089126609, 1.0022825574869039, 1.0642236851973577, 1.1283421258858297, 1.1946592148522128, 1.2631959812511864, 1.3339731595349034, 1.407011200216447, 1.4823302800086415, 1.5599503113873272, 1.6398909516233677, 1.7221716113234105, 1.8068114625156377, 1.8938294463134073, 1.9832442801866852, 2.075074464868551, 2.1693382909216234, 2.2660538449872063, 2.36523901573795, 2.4669114995532007, 2.5710888059345764, 2.6777882626779785, 2.7870270208169257, 2.898822059350997, 3.0131901897720907, 3.1301480604002863, 3.2497121605402226, 3.3718988244681087, 3.4967242352587946, 3.624204428461639, 3.754355295633311, 3.887192587735158, 4.022731918402185, 4.160988767090289, 4.301978482107941, 4.445716283538092, 4.592217266055746, 4.741496401646282, 4.893568542229298, 5.048448422192488, 5.20615066083972, 5.3666897647573375, 5.5300801301023865, 5.696336044816294, 5.865471690767354, 6.037501145825082, 6.212438385869475, 6.390297286737924, 6.571091626112461, 6.7548350853498045, 6.941541251256611, 7.131223617812143, 7.323895587840543, 7.5195704746346665, 7.7182615035334345, 7.919981813454504, 8.124744458384042, 8.332562408825165, 8.543448553206703, 8.757415699253682, 8.974476575321063, 9.194643831691977, 9.417930041841839, 9.644347703669503, 9.873909240696694, 10.106627003236781, 10.342513269534024, 10.58158024687427, 10.8238400726681, 11.069304815507364, 11.317986476196008, 11.569896988756009, 11.825048221409341, 12.083451977536606, 12.345119996613247, 12.610063955123938, 12.878295467455942, 13.149826086772048, 13.42466730586372, 13.702830557985108, 13.984327217668513, 14.269168601521828, 14.55736596900856, 14.848930523210871, 15.143873411576273, 15.44220572664832, 15.743938506781891, 16.04908273684337, 16.35764934889634, 16.66964922287304, 16.985093187232053, 17.30399201960269, 17.62635644741625, 17.95219714852476, 18.281524751807332, 18.614349837764564, 18.95068293910138, 19.290534541298456, 19.633915083172692, 19.98083495742689, 20.331304511189067, 20.685334046541502, 21.042933821039977, 21.404114048223256, 21.76888489811322, 22.137256497705877, 22.50923893145328, 22.884842241736916, 23.264076429332462, 23.6469514538663, 24.033477234264016, 24.42366364919083, 24.817520537484558, 25.21505769858089, 25.61628489293138, 26.021211842414342, 26.429848230738664, 26.842203703840827, 27.258287870275353, 27.678110301598522, 28.10168053274597, 28.529008062403893, 28.96010235337422, 29.39497283293396, 29.83362889318845, 30.276079891419332, 30.722335150426627, 31.172403958865512, 31.62629557157785, 32.08401920991837, 32.54558406207592, 33.010999283389665, 33.4802739966603, 33.953417292456834, 34.430438229418264, 34.911345834551085, 35.39614910352207, 35.88485700094671, 36.37747846067349, 36.87402238606382, 37.37449765026789, 37.87891309649659, 38.38727753828926, 38.89959975977785, 39.41588851594697, 39.93615253289054, 40.460400508064545, 40.98864111053629, 41.520882981230194, 42.05713473317016, 42.597404951718396, 43.141702194811224, 43.6900349931913, 44.24241185063697, 44.798841244188324, 45.35933162437017, 45.92389141541209, 46.49252901546552, 47.065252796817916, 47.64207110610409, 48.22299226451468, 48.808024568002054, 49.3971762874833, 49.9904556690408, 50.587870934119984, 51.189430279724725, 51.79514187861014, 52.40501387947288, 53.0190544071392, 53.637271562750364, 54.259673423945976, 54.88626804504493, 55.517063457223934, 56.15206766869424, 56.79128866487574, 57.43473440856916, 58.08241284012621, 58.734331877617365, 59.39049941699807, 60.05092333227251, 60.715611475655585, 61.38457167773311, 62.057811747619894, 62.7353394731159, 63.417162620860914, 64.10328893648692, 64.79372614476921, 65.48848194977529, 66.18756403501224, 66.89098006357258, 67.59873767827808, 68.31084450182222, 69.02730813691093, 69.74813616640164, 70.47333615344107, 71.20291564160104, 71.93688215501312, 72.67524319850172, 73.41800625771542, 74.16517879925733, 74.9167682708136, 75.67278210128072, 76.43322770089146, 77.1981124613393, 77.96744375590167, 78.74122893956174, 79.51947534912904, 80.30219030335869, 81.08938110306934, 81.88105503125999, 82.67721935322541, 83.4778813166706, 84.28304815182372, 85.09272707154808, 85.90692527145302, 86.72564993000343, 87.54890820862819, 88.3767072518277, 89.2090541872801, 90.04595612594655, 90.88742016217518, 91.73345337380438, 92.58406282226491, 93.43925555268066, 94.29903859396902, 95.16341895893969, 96.03240364439274, 96.9059996312159, 97.78421388448044, 98.6670533535366, 99.55452497210776], type$.JSArray_double);
     B.Record2_eM6 = new A._Record_2(0.7078, 8.3194);
     B.Record2_Gra = new A._Record_2(0.7895, 2.4523);
@@ -311698,6 +311907,7 @@
     B.ValidationError_ezS = new A.ValidationError("Kay\u0131t i\u015flemi s\xfcr\xfcyor \u2014 l\xfctfen bekleyin");
     B.Record2_BcC = new A._Record_2_account_error(null, B.ValidationError_ezS);
     B.Record2_Fi0 = new A._Record_2("Reddedildi", B.Color_BhF);
+    B.Record2_H8h = new A._Record_2("Hizmet veren reddetti", B.Color_BhF);
     B.UnauthorizedError_cqL = new A.UnauthorizedError("Oturum yok");
     B.Record2_InN = new A._Record_2_challengeId_error(null, B.UnauthorizedError_cqL);
     B.ValidationError_co6 = new A.ValidationError("Bu e-posta adresi ba\u015fka bir hesapta kullan\u0131l\u0131yor");
@@ -312991,7 +313201,10 @@
     B.ValidationError_sVg = new A.ValidationError("\u0130nternet ba\u011flant\u0131n\u0131z\u0131 kontrol edin");
     B.ValidationError_vmn = new A.ValidationError("\xc7ok fazla deneme yap\u0131ld\u0131. L\xfctfen daha sonra tekrar deneyin.");
     B.ValidationError_wbO = new A.ValidationError("\u0130lan olu\u015fturulamad\u0131");
+    B.ValidationError_xjD = new A.ValidationError("Bu talep art\u0131k reddedilemez.");
+    B.ValueKey_8Jv = new A.ValueKey("talep-reddet", type$.ValueKey_String);
     B.ValueKey_Efv = new A.ValueKey("ref-sheet-scrim", type$.ValueKey_String);
+    B.ValueKey_F65 = new A.ValueKey("tamamlanan-is", type$.ValueKey_String);
     B.ValueKey_GdA = new A.ValueKey("giris-eposta", type$.ValueKey_String);
     B.ValueKey_HxE = new A.ValueKey("kurtarma-eposta", type$.ValueKey_String);
     B.ValueKey_PBK = new A.ValueKey("bakim-giris-kapisi", type$.ValueKey_String);
