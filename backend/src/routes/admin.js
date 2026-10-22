@@ -592,6 +592,9 @@ export function adminRotalar(r, db) {
 
     r.delete(`/admin/v1/regions/${yol}/:id`, async (ctx) => {
       yetkiIste(ctx.admin, 'regions.write');
+      // 22 Eki (kullanıcı kararı): İLLER SİLİNMEZ — pasif edilir ve düzenlenir
+      // (PATCH active). İlçe ve mahalle silinebilir (ilçeler değişebiliyor).
+      if (b.tablo === 'cities') throw hata.durum('İller silinmez; pasif edebilir ya da düzenleyebilirsiniz');
       // İl/ilçe kaldırma alt bölgeleri de kaldırır → kritik işlem.
       yenidenDogrulamaIste(ctx.oturum);
       const x = await db.prepare(`SELECT * FROM ${b.tablo} WHERE id = ? AND deleted_at IS NULL`).get(ctx.params.id);

@@ -321,9 +321,15 @@ SAYFALAR.bolgeler = async (tur = 'cities', ustId = '', ustAd = '') => {
     const d = await form('Düzenle', alanlar);
     if (d && await guvenli(() => api(`/regions/${tur}/${x.id}`, { yontem: 'PATCH', govde: { ...d, ...(tur === 'neighborhoods' ? { postalCode: d.postalCode || null } : {}) } }))) { bildir('Kaydedildi'); yenile(); }
   };
+  // 22 Eki: iller silinmez, pasif edilir/düzenlenir; ilçe ve mahalle silinebilir.
   const sil = async (x) => {
-    const n = await gerekceIle(`"${x.name}" kaldırılsın mı?`, 'Kaldır', tur !== 'neighborhoods' ? 'Alt bölgeleri de kaldırılır.' : undefined);
-    if (n && await guvenli(() => api(`/regions/${tur}/${x.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Kaldırıldı'); yenile(); }
+    const n = await gerekceIle(`"${x.name}" silinsin mi?`, 'Sil', tur === 'districts' ? 'İlçenin mahalleleri de silinir.' : undefined);
+    if (n && await guvenli(() => api(`/regions/${tur}/${x.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Silindi'); yenile(); }
+  };
+  const pasifEt = async (x) => {
+    const d = await form(x.active ? `"${x.name}" pasif edilsin mi?` : `"${x.name}" yeniden aktif edilsin mi?`, [], x.active ? 'Pasif et' : 'Aktif et',
+      { tehlike: x.active, aciklama: x.active ? 'Pasif il adres ve hizmet bölgesi seçiminde görünmez; kayıtları silinmez.' : 'İl yeniden seçilebilir olur.' });
+    if (d && await guvenli(() => api(`/regions/${tur}/${x.id}`, { yontem: 'PATCH', govde: { active: !x.active } }))) { bildir(x.active ? 'Pasif edildi' : 'Aktif edildi'); yenile(); }
   };
   return h('div', {},
     h('div', { class: 'ust' }, h('h2', {}, TUR.baslik), h('div', { class: 'arac' },
@@ -334,7 +340,10 @@ SAYFALAR.bolgeler = async (tur = 'cities', ustId = '', ustAd = '') => {
       { baslik: 'Ad', deger: (x) => (TUR.alt ? h('a', { href: `#/bolgeler/${TUR.alt}/${x.id}/${encodeURIComponent(x.name)}` }, x.name) : x.name) },
       ...(tur === 'neighborhoods' ? [{ baslik: 'Posta kodu', deger: (x) => x.postalCode ?? '—' }] : []),
       { baslik: 'Durum', deger: (x) => rozet(x.active ? 'aktif' : 'pasif') },
-      { baslik: '', deger: (x) => (yazabilir ? h('span', {}, h('button', { class: 'btn ikincil', onclick: () => duzenle(x) }, 'Düzenle'), ' ', h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Kaldır')) : '') },
+      { baslik: '', deger: (x) => (yazabilir ? h('span', {}, h('button', { class: 'btn ikincil', onclick: () => duzenle(x) }, 'Düzenle'), ' ',
+        tur === 'cities'
+          ? h('button', { class: x.active ? 'btn tehlike' : 'btn', onclick: () => pasifEt(x) }, x.active ? 'Pasif et' : 'Aktif et')
+          : h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Sil')) : '') },
     ], liste));
 };
 
