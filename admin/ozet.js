@@ -187,10 +187,30 @@ function bugunKarti(ad, ikonAd, renk, veri, karsilastirma = 'Düne göre') {
           h('div', { class: 'oz-alt' }, `${karsilastirma}: ${sayi(dun)}`)]));
 }
 
-function miniKart(ad, deger, ikonAd, renk) {
+const tl = (v) => `${Number(v ?? 0).toLocaleString('tr-TR')} TL`;
+
+/**
+ * Seçilen teklif tutarı (21 Eki): seçilen dönemde hizmet alanların SEÇTİĞİ
+ * tekliflerin toplamı — HizmetCep'in aracılık ettiği iş hacmi. Her seçim
+ * bir kez, seçildiği gün sayılır (ilan teklifleri + kabul edilen teklif
+ * talepleri). Kaynak: /stats/market.
+ */
+function tutarKarti(etiket, pz) {
+  if (pz.e) return h('section', { class: 'oz-kart' }, h('div', { class: 'oz-kart-ust' }, h('h3', {}, 'Seçilen Teklif Tutarı')), yuklenemedi(pz.e));
+  const s = pz.v.selectedOffers;
+  return h('section', { class: 'oz-kart oz-tutar' },
+    h('div', { class: 'oz-kart-ust' }, h('h3', {}, 'Seçilen Teklif Tutarı'), h('span', { class: 'oz-secim' }, etiket)),
+    h('div', { class: 'oz-tutar-buyuk' }, tl(s.totalTl)),
+    h('p', { class: 'oz-alt' }, `${sayi(s.count)} teklif seçildi · hizmet alanların seçtiği tekliflerin toplamı`),
+    h('div', { class: 'oz-mini-izgara iki' },
+      miniKart(`İlan teklifleri · ${sayi(s.listingOffers.count)} adet`, null, 'ilan', 'mavi', tl(s.listingOffers.totalTl)),
+      miniKart(`Teklif talepleri · ${sayi(s.teklifTalepleri.count)} adet`, null, 'talep', 'turuncu', tl(s.teklifTalepleri.totalTl))));
+}
+
+function miniKart(ad, deger, ikonAd, renk, metin) {
   return h('div', { class: 'oz-mini' },
     h('span', { class: `oz-yuvarlak kucuk ${renk}` }, ikon(ikonAd, 18)),
-    h('div', {}, h('div', { class: 'oz-etiket' }, ad), h('div', { class: 'oz-orta' }, sayi(deger))));
+    h('div', {}, h('div', { class: 'oz-etiket' }, ad), h('div', { class: 'oz-orta' }, metin ?? sayi(deger))));
 }
 
 /** Çizgi grafik (SVG). seriler: [{ad, renk, degerler[]}], etiketler: gün adları. */
@@ -282,10 +302,12 @@ export async function ozetSayfasi() {
   const d = donem(secim);
   const toplamGun = 2 * d.gun;
   const sorguBas = gunEkle(d.bas, d.gun - toplamGun);
-  const [st, ku, il, en, dn] = await Promise.all([
+  const [st, ku, il, en, dn, pz] = await Promise.all([
     al('/stats'), al('/users?limit=200'), al('/listings?limit=200'),
     al('/integrations'),
     al(`/stats/period?from=${encodeURIComponent(sorguBas.toISOString())}&days=${toplamGun}`),
+    // Seçili dönemin teklif talepleri ve seçilen teklif tutarı (21 Eki).
+    al(`/stats/market?from=${encodeURIComponent(d.bas.toISOString())}&days=${d.gun}`),
   ]);
   if (st.e) throw st.e; // özet sayıları alınamıyorsa ekranın anlamı yok
 
@@ -339,6 +361,23 @@ export async function ozetSayfasi() {
         bugunKarti('Yeni teklif', 'teklif', 'mor', donemSay(dv.offers), karsilastirma),
         bugunKarti('Yeni teklif talebi', 'talep', 'turuncu', donemSay(dv.teklifTalepleri), karsilastirma),
         bugunKarti('Gelen talep', 'talep', 'kirmizi', donemSay(dv.supportTickets), karsilastirma))),
+
+    h('div', { class: 'oz-uclu sd-iki' },
+      tutarKarti(d.etiket, pz),
+      bolum('Teklif Talepleri', 'talepler', pz.e ? yuklenemedi(pz.e) : (() => {
+        const t = pz.v.teklifTalepleri; const b = t.byStatus;
+        return h('div', {},
+          h('p', { class: 'oz-alt oz-donem-not' }, `${d.etiket} açılan talepler · bugünkü durumları`),
+          h('div', { class: 'oz-mini-izgara dort' },
+            miniKart('Toplam talep', t.total, 'talep', 'turuncu'),
+            miniKart('Teklif bekliyor', b.BEKLEMEDE, 'talep', 'acikmavi'),
+            miniKart('Teklif geldi', b.TEKLIF_GELDI, 'teklif', 'mor'),
+            miniKart('Seçildi', b.SECILDI, 'tik', 'mavi'),
+            miniKart('Tamamlandı', b.TAMAMLANDI, 'tik', 'yesil'),
+            miniKart('Reddedildi', b.REDDEDILDI, 'ban', 'kirmizi'),
+            miniKart('Süresi doldu', b.SURESI_DOLDU, 'askida', 'turuncu'),
+            miniKart('İptal edildi', t.cancelled, 'silme', 'kirmizi')));
+      })())),
 
     h('div', { class: 'oz-uclu' },
       bolum('Kullanıcılar', 'kullanicilar',

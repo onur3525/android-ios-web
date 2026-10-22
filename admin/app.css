@@ -114,6 +114,11 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .oz-kart-ust { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px; }
 .oz-tumu { color:var(--oz-soluk); font-size:12px; text-decoration:none; white-space:nowrap; }
 .oz-tumu:hover { color:var(--oz-mavi); }
+.oz-tutar-buyuk { font-size:34px; font-weight:800; color:var(--oz-yesil, #16A34A); letter-spacing:-.5px; margin:2px 0 4px; }
+.oz-donem-not { margin:-6px 0 10px; }
+.oz-mini-izgara.dort { grid-template-columns:repeat(4, minmax(0,1fr)); }
+.oz-mini-izgara.dort .oz-mini { flex-direction:column; align-items:flex-start; gap:6px; }
+@media (max-width:1100px) { .oz-mini-izgara.dort { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 .oz-tumu-grup { display:flex; gap:12px; }
 .btn.kd-kucuk { padding:4px 10px; font-size:12px; }
 .oz-geri { display:inline-block; margin:0 0 10px; color:#64748B; font-size:13px; text-decoration:none; }
