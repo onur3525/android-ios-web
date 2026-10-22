@@ -33,6 +33,8 @@ import { kisaAd } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushKuyrugunuIsle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
+import { silmeKuyruguSorunlari } from './silme_kuyruklari.js';
+import { apiOlcumleri, genelDurum, kaynakKullanimi, olcumleriYaz, sonSunucuHatalari, yedekDurumu, yoneticiGuvenlikOlaylari } from '../sistem_izleme.js';
 
 export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
 const kural = (kod, mesaj) => new ApiHatasi(409, kod, mesaj);
@@ -862,12 +864,30 @@ export function ilanRotalar(r, db) {
       ? (await db.prepare(`SELECT channel, template, provider, provider_response, attempts, created_at FROM outbound_messages WHERE status = 'FAILED' ORDER BY created_at DESC LIMIT 10`).all())
         .map((m) => ({ channel: m.channel, template: m.template, provider: m.provider, providerResponse: m.provider_response ? yanitMaskele(String(m.provider_response)).slice(0, 200) : null, attempts: m.attempts, createdAt: m.created_at }))
       : null;
+    // ── 22 Eki: kaynak kullanımı, API ölçümleri, yedekleme, kritik olaylar ──
+    // Bu örneğin biriken ölçümleri önce yazılır (gösterilen sayı güncel olsun).
+    await olcumleriYaz(db).catch((e) => console.error('olcum_yazma', e?.message));
+    const kaynak = await kaynakKullanimi(db);
+    const apiOlcum = await apiOlcumleri(db);
+    const yedek = await yedekDurumu(db, { yenile: ctx.query.get('refreshBackup') === '1' && yetkiliMi(ctx.admin.role, 'integrations.read') });
+    const silme = await silmeKuyruguSorunlari(db);
+    const silmeTukenen = silme.filesExhausted + silme.firebaseLongFailure + silme.firebaseOpsLongFailure;
+    const tumEntegrasyon = (await db.prepare('SELECT type, active, last_test_ok FROM integrations WHERE deleted_at IS NULL').all())
+      .map((x) => ({ type: x.type, active: x.active === 1 || x.active === true, lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1 || x.last_test_ok === true }));
     return {
+      checkedAt: new Date().toISOString(),
+      overall: genelDurum({ veritabaniOk: true, api: apiOlcum, kaynak, yedek, entegrasyonlar: tumEntegrasyon, silmeTukenen }),
       api: { status: 'OK', uptimeSeconds: Math.round(process.uptime()), serverTime: new Date().toISOString() },
       database: { status: 'OK', driver: db.surucu, responseMs: dbMs, lastMigration: goc?.id ?? null, lastMigrationAt: goc?.applied_at ?? null, migrations: gocSayisi },
+      resources: kaynak,
+      apiMetrics: apiOlcum,
+      backup: yetkiliMi(ctx.admin.role, 'integrations.read') ? yedek : null,
       delivery: { since: yediGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
       integrations: entegrasyon,
       recentFailures: sonHatalar,
+      serverErrors: yetkiliMi(ctx.admin.role, 'notifications.read') ? await sonSunucuHatalari(db) : null,
+      deletionIssues: yetkiliMi(ctx.admin.role, 'deletion.queues.read') ? silme : null,
+      adminSecurityEvents: yetkiliMi(ctx.admin.role, 'audit.read') ? await yoneticiGuvenlikOlaylari(db) : null,
     };
   });
 

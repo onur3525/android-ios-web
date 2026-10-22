@@ -20,6 +20,7 @@ import {
   ipTeshisi, istemciIp, jsonGonder,
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
+import { istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
@@ -90,6 +91,12 @@ export function uygulamaKur(db) {
     const url = new URL(req.url, 'http://yerel');
     const yol = url.pathname;
     const cerezler = [];
+    // ── SİSTEM DURUMU ÖLÇÜMÜ (22 Eki): kullanıcı API'sinin her yanıtı
+    // (durum kodu + süre) sayılır; 5xx'te hata kodu ve istek kimliği de.
+    if (yol.startsWith('/api/v1/')) {
+      const t0 = performance.now();
+      res.once('finish', () => istekOlc({ yontem: req.method, yol, durum: res.statusCode, ms: performance.now() - t0, kod: res.hcHataKodu, istekId }));
+    }
     // ── CORS (yalnız kullanıcı API'si ve gerçek zamanlı yol) ──
     // İzin listesindeki tam köken yansıtılır ('*' yok). Kimlik Bearer ile
     // taşınır; YALNIZ web istemcisinin oturum yenileme çerezi (hc_rt,
@@ -178,6 +185,7 @@ export function uygulamaKur(db) {
     } catch (e) {
       const bilinen = e instanceof ApiHatasi;
       if (!bilinen) console.error(`[${istekId}]`, e);
+      res.hcHataKodu = bilinen ? e.kod : 'INTERNAL_ERROR';
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};
       return jsonGonder(res, bilinen ? e.durum : 500, {
         error: { code: bilinen ? e.kod : 'INTERNAL_ERROR', message: bilinen ? e.message : 'Beklenmeyen bir hata oluştu' },
@@ -211,6 +219,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['kayit_bakimi', kayitBakimi],
     ['firebase_silme', firebaseSilmeKuyrugunuIsle],
     ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
+    ['izleme_bakimi', izlemeBakimi],
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.
@@ -220,6 +229,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     pushKuyrugunuIsle(db).catch((e) => console.error('push_gonderimi', e));
   }, 60_000);
   zamanlayici.unref();
+  // API ölçümleri her örnekte 15 sn'de bir veritabanına eklenir.
+  const olcumZamanlayici = setInterval(() => olcumleriYaz(db).catch((e) => console.error('olcum_yazma', e?.message)), 15_000);
+  olcumZamanlayici.unref();
 
   const uygulama = uygulamaKur(db);
   const sunucu = createServer((req, res) => {
@@ -255,12 +267,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (durum.kapaniyor) return;
     durum.kapaniyor = true;
     clearInterval(zamanlayici);
+    clearInterval(olcumZamanlayici);
     setTimeout(() => process.exit(1), 25_000).unref();
     await new Promise((ok) => setTimeout(ok, 5_000)); // dengeleyici /readyz'yi görsün
     sunucu.close();
     hub.hepsiniKapat();
     sunucu.closeIdleConnections?.();
     await olaylar.kapat();
+    await olcumleriYaz(db).catch(() => {}); // kapanmadan son ölçümler
     await db.close();
     process.exit(0);
   };
