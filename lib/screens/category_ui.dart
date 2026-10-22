@@ -353,30 +353,11 @@ String categoryIcon(String c) =>
 /// YENİ kategoriye de mevcut ikonlardan biri atanabilir.
 final Map<String, String> _sunucuIkonu = {};
 
-/// ── ⚠ ADMİN PANELİNDEN KATEGORİ FOTOĞRAFI (yalnız API modu) ──
+/// ── ⚠ KATEGORİDE FOTOĞRAF YOK (22 Eki, kullanıcı kararı) ──
 ///
-/// Sunucu kataloğu admin'in yüklediği fotoğrafı göreli yol olarak verir
-/// (`/api/v1/categories/photo/katalog/kategori/<uuid>.jpg`). YALNIZ bu
-/// kalıp kabul edilir (başka adres/yol yok sayılır) ve API sunucusunun
-/// kendi kökenine çözülür; depo özel kalır, görsel API üzerinden gelir.
-/// Sunucu fotoğrafı yoksa [categoryPhotoUrl] null döner ve çağıran mevcut
-/// paket fotoğrafına ([categoryAsset]) düşer — 166 kategorinin bugünkü
-/// görünümü değişmez.
-final Map<String, String> _sunucuFoto = {};
-final RegExp _sunucuFotoKalibi =
-    RegExp(r'^/api/v1/categories/photo/katalog/kategori/[0-9a-f-]{36}\.(jpg|png|webp)$');
-
-void sunucuFotograflariniAyarla(Map<String, String> fotograflar, {required String apiKoku}) {
-  _sunucuFoto
-    ..clear()
-    ..addEntries(fotograflar.entries
-        .where((e) => _sunucuFotoKalibi.hasMatch(e.value))
-        .map((e) => MapEntry(e.key, '$apiKoku${e.value}')));
-}
-
-/// Admin'den yüklenmiş sunucu fotoğrafının tam adresi; yoksa null.
-String? categoryPhotoUrl(String category) => _sunucuFoto[category];
-
+/// Uygulamada fotoğraf yalnız ana sayfa çatılarındadır; kategoride yalnız
+/// ikon gösterilir. Admin panelinde kategori fotoğrafı yükleme/kaldırma
+/// yoktur ve sunucu katalog yanıtında kategori fotoğrafı göndermez.
 void sunucuIkonlariniAyarla(Map<String, String> ikonlar) {
   final paketteki = kKategoriIkonu.values.toSet();
   _sunucuIkonu
@@ -386,13 +367,8 @@ void sunucuIkonlariniAyarla(Map<String, String> ikonlar) {
 
 /// Küçük kare kategori rozeti (liste/başlık kullanımı).
 ///
-/// ⚠ FOTOĞRAF ÇİZMEZ — YALNIZ SVG.
-///
-/// İŞ KURALI: kategori fotoğrafı (`assets/categories/*.jpg`) YALNIZCA
-/// ilan verme ekranındaki kategori ızgarasında görünür. Bu rozet ilan
-/// verme dışındaki ekranlarda (kategori detayı vb.) kullanılır ve
-/// oralarda fotoğraf İSTENMEZ; bu yüzden `categoryAsset` burada
-/// OKUNMAZ. Fotoğraflı kart için tek bileşen: `KategoriKarti`.
+/// ⚠ FOTOĞRAF ÇİZMEZ — YALNIZ SVG. Kategoride fotoğraf yoktur; paket
+/// fotoğrafı (`categoryAsset`) da sunucu fotoğrafı da burada okunmaz.
 class CategoryBadge extends StatelessWidget {
   final String category;
   final double size;
@@ -402,34 +378,14 @@ class CategoryBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(size * .26);
     final svg = RefSvg(categoryIcon(category), size: size * .5, color: RC.blue);
-    // ⚠ SUNUCU FOTOĞRAFI → SVG YEDEĞİ (kullanıcı onayı, 3 Eki — Seçenek 1).
-    // Yalnız admin'den yüklenmiş sunucu fotoğrafı (API modu; güvenli yol
-    // denetimi `categoryPhotoUrl`'de). Yoksa / yüklenirken / hata olursa
-    // bugünkü SVG AYNEN. Kutu ölçüsü, rengi ve köşesi değişmez. Paket
-    // fotoğrafı (`categoryAsset`) burada KULLANILMAZ.
-    final foto = categoryPhotoUrl(category);
+    // Kategoride fotoğraf yok (22 Eki): her zaman ikon (SVG). Kutu ölçüsü,
+    // rengi ve köşesi değişmez.
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
           color: const Color(0xFFEFF4FD), borderRadius: radius),
-      child: foto == null
-          ? svg
-          : ClipRRect(
-              borderRadius: radius,
-              child: Image.network(
-                foto,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                // Web: CORS engelinde tarayıcının <img> öğesine düşer.
-                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
-                // İlk kare gelene kadar SVG (önbellekteyse anında fotoğraf).
-                frameBuilder: (_, child, kare, esZamanli) =>
-                    esZamanli || kare != null ? child : svg,
-                errorBuilder: (_, __, ___) => svg,
-              ),
-            ),
+      child: svg,
     );
   }
 }

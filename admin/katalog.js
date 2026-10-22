@@ -20,10 +20,8 @@
 //
 // BİLİNÇLİ SINIRLAR (ayrıntı: rapor):
 //   · İkon: Flutter yalnız paketindeki SVG'leri çizer → yalnız o listeden seçilir.
-//   · Kategori fotoğrafı (008 göçü): admin'den yüklenen fotoğraf MEVCUT nesne
-//     depolamaya sunucu üzerinden yazılır (POST/DELETE …/categories/:id/photo);
-//     önizleme aynı kökenden gelir (/api/v1/categories/photo/…, paket
-//     görselleri /katalog-varlik/…). Yüklenmiş fotoğraf yoksa paket fotoğrafı.
+//   · Fotoğraf YALNIZ ÇATILARDA (22 Eki, kullanıcı kararı): kategoride
+//     fotoğraf yok, yalnız ikon; kategori fotoğrafı ekleme/kaldırma yok.
 //   · Hizmet ikonu: veri modelinde YOK.
 //   · Silme yerine Aktif/Pasif (geçmiş ilan/talep kayıtları etkilenmez).
 // ═══════════════════════════════════════════════════════════════
@@ -78,7 +76,7 @@ function onizlemeOnayi(baslik, secim, mevcutUrl) {
         h('div', { class: 'kt-karsilastir' },
           mevcutUrl !== undefined ? h('div', {}, h('div', { class: 'oz-etiket' }, 'Mevcut'), gorsel(mevcutUrl, 'kt-orta')) : null,
           h('div', {}, h('div', { class: 'oz-etiket' }, 'Yeni (önizleme)'), gorsel(secim.onizleme, 'kt-orta'))),
-        h('p', { class: 'not' }, 'Kaydedene kadar mevcut kayıt değişmez. Fotoğraf uygulamada kategori görseli olarak kullanılır.'),
+        h('p', { class: 'not' }, 'Kaydedene kadar mevcut kayıt değişmez. Fotoğraf uygulamada çatı görseli olarak kullanılır.'),
         h('div', { class: 'tuslar' },
           h('button', { class: 'btn ikincil', onclick: () => kapat(false) }, 'Vazgeç'),
           h('button', { class: 'btn', onclick: () => kapat(true) }, 'Kaydet'))));
@@ -165,8 +163,8 @@ export async function katalogSayfasi(rol, catiKey) {
       onclick: () => { seciliId = k.id; listeyiCiz(); hizmetleriYukle(k.id); duzen.classList.add('detay-acik'); },
     },
     h('span', { class: 'kt-sira' }, String(k.siraNo)),
-    // Uygulamadaki rozet: yüklenmiş fotoğraf varsa o, yoksa kategori ikonu.
-    gorsel(k.photoUrl || k.iconUrl, 'kt-kucuk-gorsel kt-rozet', 'İkon'),
+    // Uygulamadaki rozet: kategori ikonu.
+    gorsel(k.iconUrl, 'kt-kucuk-gorsel kt-rozet', 'İkon'),
     h('span', { class: 'kt-kat-metin' },
       h('span', { class: 'ku-ad' }, k.name),
       h('span', { class: 'ku-eposta' }, `${k.serviceCount.toLocaleString('tr-TR')} hizmet${k.kartDisi ? ' · ana sayfa ızgarasında yok' : ''}`)),
@@ -200,15 +198,6 @@ export async function katalogSayfasi(rol, catiKey) {
           h('button', { class: 'btn ikincil', onclick: () => kategoriDuzenle(k) }, 'Kategoriyi düzenle'),
           h('button', { class: 'btn', onclick: () => hizmetEkle(k) }, '+ Yeni Hizmet')) : null),
       h('div', { class: 'kt-medya' },
-        h('div', { class: 'kt-foto-alani' },
-          h('div', { class: 'oz-etiket' }, 'Kategori fotoğrafı'),
-          gorsel(k.photoUrl || k.bundledPhotoUrl, 'kt-buyuk'),
-          h('div', { class: 'ku-eposta' }, k.photoUrl
-            ? `Admin'den yüklendi · ${dosyaAdi(k.photoRef)}`
-            : (k.photo ? `Uygulama paketi · ${dosyaAdi(k.photo)}` : 'Fotoğraf yok')),
-          yazabilir ? h('div', { class: 'kt-tuslar' },
-            h('button', { class: 'btn ikincil kt-kucuk', onclick: () => fotoDegistir(k) }, k.photoUrl || k.photo ? 'Fotoğrafı değiştir' : 'Fotoğraf ekle'),
-            k.photoRef ? h('button', { class: 'btn tehlike kt-kucuk', onclick: () => fotoKaldir(k) }, 'Fotoğrafı kaldır') : null) : null),
         h('div', { class: 'kt-ikon-alani' },
           h('div', { class: 'oz-etiket' }, 'İkon'),
           gorsel(k.iconUrl, 'kt-ikon', 'Genel ikon'),
@@ -247,34 +236,6 @@ export async function katalogSayfasi(rol, catiKey) {
       await api(`/catalog/categories/${k.id}`, { yontem: 'PATCH', govde });
       bildir('Kategori kaydedildi');
       await kategorileriYukle(); // gerçek kayıt yeniden okunur
-    } catch (e) { hataGoster(e); }
-  }
-
-  async function fotoGonder(id, secim) {
-    await api(`/catalog/categories/${id}/photo`, { yontem: 'POST', govde: { contentType: secim.tur, data: secim.veri } });
-  }
-
-  async function fotoDegistir(k) {
-    const secim = await dosyaSec();
-    if (!secim) return;
-    if (!(await onizlemeOnayi(`Fotoğraf — ${k.name}`, secim, k.photoUrl || k.bundledPhotoUrl || null))) return;
-    try {
-      await fotoGonder(k.id, secim);
-      bildir('Fotoğraf kaydedildi');
-      await kategorileriYukle(); // gerçek kayıt yeniden okunur
-    } catch (e) { hataGoster(e); }
-  }
-
-  async function fotoKaldir(k) {
-    const d = await form(`Fotoğraf kaldırılsın mı? — ${k.name}`, [], 'Kaldır', {
-      tehlike: true,
-      aciklama: k.photo ? 'Yüklenen fotoğraf depodan silinir; uygulama bu kategoride paketindeki fotoğrafa döner.' : 'Yüklenen fotoğraf depodan silinir; kategori fotoğrafsız kalır.',
-    });
-    if (!d) return;
-    try {
-      await api(`/catalog/categories/${k.id}/photo`, { yontem: 'DELETE', govde: {} });
-      bildir('Fotoğraf kaldırıldı');
-      await kategorileriYukle();
     } catch (e) { hataGoster(e); }
   }
 

@@ -1,4 +1,5 @@
-// Kategori fotoğrafı: MEVCUT nesne depolama üzerinden yükleme/değiştirme/kaldırma.
+// Katalog görselleri: fotoğraf YALNIZ çatılarda (MEVCUT nesne depolama);
+// kategoride yalnız ikon — kategori fotoğrafı ucu yok (22 Eki, kullanıcı kararı).
 // Depo olarak bellek içi, yol biçimli S3 benzeri yerel sunucu (yalnız test).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -69,10 +70,8 @@ test('imza: AWS belge örneği (sanal-host, https) hâlâ birebir', () => {
   assert.ok(u.endsWith('X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404'));
 });
 
-test('mevcut paket fotoğrafı ve ikonu admin için gerçekten sunulur; yol dışı istek reddedilir', async () => {
-  assert.ok(kat.bundledPhotoUrl && kat.iconUrl);
-  const f = await istek(kat.bundledPhotoUrl);
-  assert.equal(f.durum, 200); assert.equal(f.tur, 'image/jpeg');
+test('kategori ikonu admin için gerçekten sunulur; yol dışı istek reddedilir', async () => {
+  assert.ok(kat.iconUrl);
   const i = await istek(kat.iconUrl);
   assert.equal(i.durum, 200); assert.equal(i.tur, 'image/svg+xml');
   assert.equal((await istek('/katalog-varlik/assets/../backend/src/config.js')).durum, 404);
@@ -80,43 +79,31 @@ test('mevcut paket fotoğrafı ve ikonu admin için gerçekten sunulur; yol dı�
 });
 
 test('yükleme doğrulaması: tür, içerik (sihirli bayt), boyut', async () => {
-  const y = (tur, veri) => istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'POST', govde: { contentType: tur, data: veri.toString('base64') } });
+  const y = (tur, veri) => istek('/admin/v1/catalog/roofs/ev/photo', { yontem: 'POST', govde: { contentType: tur, data: veri.toString('base64') } });
   assert.equal((await y('image/svg+xml', Buffer.from('<svg/>'))).durum, 400);
   assert.equal((await y('image/png', JPEG)).durum, 400, 'tür/içerik uyuşmazlığı');
   assert.equal((await y('image/jpeg', Buffer.concat([JPEG, Buffer.alloc(5 * 1024 * 1024)]))).durum, 400, '5 MB üstü');
 });
 
-test('yükle → değiştir (eski nesne silinir) → kaldır (kayıt + nesne temizlenir)', async () => {
-  const y1 = await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'POST', govde: { contentType: 'image/jpeg', data: JPEG.toString('base64') } });
-  assert.equal(y1.durum, 200, JSON.stringify(y1.json));
-  const ilk = y1.json.photoRef;
-  assert.match(ilk, /^katalog\/kategori\/[0-9a-f-]{36}\.jpg$/);
-  assert.ok(depo.has(`/hc/${ilk}`));
-  // Uygulamanın okuduğu katalog yanıtı yeni fotoğrafı verir; görsel gerçekten gelir
+test('kategoride fotoğraf yok: yükleme/kaldırma ucu yok, admin ve uygulama yanıtında fotoğraf alanı yok', async () => {
+  const yukle = await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'POST', govde: { contentType: 'image/jpeg', data: JPEG.toString('base64') } });
+  assert.equal(yukle.durum, 404);
+  assert.equal((await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'DELETE', govde: {} })).durum, 404);
+  assert.equal([...depo.keys()].filter((a) => a.includes('katalog/kategori/')).length, 0, 'depoya bir şey yazılmadı');
+  for (const alan of ['photo', 'photoRef', 'photoUrl', 'bundledPhotoUrl']) assert.equal(alan in kat, false, alan);
+  // Eski kayıtta fotoğraf bağı kalmış olsa bile uygulamaya gitmez.
+  await db.prepare('UPDATE categories SET photo_ref = ? WHERE id = ?').run('katalog/kategori/00000000-0000-0000-0000-000000000000.jpg', kat.id);
   const ust = (await istek('/api/v1/categories')).json.items[0];
-  assert.equal(ust.photoUrl, `/api/v1/categories/photo/${ilk}`);
-  const g = await istek(ust.photoUrl);
-  assert.equal(g.durum, 200); assert.equal(g.tur, 'image/jpeg'); assert.match(g.baslik.get('cache-control'), /immutable/);
-  // Değiştir
-  const y2 = await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'POST', govde: { contentType: 'image/png', data: PNG.toString('base64') } });
-  const ikinci = y2.json.photoRef;
-  assert.notEqual(ikinci, ilk);
-  assert.ok(!depo.has(`/hc/${ilk}`), 'eski nesne depoda kalmamalı');
-  assert.equal((await istek(`/api/v1/categories/photo/${ilk}`)).durum, 404, 'bağlı olmayan nesne sunulmaz');
-  // Kaldır
-  const k = await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'DELETE', govde: {} });
-  assert.equal(k.json.photoRef, null);
-  assert.equal(k.json.photo, kat.photo, 'paket fotoğrafı (yedek) korunur');
-  assert.ok(!depo.has(`/hc/${ikinci}`));
-  assert.equal((await istek('/api/v1/categories')).json.items[0].photoUrl, undefined, 'uygulama paket fotoğrafına döner');
-  assert.equal((await istek(`/admin/v1/catalog/categories/${kat.id}/photo`, { yontem: 'DELETE', govde: {} })).durum, 409);
+  assert.equal(ust.category, kat.name);
+  assert.equal('photoUrl' in ust, false);
+  assert.equal('photoUrl' in (await istek('/admin/v1/catalog/categories')).json[0], false);
+  await db.prepare('UPDATE categories SET photo_ref = NULL WHERE id = ?').run(kat.id);
 });
 
-test('katalog sırası ve diğer kategoriler fotoğraf işlemlerinden etkilenmez', async () => {
+test('katalog sırası değişmez', async () => {
   const liste = (await istek('/admin/v1/catalog/categories')).json;
   assert.equal(liste.length, 166);
   assert.equal(liste[0].id, kat.id);
-  assert.equal(liste.filter((x) => x.photoRef).length, 0);
 });
 
 // ── ANA SAYFA ÇATILARI (029, 22 Eki) ──

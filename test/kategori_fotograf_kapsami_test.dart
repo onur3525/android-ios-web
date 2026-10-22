@@ -117,10 +117,10 @@ void main() {
       });
     }
 
-    // ⚠ GÜNCELLENDİ (3 Eki, kullanıcı onayı — Seçenek 1): CategoryBadge
-    // YALNIZ sunucu fotoğrafını gösterebilir; yoksa/yüklenirken/hata
-    // olursa SVG. Paket fotoğrafı (`categoryAsset`) yine KULLANILMAZ.
-    test('CategoryBadge: sunucu fotoğrafı varsa fotoğraf, yoksa/yüklenirken/hatada SVG', () {
+    // ⚠ GÜNCELLENDİ (22 Eki, kullanıcı kararı): kategoride fotoğraf yok.
+    // CategoryBadge HER ZAMAN ikon (SVG) çizer; ne paket fotoğrafı ne
+    // sunucu fotoğrafı okunur. Fotoğraf yalnız ana sayfa çatılarında.
+    test('CategoryBadge: her zaman SVG ikon; fotoğraf okumaz', () {
       final k = _kod('lib/screens/category_ui.dart');
       final bas = k.indexOf('class CategoryBadge');
       expect(bas, greaterThan(-1));
@@ -130,11 +130,16 @@ void main() {
       expect(govde.contains('categoryAsset('), isFalse);
       expect(govde.contains('categoryIcon('), isTrue,
           reason: 'CategoryBadge SVG çizmiyor');
-      expect(govde.contains('final foto = categoryPhotoUrl(category);'), isTrue);
-      expect(govde.contains('child: foto == null'), isTrue, reason: 'fotoğraf yoksa SVG');
-      expect(govde.contains('esZamanli || kare != null ? child : svg'), isTrue, reason: 'yüklenirken SVG');
-      expect(govde.contains('errorBuilder: (_, __, ___) => svg'), isTrue, reason: 'hatada SVG');
+      expect(govde.contains('Image.network('), isFalse,
+          reason: 'CategoryBadge sunucu fotoğrafı çiziyor');
+      expect(govde.contains('child: svg,'), isTrue, reason: 'her zaman SVG');
       expect(govde.contains('width: size,'), isTrue, reason: 'kutu ölçüsü korunur');
+    });
+
+    test('kategori fotoğrafı sunucudan alınmaz', () {
+      expect(_kod('lib/screens/category_ui.dart').contains('categoryPhotoUrl'), isFalse);
+      expect(_kod('lib/screens/splash_screen.dart').contains('sunucuFotograflariniAyarla'), isFalse);
+      expect(_kod('lib/data/remote/api/category_api.dart').contains('fotograflar('), isFalse);
     });
 
     test('ölü fotoğraf bileşeni CategoryCover kalmadı', () {

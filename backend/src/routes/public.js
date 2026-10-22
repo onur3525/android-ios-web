@@ -14,7 +14,7 @@ import { DESTEK_BILGISI } from '../destek_bilgisi.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
-    `SELECT id, name, active, icon, photo_ref, roof_key FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
+    `SELECT id, name, active, icon, roof_key FROM categories WHERE deleted_at IS NULL ORDER BY sort, name`,
   ).all();
   const hiz = await db.prepare(
     `SELECT category_id, name FROM services
@@ -34,9 +34,9 @@ export async function katalogYaniti(db) {
     roofs: catilar.map((c) => ({ key: c.key, name: c.name, description: c.description,
       ...(c.photo_ref ? { photoUrl: `/api/v1/categories/photo/${c.photo_ref}` } : {}), categories: catiKategorileri.get(c.key) })),
     items: kat
+      // Kategoride fotoğraf yok (22 Eki): uygulama kategoride yalnız ikon gösterir.
       .map((k) => ({ category: k.name, active: k.active === 1, ...(k.icon ? { icon: k.icon } : {}),
-        // Admin'den yüklenen fotoğraf (göreli yol; yoksa uygulama paket fotoğrafına düşer)
-        ...(k.photo_ref ? { photoUrl: `/api/v1/categories/photo/${k.photo_ref}` } : {}), services: gruplu.get(k.id) || [] }))
+        services: gruplu.get(k.id) || [] }))
       // İstemci hizmetsiz kategoriyi zaten atlıyor; pasif HİZMETLER
       // listeye hiç girmez (istemcide hizmet düzeyinde aktif alanı yok).
       .filter((k) => k.services.length > 0),
