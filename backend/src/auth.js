@@ -166,6 +166,8 @@ const YETKI = {
   'config.read': ['super_admin', 'operations', 'readonly'],
   'config.write': ['super_admin', 'operations'],
   'announcements.write': ['super_admin', 'content'],
+  // Bakım modu (22 Eki): Duyurular ekranından açılır/kapanır.
+  'maintenance.write': ['super_admin', 'content'],
   'notifications.read': ['super_admin', 'moderator', 'operations'],
   'integrations.read': ['super_admin', 'operations'],
   'integrations.write': ['super_admin', 'operations'],

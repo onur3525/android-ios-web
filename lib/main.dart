@@ -81,6 +81,7 @@ import 'data/controllers/pending_listing_controller.dart';
 import 'data/repositories/pending_listing_store.dart';
 import 'data/controllers/incelenen_ilan_controller.dart';
 import 'data/repositories/incelenen_ilan_store.dart';
+import 'ui/bakim_ekrani.dart';
 import 'ui/global_web_kabugu.dart';
 import 'ui/panel_rotasi.dart';
 import 'ui/gezgin.dart';
@@ -725,10 +726,13 @@ class HizmetCepApp extends StatelessWidget {
         // ⚠ PushKapisi (FCM yaşam döngüsü; izin yalnız girişte) ve
         // YasalKabulKapisi (yalnız API modu) ekran DIŞINDAN sarar; mevcut
         // builder yapısı (GlobalWebKabugu → OfflineBanner) AYNEN korunur.
-        builder: (context, child) => PushKapisi(
-          child: YasalKabulKapisi(
-            child: GlobalWebKabugu(
-              child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+        // ⚠ BakimKapisi (22 Eki) EN DIŞTA: bakım açıksa bütün ekranları örter.
+        builder: (context, child) => BakimKapisi(
+          child: PushKapisi(
+            child: YasalKabulKapisi(
+              child: GlobalWebKabugu(
+                child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+              ),
             ),
           ),
         ),

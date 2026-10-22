@@ -351,3 +351,6 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .kt-karsilastir { display:flex; gap:14px; flex-wrap:wrap; }
 .pencere.kt-pencere { width:min(560px, 92vw); }
 @media (max-width:600px) { .kt-medya { grid-template-columns:1fr; } }
+/* Bakım modu kartı (Duyurular, 22 Eki) */
+.bakim-kart.acik { border-color:#FCA5A5; background:#FEF2F2; }
+.bakim-kart h3 { margin-top:0; }

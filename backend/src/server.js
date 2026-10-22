@@ -20,6 +20,7 @@ import {
   ipTeshisi, istemciIp, jsonGonder,
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
+import { bakimDurumu, bakimdaAcikMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
@@ -133,6 +134,14 @@ export function uygulamaKur(db) {
       }
       if (req.method === 'GET' && (yol === '/admin' || (yol.startsWith('/admin/') && !yol.startsWith('/admin/v1/')))) {
         return await panelDosyasi(res, yol);
+      }
+      // ── BAKIM MODU (22 Eki): kullanıcı API'si 503 döner (admin etkilenmez).
+      if (yol.startsWith('/api/v1/') && !bakimdaAcikMi(yol)) {
+        const b = await bakimDurumu(db);
+        if (b.aktif) {
+          res.setHeader('Retry-After', '60');
+          throw new ApiHatasi(503, 'MAINTENANCE', b.mesaj || 'Bakım çalışması sürüyor');
+        }
       }
       const bulunan = r.bul(req.method, yol);
       if (bulunan === 'YONTEM') throw new ApiHatasi(405, 'METHOD_NOT_ALLOWED', 'Yöntem desteklenmiyor');
