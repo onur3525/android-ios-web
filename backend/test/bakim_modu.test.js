@@ -17,12 +17,13 @@ const { jwtImzala } = await import('../src/jwt.js');
 
 let db, sunucu, taban;
 const cerezler = {};
-async function istek(yol, { yontem = 'GET', govde, rol, jeton } = {}) {
+async function istek(yol, { yontem = 'GET', govde, rol, jeton, cihaz } = {}) {
   if (rol) await degisiklikOnayi(taban, yol, yontem, cerezler[rol]);
   const r = await fetch(taban + yol, {
     method: yontem,
     headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(rol ? { Cookie: cerezler[rol], 'X-HC-Admin': '1' } : {}),
-      ...(jeton ? { Authorization: `Bearer ${jeton}` } : {}) },
+      ...(jeton ? { Authorization: `Bearer ${jeton}` } : {}),
+      ...(cihaz ? { 'X-HC-Cihaz': cihaz, 'X-HC-Platform': 'android' } : {}) },
     body: govde ? JSON.stringify(govde) : undefined,
   });
   const m = await r.text();
@@ -97,71 +98,98 @@ async function kullanici(tel, eposta) {
   ).run(id, tel, eposta, `K${tel.slice(-2)}`, sifreOzetle(SIFRE), simdi(), simdi());
   return id;
 }
-const giris = (phone, password = SIFRE) => istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone, password } });
+const giris = (phone, cihaz, password = SIFRE) => istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone, password }, cihaz });
+const CIHAZ_A = 'a'.repeat(43); // uygulamanın ürettiği rastgele kimlik biçimi (base64url)
+const CIHAZ_B = 'b'.repeat(43);
+const bakim = (active) => istek('/admin/v1/maintenance', { yontem: 'PUT', rol: 'super_admin', govde: active ? { active, message: 'Planlı bakım çalışması' } : { active } });
+const cihazSayisi = async () => (await db.prepare('SELECT COUNT(*) n FROM maintenance_devices').get()).n;
 
-test('test hesabı: listedeki hesap bakımda giriş yapar ve kullanır; diğerleri bakım ekranında kalır', async () => {
+test('test hesabı: yalnız listedeki hesap, önceden tanınmış cihazından bakımda giriş yapar; kapı yalnız o cihazda açılır', async () => {
   const testciId = await kullanici('5321112233', 'testci@ornek.test');
   await kullanici('5324445566', 'normal@ornek.test');
-  // Bakım açıkken normal hesabın önceden açılmış oturumu da 503 alır.
-  await istek('/admin/v1/maintenance', { yontem: 'PUT', rol: 'super_admin', govde: { active: false } });
-  const normalOturum = (await giris('5324445566')).json;
-  await istek('/admin/v1/maintenance', { yontem: 'PUT', rol: 'super_admin', govde: { active: true, message: 'Planlı bakım çalışması' } });
+  await bakim(false);
+  const normalOturum = (await giris('5324445566', CIHAZ_B)).json;
+  assert.equal(await cihazSayisi(), 0, 'listede olmayan hesabın cihazı kaydedilmez');
 
-  // Liste yetkisi yalnız süper yönetici.
+  // Liste yetkisi yalnız süper yönetici; e-posta ya da telefonla bulunur.
   assert.equal((await istek('/admin/v1/maintenance/testers', { rol: 'content' })).durum, 403);
   assert.equal((await istek('/admin/v1/maintenance/testers', { yontem: 'POST', rol: 'content', govde: { account: 'testci@ornek.test' } })).durum, 403);
   assert.equal((await istek('/admin/v1/maintenance/testers', { yontem: 'POST', rol: 'super_admin', govde: { account: 'yok@ornek.test' } })).durum, 404);
   assert.equal((await istek('/admin/v1/maintenance/testers', { yontem: 'POST', rol: 'super_admin', govde: { account: '123' } })).durum, 400);
-
-  // Listede olmayan: doğru şifreyle bile oturum verilmez.
-  const red = await giris('5321112233');
-  assert.equal(red.durum, 503);
-  assert.equal(red.json.error.code, 'MAINTENANCE');
-  assert.equal((await giris('5321112233', 'YanlisSifre1')).durum, 401);
-
-  // E-postayla listeye eklenir (telefonla da bulunur — aynı hesap: 409).
   const ek = await istek('/admin/v1/maintenance/testers', { yontem: 'POST', rol: 'super_admin', govde: { account: 'Testci@Ornek.test' } });
   assert.equal(ek.durum, 200, JSON.stringify(ek.json));
   assert.equal(ek.json.id, testciId);
   assert.equal((await istek('/admin/v1/maintenance/testers', { yontem: 'POST', rol: 'super_admin', govde: { account: '0532 111 22 33' } })).durum, 409);
-  assert.deepEqual((await istek('/admin/v1/maintenance/testers', { rol: 'super_admin' })).json.map((u) => u.id), [testciId]);
   assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'maintenance.tester.add' AND target_id = ?").get(testciId));
 
-  // Test hesabı giriş yapar, API'yi kullanır; bakım bilgisi ona "bypass" der.
-  const g = await giris('5321112233');
+  // Bakım kapalıyken giriş cihazı tanıtır; cihaz başlığı yoksa/bozuksa tanıtmaz.
+  assert.equal((await giris('5321112233', undefined)).durum, 200);
+  assert.equal((await giris('5321112233', 'kisa')).durum, 200);
+  assert.equal(await cihazSayisi(), 0);
+  assert.equal((await giris('5321112233', CIHAZ_A)).durum, 200);
+  assert.equal((await giris('5321112233', CIHAZ_A)).durum, 200);
+  assert.equal(await cihazSayisi(), 1, 'aynı cihaz bir kez');
+  const kayit = await db.prepare('SELECT * FROM maintenance_devices').get();
+  assert.notEqual(kayit.device_hash, CIHAZ_A, 'ham kimlik saklanmaz');
+  const liste = (await istek('/admin/v1/maintenance/testers', { rol: 'super_admin' })).json;
+  assert.deepEqual(liste.map((u) => [u.id, u.devices.map((d) => d.platform)]), [[testciId, ['android']]]);
+
+  await bakim(true);
+  // Gizli kapı yalnız tanınmış cihazda; oturumsuz da bilinir (giriş için).
+  const cfg = async (o) => (await istek('/api/v1/config/app?platform=android', o)).json.maintenance;
+  assert.equal((await cfg({ cihaz: CIHAZ_A })).testerDevice, true);
+  assert.equal('testerDevice' in await cfg({ cihaz: CIHAZ_B }), false);
+  assert.equal('testerDevice' in await cfg({}), false);
+
+  // Bakımda: tanınmamış cihazdan, ya da listede olmayan hesapla oturum yok.
+  assert.equal((await giris('5321112233', CIHAZ_B)).durum, 503);
+  assert.equal((await giris('5321112233', undefined)).durum, 503);
+  assert.equal((await giris('5324445566', CIHAZ_A)).json.error.code, 'MAINTENANCE');
+  assert.equal((await giris('5321112233', CIHAZ_A, 'YanlisSifre1')).durum, 401);
+  assert.equal(await cihazSayisi(), 1, 'bakımda yeni cihaz tanıtılamaz');
+
+  // Tanınmış cihazdan test hesabı girer ve kullanır.
+  const g = await giris('5321112233', CIHAZ_A);
   assert.equal(g.durum, 200, JSON.stringify(g.json));
   const jeton = g.json.accessToken;
-  assert.equal((await istek('/api/v1/categories', { jeton })).durum, 200);
-  assert.equal((await istek('/api/v1/config/app?platform=android', { jeton })).json.maintenance.bypass, true);
-  assert.equal('bypass' in (await istek('/api/v1/config/app?platform=android')).json.maintenance, false, 'oturumsuz istekte yok');
-  const y = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: g.json.refreshToken } });
+  assert.equal((await istek('/api/v1/categories', { jeton, cihaz: CIHAZ_A })).durum, 200);
+  assert.equal((await istek('/api/v1/categories', { jeton, cihaz: CIHAZ_B })).durum, 503, 'jeton başka cihazda işe yaramaz');
+  assert.equal((await istek('/api/v1/categories', { jeton })).durum, 503);
+  assert.equal((await cfg({ jeton, cihaz: CIHAZ_A })).bypass, true);
+  assert.equal('bypass' in await cfg({ jeton, cihaz: CIHAZ_B }), false);
+  const y = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: g.json.refreshToken }, cihaz: CIHAZ_A });
   assert.equal(y.durum, 200, 'test hesabının oturumu yenilenir');
-  // Erişim jetonunun süresi dolmuş olsa da (imza doğru, oturum açık) test
-  // hesabı tanınır; döndürülmüş (iptal) oturumun jetonu tanınmaz.
+
+  // Erişim jetonunun süresi dolmuş olsa da (imza doğru, oturum açık) tanınır;
+  // döndürülmüş (iptal) oturumun jetonu tanınmaz.
   const yukOku = (t) => JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString());
   const eski = (t) => jwtImzala({ ...yukOku(t), exp: Math.floor(Date.now() / 1000) - 60 });
-  assert.equal((await istek('/api/v1/categories', { jeton: eski(y.json.accessToken) })).durum, 200);
-  assert.equal((await istek('/api/v1/config/app?platform=ios', { jeton: eski(y.json.accessToken) })).json.maintenance.bypass, true);
-  assert.equal((await istek('/api/v1/categories', { jeton: jeton })).durum, 503, 'yenilemeyle iptal edilen oturum');
-  assert.equal((await istek('/api/v1/categories', { jeton: eski(normalOturum.accessToken) })).durum, 503);
+  assert.equal((await istek('/api/v1/categories', { jeton: eski(y.json.accessToken), cihaz: CIHAZ_A })).durum, 200);
+  assert.equal((await istek('/api/v1/categories', { jeton, cihaz: CIHAZ_A })).durum, 503, 'yenilemeyle iptal edilen oturum');
 
-  // Normal hesap: API 503; yenileme 503 ama oturum SİLİNMEZ (bakım bitince sürer).
-  assert.equal((await istek('/api/v1/categories', { jeton: normalOturum.accessToken })).durum, 503);
-  assert.equal('bypass' in (await istek('/api/v1/config/app?platform=web', { jeton: normalOturum.accessToken })).json.maintenance, false);
-  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: normalOturum.refreshToken } })).durum, 503);
-  // Geçersiz jeton istisna sayılmaz.
-  assert.equal((await istek('/api/v1/categories', { jeton: 'bozuk' })).durum, 503);
+  // Normal hesap: API 503; yenileme 503 ama oturum SİLİNMEZ.
+  assert.equal((await istek('/api/v1/categories', { jeton: normalOturum.accessToken, cihaz: CIHAZ_A })).durum, 503);
+  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: normalOturum.refreshToken }, cihaz: CIHAZ_A })).durum, 503);
+  assert.equal((await istek('/api/v1/categories', { jeton: 'bozuk', cihaz: CIHAZ_A })).durum, 503);
 
-  // Listeden çıkarılınca test hesabı da bakım ekranını görür.
+  // Cihaz silinince o cihazda kapı da erişim de kapanır.
+  const cihazId = liste[0].devices[0].id;
+  assert.equal((await istek(`/admin/v1/maintenance/testers/${testciId}/devices/${cihazId}`, { yontem: 'DELETE', rol: 'super_admin', govde: {} })).durum, 204);
+  assert.equal((await istek('/api/v1/categories', { jeton: y.json.accessToken, cihaz: CIHAZ_A })).durum, 503);
+  assert.equal('testerDevice' in await cfg({ cihaz: CIHAZ_A }), false);
+  assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'maintenance.device.remove' AND target_id = ?").get(testciId));
+
+  // Listeden çıkarılınca cihazları da silinir.
+  await bakim(false);
+  await giris('5321112233', CIHAZ_A);
+  assert.equal(await cihazSayisi(), 1);
   assert.equal((await istek(`/admin/v1/maintenance/testers/${testciId}`, { yontem: 'DELETE', rol: 'super_admin', govde: {} })).durum, 204);
-  assert.equal((await istek('/api/v1/categories', { jeton: y.json.accessToken })).durum, 503);
+  assert.equal(await cihazSayisi(), 0);
   assert.equal((await istek(`/admin/v1/maintenance/testers/${testciId}`, { yontem: 'DELETE', rol: 'super_admin', govde: {} })).durum, 404);
   assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'maintenance.tester.remove' AND target_id = ?").get(testciId));
-
-  // Bakım kapanınca normal hesabın oturumu sürer.
-  await istek('/admin/v1/maintenance', { yontem: 'PUT', rol: 'super_admin', govde: { active: false } });
+  // Bakım kapalıyken normal hesabın oturumu sürer.
   assert.equal((await istek('/api/v1/categories', { jeton: normalOturum.accessToken })).durum, 200);
-  await istek('/admin/v1/maintenance', { yontem: 'PUT', rol: 'super_admin', govde: { active: true, message: 'Planlı bakım çalışması' } });
+  await bakim(true);
 });
 
 test('bakım kapanır: API yeniden açılır, sürüm ayarları korunur', async () => {

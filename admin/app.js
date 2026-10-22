@@ -551,19 +551,30 @@ function testHesaplariKarti(liste) {
   const ekle = async () => {
     const d = await form('Bakımda erişebilecek hesap ekle', [
       { ad: 'account', etiket: 'Kullanıcının e-postası ya da telefon numarası', zorunlu: true },
-    ], 'Ekle', { aciklama: 'Hesap uygulamada kayıtlı olmalı. Bakım açıkken bu hesap şifresiyle giriş yapıp uygulamayı ve web sitesini normal kullanır; diğer herkes bakım ekranını görür.' });
+    ], 'Ekle', { aciklama: 'Hesap uygulamada kayıtlı olmalı. Ekledikten sonra, bakım KAPALIYKEN kullanacağınız telefonda ve tarayıcıda bu hesapla bir kez giriş yapın: cihaz otomatik tanınır. Bakım açıkken yalnız tanınmış cihazlarda logoya 2 sn basılı tutunca giriş ekranı açılır.' });
     if (d && await guvenli(() => api('/maintenance/testers', { yontem: 'POST', govde: { account: d.account } }))) { bildir('Hesap listeye eklendi'); yenile(); }
   };
+  const PLATFORM_ADI = { android: 'Android', ios: 'iPhone', web: 'Web', bilinmiyor: 'Bilinmiyor' };
+  const cihazSil = async (u, c) => {
+    const d = await form(`Cihaz silinsin mi? — ${u.name} · ${PLATFORM_ADI[c.platform] ?? c.platform}`, [], 'Sil',
+      { tehlike: true, aciklama: 'Bakım açıkken bu cihazda giriş kapısı açılmaz. Cihaz, bakım kapalıyken bu hesapla yeniden giriş yapılırsa tekrar tanınır.' });
+    if (d && await guvenli(() => api(`/maintenance/testers/${u.id}/devices/${c.id}`, { yontem: 'DELETE', govde: {} }))) { bildir('Cihaz silindi'); yenile(); }
+  };
+  const cihazlar = (u) => (u.devices.length
+    ? h('div', {}, u.devices.map((c) => h('div', { class: 'not' },
+      `${PLATFORM_ADI[c.platform] ?? c.platform} · ilk: ${tarih(c.createdAt)} · son: ${tarih(c.lastSeenAt)} `,
+      h('button', { class: 'btn ikincil kt-kucuk', onclick: () => cihazSil(u, c) }, 'Sil'))))
+    : h('span', { class: 'not' }, 'Tanınmış cihaz yok — bakım kapalıyken bu hesapla giriş yapın'));
   const cikar = async (u) => {
-    const d = await form(`Listeden çıkarılsın mı? — ${u.name}`, [], 'Çıkar', { tehlike: true, aciklama: 'Bakım açıkken bu hesap da bakım ekranını görür.' });
+    const d = await form(`Listeden çıkarılsın mı? — ${u.name}`, [], 'Çıkar', { tehlike: true, aciklama: 'Bakım açıkken bu hesap da bakım ekranını görür; tanınmış cihazları silinir.' });
     if (d && await guvenli(() => api(`/maintenance/testers/${u.id}`, { yontem: 'DELETE', govde: {} }))) { bildir('Hesap listeden çıkarıldı'); yenile(); }
   };
   return h('div', { class: 'kart' },
     h('div', { class: 'ust' }, h('h3', {}, 'Bakımda erişebilecek hesaplar'), h('button', { class: 'btn ikincil', onclick: ekle }, 'Hesap ekle')),
-    h('p', { class: 'not' }, 'Bakım modunda yalnız bu hesaplar şifreyle giriş yapıp değişiklikleri kullanıcıların göreceği hâliyle kontrol edebilir.'),
+    h('p', { class: 'not' }, 'Bakım modunda yalnız bu hesaplar, tanınmış cihazlarından şifreyle giriş yapıp değişiklikleri kullanıcıların göreceği hâliyle kontrol edebilir. Cihaz, bakım kapalıyken o hesapla giriş yapılınca otomatik tanınır; bakım açıkken yeni cihaz tanıtılamaz.'),
     liste.length
       ? tablo([{ baslik: 'Ad', deger: (u) => h('a', { href: `#/kullanici/${u.id}` }, u.name) }, { baslik: 'E-posta', deger: (u) => u.email || '—' },
-        { baslik: 'Telefon', deger: (u) => u.phone }, { baslik: '', deger: (u) => h('button', { class: 'btn tehlike kt-kucuk', onclick: () => cikar(u) }, 'Çıkar') }], liste)
+        { baslik: 'Telefon', deger: (u) => u.phone }, { baslik: 'Tanınmış cihazlar', deger: cihazlar }, { baslik: '', deger: (u) => h('button', { class: 'btn tehlike kt-kucuk', onclick: () => cikar(u) }, 'Çıkar') }], liste)
       : h('p', { class: 'not' }, 'Listede hesap yok.'));
 }
 

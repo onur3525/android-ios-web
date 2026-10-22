@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
 import '../../core/bakim_durumu.dart';
+import '../../core/boot.dart' show currentPlatform;
+import '../../core/cihaz_kimligi.dart';
 import 'sabitlemeli_istemci.dart';
 import 'api_config.dart';
 import 'api_error_mapper.dart';
@@ -145,6 +147,7 @@ class ApiClient {
       'Accept': 'application/json',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
       if (cerezliOturum) 'X-HC-Web': '1',
+      ...await _cihazBasliklari(),
     };
     final token = await tokens.accessToken();
     if (token != null) {
@@ -291,6 +294,17 @@ class ApiClient {
   Future<bool> cerezleOturumuSurdur() =>
       cerezliOturum ? _refreshOnce() : Future.value(false);
 
+  /// ⚠ CİHAZ KİMLİĞİ (22 Eki · bakımda test hesabı): rastgele cihaz
+  /// kimliği ve platform adı. Sunucu yalnız admin'in listesindeki hesaplar
+  /// için kullanır (bkz. `core/cihaz_kimligi.dart`). Kimlik yoksa başlık da yok.
+  Future<Map<String, String>> _cihazBasliklari() async {
+    final c = await CihazKimligi.i.deger();
+    if (c == null) {
+      return const {};
+    }
+    return {'X-HC-Cihaz': c, 'X-HC-Platform': currentPlatform()};
+  }
+
   /// Son yenileme sunucu tarafından KESİN reddedildi mi (401/403)?
   bool _sonYenilemeReddedildi = false;
 
@@ -308,6 +322,7 @@ class ApiClient {
               headers: {
                 'Content-Type': 'application/json',
                 if (cerezliOturum) 'X-HC-Web': '1',
+                ...await _cihazBasliklari(),
               },
               body: jsonEncode(
                   rt == null ? <String, String>{} : {'refreshToken': rt}))

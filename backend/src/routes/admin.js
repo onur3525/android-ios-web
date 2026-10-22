@@ -906,13 +906,30 @@ export function adminRotalar(r, db) {
   // Listedeki kullanıcı hesabı bakım açıkken şifresiyle giriş yapıp
   // uygulamayı kullanır; diğer herkes bakım ekranını görür. Hesap e-posta
   // ya da telefonla bulunur. Ekleme/çıkarma şifre + doğrulama kodu ister.
-  const testHesabiGorunumu = (u) => ({
+  // Tanınmış cihazlar bakım KAPALIYKEN o hesapla giriş yapılınca otomatik
+  // kaydedilir; buradan tek tek silinir.
+  const testHesabiGorunumu = (u, cihazlar = []) => ({
     id: u.id, name: u.name, phone: u.phone, email: u.email ?? '', roles: u.roles.split(','), status: u.status,
+    devices: cihazlar.map((c) => ({ id: c.id, platform: c.platform, createdAt: c.created_at, lastSeenAt: c.last_seen_at })),
   });
   r.get('/admin/v1/maintenance/testers', async (ctx) => {
     yetkiIste(ctx.admin, 'maintenance.testers');
-    return (await db.prepare('SELECT * FROM users WHERE maintenance_bypass = TRUE AND deleted_at IS NULL ORDER BY name').all())
-      .map(testHesabiGorunumu);
+    const kisiler = await db.prepare('SELECT * FROM users WHERE maintenance_bypass = TRUE AND deleted_at IS NULL ORDER BY name').all();
+    const cihazlar = await db.prepare(
+      `SELECT d.* FROM maintenance_devices d JOIN users u ON u.id = d.user_id
+        WHERE u.maintenance_bypass = TRUE AND u.deleted_at IS NULL ORDER BY d.created_at`,
+    ).all();
+    return kisiler.map((u) => testHesabiGorunumu(u, cihazlar.filter((c) => c.user_id === u.id)));
+  });
+  r.delete('/admin/v1/maintenance/testers/:id/devices/:deviceId', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.testers');
+    const c = await db.prepare('SELECT * FROM maintenance_devices WHERE id = ? AND user_id = ?').get(ctx.params.deviceId, ctx.params.id);
+    if (!c) throw hata.bulunamadi('Cihaz bulunamadı');
+    await db.tx(async () => {
+      await db.prepare('DELETE FROM maintenance_devices WHERE id = ?').run(c.id);
+      await yaz(ctx, { islem: 'maintenance.device.remove', hedefTur: 'user', hedefId: c.user_id, once: { deviceId: c.id, platform: c.platform } });
+    });
+    return undefined;
   });
   r.post('/admin/v1/maintenance/testers', async (ctx) => {
     yetkiIste(ctx.admin, 'maintenance.testers');
@@ -935,6 +952,7 @@ export function adminRotalar(r, db) {
     if (!u) throw hata.bulunamadi('Hesap listede değil');
     await db.tx(async () => {
       await db.prepare('UPDATE users SET maintenance_bypass = FALSE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+      await db.prepare('DELETE FROM maintenance_devices WHERE user_id = ?').run(u.id);
       await yaz(ctx, { islem: 'maintenance.tester.remove', hedefTur: 'user', hedefId: u.id, once: { maintenanceBypass: true } });
     });
     return undefined;

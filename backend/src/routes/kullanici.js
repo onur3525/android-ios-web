@@ -644,7 +644,7 @@ export function kullaniciRotalar(r, db) {
       throw genel();
     }
     durumKapisi(u);
-    await bakimGirisKapisi(db, u); // 032: bakımda yalnız test hesabı
+    await bakimGirisKapisi(db, u, ctx.req); // 032: bakımda yalnız test hesabı (tanınmış cihaz)
     await db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(u.id);
     return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req));
   });
@@ -703,7 +703,7 @@ export function kullaniciRotalar(r, db) {
     durumKapisi(u);
     // 032: bakımda yalnız test hesabı yenilenir. 503 oturumu SİLMEZ
     // (istemci yalnız 401/403'te çıkış yapar); bakım bitince sürer.
-    await bakimGirisKapisi(db, u);
+    await bakimGirisKapisi(db, u, ctx.req);
     // Firebase'de dışarıda yapılan şifre sıfırlama / iptal (bkz. yukarı).
     await firebaseDisDegisiklikleriniUzlastir(db, u);
     if ((await db.prepare('SELECT revoked_at FROM user_sessions WHERE id = ?').get(o.id))?.revoked_at) throw hata.kimlik('Oturum sonlandırılmış');
@@ -745,7 +745,7 @@ export function kullaniciRotalar(r, db) {
     if (!u) throw hata.bulunamadi('Bu bilgilerle kayıtlı hesap bulunamadı');
     if (u.firebase_uid && u.firebase_uid !== yuk.sub) throw new ApiHatasi(401, 'AUTH_FAILED', 'Hesap başka bir doğrulamaya bağlı');
     durumKapisi(u);
-    await bakimGirisKapisi(db, u); // 032: bakımda yalnız test hesabı
+    await bakimGirisKapisi(db, u, ctx.req); // 032: bakımda yalnız test hesabı (tanınmış cihaz)
     // İptal edilmiş (şifre sıfırlama/değiştirme, telefon değişikliği öncesi) belgeyle oturum açılmaz.
     await firebaseBelgesiIptalDenetimi(db, u, yuk);
     // E-posta: tek kaynak (firebaseEpostasiniIsle). Farklı adres YALNIZ

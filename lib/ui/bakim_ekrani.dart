@@ -204,7 +204,8 @@ class BakimKapisi extends StatelessWidget {
                 mesaj: d.mesaj,
                 bitis: d.bitis,
                 onYenile: () => unawaited(d.kontrolEt()),
-                onGiris: () {
+                // Kapı YALNIZ tanınmış test cihazında (sunucu kararı).
+                onGiris: !d.testCihazi ? null : () {
                   final nav = gezginAnahtari.currentState;
                   if (nav == null) {
                     return;

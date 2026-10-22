@@ -116,7 +116,7 @@ export function uygulamaKur(db) {
       if (corsIzinli) {
         res.writeHead(204, {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key, X-HC-Web',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key, X-HC-Web, X-HC-Cihaz, X-HC-Platform',
           'Access-Control-Max-Age': '600',
         });
       } else {

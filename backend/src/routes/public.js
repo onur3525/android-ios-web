@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { hata } from '../http.js';
 import { DESTEK_BILGISI } from '../destek_bilgisi.js';
-import { bakimIstisnasiMi } from '../bakim_modu.js';
+import { bakimIstisnasiMi, testCihaziMi } from '../bakim_modu.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
@@ -118,9 +118,11 @@ export function publicRotalar(r, db) {
         active: aktif,
         message: c?.maintenance_message ?? null,
         endAt: c?.maintenance_end_at ?? null,
-        // 032: istek bakımda erişebilen hesabın oturumuyla geldiyse uygulama
-        // bakım ekranını göstermez (yalnız bakım açıkken eklenir).
+        // 032 (yalnız bakım açıkken eklenir):
+        //   bypass       → listedeki hesabın oturumu + tanınmış cihaz: bakım ekranı yok
+        //   testerDevice → bu cihaz tanınmış test cihazı: gizli giriş kapısı açılır
         ...(aktif && await bakimIstisnasiMi(db, ctx.req) ? { bypass: true } : {}),
+        ...(aktif && await testCihaziMi(db, ctx.req) ? { testerDevice: true } : {}),
       },
       release: {
         minSupportedVersion: c?.min_version ?? null,

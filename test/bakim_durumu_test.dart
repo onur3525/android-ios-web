@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/core/bakim_durumu.dart';
+import 'package:hizmetcep/core/cihaz_kimligi.dart';
 import 'package:hizmetcep/ui/bakim_ekrani.dart';
 
 void main() {
@@ -44,6 +45,16 @@ void main() {
         '${iki(t.day)}.${iki(t.month)}.${t.year} ${iki(t.hour)}:${iki(t.minute)}');
   });
 
+  test('032: cihaz kimliği rastgele, kalıba uygun; kişisel bilgi içermez', () {
+    final a = CihazKimligi.uret();
+    final b = CihazKimligi.uret();
+    expect(a.length, 43);
+    expect(CihazKimligi.gecerliMi(a), isTrue);
+    expect(a, isNot(b));
+    expect(CihazKimligi.gecerliMi('kisa'), isFalse);
+    expect(CihazKimligi.gecerliMi(null), isFalse);
+  });
+
   test('032: listedeki hesap (bypass) için bakım ekranı yok', () {
     expect(bakimEtkinMi({'active': true}), isTrue);
     expect(bakimEtkinMi({'active': true, 'bypass': true}), isFalse);
@@ -75,7 +86,8 @@ void main() {
     expect(acildi, 1);
   });
 
-  testWidgets('032: giriş açıkken örtü kalkar; kapı yoksa algılayıcı da yok', (t) async {
+  testWidgets('032: kapı YALNIZ tanınmış test cihazında; giriş açıkken örtü kalkar', (t) async {
+    final kapi = find.byKey(const ValueKey('bakim-giris-kapisi'));
     await t.pumpWidget(MaterialApp(
       builder: (context, child) => BakimKapisi(child: child!),
       home: const Scaffold(body: Text('ana ekran')),
@@ -83,6 +95,12 @@ void main() {
     BakimDurumu.i.uygula({'active': true, 'message': 'Bakım'});
     await t.pump();
     expect(find.text('Bakımdayız'), findsOneWidget);
+    expect(kapi, findsNothing, reason: 'tanınmamış cihazda kapı yok');
+    expect(BakimDurumu.i.testCihazi, isFalse);
+    BakimDurumu.i.uygula({'active': true, 'message': 'Bakım', 'testerDevice': true});
+    await t.pump();
+    expect(BakimDurumu.i.testCihazi, isTrue);
+    expect(kapi, findsOneWidget);
     BakimDurumu.i.girisAc();
     await t.pump();
     expect(find.text('Bakımdayız'), findsNothing);

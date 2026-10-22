@@ -36,8 +36,14 @@ class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
   VoidCallback? _bitince;
   bool _sorguda = false;
   bool _girisAcik = false;
+  bool _testCihazi = false;
 
   bool get aktif => _aktif;
+
+  /// Bu cihaz admin listesindeki bir hesabın TANINMIŞ cihazı mı? (sunucu
+  /// `testerDevice`). Bakım ekranındaki gizli giriş kapısı yalnız o zaman
+  /// vardır; diğer cihazlarda logoya basmak hiçbir şey yapmaz.
+  bool get testCihazi => _testCihazi;
 
   /// Bakım ekranındaki gizli giriş kapısından (logoya 2 sn basılı tutma)
   /// giriş ekranı açıkken bakım örtüsü kalkar. Giriş ekranı kapanınca
@@ -64,9 +70,11 @@ class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
     final aktif = bakimEtkinMi(harita);
     final mesaj = harita['message'] is String ? harita['message'] as String : null;
     final bitis = harita['endAt'] is String ? harita['endAt'] as String : null;
-    if (aktif == _aktif && mesaj == _mesaj && bitis == _bitis) {
+    final testCihazi = aktif && harita['testerDevice'] == true;
+    if (aktif == _aktif && mesaj == _mesaj && bitis == _bitis && testCihazi == _testCihazi) {
       return;
     }
+    _testCihazi = testCihazi;
     final bitti = _aktif && !aktif;
     _aktif = aktif;
     _mesaj = mesaj;
@@ -125,6 +133,7 @@ class BakimDurumu extends ChangeNotifier with WidgetsBindingObserver {
     _bitince = null;
     _aktif = false;
     _girisAcik = false;
+    _testCihazi = false;
     _mesaj = null;
     _bitis = null;
   }
