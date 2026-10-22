@@ -26,7 +26,6 @@ const MENU = [
   ['katalog', 'Kategori ve Hizmetler', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['bolgeler', 'İl / İlçe / Mahalle', ['super_admin', 'content', 'moderator', 'operations', 'readonly']],
   ['yasal', 'Yasal Belgeler', ['super_admin', 'content', 'readonly']],
-  ['destek', 'Destek Bilgisi', ['super_admin', 'content', 'readonly']],
   ['duyurular', 'Duyurular', ['super_admin', 'content']],
   ['ayarlar', 'Uygulama Ayarları', ['super_admin', 'operations', 'readonly']],
   ['gonderimler', 'SMS / E-posta Kayıtları', ['super_admin', 'moderator', 'operations']],
@@ -368,17 +367,6 @@ SAYFALAR.belge = async (slug) => {
 };
 
 // ── Destek / ayarlar / duyurular ──────────────────────────────
-SAYFALAR.destek = async () => {
-  const yazabilir = ['super_admin', 'content'].includes(ben.role); // sunucu: support.write
-  const d = await api('/support');
-  const ac = h('textarea', {}, d?.description ?? '');
-  const ep = h('input', { class: 'genis', type: 'email', value: d?.email ?? '' });
-  const kaydet = async () => { if (await guvenli(() => api('/support', { yontem: 'PUT', govde: { description: ac.value, email: ep.value } }))) bildir('Kaydedildi'); };
-  return h('div', {}, h('h2', {}, 'Destek Bilgisi'), h('div', { class: 'kart' },
-    h('p', { class: 'not' }, 'Uygulamadaki Destek Merkezi panelinde ve kullanıcıya giden SMS/e-postalardaki iletişim satırında kullanılır.'),
-    h('label', {}, 'Açıklama'), ac, h('label', {}, 'Destek e-postası'), ep, h('br'), h('br'), yazabilir ? h('button', { class: 'btn', onclick: kaydet }, 'Kaydet') : null));
-};
-
 SAYFALAR.ayarlar = async () => {
   const yazabilir = ['super_admin', 'operations'].includes(ben.role);
   const liste = await api('/config/app');

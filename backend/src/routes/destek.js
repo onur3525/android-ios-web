@@ -19,6 +19,7 @@
 // ⚠ Kullanıcı yalnız KENDİ taleplerini görür (başkasınınki 404).
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
+import { DESTEK_BILGISI } from '../destek_bilgisi.js';
 import { yetkiIste, yetkiliMi } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { gonder } from '../bildirim.js';
@@ -187,8 +188,7 @@ export function destekRotalar(r, db) {
     // Uygulamadan gelen talep: yalnız DOĞRULANMIŞ e-postaya; yoksa FAILED.
     // Kullanıcının bu e-postaya yanıtı destek adresine döner (Reply-To) ve
     // konudaki talep numarasıyla aynı talebe eklenir.
-    let destek = null;
-    try { destek = await db.prepare('SELECT email FROM support_info WHERE id = 1').get(); } catch { /* Reply-To'suz gider */ }
+    const destek = DESTEK_BILGISI;
     const dogrulanmis = (t.user_email_verified === 1 || t.user_email_verified === true) && t.user_email ? t.user_email : null;
     const e = await gonder(db, {
       kullaniciId: t.user_id, kanal: 'EMAIL', sablon: 'DESTEK_YANITI', denetimRef: id,
