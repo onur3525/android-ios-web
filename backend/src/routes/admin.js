@@ -16,6 +16,7 @@ import { denetimYaz } from '../audit.js';
 import { config } from '../config.js';
 import { simdi } from '../db.js';
 import { fotoSil, fotoYukle } from '../katalog_foto.js';
+import { IL_ILCE_KAYNAK, ILLER, ilBul } from '../il_ilce_listesi.js';
 import { bakimOnbellegiTemizle } from '../bakim_modu.js';
 import { ApiHatasi, HizSiniri, cerez, hata } from '../http.js';
 
@@ -526,6 +527,59 @@ export function adminRotalar(r, db) {
     id: x.id, name: x.name, active: x.active === 1, updatedAt: x.updated_at,
     ...(x.city_id ? { cityId: x.city_id, allDistrictsSupported: x.all_supported === 1 } : {}),
     ...(x.district_id ? { districtId: x.district_id, postalCode: x.postal_code } : {}),
+  });
+
+  // ── HAZIR İL / İLÇE LİSTESİ (22 Eki): seçerek ekleme ──
+  // Admin listeden il seçer; il ilçeleriyle birlikte eklenir. Var olan
+  // il/ilçe atlanır (adla eşleşir). Listede olmayan ad bu uçla eklenemez.
+  r.get('/admin/v1/regions/catalog', async (ctx) => {
+    yetkiIste(ctx.admin, 'regions.read');
+    const kayitli = new Set((await db.prepare('SELECT name FROM cities WHERE deleted_at IS NULL').all()).map((x) => x.name));
+    return {
+      source: IL_ILCE_KAYNAK,
+      cities: ILLER.map((i) => ({ code: i.kod, name: i.ad, districtCount: i.ilceler.length, added: kayitli.has(i.ad) })),
+    };
+  });
+
+  r.get('/admin/v1/regions/catalog/:code', async (ctx) => {
+    yetkiIste(ctx.admin, 'regions.read');
+    const il = ilBul(ctx.params.code);
+    if (!il) throw hata.bulunamadi('İl listede yok');
+    const kayit = await db.prepare('SELECT id FROM cities WHERE name = ? AND deleted_at IS NULL').get(il.ad);
+    const var_ = new Set(kayit ? (await db.prepare('SELECT name FROM districts WHERE city_id = ? AND deleted_at IS NULL').all(kayit.id)).map((x) => x.name) : []);
+    return { code: il.kod, name: il.ad, cityId: kayit?.id ?? null, districts: il.ilceler.map((d) => ({ name: d, added: var_.has(d) })) };
+  });
+
+  r.post('/admin/v1/regions/import', async (ctx) => {
+    yetkiIste(ctx.admin, 'regions.write');
+    const il = ilBul(ctx.body.cityCode);
+    if (!il) throw hata.dogrulama('İl listede yok');
+    const istenen = ctx.body.districts === 'all' ? [...il.ilceler] : ctx.body.districts;
+    if (!Array.isArray(istenen)) throw hata.dogrulama('districts bir liste ya da "all" olmalıdır');
+    const yabanci = istenen.filter((d) => !il.ilceler.includes(d));
+    if (yabanci.length) throw hata.dogrulama(`Bu ilçeler ${il.ad} listesinde yok: ${yabanci.slice(0, 5).join(', ')}`);
+    const z = simdi();
+    let ilEklendi = false;
+    let eklenen = 0;
+    let cityId;
+    await db.tx(async () => {
+      const kayit = await db.prepare('SELECT id FROM cities WHERE name = ? AND deleted_at IS NULL').get(il.ad);
+      cityId = kayit?.id;
+      if (!cityId) {
+        cityId = randomUUID();
+        await db.prepare('INSERT INTO cities (id, name, active, created_at, updated_at) VALUES (?, ?, TRUE, ?, ?)').run(cityId, il.ad, z, z);
+        ilEklendi = true;
+      }
+      const var_ = new Set((await db.prepare('SELECT name FROM districts WHERE city_id = ? AND deleted_at IS NULL').all(cityId)).map((x) => x.name));
+      for (const d of [...new Set(istenen)]) {
+        if (var_.has(d)) continue;
+        await db.prepare('INSERT INTO districts (id, city_id, name, active, all_supported, created_at, updated_at) VALUES (?, ?, ?, TRUE, FALSE, ?, ?)').run(randomUUID(), cityId, d, z, z);
+        eklenen += 1;
+      }
+      await yaz(ctx, { islem: 'region.import', hedefTur: 'city', hedefId: cityId,
+        sonra: { city: il.ad, cityAdded: ilEklendi, districtsAdded: eklenen, source: `${IL_ILCE_KAYNAK.depo}@${IL_ILCE_KAYNAK.surum.slice(0, 7)}` } });
+    });
+    return { cityId, city: il.ad, cityAdded: ilEklendi, districtsAdded: eklenen, skipped: istenen.length - eklenen };
   });
 
   for (const [yol, b] of Object.entries(BOLGE)) {

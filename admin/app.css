@@ -382,3 +382,9 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 /* Bakım modu kartı (Duyurular, 22 Eki) */
 .bakim-kart.acik { border-color:#FCA5A5; background:#FEF2F2; }
 .bakim-kart h3 { margin-top:0; }
+/* Hazır il/ilçe listesi seçimi (22 Eki) */
+.pencere.bolge-secim { width:min(560px, 94vw); }
+.bolge-liste { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:4px 12px; max-height:50vh; overflow:auto; border:1px solid var(--cizgi, #E8ECF3); border-radius:8px; padding:10px; margin:8px 0 12px; }
+.bolge-liste label { font-size:14px; display:flex; align-items:center; gap:6px; }
+.bolge-liste label.ekli { color:#94A3B8; }
+.bolge-tumu { font-weight:600; font-size:14px; }
