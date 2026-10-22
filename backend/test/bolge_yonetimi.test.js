@@ -62,3 +62,46 @@ test('ilçe mahalleleriyle birlikte silinir; il ve diğer ilçeler etkilenmez', 
   assert.ok(await db.prepare('SELECT 1 FROM cities WHERE id = ? AND deleted_at IS NULL').get(il.id));
   assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'region.district.delete' AND target_id = ?").get(hedef.id));
 });
+
+// ── HAZIR İL / İLÇE LİSTESİ (22 Eki) ──
+test('hazır liste: 81 il, 973 ilçe; kaynak bilgisi; ekli il işaretli', async () => {
+  const k = await istek('/admin/v1/regions/catalog');
+  assert.equal(k.durum, 200);
+  assert.equal(k.json.cities.length, 81);
+  assert.equal(k.json.cities.reduce((a, c) => a + c.districtCount, 0), 973);
+  assert.match(k.json.source.depo, /github\.com\/muratgozel\/turkey-neighbourhoods/);
+  assert.equal(k.json.cities.find((c) => c.code === '34').added, false);
+  const ist = (await istek('/admin/v1/regions/catalog/34')).json;
+  assert.equal(ist.name, 'İstanbul');
+  assert.equal(ist.districts.length, 39);
+  assert.equal(ist.cityId, null);
+});
+
+test('İstanbul tek seferde ilçeleriyle eklenir; tekrar ekleme atlanır; listede olmayan ad reddedilir', async () => {
+  assert.equal((await istek('/admin/v1/regions/import', { yontem: 'POST', govde: { cityCode: '34', districts: ['Kadıköy', 'Uydurma İlçe'] } })).durum, 400);
+  assert.equal((await istek('/admin/v1/regions/import', { yontem: 'POST', govde: { cityCode: '99', districts: 'all' } })).durum, 400);
+  const r1 = await istek('/admin/v1/regions/import', { yontem: 'POST', govde: { cityCode: '34', districts: ['Kadıköy', 'Üsküdar'] } });
+  assert.equal(r1.durum, 200, JSON.stringify(r1.json));
+  assert.deepEqual({ ...r1.json, cityId: undefined }, { cityId: undefined, city: 'İstanbul', cityAdded: true, districtsAdded: 2, skipped: 0 });
+  const r2 = await istek('/admin/v1/regions/import', { yontem: 'POST', govde: { cityCode: '34', districts: 'all' } });
+  assert.deepEqual({ ...r2.json, cityId: undefined }, { cityId: undefined, city: 'İstanbul', cityAdded: false, districtsAdded: 37, skipped: 2 });
+  assert.equal(r2.json.cityId, r1.json.cityId, 'aynı il');
+  assert.equal((await istek(`/admin/v1/regions/districts?cityId=${r1.json.cityId}`)).json.length, 39);
+  assert.ok((await istek('/admin/v1/regions/catalog/34')).json.districts.every((d) => d.added));
+  assert.ok(await db.prepare("SELECT 1 FROM audit_log WHERE action = 'region.import'").get());
+});
+
+test('mevcut il (elle eklenmiş, ilçesiz) listeden ilçeleriyle tamamlanır; ikinci il oluşmaz', async () => {
+  const el = await istek('/admin/v1/regions/cities', { yontem: 'POST', govde: { name: 'Ankara' } });
+  assert.equal(el.durum, 200);
+  const r = await istek('/admin/v1/regions/import', { yontem: 'POST', govde: { cityCode: '06', districts: 'all' } });
+  assert.equal(r.json.cityAdded, false);
+  assert.equal(r.json.cityId, el.json.id);
+  assert.equal(r.json.districtsAdded, 25);
+  assert.equal(Number((await db.prepare("SELECT COUNT(*) n FROM cities WHERE name = 'Ankara' AND deleted_at IS NULL").get()).n), 1);
+});
+
+test('hazır liste dosyası üretim imajına kopyalanır', async () => {
+  const { readFileSync } = await import('node:fs');
+  assert.match(readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8'), /^COPY backend\/veri \.\/veri$/m);
+});

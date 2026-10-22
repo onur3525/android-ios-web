@@ -309,10 +309,13 @@ SAYFALAR.bolgeler = async (tur = 'cities', ustId = '', ustAd = '') => {
     neighborhoods: { baslik: `${ustAd} — Mahalleler`, alt: null, param: 'districtId' },
   }[tur];
   const liste = await api(`/regions/${tur}${TUR.param ? `?${TUR.param}=${encodeURIComponent(ustId)}` : ''}`);
+  // Mahalle elle eklenir; il ve ilçe hazır listeden seçilir (22 Eki).
   const ekle = async () => {
-    const alanlar = [{ ad: 'name', etiket: 'Ad', zorunlu: true }];
-    if (tur === 'neighborhoods') alanlar.push({ ad: 'postalCode', etiket: 'Posta kodu (isteğe bağlı)', desen: '^\\d{5}$' });
-    const d = await form('Ekle', alanlar);
+    if (tur === 'cities') return ilListedenEkle();
+    if (tur === 'districts') return ilceListedenEkle(ustAd);
+    const alanlar = [{ ad: 'name', etiket: `${ustAd} — mahalle adı`, zorunlu: true }];
+    alanlar.push({ ad: 'postalCode', etiket: 'Posta kodu (isteğe bağlı)', desen: '^\\d{5}$' });
+    const d = await form(`${ustAd} — Mahalle ekle`, alanlar);
     if (d && await guvenli(() => api(`/regions/${tur}`, { yontem: 'POST', govde: { ...d, ...(TUR.param ? { [TUR.param]: ustId } : {}) } }))) { bildir('Eklendi'); yenile(); }
   };
   const duzenle = async (x) => {
@@ -346,6 +349,63 @@ SAYFALAR.bolgeler = async (tur = 'cities', ustId = '', ustAd = '') => {
           : h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Sil')) : '') },
     ], liste));
 };
+
+// ── HAZIR İL / İLÇE LİSTESİ (22 Eki): yazmadan, seçerek ekleme ──
+// Kaynak: GitHub muratgozel/turkey-neighbourhoods (PTT verisi), koda gömülü.
+function secimPenceresi(baslik, aciklama, ogeler, onay) {
+  // ogeler: [{ deger, etiket, ekli }] — eklenmiş olanlar işaretli ve kapalı.
+  return new Promise((coz) => {
+    const kutular = ogeler.map((o) => ({ o, g: h('input', { type: 'checkbox', ...(o.ekli ? { checked: true, disabled: true } : { checked: true }) }) }));
+    const tumu = h('input', { type: 'checkbox', checked: true });
+    tumu.addEventListener('change', () => { for (const k of kutular) if (!k.o.ekli) k.g.checked = tumu.checked; });
+    const kapat = (v) => { perde.remove(); coz(v); };
+    const perde = h('div', { class: 'perde', role: 'dialog', 'aria-modal': 'true' },
+      h('div', { class: 'pencere bolge-secim' },
+        h('h3', {}, baslik), h('p', { class: 'not' }, aciklama),
+        h('label', { class: 'bolge-tumu' }, tumu, ' Tümünü seç'),
+        h('div', { class: 'bolge-liste' }, kutular.map((k) => h('label', { class: k.o.ekli ? 'ekli' : '' }, k.g, ` ${k.o.etiket}${k.o.ekli ? ' (ekli)' : ''}`))),
+        h('div', { class: 'tuslar' },
+          h('button', { class: 'btn ikincil', onclick: () => kapat(null) }, 'Vazgeç'),
+          h('button', { class: 'btn', onclick: () => kapat(kutular.filter((k) => !k.o.ekli && k.g.checked).map((k) => k.o.deger)) }, onay))));
+    perde.addEventListener('keydown', (e) => { if (e.key === 'Escape') kapat(null); });
+    document.body.append(perde);
+  });
+}
+
+async function ilListedenEkle() {
+  const k = await guvenli(() => api('/regions/catalog'));
+  if (!k) return;
+  const secenekler = k.cities.map((c) => [c.code, `${c.name} (${c.districtCount} ilçe)${c.added ? ' — ekli' : ''}`]);
+  const d = await form('İl ekle', [
+    { ad: 'kod', etiket: 'İl', tur: 'select', deger: k.cities.find((c) => !c.added)?.code ?? '01', secenekler },
+  ], 'Devam', { aciklama: 'İl, Türkiye il/ilçe listesinden seçilir; bir sonraki adımda ilçeleri seçersiniz. Zaten ekli il ve ilçeler tekrar eklenmez.' });
+  if (d) await ilceSecVeEkle(d.kod);
+}
+
+async function ilceListedenEkle(ilAdi) {
+  const k = await guvenli(() => api('/regions/catalog'));
+  if (!k) return;
+  const il = k.cities.find((c) => c.name === ilAdi);
+  if (!il) return bildir(`"${ilAdi}" Türkiye il listesinde bulunamadı (il adı değiştirilmiş olabilir).`, true);
+  await ilceSecVeEkle(il.code);
+}
+
+async function ilceSecVeEkle(kod) {
+  const il = await guvenli(() => api(`/regions/catalog/${encodeURIComponent(kod)}`));
+  if (!il) return;
+  const ogeler = [...il.districts].sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((x) => ({ deger: x.name, etiket: x.name, ekli: x.added }));
+  const kalan = ogeler.filter((o) => !o.ekli).length;
+  if (!kalan && il.cityId) return bildir(`${il.name}: bütün ilçeler zaten ekli.`);
+  const secilen = await secimPenceresi(`${il.name} — ilçeler`,
+    `${ogeler.length} ilçeden ${kalan} tanesi ekli değil. Eklemek istediklerinizi seçin.${il.cityId ? '' : ' İl de eklenecek.'}`, ogeler, 'Ekle');
+  if (!secilen) return;
+  const r = await guvenli(() => api('/regions/import', { yontem: 'POST', govde: { cityCode: il.code, districts: secilen } }));
+  if (r) {
+    bildir(`${r.city}: ${r.cityAdded ? 'il ve ' : ''}${r.districtsAdded} ilçe eklendi.`);
+    location.hash = `#/bolgeler/districts/${r.cityId}/${encodeURIComponent(r.city)}`;
+    yenile();
+  }
+}
 
 // ── Yasal belgeler ────────────────────────────────────────────
 SAYFALAR.yasal = async () => {

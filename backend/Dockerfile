@@ -19,6 +19,8 @@ COPY backend/migrations ./migrations
 COPY backend/scripts ./scripts
 # Kurumsal e-posta logosu (GET /eposta-varlik/eposta_logo.png).
 COPY backend/varliklar ./varliklar
+# Hazır il/ilçe listesi (il_ilce_listesi.js).
+COPY backend/veri ./veri
 # Yönetim paneli (statik) aynı imajda, /admin altında sunulur.
 COPY admin /app/admin
 # Admin önizlemesi için uygulama paketindeki katalog görselleri (salt okunur).
