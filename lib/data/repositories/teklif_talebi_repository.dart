@@ -58,7 +58,9 @@ class TeklifTalebiRepository extends ChangeNotifier {
   /// Bir hizmet verene GELEN tüm talepler — en yeni üstte.
   List<TeklifTalebi> bySaglayici(String saglayiciId) {
     _suresiDolanlariUygula();
-    return _items.values.where((t) => t.saglayiciId == saglayiciId).toList()
+    return _items.values
+        .where((t) => t.saglayiciId == saglayiciId && !t.saglayiciReddetti)
+        .toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -137,6 +139,21 @@ class TeklifTalebiRepository extends ChangeNotifier {
       ..durum = TeklifTalebiDurumu.reddedildi
       ..redGerekcesi = gerekce;
     notifyListeners();
+  }
+
+  /// ⚠ HİZMET VEREN TALEBİ REDDEDER (22 Eki) — sunucudaki `/reddet`
+  /// ile aynı kural: yalnız teklif VERİLMEDEN (beklemede). Talep hizmet
+  /// verenin listesinden kalkar; hizmet alan pasif görür.
+  bool saglayiciReddet(String id) {
+    final t = _items[id];
+    if (t == null || t.hizmetAlanSildi || t.durum != TeklifTalebiDurumu.beklemede) {
+      return false;
+    }
+    t
+      ..durum = TeklifTalebiDurumu.reddedildi
+      ..saglayiciReddetti = true;
+    notifyListeners();
+    return true;
   }
 
   /// ⚠ HİZMET ALAN TALEBİ SİLER (15 Eki) — sunucudaki `/sil` ile aynı

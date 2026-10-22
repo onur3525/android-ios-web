@@ -113,7 +113,8 @@ export function fcmEtkin() {
 export function pushIzniVar(u, tur) {
   // TALEP_* = Bul akışı (Doğrudan Teklif İste); aynı üç anahtara bağlıdır.
   // NEW_LISTING: hizmet verene yeni iş ilanı (15 Eki) — "Yeni teklifler" anahtarı.
-  if (['NEW_OFFER', 'OFFER_SELECTED', 'TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED', 'NEW_LISTING'].includes(tur)) return u.notif_offer !== 0;
+  // TALEP_DECLINED (22 Eki): hizmet veren talebi reddetti — hizmet alana.
+  if (['NEW_OFFER', 'OFFER_SELECTED', 'TALEP_REQUEST', 'TALEP_OFFER', 'TALEP_ACCEPTED', 'TALEP_DECLINED', 'NEW_LISTING'].includes(tur)) return u.notif_offer !== 0;
   if (['NEW_MESSAGE', 'CONTACT_OPENED', 'TALEP_MESSAGE'].includes(tur)) return u.notif_message !== 0;
   if (tur === 'ANNOUNCEMENT') return u.notif_announcement !== 0;
   return true;

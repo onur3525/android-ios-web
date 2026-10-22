@@ -44,6 +44,11 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
   Future<DomainError?> secToVer(String id);
   Future<DomainError?> reddet(String id, {String? gerekce});
 
+  /// ⚠ HİZMET VEREN TALEBİ REDDEDER (22 Eki): teklif vermeden. Talep
+  /// hizmet verenin listesinden kalkar; hizmet alana "reddedildi"
+  /// bildirimi gider ve talebi pasif görür.
+  Future<DomainError?> saglayiciReddet(String id);
+
   /// ⚠ HİZMET ALAN TALEBİ SİLER (15 Eki): gerekçe ne olursa olsun talep
   /// hizmet alanın listesinden kalkar (`byHizmetAlan` döndürmez); açıksa
   /// kapanır. Kabul edilmiş/tamamlanmış iş silinemez.
@@ -224,6 +229,24 @@ class MockTeklifTalebiPort extends TeklifTalebiPort {
     // ⚠ `NotifType.teklifReddedildi` SİLİNMEDİ: geçmişte gönderilmiş
     // bildirimler hâlâ o türle kayıtlı ve yönlendirmesi duruyor.
     _repo.reddet(id, gerekce: gerekce);
+    return null;
+  }
+
+  @override
+  Future<DomainError?> saglayiciReddet(String id) async {
+    if (!_repo.saglayiciReddet(id)) {
+      return const ValidationError('Bu talep artık reddedilemez.');
+    }
+    final t = _repo.byId(id);
+    if (t != null) {
+      // ⚠ HİZMET ALANA — sunucudaki TALEP_DECLINED ile aynı metin.
+      notifs?.push(
+          userId: t.hizmetAlanId,
+          type: NotifType.talepSaglayiciReddetti,
+          refId: t.id,
+          title: 'Teklif talebiniz reddedildi',
+          body: '"${t.hizmet}" talebinizi hizmet veren reddetti.');
+    }
     return null;
   }
 

@@ -152,7 +152,10 @@ class _TalepKarti extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (metin, renk) = _durumGoster(talep.durum);
+    // 22 Eki: hizmet veren reddettiyse kart bunu söyler (pasif).
+    final (metin, renk) = talep.saglayiciReddetti
+        ? ('Hizmet veren reddetti', HC.grey)
+        : _durumGoster(talep.durum);
     // ⚠ EKLENDİ — kullanıcı bulgusu: bu kart yalnız maskeli ad
     // gösteriyordu. `teklif_iste_screen.dart`/`teklif_talebi_detay_
     // screen.dart`daki AYNI hizmet veren kartı (puan, yorum sayısı,

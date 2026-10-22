@@ -214,6 +214,7 @@ class NotificationsScreen extends StatefulWidget {
       case NotifType.teklifVerildi:
       case NotifType.teklifSecildi:
       case NotifType.teklifReddedildi:
+      case NotifType.talepSaglayiciReddetti:
       case NotifType.teklifSuresiDoldu:
       case NotifType.teklifIsiTamamlandi:
         if (gecerli) {
@@ -337,7 +338,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const Color(0xFFE9F9EF),
             RC.success
           ),
-        NotifType.teklifReddedildi => (
+        NotifType.teklifReddedildi || NotifType.talepSaglayiciReddetti => (
             'assets/svg/ic_close.svg',
             const Color(0xFFF2F4F7),
             RC.grey

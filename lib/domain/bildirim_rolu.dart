@@ -37,6 +37,7 @@ Role? bildirimRolu(NotifType tur) => switch (tur) {
       NotifType.listingExpired => Role.customer,
       NotifType.teklifVerildi => Role.customer,
       NotifType.teklifIsiTamamlandi => Role.customer,
+      NotifType.talepSaglayiciReddetti => Role.customer,
 
       // ── HİZMET VEREN (usta) ──
       NotifType.offerSelected => Role.provider,

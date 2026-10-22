@@ -152,6 +152,35 @@ test('teklif talebi: hizmet alan siler — gerekçe ne olursa olsun listesinden 
   assert.ok((await alanListesi()).includes(d));
 });
 
+// 22 Eki: hizmet veren teklif vermek zorunda değil; talebi reddeder.
+test('teklif talebi: hizmet veren reddeder — kendi listesinden kalkar, hizmet alan pasif görür ve bildirim alır', async () => {
+  const t = (await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'mutfak dolabı montajı lazım', iletisimTercihi: 'yalnizMesaj' } })).json.id;
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${t}/reddet`, { yontem: 'POST', token: yabanci.token, govde: {} })).durum, 404, 'taraf olmayan reddedemez');
+  const r = await istek(`/api/v1/teklif-talepleri/${t}/reddet`, { yontem: 'POST', token: usta.token, govde: {} });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.durum, 'REDDEDILDI');
+  assert.equal(r.json.saglayiciReddetti, true);
+  // Hizmet verenin listesinden kalkar; hizmet alanın listesinde pasif kalır.
+  assert.ok(!(await istek('/api/v1/teklif-talepleri', { token: usta.token })).json.some((x) => x.id === t));
+  const alanKaydi = (await istek('/api/v1/teklif-talepleri', { token: alan.token })).json.find((x) => x.id === t);
+  assert.equal(alanKaydi?.durum, 'REDDEDILDI');
+  assert.equal(alanKaydi.saglayiciReddetti, true);
+  // Hizmet alana bildirim gider.
+  const bildirim = (await istek('/api/v1/notifications', { token: alan.token })).json.find((n) => n.refId === t);
+  assert.equal(bildirim?.type, 'TALEP_DECLINED');
+  // Reddedilen talebe teklif verilemez, mesaj yazılamaz; ikinci red 409.
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${t}/teklif`, { yontem: 'POST', token: usta.token, govde: { fiyat: 500 } })).durum, 409);
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${t}/reddet`, { yontem: 'POST', token: usta.token, govde: {} })).durum, 409);
+  // Hizmet alan kendisi silince onun listesinden de kalkar.
+  assert.equal((await istek(`/api/v1/teklif-talepleri/${t}/sil`, { yontem: 'POST', token: alan.token, govde: {} })).durum, 200);
+  assert.ok(!(await istek('/api/v1/teklif-talepleri', { token: alan.token })).json.some((x) => x.id === t));
+  // Hizmet ALAN'ın reddettiği talep "hizmet veren reddetti" sayılmaz.
+  const u = (await istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: usta.id, kategori: kat, hizmet: hiz, aciklama: 'kapı kilidi değişecek', iletisimTercihi: 'yalnizMesaj' } })).json.id;
+  const r2 = await istek(`/api/v1/teklif-talepleri/${u}/reddet`, { yontem: 'POST', token: alan.token, govde: {} });
+  assert.equal(r2.json.saglayiciReddetti, false);
+  assert.ok((await istek('/api/v1/teklif-talepleri', { token: usta.token })).json.some((x) => x.id === u));
+});
+
 test('yasal kabul: yalnız kabul isteyen + yayındaki sürüm; sürüm değişince yeniden istenir', async () => {
   const z = simdi();
   await db.prepare(`INSERT INTO legal_versions (id, slug, version, body, sha256, effective_date, status, created_at) VALUES (?, 'kvkk', 1, 'metin bir', 'aaa', '2026-10-01', 'PUBLISHED', ?)`).run(randomUUID(), z);
