@@ -818,8 +818,14 @@ export function ilanRotalar(r, db) {
     const ilanT = await db.prepare('SELECT COUNT(*) n, COALESCE(SUM(amount_tl), 0) tl FROM offers WHERE selected_at >= ? AND selected_at < ?').get(ilk, son);
     const talepT = await db.prepare('SELECT COUNT(*) n, COALESCE(SUM(teklif_fiyati), 0) tl FROM teklif_talepleri WHERE secildi_at >= ? AND secildi_at < ? AND teklif_fiyati IS NOT NULL').get(ilk, son);
     const ilanTl = Number(ilanT.tl); const talepTl = Number(talepT.tl);
+    // 22 Eki: Seçilen Toplam Teklif Tutarı kartında yıl seçimi — ilk seçimin yılı.
+    const ilkSecim = [
+      (await db.prepare('SELECT MIN(selected_at) t FROM offers WHERE selected_at IS NOT NULL').get())?.t,
+      (await db.prepare('SELECT MIN(secildi_at) t FROM teklif_talepleri WHERE secildi_at IS NOT NULL').get())?.t,
+    ].filter(Boolean).map((t) => new Date(t).getFullYear()).filter(Number.isFinite);
     return {
       from: ilk, days: gun,
+      firstSelectedYear: ilkSecim.length ? Math.min(...ilkSecim) : null,
       teklifTalepleri: { total: toplam, byStatus: durumlar, cancelled: iptal },
       selectedOffers: {
         totalTl: ilanTl + talepTl,

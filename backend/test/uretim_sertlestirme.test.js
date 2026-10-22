@@ -586,6 +586,12 @@ test('21 Eki: Özet — teklif talepleri durumları ve seçilen teklif tutarı (
   const gecmis = (await istek(`/admin/v1/stats/market?from=${encodeURIComponent(new Date(Date.now() - 10 * 86_400_000).toISOString())}&days=2`, { rol: 'readonly' })).json;
   assert.equal(gecmis.selectedOffers.totalTl, 0);
   assert.equal((await istek('/admin/v1/stats/market?from=x&days=1', { rol: 'readonly' })).durum, 400);
+  // 22 Eki: yıl seçimi için ilk seçimin yılı; bir yıllık dönem sorgulanabilir.
+  assert.equal(son.firstSelectedYear, new Date().getFullYear());
+  const yil = new Date(new Date().getFullYear(), 0, 1);
+  const yillik = await istek(`/admin/v1/stats/market?from=${encodeURIComponent(yil.toISOString())}&days=366`, { rol: 'readonly' });
+  assert.equal(yillik.durum, 200);
+  assert.ok(yillik.json.selectedOffers.totalTl >= 8000);
 });
 
 test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adres sabittir (panelden girilen adres yok sayılır)', async () => {
