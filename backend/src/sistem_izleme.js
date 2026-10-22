@@ -41,6 +41,8 @@ export function yolDeseni(yol) {
 
 /** server.js her /api/v1 yanıtı bittiğinde çağırır. */
 export function istekOlc({ yontem, yol, durum, ms, kod, istekId }) {
+  // Bakım modundaki bilinçli 503'ler hata sayılmaz (bakim_modu.js).
+  if (kod === 'MAINTENANCE') return;
   const b = Math.floor(Date.now() / DAKIKA);
   let x = birikim.get(b);
   if (!x) birikim.set(b, (x = { requests: 0, errors_4xx: 0, errors_5xx: 0, total_ms: 0, max_ms: 0, lat_100: 0, lat_300: 0, lat_1000: 0, lat_3000: 0, lat_over: 0 }));

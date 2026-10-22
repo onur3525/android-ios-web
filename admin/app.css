@@ -379,3 +379,6 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .kt-ikon-sec img { width:100%; height:100%; object-fit:contain; }
 .kt-ikon-sec.secili, .kt-ikon-sec:hover { border-color:var(--oz-mavi, #2563EB); }
 @media (max-width: 640px) { .kt-cati-izgara { gap:8px; } .kt-cati-ad { font-size:12.5px; } .kt-cati-aciklama { font-size:11px; } }
+/* Bakım modu kartı (Duyurular, 22 Eki) */
+.bakim-kart.acik { border-color:#FCA5A5; background:#FEF2F2; }
+.bakim-kart h3 { margin-top:0; }

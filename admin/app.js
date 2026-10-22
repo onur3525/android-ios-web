@@ -392,25 +392,49 @@ SAYFALAR.ayarlar = async () => {
   const yazabilir = ['super_admin', 'operations'].includes(ben.role);
   const liste = await api('/config/app');
   const kart = (c) => {
-    const bakim = h('input', { type: 'checkbox', ...(c.maintenanceActive ? { checked: true } : {}) });
-    const mesaj = h('input', { class: 'genis', value: c.maintenanceMessage ?? '' });
-    const bitis = h('input', { class: 'genis', type: 'datetime-local', value: c.maintenanceEndAt ? c.maintenanceEndAt.slice(0, 16) : '' });
     const min = h('input', { class: 'genis', placeholder: '1.0.0', value: c.minSupportedVersion ?? '' });
     const gun = h('input', { class: 'genis', placeholder: '1.0.0', value: c.latestVersion ?? '' });
     const kaydet = async () => {
-      const govde = { maintenanceActive: bakim.checked, maintenanceMessage: mesaj.value || null, maintenanceEndAt: bitis.value ? new Date(bitis.value).toISOString() : null, minSupportedVersion: min.value || null, latestVersion: gun.value || null };
+      // Bakım modu Duyurular ekranından yönetilir (22 Eki); burada gönderilmez.
+      const govde = { minSupportedVersion: min.value || null, latestVersion: gun.value || null };
       if (await guvenli(() => api(`/config/app/${c.platform}`, { yontem: 'PUT', govde }))) bildir(`${c.platform} kaydedildi`);
     };
     return h('div', { class: 'kart' }, h('h3', {}, { android: 'Android', ios: 'iOS', web: 'Web' }[c.platform]),
-      h('label', {}, bakim, ' Bakım modu'), h('label', {}, 'Bakım mesajı'), mesaj, h('label', {}, 'Bakım bitiş zamanı'), bitis,
+      c.maintenanceActive ? h('p', {}, rozet('Bakımda', 'FAILED'), ' Bakım modu açık (Duyurular ekranından yönetilir)') : null,
       h('label', {}, 'En düşük desteklenen sürüm'), min, h('label', {}, 'Güncel sürüm'), gun, h('br'), h('br'),
       yazabilir ? h('button', { class: 'btn', onclick: kaydet }, 'Kaydet') : null, h('p', { class: 'not' }, `Son güncelleme: ${tarih(c.updatedAt)}`));
   };
   return h('div', {}, h('h2', {}, 'Uygulama Ayarları'), liste.map(kart));
 };
 
+// ── BAKIM MODU (22 Eki): bütün platformlar tek anahtarla ──
+function bakimKarti(b) {
+  const ac = async () => {
+    const d = await form('Bakım modunu aç', [
+      { ad: 'message', etiket: 'Kullanıcılara gösterilecek mesaj (5–500 karakter)', tur: 'textarea', zorunlu: true, deger: 'HizmetCep kısa süreli bakımda. Lütfen daha sonra tekrar deneyin.' },
+      { ad: 'endAt', etiket: 'Tahmini bitiş (isteğe bağlı)', tur: 'datetime-local' },
+    ], 'Bakımı başlat', { tehlike: true, aciklama: 'Android, iOS ve web uygulamasının BÜTÜN ekranlarında HizmetCep logolu bakım ekranı görünür; kullanıcılar işlem yapamaz. Yönetim paneli çalışmaya devam eder.' });
+    if (!d) return;
+    const govde = { active: true, message: d.message, endAt: d.endAt ? new Date(d.endAt).toISOString() : null };
+    if (await guvenli(() => api('/maintenance', { yontem: 'PUT', govde }))) { bildir('Bakım modu açıldı'); yenile(); }
+  };
+  const kapat = async () => {
+    const d = await form('Bakım modunu kapat', [], 'Bakımı bitir', { aciklama: 'Uygulama kullanıcılar için yeniden açılır.' });
+    if (d && await guvenli(() => api('/maintenance', { yontem: 'PUT', govde: { active: false } }))) { bildir('Bakım modu kapatıldı'); yenile(); }
+  };
+  return h('div', { class: `kart bakim-kart${b.active ? ' acik' : ''}` },
+    h('h3', {}, 'Bakım modu'),
+    b.active
+      ? [h('p', {}, rozet('Bakımda', 'FAILED'), ' Uygulama şu an bakımda (Android, iOS, web).'),
+        h('p', { class: 'not' }, `Mesaj: ${b.message ?? '—'}`),
+        h('p', { class: 'not' }, `Tahmini bitiş: ${b.endAt ? tarih(b.endAt) : '—'} · Açılış: ${tarih(b.updatedAt)}`),
+        h('button', { class: 'btn', onclick: kapat }, 'Bakımı bitir')]
+      : [h('p', { class: 'not' }, 'Kapalı. Açıldığında uygulamanın bütün ekranlarında logolu, animasyonlu bakım ekranı görünür.'),
+        h('button', { class: 'btn tehlike', onclick: ac }, 'Bakım modunu aç')]);
+}
+
 SAYFALAR.duyurular = async () => {
-  const gecmis = await api('/announcements');
+  const [gecmis, bakim] = await Promise.all([api('/announcements'), api('/maintenance')]);
   const gonder = async () => {
     const d = await form('Duyuru gönder', [{ ad: 'title', etiket: 'Başlık', zorunlu: true }, { ad: 'body', etiket: 'Metin', tur: 'textarea', zorunlu: true },
       { ad: 'target', etiket: 'Hedef', tur: 'select', deger: 'ALL', secenekler: [['ALL', 'Herkes'], ['CUSTOMER', 'Hizmet alanlar'], ['PROVIDER', 'Hizmet verenler']] }], 'Gönder');
@@ -418,6 +442,7 @@ SAYFALAR.duyurular = async () => {
     if (r) { bildir(`${r.recipients} kullanıcıya gönderildi`); yenile(); }
   };
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Duyurular'), h('button', { class: 'btn', onclick: gonder }, 'Duyuru gönder')),
+    bakimKarti(bakim),
     h('p', { class: 'not' }, 'Duyurular uygulamadaki Bildirimler sekmesine düşer; yalnız etkin hesaplara gider.'),
     tablo([{ baslik: 'Başlık', deger: (a) => a.title }, { baslik: 'Hedef', deger: (a) => a.target }, { baslik: 'Alıcı', deger: (a) => a.recipients }, { baslik: 'Tarih', deger: (a) => tarih(a.createdAt) }], gecmis));
 };

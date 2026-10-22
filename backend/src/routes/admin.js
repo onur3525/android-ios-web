@@ -16,6 +16,7 @@ import { denetimYaz } from '../audit.js';
 import { config } from '../config.js';
 import { simdi } from '../db.js';
 import { fotoSil, fotoYukle } from '../katalog_foto.js';
+import { bakimOnbellegiTemizle } from '../bakim_modu.js';
 import { ApiHatasi, HizSiniri, cerez, hata } from '../http.js';
 
 const girisSiniri = new HizSiniri('admin_giris', 10, 15 * 60 * 1000);
@@ -748,15 +749,20 @@ export function adminRotalar(r, db) {
     yetkiIste(ctx.admin, 'config.write');
     const p = ctx.params.platform;
     if (!['android', 'ios', 'web'].includes(p)) throw hata.dogrulama('Geçersiz platform');
-    const bakim = bool(ctx.body.maintenanceActive, 'maintenanceActive');
+    const once = await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p);
+    // 22 Eki: bakım modu Duyurular ekranından (PUT /admin/v1/maintenance)
+    // yönetilir. Bakım alanları gönderilmezse MEVCUT değer korunur.
+    const bakimGeldi = ctx.body.maintenanceActive !== undefined;
+    const bakim = bakimGeldi ? bool(ctx.body.maintenanceActive, 'maintenanceActive') : once?.maintenance_active === 1;
     // Bakım modunu açmak tüm kullanıcıları etkiler → yeniden doğrulama.
-    if (bakim) yenidenDogrulamaIste(ctx.oturum);
-    const mesaj = ctx.body.maintenanceMessage ? ad(ctx.body.maintenanceMessage, 'Bakım mesajı', 5, 500) : null;
+    if (bakimGeldi && bakim) yenidenDogrulamaIste(ctx.oturum);
+    const mesaj = bakimGeldi
+      ? (ctx.body.maintenanceMessage ? ad(ctx.body.maintenanceMessage, 'Bakım mesajı', 5, 500) : null)
+      : (once?.maintenance_message ?? null);
     if (bakim && !mesaj) throw hata.dogrulama('Bakım modunda mesaj zorunludur');
-    const bitis = tarihVeyaBos(ctx.body.maintenanceEndAt, 'Bakım bitiş zamanı');
+    const bitis = bakimGeldi ? tarihVeyaBos(ctx.body.maintenanceEndAt, 'Bakım bitiş zamanı') : (once?.maintenance_end_at ?? null);
     const minS = surum(ctx.body.minSupportedVersion, 'Minimum sürüm');
     const gunS = surum(ctx.body.latestVersion, 'Güncel sürüm');
-    const once = await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p);
     await db.tx(async () => {
       await db.prepare(
         `INSERT INTO app_config (platform, maintenance_active, maintenance_message, maintenance_end_at, min_version, latest_version, updated_at)
@@ -767,7 +773,53 @@ export function adminRotalar(r, db) {
       ).run(p, bakim ? 1 : 0, mesaj, bitis, minS, gunS, simdi());
       await yaz(ctx, { islem: 'config.app.update', hedefTur: 'app_config', hedefId: p, once: once ? ayarGorunumu(once, p) : null, sonra: { maintenanceActive: bakim, maintenanceMessage: mesaj, maintenanceEndAt: bitis, minSupportedVersion: minS, latestVersion: gunS }, gerekce: ctx.body.reason });
     });
+    bakimOnbellegiTemizle();
     return ayarGorunumu(await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p), p);
+  });
+
+  // ── BAKIM MODU (22 Eki): bütün platformlar için tek anahtar ──
+  // Duyurular ekranından açılır. Açıkken uygulama API'si 503 MAINTENANCE
+  // döner (server.js) ve uygulama bütün ekranlarda bakım ekranını gösterir.
+  const bakimGorunumu = async () => {
+    const satirlar = await db.prepare('SELECT * FROM app_config').all();
+    const acik = satirlar.filter((c) => c.maintenance_active === 1);
+    const ilk = acik[0];
+    return {
+      active: acik.length > 0,
+      message: ilk?.maintenance_message ?? null,
+      endAt: ilk?.maintenance_end_at ?? null,
+      platforms: acik.map((c) => c.platform).sort(),
+      updatedAt: ilk?.updated_at ?? null,
+    };
+  };
+
+  r.get('/admin/v1/maintenance', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.write');
+    return bakimGorunumu();
+  });
+
+  r.put('/admin/v1/maintenance', async (ctx) => {
+    yetkiIste(ctx.admin, 'maintenance.write');
+    const acik = bool(ctx.body.active, 'active');
+    if (acik) yenidenDogrulamaIste(ctx.oturum);
+    const mesaj = acik ? ad(ctx.body.message, 'Bakım mesajı', 5, 500) : null;
+    const bitis = acik ? tarihVeyaBos(ctx.body.endAt, 'Tahmini bitiş') : null;
+    const once = await bakimGorunumu();
+    const z = simdi();
+    await db.tx(async () => {
+      for (const p of ['android', 'ios', 'web']) {
+        await db.prepare(
+          `INSERT INTO app_config (platform, maintenance_active, maintenance_message, maintenance_end_at, min_version, latest_version, updated_at)
+           VALUES (?, ?, ?, ?, NULL, NULL, ?)
+           ON CONFLICT(platform) DO UPDATE SET maintenance_active = excluded.maintenance_active,
+             maintenance_message = excluded.maintenance_message, maintenance_end_at = excluded.maintenance_end_at, updated_at = excluded.updated_at`,
+        ).run(p, acik ? 1 : 0, mesaj, bitis, z);
+      }
+      await yaz(ctx, { islem: acik ? 'maintenance.on' : 'maintenance.off', hedefTur: 'app_config', hedefId: 'all',
+        once: { active: once.active, message: once.message, endAt: once.endAt }, sonra: { active: acik, message: mesaj, endAt: bitis } });
+    });
+    bakimOnbellegiTemizle();
+    return bakimGorunumu();
   });
 
   // ── DENETİM KAYDI ────────────────────────────────────────

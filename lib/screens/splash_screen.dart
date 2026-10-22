@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../core/bakim_durumu.dart';
 import '../core/boot.dart';
 import '../core/sys_state.dart';
+import '../ui/bakim_ekrani.dart';
 import '../ui/ref_tokens.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/notification_controller.dart';
@@ -663,6 +665,10 @@ class _SplashScreenState extends State<SplashScreen> {
         BootLog.olay('CONFIG_CHECK_END', 'ok');
         final m = j['maintenance'] as Map<String, dynamic>?;
         final r = j['release'] as Map<String, dynamic>?;
+        // ⚠ 22 Eki: bakım uygulama açıkken de izlenir (BakimDurumu).
+        BakimDurumu.i.uygula(m);
+        BakimDurumu.i
+            .baslat(() => api.app(platform: currentPlatform()));
         maintenanceActive = m?['active'] as bool? ?? false;
         message = m?['message'] as String?;
         endAt = m?['endAt'] as String?;
@@ -847,16 +853,16 @@ class BootBlockedScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: switch (result.decision) {
-              BootDecision.maintenance => SysState(
-                  SysKind.serverUnreachable,
-                  title: 'Bakımdayız',
-                  desc: result.maintenanceMessage?.isNotEmpty == true
-                      ? result.maintenanceMessage
-                      : 'HizmetCep kısa süreli bakımda. '
-                          'Lütfen daha sonra tekrar deneyin.',
-                  action: 'Tekrar Dene',
-                  onAction: onRetry,
-                ),
+              // ⚠ 22 Eki: ortak bakım ekranı (logo + animasyon). Bakım
+              // bitince açılış kendiliğinden baştan çalışır.
+              BootDecision.maintenance => () {
+                  BakimDurumu.i.bitinceCalistir(onRetry);
+                  return BakimEkrani(
+                    mesaj: result.maintenanceMessage,
+                    bitis: result.maintenanceEndAt,
+                    onYenile: onRetry,
+                  );
+                }(),
               BootDecision.forceUpdate => SysState(
                   SysKind.genericError,
                   title: 'Güncelleme gerekli',

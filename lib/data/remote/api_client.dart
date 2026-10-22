@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
+import '../../core/bakim_durumu.dart';
 import 'sabitlemeli_istemci.dart';
 import 'api_config.dart';
 import 'api_error_mapper.dart';
@@ -246,6 +247,11 @@ class ApiClient {
     if (res.statusCode == 403 &&
         (kod == 'ACCOUNT_SUSPENDED' || kod == 'ACCOUNT_BANNED')) {
       await _forceLogout();
+    }
+    // ⚠ BAKIM (22 Eki): sunucu bakımda olduğunu söylediyse bakım durumu
+    // hemen yeniden sorulur; bakım ekranı bütün ekranları örter.
+    if (res.statusCode == 503 && kod == 'MAINTENANCE') {
+      unawaited(BakimDurumu.i.kontrolEt());
     }
     throw ApiFailure(
       mapErrorBody(res.statusCode, map),
