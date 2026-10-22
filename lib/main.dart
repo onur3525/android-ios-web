@@ -726,9 +726,10 @@ class HizmetCepApp extends StatelessWidget {
         // ⚠ PushKapisi (FCM yaşam döngüsü; izin yalnız girişte) ve
         // YasalKabulKapisi (yalnız API modu) ekran DIŞINDAN sarar; mevcut
         // builder yapısı (GlobalWebKabugu → OfflineBanner) AYNEN korunur.
-        // ⚠ BakimKapisi (22 Eki) EN DIŞTA: bakım açıksa bütün ekranları örter.
-        builder: (context, child) => BakimKapisi(
-          child: PushKapisi(
+        // ⚠ BakimKapisi (22 Eki): PushKapisi yalnız yaşam döngüsü sarmalayıcısı
+        // olduğundan bakım katmanı onun hemen içinde, BÜTÜN ekranların üstünde.
+        builder: (context, child) => PushKapisi(
+          child: BakimKapisi(
             child: YasalKabulKapisi(
               child: GlobalWebKabugu(
                 child: OfflineBanner(child: child ?? const SizedBox.shrink()),
