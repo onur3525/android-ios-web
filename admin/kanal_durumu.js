@@ -27,6 +27,9 @@ export function kanalDurumu(k, { gonderildi = null, basarisiz24 = 0 } = {}) {
   if (k?.type === 'SMS' && k.source === 'yok') return { metin: 'Kapalı (bilinçli) — kodları Firebase gönderir, bildirimler e-postayla', sinif: 'iyi' };
   if (!k || k.source === 'yok') return { metin: `Yapılandırılmamış — ${NE_YAPILAMAZ[k?.type] ?? 'kullanılamaz'}`, sinif: 'uyari' };
   if (k.source === 'ortam' && k.provider === 'log') return { metin: 'Geliştirme kaydı — gerçek gönderim yok', sinif: 'uyari' };
+  // 23 Eki: depolamayı sunucu 15 dakikada bir kendisi kontrol eder (kanıt).
+  if (k.type === 'STORAGE' && k.autoCheckOk === false) return { metin: `Otomatik kontrol başarısız${k.autoCheckMessage ? ` — ${k.autoCheckMessage}` : ''}`, sinif: 'kotu' };
+  if (k.type === 'STORAGE' && k.autoCheckOk === true) return { metin: 'Çalışıyor · otomatik kontrol başarılı', sinif: 'iyi' };
   if (k.lastTestOk === false) return { metin: 'Son test başarısız', sinif: 'kotu' };
   if (basarisiz24 > 0) return { metin: `Son 24 saatte ${basarisiz24.toLocaleString('tr-TR')} başarısız gönderim`, sinif: 'uyari' };
   if (k.lastTestOk === true) return { metin: 'Çalışıyor · test başarılı', sinif: 'iyi' };

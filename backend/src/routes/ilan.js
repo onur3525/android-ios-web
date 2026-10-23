@@ -904,7 +904,7 @@ export function ilanRotalar(r, db) {
       delivery: { since: yediGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
       integrations: entegrasyon,
       // Kaynak bilgisi sır içermez; ayrıntı (son test mesajı) yalnız yetkiliye.
-      channels: kanallar.map((k) => (yetkiliMi(ctx.admin.role, 'integrations.read') ? k : { type: k.type, source: k.source, provider: k.provider })),
+      channels: kanallar.map((k) => (yetkiliMi(ctx.admin.role, 'integrations.read') ? k : { type: k.type, source: k.source, provider: k.provider, ...(k.type === 'STORAGE' ? { autoCheckAt: k.autoCheckAt, autoCheckOk: k.autoCheckOk } : {}) })),
       failures24h: basarisiz24,
       recentFailures: sonHatalar,
       serverErrors: yetkiliMi(ctx.admin.role, 'notifications.read') ? await sonSunucuHatalari(db) : null,
