@@ -181,6 +181,12 @@ test('yükleme: büyük dosya, sahte tür, yüklenmemiş dosya bağlanamaz; geç
   const ham = await yukle(k);
   await assert.rejects(db.tx(() => dosyalariBagla(db, [ham], k.id)), /doğrulanmadı/, 'doğrulama atlanamaz');
   assert.equal((await istek('/api/v1/storage/upload-ref', { yontem: 'POST', token: k.token, govde: { kind: 'listing-photo', contentType: 'image/svg+xml', sizeBytes: 100 } })).durum, 400, 'SVG yüklenemez');
+  // 23 Eki (KVKK B5): HEIC'in konum meta verisi ayıklanamadığı için yeni yükleme kabul edilmez.
+  for (const kind of ['listing-photo', 'profile-photo']) {
+    const heic = await istek('/api/v1/storage/upload-ref', { yontem: 'POST', token: k.token, govde: { kind, contentType: 'image/heic', sizeBytes: 100 } });
+    assert.equal(heic.durum, 400, `${kind}: HEIC yüklenemez`);
+    assert.match(heic.json.error.message, /JPEG, PNG ya da WEBP/);
+  }
 });
 
 // ═════ PROFİL FOTOĞRAFI ═════

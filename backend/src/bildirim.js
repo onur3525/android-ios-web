@@ -212,16 +212,25 @@ export async function gonder(db, { kullaniciId, kanal, hedef, sablon, degerler =
 }
 
 /** Kullanıcının DOĞRULANMIŞ kanallarına (SMS ve/veya e-posta) gönderir. */
+//
+// ⚠ 23 Eki (işletmeci kararı "A"): SUNUCU SMS'İ YALNIZ YAPILANDIRILMIŞSA.
+// Doğrulama kodlarını Firebase gönderir (firebase_kimlik.dart); sunucunun
+// SMS'i yalnız yönetici bildirimlerinde kullanılıyordu ve sağlayıcı yokken
+// her bildirim "başarısız SMS" kaydı üretiyordu. SMS sağlayıcısı (panel ya
+// da sunucu ayarı) yoksa SMS hiç DENENMEZ; bildirim e-postayla gider.
+// İleride sağlayıcı tanımlanırsa SMS kendiliğinden yeniden devreye girer.
 export async function kullaniciyaBildir(db, kullanici, sablon, degerler, denetimRef) {
   const tam = { DESTEK: DESTEK_BILGISI.email, ...degerler };
   const sonuc = [];
-  sonuc.push(await gonder(db, {
-    kullaniciId: kullanici.id, kanal: 'SMS', sablon, degerler: tam, denetimRef,
-    hedef: kullanici.phone_verified === 1 ? `+90${kullanici.phone}` : null,
-  }));
-  sonuc.push(await gonder(db, {
+  if (await kanalHazir(db, 'SMS')) {
+    sonuc.push({ channel: 'SMS', ...await gonder(db, {
+      kullaniciId: kullanici.id, kanal: 'SMS', sablon, degerler: tam, denetimRef,
+      hedef: kullanici.phone_verified === 1 ? `+90${kullanici.phone}` : null,
+    }) });
+  }
+  sonuc.push({ channel: 'EMAIL', ...await gonder(db, {
     kullaniciId: kullanici.id, kanal: 'EMAIL', sablon, degerler: tam, denetimRef,
     hedef: kullanici.email_verified === 1 && kullanici.email ? kullanici.email : null,
-  }));
+  }) });
   return sonuc;
 }

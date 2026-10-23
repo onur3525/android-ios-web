@@ -18,7 +18,7 @@ import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
 import { simdi, tekilIhlaliMi } from '../db.js';
 import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
-import { depolamaAyari } from '../entegrasyon.js';
+import { depolamaAyari, kanalKaynaklari } from '../entegrasyon.js';
 import { govdeOzeti, idemAnahtari, idemOlustur, oncekiKayit } from '../idempotency.js';
 import { ApiHatasi, HizSiniri, hata } from '../http.js';
 
@@ -884,11 +884,18 @@ export function ilanRotalar(r, db) {
     const yedek = await yedekDurumu(db, { yenile: ctx.query.get('refreshBackup') === '1' && yetkiliMi(ctx.admin.role, 'integrations.read') });
     const silme = await silmeKuyruguSorunlari(db);
     const silmeTukenen = silme.filesExhausted + silme.firebaseLongFailure + silme.firebaseOpsLongFailure;
+    // 23 Eki: kanalların gerçek kaynağı ve son 24 saatin başarısız gönderimleri.
+    const kanallar = await kanalKaynaklari(db);
+    const basarisiz24 = { SMS: 0, EMAIL: 0 };
+    for (const x of await db.prepare(`SELECT channel, COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND created_at > ? GROUP BY channel`)
+      .all(new Date(Date.now() - 86_400_000).toISOString())) {
+      if (x.channel in basarisiz24) basarisiz24[x.channel] = Number(x.n);
+    }
     const tumEntegrasyon = (await db.prepare('SELECT type, active, last_test_ok FROM integrations WHERE deleted_at IS NULL').all())
       .map((x) => ({ type: x.type, active: x.active === 1 || x.active === true, lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1 || x.last_test_ok === true }));
     return {
       checkedAt: new Date().toISOString(),
-      overall: genelDurum({ veritabaniOk: true, api: apiOlcum, kaynak, yedek, entegrasyonlar: tumEntegrasyon, silmeTukenen }),
+      overall: genelDurum({ veritabaniOk: true, api: apiOlcum, kaynak, yedek, entegrasyonlar: tumEntegrasyon, silmeTukenen, kanallar, basarisiz24 }),
       api: { status: 'OK', uptimeSeconds: Math.round(process.uptime()), serverTime: new Date().toISOString() },
       database: { status: 'OK', driver: db.surucu, responseMs: dbMs, lastMigration: goc?.id ?? null, lastMigrationAt: goc?.applied_at ?? null, migrations: gocSayisi },
       resources: kaynak,
@@ -896,6 +903,9 @@ export function ilanRotalar(r, db) {
       backup: yetkiliMi(ctx.admin.role, 'integrations.read') ? yedek : null,
       delivery: { since: yediGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
       integrations: entegrasyon,
+      // Kaynak bilgisi sır içermez; ayrıntı (son test mesajı) yalnız yetkiliye.
+      channels: kanallar.map((k) => (yetkiliMi(ctx.admin.role, 'integrations.read') ? k : { type: k.type, source: k.source, provider: k.provider })),
+      failures24h: basarisiz24,
       recentFailures: sonHatalar,
       serverErrors: yetkiliMi(ctx.admin.role, 'notifications.read') ? await sonSunucuHatalari(db) : null,
       deletionIssues: yetkiliMi(ctx.admin.role, 'deletion.queues.read') ? silme : null,

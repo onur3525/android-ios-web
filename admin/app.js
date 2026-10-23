@@ -16,6 +16,7 @@ import { tekliflerSayfasi } from './teklifler.js';
 import { teklifTalepleriSayfasi } from './teklif_talepleri.js';
 import { degerlendirmelerSayfasi } from './degerlendirmeler.js';
 import { katalogSayfasi } from './katalog.js';
+import { bildirimOzeti } from './kanal_durumu.js';
 
 const kok = document.getElementById('kok');
 let ben = null;
@@ -181,7 +182,7 @@ SAYFALAR.ilan = async (id) => {
     const neden = await gerekceIle('İlanı kaldır', 'Kaldır', 'İlan yayından kalkar, açık teklifler kapanır; ilan sahibine ilan adı ve gerekçeyle SMS/e-posta gider.');
     if (!neden) return;
     const r = await guvenli(() => api(`/listings/${id}/remove`, { yontem: 'POST', govde: { reason: neden } }));
-    if (r) { bildir(`İlan kaldırıldı. Bildirim: ${r.notifications.map((n) => n.status).join(', ')}`); yenile(); }
+    if (r) { bildir(`İlan kaldırıldı. Bildirim: ${bildirimOzeti(r.notifications)}`); yenile(); }
   };
   return h('div', {},
     h('div', { class: 'ust' }, h('h2', {}, `İlan ${l.ilanNo}`), l.status !== 'ADMIN_REMOVED' ? h('button', { class: 'btn tehlike', onclick: kaldir }, 'İlanı kaldır') : null),

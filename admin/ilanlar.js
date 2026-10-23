@@ -11,6 +11,7 @@
 // Sayfalama, arama ve süzgeç SUNUCUDA yapılır.
 // ═══════════════════════════════════════════════════════════════
 import { api, bildir, gerekceIle, h } from './cekirdek.js';
+import { bildirimOzeti } from './kanal_durumu.js';
 
 const SAYFA = 25;
 const DURUMLAR = [
@@ -73,7 +74,7 @@ export async function ilanlarSayfasi(rol) {
     if (!neden) return;
     try {
       const r = await api(`/listings/${l.id}/remove`, { yontem: 'POST', govde: { reason: neden } });
-      bildir(`İlan kaldırıldı. Bildirim: ${r.notifications.map((n) => (n.status === 'SENT' ? 'gönderildi' : 'gönderilemedi')).join(', ') || 'gönderilmedi'}`);
+      bildir(`İlan kaldırıldı. Bildirim: ${bildirimOzeti(r.notifications)}`);
       await sayilariAl();
       await yukle(); // liste API'den yeniden yüklenir
     } catch (e) {

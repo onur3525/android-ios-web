@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { sirCoz, sirSifrele, yenidenDogrulamaIste, yetkiIste } from '../auth.js';
 import { yedekDurumu } from '../sistem_izleme.js';
 import { denetimYaz } from '../audit.js';
-import { depolamaAyari, s3ImzaliAdres } from '../entegrasyon.js';
+import { depolamaAyari, kanalKaynaklari, s3ImzaliAdres } from '../entegrasyon.js';
 import { olaylar } from '../olaylar.js';
 import { simdi } from '../db.js';
 import { ApiHatasi, hata } from '../http.js';
@@ -17,7 +17,7 @@ import { kullaniciCoz } from './kullanici.js';
 import { disAdresSorunu, guvenliIstek } from '../ag_guvenligi.js';
 import { RESEND_ADRESI } from '../bildirim.js';
 
-import { ICERIK_UZANTI as ICERIK, TUR_SINIRI as TURLER } from '../depo_dogrulama.js';
+import { ICERIK_UZANTI as ICERIK, TUR_SINIRI as TURLER, YENI_YUKLEME_TURLERI } from '../depo_dogrulama.js';
 // Türler: ilan/mesaj/talep fotoğrafı ve profil fotoğrafı; 10 MB. SVG YOK.
 
 /** Kullanıcının bu dosyayı görmeye yetkisi var mı? */
@@ -118,7 +118,11 @@ export function depolamaEntegrasyonRotalar(r, db) {
     const icerik = String(ctx.body.contentType ?? '');
     const boyut = ctx.body.sizeBytes;
     if (!TURLER[tur]) throw hata.dogrulama('Geçersiz dosya türü');
-    if (!ICERIK[icerik]) throw hata.dogrulama('Yalnız JPEG, PNG, WEBP ya da HEIC yüklenebilir');
+    // ⚠ 23 Eki (KVKK B5): YENİ yükleme yalnız JPEG/PNG/WEBP. HEIC'in konum
+    // (GPS) meta verisi istemcide güvenle ayıklanamıyor (gorsel_meta_temizleyici
+    // .dart); bu yüzden kabul edilmez. Daha önce yüklenmiş HEIC dosyaları
+    // doğrulama/silme akışında tanınmaya devam eder (ICERIK_UZANTI).
+    if (!ICERIK[icerik] || !YENI_YUKLEME_TURLERI.has(icerik)) throw hata.dogrulama('Yalnız JPEG, PNG ya da WEBP yüklenebilir');
     if (!Number.isInteger(boyut) || boyut < 1 || boyut > TURLER[tur]) throw hata.dogrulama('Dosya en fazla 10 MB olabilir');
     // Kullanıcı başına bekleyen dosya sınırı (kötüye kullanım).
     const bekleyen = (await db.prepare(`SELECT COUNT(*) n FROM storage_objects WHERE owner_id = ? AND status = 'PENDING' AND created_at > ?`)
@@ -152,6 +156,13 @@ export function depolamaEntegrasyonRotalar(r, db) {
   r.get('/admin/v1/integrations', async (ctx) => {
     yetkiIste(ctx.admin, 'integrations.read');
     return (await db.prepare('SELECT * FROM integrations WHERE deleted_at IS NULL ORDER BY type, created_at').all()).map(entegrasyonGorunumu);
+  });
+
+  // 23 Eki: kanalların GERÇEK kaynağı (panel → ortam → yok); Özet ekranı
+  // "Panelde tanımlı değil" yerine sistemin gerçekten ne kullandığını gösterir.
+  r.get('/admin/v1/integrations/effective', async (ctx) => {
+    yetkiIste(ctx.admin, 'integrations.read');
+    return kanalKaynaklari(db);
   });
 
   r.post('/admin/v1/integrations', async (ctx) => {

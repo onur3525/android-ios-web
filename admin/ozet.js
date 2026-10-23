@@ -2,7 +2,7 @@
 // ÖZET EKRANI — yalnız MEVCUT admin API'leri (sahte/demo veri YOK)
 //
 // Kaynaklar: /stats · /stats/period · /users · /listings
-// · /account-closures · /integrations. Her bölüm bağımsız yüklenir;
+// · /account-closures · /integrations/effective. Her bölüm bağımsız yüklenir;
 // yetkisi olmayan rol (403) o bölümde "yetki yok" görür, ekran çökmez.
 //
 // TARİH ARALIĞI (21 Eki): sağ üstteki seçim — Bugün / Bu hafta / Bu ay /
@@ -17,42 +17,12 @@
 // yetersiz" gösterilir. CSP: satır içi stil yok; grafik SVG öznitelikli.
 // ═══════════════════════════════════════════════════════════════
 import { api, h, rozet } from './cekirdek.js';
+import { ikon, svg } from './svg.js';
+import { kanalDurumu } from './kanal_durumu.js';
 import { kapatmaPaneli } from './hesap_kapatma.js';
 
 const GUN = 86_400_000;
 const RENK = { mavi: '#2563EB', yesil: '#22C55E', mor: '#8B5CF6', turuncu: '#F97316', kirmizi: '#EF4444', gri: '#94A3B8' };
-const SVG = 'http://www.w3.org/2000/svg';
-
-function svg(etiket, nit = {}, ...cocuk) {
-  const e = document.createElementNS(SVG, etiket);
-  for (const [k, v] of Object.entries(nit)) e.setAttribute(k, String(v));
-  for (const c of cocuk) if (c) e.append(c);
-  return e;
-}
-
-/** Basit ikon kümesi (çizgi; currentColor). */
-const IKON = {
-  kisi: 'M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M20 19v-1a3 3 0 0 0-2-2.8M15 4.2a3 3 0 0 1 0 5.6',
-  ilan: 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1M9 8h6M9 12h6M9 16h4',
-  teklif: 'M6 3h9l3 3v15H6zM9 11h6M9 15h6',
-  talep: 'M4 5h16v10H8l-4 4zM8 9h8M8 12h5',
-  askida: 'M9 6v12M15 6v12',
-  ban: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M6 6l12 12',
-  tik: 'M5 12l4 4 10-10',
-  silme: 'M5 7h14M10 11v6M14 11v6M7 7l1 13h8l1-13M9 7V4h6v3',
-  zil: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0',
-  sunucu: 'M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01',
-  db: 'M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
-  sms: 'M4 5h16v11H8l-4 4zM8 10h.01M12 10h.01M16 10h.01',
-  posta: 'M3 6h18v12H3zM3 7l9 6 9-6',
-  depo: 'M4 7l8-4 8 4-8 4zM4 7v10l8 4 8-4V7M12 11v10',
-  takvim: 'M4 5h16v15H4zM4 9h16M8 3v4M16 3v4',
-};
-function ikon(ad, boyut = 20) {
-  return svg('svg', { viewBox: '0 0 24 24', width: boyut, height: boyut, fill: 'none', stroke: 'currentColor', 'stroke-width': 1.8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' },
-    svg('path', { d: IKON[ad] }));
-}
-
 const kisaTarih = (v) => (v ? new Date(v).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
 const sayi = (v) => (Number.isFinite(v) ? v.toLocaleString('tr-TR') : '—');
 const gunBasi = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
@@ -336,7 +306,7 @@ export async function ozetSayfasi() {
   const sorguBas = gunEkle(d.bas, d.gun - toplamGun);
   const [st, ku, il, en, dn, pz] = await Promise.all([
     al('/stats'), al('/users?limit=200'), al('/listings?limit=200'),
-    al('/integrations'),
+    al('/integrations/effective'),
     al(`/stats/period?from=${encodeURIComponent(sorguBas.toISOString())}&days=${toplamGun}`),
     // Seçili dönemin teklif talepleri ve seçilen teklif tutarı (21 Eki).
     al(`/stats/market?from=${encodeURIComponent(d.bas.toISOString())}&days=${d.gun}`),
@@ -365,16 +335,17 @@ export async function ozetSayfasi() {
   const durumSatiri = (ad, ikonAd, durum, sinif) => h('li', {}, h('span', { class: 'oz-durum-ad' }, ikon(ikonAd, 18), ad),
     h('span', { class: `oz-durum ${sinif}` }, durum));
   const sistem = [
-    durumSatiri('Backend API', 'sunucu', 'Çalışıyor', 'iyi'),
-    durumSatiri('Veritabanı', 'db', 'Çalışıyor', 'iyi'),
+    durumSatiri('Backend API', 'sunucu', 'Yanıt veriyor', 'iyi'), // bu ekranın verisi şu an ondan geldi
+    durumSatiri('Veritabanı', 'db', 'Yanıt veriyor', 'iyi'), // sayılar şu an veritabanından okundu
     ...(en.e
       ? []
+      // 23 Eki: kanalın GERÇEK kaynağı (panel → sunucu ayarı → yok); kural
+      // tek kaynakta (kanal_durumu.js), Sistem Durumu ekranıyla aynı.
       : ['SMS', 'EMAIL', 'STORAGE'].map((t) => {
-        const x = en.v.find((i) => i.type === t && i.active);
+        const k = en.v.find((i) => i.type === t);
         const ikonAd = { SMS: 'sms', EMAIL: 'posta', STORAGE: 'depo' }[t];
-        if (!x) return durumSatiri(ENTEGRASYON[t], ikonAd, 'Panelde tanımlı değil', 'notr');
-        if (x.lastTestOk === false) return durumSatiri(ENTEGRASYON[t], ikonAd, 'Son test başarısız', 'kotu');
-        return durumSatiri(ENTEGRASYON[t], ikonAd, x.lastTestOk ? 'Etkin · test başarılı' : 'Etkin', 'iyi');
+        const d = kanalDurumu(k);
+        return durumSatiri(ENTEGRASYON[t], ikonAd, d.metin, d.sinif);
       })),
     durumSatiri('Bildirim gönderimi (7 gün)', 'zil',
       s.failedNotifications ? `${sayi(s.failedNotifications)} başarısız` : 'Sorun yok', s.failedNotifications ? 'kotu' : 'iyi'),

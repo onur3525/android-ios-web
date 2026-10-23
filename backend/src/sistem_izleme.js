@@ -12,12 +12,20 @@
 //     kişisel veri, gövde, IP yok).
 //   · CPU / RAM: yanıt veren sunucu örneğinin kapsayıcı (cgroup) ölçümü;
 //     okunamazsa null. Node sürecinin belleği her zaman ölçülür.
-//   · Disk: sunucunun dosya sistemi (statfs) ve veritabanının gerçek boyutu.
+//   · Veritabanı boyutu: gerçek boyut (pg_database_size).
+//   · ⚠ SUNUCU DİSKİ GÖSTERİLMEZ (23 Eki, kullanıcı kuralı "sahte ve
+//     varsayım olmamalı"): Render'da uygulama paylaşılan bir makinede
+//     kapsayıcı olarak çalışır; kapsayıcı içinden `statfs('/')` o makinenin
+//     TAMAMINI (başka müşteriler dahil) ölçer, HizmetCep'in kullanımını
+//     değil. Uygulama diske veri yazmaz (veritabanı ayrı servis, dosyalar
+//     nesne deposunda). Yanıltıcı olduğu için kaldırıldı.
+//   · Gönderim kanalları: panel entegrasyonu, yoksa ortam değişkeni, yoksa
+//     "yapılandırılmamış" (entegrasyon.js › kanalKaynaklari).
 //   · Yedekleme: Render API (PITR durumu + dışa aktarmalar). Anahtar
 //     girilmemişse "doğrulanmadı". İndirme adresleri hiçbir yere yazılmaz.
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
-import { readFile, statfs } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { guvenliIstek } from './ag_guvenligi.js';
 import { sirCoz } from './auth.js';
 import { simdi } from './db.js';
@@ -108,6 +116,27 @@ async function pencereOzeti(db, dakika) {
   };
 }
 
+/**
+ * Son 24 saatin SAAT SAAT gerçek ölçümü (grafik için, 23 Eki). Ölçülmeyen
+ * saat (istek yok ya da ölçüm başlamadan önce) requests=0, avgMs=null;
+ * değer uydurulmaz, boşluk doldurulmaz.
+ */
+async function saatlikSeri(db) {
+  const simdiDk = Math.floor(Date.now() / DAKIKA);
+  const bas = simdiDk - 24 * 60 + 1;
+  const seri = Array.from({ length: 24 }, (_, i) => ({
+    start: new Date((bas + i * 60) * DAKIKA).toISOString(), requests: 0, errors5xx: 0, errors4xx: 0, totalMs: 0, maxMs: 0,
+  }));
+  for (const r of await db.prepare('SELECT bucket, requests, errors_4xx, errors_5xx, total_ms, max_ms FROM api_metrics WHERE bucket >= ?').all(bas)) {
+    const i = Math.floor((Number(r.bucket) - bas) / 60);
+    if (i < 0 || i > 23) continue;
+    const x = seri[i];
+    x.requests += Number(r.requests); x.errors5xx += Number(r.errors_5xx); x.errors4xx += Number(r.errors_4xx);
+    x.totalMs += Number(r.total_ms); x.maxMs = Math.max(x.maxMs, Number(r.max_ms));
+  }
+  return seri.map(({ totalMs, ...x }) => ({ ...x, avgMs: x.requests ? Math.round(totalMs / x.requests) : null, maxMs: x.requests ? x.maxMs : null }));
+}
+
 export async function apiOlcumleri(db) {
   const ilk = await db.prepare('SELECT MIN(bucket) b FROM api_metrics').get();
   return {
@@ -115,6 +144,7 @@ export async function apiOlcumleri(db) {
     last15m: await pencereOzeti(db, 15),
     last1h: await pencereOzeti(db, 60),
     last24h: await pencereOzeti(db, 24 * 60),
+    hourly24h: await saatlikSeri(db),
   };
 }
 
@@ -186,14 +216,6 @@ export async function kaynakKullanimi(db, { aralikMs = 500 } = {}) {
     percent: b.memLimit ? Math.round((b.memUsed / b.memLimit) * 1000) / 10 : null,
   } : null;
 
-  let disk = null;
-  try {
-    const s = await statfs('/');
-    const toplam = Number(s.blocks) * Number(s.bsize);
-    const bos = Number(s.bavail) * Number(s.bsize);
-    if (toplam > 0) disk = { totalBytes: toplam, usedBytes: toplam - bos, percent: Math.round(((toplam - bos) / toplam) * 1000) / 10 };
-  } catch { disk = null; }
-
   let veritabani = null;
   try {
     if (db.surucu === 'postgres') {
@@ -214,7 +236,6 @@ export async function kaynakKullanimi(db, { aralikMs = 500 } = {}) {
       rssBytes: process.memoryUsage().rss,
       cpuPercentOfOneCore: gecenUs > 0 ? Math.round(((s1.user + s1.system) / gecenUs) * 1000) / 10 : null,
     },
-    disk,
     database: veritabani,
   };
 }
@@ -303,14 +324,13 @@ export async function izlemeBakimi(db) {
 // ── GENEL DURUM ──────────────────────────────────────────────
 // Kurallar panelde de yazılıdır. Ölçülemeyen gösterge "uyarı" sayılır,
 // "sağlıklı" sayılmaz.
-export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, silmeTukenen }) {
+export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, silmeTukenen, kanallar, basarisiz24 }) {
   const sorunlar = []; const uyarilar = [];
   if (!veritabaniOk) sorunlar.push('Veritabanı yanıt vermiyor');
   const s = api?.last15m;
   if (s && s.requests >= 20 && s.rate5xx !== null && s.rate5xx >= 5) sorunlar.push(`Son 15 dakikada sunucu hatası oranı %${s.rate5xx}`);
   else if (s && s.errors5xx > 0) uyarilar.push(`Son 15 dakikada ${s.errors5xx} sunucu hatası`);
   if (kaynak?.memory?.percent !== null && kaynak?.memory?.percent !== undefined && kaynak.memory.percent >= 90) sorunlar.push(`Bellek kullanımı %${kaynak.memory.percent}`);
-  if (kaynak?.disk?.percent >= 90) sorunlar.push(`Sunucu diski %${kaynak.disk.percent} dolu`);
   if (!kaynak?.cpu) uyarilar.push('CPU kullanımı ölçülemiyor');
   if (!kaynak?.memory) uyarilar.push('Kapsayıcı belleği ölçülemiyor');
   if (yedek) {
@@ -320,6 +340,17 @@ export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, s
     else if (yedek.status !== 'AVAILABLE') uyarilar.push('Yedek henüz hazır değil');
   }
   for (const e of entegrasyonlar ?? []) if (e.active && e.lastTestOk === false) uyarilar.push(`${e.type} entegrasyonunun son testi başarısız`);
+  // 23 Eki: gönderim yolu hiç yoksa ya da yalnız geliştirme kaydıysa
+  // (gönderim YAPILMAZ) uyarı; son 24 saatte başarısız gönderim varsa uyarı.
+  const KANAL_ADI = { SMS: 'SMS', EMAIL: 'E-posta', STORAGE: 'Dosya depolama' };
+  for (const k of kanallar ?? []) {
+    // SMS bilinçli olarak kapalı olabilir (kodları Firebase gönderir; 23 Eki karar A): uyarı değil.
+    if (k.source === 'yok' && k.type !== 'SMS') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} yapılandırılmamış (panelde ve sunucu ayarında yok)`);
+    else if (k.source === 'ortam' && k.provider === 'log') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} gerçekten gönderilmiyor (geliştirme kaydı)`);
+  }
+  for (const [kanal, n] of Object.entries(basarisiz24 ?? {})) {
+    if (n > 0) uyarilar.push(`Son 24 saatte ${n} ${KANAL_ADI[kanal] ?? kanal} gönderilemedi`);
+  }
   if (silmeTukenen > 0) uyarilar.push(`${silmeTukenen} silme işi deneme hakkını tüketti`);
   return { status: sorunlar.length ? 'PROBLEM' : uyarilar.length ? 'WARNING' : 'OK', problems: sorunlar, warnings: uyarilar };
 }

@@ -70,7 +70,11 @@ jobs:
         env:
           STORAGE_HOSTS: ${{ vars.HC_STORAGE_HOSTS }}
         run: |
+          # ⚠ 23 Eki (KVKK B9): --no-web-resources-cdn — CanvasKit ve motor
+          # dosyaları Google'ın CDN'inden (gstatic) DEĞİL, kendi sitemizden
+          # yüklenir; ziyaretçinin IP'si açılışta Google'a gitmez.
           flutter build web --release \
+            --no-web-resources-cdn \
             --base-href / \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=STORAGE_HOSTS="$STORAGE_HOSTS" \
@@ -89,6 +93,11 @@ jobs:
             echo "::error::GitHub Pages base-href production'a taşınmış"; exit 1
           fi
           ls -la firebase-messaging-sw.js fcm_web.js fcm_yapilandirma.js
+          # Motor dosyaları yerel olmalı (Google CDN'e bağımlılık yok).
+          ls canvaskit/canvaskit.wasm >/dev/null || { echo "::error::canvaskit yerel kopyası yok"; exit 1; }
+          # Derleme yapılandırması yerel CanvasKit'i işaretlemeli (yalnız uyarı:
+          # bayrağın çıktısı Flutter sürümüne göre biçim değiştirebilir).
+          grep -q '"useLocalCanvasKit":true' flutter_bootstrap.js || echo "::warning::flutter_bootstrap.js içinde useLocalCanvasKit:true bulunamadı; tarayıcıda ağ sekmesinden doğrulayın"
 
       - uses: actions/upload-artifact@v6
         with:

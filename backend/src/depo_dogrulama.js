@@ -25,6 +25,8 @@ import { ApiHatasi, hata } from './http.js';
 
 export const TUR_SINIRI = { 'listing-photo': 10 * 1024 * 1024, 'profile-photo': 10 * 1024 * 1024 };
 export const ICERIK_UZANTI = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic' };
+/** Yeni yüklemede kabul edilen türler (HEIC hariç — meta verisi ayıklanamıyor, 23 Eki). */
+export const YENI_YUKLEME_TURLERI = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ANAHTAR = /^u\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.(jpg|png|webp|heic)$/;
 
 /** İlk baytlardan gerçek görsel türü; tanınmazsa null. */
@@ -91,7 +93,7 @@ export async function dosyalariDogrula(db, refler, kullaniciId, beklenenTur = nu
       if (bilgi.var) {
         await db.prepare(`UPDATE storage_objects SET status = 'DISCARDED', delete_requested_at = ? WHERE ref = ? AND status = 'PENDING'`).run(simdi(), ref);
       }
-      throw hata.dogrulama(bilgi.var ? 'Fotoğraf doğrulanamadı. Lütfen geçerli bir JPG, PNG, WEBP ya da HEIC yükleyin.' : 'Fotoğraf yüklenmemiş');
+      throw hata.dogrulama(bilgi.var ? 'Fotoğraf doğrulanamadı. Lütfen geçerli bir JPG, PNG ya da WEBP yükleyin.' : 'Fotoğraf yüklenmemiş');
     }
     await db.prepare('UPDATE storage_objects SET verified_at = ? WHERE ref = ?').run(simdi(), ref);
   }

@@ -386,3 +386,81 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .bolge-liste label { font-size:14px; display:flex; align-items:center; gap:6px; }
 .bolge-liste label.ekli { color:#94A3B8; }
 .bolge-tumu { font-weight:600; font-size:14px; }
+
+/* ═══ SİSTEM DURUMU — görsel (23 Eki): her sistem ayrı kart, gerçek veriden renk ═══ */
+.sd-hero { position:relative; overflow:hidden; border-radius:18px; padding:22px; color:#fff; display:grid; gap:14px;
+  background:linear-gradient(135deg, #334155, #0f172a); box-shadow:0 10px 30px rgba(15,23,42,.18); }
+.sd-hero.iyi { background:linear-gradient(135deg, #16A34A, #065F46); }
+.sd-hero.uyari { background:linear-gradient(135deg, #F59E0B, #B45309); }
+.sd-hero.kotu { background:linear-gradient(135deg, #EF4444, #991B1B); }
+.sd-hero::after { content:''; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.08); }
+.sd-hero h3 { margin:0; font-size:22px; font-weight:800; }
+.sd-hero .not { color:rgba(255,255,255,.85); margin:4px 0 0; }
+.sd-hero-sol { display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
+.sd-hero-ikon { flex:0 0 auto; width:54px; height:54px; border-radius:16px; display:grid; place-items:center; background:rgba(255,255,255,.18); }
+.sd-hero-ikon.iyi svg, .sd-hero-ikon.uyari svg, .sd-hero-ikon.kotu svg { animation:sd-nabiz 2.4s ease-in-out infinite; }
+@keyframes sd-nabiz { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .sd-hero-ikon svg { animation:none !important; } }
+.sd-hero-sayac { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; position:relative; z-index:1; }
+.sd-sayac { background:rgba(255,255,255,.14); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+.sd-sayac strong { font-size:24px; line-height:1.1; }
+.sd-sayac span { font-size:12px; opacity:.9; }
+.sd-sayac::before { content:''; width:8px; height:8px; border-radius:50%; background:#94A3B8; margin-bottom:4px; }
+.sd-sayac.iyi::before { background:#4ADE80; } .sd-sayac.uyari::before { background:#FCD34D; } .sd-sayac.kotu::before { background:#FCA5A5; }
+.sd-hero-madde { margin:0; padding-left:18px; position:relative; z-index:1; font-size:14px; }
+.sd-hero-madde li { margin:3px 0; } .sd-hero-madde li.kotu { font-weight:700; }
+.sd-hero-tamam { margin:0; position:relative; z-index:1; font-weight:600; }
+@media (max-width:620px) { .sd-hero-sayac { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+.sd-izgara { display:grid; grid-template-columns:repeat(auto-fill, minmax(270px, 1fr)); gap:16px; }
+.sd-kutu { background:#fff; border:1px solid var(--oz-cizgi); border-top:4px solid #94A3B8; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px; min-width:0;
+  box-shadow:0 1px 2px rgba(15,23,42,.04); transition:transform .15s ease, box-shadow .15s ease; }
+.sd-kutu:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(15,23,42,.08); }
+.sd-kutu.iyi { border-top-color:#16A34A; } .sd-kutu.uyari { border-top-color:#D97706; } .sd-kutu.kotu { border-top-color:var(--oz-kirmizi); }
+.sd-kutu-ust { display:flex; align-items:flex-start; gap:12px; }
+.sd-kutu-ikon { flex:0 0 auto; width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:#F1F5F9; color:#64748B; }
+.sd-kutu-ikon.iyi { background:#DCFCE7; color:#16A34A; } .sd-kutu-ikon.uyari { background:#FEF3C7; color:#B45309; } .sd-kutu-ikon.kotu { background:#FEE2E2; color:#B91C1C; }
+.sd-kutu-baslik { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.sd-kutu-baslik h3 { margin:0; font-size:16px; font-weight:700; }
+.sd-kutu-baslik .oz-durum { text-align:left; }
+.sd-ana { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.sd-ana-deger { font-size:30px; font-weight:800; letter-spacing:-.5px; color:var(--oz-yazi); }
+.sd-ana-alt { font-size:12px; color:var(--oz-soluk); }
+.sd-kutu-liste { font-size:13px; gap:6px 12px; }
+.sd-kutu-liste dd { overflow-wrap:anywhere; min-width:0; }
+.sd-kutu .not { margin:0; font-size:12px; color:var(--oz-soluk); }
+.sd-kutu .oz-tumu { align-self:flex-start; }
+
+.sd-halkalar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sd-halka { display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; }
+.sd-halka-zemin { fill:none; stroke:#EEF2F7; stroke-width:9; }
+.sd-halka-deger { fill:none; stroke:#94A3B8; stroke-width:9; stroke-linecap:round; transition:stroke-dasharray .8s ease; }
+.sd-halka-deger.iyi { stroke:#22C55E; } .sd-halka-deger.uyari { stroke:#F59E0B; } .sd-halka-deger.kotu { stroke:#EF4444; }
+.sd-halka-yazi { font-size:16px; font-weight:800; fill:#0F172A; }
+.sd-halka-ad { font-weight:700; font-size:13px; }
+.sd-halka-alt { font-size:11px; color:var(--oz-soluk); }
+
+.sd-oran { display:flex; flex-direction:column; gap:6px; }
+.sd-oran svg { display:block; border-radius:4px; overflow:hidden; }
+.sd-oran-zemin { fill:#EEF2F7; }
+.sd-oran-iyi { fill:#22C55E; } .sd-oran-kotu { fill:#EF4444; } .sd-oran-notr { fill:#CBD5E1; }
+.sd-oran-lejant { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--oz-soluk); }
+.sd-lejant { display:inline-flex; align-items:center; gap:5px; }
+.sd-lejant::before { content:''; width:9px; height:9px; border-radius:3px; background:#CBD5E1; }
+.sd-lejant.iyi::before { background:#22C55E; } .sd-lejant.kotu::before { background:#EF4444; } .sd-lejant.uyari::before { background:#F59E0B; } .sd-lejant.mavi::before { background:#3B82F6; }
+
+.sd-grafik { position:relative; }
+.sd-grafik svg { display:block; height:auto; }
+.sd-izgara-cizgi { stroke:#EEF2F7; stroke-width:1; }
+.sd-eksen { font-size:10px; fill:#94A3B8; }
+.sd-cubuk { fill:#3B82F6; opacity:.85; } .sd-cubuk:hover { opacity:1; }
+.sd-cubuk-4xx { fill:#F59E0B; } .sd-cubuk-5xx { fill:#EF4444; }
+.sd-cizgi { fill:none; stroke:#8B5CF6; stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+.sd-nokta { fill:#fff; stroke:#8B5CF6; stroke-width:2; }
+.sd-grafik-bos { position:absolute; inset:0; display:grid; place-items:center; margin:0; color:var(--oz-soluk); font-size:13px; }
+
+.sd-ayrinti > summary { cursor:pointer; font-weight:700; font-size:15px; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+.sd-ayrinti > summary::-webkit-details-marker { display:none; }
+.sd-ayrinti > summary::after { content:'›'; font-size:20px; color:var(--oz-soluk); transition:transform .15s ease; }
+.sd-ayrinti[open] > summary::after { transform:rotate(90deg); }
+.sd-ayrinti[open] > summary { margin-bottom:12px; }
