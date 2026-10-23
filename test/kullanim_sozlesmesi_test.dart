@@ -61,6 +61,10 @@ void main() {
     expect(_oku('backend/src/routes/kullanici.js').contains("ctx.body.termsAccepted !== true"), isTrue);
     // İki onay sunucuya bildirilir; onay kaydı sözleşme + aydınlatma metnine yazılır.
     expect(_oku('lib/data/remote/api/auth_api.dart').contains("'aydinlatmaAccepted': termsAccepted,"), isTrue);
-    expect(_oku('backend/src/routes/kullanici.js').contains("ctx.body.aydinlatmaAccepted === true ? ['terms', 'kvkk'] : ['terms', 'privacy']"), isTrue);
+    // 23 Eki: aydınlatma bilgilendirmesi sunucuda da ZORUNLU; kayıt
+    // sözleşme + aydınlatma metnine yazılır (eski tek onaylı yol kaldırıldı).
+    final k = _oku('backend/src/routes/kullanici.js');
+    expect(k.contains("if (ctx.body.aydinlatmaAccepted !== true) throw new ApiHatasi(400, 'AYDINLATMA_REQUIRED'"), isTrue);
+    expect(k.contains("const onaylananlar = ['terms', 'kvkk'];"), isTrue);
   });
 }

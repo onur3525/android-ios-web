@@ -26,7 +26,7 @@ void main() {
   test('aydınlatma ve çerez politikası menüden okunabilir (tek satır → belge listesi)', () {
     final mobil = _kodu('lib/screens/profile_screen.dart');
     expect(mobil.contains("Navigator.pushNamed(c, '/profile/legal')"), isTrue);
-    expect(mobil.contains("'slug': 'terms'"), isFalse, 'profilde belgeler ayrı ayrı durmaz');
+    expect(mobil.contains("'slug': 'terms'"), isFalse, reason: 'profilde belgeler ayrı ayrı durmaz');
     final menu = _kodu('lib/domain/profil_menusu.dart');
     expect(menu.contains("rota: '/profile/legal'"), isTrue);
     for (final slug in ['terms', 'privacy', 'kvkk', 'cookies']) {

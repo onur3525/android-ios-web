@@ -41,6 +41,8 @@ import '../data/models/account.dart';
 /// KVKK: aydınlatma, gizlilik ve çerez metinleri her zaman buradan
 /// okunabilir kalır. Çerez Politikası yalnız web'de (mobil uygulama çerez
 /// kullanmaz).
+/// ⚠ İKONLAR ÇİZGİ: bu dosyadaki ikonlar kenar çubuğunda tek renge
+/// boyanır; dolgulu `ic_pdoc` kullanılmaz (bkz. web_destek_paneli_test).
 /// ═══════════════════════════════════════════════════════════════
 @immutable
 class YasalBelge {
@@ -66,7 +68,7 @@ const List<YasalBelge> kYasalBelgeler = [
     slug: 'terms',
     baslik: 'Kullanım Sözleşmesi',
     altYazi: 'Uygulama kullanım koşullarını inceleyin.',
-    ikon: 'assets/svg/ic_pdoc.svg',
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
     ikonZemini: Color(0xFFE2F7FA),
   ),
   YasalBelge(
@@ -80,14 +82,14 @@ const List<YasalBelge> kYasalBelgeler = [
     slug: 'kvkk',
     baslik: 'Aydınlatma Metni',
     altYazi: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
-    ikon: 'assets/svg/ic_pdoc.svg',
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
     ikonZemini: Color(0xFFE7EFFD),
   ),
   YasalBelge(
     slug: 'cookies',
     baslik: 'Çerez Politikası',
     altYazi: 'Web sitesinde kullanılan zorunlu çerezler.',
-    ikon: 'assets/svg/ic_pdoc.svg',
+    ikon: 'assets/svg/ic_doc_cizgi.svg',
     ikonZemini: Color(0xFFEEF0F4),
     yalnizWeb: true,
   ),

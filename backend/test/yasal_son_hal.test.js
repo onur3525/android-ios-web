@@ -61,7 +61,7 @@ test('040: yayımdaki metinlerde hazırlık notu ve boş bölüm kalmaz; iletiş
   assert.ok((await yayimda('terms')).body.includes('ödeme aracılığı'), 'ödeme aracılığı yapılmadığı açık');
   assert.equal((await yayimda('cookies')).id, once.cookies.id, 'Çerez Politikası değişmez');
   // 035 taslakları arşivde; yayımlanabilir taslak kalmadı.
-  assert.equal(Number((await db.prepare(`SELECT COUNT(*) n FROM legal_versions WHERE status = 'DRAFT' AND id LIKE '%23102026b01%'`).get()).n), 0);
+  assert.equal(Number((await db.prepare(`SELECT COUNT(*) n FROM legal_versions WHERE status = 'DRAFT' AND CAST(id AS TEXT) LIKE '%23102026b01%'`).get()).n), 0);
   assert.equal((await db.prepare(`SELECT requires_acceptance r FROM legal_documents WHERE slug = 'terms'`).get()).r, 1, 'sözleşme yeni sürüm için onaylatılır');
   assert.equal((await db.prepare(`SELECT requires_acceptance r FROM legal_documents WHERE slug = 'kvkk'`).get()).r, 0, 'aydınlatma onaylatılmaz (bilgilendirme)');
   assert.equal((await db.prepare(`SELECT active a FROM legal_documents WHERE slug = 'membership'`).get()).a, 0, 'Üyelik Sözleşmesi pasif (tek sözleşme)');
