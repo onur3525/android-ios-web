@@ -47,7 +47,11 @@ export async function kanalKaynaklari(db) {
     'SELECT type, provider, active, last_test_at, last_test_ok, last_test_message FROM integrations WHERE deleted_at IS NULL ORDER BY created_at',
   ).all();
   const evet = (v) => v === 1 || v === true;
-  return ['SMS', 'EMAIL', 'STORAGE'].map((tur) => {
+  // 23 Eki: depolamanın 15 dakikalık otomatik kontrolü (sistem_izleme.js).
+  const dk = await db.prepare('SELECT checked_at, check_ok, check_message FROM storage_monitor WHERE id = 1').get();
+  const otomatik = dk ? { autoCheckAt: dk.checked_at, autoCheckOk: evet(dk.check_ok), autoCheckMessage: dk.check_message } : { autoCheckAt: null, autoCheckOk: null, autoCheckMessage: null };
+  return ['SMS', 'EMAIL', 'STORAGE'].map((tur) => ({ ...kanal(tur), ...(tur === 'STORAGE' ? otomatik : {}) }));
+  function kanal(tur) {
     const e = panel.find((x) => x.type === tur && evet(x.active));
     if (e) {
       return {
@@ -64,7 +68,7 @@ export async function kanalKaynaklari(db) {
     }
     const s = tur === 'SMS' ? config.sms : config.eposta;
     return s.ad === 'yok' ? { type: tur, source: 'yok', provider: null, ...bos } : { type: tur, source: 'ortam', provider: s.ad, ...bos };
-  });
+  }
 }
 
 /** Depolama yapılandırması: entegrasyon → ortam değişkeni → yok. */

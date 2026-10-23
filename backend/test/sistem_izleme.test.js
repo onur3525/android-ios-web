@@ -12,7 +12,7 @@ const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { simdi } = await import('../src/db.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
-const { istekOlc, olcumleriYaz, yolDeseni, kaynakTestOkuyucu, yedekTestGetirici, izlemeBakimi, genelDurum } = await import('../src/sistem_izleme.js');
+const { istekOlc, olcumleriYaz, yolDeseni, kaynakTestOkuyucu, yedekTestGetirici, izlemeBakimi, genelDurum, depolamaKontrolEt, depoTestGetirici } = await import('../src/sistem_izleme.js');
 const { degisiklikOnayi, onayKimligi } = await import('./admin_onay.js');
 
 const SIFRE = 'GucluSifre12345';
@@ -54,7 +54,7 @@ before(async () => {
   await adminGiris('super_admin');
   await adminGiris('readonly');
 });
-after(async () => { kaynakTestOkuyucu(null); yedekTestGetirici(null); sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
+after(async () => { kaynakTestOkuyucu(null); yedekTestGetirici(null); depoTestGetirici(null); sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
 
 test('yol deseni: kimlik ve sayılar saklanmaz', () => {
   assert.equal(yolDeseni(`/api/v1/listings/${randomUUID()}/offers/12345`), '/api/v1/listings/:id/offers/:id');
@@ -266,4 +266,61 @@ test('genel durum: yapılandırılmamış kanal ve 24 saatlik başarısızlık u
   assert.equal(y.status, 'WARNING');
   assert.deepEqual(y.warnings, ['E-posta yapılandırılmamış (panelde ve sunucu ayarında yok)', 'Son 24 saatte 3 SMS gönderilemedi']);
   assert.equal(genelDurum({ ...temel, kaynak: { ...temel.kaynak, disk: { percent: 99 } } }).status, 'OK', 'disk artık kural değil');
+});
+
+test('depolama: 15 dakikada bir otomatik kontrol; depoya yazmaz, adres/anahtar saklanmaz; başarısızlık sorun', async () => {
+  const DEPO = { HC_S3_ENDPOINT: 'https://depo.example', HC_S3_BUCKET: 'kova', HC_S3_ACCESS_KEY_ID: 'AKIDKONTROL', HC_S3_SECRET_ACCESS_KEY: 'gizli-depo-anahtari' };
+  const eski = Object.fromEntries(Object.keys(DEPO).map((k) => [k, process.env[k]]));
+  Object.assign(process.env, DEPO);
+  try {
+    await db.prepare('DELETE FROM storage_monitor').run();
+    const istenen = [];
+    depoTestGetirici(async (adres) => { istenen.push(adres); return { status: 404, text: '<?xml version="1.0"?><Error><Code>NoSuchKey</Code></Error>' }; });
+    assert.deepEqual(await depolamaKontrolEt(db), { ok: true, mesaj: 'Depoya erişildi' });
+    assert.equal(istenen.length, 1);
+    assert.ok(istenen[0].startsWith('https://kova.depo.example/_saglik-kontrolu/olmayan-nesne?'), 'olmayan bir nesne istenir');
+    assert.ok(istenen[0].includes('X-Amz-Signature='), 'imzalı istek');
+    // 15 dakika dolmadan yeniden kontrol edilmez.
+    assert.equal(await depolamaKontrolEt(db), null);
+    assert.equal(istenen.length, 1);
+
+    const s = await durum('super_admin');
+    const depo = s.channels.find((x) => x.type === 'STORAGE');
+    assert.equal(depo.source, 'ortam');
+    assert.equal(depo.autoCheckOk, true);
+    assert.ok(depo.autoCheckAt);
+    assert.ok(!s.overall.problems.some((p) => p.startsWith('Dosya depolama')));
+    // Yetkisi kısıtlı rol de durumu görür (sonuç metni yalnız yetkiliye).
+    const k = (await durum('readonly')).channels.find((x) => x.type === 'STORAGE');
+    assert.equal(k.autoCheckOk, true);
+    assert.equal('autoCheckMessage' in k, false);
+
+    // Yetki/imza hatası → başarısız → genel durumda sorun.
+    depoTestGetirici(async () => ({ status: 403, text: '<Error><Code>SignatureDoesNotMatch</Code></Error>' }));
+    assert.deepEqual(await depolamaKontrolEt(db, { zorla: true }), { ok: false, mesaj: 'Depo yanıtı: HTTP 403 · SignatureDoesNotMatch' });
+    const y = await durum('super_admin');
+    assert.equal(y.channels.find((x) => x.type === 'STORAGE').autoCheckOk, false);
+    assert.equal(y.overall.status, 'PROBLEM');
+    assert.ok(y.overall.problems.includes('Dosya depolamaya erişilemiyor (otomatik kontrol başarısız)'));
+
+    // Bağlantı hatasında mesajdan imzalı adres çıkarılır.
+    depoTestGetirici(async (adres) => { throw new Error(`bağlanamadı ${adres}`); });
+    const h = await depolamaKontrolEt(db, { zorla: true });
+    assert.equal(h.ok, false);
+    assert.ok(h.mesaj.includes('[adres]'));
+    const kayit = JSON.stringify(await db.prepare('SELECT * FROM storage_monitor').all());
+    for (const yasak of ['AKIDKONTROL', 'gizli-depo-anahtari', 'X-Amz', 'depo.example']) assert.equal(kayit.includes(yasak), false, yasak);
+  } finally {
+    for (const [k, v] of Object.entries(eski)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    depoTestGetirici(null);
+    await db.prepare('DELETE FROM storage_monitor').run();
+  }
+});
+
+test('depolama yapılandırılmamışsa otomatik kontrol yapılmaz', async () => {
+  let cagri = 0;
+  depoTestGetirici(async () => { cagri += 1; return { status: 404, text: '<Code>NoSuchKey</Code>' }; });
+  assert.equal(await depolamaKontrolEt(db, { zorla: true }), null);
+  assert.equal(cagri, 0);
+  depoTestGetirici(null);
 });

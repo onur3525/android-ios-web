@@ -244,6 +244,7 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
       satirlar: [
         ['Kaynak', kanalKaynagi(kk)],
         ...(kk?.lastTestAt ? [['Son test', `${zaman(kk.lastTestAt)} · ${kk.lastTestOk ? 'başarılı' : 'başarısız'}`]] : []),
+        ...(tur === 'STORAGE' && kk?.source !== 'yok' ? [['Otomatik kontrol', kk?.autoCheckAt ? `${zaman(kk.autoCheckAt)} · ${kk.autoCheckOk ? 'başarılı' : 'başarısız'} · 15 dakikada bir` : 'Henüz yapılmadı · 15 dakikada bir']] : []),
       ],
     });
   };

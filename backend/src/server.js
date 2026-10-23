@@ -21,7 +21,7 @@ import {
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
-import { istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
+import { depolamaKontrolEt, istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
 import { BAKIMDA_GIRIS_YOLLARI, bakimDurumu, bakimdaAcikMi, bakimIstisnasiMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
@@ -252,6 +252,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['firebase_silme', firebaseSilmeKuyrugunuIsle],
     ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
     ['izleme_bakimi', izlemeBakimi],
+    // 23 Eki: dakikada bir bakılır; son kontrol 15 dakikadan eskiyse depo kontrol edilir.
+    ['depolama_kontrolu', depolamaKontrolEt],
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.

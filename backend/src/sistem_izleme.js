@@ -21,6 +21,8 @@
 //     nesne deposunda). Yanıltıcı olduğu için kaldırıldı.
 //   · Gönderim kanalları: panel entegrasyonu, yoksa ortam değişkeni, yoksa
 //     "yapılandırılmamış" (entegrasyon.js › kanalKaynaklari).
+//   · Dosya depolama: sunucu 15 dakikada bir depoya imzalı GET ile olmayan
+//     bir nesneyi sorar (yazma YOK); sonuç storage_monitor'da (23 Eki).
 //   · Yedekleme: Render API (PITR durumu + dışa aktarmalar). Anahtar
 //     girilmemişse "doğrulanmadı". İndirme adresleri hiçbir yere yazılmaz.
 // ═══════════════════════════════════════════════════════════════
@@ -28,6 +30,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { guvenliIstek } from './ag_guvenligi.js';
 import { sirCoz } from './auth.js';
+import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 import { simdi } from './db.js';
 
 const DAKIKA = 60_000;
@@ -303,6 +306,54 @@ export async function yedekDurumu(db, { yenile = false } = {}) {
   };
 }
 
+// ── DOSYA DEPOLAMA OTOMATİK KONTROLÜ (23 Eki) ─────────────────
+// Kullanıcı isteği: depolama durumu düğmeye basmadan, 15 dakikada bir
+// otomatik doğrulansın. Kontrol depoya HİÇBİR ŞEY YAZMAZ: olmayan bir
+// nesne imzalı GET ile istenir. "NoSuchKey" (404) yanıtı, anahtarın geçerli
+// ve klasörün erişilebilir olduğunu kanıtlar; imza/yetki/klasör hatası
+// başarısız sayılır. Adres, anahtar ve imza hiçbir yere yazılmaz.
+export const DEPO_KONTROL_ARALIGI = 15 * DAKIKA;
+const DEPO_KONTROL_ANAHTARI = '_saglik-kontrolu/olmayan-nesne';
+let testDepo = null;
+/** Yalnız testler: depo isteği yerine (adres) → { status, text }. */
+export function depoTestGetirici(f) { testDepo = f; }
+
+/** Hata metninden adresleri (imza ve anahtar kimliği içerir) çıkarır. */
+const adressiz = (m) => String(m).replace(/https?:\/\/\S+/g, '[adres]').slice(0, 200);
+
+/**
+ * Depolamayı kontrol eder; son kontrol 15 dakikadan yeniyse (zorla değilse)
+ * hiçbir şey yapmaz. Depolama yapılandırılmamışsa kontrol edilecek şey yok.
+ * @returns {Promise<{ok:boolean, mesaj:string}|null>}
+ */
+export async function depolamaKontrolEt(db, { zorla = false } = {}) {
+  const ayar = await depolamaAyari(db);
+  if (!ayar) return null;
+  if (!zorla) {
+    const m = await db.prepare('SELECT checked_at FROM storage_monitor WHERE id = 1').get();
+    if (m && Date.now() - Date.parse(m.checked_at) < DEPO_KONTROL_ARALIGI) return null;
+  }
+  let ok = false; let mesaj = '';
+  try {
+    const adres = s3ImzaliAdres(ayar, { yontem: 'GET', anahtar: DEPO_KONTROL_ANAHTARI, sureSn: 60 });
+    const r = testDepo ? await testDepo(adres) : await guvenliIstek(adres, { method: 'GET', timeoutMs: 8000 });
+    const kod = /<Code>([A-Za-z]{1,64})<\/Code>/.exec(r.text ?? '')?.[1] ?? null;
+    if ((r.status === 404 && kod === 'NoSuchKey') || r.status === 200) {
+      ok = true;
+      mesaj = 'Depoya erişildi';
+    } else {
+      mesaj = `Depo yanıtı: HTTP ${r.status}${kod ? ` · ${kod}` : ''}`;
+    }
+  } catch (e) {
+    mesaj = adressiz(e.message);
+  }
+  const an = simdi();
+  await db.prepare(`INSERT INTO storage_monitor (id, checked_at, check_ok, check_message) VALUES (1, ?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET checked_at = excluded.checked_at, check_ok = excluded.check_ok, check_message = excluded.check_message`)
+    .run(an, ok ? 1 : 0, mesaj);
+  return { ok, mesaj };
+}
+
 // ── KRİTİK OLAYLAR ───────────────────────────────────────────
 export async function yoneticiGuvenlikOlaylari(db) {
   const gun = new Date(Date.now() - GUN).toISOString();
@@ -344,6 +395,8 @@ export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, s
   // (gönderim YAPILMAZ) uyarı; son 24 saatte başarısız gönderim varsa uyarı.
   const KANAL_ADI = { SMS: 'SMS', EMAIL: 'E-posta', STORAGE: 'Dosya depolama' };
   for (const k of kanallar ?? []) {
+    // 23 Eki: depolamanın otomatik kontrolü başarısızsa fotoğraf yüklenemez → sorun.
+    if (k.type === 'STORAGE' && k.source !== 'yok' && k.autoCheckOk === false) sorunlar.push('Dosya depolamaya erişilemiyor (otomatik kontrol başarısız)');
     // SMS bilinçli olarak kapalı olabilir (kodları Firebase gönderir; 23 Eki karar A): uyarı değil.
     if (k.source === 'yok' && k.type !== 'SMS') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} yapılandırılmamış (panelde ve sunucu ayarında yok)`);
     else if (k.source === 'ortam' && k.provider === 'log') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} gerçekten gönderilmiyor (geliştirme kaydı)`);
