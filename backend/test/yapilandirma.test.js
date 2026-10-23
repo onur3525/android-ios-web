@@ -40,6 +40,12 @@ test('CORS: joker, yol ve http üretimde reddedilir', () => {
   assert.match(ac({ HC_CORS_ORIGINS: 'http://hizmetcep.com' }), /https olmalı/);
 });
 
+test('CORS: üretim varsayılanı hizmetcep.com ve www.hizmetcep.com kökenlerinin ikisini de kapsar', () => {
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', "const { config } = await import('./src/config.js'); console.log(JSON.stringify(config.corsKokenleri))"],
+    { cwd: new URL('..', import.meta.url).pathname, env: { PATH: process.env.PATH, ...URETIM }, encoding: 'utf8' });
+  assert.deepEqual(JSON.parse(r.stdout.trim().split('\n').pop()), ['https://hizmetcep.com', 'https://www.hizmetcep.com']);
+});
+
 test('depolama: yarım ya da http yapılandırma reddedilir', () => {
   assert.match(ac({ HC_S3_ENDPOINT: 'https://s3.example', HC_S3_BUCKET: 'b' }), /yarım: HC_S3_ACCESS_KEY_ID, HC_S3_SECRET_ACCESS_KEY eksik/);
   assert.match(ac({ HC_S3_ENDPOINT: 'http://s3.example', HC_S3_BUCKET: 'b', HC_S3_ACCESS_KEY_ID: 'a', HC_S3_SECRET_ACCESS_KEY: 's' }), /https olmalıdır/);

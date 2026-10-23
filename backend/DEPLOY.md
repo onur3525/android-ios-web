@@ -213,9 +213,12 @@ olursa oturumlar ve şifreli sırlar ÇALIŞMAZ.
    gerekir): `HC_ADMIN_PASSWORD=… npm run admin:create -- <e-posta> "<Ad Soyad>"`.
 8. **`HC_TRUST_PROXY_HOPS`**: "İstemci IP'si" bölümündeki ölçüm adımıyla
    belirleyin; ölçmeden değer vermeyin (tanımsız = başlığa güvenilmez).
-9. **Alan adı**: Render → Custom Domains → `api.hizmetcep.com` (Flutter
-   release derlemeleri bu adresi kullanır: `API_BASE_URL=https://api.hizmetcep.com/api/v1`).
-10. **Doğrulama**: `https://api.hizmetcep.com/healthz` → `{"ok":true}`;
+9. **Adresler (23 Eki kararı)**: ayrı API alan adı YOKTUR; Flutter release
+   derlemeleri Render adresini kullanır: `API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1`.
+   Site `hizmetcep.com` (www.hizmetcep.com aynı site); `hizmetcep.com.tr` alan
+   adı tarafında `.com`'a yönlendirilir. `HC_CORS_ORIGINS` tanımlıysa iki
+   köken de yazılmalı: `https://hizmetcep.com,https://www.hizmetcep.com`.
+10. **Doğrulama**: `https://hizmetcep-backend.onrender.com/healthz` → `{"ok":true}`;
     günlükte "HizmetCep backend dinliyor" satırı; SMS/e-posta uyarısı
     varsa bilinçli olmalı.
 

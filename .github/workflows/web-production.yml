@@ -37,8 +37,9 @@ concurrency:
   group: web-production
   cancel-in-progress: false
 env:
-  # Karar (6 Eki): production API.
-  API_BASE_URL: https://api.hizmetcep.com/api/v1
+  # Karar (23 Eki): api.hizmetcep.com YOK; production API Render adresidir.
+  # Site hizmetcep.com (www.hizmetcep.com aynı site; .com.tr → .com yönlendirilir).
+  API_BASE_URL: https://hizmetcep-backend.onrender.com/api/v1
 jobs:
   web-release:
     runs-on: ubuntu-24.04
@@ -85,7 +86,7 @@ jobs:
           set -eu
           cd build/web
           grep -q '<base href="/">' index.html || { echo "::error::base-href kök (/) değil"; exit 1; }
-          grep -q 'api.hizmetcep.com' main.dart.js || { echo "::error::production API adresi derlemede yok"; exit 1; }
+          grep -q 'hizmetcep-backend.onrender.com' main.dart.js || { echo "::error::production API adresi derlemede yok"; exit 1; }
           if grep -q 'onur3525.github.io/android-ios-web' main.dart.js index.html; then
             echo "::error::GitHub Pages test adresi production derlemesine girmiş"; exit 1
           fi

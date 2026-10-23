@@ -29,9 +29,9 @@ async function istek(yol, { yontem = 'GET', govde } = {}) {
   return { durum: r.status, json: m ? JSON.parse(m) : null };
 }
 /** 034 göçünü (tohumlamadan SONRA, canlıdaki sırayla) uygular. */
-async function gocuUygula() {
-  const sql = readFileSync(new URL(`../migrations/${db.surucu}/034_yasal_taslaklar.sql`, import.meta.url), 'utf8');
-  for (const p of sql.split(/\n(?=INSERT INTO legal_versions)/).slice(1)) await db.prepare(p.trim().replace(/;$/, '')).run();
+async function gocuUygula(dosya = '034_yasal_taslaklar.sql') {
+  const sql = readFileSync(new URL(`../migrations/${db.surucu}/${dosya}`, import.meta.url), 'utf8');
+  for (const p of sql.split(/\n(?=INSERT INTO legal_versions|UPDATE legal_versions)/).slice(1)) await db.prepare(p.trim().replace(/;$/, '')).run();
 }
 const KIMLIKLER = ['b001', 'b002', 'b003', 'b004'].map((x) => `7b0e6f2a-3c1d-4e5f-9a8b-23102026${x}`);
 const KOSUL = `id IN (${KIMLIKLER.map((k) => `'${k}'`).join(', ')})`;
@@ -80,4 +80,25 @@ test('yayın kapısı: DOĞRULANACAK alanı olan taslak yayımlanamaz; temiz tas
   // Yer tutucusu olmayan taslak (Çerez Politikası) yayımlanabilir.
   const c = await istek(`/admin/v1/legal/cookies/versions/${await surum('cookies')}/publish`, { yontem: 'POST', govde: { reason: 'Adres tekleştirildi' } });
   assert.equal(c.durum, 200, JSON.stringify(c.json));
+});
+
+// 035 (23 Eki, işletmeci kararı): şahıs olarak yayın — ev adresi yok;
+// iletişim ve KVKK başvuruları onur_butun@hotmail.com. 034 taslakları arşivlenir.
+test('035: ev adresi çıkarılır, iletişim e-postası yer alır; yayımlanmamış 034 taslakları arşivlenir', async () => {
+  const once = await yayimdakiler();
+  await gocuUygula('035_yasal_taslak_iletisim.sql');
+  await gocuUygula('035_yasal_taslak_iletisim.sql');
+  assert.deepEqual(await yayimdakiler(), once, 'yayımdaki sürümler değişmez');
+  const eski = await db.prepare(`SELECT slug, status FROM legal_versions WHERE ${KOSUL} ORDER BY slug`).all();
+  // Önceki testte yayımlanan Çerez taslağı yayımda kalır; diğerleri arşivde.
+  assert.deepEqual(eski.map((x) => `${x.slug}:${x.status}`), ['cookies:PUBLISHED', 'kvkk:ARCHIVED', 'privacy:ARCHIVED', 'terms:ARCHIVED']);
+  const yeniKimlik = ['b011', 'b012', 'b013', 'b014'].map((x) => `'7b0e6f2a-3c1d-4e5f-9a8b-23102026${x}'`).join(', ');
+  const yeni = await db.prepare(`SELECT slug, body, sha256, status FROM legal_versions WHERE id IN (${yeniKimlik}) ORDER BY slug`).all();
+  assert.deepEqual(yeni.map((x) => `${x.slug}:${x.status}`), ['cookies:DRAFT', 'kvkk:DRAFT', 'privacy:DRAFT', 'terms:DRAFT']);
+  for (const t of yeni) {
+    assert.equal(createHash('sha256').update(t.body.trim(), 'utf8').digest('hex'), t.sha256);
+    assert.equal(/1847|Örnekköy|Karşıyaka/i.test(t.body), false, `${t.slug}: ev adresi yok`);
+    assert.ok(t.body.includes('onur_butun@hotmail.com'), `${t.slug}: iletişim e-postası`);
+    assert.ok(t.body.includes('Onur Bütün'), `${t.slug}: veri sorumlusu/işletmeci adı`);
+  }
 });
