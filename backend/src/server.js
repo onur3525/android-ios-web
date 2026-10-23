@@ -22,6 +22,7 @@ import {
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
 import { depolamaKontrolEt, istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
+import { yoneticiUyarilariniIsle } from './yonetici_uyarilari.js';
 import { BAKIMDA_GIRIS_YOLLARI, bakimDurumu, bakimdaAcikMi, bakimIstisnasiMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
@@ -47,6 +48,8 @@ import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
 
 const PANEL_KOKU = normalize(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'admin'));
 const ACIK_ADMIN_YOLLARI = new Set(['/admin/v1/auth/login', '/admin/v1/auth/mfa']);
+// 23 Eki: oturum ister ama hareketsizlik süresini UZATMAZ (panelin dakikalık arka plan sorgusu).
+const PASIF_ADMIN_YOLLARI = new Set(['/admin/v1/support/pending-count']);
 // Değişiklik sayılmayan oturum işlemleri: yeniden doğrulamanın kendisi ve çıkış.
 const YENIDEN_DOGRULAMASIZ = new Set(['/admin/v1/auth/reauth', '/admin/v1/auth/logout']);
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
@@ -188,7 +191,8 @@ export function uygulamaKur(db) {
       if (yol.startsWith('/admin/v1/')) {
         if (req.method !== 'GET' && req.headers['x-hc-admin'] !== '1') throw hata.yetki('Eksik istek başlığı');
         if (!ACIK_ADMIN_YOLLARI.has(yol)) {
-          const c = await oturumCoz(db, token, 'full');
+          // 23 Eki: arka plan sorguları (bekleyen talep sayısı) hareketsizlik süresini uzatmaz.
+          const c = await oturumCoz(db, token, 'full', { etkinlik: !(req.method === 'GET' && PASIF_ADMIN_YOLLARI.has(yol)) });
           if (!c) throw hata.kimlik();
           ctx.admin = c.admin;
           ctx.oturum = c.oturum;
@@ -254,6 +258,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['izleme_bakimi', izlemeBakimi],
     // 23 Eki: dakikada bir bakılır; son kontrol 15 dakikadan eskiyse depo kontrol edilir.
     ['depolama_kontrolu', depolamaKontrolEt],
+    // 23 Eki: yönetici e-posta uyarıları (yeni talep, giriş, sistem sorunu, yavaşlama).
+    ['yonetici_uyarilari', yoneticiUyarilariniIsle],
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.

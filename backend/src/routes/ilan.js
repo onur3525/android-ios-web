@@ -18,7 +18,8 @@ import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
 import { simdi, tekilIhlaliMi } from '../db.js';
 import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
-import { depolamaAyari, kanalKaynaklari } from '../entegrasyon.js';
+import { depolamaAyari } from '../entegrasyon.js';
+import { genelDurumGirdileri } from '../genel_durum.js';
 import { govdeOzeti, idemAnahtari, idemOlustur, oncekiKayit } from '../idempotency.js';
 import { ApiHatasi, HizSiniri, hata } from '../http.js';
 
@@ -33,8 +34,7 @@ import { ilanTelefonuGorunur, kisaAd, saglayiciTamamlananIs } from './kisi_ozeti
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushTetikle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
-import { silmeKuyruguSorunlari } from './silme_kuyruklari.js';
-import { apiOlcumleri, genelDurum, kaynakKullanimi, olcumleriYaz, sonSunucuHatalari, yedekDurumu, yoneticiGuvenlikOlaylari } from '../sistem_izleme.js';
+import { sonSunucuHatalari, yoneticiGuvenlikOlaylari } from '../sistem_izleme.js';
 
 export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
 const kural = (kod, mesaj) => new ApiHatasi(409, kod, mesaj);
@@ -877,25 +877,14 @@ export function ilanRotalar(r, db) {
         .map((m) => ({ channel: m.channel, template: m.template, provider: m.provider, providerResponse: m.provider_response ? yanitMaskele(String(m.provider_response)).slice(0, 200) : null, attempts: m.attempts, createdAt: m.created_at }))
       : null;
     // ── 22 Eki: kaynak kullanımı, API ölçümleri, yedekleme, kritik olaylar ──
-    // Bu örneğin biriken ölçümleri önce yazılır (gösterilen sayı güncel olsun).
-    await olcumleriYaz(db).catch((e) => console.error('olcum_yazma', e?.message));
-    const kaynak = await kaynakKullanimi(db);
-    const apiOlcum = await apiOlcumleri(db);
-    const yedek = await yedekDurumu(db, { yenile: ctx.query.get('refreshBackup') === '1' && yetkiliMi(ctx.admin.role, 'integrations.read') });
-    const silme = await silmeKuyruguSorunlari(db);
-    const silmeTukenen = silme.filesExhausted + silme.firebaseLongFailure + silme.firebaseOpsLongFailure;
-    // 23 Eki: kanalların gerçek kaynağı ve son 24 saatin başarısız gönderimleri.
-    const kanallar = await kanalKaynaklari(db);
-    const basarisiz24 = { SMS: 0, EMAIL: 0 };
-    for (const x of await db.prepare(`SELECT channel, COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND created_at > ? GROUP BY channel`)
-      .all(new Date(Date.now() - 86_400_000).toISOString())) {
-      if (x.channel in basarisiz24) basarisiz24[x.channel] = Number(x.n);
-    }
-    const tumEntegrasyon = (await db.prepare('SELECT type, active, last_test_ok FROM integrations WHERE deleted_at IS NULL').all())
-      .map((x) => ({ type: x.type, active: x.active === 1 || x.active === true, lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1 || x.last_test_ok === true }));
+    // 23 Eki: genel durumun girdileri ve kuralları tek kaynakta (genel_durum.js);
+    // yönetici e-posta uyarıları da aynı hesabı kullanır.
+    const { kaynak, apiOlcum, yedek, silme, kanallar, basarisiz24, overall } = await genelDurumGirdileri(db, {
+      yedekYenile: ctx.query.get('refreshBackup') === '1' && yetkiliMi(ctx.admin.role, 'integrations.read'),
+    });
     return {
       checkedAt: new Date().toISOString(),
-      overall: genelDurum({ veritabaniOk: true, api: apiOlcum, kaynak, yedek, entegrasyonlar: tumEntegrasyon, silmeTukenen, kanallar, basarisiz24 }),
+      overall,
       api: { status: 'OK', uptimeSeconds: Math.round(process.uptime()), serverTime: new Date().toISOString() },
       database: { status: 'OK', driver: db.surucu, responseMs: dbMs, lastMigration: goc?.id ?? null, lastMigrationAt: goc?.applied_at ?? null, migrations: gocSayisi },
       resources: kaynak,

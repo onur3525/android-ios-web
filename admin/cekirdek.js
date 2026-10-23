@@ -70,21 +70,23 @@ export function hareketsizlikKilidi(sureSn, kilitle) {
  * ister (tek kullanımlık): REAUTH_REQUIRED gelince ikisi sorulur ve istek
  * bir kez tekrarlanır. Görüntüleme hiç sormaz.
  */
-export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar = {} } = {}) {
+// [etkinlik] false: arka plan sorgusu (23 Eki, bekleyen talep sayacı) —
+// hareketsizlik sayacını SIFIRLAMAZ; sunucu tarafı da süreyi uzatmaz.
+export async function api(yol, { yontem = 'GET', govde, tekrar = true, basliklar = {}, etkinlik = true } = {}) {
   const r = await fetch(`/admin/v1${yol}`, {
     method: yontem,
     credentials: 'same-origin',
     headers: { ...(govde !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(yontem !== 'GET' ? { 'X-HC-Admin': '1' } : {}), ...basliklar },
     body: govde !== undefined ? JSON.stringify(govde) : undefined,
   });
-  if (r.ok) sonIstek = Date.now();
+  if (r.ok && etkinlik) sonIstek = Date.now();
   if (r.status === 204) return null;
   const j = await r.json().catch(() => null);
   if (r.ok) return j;
   const kod = j?.error?.code ?? 'HATA';
   if (kod === 'REAUTH_REQUIRED' && tekrar) {
     const kodGirildi = await yenidenDogrula();
-    if (kodGirildi) return api(yol, { yontem, govde, tekrar: false, basliklar });
+    if (kodGirildi) return api(yol, { yontem, govde, tekrar: false, basliklar, etkinlik });
   }
   if (r.status === 401 && !yol.startsWith('/auth/')) oturumDustu();
   throw new ApiHata(r.status, kod, j?.error?.message ?? 'İşlem başarısız');
