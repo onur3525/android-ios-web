@@ -233,18 +233,19 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
     }));
   }
 
-  // 5–7) SMS, e-posta, dosya depolama — gerçek kaynak + son 7 gün gönderim.
+  // 5–7) SMS, e-posta, dosya depolama — gerçek kaynak + son 24 saat gönderim (23 Eki).
   const gonderimKarti = (tur, ad, ikonAd, v) => {
     const kk = kanal(tur);
-    const dd = kanalDurumu(kk, { gonderildi: v ? v.SENT : null, basarisiz24: s.failures24h?.[tur] ?? 0 });
+    const dd = kanalDurumu(kk);
     return sistemKarti({
       ad, ikonAd, sinif: dd.sinif, durumMetni: dd.metin,
-      ana: v ? sayi(v.SENT) : undefined, anaAlt: v ? 'başarılı gönderim · son 7 gün' : undefined,
-      ek: v ? oranCubugu([{ ad: 'Gönderildi', deger: v.SENT, sinif: 'iyi' }, { ad: 'Başarısız', deger: v.FAILED, sinif: 'kotu' }, { ad: 'Bekleyen', deger: v.PENDING, sinif: 'notr' }]) : null,
+      ana: v ? sayi(v.SENT) : undefined, anaAlt: v ? 'başarılı gönderim · son 24 saat' : undefined,
+      // Hata yoksa çubuk gösterilmez (23 Eki: ana ekranda yalnız son 24 saatin hataları).
+      ek: v && (v.SENT + v.FAILED + v.PENDING) > 0 ? oranCubugu([{ ad: 'Gönderildi', deger: v.SENT, sinif: 'iyi' }, { ad: 'Başarısız', deger: v.FAILED, sinif: 'kotu' }, { ad: 'Bekleyen', deger: v.PENDING, sinif: 'notr' }]) : null,
       satirlar: [
         ['Kaynak', kanalKaynagi(kk)],
         ...(kk?.lastTestAt ? [['Son test', `${zaman(kk.lastTestAt)} · ${kk.lastTestOk ? 'başarılı' : 'başarısız'}`]] : []),
-        ...(tur === 'STORAGE' && kk?.source !== 'yok' ? [['Otomatik kontrol', kk?.autoCheckAt ? `${zaman(kk.autoCheckAt)} · ${kk.autoCheckOk ? 'başarılı' : 'başarısız'} · 15 dakikada bir` : 'Henüz yapılmadı · 15 dakikada bir']] : []),
+        ...((tur === 'STORAGE' || (tur === 'EMAIL' && kk?.provider === 'resend' && kk?.source === 'panel')) && kk?.source !== 'yok' ? [['Otomatik kontrol', kk?.autoCheckAt ? `${zaman(kk.autoCheckAt)} · ${kk.autoCheckOk ? 'başarılı' : 'başarısız'} · 15 dakikada bir` : 'Henüz yapılmadı · 15 dakikada bir']] : []),
       ],
     });
   };
@@ -252,14 +253,14 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
   kartlar.push(gonderimKarti('EMAIL', 'E-posta', 'posta', d.email));
   kartlar.push(gonderimKarti('STORAGE', 'Dosya depolama', 'depo', null));
 
-  // 8) Push bildirim — sunucu yapılandırması + son 7 gün.
+  // 8) Push bildirim — sunucu yapılandırması + son 24 saat (23 Eki).
   const p = d.push;
   const pushSinif = !p.configured ? 'uyari' : p.FAILED > 0 ? 'uyari' : p.SENT > 0 ? 'iyi' : 'notr';
   kartlar.push(sistemKarti({
     ad: 'Push bildirim', ikonAd: 'bulut', sinif: pushSinif,
-    durumMetni: !p.configured ? 'Sunucuda yapılandırılmamış' : p.FAILED > 0 ? `${sayi(p.FAILED)} başarısız (7 gün)` : p.SENT > 0 ? 'Çalışıyor · gönderim var' : 'Yapılandırılmış · henüz gönderim yok',
-    ana: sayi(p.SENT), anaAlt: 'gönderilen bildirim · son 7 gün',
-    ek: oranCubugu([
+    durumMetni: !p.configured ? 'Sunucuda yapılandırılmamış' : p.FAILED > 0 ? `${sayi(p.FAILED)} başarısız (24 saat)` : p.SENT > 0 ? 'Çalışıyor · gönderim var' : 'Yapılandırılmış · henüz gönderim yok',
+    ana: sayi(p.SENT), anaAlt: 'gönderilen bildirim · son 24 saat',
+    ek: (p.SENT + p.FAILED + p.NO_TOKEN + p.SKIPPED) === 0 ? null : oranCubugu([
       { ad: 'Gönderildi', deger: p.SENT, sinif: 'iyi' }, { ad: 'Başarısız', deger: p.FAILED, sinif: 'kotu' },
       { ad: 'Cihaz kaydı yok', deger: p.NO_TOKEN, sinif: 'notr' }, { ad: 'Tercih/hesap nedeniyle atlanan', deger: p.SKIPPED, sinif: 'notr' },
     ]),
@@ -381,6 +382,7 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
       h('p', { class: 'not' }, m.since ? `Ölçüm başlangıcı: ${zaman(m.since)}. Bütün sunucu örneklerinin toplamıdır.` : 'Henüz ölçülmüş istek yok.')),
     katlanir('Panel entegrasyonları', entegrasyonlar),
     katlanir('Son sunucu hataları (5xx)', sunucuHatalari),
-    katlanir('Son başarısız gönderimler', basarisiz, s.recentFailures === null ? null : h('a', { class: 'oz-tumu', href: '#/gonderimler' }, 'Tümünü gör ›')),
+    // 23 Eki: yalnız son 24 saatin hataları; yoksa bölüm görünmez (eskiler Kayıtlar sayfasında).
+    s.recentFailures?.length === 0 ? null : katlanir('Son başarısız gönderimler (24 saat)', basarisiz, s.recentFailures === null ? null : h('a', { class: 'oz-tumu', href: '#/gonderimler' }, 'Tümünü gör ›')),
     guvenlik ? katlanir('Yönetici güvenlik olayları (son 24 saat)', guvenlik) : null);
 }

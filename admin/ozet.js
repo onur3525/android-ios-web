@@ -30,8 +30,17 @@ const gunBasi = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d
 // ── TARİH ARALIĞI SEÇİMİ ──
 // Seçim sayfa oturumu boyunca hatırlanır (başka sayfaya gidip dönünce).
 let secim = { tur: 'bugun' };
-// Grafik kartlarının her biri kendi seçimini taşır (varsayılan: Son 7 gün).
-const grafikSecimi = { users: { tur: 'son7' }, listings: { tur: 'son7' }, offers: { tur: 'son7' } };
+// Grafik kartlarının her biri kendi seçimini taşır. 23 Eki (kullanıcı kuralı):
+// sağ üstteki seçim yapılınca filtreli BÜTÜN kartlar (dönem kartları, Teklif
+// Talepleri, Seçilen Toplam Teklif Tutarı ve üç grafik) o döneme geçer;
+// kartın kendi seçicisi sonradan yalnız o kartı değiştirir. Başlangıçta da
+// hepsi sağ üstteki seçimle (Bugün) açılır.
+const grafikSecimi = { users: { tur: 'bugun' }, listings: { tur: 'bugun' }, offers: { tur: 'bugun' } };
+function genelSecimUygula(yeni) {
+  secim = yeni;
+  tutarSecimi = yeni;
+  for (const k of Object.keys(grafikSecimi)) grafikSecimi[k] = yeni;
+}
 const AZAMI_GUN = 366;
 const yerelGun = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const gunEkle = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
@@ -347,14 +356,14 @@ export async function ozetSayfasi() {
         const d = kanalDurumu(k);
         return durumSatiri(ENTEGRASYON[t], ikonAd, d.metin, d.sinif);
       })),
-    durumSatiri('Bildirim gönderimi (7 gün)', 'zil',
+    durumSatiri('Bildirim gönderimi (24 saat)', 'zil',
       s.failedNotifications ? `${sayi(s.failedNotifications)} başarısız` : 'Sorun yok', s.failedNotifications ? 'kotu' : 'iyi'),
   ];
 
   return h('div', { class: 'oz' },
     h('div', { class: 'oz-baslik' },
       h('div', {}, h('h2', {}, 'Özet'), h('p', {}, 'Uygulamanın genel durumu ve son istatistikler')),
-      tarihSecici(secim, (yeni) => { secim = yeni; yenidenCiz(); })),
+      tarihSecici(secim, (yeni) => { genelSecimUygula(yeni); yenidenCiz(); })),
 
     h('section', { class: 'oz-kart oz-bugun-sar' },
       h('h3', {}, d.etiket),

@@ -18,22 +18,26 @@ export function kanalKaynagi(k) {
 
 /**
  * { metin, sinif } — sinif: iyi | uyari | kotu | notr.
- * [gonderildi]: son 7 günde başarılı gönderim sayısı (bilinmiyorsa null).
- * [basarisiz24]: son 24 saatte başarısız gönderim sayısı.
+ * Kanıtlar kanal kaydının KENDİSİNDEN okunur (23 Eki, tek kaynak: sunucunun
+ * `kanalKaynaklari`): autoCheckOk (15 dakikalık otomatik kontrol), sent24h /
+ * failed24h (son 24 saatin gönderimleri). Özet ve Sistem Durumu aynı sonucu
+ * gösterir.
  */
-export function kanalDurumu(k, { gonderildi = null, basarisiz24 = 0 } = {}) {
+export function kanalDurumu(k) {
+  const gonderildi = k?.sent24h ?? null;
+  const basarisiz24 = k?.failed24h ?? 0;
   // 23 Eki (karar A): sunucu SMS'i bilinçli olarak kapalı — doğrulama kodlarını
   // Firebase gönderir, yönetici bildirimleri e-postayla gider.
   if (k?.type === 'SMS' && k.source === 'yok') return { metin: 'Kapalı (bilinçli) — kodları Firebase gönderir, bildirimler e-postayla', sinif: 'iyi' };
   if (!k || k.source === 'yok') return { metin: `Yapılandırılmamış — ${NE_YAPILAMAZ[k?.type] ?? 'kullanılamaz'}`, sinif: 'uyari' };
   if (k.source === 'ortam' && k.provider === 'log') return { metin: 'Geliştirme kaydı — gerçek gönderim yok', sinif: 'uyari' };
-  // 23 Eki: depolamayı sunucu 15 dakikada bir kendisi kontrol eder (kanıt).
-  if (k.type === 'STORAGE' && k.autoCheckOk === false) return { metin: `Otomatik kontrol başarısız${k.autoCheckMessage ? ` — ${k.autoCheckMessage}` : ''}`, sinif: 'kotu' };
-  if (k.type === 'STORAGE' && k.autoCheckOk === true) return { metin: 'Çalışıyor · otomatik kontrol başarılı', sinif: 'iyi' };
+  // 23 Eki: depolama ve e-postayı sunucu 15 dakikada bir kendisi kontrol eder (kanıt).
+  if (k.autoCheckOk === false) return { metin: `Otomatik kontrol başarısız${k.autoCheckMessage ? ` — ${k.autoCheckMessage}` : ''}`, sinif: 'kotu' };
+  if (k.autoCheckOk === true && !(basarisiz24 > 0)) return { metin: 'Çalışıyor · otomatik kontrol başarılı', sinif: 'iyi' };
   if (k.lastTestOk === false) return { metin: 'Son test başarısız', sinif: 'kotu' };
   if (basarisiz24 > 0) return { metin: `Son 24 saatte ${basarisiz24.toLocaleString('tr-TR')} başarısız gönderim`, sinif: 'uyari' };
   if (k.lastTestOk === true) return { metin: 'Çalışıyor · test başarılı', sinif: 'iyi' };
-  if (gonderildi > 0) return { metin: 'Çalışıyor · son 7 günde başarılı gönderim var', sinif: 'iyi' };
+  if (gonderildi > 0) return { metin: 'Çalışıyor · son 24 saatte başarılı gönderim var', sinif: 'iyi' };
   return { metin: 'Yapılandırılmış · henüz doğrulanmadı', sinif: 'notr' };
 }
 

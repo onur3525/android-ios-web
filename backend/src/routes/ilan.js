@@ -745,7 +745,8 @@ export function ilanRotalar(r, db) {
       offersToday: await say('SELECT COUNT(*) n FROM offers WHERE created_at > ?', new Date(Date.now() - 86_400_000).toISOString()),
       openTalepler: await say(`SELECT COUNT(*) n FROM teklif_talepleri WHERE durum IN ('BEKLEMEDE','TEKLIF_GELDI','SECILDI')`),
       pendingDeletions: await say(`SELECT COUNT(*) n FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING'`),
-      failedNotifications: await say(`SELECT COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND template <> 'OTP' AND created_at > ?`, new Date(Date.now() - 7 * 86_400_000).toISOString()),
+      // 23 Eki (kullanıcı kuralı): ana ekran son 24 saati gösterir; eskisi Kayıtlar sayfasında.
+      failedNotifications: await say(`SELECT COUNT(*) n FROM outbound_messages WHERE status = 'FAILED' AND template <> 'OTP' AND created_at > ?`, new Date(Date.now() - 86_400_000).toISOString()),
     };
   });
 
@@ -857,13 +858,15 @@ export function ilanRotalar(r, db) {
     const dbMs = Math.round((performance.now() - t0) * 10) / 10;
     const goc = await db.prepare('SELECT id, applied_at FROM schema_migrations ORDER BY id DESC LIMIT 1').get();
     const gocSayisi = Number((await db.prepare('SELECT COUNT(*) n FROM schema_migrations').get()).n);
-    const yediGun = new Date(Date.now() - 7 * 86_400_000).toISOString();
+    // 23 Eki (kullanıcı kuralı): gönderim sayıları ve hata listesi SON 24 SAAT;
+    // daha eski kayıtlar yalnız "SMS / E-posta Kayıtları" sayfasında.
+    const birGun = new Date(Date.now() - 86_400_000).toISOString();
     const kanal = { SMS: { SENT: 0, FAILED: 0, PENDING: 0 }, EMAIL: { SENT: 0, FAILED: 0, PENDING: 0 } };
-    for (const x of await db.prepare('SELECT channel, status, COUNT(*) n FROM outbound_messages WHERE created_at > ? GROUP BY channel, status').all(yediGun)) {
+    for (const x of await db.prepare('SELECT channel, status, COUNT(*) n FROM outbound_messages WHERE created_at > ? GROUP BY channel, status').all(birGun)) {
       if (kanal[x.channel] && x.status in kanal[x.channel]) kanal[x.channel][x.status] = Number(x.n);
     }
     const push = { SENT: 0, FAILED: 0, PENDING: 0, NO_TOKEN: 0, SKIPPED: 0 };
-    for (const x of await db.prepare('SELECT push_status s, COUNT(*) n FROM notifications WHERE created_at > ? GROUP BY push_status').all(yediGun)) {
+    for (const x of await db.prepare('SELECT push_status s, COUNT(*) n FROM notifications WHERE created_at > ? GROUP BY push_status').all(birGun)) {
       const k = x.s === null || x.s === 'SENDING' ? 'PENDING' : x.s;
       if (k in push) push[k] += Number(x.n);
     }
@@ -873,7 +876,7 @@ export function ilanRotalar(r, db) {
           lastTestOk: x.last_test_ok === null ? null : x.last_test_ok === 1 || x.last_test_ok === true, lastTestMessage: x.last_test_message }))
       : null;
     const sonHatalar = yetkiliMi(ctx.admin.role, 'notifications.read')
-      ? (await db.prepare(`SELECT channel, template, provider, provider_response, attempts, created_at FROM outbound_messages WHERE status = 'FAILED' ORDER BY created_at DESC LIMIT 10`).all())
+      ? (await db.prepare(`SELECT channel, template, provider, provider_response, attempts, created_at FROM outbound_messages WHERE status = 'FAILED' AND created_at > ? ORDER BY created_at DESC LIMIT 10`).all(birGun))
         .map((m) => ({ channel: m.channel, template: m.template, provider: m.provider, providerResponse: m.provider_response ? yanitMaskele(String(m.provider_response)).slice(0, 200) : null, attempts: m.attempts, createdAt: m.created_at }))
       : null;
     // ── 22 Eki: kaynak kullanımı, API ölçümleri, yedekleme, kritik olaylar ──
@@ -890,10 +893,10 @@ export function ilanRotalar(r, db) {
       resources: kaynak,
       apiMetrics: apiOlcum,
       backup: yetkiliMi(ctx.admin.role, 'integrations.read') ? yedek : null,
-      delivery: { since: yediGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
+      delivery: { since: birGun, sms: kanal.SMS, email: kanal.EMAIL, push: { ...push, configured: fcmEtkin() } },
       integrations: entegrasyon,
       // Kaynak bilgisi sır içermez; ayrıntı (son test mesajı) yalnız yetkiliye.
-      channels: kanallar.map((k) => (yetkiliMi(ctx.admin.role, 'integrations.read') ? k : { type: k.type, source: k.source, provider: k.provider, ...(k.type === 'STORAGE' ? { autoCheckAt: k.autoCheckAt, autoCheckOk: k.autoCheckOk } : {}) })),
+      channels: kanallar.map((k) => (yetkiliMi(ctx.admin.role, 'integrations.read') ? k : { type: k.type, source: k.source, provider: k.provider, autoCheckAt: k.autoCheckAt ?? null, autoCheckOk: k.autoCheckOk ?? null, ...(k.type === 'STORAGE' ? {} : { sent24h: k.sent24h, failed24h: k.failed24h }) })),
       failures24h: basarisiz24,
       recentFailures: sonHatalar,
       serverErrors: yetkiliMi(ctx.admin.role, 'notifications.read') ? await sonSunucuHatalari(db) : null,

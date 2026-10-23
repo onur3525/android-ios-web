@@ -30,7 +30,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { guvenliIstek } from './ag_guvenligi.js';
 import { sirCoz } from './auth.js';
-import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
+import { depolamaAyari, etkinEntegrasyon, s3ImzaliAdres } from './entegrasyon.js';
 import { simdi } from './db.js';
 
 const DAKIKA = 60_000;
@@ -354,6 +354,54 @@ export async function depolamaKontrolEt(db, { zorla = false } = {}) {
   return { ok, mesaj };
 }
 
+// ── E-POSTA OTOMATİK KONTROLÜ (23 Eki) ───────────────────────
+// Kullanıcı isteği: "test et" demeden e-posta durumu otomatik bilinsin.
+// Panelde etkin Resend entegrasyonu varsa 15 dakikada bir Resend'in alan adı
+// listesi okunur (E-POSTA GÖNDERİLMEZ). Gönderen adresin alan adı Resend'de
+// "verified" ise kanıt tamam. Anahtar yalnız gönderim yetkiliyse (Resend
+// "restricted_api_key") alan adı okunamaz ama anahtar Resend'ce tanınmıştır:
+// bu durum açıkça yazılır. Diğer sağlayıcılar (webhook) gönderim yapmadan
+// doğrulanamaz; onlar için kontrol yapılmaz.
+const RESEND_ALAN_ADLARI = 'https://api.resend.com/domains';
+let testEposta = null;
+/** Yalnız testler: Resend isteği yerine () → { status, text }. */
+export function epostaTestGetirici(f) { testEposta = f; }
+
+export async function epostaKontrolEt(db, { zorla = false } = {}) {
+  const e = await etkinEntegrasyon(db, 'EMAIL');
+  if (!e || e.provider !== 'resend') return null;
+  if (!zorla) {
+    const m = await db.prepare('SELECT checked_at FROM email_monitor WHERE id = 1').get();
+    if (m && Date.now() - Date.parse(m.checked_at) < DEPO_KONTROL_ARALIGI) return null;
+  }
+  let ok = false; let mesaj = '';
+  try {
+    if (!e.secret?.token) throw new Error('Resend API anahtarı girilmemiş');
+    const alan = /@([^>\s]+)/.exec(String(e.config?.from ?? ''))?.[1]?.toLowerCase() ?? null;
+    const r = testEposta ? await testEposta() : await guvenliIstek(RESEND_ALAN_ADLARI, { headers: { Authorization: `Bearer ${e.secret.token}` }, timeoutMs: 8000 });
+    let j = null;
+    try { j = JSON.parse(r.text); } catch { j = null; }
+    if (r.status === 200 && Array.isArray(j?.data)) {
+      const d = alan ? j.data.find((x) => String(x?.name ?? '').toLowerCase() === alan) : null;
+      if (!alan) mesaj = 'Gönderen adresi tanımlı değil';
+      else if (!d) mesaj = `${alan} Resend'de kayıtlı değil`;
+      else if (d.status !== 'verified') mesaj = `${alan} doğrulanmamış (Resend durumu: ${String(d.status).slice(0, 30)})`;
+      else { ok = true; mesaj = `Resend bağlantısı ve ${alan} alan adı doğrulandı`; }
+    } else if (r.status === 401 && j?.name === 'restricted_api_key') {
+      ok = true;
+      mesaj = 'Resend anahtarı geçerli (yalnız gönderim yetkili; alan adı durumu okunamadı)';
+    } else {
+      mesaj = `Resend yanıtı: HTTP ${r.status}${j?.name ? ` · ${String(j.name).slice(0, 40)}` : ''}`;
+    }
+  } catch (h) {
+    mesaj = adressiz(h.message);
+  }
+  await db.prepare(`INSERT INTO email_monitor (id, checked_at, check_ok, check_message) VALUES (1, ?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET checked_at = excluded.checked_at, check_ok = excluded.check_ok, check_message = excluded.check_message`)
+    .run(simdi(), ok ? 1 : 0, mesaj);
+  return { ok, mesaj };
+}
+
 // ── KRİTİK OLAYLAR ───────────────────────────────────────────
 export async function yoneticiGuvenlikOlaylari(db) {
   const gun = new Date(Date.now() - GUN).toISOString();
@@ -410,8 +458,10 @@ export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, s
   // (gönderim YAPILMAZ) uyarı; son 24 saatte başarısız gönderim varsa uyarı.
   const KANAL_ADI = { SMS: 'SMS', EMAIL: 'E-posta', STORAGE: 'Dosya depolama' };
   for (const k of kanallar ?? []) {
-    // 23 Eki: depolamanın otomatik kontrolü başarısızsa fotoğraf yüklenemez → sorun.
+    // 23 Eki: otomatik kontrol başarısızsa (depolama: fotoğraf yüklenemez;
+    // e-posta: doğrulama/bildirim e-postaları gitmez) → sorun.
     if (k.type === 'STORAGE' && k.source !== 'yok' && k.autoCheckOk === false) sorunlar.push('Dosya depolamaya erişilemiyor (otomatik kontrol başarısız)');
+    if (k.type === 'EMAIL' && k.source !== 'yok' && k.autoCheckOk === false) sorunlar.push('E-posta sağlayıcısına erişilemiyor (otomatik kontrol başarısız)');
     // SMS bilinçli olarak kapalı olabilir (kodları Firebase gönderir; 23 Eki karar A): uyarı değil.
     if (k.source === 'yok' && k.type !== 'SMS') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} yapılandırılmamış (panelde ve sunucu ayarında yok)`);
     else if (k.source === 'ortam' && k.provider === 'log') uyarilar.push(`${KANAL_ADI[k.type] ?? k.type} gerçekten gönderilmiyor (geliştirme kaydı)`);
