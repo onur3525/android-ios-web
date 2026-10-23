@@ -552,7 +552,7 @@ export function kullaniciRotalar(r, db) {
       throw e;
     }
   });
-  async function yenile(ctx) {
+  async function yenile(ctx, yarısTekrar = 0) {
     // Web: token gövdede DEĞİL çerezde gelir (sekmeler arası ortak ve hep
     // güncel; eski bir bellek kopyası yeniden kullanım sayılmaz).
     const rt = String(ctx.body.refreshToken ?? '')
@@ -600,18 +600,34 @@ export function kullaniciRotalar(r, db) {
     const yeniJti = randomUUID();
     const yeni = randomBytes(32).toString('base64url');
     const z = simdi();
-    await db.tx(async () => {
-      // Koşullu döndürme: aynı yenileme token'ı eşzamanlı iki istekte
-      // kullanılırsa yalnız BİRİ yeni oturum alır (diğeri tekrar kullanım
-      // sayılır ve bütün oturumlar kapanır).
-      const d = await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'ROTATED' WHERE id = ? AND revoked_at IS NULL`).run(z, o.id);
-      if (d.changes !== 1) throw hata.kimlik();
-      await db.prepare(
-        `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).run(yeniJti, u.id, ozet(yeni), o.created_at, z,
-        mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent);
-    });
+    try {
+      await db.tx(async () => {
+        // Koşullu döndürme: aynı belirteçle eşzamanlı gelen isteklerden yalnız
+        // biri bu halkayı döndürür. Kaybeden istek, aşağıda kısa yarış payı
+        // içinde yeni halkayı okuyup normal akışla bir kez daha dener.
+        const d = await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'ROTATED' WHERE id = ? AND revoked_at IS NULL`).run(z, o.id);
+        if (d.changes !== 1) throw hata.kimlik();
+        await db.prepare(
+          `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        ).run(yeniJti, u.id, ozet(yeni), o.created_at, z,
+          mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent);
+      });
+    } catch (e) {
+      // İki sekme aynı web çerezini aynı anda gönderirse iki istek de eski
+      // halkayı okuyabilir. Koşullu UPDATE birini kazanır; kaybeden için bu
+      // tek başına tekrar kullanım kanıtı değildir. Yalnız web'de, ROTATED
+      // işaretli aynı halka yarış payı içindeyse yeniden okuyup halefi döndür.
+      // Mobildeki süresiz tekrar kuralını ve pay dışı hırsızlık tespitini bozma.
+      if (!mobil && yarısTekrar < 2) {
+        const son = await db.prepare('SELECT revoked_at, revoke_reason FROM user_sessions WHERE id = ?').get(o.id);
+        if (son?.revoked_at && son.revoke_reason === 'ROTATED' &&
+            Date.now() - Date.parse(son.revoked_at) < YENILEME_YARIS_PAYI_MS) {
+          return yenile(ctx, yarısTekrar + 1);
+        }
+      }
+      throw e;
+    }
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
   }
 
