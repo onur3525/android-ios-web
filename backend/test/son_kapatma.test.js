@@ -49,7 +49,7 @@ async function kisi(tel, rol, { kategoriler, ilceler, adres } = {}) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Usta ${tel.slice(-3)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Usta ${tel.slice(-3)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   const k = { token: r.json.accessToken, refresh: r.json.refreshToken, id: me.json.id, tel };

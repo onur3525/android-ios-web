@@ -283,7 +283,7 @@ test('D1 · kayıt, giriş, yenileme ve Firebase oturumu AYNI gerçek IP\'yi yaz
   config.guvenilirProxySayisi = 1;
   const tel = '5370001234';
   const b = xff(sahte(3), GERCEK);
-  const k = await istek('/api/v1/auth/register', { yontem: 'POST', basliklar: b, govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Ip Kişi', email: 'ip@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'ip-uid-1', phone_number: `+90${tel}` }) } });
+  const k = await istek('/api/v1/auth/register', { yontem: 'POST', basliklar: b, govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Ip Kişi', email: 'ip@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'ip-uid-1', phone_number: `+90${tel}` }) } });
   assert.equal(k.durum, 200, JSON.stringify(k.json));
   const g = await istek('/api/v1/auth/login', { yontem: 'POST', basliklar: xff(sahte(4), GERCEK), govde: { phone: tel, password: 'sifre1234' } });
   assert.equal(g.durum, 200, JSON.stringify(g.json));

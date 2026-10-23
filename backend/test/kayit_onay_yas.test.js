@@ -52,21 +52,30 @@ test('koşul onayı olmadan kayıt reddedilir', async () => {
 });
 
 test('16 Eki: ayrı yaş beyanı istenmez; sözleşme onayıyla kayıt olur, beyan zamanı onay anıdır', async () => {
-  const r = await kayit('5360000002', { termsAccepted: true });
+  const r = await kayit('5360000002', { termsAccepted: true, aydinlatmaAccepted: true });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const u = await db.prepare('SELECT age_confirmed_at, created_at FROM users WHERE phone = ?').get('5360000002');
   assert.ok(u.age_confirmed_at, 'sözleşme kabulüyle yaş beyanı zamanı kaydedilmeli');
   assert.equal(String(u.age_confirmed_at), String(u.created_at));
 });
 
+test('23 Eki: Aydınlatma Metni bilgilendirmesi olmadan kayıt SUNUCUDA reddedilir', async () => {
+  for (const ek of [{ termsAccepted: true }, { termsAccepted: true, aydinlatmaAccepted: 'true' }]) {
+    const r = await kayit('5360000003', ek);
+    assert.equal(r.durum, 400);
+    assert.equal(r.json.error.code, 'AYDINLATMA_REQUIRED');
+  }
+  assert.equal(await db.prepare('SELECT 1 FROM users WHERE phone = ?').get('5360000003'), undefined, 'hesap açılmaz');
+});
+
 test('onayla kayıt: yayındaki sürümlerin onayı (sürüm + SHA-256) kaydedilir', async () => {
-  const r = await kayit('5360000003', { termsAccepted: true });
+  const r = await kayit('5360000005', { termsAccepted: true, aydinlatmaAccepted: true });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
-  const u = await db.prepare('SELECT id, age_confirmed_at, terms_accepted FROM users WHERE phone = ?').get('5360000003');
+  const u = await db.prepare('SELECT id, age_confirmed_at, terms_accepted FROM users WHERE phone = ?').get('5360000005');
   assert.ok(u.age_confirmed_at);
   const onaylar = await db.prepare('SELECT slug, version, sha256, platform FROM legal_acceptances WHERE user_id = ? ORDER BY slug').all(u.id);
   assert.deepEqual(onaylar.map((o) => [o.slug, Number(o.version), o.sha256, o.platform]),
-    [['privacy', 1, 'ozet-privacy', 'android'], ['terms', 1, 'ozet-terms', 'android']]);
+    [['kvkk', 1, 'ozet-kvkk', 'android'], ['terms', 1, 'ozet-terms', 'android']]);
 });
 
 test('16 Eki: iki onaylı kayıt (aydinlatmaAccepted) Kullanım Sözleşmesi + Aydınlatma Metni onayı yazar; gizlilik yazılmaz', async () => {

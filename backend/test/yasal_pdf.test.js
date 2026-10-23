@@ -96,7 +96,7 @@ test('güncelle ve yayınla: tek adımda yayın; kullanıcı özeti ve PDF\'i g�
   // Kullanıcı önce kayıt olur (o an yayında sözleşme sürümü yok).
   await db.prepare(`DELETE FROM rate_limits`).run();
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: '5330000991', purpose: 'REGISTER' } });
-  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: '5330000991', password: 'sifre1234', name: 'Yasal Kişi', email: 'yasal@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
+  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: '5330000991', password: 'sifre1234', name: 'Yasal Kişi', email: 'yasal@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(k.durum, 200, JSON.stringify(k.json));
   const r = await istek('/admin/v1/legal/terms/versions', { yontem: 'POST', govde: { pdf: PDF.toString('base64'), summary: OZET, publish: true } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -7,6 +6,7 @@ import '../core/oturum_temizligi.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../data/services/share_service.dart';
+import '../domain/profil_menusu.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/destek_merkezi_paneli.dart';
@@ -202,41 +202,15 @@ class ProfileScreen extends StatelessWidget {
           subtitle: 'Sorularınız için bize ulaşın.',
           onTap: () => _destekSheet(c),
         ),
+        // 23 Eki (kullanıcı kararı): yasal belgeler TEK satır altında;
+        // satır belge listesini açar (tek kaynak: domain/profil_menusu.dart).
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pdoc.svg',
           iconBg: const Color(0xFFE2F7FA),
-          title: 'Kullanım Sözleşmesi',
-          subtitle: 'Uygulama kullanım koşullarını inceleyin.',
-          onTap: () => Navigator.pushNamed(c, '/legal',
-              arguments: {'slug': 'terms', 'title': 'Kullanım Sözleşmesi'}),
+          title: kYasalBelgelerBaslik,
+          subtitle: kYasalBelgelerAltYazi,
+          onTap: () => Navigator.pushNamed(c, '/profile/legal'),
         ),
-        RefMenuRow(
-          iconAsset: 'assets/svg/ic_pshield.svg',
-          iconBg: const Color(0xFFE7EFFD),
-          title: 'Gizlilik Politikası',
-          subtitle: 'Kişisel verilerinizin nasıl işlendiğini görün.',
-          onTap: () => Navigator.pushNamed(c, '/legal',
-              arguments: {'slug': 'privacy', 'title': 'Gizlilik Politikası'}),
-        ),
-        // 22 Eki (KVKK): aydınlatma açılışta onaylatılmıyor; buradan okunur.
-        RefMenuRow(
-          iconAsset: 'assets/svg/ic_pdoc.svg',
-          iconBg: const Color(0xFFE7EFFD),
-          title: 'Aydınlatma Metni',
-          subtitle: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
-          onTap: () => Navigator.pushNamed(c, '/legal',
-              arguments: {'slug': 'kvkk', 'title': 'Aydınlatma Metni'}),
-        ),
-        // Çerez Politikası yalnız web'de (mobil uygulama çerez kullanmaz).
-        if (kIsWeb)
-          RefMenuRow(
-            iconAsset: 'assets/svg/ic_pdoc.svg',
-            iconBg: const Color(0xFFEEF0F4),
-            title: 'Çerez Politikası',
-            subtitle: 'Web sitesinde kullanılan zorunlu çerezler.',
-            onTap: () => Navigator.pushNamed(c, '/legal',
-                arguments: {'slug': 'cookies', 'title': 'Çerez Politikası'}),
-          ),
         RefMenuRow(
           iconAsset: 'assets/svg/ic_pstar.svg',
           iconBg: const Color(0xFFFDE9F1),

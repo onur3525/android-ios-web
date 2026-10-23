@@ -31,7 +31,7 @@ const deger = (c) => decodeURIComponent(c.split(';')[0].slice('hc_rt='.length));
 
 async function kayit(tel, basliklar = {}) {
   await istek('/api/v1/auth/otp/request', { govde: { phone: tel, purpose: 'REGISTER' } });
-  return istek('/api/v1/auth/register', { govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Web Deneme', email: `w${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp }, basliklar });
+  return istek('/api/v1/auth/register', { govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Web Deneme', email: `w${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp }, basliklar });
 }
 
 before(async () => {
