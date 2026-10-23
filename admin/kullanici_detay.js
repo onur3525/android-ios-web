@@ -14,6 +14,7 @@
 // Bölümler bağımsız yüklenir; yetkisi olmayan bölüm "Yetkiniz yok" der.
 // ═══════════════════════════════════════════════════════════════
 import { api, bildir, gerekceIle, h } from './cekirdek.js';
+import { bildirimOzeti } from './kanal_durumu.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DURUM_ADI = { ACTIVE: 'Aktif', SUSPENDED: 'Askıda', BANNED: 'Banlı' };
@@ -106,7 +107,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
     if (!neden) return;
     try {
       const r = await api(`/users/${id}/${eylem}`, { yontem: 'POST', govde: { reason: neden } });
-      bildir(`İşlem tamamlandı. Bildirim: ${r.notifications.map((n) => (n.status === 'SENT' ? 'gönderildi' : 'gönderilemedi')).join(', ') || 'gönderilmedi'}`);
+      bildir(`İşlem tamamlandı. Bildirim: ${bildirimOzeti(r.notifications)}`);
       yenile(); // kullanıcı verisi API'den yeniden yüklenir
     } catch (e) {
       bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);

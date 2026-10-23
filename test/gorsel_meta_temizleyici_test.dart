@@ -56,4 +56,10 @@ void main() {
     expect(k.contains('GorselMetaTemizleyici.temizle(bytes, contentType)'), isTrue);
     expect(k.contains('body: temiz,'), isTrue);
   });
+
+  test('HEIC yüklenmez: profil fotoğrafı tür tablosunda yok (23 Eki)', () {
+    final k = File('lib/data/remote/repositories/api_repositories.dart').readAsStringSync();
+    expect(k.contains("'heic': 'image/heic'"), isFalse);
+    expect(k.contains("'Yalnızca JPG, PNG ya da WEBP yüklenebilir.'"), isTrue);
+  });
 }

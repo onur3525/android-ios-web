@@ -258,7 +258,7 @@ class ApiAuthRepository extends ChangeNotifier {
     if (yol.isNotEmpty) {
       final veri = await _fotoVerisi(yol);
       if (veri == null) {
-        return const ValidationError('Yalnızca JPG, PNG, WEBP ya da HEIC yüklenebilir.');
+        return const ValidationError('Yalnızca JPG, PNG ya da WEBP yüklenebilir.');
       }
       final depo = StorageApi(_client);
       final (yanit, hata) = await _guard(() => depo.createUploadRef(
@@ -293,7 +293,9 @@ class ApiAuthRepository extends ChangeNotifier {
   static Future<(List<int>, String)?> _fotoVerisi(String yol) async {
     const turler = {
       'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
-      'webp': 'image/webp', 'heic': 'image/heic',
+      // ⚠ 23 Eki: HEIC KABUL EDİLMEZ — konum meta verisi güvenle
+      // ayıklanamıyor (gorsel_meta_temizleyici.dart). Sunucu da reddeder.
+      'webp': 'image/webp',
     };
     if (yol.startsWith('data:')) {
       final virgul = yol.indexOf(',');

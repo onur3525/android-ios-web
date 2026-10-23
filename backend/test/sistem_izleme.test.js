@@ -218,3 +218,52 @@ test('bakım: 30 günden eski ölçüm ve hata kayıtları silinir, yenileri kal
   assert.equal(Number((await db.prepare('SELECT COUNT(*) n FROM api_errors').get()).n), once - 1);
   assert.ok(Number((await db.prepare('SELECT COUNT(*) n FROM api_metrics').get()).n) > 0);
 });
+
+// ── 23 Eki (kullanıcı kuralı: "sahte ve varsayım olmamalı") ──
+test('sunucu diski gösterilmez (paylaşılan makine); saatlik seri 24 saat ve gerçek', async () => {
+  await db.prepare('DELETE FROM api_metrics').run();
+  const simdiDk = Math.floor(Date.now() / 60_000);
+  await db.prepare('INSERT INTO api_metrics (bucket, requests, errors_5xx, errors_4xx, total_ms, max_ms) VALUES (?, 10, 1, 2, 1000, 400)').run(simdiDk - 5);
+  const s = await durum('super_admin');
+  assert.equal('disk' in s.resources, false);
+  assert.ok(!s.overall.problems.concat(s.overall.warnings).some((x) => /disk/i.test(x)));
+  const seri = s.apiMetrics.hourly24h;
+  assert.equal(seri.length, 24);
+  const dolu = seri.filter((x) => x.requests > 0);
+  assert.equal(dolu.length, 1, 'yalnız ölçülen saat dolu; boşluk doldurulmaz');
+  assert.deepEqual({ r: dolu[0].requests, e5: dolu[0].errors5xx, e4: dolu[0].errors4xx, ort: dolu[0].avgMs, max: dolu[0].maxMs }, { r: 10, e5: 1, e4: 2, ort: 100, max: 400 });
+  assert.ok(seri.filter((x) => !x.requests).every((x) => x.avgMs === null && x.maxMs === null));
+});
+
+test('kanallar: gerçek kaynak (panel → sunucu ayarı → yok); geliştirme kaydı ve başarısız gönderim uyarıdır', async () => {
+  const s = await durum('super_admin');
+  const sms = s.channels.find((x) => x.type === 'SMS');
+  // Test ortamında sağlayıcı ortam değişkeninden 'log': gerçek gönderim yok.
+  assert.equal(sms.source, 'ortam');
+  assert.equal(sms.provider, 'log');
+  assert.ok(s.overall.warnings.includes('SMS gerçekten gönderilmiyor (geliştirme kaydı)'));
+  const depo = s.channels.find((x) => x.type === 'STORAGE');
+  assert.equal(depo.source, 'yok');
+  assert.ok(s.overall.warnings.includes('Dosya depolama yapılandırılmamış (panelde ve sunucu ayarında yok)'));
+  // Son 24 saatte başarısız SMS → uyarı ve sayı.
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, created_at) VALUES (?, NULL, 'SMS', '-', 'OTP', NULL, '-', 'FAILED', 1, ?)`)
+    .run(randomUUID(), new Date().toISOString());
+  const y = await durum('super_admin');
+  assert.equal(y.failures24h.SMS, 1);
+  assert.ok(y.overall.warnings.includes('Son 24 saatte 1 SMS gönderilemedi'));
+  // Panel entegrasyonu etkinse kaynak panel olur; sır dönmez.
+  const e = await istek('/admin/v1/integrations/effective');
+  assert.equal(e.durum, 200);
+  assert.deepEqual(e.json.map((x) => x.type), ['SMS', 'EMAIL', 'STORAGE']);
+  assert.equal(JSON.stringify(e.json).includes('secret'), false);
+  assert.equal((await istek('/admin/v1/integrations/effective', { rol: 'readonly' })).durum, 403);
+});
+
+test('genel durum: yapılandırılmamış kanal ve 24 saatlik başarısızlık uyarı; disk kuralı yok', () => {
+  const temel = { veritabaniOk: true, api: { last15m: { requests: 0 } }, kaynak: { cpu: {}, memory: { percent: 10 } }, yedek: { configured: true, checkOk: true, status: 'AVAILABLE' }, entegrasyonlar: [], silmeTukenen: 0 };
+  assert.equal(genelDurum({ ...temel, kanallar: [{ type: 'SMS', source: 'panel', provider: 'x' }] }).status, 'OK');
+  const y = genelDurum({ ...temel, kanallar: [{ type: 'EMAIL', source: 'yok' }], basarisiz24: { SMS: 3 } });
+  assert.equal(y.status, 'WARNING');
+  assert.deepEqual(y.warnings, ['E-posta yapılandırılmamış (panelde ve sunucu ayarında yok)', 'Son 24 saatte 3 SMS gönderilemedi']);
+  assert.equal(genelDurum({ ...temel, kaynak: { ...temel.kaynak, disk: { percent: 99 } } }).status, 'OK', 'disk artık kural değil');
+});

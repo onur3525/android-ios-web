@@ -18,9 +18,10 @@
 	<string>İlan ve profil fotoğrafı eklemek için galeriye erişim gerekir.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>İlan ve profil fotoğrafı çekmek için kameraya erişim gerekir.</string>
-	<!-- image_picker: seçilen fotoğrafın düzenlenmiş halini kaydetme -->
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Düzenlenen fotoğrafı galerinize kaydetmek için izin gerekir.</string>
+	<!-- ⚠ NSPhotoLibraryAddUsageDescription KALDIRILDI (23 Eki, KVKK takip
+	     denetimi E7). Uygulama galeriye hiçbir şey KAYDETMEZ: image_picker
+	     yalnız seçer/çeker; kodda galeriye yazan çağrı yok. Kullanılmayan
+	     izin açıklaması App Store incelemesinde sorulur. -->
 	<!-- ⚠ NSFaceIDUsageDescription KALDIRILDI.
 	     Gerekçe olarak flutter_secure_storage yazılmıştı; ancak token
 	     deposu KeychainAccessibility.first_unlock ile açılır, biyometri

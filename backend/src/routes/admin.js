@@ -738,6 +738,16 @@ export function adminRotalar(r, db) {
   // publish: true → "Güncelle ve yayınla": sürüm oluşturulup aynı işlemde
   // yayınlanır, önceki yayındaki sürüm arşive alınır; kabul isteyen
   // belgede kullanıcılar uygulamaya girince özeti görüp kabul eder.
+  // ── YAYIN KAPISI (23 Eki, KVKK takip denetimi B1) ──
+  // Doğrulanmamış yer tutucu ya da editör notu taşıyan metin YAYIMLANAMAZ
+  // (taslak olarak kaydedilebilir). 034 taslaklarındaki ⟦DOĞRULANACAK: …⟧
+  // alanları doldurulmadan kullanıcıya gösterilmesi böylece engellenir.
+  const YAYIN_ENGELI = [/⟦\s*DOĞRULANACAK/i, /YAYIN ENGEL[İI]/i, /YAYIN ÖNCES[İI] TAMAMLANACAK/i];
+  const yayinaHazirlikDenetimi = (govde) => {
+    const k = YAYIN_ENGELI.find((r) => r.test(String(govde ?? '')));
+    if (k) throw hata.dogrulama('Metinde doldurulmamış "DOĞRULANACAK" alanı ya da yayın öncesi notu var; düzeltilmeden yayımlanamaz');
+  };
+
   r.post('/admin/v1/legal/:slug/versions', async (ctx) => {
     yetkiIste(ctx.admin, 'legal.write');
     const d = await belgeGetir(ctx.params.slug);
@@ -757,6 +767,7 @@ export function adminRotalar(r, db) {
       if (govde.length > 500_000) throw hata.dogrulama('Belge metni çok uzun');
       ozet = createHash('sha256').update(govde, 'utf8').digest('hex');
     }
+    if (yayinla) yayinaHazirlikDenetimi(govde);
     const v = (await db.prepare('SELECT COALESCE(MAX(version), 0) + 1 n FROM legal_versions WHERE slug = ?').get(d.slug)).n;
     const id = randomUUID();
     const z = simdi();
@@ -783,6 +794,7 @@ export function adminRotalar(r, db) {
     const v = await db.prepare('SELECT * FROM legal_versions WHERE slug = ? AND version = ?').get(d.slug, Number(ctx.params.version));
     if (!v) throw hata.bulunamadi('Sürüm bulunamadı');
     if (v.status !== 'DRAFT') throw hata.durum('Yalnız taslak sürüm yayınlanabilir');
+    yayinaHazirlikDenetimi(v.body);
     const onceki = await db.prepare(`SELECT * FROM legal_versions WHERE slug = ? AND status = 'PUBLISHED'`).get(d.slug);
     await db.tx(async () => {
       if (onceki) await db.prepare(`UPDATE legal_versions SET status = 'ARCHIVED' WHERE id = ?`).run(onceki.id);

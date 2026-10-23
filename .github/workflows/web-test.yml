@@ -29,7 +29,7 @@ jobs:
       # ApiClient hata fırlatır ve sayfa boş kalır. Production web
       # derlemesi ayrı iş akışındadır (web-production.yml).
       - name: Build Web
-        run: flutter build web --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 --base-href "/android-ios-web/"
+        run: flutter build web --debug --no-web-resources-cdn --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1 --base-href "/android-ios-web/"
 
       # Paylaşım önizlemesi (WhatsApp vb.) TEST adresini göstersin: kaynak
       # index.html production adresini (hizmetcep.com) taşır; test yayınında

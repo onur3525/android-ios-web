@@ -14,7 +14,7 @@
 import { createHash, createHmac } from 'node:crypto';
 import { sirCoz } from './auth.js';
 import { olaylar } from './olaylar.js';
-import { uretim } from './config.js';
+import { config, uretim } from './config.js';
 
 const ONBELLEK_MS = 30_000;
 const onbellek = new Map();
@@ -33,6 +33,38 @@ export async function etkinEntegrasyon(db, tur) {
   const deger = x ? { id: x.id, provider: x.provider, config: JSON.parse(x.config_json), secret: x.secret_enc ? JSON.parse(sirCoz(x.secret_enc)) : {} } : null;
   onbellek.set(tur, { zaman: Date.now(), deger });
   return deger;
+}
+
+/**
+ * GÖNDERİM/DEPOLAMA KANALLARININ GERÇEK KAYNAĞI (23 Eki) — panel ve Özet
+ * aynı bilgiyi buradan alır. Gönderimde kullanılan sırayla aynıdır:
+ * etkin panel entegrasyonu → ortam değişkeni → yok. Sır döndürülmez.
+ *   source: 'panel' | 'ortam' | 'yok'
+ *   provider: panelde sağlayıcı adı; ortamda 'webhook' | 'log' | 's3'
+ */
+export async function kanalKaynaklari(db) {
+  const panel = await db.prepare(
+    'SELECT type, provider, active, last_test_at, last_test_ok, last_test_message FROM integrations WHERE deleted_at IS NULL ORDER BY created_at',
+  ).all();
+  const evet = (v) => v === 1 || v === true;
+  return ['SMS', 'EMAIL', 'STORAGE'].map((tur) => {
+    const e = panel.find((x) => x.type === tur && evet(x.active));
+    if (e) {
+      return {
+        type: tur, source: 'panel', provider: e.provider, lastTestAt: e.last_test_at,
+        lastTestOk: e.last_test_ok === null ? null : evet(e.last_test_ok), lastTestMessage: e.last_test_message,
+      };
+    }
+    const bos = { lastTestAt: null, lastTestOk: null, lastTestMessage: null };
+    if (tur === 'STORAGE') {
+      const env = process.env;
+      return env.HC_S3_ENDPOINT && env.HC_S3_BUCKET && env.HC_S3_ACCESS_KEY_ID && env.HC_S3_SECRET_ACCESS_KEY
+        ? { type: tur, source: 'ortam', provider: 's3', ...bos }
+        : { type: tur, source: 'yok', provider: null, ...bos };
+    }
+    const s = tur === 'SMS' ? config.sms : config.eposta;
+    return s.ad === 'yok' ? { type: tur, source: 'yok', provider: null, ...bos } : { type: tur, source: 'ortam', provider: s.ad, ...bos };
+  });
 }
 
 /** Depolama yapılandırması: entegrasyon → ortam değişkeni → yok. */
