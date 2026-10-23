@@ -47,10 +47,24 @@ export async function kanalKaynaklari(db) {
     'SELECT type, provider, active, last_test_at, last_test_ok, last_test_message FROM integrations WHERE deleted_at IS NULL ORDER BY created_at',
   ).all();
   const evet = (v) => v === 1 || v === true;
-  // 23 Eki: depolamanın 15 dakikalık otomatik kontrolü (sistem_izleme.js).
-  const dk = await db.prepare('SELECT checked_at, check_ok, check_message FROM storage_monitor WHERE id = 1').get();
-  const otomatik = dk ? { autoCheckAt: dk.checked_at, autoCheckOk: evet(dk.check_ok), autoCheckMessage: dk.check_message } : { autoCheckAt: null, autoCheckOk: null, autoCheckMessage: null };
-  return ['SMS', 'EMAIL', 'STORAGE'].map((tur) => ({ ...kanal(tur), ...(tur === 'STORAGE' ? otomatik : {}) }));
+  // 23 Eki: depolama ve e-postanın 15 dakikalık otomatik kontrolü (sistem_izleme.js).
+  const sonuc = (x) => (x ? { autoCheckAt: x.checked_at, autoCheckOk: evet(x.check_ok), autoCheckMessage: x.check_message } : { autoCheckAt: null, autoCheckOk: null, autoCheckMessage: null });
+  const depo = sonuc(await db.prepare('SELECT checked_at, check_ok, check_message FROM storage_monitor WHERE id = 1').get());
+  const eposta = sonuc(await db.prepare('SELECT checked_at, check_ok, check_message FROM email_monitor WHERE id = 1').get());
+  // 23 Eki (kullanıcı kuralı): ana ekranlar SON 24 SAATİ gösterir; eski kayıtlar
+  // yalnız "SMS / E-posta Kayıtları" sayfasında. Kanal kartları bu sayıları kullanır.
+  const gun = { SMS: { sent24h: 0, failed24h: 0 }, EMAIL: { sent24h: 0, failed24h: 0 } };
+  for (const x of await db.prepare(`SELECT channel, status, COUNT(*) n FROM outbound_messages WHERE created_at > ? AND status IN ('SENT', 'FAILED') GROUP BY channel, status`)
+    .all(new Date(Date.now() - 86_400_000).toISOString())) {
+    if (gun[x.channel]) gun[x.channel][x.status === 'SENT' ? 'sent24h' : 'failed24h'] = Number(x.n);
+  }
+  return ['SMS', 'EMAIL', 'STORAGE'].map((tur) => {
+    const k = kanal(tur);
+    if (tur === 'STORAGE') return { ...k, ...depo };
+    // E-posta otomatik kontrolü yalnız etkin panel Resend entegrasyonu için yapılır.
+    const oto = tur === 'EMAIL' && k.source === 'panel' && k.provider === 'resend' ? eposta : {};
+    return { ...k, ...gun[tur], ...oto };
+  });
   function kanal(tur) {
     const e = panel.find((x) => x.type === tur && evet(x.active));
     if (e) {

@@ -21,7 +21,7 @@ import {
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
-import { depolamaKontrolEt, istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
+import { depolamaKontrolEt, epostaKontrolEt, istekOlc, izlemeBakimi, olcumleriYaz } from './sistem_izleme.js';
 import { yoneticiUyarilariniIsle } from './yonetici_uyarilari.js';
 import { BAKIMDA_GIRIS_YOLLARI, bakimDurumu, bakimdaAcikMi, bakimIstisnasiMi } from './bakim_modu.js';
 import { adminRotalar } from './routes/admin.js';
@@ -258,6 +258,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['izleme_bakimi', izlemeBakimi],
     // 23 Eki: dakikada bir bakılır; son kontrol 15 dakikadan eskiyse depo kontrol edilir.
     ['depolama_kontrolu', depolamaKontrolEt],
+    ['eposta_kontrolu', epostaKontrolEt],
     // 23 Eki: yönetici e-posta uyarıları (yeni talep, giriş, sistem sorunu, yavaşlama).
     ['yonetici_uyarilari', yoneticiUyarilariniIsle],
   ];

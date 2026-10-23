@@ -12,7 +12,8 @@ const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { simdi } = await import('../src/db.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
-const { istekOlc, olcumleriYaz, yolDeseni, kaynakTestOkuyucu, yedekTestGetirici, izlemeBakimi, genelDurum, depolamaKontrolEt, depoTestGetirici } = await import('../src/sistem_izleme.js');
+const { istekOlc, olcumleriYaz, yolDeseni, kaynakTestOkuyucu, yedekTestGetirici, izlemeBakimi, genelDurum, depolamaKontrolEt, depoTestGetirici, epostaKontrolEt, epostaTestGetirici } = await import('../src/sistem_izleme.js');
+const { onbellegiTemizle } = await import('../src/entegrasyon.js');
 const { degisiklikOnayi, onayKimligi } = await import('./admin_onay.js');
 
 const SIFRE = 'GucluSifre12345';
@@ -54,7 +55,7 @@ before(async () => {
   await adminGiris('super_admin');
   await adminGiris('readonly');
 });
-after(async () => { kaynakTestOkuyucu(null); yedekTestGetirici(null); depoTestGetirici(null); sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
+after(async () => { kaynakTestOkuyucu(null); yedekTestGetirici(null); depoTestGetirici(null); epostaTestGetirici(null); sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
 
 test('yol deseni: kimlik ve sayılar saklanmaz', () => {
   assert.equal(yolDeseni(`/api/v1/listings/${randomUUID()}/offers/12345`), '/api/v1/listings/:id/offers/:id');
@@ -323,4 +324,71 @@ test('depolama yapılandırılmamışsa otomatik kontrol yapılmaz', async () =>
   assert.equal(await depolamaKontrolEt(db, { zorla: true }), null);
   assert.equal(cagri, 0);
   depoTestGetirici(null);
+});
+
+test('e-posta: Resend 15 dakikada bir otomatik kontrol edilir (gönderim yok); alan adı doğrulanmamışsa sorun', async () => {
+  // Resend entegrasyonu yokken kontrol yapılmaz.
+  let cagri = 0;
+  epostaTestGetirici(async () => { cagri += 1; return { status: 200, text: '{"data":[]}' }; });
+  assert.equal(await epostaKontrolEt(db, { zorla: true }), null);
+  assert.equal(cagri, 0);
+
+  const id = randomUUID();
+  await db.prepare(`INSERT INTO integrations (id, type, provider, active, config_json, secret_enc, secret_hint, created_at, updated_at) VALUES (?, 'EMAIL', 'resend', TRUE, ?, ?, '••••test', ?, ?)`)
+    .run(id, JSON.stringify({ from: 'HizmetCep <bildirim@hizmetcep.com>' }), sirSifrele(JSON.stringify({ token: 're_gizli_anahtar' })), simdi(), simdi());
+  onbellegiTemizle();
+  try {
+    epostaTestGetirici(async () => ({ status: 200, text: JSON.stringify({ data: [{ name: 'hizmetcep.com', status: 'verified' }] }) }));
+    assert.deepEqual(await epostaKontrolEt(db, { zorla: true }), { ok: true, mesaj: 'Resend bağlantısı ve hizmetcep.com alan adı doğrulandı' });
+    assert.equal(await epostaKontrolEt(db), null, '15 dakika dolmadan tekrar kontrol yok');
+    let k = (await durum('super_admin')).channels.find((x) => x.type === 'EMAIL');
+    assert.equal(k.source, 'panel');
+    assert.equal(k.autoCheckOk, true);
+    // Kısıtlı rol de sonucu görür (ana ekranlar aynı sonucu göstersin).
+    assert.equal((await durum('readonly')).channels.find((x) => x.type === 'EMAIL').autoCheckOk, true);
+
+    epostaTestGetirici(async () => ({ status: 401, text: '{"name":"restricted_api_key","message":"x"}' }));
+    assert.equal((await epostaKontrolEt(db, { zorla: true })).ok, true, 'yalnız gönderim yetkili anahtar Resend\'ce tanınmıştır');
+
+    epostaTestGetirici(async () => ({ status: 200, text: JSON.stringify({ data: [{ name: 'hizmetcep.com', status: 'pending' }] }) }));
+    assert.deepEqual(await epostaKontrolEt(db, { zorla: true }), { ok: false, mesaj: 'hizmetcep.com doğrulanmamış (Resend durumu: pending)' });
+    const y = await durum('super_admin');
+    assert.equal(y.overall.status, 'PROBLEM');
+    assert.ok(y.overall.problems.includes('E-posta sağlayıcısına erişilemiyor (otomatik kontrol başarısız)'));
+
+    epostaTestGetirici(async () => ({ status: 401, text: '{"name":"validation_error"}' }));
+    assert.deepEqual(await epostaKontrolEt(db, { zorla: true }), { ok: false, mesaj: 'Resend yanıtı: HTTP 401 · validation_error' });
+    const kayit = JSON.stringify(await db.prepare('SELECT * FROM email_monitor').all());
+    assert.equal(kayit.includes('re_gizli_anahtar'), false, 'anahtar kayda yazılmaz');
+  } finally {
+    epostaTestGetirici(null);
+    await db.prepare('DELETE FROM integrations WHERE id = ?').run(id);
+    await db.prepare('DELETE FROM email_monitor').run();
+    onbellegiTemizle();
+  }
+});
+
+test('ana ekran son 24 saati gösterir: eski hatalar sayıya ve listeye girmez, Kayıtlar sayfasında durur', async () => {
+  await db.prepare('DELETE FROM outbound_messages').run();
+  const eski = new Date(Date.now() - 2 * 86_400_000).toISOString();
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, created_at) VALUES (?, NULL, 'EMAIL', '-', 'HESAP_ASKIYA_ALINDI', NULL, '-', 'FAILED', 1, ?)`)
+    .run(randomUUID(), eski);
+  let s = await durum('super_admin');
+  assert.deepEqual(s.recentFailures, [], '24 saatten eski hata ana ekranda yok');
+  assert.equal(s.delivery.email.FAILED, 0);
+  assert.equal(s.channels.find((x) => x.type === 'EMAIL').failed24h, 0);
+  assert.equal((await istek('/admin/v1/stats')).json.failedNotifications, 0);
+  // Kayıt silinmez: detay (Kayıtlar) sayfasında görünür.
+  assert.equal(Number((await db.prepare(`SELECT COUNT(*) n FROM outbound_messages WHERE status = 'FAILED'`).get()).n), 1);
+
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, created_at) VALUES (?, NULL, 'EMAIL', '-', 'HESAP_ASKIYA_ALINDI', NULL, '-', 'FAILED', 1, ?)`)
+    .run(randomUUID(), new Date().toISOString());
+  await db.prepare(`INSERT INTO outbound_messages (id, user_id, channel, target, template, subject, body, status, attempts, created_at) VALUES (?, NULL, 'EMAIL', '-', 'HESAP_ASKIYA_ALINDI', NULL, '-', 'SENT', 1, ?)`)
+    .run(randomUUID(), new Date().toISOString());
+  s = await durum('super_admin');
+  assert.equal(s.recentFailures.length, 1);
+  assert.equal(s.delivery.email.FAILED, 1);
+  const k = s.channels.find((x) => x.type === 'EMAIL');
+  assert.deepEqual({ g: k.sent24h, b: k.failed24h }, { g: 1, b: 1 });
+  assert.equal((await istek('/admin/v1/stats')).json.failedNotifications, 1);
 });
