@@ -119,6 +119,16 @@ export function destekRotalar(r, db) {
        FROM support_tickets t LEFT JOIN users u ON u.id = t.user_id WHERE t.id = ?`,
   ).get(id);
 
+  // ── 23 Eki: BEKLEYEN TALEP SAYISI — panel menüsündeki sayaç ve bildirim
+  // sesi için dakikada bir sorulur. Oturumun hareketsizlik süresini uzatmaz
+  // (server.js › PASIF_ADMIN_YOLLARI). Yalnız sayı döner.
+  r.get('/admin/v1/support/pending-count', async (ctx) => {
+    yetkiIste(ctx.admin, 'support.tickets.read');
+    const x = await db.prepare(`SELECT COUNT(*) n, MAX(updated_at) son FROM support_tickets WHERE status = 'OPEN'`).get();
+    const son = x.son instanceof Date ? x.son.toISOString() : x.son ?? null;
+    return { open: Number(x.n), lastActivityAt: son };
+  });
+
   r.get('/admin/v1/support/tickets', async (ctx) => {
     yetkiIste(ctx.admin, 'support.tickets.read');
     const durum = ctx.query.get('status');

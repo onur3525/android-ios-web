@@ -252,8 +252,13 @@ export function yenidenDogrulamaHatasi() {
   return e;
 }
 
-/** Token → { admin, oturum } ya da null. Süresi dolanı siler. */
-export async function oturumCoz(db, token, beklenenAsama = 'full') {
+/**
+ * Token → { admin, oturum } ya da null. Süresi dolanı siler.
+ * [etkinlik] false ise istek hareketsizlik süresini UZATMAZ (23 Eki: panelin
+ * arka planda yaptığı "bekleyen talep" sorgusu 15 dakikalık kilidi
+ * etkisiz bırakmasın diye).
+ */
+export async function oturumCoz(db, token, beklenenAsama = 'full', { etkinlik = true } = {}) {
   if (!token) return null;
   const o = await db.prepare('SELECT * FROM admin_sessions WHERE token_hash = ?').get(ozetle(token));
   if (!o) return null;
@@ -266,7 +271,7 @@ export async function oturumCoz(db, token, beklenenAsama = 'full') {
   }
   const admin = await db.prepare('SELECT * FROM admins WHERE id = ? AND active = TRUE').get(o.admin_id);
   if (!admin) return null;
-  await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE token_hash = ?').run(simdi(), o.token_hash);
+  if (etkinlik) await db.prepare('UPDATE admin_sessions SET last_seen = ? WHERE token_hash = ?').run(simdi(), o.token_hash);
   return { admin, oturum: o };
 }
 

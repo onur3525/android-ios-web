@@ -372,6 +372,19 @@ export async function izlemeBakimi(db) {
   return { olcum: a, hata: b };
 }
 
+// ── YAVAŞLAMA (23 Eki, kullanıcı isteği) ─────────────────────
+// Kural: son 15 dakikada en az 20 istek varsa ve isteklerin %20'den fazlası
+// 1 saniyeden uzun sürdüyse "yavaşlama". Az istekte oran anlamsız olduğu için
+// karar verilmez. Panel (uyarı) ve e-posta uyarısı aynı kuralı kullanır.
+export const YAVAS_ESIK = { enAzIstek: 20, ms: 1000, yuzde: 20 };
+export function yavaslama(s15) {
+  const n = Number(s15?.requests ?? 0);
+  if (n < YAVAS_ESIK.enAzIstek || !s15?.latency) return { yavas: false, oran: null };
+  const yavasSayi = Number(s15.latency.under3000 ?? 0) + Number(s15.latency.over3000 ?? 0);
+  const oran = Math.round((yavasSayi / n) * 1000) / 10;
+  return { yavas: oran > YAVAS_ESIK.yuzde, oran };
+}
+
 // ── GENEL DURUM ──────────────────────────────────────────────
 // Kurallar panelde de yazılıdır. Ölçülemeyen gösterge "uyarı" sayılır,
 // "sağlıklı" sayılmaz.
@@ -381,6 +394,8 @@ export function genelDurum({ veritabaniOk, api, kaynak, yedek, entegrasyonlar, s
   const s = api?.last15m;
   if (s && s.requests >= 20 && s.rate5xx !== null && s.rate5xx >= 5) sorunlar.push(`Son 15 dakikada sunucu hatası oranı %${s.rate5xx}`);
   else if (s && s.errors5xx > 0) uyarilar.push(`Son 15 dakikada ${s.errors5xx} sunucu hatası`);
+  const yv = yavaslama(s);
+  if (yv.yavas) uyarilar.push(`Yavaşlama: son 15 dakikada isteklerin %${yv.oran}'i 1 saniyeden uzun sürdü`);
   if (kaynak?.memory?.percent !== null && kaynak?.memory?.percent !== undefined && kaynak.memory.percent >= 90) sorunlar.push(`Bellek kullanımı %${kaynak.memory.percent}`);
   if (!kaynak?.cpu) uyarilar.push('CPU kullanımı ölçülemiyor');
   if (!kaynak?.memory) uyarilar.push('Kapsayıcı belleği ölçülemiyor');

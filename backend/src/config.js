@@ -196,6 +196,9 @@ export const config = {
   // E-postalardaki logo görsellerinin herkese açık kökü (21 Eki). Gizli
   // değildir; varsayılan canlı sunucu adresidir.
   epostaVarlikKoku: (env.HC_PUBLIC_BASE_URL || 'https://hizmetcep-backend.onrender.com').trim(),
+  // 23 Eki: yönetici uyarılarının (yeni talep, sistem sorunu, yavaşlama, yönetici
+  // girişi) gideceği işletme adresi (yonetici_uyarilari.js).
+  yoneticiUyariEposta: (env.HC_UYARI_EPOSTA || 'onur@hizmetcep.com').trim(),
   veritabani: veritabaniAyari(),
   anaAnahtar: anaAnahtar(),
   // Çerez Secure bayrağı: üretimde HER ZAMAN açık.

@@ -86,6 +86,13 @@ export const SABLONLAR = {
     // AYNI talebe eklenmesini sağlar (gelen_eposta.js).
     konu: 'Destek talebiniz yanıtlandı (Talep No: {NO})',
   },
+  // ── 23 Eki: YÖNETİCİ UYARISI (yonetici_uyarilari.js) — yeni talep, sistem
+  // sorunu, yavaşlama, şüpheli/başarılı yönetici girişi. Alıcı işletme
+  // adresidir (kullanıcı değil). Metin paragrafları boş satırla ayrılır. ──
+  YONETICI_UYARISI: {
+    konu: 'HizmetCep uyarısı: {KONU}',
+    sms: '{METIN}\n\nYönetim paneli: {PANEL}\n\nBu e-posta HizmetCep sunucusu tarafından otomatik gönderildi.',
+  },
   ILAN_KALDIRILDI: {
     sms: 'Merhaba, "{ILAN}" ilanınız HizmetCep yönetimi tarafından kaldırılmıştır. İşlem nedeni: {NEDEN} Detaylı bilgi için: {DESTEK}',
     konu: 'İlanınız kaldırıldı',

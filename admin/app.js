@@ -41,8 +41,66 @@ const MENU = [
 const DURUM_TR = { ACTIVE: 'Aktif', SUSPENDED: 'Askıda', BANNED: 'Banlı' };
 
 // ── Giriş ─────────────────────────────────────────────────────
+// ── GELEN TALEP SAYACI VE BİLDİRİM SESİ (23 Eki, kullanıcı isteği) ──
+// Panel açıkken dakikada bir bekleyen (OPEN) talep sayısı sorulur; menüde
+// "Gelen Talepler" yanında sayı görünür. Yeni talep ya da açık talebe yeni
+// kullanıcı yanıtı gelince kısa bir ses çalar ve ekranda bildirim çıkar.
+// ⚠ Bu sorgu hareketsizlik kilidini UZATMAZ (api › etkinlik: false; sunucu
+// PASIF_ADMIN_YOLLARI): 15 dakika işlem yapılmazsa oturum yine kapanır.
+let talepDurumu = null;
+let talepZamanlayici = null;
+let sesBaglami = null;
+// Tarayıcılar sesi ancak sayfayla etkileşimden sonra izin verir: ilk
+// dokunuş/tuşta ses bağlamı hazırlanır.
+for (const t of ['pointerdown', 'keydown']) {
+  document.addEventListener(t, () => {
+    try { sesBaglami ??= new AudioContext(); if (sesBaglami.state === 'suspended') sesBaglami.resume(); } catch { /* ses yok */ }
+  }, { passive: true });
+}
+function bildirimSesi() {
+  try {
+    if (!sesBaglami) return;
+    const t0 = sesBaglami.currentTime;
+    for (const [frekans, bas] of [[880, 0], [1320, 0.18]]) {
+      const o = sesBaglami.createOscillator(); const g = sesBaglami.createGain();
+      o.frequency.value = frekans; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, t0 + bas);
+      g.gain.exponentialRampToValueAtTime(0.25, t0 + bas + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + bas + 0.16);
+      o.connect(g).connect(sesBaglami.destination);
+      o.start(t0 + bas); o.stop(t0 + bas + 0.18);
+    }
+  } catch { /* ses çalınamadı: bildirim yine görünür */ }
+}
+function talepSayaciniYaz() {
+  const a = document.querySelector('.yan a[href="#/hesaptalepleri"]');
+  if (!a) return;
+  a.querySelector('.menu-sayac')?.remove();
+  if (talepDurumu?.open > 0) a.append(h('span', { class: 'menu-sayac', title: 'Yanıt bekleyen talep' }, String(talepDurumu.open)));
+}
+function talepSayaciBaslat() {
+  clearInterval(talepZamanlayici);
+  talepZamanlayici = null;
+  talepDurumu = null;
+  if (!ben || !MENU.some(([k, , roller]) => k === 'hesaptalepleri' && roller.includes(ben.role))) return;
+  const sor = async () => {
+    if (!ben) { clearInterval(talepZamanlayici); talepZamanlayici = null; return; }
+    try {
+      const s = await api('/support/pending-count', { etkinlik: false });
+      const onceki = talepDurumu;
+      talepDurumu = s;
+      talepSayaciniYaz();
+      const yeni = onceki && (s.open > onceki.open || (s.lastActivityAt && s.lastActivityAt > (onceki.lastActivityAt ?? '')));
+      if (yeni) { bildirimSesi(); bildir('Yeni gelen talep var — Gelen Talepler'); }
+    } catch { /* geçici hata: bir sonraki turda yeniden sorulur */ }
+  };
+  sor();
+  talepZamanlayici = setInterval(sor, 60_000);
+}
+
 /** Giriş yapıldı: 15 dk hareketsizlikte ekran kilitlenir (süre sunucudan). */
 function oturumBasladi() {
+  talepSayaciBaslat();
   hareketsizlikKilidi(ben?.idleTimeoutSeconds, async () => {
     ben = null;
     await api('/auth/logout', { yontem: 'POST', govde: {} }).catch(() => {}); // sunucuda zaten kapanmış olabilir
@@ -106,7 +164,8 @@ function duzen(sayfa, icerik) {
   return h('div', { class: 'duzen' },
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
-      menu.map(([k, ad]) => h('a', { class: secili === k ? 'secili' : '', href: `#/${k}` }, ad)),
+      menu.map(([k, ad]) => h('a', { class: secili === k ? 'secili' : '', href: `#/${k}` }, ad,
+        k === 'hesaptalepleri' && talepDurumu?.open > 0 ? h('span', { class: 'menu-sayac', title: 'Yanıt bekleyen talep' }, String(talepDurumu.open)) : null)),
       h('div', { class: 'cikis' }, h('a', { onclick: sifreDegistir }, 'Şifre değiştir'), h('a', { onclick: cikis }, 'Çıkış'))),
     h('main', { class: 'icerik' },
       // Kullanıcı detayının kendi "‹ Kullanıcılar" bağlantısı var; ikisi üst üste çıkmasın.
