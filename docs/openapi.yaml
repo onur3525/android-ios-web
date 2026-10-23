@@ -38,10 +38,8 @@ info:
     - Platform iki taraf için de ücretsizdir; ödeme/bakiye yoktur.
 
 servers:
-  - url: https://api.hizmetcep.com/api/v1
+  - url: https://hizmetcep-backend.onrender.com/api/v1
     description: Üretim
-  - url: https://staging-api.hizmetcep.com/api/v1
-    description: Hazırlık
   # ⚠ Admin API'si (/admin/v1) bu sözleşmede YOKTUR: ayrı, çerez + MFA
   # korumalı yüzeydir; yalnız panelden kullanılır.
 

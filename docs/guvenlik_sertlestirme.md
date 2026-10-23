@@ -69,7 +69,7 @@ sertifika yenilendiği gün kırılır.
 
 Pin üretimi (sunucu canlıya çıktıktan sonra):
 
-    openssl s_client -connect api.hizmetcep.com:443 -showcerts </dev/null \
+    openssl s_client -connect hizmetcep-backend.onrender.com:443 -showcerts </dev/null \
       | openssl x509 -outform DER | openssl dgst -sha256 -binary | base64
 
 ## 5. Karartma (obfuscation) — SÜRÜM KOMUTUNA EKLENECEK

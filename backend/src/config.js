@@ -93,7 +93,7 @@ function saglayici(tur) {
 }
 
 function corsKokenleri() {
-  const ham = (env.HC_CORS_ORIGINS ?? (uretim ? 'https://hizmetcep.com' : '')).split(',').map((s) => s.trim()).filter(Boolean);
+  const ham = (env.HC_CORS_ORIGINS ?? (uretim ? 'https://hizmetcep.com,https://www.hizmetcep.com' : '')).split(',').map((s) => s.trim()).filter(Boolean);
   for (const k of ham) {
     if (k === '*' || k.includes('*')) throw new Error('HC_CORS_ORIGINS joker (*) içeremez');
     let u;

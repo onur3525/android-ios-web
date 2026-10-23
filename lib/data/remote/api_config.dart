@@ -37,7 +37,7 @@ abstract final class ApiConfig {
     if (kReleaseMode) {
       throw StateError(
         'RELEASE derlemede API_BASE_URL zorunludur: '
-        '--dart-define=API_BASE_URL=https://api.hizmetcep.com/api/v1',
+        '--dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1',
       );
     }
     return _devBaseUrl;
