@@ -64,11 +64,11 @@ after(async () => {
 let erisim, yenileme, kullaniciId, ilkKod;
 
 test('kayıt: OTP olmadan reddedilir, doğru OTP ile hesap + oturum', async () => {
-  const yanlis = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: '000000' } });
+  const yanlis = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: '000000' } });
   assert.equal(yanlis.durum, 400);
   const kod = await otpAl(TEL, 'REGISTER');
   ilkKod = kod;
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: kod } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: TEL, password: 'sifre1234', name: 'Ayşe Yılmaz', email: 'ayse@ornek.com', role: 'CUSTOMER', otpCode: kod } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.ok(r.json.accessToken && r.json.refreshToken);
   erisim = r.json.accessToken;
@@ -94,7 +94,7 @@ test('aynı OTP ikinci kez kullanılamaz; aynı numara ikinci kez kayıt olamaz'
   assert.equal(m.template, 'KAYITLI_NUMARA');
   assert.equal(/\d{6}/.test(m.body), false);
   // İkinci kayıt yine reddedilir (önceki kod tüketildi; yeni kod yok).
-  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, phone: TEL, password: 'sifre1234', name: 'İkinci Kişi', email: 'ikinci@ornek.com', role: 'CUSTOMER', otpCode: ilkKod } });
+  const k = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, phone: TEL, password: 'sifre1234', name: 'İkinci Kişi', email: 'ikinci@ornek.com', role: 'CUSTOMER', otpCode: ilkKod } });
   assert.equal(k.durum, 400);
   // Hız sınırı da kayıtsız numarayla aynı işler (60 sn içinde ikinci istek 429).
   const ikinci = await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: TEL, purpose: 'REGISTER' } });

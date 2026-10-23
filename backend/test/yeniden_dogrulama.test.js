@@ -36,7 +36,7 @@ async function kod(tel, amac) {
 }
 async function hesap(tel) {
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: {
-    termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Yeniden Doğrulama',
+    termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Yeniden Doğrulama',
     email: `r${tel}@ornek.com`, role: 'CUSTOMER', otpCode: await kod(tel, 'REGISTER') } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   return { tel, token: r.json.accessToken };

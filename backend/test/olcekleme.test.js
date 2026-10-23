@@ -51,7 +51,7 @@ async function istek(taban, yol, { yontem = 'GET', govde, token, cerez } = {}) {
 }
 async function kisi(taban, tel, rol) {
   await istek(taban, '/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
-  const r = await istek(taban, '/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Kişi', email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek(taban, '/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Kişi', email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
   return { token: r.json.accessToken, id: (await istek(taban, '/api/v1/users/me', { token: r.json.accessToken })).json.id };
 }
 function sio(taban, token) {

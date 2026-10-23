@@ -60,15 +60,15 @@ test('geçersiz tokenlar reddedilir: yanlış proje, süresi dolmuş, başka ana
 });
 
 test('Firebase telefon doğrulamasıyla kayıt: uid hesaba bağlanır; numara eşleşmezse red', async () => {
-  const yanlis = await istek('/api/v1/auth/register', { termsAccepted: true, ageConfirmed: true, phone: '5401112233', password: 'sifre1234', name: 'Fb Kişi', email: 'fb@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905409999999' }) });
+  const yanlis = await istek('/api/v1/auth/register', { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: '5401112233', password: 'sifre1234', name: 'Fb Kişi', email: 'fb@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905409999999' }) });
   assert.equal(yanlis.durum, 400);
-  const r = await istek('/api/v1/auth/register', { termsAccepted: true, ageConfirmed: true, phone: '5401112233', password: 'sifre1234', name: 'Fb Kişi', email: 'fb@ornek.com', role: 'PROVIDER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905401112233' }) });
+  const r = await istek('/api/v1/auth/register', { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: '5401112233', password: 'sifre1234', name: 'Fb Kişi', email: 'fb@ornek.com', role: 'PROVIDER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905401112233' }) });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const u = await db.prepare('SELECT firebase_uid, phone_verified, email_verified FROM users WHERE phone = ?').get('5401112233');
   assert.equal(u.firebase_uid, 'fb-uid-1');
   assert.equal(u.email_verified, 0);
   // Aynı Firebase kullanıcısı ikinci hesaba bağlanamaz
-  const iki = await istek('/api/v1/auth/register', { termsAccepted: true, ageConfirmed: true, phone: '5401112244', password: 'sifre1234', name: 'Xx Yy', email: 'x@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905401112244' }) });
+  const iki = await istek('/api/v1/auth/register', { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: '5401112244', password: 'sifre1234', name: 'Xx Yy', email: 'x@ornek.com', role: 'CUSTOMER', firebaseIdToken: idToken({ sub: 'fb-uid-1', phone_number: '+905401112244' }) });
   assert.equal(iki.durum, 409);
 });
 

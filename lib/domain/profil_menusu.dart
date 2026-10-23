@@ -32,6 +32,81 @@ import '../data/models/account.dart';
 /// bilmesine gerek yoktur.
 /// ═══════════════════════════════════════════════════════════════
 
+/// ═══════════════════════════════════════════════════════════════
+/// YASAL BELGELER — TEK KAYNAK (23 Eki, kullanıcı kararı)
+///
+/// Profilde (mobil profil ekranı ve web kenar çubuğu) dört belge ayrı
+/// satırlar olarak DEĞİL, tek "Sözleşmeler ve Politikalar" satırı altında
+/// durur. Satır `/profile/legal` sayfasını açar; sayfa bu listeyi çizer.
+/// KVKK: aydınlatma, gizlilik ve çerez metinleri her zaman buradan
+/// okunabilir kalır. Çerez Politikası yalnız web'de (mobil uygulama çerez
+/// kullanmaz).
+/// ═══════════════════════════════════════════════════════════════
+@immutable
+class YasalBelge {
+  const YasalBelge({
+    required this.slug,
+    required this.baslik,
+    required this.altYazi,
+    required this.ikon,
+    required this.ikonZemini,
+    this.yalnizWeb = false,
+  });
+
+  final String slug;
+  final String baslik;
+  final String altYazi;
+  final String ikon;
+  final Color ikonZemini;
+  final bool yalnizWeb;
+}
+
+const List<YasalBelge> kYasalBelgeler = [
+  YasalBelge(
+    slug: 'terms',
+    baslik: 'Kullanım Sözleşmesi',
+    altYazi: 'Uygulama kullanım koşullarını inceleyin.',
+    ikon: 'assets/svg/ic_pdoc.svg',
+    ikonZemini: Color(0xFFE2F7FA),
+  ),
+  YasalBelge(
+    slug: 'privacy',
+    baslik: 'Gizlilik Politikası',
+    altYazi: 'Kişisel verilerinizin nasıl işlendiğini görün.',
+    ikon: 'assets/svg/ic_pshield.svg',
+    ikonZemini: Color(0xFFE7EFFD),
+  ),
+  YasalBelge(
+    slug: 'kvkk',
+    baslik: 'Aydınlatma Metni',
+    altYazi: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
+    ikon: 'assets/svg/ic_pdoc.svg',
+    ikonZemini: Color(0xFFE7EFFD),
+  ),
+  YasalBelge(
+    slug: 'cookies',
+    baslik: 'Çerez Politikası',
+    altYazi: 'Web sitesinde kullanılan zorunlu çerezler.',
+    ikon: 'assets/svg/ic_pdoc.svg',
+    ikonZemini: Color(0xFFEEF0F4),
+    yalnizWeb: true,
+  ),
+];
+
+/// Profildeki tek satır. (Ad ve alt yazı mobil profil ekranında da
+/// buradan okunur.)
+const String kYasalBelgelerBaslik = 'Sözleşmeler ve Politikalar';
+const String kYasalBelgelerAltYazi =
+    'Kullanım sözleşmesi, gizlilik ve kişisel veri metinleri.';
+const ProfilMenuOgesi kYasalBelgelerOgesi = ProfilMenuOgesi(
+  // ⚠ ÇİZGİ BELGE: kenar çubuğu ikonu tek renge boyar.
+  ikon: 'assets/svg/ic_doc_cizgi.svg',
+  ikonZemini: Color(0xFFE2F7FA),
+  baslik: kYasalBelgelerBaslik,
+  altYazi: kYasalBelgelerAltYazi,
+  rota: '/profile/legal',
+);
+
 /// Rota dışı eylemler.
 ///
 /// ⚠ Rota ile açılan öğelerde bu alan `null` kalır.
@@ -191,42 +266,10 @@ const List<ProfilMenuOgesi> _diger = [
     altYazi: 'Sorularınız için bize ulaşın.',
     eylem: ProfilEylemi.destek,
   ),
-  ProfilMenuOgesi(
-    // ⚠ ÇİZGİ BELGE: dolgulu `ic_pdoc` (Android profil karesi için)
-    // tek renge boyanınca satırları kayboluyordu.
-    ikon: 'assets/svg/ic_doc_cizgi.svg',
-    ikonZemini: Color(0xFFE2F7FA),
-    baslik: 'Kullanım Sözleşmesi',
-    altYazi: 'Uygulama kullanım koşullarını inceleyin.',
-    rota: '/legal',
-    rotaArgumani: {'slug': 'terms', 'title': 'Kullanım Sözleşmesi'},
-  ),
-  ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_pshield.svg',
-    ikonZemini: Color(0xFFE7EFFD),
-    baslik: 'Gizlilik Politikası',
-    altYazi: 'Kişisel verilerinizin nasıl işlendiğini görün.',
-    rota: '/legal',
-    rotaArgumani: {'slug': 'privacy', 'title': 'Gizlilik Politikası'},
-  ),
-  // 22 Eki (KVKK): aydınlatma artık açılışta onaylatılmıyor; her zaman
-  // buradan okunabilir. Çerez Politikası web içindir (kenar çubuğu web'de).
-  ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_doc_cizgi.svg',
-    ikonZemini: Color(0xFFE7EFFD),
-    baslik: 'Aydınlatma Metni',
-    altYazi: 'Kişisel verilerinizin işlenmesi hakkında bilgilendirme.',
-    rota: '/legal',
-    rotaArgumani: {'slug': 'kvkk', 'title': 'Aydınlatma Metni'},
-  ),
-  ProfilMenuOgesi(
-    ikon: 'assets/svg/ic_doc_cizgi.svg',
-    ikonZemini: Color(0xFFEEF0F4),
-    baslik: 'Çerez Politikası',
-    altYazi: 'Web sitesinde kullanılan zorunlu çerezler.',
-    rota: '/legal',
-    rotaArgumani: {'slug': 'cookies', 'title': 'Çerez Politikası'},
-  ),
+  // 23 Eki (kullanıcı kararı): dört yasal belge profilde AYRI AYRI değil,
+  // TEK satır altında toplanır; satır belge listesini açar (bkz.
+  // `kYasalBelgeler`, `YasalBelgelerScreen`).
+  kYasalBelgelerOgesi,
   ProfilMenuOgesi(
     ikon: 'assets/svg/ic_pstar.svg',
     ikonZemini: Color(0xFFFDE9F1),

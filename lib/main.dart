@@ -9,6 +9,7 @@ import 'core/route_guard.dart';
 import 'screens/account_settings_screen.dart';
 import 'screens/addresses_screen.dart';
 import 'screens/app_rate_screen.dart';
+import 'screens/yasal_belgeler_screen.dart';
 import 'screens/change_password_screen.dart';
 import 'screens/create_listing_screen.dart';
 import 'screens/legal_screen.dart';
@@ -912,6 +913,14 @@ class HizmetCepApp extends StatelessWidget {
             return MaterialPageRoute<void>(
               settings: settings,
               builder: (_) => RoleGuard(builder: (_) => const AccountSettingsScreen()),
+            );
+          }
+          // 23 Eki: Sözleşmeler ve Politikalar — profildeki tek satırın
+          // açtığı belge listesi (domain/profil_menusu.dart › kYasalBelgeler).
+          if (ad == '/profile/legal') {
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => RoleGuard(builder: (_) => const YasalBelgelerScreen()),
             );
           }
           if (ad == '/profile/rate') {

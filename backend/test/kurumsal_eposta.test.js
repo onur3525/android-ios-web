@@ -50,7 +50,7 @@ async function hesap(tel, { uid } = {}) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'otp_ip:%'`).run();
   const o = await istek('/api/v1/auth/otp/request', { govde: { phone: tel, purpose: 'REGISTER' } });
   assert.equal(o.durum, 204, JSON.stringify(o.json));
-  const r = await istek('/api/v1/auth/register', { govde: { termsAccepted: true, phone: tel, password: 'GucluSifre12', name: 'Eposta Deneme', email: `e${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { govde: { termsAccepted: true, aydinlatmaAccepted: true, phone: tel, password: 'GucluSifre12', name: 'Eposta Deneme', email: `e${tel}@ornek.com`, role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   if (uid) await db.prepare('UPDATE users SET firebase_uid = ? WHERE phone = ?').run(uid, tel);
   return r.json.accessToken;

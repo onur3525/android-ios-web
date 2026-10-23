@@ -600,6 +600,10 @@ export function kullaniciRotalar(r, db) {
     // Ayrı `ageConfirmed` alanı istenmez (gönderilirse yok sayılır); beyanın
     // zamanı (`age_confirmed_at`) sözleşme kabulüyle aynı andır.
     if (ctx.body.termsAccepted !== true) throw new ApiHatasi(400, 'TERMS_REQUIRED', 'Kullanım Sözleşmesi onayı zorunludur');
+    // 23 Eki: Aydınlatma Metni'nin gösterildiği ("okudum, bilgilendirildim")
+    // SUNUCUDA da zorunlu — veri toplanmadan önce aydınlatmanın yapıldığının
+    // ispatı (KVKK m.10). Kayıt ekranı bu alanı 16 Eki'den beri gönderiyor.
+    if (ctx.body.aydinlatmaAccepted !== true) throw new ApiHatasi(400, 'AYDINLATMA_REQUIRED', 'Aydınlatma Metni bilgilendirmesi zorunludur');
     const kanit = await telefonKaniti(db, ctx.body, tel, ['REGISTER']);
     if (kanit.uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(kanit.uid)) {
       throw hata.cakisma('Bu doğrulama başka bir hesaba bağlı');
@@ -621,12 +625,10 @@ export function kullaniciRotalar(r, db) {
     // Onay isteyen diğer belgeler girişteki onay akışında istenir.
     const pl = ['android', 'ios', 'web'].includes(ctx.body.platform) ? ctx.body.platform : null;
     // ── 16 Eki: KAYITTA İKİ ZORUNLU ONAY ──
-    // Yeni kayıt ekranında kullanıcı Kullanım Sözleşmesi ile KVKK
-    // Aydınlatma Metni'ni AYRI ayrı onaylar (`aydinlatmaAccepted`); kaydı
-    // onayladığı belgelere yazılır. Eski uygulama sürümlerinde tek onay
-    // satırı "Kullanım sözleşmesi ve gizlilik politikası" idi; onlarda
-    // önceki davranış (terms + privacy) korunur.
-    const onaylananlar = ctx.body.aydinlatmaAccepted === true ? ['terms', 'kvkk'] : ['terms', 'privacy'];
+    // Kullanıcı Kullanım Sözleşmesi'ni kabul eder ve Aydınlatma Metni'nin
+    // gösterildiğini işaretler; ikisinin yayımdaki sürümü (sürüm + SHA-256)
+    // kaydedilir. (23 Eki: tek onay satırlı eski istemci yolu kaldırıldı.)
+    const onaylananlar = ['terms', 'kvkk'];
     for (const v of await db.prepare(
       `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
         WHERE v.slug IN (?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,

@@ -93,7 +93,7 @@ async function hesap(tel, uid) {
   await db.prepare(`DELETE FROM rate_limits WHERE key LIKE 'giris_ip:%' OR key LIKE 'otp_ip:%'`).run();
   fbKullanicilar.set(uid, { validSince: null, disabled: false, phoneNumber: `+90${tel}` });
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: {
-    termsAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'İptal Deneme',
+    termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'İptal Deneme',
     email: `i${tel}@ornek.com`, role: 'CUSTOMER', firebaseIdToken: idToken({ sub: uid, phone_number: `+90${tel}` }) } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const ikinci = await istek('/api/v1/auth/firebase/session', { yontem: 'POST', govde: { idToken: idToken({ sub: uid, phone_number: `+90${tel}` }) } });

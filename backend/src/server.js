@@ -41,7 +41,7 @@ import { dosyaTemizliginiIsle } from './dosya_temizligi.js';
 import { pushKuyrugunuIsle } from './fcm.js';
 import { publicRotalar } from './routes/public.js';
 import { destekRotalar } from './routes/destek.js';
-import { kayitBakimi } from './bakim.js';
+import { kayitBakimi, saklamaSuresiBakimi } from './bakim.js';
 import { firebaseSilmeKuyrugunuIsle } from './firebase_silme.js';
 import { firebaseIslemKuyrugunuIsle } from './firebase_islemleri.js';
 import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
@@ -253,6 +253,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['hesap_silme', silmeTalepleriniIsle],
     ['dosya_temizligi', dosyaTemizliginiIsle],
     ['kayit_bakimi', kayitBakimi],
+    // 23 Eki: Gizlilik Politikası'ndaki 2 yıllık saklama süreleri.
+    ['saklama_suresi', saklamaSuresiBakimi],
     ['firebase_silme', firebaseSilmeKuyrugunuIsle],
     ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
     ['izleme_bakimi', izlemeBakimi],

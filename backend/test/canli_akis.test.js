@@ -30,7 +30,7 @@ async function istek(yol, { yontem = 'GET', govde, token } = {}) {
 async function kaydol(tel, rol, ad, email) {
   const o = await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   assert.equal(o.durum, 204, JSON.stringify(o.json));
-  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: ad, email, role: rol, otpCode: globalThis.__sonOtp } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: ad, email, role: rol, otpCode: globalThis.__sonOtp } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   return r.json.accessToken;
 }
@@ -57,7 +57,7 @@ test('başlangıç verisi: yalnız boş tablolara; ikinci çağrı hiçbir şey 
 
 test('OTP: sabit test kodu (123456) ve sahte Firebase kanıtı sunucuda REDDEDİLİR', async () => {
   const tel = '5401110001';
-  const govde = { termsAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: 'Deneme Kişi', email: 'deneme@ornek.com', role: 'CUSTOMER' };
+  const govde = { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: 'Deneme Kişi', email: 'deneme@ornek.com', role: 'CUSTOMER' };
   // Kod hiç istenmeden "123456".
   const a = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { ...govde, otpCode: '123456' } });
   assert.equal(a.durum, 400, JSON.stringify(a.json));

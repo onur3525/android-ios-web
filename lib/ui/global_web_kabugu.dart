@@ -388,6 +388,7 @@ class AktifRota extends NavigatorObserver {
       '/profile/password': 'Şifre Değiştir',
       '/profile/account': 'Hesap Ayarları',
       '/profile/rate': 'Uygulama Değerlendirmesi',
+      '/profile/legal': 'Sözleşmeler ve Politikalar',
       '/profile/role': 'Rol Değiştir',
       '/notifications': 'Bildirimler',
       '/customer/listings': 'İlanlarım',
