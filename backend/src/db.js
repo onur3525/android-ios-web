@@ -150,6 +150,23 @@ class PostgresDb {
     this._kapanis = null;
   }
   _istemci() { return this.als.getStore() || this.havuz; }
+  // Bağlantı edinme zaman aşımında havuzun anlık durumunu kaydet; sırları/URL'yi yazma.
+  async _baglantiAl(kaynak) {
+    try {
+      return await this.havuz.connect();
+    } catch (e) {
+      console.error('[HC_DB_POOL_ACQUIRE_FAILED]', JSON.stringify({
+        kaynak,
+        hata: e?.message || String(e),
+        kod: e?.code || null,
+        totalCount: this.havuz.totalCount,
+        idleCount: this.havuz.idleCount,
+        waitingCount: this.havuz.waitingCount,
+        max: this.havuz.options?.max ?? null,
+      }));
+      throw e;
+    }
+  }
   // PG boolean sütunlarına 1/0 yazılabilsin diye sayılar metne çevrilir
   // ('1'/'0' PG'de geçerli boolean girdisidir; tamsayı sütunlarında da).
   static _p(p) {
@@ -166,7 +183,7 @@ class PostgresDb {
   }
   async tx(f) {
     if (this.als.getStore()) return f();
-    const istemci = await this.havuz.connect();
+    const istemci = await this._baglantiAl('transaction');
     const sonra = [];
     istemci.__hcSonra = sonra;
     try {
@@ -224,7 +241,7 @@ class PostgresDb {
    */
   async dinleyiciAc() {
     if (this.kapandi) throw new Error('Veritabanı kapanıyor: yeni dinleyici açılamaz');
-    const istemci = await this.havuz.connect();
+    const istemci = await this._baglantiAl('listener');
     const ozgun = istemci.release.bind(istemci);
     let birakildi = false;
     istemci.release = (hata) => {
@@ -256,7 +273,7 @@ class PostgresDb {
   // işin içinde zaten kendi `db.tx`'ini açar. İş, çağıranın işlem bağlamının
   // DIŞINDA koşar (`als.exit`).
   async isKilidi(ad, f) {
-    const kilit = await this.havuz.connect();
+    const kilit = await this._baglantiAl('advisory-lock');
     let alindi = false;
     let bozuk = false;
     try {
