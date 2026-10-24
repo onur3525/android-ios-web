@@ -1,0 +1,108 @@
+name: HizmetCep Endpoint Latency Diagnosis
+
+on:
+  push:
+    branches:
+      - perf/safe-live-load-test
+    paths:
+      - .github/workflows/hizmetcep-endpoint-diagnostic.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hizmetcep-endpoint-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  endpoint-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Warm up and compare public endpoints independently
+        env:
+          TARGET: https://hizmetcep-backend.onrender.com
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+
+          const base = process.env.TARGET;
+          const endpoints = [
+            { name: 'healthz', path: '/healthz' },
+            { name: 'categories', path: '/api/v1/categories' },
+            { name: 'regions-tree', path: '/api/v1/regions/tree' },
+            { name: 'legal', path: '/api/v1/legal' },
+            { name: 'app-config-web', path: '/api/v1/config/app?platform=web' },
+          ];
+
+          async function hit(path) {
+            const t0 = performance.now();
+            try {
+              const res = await fetch(base + path, {
+                method: 'GET',
+                headers: { 'User-Agent': 'HizmetCep-Endpoint-Diagnosis/1.0', 'Accept': 'application/json' },
+                signal: AbortSignal.timeout(15000),
+              });
+              const body = await res.arrayBuffer();
+              return { status: res.status, ms: performance.now() - t0, bytes: body.byteLength, error: res.ok ? '' : 'HTTP_' + res.status };
+            } catch (e) {
+              return { status: 0, ms: performance.now() - t0, bytes: 0, error: e?.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK_ERROR' };
+            }
+          }
+
+          // Warm-up separately, so cold-start cost is visible rather than mixed into the burst.
+          console.log('WARMUP');
+          const warmups = [];
+          for (const ep of endpoints) {
+            const r = await hit(ep.path);
+            warmups.push({ endpoint: ep.name, ...r });
+            console.log(JSON.stringify({ phase: 'warmup', endpoint: ep.name, ...r }));
+          }
+
+          // Exactly 300 concurrent requests: 60 to each endpoint, all started in one burst.
+          const burst = await Promise.all(endpoints.flatMap(ep =>
+            Array.from({ length: 60 }, async () => ({ endpoint: ep.name, ...(await hit(ep.path)) }))
+          ));
+
+          const summarize = (name, rows) => {
+            const times = rows.map(r => r.ms).sort((a,b) => a-b);
+            const pct = p => Math.round(times[Math.min(times.length - 1, Math.ceil(p * times.length) - 1)]);
+            const errors = rows.filter(r => r.error).length;
+            return {
+              endpoint: name,
+              requests: rows.length,
+              errors,
+              errorRatePct: +((errors / rows.length) * 100).toFixed(2),
+              p50Ms: pct(.5),
+              p95Ms: pct(.95),
+              p99Ms: pct(.99),
+              maxMs: Math.round(Math.max(...times)),
+              averageResponseBytes: Math.round(rows.reduce((n,r)=>n+r.bytes,0) / rows.length),
+              statusCounts: Object.fromEntries([...new Set(rows.map(r => String(r.status || r.error)))].map(s => [s, rows.filter(r => String(r.status || r.error) === s).length])),
+            };
+          };
+
+          const reports = endpoints.map(ep => ({
+            warmup: warmups.find(w => w.endpoint === ep.name),
+            burst: summarize(ep.name, burst.filter(r => r.endpoint === ep.name)),
+          }));
+          console.log('ENDPOINT_REPORTS');
+          for (const report of reports) console.log(JSON.stringify(report));
+
+          const lines = [
+            '## HizmetCep endpoint latency diagnosis',
+            '',
+            '- Target: `' + base + '`',
+            '- Warm-up: one sequential request per endpoint, reported separately.',
+            '- Burst: exactly 300 concurrent GET requests, 60 per endpoint.',
+            '- Public read-only endpoints only; no writes, login, OTP, messages, offers, or uploads.',
+            '',
+            '| Endpoint | Warm-up status | Warm-up ms | Burst requests | Errors | Error rate | p50 ms | p95 ms | p99 ms | Max ms | Avg bytes |',
+            '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+            ...reports.map(x => '| ' + x.burst.endpoint + ' | ' + x.warmup.status + ' | ' + Math.round(x.warmup.ms) + ' | ' + x.burst.requests + ' | ' + x.burst.errors + ' | ' + x.burst.errorRatePct + '% | ' + x.burst.p50Ms + ' | ' + x.burst.p95Ms + ' | ' + x.burst.p99Ms + ' | ' + x.burst.maxMs + ' | ' + x.burst.averageResponseBytes + ' |'),
+            '',
+            'Interpretation: if warm-up is slow across endpoints, suspect cold start/network/platform. If healthz is fast but particular API endpoints are slow, inspect that endpoint and its DB/query/payload path. A GitHub runner-to-host measurement includes network latency and is not a server-only benchmark.'
+          ];
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
