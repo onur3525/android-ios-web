@@ -1,0 +1,112 @@
+name: HizmetCep Safe Live Load Test
+
+on:
+  push:
+    branches:
+      - perf/safe-live-load-test
+    paths:
+      - .github/workflows/hizmetcep-safe-load-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hizmetcep-safe-live-load-test
+  cancel-in-progress: false
+
+jobs:
+  safe-read-only-load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run conservative read-only load test against production
+        env:
+          TARGET: https://hizmetcep-backend.onrender.com
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          import { setTimeout as sleep } from 'node:timers/promises';
+
+          const base = process.env.TARGET;
+          const paths = [
+            '/healthz',
+            '/api/v1/categories',
+            '/api/v1/regions/tree',
+            '/api/v1/legal',
+            '/api/v1/config/app?platform=web',
+          ];
+          const stages = [
+            { users: 1, seconds: 12 },
+            { users: 3, seconds: 12 },
+            { users: 5, seconds: 12 },
+          ];
+          const results = [];
+
+          async function stage(users, seconds) {
+            const endAt = Date.now() + seconds * 1000;
+            const rows = [];
+            let cursor = 0;
+            async function worker() {
+              while (Date.now() < endAt) {
+                const path = paths[cursor++ % paths.length];
+                const start = performance.now();
+                let status = 0;
+                let error = '';
+                try {
+                  const response = await fetch(base + path, {
+                    method: 'GET',
+                    headers: { 'User-Agent': 'HizmetCep-SafeLoadTest/1.0', 'Accept': 'application/json' },
+                    signal: AbortSignal.timeout(8000),
+                  });
+                  status = response.status;
+                  await response.arrayBuffer();
+                  if (!response.ok) error = 'HTTP_' + status;
+                } catch (e) {
+                  error = e?.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK_ERROR';
+                }
+                rows.push({ path, status, ms: performance.now() - start, error });
+              }
+            }
+            await Promise.all(Array.from({ length: users }, () => worker()));
+            const times = rows.map(r => r.ms).sort((a,b) => a-b);
+            const percentile = p => times.length ? Math.round(times[Math.min(times.length - 1, Math.ceil(p * times.length) - 1)]) : null;
+            const failed = rows.filter(r => r.error).length;
+            const report = {
+              users,
+              seconds,
+              requests: rows.length,
+              rps: +(rows.length / seconds).toFixed(2),
+              errors: failed,
+              errorRatePct: rows.length ? +((failed / rows.length) * 100).toFixed(2) : 0,
+              p50Ms: percentile(0.50),
+              p95Ms: percentile(0.95),
+              p99Ms: percentile(0.99),
+              statuses: Object.fromEntries([...new Set(rows.map(r => String(r.status || r.error)))].map(s => [s, rows.filter(r => String(r.status || r.error) === s).length])),
+            };
+            results.push(report);
+            console.log(JSON.stringify(report));
+          }
+
+          console.log('Target:', base);
+          console.log('Only GET requests; no login, account creation, messages, offers, uploads, or data changes.');
+          for (const s of stages) {
+            await stage(s.users, s.seconds);
+            await sleep(2000);
+          }
+
+          const lines = [
+            '## HizmetCep safe live load test',
+            '',
+            '- Target: `' + base + '`',
+            '- Scope: public, read-only GET endpoints only; no writes or authenticated user actions.',
+            '- Load profile: 1, 3, then 5 concurrent workers; 12 seconds per stage.',
+            '',
+            '| Concurrent workers | Requests | RPS | Errors | Error rate | p50 (ms) | p95 (ms) | p99 (ms) |',
+            '|---:|---:|---:|---:|---:|---:|---:|---:|',
+            ...results.map(r => '| ' + r.users + ' | ' + r.requests + ' | ' + r.rps + ' | ' + r.errors + ' | ' + r.errorRatePct + '% | ' + r.p50Ms + ' | ' + r.p95Ms + ' | ' + r.p99Ms + ' |'),
+            '',
+            'This is a conservative smoke/load test, not a capacity certification. Results can be affected by cold starts and the GitHub-hosted runner network.'
+          ];
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
