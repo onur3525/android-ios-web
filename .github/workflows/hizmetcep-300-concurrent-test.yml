@@ -1,0 +1,91 @@
+name: HizmetCep 300 Concurrent Read-Only Test
+
+on:
+  push:
+    branches:
+      - perf/safe-live-load-test
+    paths:
+      - .github/workflows/hizmetcep-300-concurrent-test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hizmetcep-300-concurrent-test
+  cancel-in-progress: false
+
+jobs:
+  burst-read-only-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send one bounded wave of 300 read-only requests
+        env:
+          TARGET: https://hizmetcep-backend.onrender.com
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+
+          const base = process.env.TARGET;
+          const paths = [
+            '/healthz',
+            '/api/v1/categories',
+            '/api/v1/regions/tree',
+            '/api/v1/legal',
+            '/api/v1/config/app?platform=web',
+          ];
+          const started = performance.now();
+          let cursor = 0;
+          const results = await Promise.all(Array.from({ length: 300 }, async (_, worker) => {
+            const path = paths[worker % paths.length];
+            const t0 = performance.now();
+            try {
+              const response = await fetch(base + path, {
+                method: 'GET',
+                headers: {
+                  'User-Agent': 'HizmetCep-300-ReadOnly-Test/1.0',
+                  'Accept': 'application/json'
+                },
+                signal: AbortSignal.timeout(15000),
+              });
+              const bytes = await response.arrayBuffer();
+              return { path, status: response.status, ms: performance.now() - t0, bytes: bytes.byteLength, error: response.ok ? '' : 'HTTP_' + response.status };
+            } catch (e) {
+              return { path, status: 0, ms: performance.now() - t0, bytes: 0, error: e?.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK_ERROR' };
+            }
+          }));
+          const elapsed = (performance.now() - started) / 1000;
+          const times = results.map(r => r.ms).sort((a,b) => a-b);
+          const pct = p => Math.round(times[Math.min(times.length - 1, Math.ceil(p * times.length) - 1)]);
+          const errors = results.filter(r => r.error).length;
+          const summary = {
+            concurrentRequests: results.length,
+            endpoints: paths,
+            elapsedSeconds: +elapsed.toFixed(2),
+            completedRequestsPerSecond: +(results.length / elapsed).toFixed(2),
+            errors,
+            errorRatePct: +((errors / results.length) * 100).toFixed(2),
+            p50Ms: pct(0.50),
+            p95Ms: pct(0.95),
+            p99Ms: pct(0.99),
+            maxMs: Math.round(Math.max(...times)),
+            statusCounts: Object.fromEntries([...new Set(results.map(r => String(r.status || r.error)))].map(s => [s, results.filter(r => String(r.status || r.error) === s).length])),
+            errorSamples: results.filter(r => r.error).slice(0, 20).map(({path,status,ms,error}) => ({path,status,ms:Math.round(ms),error})),
+          };
+          console.log(JSON.stringify(summary, null, 2));
+          const lines = [
+            '## HizmetCep 300 concurrent read-only test',
+            '',
+            '- Target: `' + base + '`',
+            '- Scope: one bounded burst of 300 GET requests to public endpoints only.',
+            '- No login, OTP, account creation, listing creation, offers, messages, uploads, or data mutation.',
+            '',
+            '| Concurrent requests | Completed RPS | Errors | Error rate | p50 (ms) | p95 (ms) | p99 (ms) | Max (ms) |',
+            '|---:|---:|---:|---:|---:|---:|---:|---:|',
+            '| ' + summary.concurrentRequests + ' | ' + summary.completedRequestsPerSecond + ' | ' + summary.errors + ' | ' + summary.errorRatePct + '% | ' + summary.p50Ms + ' | ' + summary.p95Ms + ' | ' + summary.p99Ms + ' | ' + summary.maxMs + ' |',
+            '',
+            'This is a single burst against public read-only endpoints, not 300 sustained users and not a capacity certification. Stop further testing if errors or latency are high.'
+          ];
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
