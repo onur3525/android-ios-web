@@ -1,0 +1,89 @@
+name: HizmetCep API Latency Diagnosis
+
+on:
+  push:
+    branches:
+      - perf/safe-live-load-test
+    paths:
+      - .github/workflows/hizmetcep-api-latency-diagnosis.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hizmetcep-api-latency-diagnosis
+  cancel-in-progress: false
+
+jobs:
+  endpoint-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Measure each public endpoint separately (warm-up + 10 concurrent requests)
+        env:
+          TARGET: https://hizmetcep-backend.onrender.com
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const base = process.env.TARGET;
+          const paths = [
+            '/healthz',
+            '/readyz',
+            '/api/v1/categories',
+            '/api/v1/regions/tree',
+            '/api/v1/legal',
+            '/api/v1/config/app?platform=web',
+          ];
+          const results = [];
+          async function request(path) {
+            const t0 = performance.now();
+            try {
+              const r = await fetch(base + path, {
+                method: 'GET',
+                headers: {'User-Agent':'HizmetCep-LatencyDiagnosis/1.0','Accept':'application/json'},
+                signal: AbortSignal.timeout(15000),
+              });
+              const body = await r.arrayBuffer();
+              return {path,status:r.status,ms:Math.round(performance.now()-t0),bytes:body.byteLength,error:r.ok?'':'HTTP_'+r.status};
+            } catch(e) {
+              return {path,status:0,ms:Math.round(performance.now()-t0),bytes:0,error:e?.name==='TimeoutError'?'TIMEOUT':'NETWORK_ERROR'};
+            }
+          }
+          for (const path of paths) {
+            const warmup = await request(path);
+            const batch = await Promise.all(Array.from({length:10},()=>request(path)));
+            const all = [warmup,...batch];
+            const times = all.map(x=>x.ms).sort((a,b)=>a-b);
+            const errors = all.filter(x=>x.error).length;
+            const result = {
+              endpoint:path,
+              warmupMs:warmup.ms,
+              warmupStatus:warmup.status,
+              requests:all.length,
+              errors,
+              errorRatePct:+(errors/all.length*100).toFixed(1),
+              p50Ms:times[Math.ceil(.50*times.length)-1],
+              p95Ms:times[Math.ceil(.95*times.length)-1],
+              maxMs:Math.max(...times),
+              statuses:Object.fromEntries([...new Set(all.map(x=>String(x.status||x.error)))].map(s=>[s,all.filter(x=>String(x.status||x.error)===s).length])),
+            };
+            results.push(result);
+            console.log(JSON.stringify(result));
+            await new Promise(r=>setTimeout(r,1500));
+          }
+          const lines=[
+            '## HizmetCep endpoint latency diagnosis',
+            '',
+            '- Target: `'+base+'`',
+            '- Each endpoint measured separately: one warm-up request followed by 10 concurrent GET requests.',
+            '- Public read-only endpoints only; no data changes.',
+            '',
+            '| Endpoint | Warm-up (ms) | Requests | Errors | p50 (ms) | p95 (ms) | Max (ms) |',
+            '|---|---:|---:|---:|---:|---:|---:|',
+            ...results.map(r=>'| `'+r.endpoint+'` | '+r.warmupMs+' ('+r.warmupStatus+') | '+r.requests+' | '+r.errors+' | '+r.p50Ms+' | '+r.p95Ms+' | '+r.maxMs+' |'),
+            '',
+            'Interpretation: if /healthz is fast but one API route is slow, inspect that route/DB query. If all routes including /healthz are slow together, investigate cold start, instance CPU/memory, platform throttling, or network. This does not measure sustained user capacity.'
+          ];
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+          NODE
