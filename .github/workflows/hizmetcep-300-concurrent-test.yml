@@ -1,4 +1,4 @@
-name: HizmetCep 300 Concurrent Read-Only Test
+name: HizmetCep 500 Concurrent Read-Only Test
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hizmetcep-300-concurrent-test
+  group: hizmetcep-500-concurrent-test
   cancel-in-progress: false
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Send one bounded wave of 300 read-only requests
+      - name: Send one bounded wave of 500 read-only requests
         env:
           TARGET: https://hizmetcep-backend.onrender.com
         run: |
@@ -37,14 +37,14 @@ jobs:
           ];
           const started = performance.now();
           let cursor = 0;
-          const results = await Promise.all(Array.from({ length: 300 }, async (_, worker) => {
+          const results = await Promise.all(Array.from({ length: 500 }, async (_, worker) => {
             const path = paths[worker % paths.length];
             const t0 = performance.now();
             try {
               const response = await fetch(base + path, {
                 method: 'GET',
                 headers: {
-                  'User-Agent': 'HizmetCep-300-ReadOnly-Test/1.0',
+                  'User-Agent': 'HizmetCep-500-ReadOnly-Test/1.0',
                   'Accept': 'application/json'
                 },
                 signal: AbortSignal.timeout(15000),
@@ -75,17 +75,17 @@ jobs:
           };
           console.log(JSON.stringify(summary, null, 2));
           const lines = [
-            '## HizmetCep 300 concurrent read-only test',
+            '## HizmetCep 500 concurrent read-only test',
             '',
             '- Target: `' + base + '`',
-            '- Scope: one bounded burst of 300 GET requests to public endpoints only.',
+            '- Scope: one bounded burst of 500 GET requests to public endpoints only.',
             '- No login, OTP, account creation, listing creation, offers, messages, uploads, or data mutation.',
             '',
             '| Concurrent requests | Completed RPS | Errors | Error rate | p50 (ms) | p95 (ms) | p99 (ms) | Max (ms) |',
             '|---:|---:|---:|---:|---:|---:|---:|---:|',
             '| ' + summary.concurrentRequests + ' | ' + summary.completedRequestsPerSecond + ' | ' + summary.errors + ' | ' + summary.errorRatePct + '% | ' + summary.p50Ms + ' | ' + summary.p95Ms + ' | ' + summary.p99Ms + ' | ' + summary.maxMs + ' |',
             '',
-            'This is a single burst against public read-only endpoints, not 300 sustained users and not a capacity certification. Stop further testing if errors or latency are high.'
+            'This is a single burst against public read-only endpoints, not 500 sustained users and not a capacity certification. Stop further testing if errors or latency are high.'
           ];
           appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           NODE
