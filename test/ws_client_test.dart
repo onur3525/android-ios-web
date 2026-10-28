@@ -13,6 +13,16 @@ void main() {
       expect(url.contains('/api/v1'), isFalse);
     });
 
+    test('kapı numarası her zaman açık yazılır (wss://alan:0 hatası)', () {
+      expect(ApiConfig.wsAdresi('https://hizmetcep-backend.onrender.com/api/v1'),
+          'wss://hizmetcep-backend.onrender.com:443/ws');
+      expect(ApiConfig.wsAdresi('https://api.hizmetcep.com/api/v1/'),
+          'wss://api.hizmetcep.com:443/ws');
+      expect(ApiConfig.wsAdresi('http://10.0.2.2:8080/api/v1'), 'ws://10.0.2.2:8080/ws');
+      expect(ApiConfig.wsAdresi('http://localhost/api/v1'), 'ws://localhost:80/ws');
+      expect(ApiConfig.wsUrl.contains(':0/'), isFalse);
+    });
+
     test('oturum varken handshake token taşır', () async {
       final auth = WsAuth(FakeTokenStore(access: 'AT', refresh: 'RT'));
       expect(await auth.handshakeAuth(), {'token': 'AT'});
