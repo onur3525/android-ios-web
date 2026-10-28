@@ -9,6 +9,8 @@
 //   GET   /admin/v1/catalog/categories/:id/services   sırayla (sort, ad)
 //   POST  /admin/v1/catalog/categories/:id/services   yeni hizmet → sort = kategorideki MAX+1 (EN ALTA)
 //   PATCH /admin/v1/catalog/services/:id          ad, aktif, öne çıkan
+//   DELETE /admin/v1/catalog/categories/:id       kategori + bütün hizmetleri kaldırılır (gerekçe + yeniden doğrulama)
+//   DELETE /admin/v1/catalog/services/:id         hizmet kaldırılır (gerekçe + yeniden doğrulama)
 // Sıra SUNUCUDA atanır; istemci sort GÖNDERMEZ (mevcut sıra hiç değişmez).
 // Uygulama (Flutter) kataloğu GET /api/v1/categories ile aynı sırada okur.
 //
@@ -23,9 +25,13 @@
 //   · Fotoğraf YALNIZ ÇATILARDA (22 Eki, kullanıcı kararı): kategoride
 //     fotoğraf yok, yalnız ikon; kategori fotoğrafı ekleme/kaldırma yok.
 //   · Hizmet ikonu: veri modelinde YOK.
-//   · Silme yerine Aktif/Pasif (geçmiş ilan/talep kayıtları etkilenmez).
+//   · KALDIRMA (28 Eki, kullanıcı kararı): her kategoride ve her hizmette
+//     "Kaldır" düğmesi var — sonradan eklenenler dahil (düğme her satırla
+//     birlikte çizilir). Kaldırılan uygulamada görünmez/seçilmez/aranmaz;
+//     geçmiş ilan/talep kayıtları etkilenmez. Geçici gizleme için Aktif/Pasif.
+//     ÇATILARDA kaldırma YOK (kullanıcı kararı: çatılara dokunulmaz).
 // ═══════════════════════════════════════════════════════════════
-import { api, bildir, form, h } from './cekirdek.js';
+import { api, bildir, form, gerekceIle, h } from './cekirdek.js';
 
 const FOTO_TURLERI = ['image/jpeg', 'image/png', 'image/webp']; // backend ile aynı
 const FOTO_AZAMI = 5 * 1024 * 1024; // backend ile aynı (5 MB)
@@ -196,7 +202,8 @@ export async function katalogSayfasi(rol, catiKey) {
             k.kartDisi ? h('span', { class: 'ku-dogrulama hayir' }, 'Ana sayfa ızgarasında gösterilmiyor') : null)),
         yazabilir ? h('div', { class: 'kt-tuslar' },
           h('button', { class: 'btn ikincil', onclick: () => kategoriDuzenle(k) }, 'Kategoriyi düzenle'),
-          h('button', { class: 'btn', onclick: () => hizmetEkle(k) }, '+ Yeni Hizmet')) : null),
+          h('button', { class: 'btn', onclick: () => hizmetEkle(k) }, '+ Yeni Hizmet'),
+          h('button', { class: 'btn tehlike', onclick: () => kategoriKaldir(k) }, 'Kategoriyi kaldır')) : null),
       h('div', { class: 'kt-medya' },
         h('div', { class: 'kt-ikon-alani' },
           h('div', { class: 'oz-etiket' }, 'İkon'),
@@ -212,7 +219,8 @@ export async function katalogSayfasi(rol, catiKey) {
         h('span', { class: 'kt-hizmet-rozet' },
           s.lider ? h('span', { class: 'ku-dogrulama evet' }, 'Öne çıkan') : null,
           s.active ? null : h('span', { class: 'ku-durum kd-kapali' }, 'Pasif')),
-        yazabilir ? h('button', { class: 'btn ikincil kt-kucuk', onclick: () => hizmetDuzenle(k, s) }, 'Düzenle') : null)))
+        yazabilir ? h('button', { class: 'btn ikincil kt-kucuk', onclick: () => hizmetDuzenle(k, s) }, 'Düzenle') : null,
+        yazabilir ? h('button', { class: 'btn tehlike kt-kucuk', onclick: () => hizmetKaldir(k, s) }, 'Kaldır') : null)))
         : h('div', { class: 'ku-bos' }, h('div', { class: 'ku-bos-baslik' }, 'Bu kategoride henüz hizmet yok'),
           h('p', { class: 'oz-bos' }, 'Hizmeti olmayan kategori uygulamada listelenmez.')));
   }
@@ -266,6 +274,32 @@ export async function katalogSayfasi(rol, catiKey) {
       await api(`/catalog/services/${s.id}`, { yontem: 'PATCH', govde });
       bildir('Hizmet kaydedildi');
       await hizmetleriYukle(k.id);
+    } catch (e) { hataGoster(e); }
+  }
+
+  // ── KALDIRMA (28 Eki): gerekçe zorunlu; sunucu şifre + kod ister ──
+  async function kategoriKaldir(k) {
+    const neden = await gerekceIle(`Kategori kaldırılsın mı? — ${k.name}`, 'Kaldır',
+      `Kategori ve içindeki ${k.serviceCount.toLocaleString('tr-TR')} hizmetin tamamı uygulamadan kalkar: görünmez, seçilemez, aranmaz. Geçmiş ilanlar etkilenmez. İşlem gerekçesiyle denetim kaydına yazılır.`);
+    if (!neden) return;
+    try {
+      await api(`/catalog/categories/${k.id}`, { yontem: 'DELETE', govde: { reason: neden } });
+      bildir('Kategori kaldırıldı');
+      seciliId = null;
+      duzen.classList.remove('detay-acik');
+      detay.replaceChildren(h('div', { class: 'ku-bos' }, h('div', { class: 'ku-bos-baslik' }, 'Bir kategori seçin')));
+      await kategorileriYukle(); // liste ve sayılar sunucudan
+    } catch (e) { hataGoster(e); }
+  }
+
+  async function hizmetKaldir(k, s) {
+    const neden = await gerekceIle(`Hizmet kaldırılsın mı? — ${s.name}`, 'Kaldır',
+      `Hizmet "${k.name}" kategorisinden ve uygulamadan kalkar: görünmez, seçilemez, aranmaz. Geçmiş ilanlar etkilenmez. İşlem gerekçesiyle denetim kaydına yazılır.`);
+    if (!neden) return;
+    try {
+      await api(`/catalog/services/${s.id}`, { yontem: 'DELETE', govde: { reason: neden } });
+      bildir('Hizmet kaldırıldı');
+      await kategorileriYukle(); // hizmet sayısı ve liste sunucudan
     } catch (e) { hataGoster(e); }
   }
 
