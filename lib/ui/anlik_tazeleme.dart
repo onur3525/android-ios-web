@@ -9,7 +9,10 @@ import '../data/controllers/notification_controller.dart';
 import '../data/controllers/offer_controller.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import '../data/models/account.dart' show Role;
+import '../data/remote/api_client.dart';
+import '../data/remote/api_config.dart';
 import '../data/remote/ws_client.dart';
+import 'katalog_tazeleme.dart';
 
 /// Haber türüne göre yapılacak tazeleme işleri.
 enum TazelemeIsi {
@@ -176,6 +179,8 @@ class AnlikTazeleme {
 ///   · Kopan bağlantı yeniden kurulunca ve uygulama öne gelince →
 ///     `AnlikTazeleme.hepsiniTazele` (en sık 10 sn'de bir).
 ///   · Oturum sahibi değişince talep önbelleği bırakılır.
+///   · Öne gelmede katalog da (kategori, hizmet, çatı) denetlenir
+///     (`KatalogTazeleme`, en sık 5 dk'da bir).
 /// ═══════════════════════════════════════════════════════════════
 class AnlikTazelemeKapisi extends StatefulWidget {
   const AnlikTazelemeKapisi({super.key, required this.child});
@@ -271,7 +276,18 @@ class _AnlikTazelemeKapisiState extends State<AnlikTazelemeKapisi>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted && _kullanici != null) {
+    if (state != AppLifecycleState.resumed || !mounted) {
+      return;
+    }
+    // Katalog herkese açıktır (oturumsuz da): admin değişikliği uygulama
+    // kapanıp açılmadan gelir; en sık 5 dk'da bir, değişmediyse 304.
+    if (ApiConfig.useRealApi) {
+      final client = context.read<ApiClient?>();
+      if (client != null) {
+        unawaited(KatalogTazeleme.gerekirseTazele(client));
+      }
+    }
+    if (_kullanici != null) {
       _tamTazele();
     }
   }

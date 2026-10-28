@@ -5,7 +5,8 @@
 //   { "error": { "code": "NOT_FOUND", "message": "..." }, "requestId": "..." }
 // Başarı yanıtı ZARFSIZ düz JSON'dur (istemci `_list`/nesne bekler).
 // ═══════════════════════════════════════════════════════════════
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { isIP } from 'node:net';
 import { config } from './config.js';
 
@@ -47,6 +48,51 @@ export function jsonGonder(res, durum, govde, ekBaslik = {}) {
     ...ekBaslik,
   });
   res.end(metin);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OKUMA YANITI: SIKIŞTIRMA + DEĞİŞMEDİ (28 Eki, telefon performansı)
+//
+// Kullanıcı API'sinin başarılı GET yanıtları:
+//   · ETag taşır (gövdenin özeti). İstemci aynı özeti If-None-Match ile
+//     gönderirse gövde YENİDEN GÖNDERİLMEZ: 304 Not Modified (boş).
+//     Özet yalnız içerikten üretilir; aynı özet = birebir aynı gövde,
+//     başka kullanıcının verisi sızamaz.
+//   · İstemci kabul ediyorsa ve gövde 1 KB'tan büyükse gzip ile
+//     sıkıştırılır (ilan listeleri tipik olarak ~%80 küçülür).
+// Yalnız GET: gizli bilgi taşıyabilen POST yanıtları (giriş vb.)
+// sıkıştırılmaz.
+// ═══════════════════════════════════════════════════════════════
+export const SIKISTIRMA_ESIGI = 1024;
+
+export const icerikEtiketi = (metin) => `W/"${createHash('sha1').update(metin).digest('base64url')}"`;
+
+export function okumaYanitiGonder(req, res, govde, ekBaslik = {}) {
+  const metin = JSON.stringify(govde);
+  const etiket = icerikEtiketi(metin);
+  const onceki = res.getHeader('Vary');
+  const ortak = {
+    ...GUVENLIK_BASLIKLARI,
+    ...(config.cerezSecure ? { 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' } : {}),
+    ETag: etiket,
+    Vary: onceki ? `${onceki}, Accept-Encoding` : 'Accept-Encoding',
+    ...ekBaslik,
+  };
+  const istenen = req.headers['if-none-match'];
+  if (typeof istenen === 'string' && istenen.split(',').some((x) => x.trim() === etiket)) {
+    res.writeHead(304, ortak);
+    return res.end();
+  }
+  const ham = Buffer.from(metin, 'utf8');
+  const gzipKabul = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
+  const govdeBayt = gzipKabul && ham.length > SIKISTIRMA_ESIGI ? gzipSync(ham) : ham;
+  res.writeHead(200, {
+    ...ortak,
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': govdeBayt.length,
+    ...(govdeBayt !== ham ? { 'Content-Encoding': 'gzip' } : {}),
+  });
+  res.end(govdeBayt);
 }
 
 export async function govdeOku(req, sinir = 1024 * 1024) {

@@ -117,9 +117,23 @@ class ApiAuthPort extends AuthPort {
       return;
     }
     _ozetHatasi.remove(id);
+    final onceki = _ozetler[id]?.hesap;
     _ozetler[id] = (hesap: hesap, zaman: DateTime.now());
+    // ⚠ DEĞİŞMEYEN ÖZET (28 Eki, telefon performansı): özetler 2 dk'da bir
+    // arka planda tazelenir. Bilgi aynıysa haber verilmez; aksi hâlde
+    // oturum denetleyicisini izleyen BÜTÜN ekranlar boşuna yeniden çiziliyordu.
+    if (onceki != null && _ozetImzasi(onceki) == _ozetImzasi(hesap)) {
+      return;
+    }
     notifyListeners();
   }
+
+  /// Ekranda gösterilen özet alanları (kayıt tarihi değişmez, katılmaz).
+  static String _ozetImzasi(Account a) => [
+        a.name, a.phone, a.tamamlananIs, a.tamamlananIsHizmetAlan,
+        a.address?.city, a.address?.district, a.address?.neighborhood,
+        a.fotografi(Role.customer), a.fotografi(Role.provider),
+      ].join('\u0000');
 
   @override
   Account? get currentAccount => repo.currentAccount;

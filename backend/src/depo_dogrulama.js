@@ -21,6 +21,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 import { simdi } from './db.js';
+import { imzaZamani } from './gorsel_adresleri.js';
 import { ApiHatasi, hata } from './http.js';
 
 export const TUR_SINIRI = { 'listing-photo': 10 * 1024 * 1024, 'profile-photo': 10 * 1024 * 1024 };
@@ -104,5 +105,5 @@ export async function imzaliGorselAdresi(db, ref, ayar = undefined) {
   if (!ref) return null;
   const a = ayar === undefined ? await depolamaAyari(db) : ayar;
   if (!a) return null;
-  return s3ImzaliAdres(a, { yontem: 'GET', anahtar: ref, sureSn: 3600 });
+  return s3ImzaliAdres(a, { yontem: 'GET', anahtar: ref, sureSn: 3600, simdi: imzaZamani() });
 }
