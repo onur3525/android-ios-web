@@ -45,7 +45,7 @@ void main() {
     GorselOnbellegi.testSifirla();
     GorselOnbellegi.testKlasoru = klasor;
     expect(await GorselOnbellegi.getir(url), icerik);
-    expect(indirilen.length, 1, 'ikinci açılışta internetten indirilmemeli');
+    expect(indirilen.length, 1, reason: 'ikinci açılışta internetten indirilmemeli');
   });
 
   test('yeniden imzalanan adres (sorgu farklı) aynı fotoğraf sayılır', () async {
