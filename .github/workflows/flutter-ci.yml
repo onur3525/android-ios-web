@@ -75,6 +75,28 @@ jobs:
           durum=$?
           node .github/scripts/test_hatalari.mjs test-sonuc.jsonl
           exit $durum
+      # ── SERTİFİKA SABİTLEME — PİNLİ YOL (29 Eki, güvenlik planı) ──
+      # Pin listesi derleme zamanında sabitlendiği için normal test koşusunda
+      # pinli yol SINANAMAZ (testler atlanır). Bu adım GEÇİCİ test
+      # sertifikaları üretir (anahtar depoya işlenmez, yalnız bu koşunun geçici
+      # dizininde) ve pinli derleme ayarıyla doğru pin / yanlış pin / yanlış
+      # ad / süresi dolmuş sertifika / WebSocket senaryolarını çalıştırır.
+      - name: Sertifika sabitleme testi (pinli)
+        if: always()
+        run: |
+          set +e
+          d="$(mktemp -d)"
+          python3 -m venv "$d/py" && "$d/py/bin/pip" install -q cryptography
+          pinler="$("$d/py/bin/python" .github/scripts/pin_test_sertifikalari.py "$d/sertifika")"
+          flutter test --machine \
+            --dart-define=CERT_PINS="$pinler" \
+            --dart-define=API_BASE_URL=https://localhost/api/v1 \
+            --dart-define=PIN_TEST_DIZINI="$d/sertifika" \
+            test/sertifika_pinli_test.dart test/sertifika_bolge_test.dart > pin-sonuc.jsonl
+          durum=$?
+          node .github/scripts/test_hatalari.mjs pin-sonuc.jsonl
+          rm -rf "$d"
+          exit $durum
 
   android-debug:
     runs-on: ubuntu-24.04
