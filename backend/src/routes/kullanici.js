@@ -186,12 +186,66 @@ async function oturumVer(db, kullaniciId, req) {
   const jti = randomUUID();
   const yenileme = randomBytes(32).toString('base64url');
   const z = simdi();
+  const istemci = istemciTuru(req);
   await db.prepare(
-    `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent, istemci, soy_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(jti, kullaniciId, ozet(yenileme), z, z, new Date(Date.now() + config.yenilemeSuresi).toISOString(),
-    istemciIp(req), String(req.headers['user-agent'] ?? '').slice(0, 200));
+    istemciIp(req), String(req.headers['user-agent'] ?? '').slice(0, 200), istemci, jti);
+  // ⚠ TEK CİHAZ KURALI (28 Eki): uygulamaya yeni giriş → diğer cihazlar kapanır.
+  if (istemci === 'mobil') await digerCihazlariKapat(db, kullaniciId, jti);
   return { accessToken: erisimTokeni(kullaniciId, jti), refreshToken: yenileme };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEK CİHAZ KURALI (28 Eki, kullanıcı kararı)
+//
+// "Yeni bir cihazdan uygulamada oturum açılırsa eski oturum açık olsa bile
+// kapatılır." Telefon/tablet ayrımı YOK (cihaz). Kapanan:
+//   · hesabın diğer bütün UYGULAMA oturumları (başka telefon/tablet);
+//   · telefon/tablet TARAYICISINDAKİ web oturumları.
+// Kalan: bilgisayardaki web oturumu (kullanıcı kararı: bilgisayarda sorun yok).
+// Eski cihazın açık gerçek zamanlı bağlantısı hemen kapanır, bildirim
+// kayıtları silinir; uygulama AÇIKLAMA GÖSTERMEDEN giriş ekranına döner
+// (yenileme 401 → istemci oturumu kapatır).
+// Aynı cihazda çıkış + tekrar giriş bu kuraldan etkilenmez (kapanacak başka
+// oturum yoktur). Kural yalnız GİRİŞTE uygulanır; açık oturumun yenilenmesi
+// (uygulamayı kapatıp açma) başka cihazı kapatmaz.
+// ═══════════════════════════════════════════════════════════════
+const MOBIL_TARAYICI = /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk|Kindle|Opera Mini|IEMobile/i;
+
+/** İsteği yapan istemci: 'mobil' (uygulama) | 'web_mobil' (telefon/tablet tarayıcısı) | 'web'. */
+export function istemciTuru(req) {
+  if (req.headers['x-hc-web'] !== '1') return 'mobil';
+  return MOBIL_TARAYICI.test(String(req.headers['user-agent'] ?? '')) ? 'web_mobil' : 'web';
+}
+
+/** Oturum satırının istemci türü; 042 öncesi satırda user_agent'tan tahmin. */
+function satirIstemcisi(s) {
+  if (s.istemci) return s.istemci;
+  const ua = String(s.user_agent ?? '');
+  if (/^Dart\//.test(ua)) return 'mobil';
+  return MOBIL_TARAYICI.test(ua) ? 'web_mobil' : 'web';
+}
+
+/** Yeni cihaz girişinde diğer cihazların oturumlarını ve bildirim kayıtlarını kapatır. */
+export async function digerCihazlariKapat(db, kullaniciId, yeniOturumId) {
+  const acik = await db.prepare(
+    'SELECT id, soy_id, istemci, user_agent FROM user_sessions WHERE user_id = ? AND revoked_at IS NULL AND id <> ?',
+  ).all(kullaniciId, yeniOturumId);
+  const hedef = acik.filter((s) => satirIstemcisi(s) !== 'web');
+  const z = simdi();
+  for (const s of hedef) {
+    await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'NEW_DEVICE' WHERE id = ? AND revoked_at IS NULL`).run(z, s.id);
+    // Kapanan soyda saklanan halef belirteci (bkz. 041) de silinir.
+    await db.prepare('UPDATE user_sessions SET halef_token_enc = NULL WHERE halef_id = ?').run(s.id);
+    await db.prepare('DELETE FROM push_tokens WHERE user_id = ? AND soy_id = ?').run(kullaniciId, s.soy_id ?? s.id);
+  }
+  // Uygulama bildirim kayıtlarının HEPSİ silinir: yeni cihaz girişten SONRA
+  // kendi kaydını yeniden yapar (PushKapisi). Bilgisayar web kaydı kalır.
+  await db.prepare(`DELETE FROM push_tokens WHERE user_id = ? AND platform IN ('android', 'ios')`).run(kullaniciId);
+  for (const s of hedef) await olaylar.yayinla('user.sessions.revoked', { userId: kullaniciId, oturumId: s.id });
+  return hedef.length;
 }
 // ── WEB OTURUMU: HttpOnly YENİLEME ÇEREZİ (15 Eki) ──
 // Web istemcisi (X-HC-Web: 1) yenileme token'ını KALICI depoya yazmaz
@@ -732,7 +786,15 @@ export function kullaniciRotalar(r, db) {
     if (o.revoked_at) {
       // İptal edilmiş yenileme token'ı tekrar kullanıldı → çalınmış olabilir:
       // kullanıcının BÜTÜN oturumları kapatılır.
-      if (o.revoke_reason === 'ROTATED') await oturumlariIptal(db, o.user_id, 'REUSE_DETECTED');
+      // ⚠ 28 Eki: soy TEK CİHAZ kuralıyla kapatıldıysa bu, eski cihazın eski
+      // belirtecidir — yalnız reddedilir; YENİ cihazın oturumu kapatılmaz.
+      if (o.revoke_reason === 'ROTATED') {
+        const yeniCihaz = await db.prepare(
+          `SELECT 1 FROM user_sessions WHERE user_id = ? AND revoke_reason = 'NEW_DEVICE'
+             AND (soy_id = ? OR (created_at = ? AND user_agent IS NOT DISTINCT FROM ?)) LIMIT 1`,
+        ).get(o.user_id, o.soy_id ?? o.id, o.created_at, o.user_agent);
+        if (!yeniCihaz) await oturumlariIptal(db, o.user_id, 'REUSE_DETECTED');
+      }
       throw hata.kimlik();
     }
     // Mobil oturum süresi kullanımla uzar (aşağıda): açık tutulan uygulama
@@ -776,10 +838,11 @@ export function kullaniciRotalar(r, db) {
       // Yalnız son halka saklanır: bir önceki halkadaki belirteç artık gereksiz.
       await db.prepare('UPDATE user_sessions SET halef_token_enc = NULL WHERE halef_id = ?').run(o.id);
       await db.prepare(
-        `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent, istemci, soy_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(yeniJti, u.id, ozet(yeni), o.created_at, z,
-        mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent);
+        mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent,
+        satirIstemcisi(o), o.soy_id ?? o.id);
     });
     if (kaybetti) {
       // Yarışı kaybeden istek (iki sekme aynı anda): kazananın AYNI yanıtı.

@@ -394,8 +394,17 @@ function sio(token) {
 
 test('çıkış ve tek oturum sonlandırma YALNIZ o oturumun soketini kapatır', async () => {
   const u = await kisi('5340000081', 'CUSTOMER');
-  const g2 = await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: '5340000081', password: 'sifre1234' } });
-  const g3 = await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: '5340000081', password: 'sifre1234' } });
+  // 28 Eki (tek cihaz kuralı): uygulamadan yeni giriş eski cihazı kapattığı
+  // için 2. ve 3. oturum BİLGİSAYAR web'inden açılır (kuraldan etkilenmez).
+  const webGiris = async () => {
+    const r = await fetch(`${taban}/api/v1/auth/login`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-HC-Web': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0' },
+      body: JSON.stringify({ phone: '5340000081', password: 'sifre1234' }) });
+    return { durum: r.status, json: await r.json() };
+  };
+  const g2 = await webGiris();
+  const g3 = await webGiris();
+  assert.equal(g2.durum, 200); assert.equal(g3.durum, 200);
   const s1 = sio(u.token); const s2 = sio(g2.json.accessToken); const s3 = sio(g3.json.accessToken);
   for (const s of [s1, s2, s3]) assert.ok(await s.bekle(() => s.gelen.some((p) => p.startsWith('40/ws'))));
   // 1) Oturum-1 çıkış yapar → yalnız s1 kapanır.

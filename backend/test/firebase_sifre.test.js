@@ -56,10 +56,10 @@ after(async () => {
   await db?.close();
 });
 
-async function istek(yol, { yontem = 'GET', govde, token } = {}) {
+async function istek(yol, { yontem = 'GET', govde, token, basliklar = {} } = {}) {
   const r = await asilFetch(taban + yol, {
     method: yontem,
-    headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...basliklar },
     body: govde ? JSON.stringify(govde) : undefined,
   });
   const m = await r.text();
@@ -85,7 +85,8 @@ const yerelOzet = async (id) => (await db.prepare('SELECT password_hash FROM use
 test('Firebase\'den e-postayla sıfırlanan şifre: giriş, şifre doğrulama (hesap silme adımı) ve rol ekleme AYNI şifreyi kabul eder', async () => {
   const h = await hesap('5350000001');
   fb.set(h.email, 'YeniSifre99'); // kullanıcı şifresini Firebase e-postasıyla sıfırladı; yerel özet eski
-  assert.equal((await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: h.tel, password: 'YeniSifre99' } })).durum, 200);
+  // 28 Eki (tek cihaz kuralı): ikinci giriş bilgisayar web'inden; uygulama oturumu (h.token) açık kalır.
+  assert.equal((await istek('/api/v1/auth/login', { yontem: 'POST', basliklar: { 'X-HC-Web': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0' }, govde: { phone: h.tel, password: 'YeniSifre99' } })).durum, 200);
   // Önceden: giriş olurken hesap silmenin şifre adımı bu DOĞRU şifreyi reddediyordu.
   assert.equal((await istek('/api/v1/auth/verify-password', { yontem: 'POST', token: h.token, govde: { password: 'YeniSifre99' } })).durum, 204);
   assert.equal((await istek('/api/v1/auth/verify-password', { yontem: 'POST', token: h.token, govde: { password: 'sifre1234' } })).durum, 400, 'eski şifre artık geçersiz');

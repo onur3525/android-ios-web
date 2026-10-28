@@ -504,9 +504,11 @@ export function sohbetTalepRotalar(r, db) {
     if (!['android', 'ios', 'web'].includes(pl)) throw hata.dogrulama('Geçersiz platform');
     const z = simdi();
     await db.prepare(
-      `INSERT INTO push_tokens (token, user_id, platform, created_at, last_seen) VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(token) DO UPDATE SET user_id = excluded.user_id, platform = excluded.platform, last_seen = excluded.last_seen`,
-    ).run(t, ctx.kullanici.id, pl, z, z);
+      `INSERT INTO push_tokens (token, user_id, platform, created_at, last_seen, soy_id) VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(token) DO UPDATE SET user_id = excluded.user_id, platform = excluded.platform,
+         last_seen = excluded.last_seen, soy_id = excluded.soy_id`,
+      // 28 Eki: kayıt oturum SOYUNA bağlanır (tek cihaz kuralında o soy kapanınca silinir).
+    ).run(t, ctx.kullanici.id, pl, z, z, ctx.kOturum.soy_id ?? ctx.kOturum.id);
     return undefined;
   }));
 

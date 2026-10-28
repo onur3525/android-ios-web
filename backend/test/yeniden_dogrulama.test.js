@@ -22,8 +22,8 @@ before(async () => {
 });
 after(async () => { sunucu.closeAllConnections?.(); sunucu.close(); await db?.close(); });
 
-async function istek(yol, { yontem = 'GET', govde, token } = {}) {
-  const h = { 'Content-Type': 'application/json' };
+async function istek(yol, { yontem = 'GET', govde, token, basliklar = {} } = {}) {
+  const h = { 'Content-Type': 'application/json', ...basliklar };
   if (token) h.Authorization = `Bearer ${token}`;
   const r = await fetch(taban + yol, { method: yontem, headers: h, body: govde ? JSON.stringify(govde) : undefined });
   const m = await r.text();
@@ -44,7 +44,9 @@ async function hesap(tel) {
 
 test('telefon değiştirme: şifresiz/yanlış şifre reddedilir, kod harcanmaz; doğru şifreyle değişir ve diğer oturumlar kapanır', async () => {
   const h = await hesap('5370000001');
-  const ikinci = await istek('/api/v1/auth/login', { yontem: 'POST', govde: { phone: h.tel, password: 'sifre1234' } });
+  // 28 Eki (tek cihaz kuralı): ikinci oturum bilgisayar web'inden (uygulamadan
+  // ikinci giriş ilk cihazı kapatırdı).
+  const ikinci = await istek('/api/v1/auth/login', { yontem: 'POST', basliklar: { 'X-HC-Web': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0' }, govde: { phone: h.tel, password: 'sifre1234' } });
   assert.equal(ikinci.durum, 200);
   const yeni = '5370000002';
   const otp = await kod(yeni, 'PHONE_CHANGE');

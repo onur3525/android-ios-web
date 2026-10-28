@@ -72,10 +72,10 @@ function sahteYonetim() {
 }
 
 let db, sunucu, taban;
-async function istek(yol, { yontem = 'GET', govde, token } = {}) {
+async function istek(yol, { yontem = 'GET', govde, token, basliklar = {} } = {}) {
   const r = await fetch(taban + yol, {
     method: yontem,
-    headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...basliklar },
     body: govde ? JSON.stringify(govde) : undefined,
   });
   const m = await r.text();
@@ -86,7 +86,12 @@ async function kod(tel, amac) {
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: amac } });
   return globalThis.__sonOtp;
 }
-/** Firebase'e bağlı hesap + iki sunucu oturumu (iki cihaz). */
+/**
+ * Firebase'e bağlı hesap + iki sunucu oturumu (iki cihaz).
+ * 28 Eki (tek cihaz kuralı): uygulamadan ikinci giriş ilk cihazı kapattığı
+ * için ikinci oturum BİLGİSAYAR web'inden açılır (kuraldan etkilenmez).
+ */
+const BILGISAYAR_WEB = { 'X-HC-Web': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0' };
 async function hesap(tel, uid) {
   // Bu dosya çok sayıda Firebase oturumu açar: IP başına giriş/OTP sınırı
   // kurulumu engellemesin (sınırların kendisi başka dosyalarda sınanır).
@@ -96,7 +101,7 @@ async function hesap(tel, uid) {
     termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'İptal Deneme',
     email: `i${tel}@ornek.com`, role: 'CUSTOMER', firebaseIdToken: idToken({ sub: uid, phone_number: `+90${tel}` }) } });
   assert.equal(r.durum, 200, JSON.stringify(r.json));
-  const ikinci = await istek('/api/v1/auth/firebase/session', { yontem: 'POST', govde: { idToken: idToken({ sub: uid, phone_number: `+90${tel}` }) } });
+  const ikinci = await istek('/api/v1/auth/firebase/session', { yontem: 'POST', basliklar: BILGISAYAR_WEB, govde: { idToken: idToken({ sub: uid, phone_number: `+90${tel}` }) } });
   assert.equal(ikinci.durum, 200, JSON.stringify(ikinci.json));
   return { tel, uid, a: r.json, b: ikinci.json };
 }
