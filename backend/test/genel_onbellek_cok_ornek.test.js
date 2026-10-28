@@ -2,7 +2,7 @@
 // yoluyla (PostgreSQL LISTEN/NOTIFY) DİĞER örneklerin önbelleğini de temizler.
 // Ayrı süreçler gerçek ayrı sunucu örneklerini temsil eder.
 // Yalnız HC_TEST_DB=postgres (CI'daki PostgreSQL adımı); SQLite tek örneklidir.
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -32,24 +32,45 @@ process.stdin.on('data', async (s) => {
 process.stdout.write('{"hazir":1}\\n');
 `;
 
+// Bütün alt süreçler — test nasıl biterse bitsin (hata, zaman aşımı)
+// `after` ile öldürülür; test dosyası asılı KALMAZ (CI'da adım bitmezdi).
+const surecler = new Set();
+after(() => { for (const p of surecler) p.kill('SIGKILL'); });
+
 function ornek(sema) {
   const p = spawn(process.execPath, ['--no-warnings', '--input-type=module', '-e', ALT], {
     cwd: KOK, env: { ...process.env, SEMA: sema, HC_SESSIZ: '1' }, stdio: ['pipe', 'pipe', 'inherit'],
   });
-  const kuyruk = []; let tampon = '';
+  surecler.add(p);
+  // Alt süreç ve boruları ana süreci açık TUTMAZ.
+  p.unref(); p.stdin.unref?.(); p.stdout.unref?.();
+  const kuyruk = []; let tampon = ''; let bitti = null;
+  p.on('exit', (kod, sinyal) => {
+    surecler.delete(p);
+    bitti = new Error(`alt süreç kapandı (kod ${kod}, sinyal ${sinyal})`);
+    for (const { red } of kuyruk.splice(0)) red(bitti);
+  });
   p.stdout.on('data', (d) => {
     tampon += d;
     let i;
-    while ((i = tampon.indexOf('\n')) >= 0) { const s = tampon.slice(0, i); tampon = tampon.slice(i + 1); kuyruk.shift()?.(JSON.parse(s)); }
+    while ((i = tampon.indexOf('\n')) >= 0) {
+      const s = tampon.slice(0, i); tampon = tampon.slice(i + 1);
+      const k = kuyruk.shift();
+      try { k?.coz(JSON.parse(s)); } catch (e) { k?.red(e); }
+    }
   });
-  const bekle = () => new Promise((r) => kuyruk.push(r));
-  // Kapanış: önce düzgün çıkış istenir; 3 sn'de çıkmazsa zorla sonlandırılır
-  // (test süreci asılı kalmaz).
+  // Her yanıt beklemesi 15 sn ile sınırlı: alt süreç takılırsa test HATA verir, beklemez.
+  const bekle = () => new Promise((coz, red) => {
+    if (bitti) return red(bitti);
+    const z = setTimeout(() => red(new Error('alt süreç 15 sn içinde yanıt vermedi')), 15_000);
+    kuyruk.push({ coz: (v) => { clearTimeout(z); coz(v); }, red: (e) => { clearTimeout(z); red(e); } });
+  });
+  // Kapanış: önce düzgün çıkış istenir; 3 sn'de çıkmazsa zorla sonlandırılır.
   const cik = () => new Promise((r) => {
-    if (p.exitCode !== null) return r();
+    if (p.exitCode !== null || p.signalCode !== null) return r();
     const t = setTimeout(() => p.kill('SIGKILL'), 3000);
     p.once('exit', () => { clearTimeout(t); r(); });
-    p.stdin.write('cik\n');
+    try { p.stdin.write('cik\n'); } catch { p.kill('SIGKILL'); }
   });
   return { hazir: bekle(), komut: (k) => { const s = bekle(); p.stdin.write(`${k}\n`); return s; }, cik };
 }
@@ -57,8 +78,8 @@ function ornek(sema) {
 test('çok örnek: A\'daki admin temizliği B\'nin önbelleğini de temizler', { skip: !pg && 'yalnız HC_TEST_DB=postgres', timeout: 60_000 }, async () => {
   const sema = `t_${randomUUID().replace(/-/g, '').slice(0, 20)}`;
   const A = ornek(sema); const B = ornek(sema);
-  await A.hazir; await B.hazir;
   try {
+    await Promise.all([A.hazir, B.hazir]);
     assert.equal((await B.komut('oku')).n, 1);
     assert.equal((await B.komut('oku')).n, 1, 'B önbellekten okuyor');
     await A.komut('temizle');

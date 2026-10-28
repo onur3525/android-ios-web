@@ -47,7 +47,7 @@ before(async () => {
   await istek('/admin/v1/auth/mfa', { yontem: 'POST', govde: { code: totpUret(sir) } });
   onayKimligi(cerez, 'GucluSifre12345', sir);
 });
-after(async () => { sunucu?.close(); await db?.close(); });
+after(async () => { sunucu?.closeAllConnections(); sunucu?.close(); await db?.close(); });
 
 // ── Birim davranışları ──
 

@@ -54,6 +54,9 @@ jobs:
       # Çıktı dosyaya da yazılır; başarısızlıkta düşen testler iş
       # açıklaması olarak işaretlenir (günlük indirilemese de görünür).
       - name: SQLite
+        id: sqlite
+        # 28 Eki: takılan test adımı saatlerce beklemesin.
+        timeout-minutes: 20
         shell: bash
         run: |
           set -o pipefail
@@ -62,6 +65,8 @@ jobs:
         if: failure()
         run: node ../.github/scripts/test_hatalarini_isaretle.mjs sqlite-test.log SQLite
       - name: PostgreSQL 16
+        id: pg
+        timeout-minutes: 20
         env:
           HC_TEST_DB: postgres
           HC_DATABASE_URL: postgres://hc:hc_test_only@localhost:5432/hizmetcep_test
@@ -74,6 +79,18 @@ jobs:
         run: node ../.github/scripts/test_hatalarini_isaretle.mjs pg-test.log PostgreSQL
       # ── GÜVENLİK (15 Eki denetimi) ──
       # Bağımlılık denetimi: bilinen YÜKSEK/KRİTİK açık varsa iş kırmızı olur.
+      # 28 Eki: test adımı başarısız olur ya da süresi dolarsa günlüğün son
+      # satırları GitHub notu olarak yazılır (günlük dosyasına erişilemeyen
+      # yerlerden de okunabilsin). Not: node:test bir testi BİTİNCE yazar;
+      # takılan test günlükte görünmez, son biten testler ipucu verir.
+      - name: Test günlüğü özeti (başarısız / süre doldu)
+        if: always() && (steps.sqlite.outcome == 'failure' || steps.sqlite.outcome == 'cancelled' || steps.pg.outcome == 'failure' || steps.pg.outcome == 'cancelled')
+        shell: bash
+        run: |
+          for g in sqlite-test.log pg-test.log; do
+            [ -f "$g" ] || continue
+            tail -25 "$g" | tr -d '\r' | sed "s/^/::notice title=$g son satırlar::/"
+          done
       - name: npm audit (üretim bağımlılıkları)
         run: npm audit --omit=dev --audit-level=high
       # Gizli bilgi taraması: depoya özel anahtar, parolalı veritabanı adresi,

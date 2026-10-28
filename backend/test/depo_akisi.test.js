@@ -54,7 +54,12 @@ before(async () => {
   await new Promise((ok) => sunucu.listen(0, ok));
   taban = `http://127.0.0.1:${sunucu.address().port}`;
 });
-after(async () => { sunucu?.close(); depo.close(); await db?.close(); });
+// Açık bağlantılar (yarıda bırakılan akışlar) dosyanın kapanmasını engellemesin.
+after(async () => {
+  sunucu?.closeAllConnections(); sunucu?.close();
+  depo.closeAllConnections(); depo.close();
+  await db?.close();
+});
 
 const ayakta = async () => (await fetch(`${taban}/api/v1/legal/support`)).status === 200;
 
