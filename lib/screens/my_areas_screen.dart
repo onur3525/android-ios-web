@@ -494,11 +494,9 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
                       busy: _saving,
                       onPressed: _selected.isEmpty ? null : _save),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Hizmet dağıtımı ilçe bazlıdır; mahalle seçimi yapılmaz.',
-                  style: TextStyle(fontSize: 11.5, color: HC.lightGrey),
-                ),
+                // 28 Eki (kullanıcı isteği): Kaydet altındaki "Hizmet
+                // dağıtımı ilçe bazlıdır; mahalle seçimi yapılmaz." notu
+                // kaldırıldı. Kural değişmedi; yalnız metin gösterilmiyor.
               ]),
             ),
           ),
