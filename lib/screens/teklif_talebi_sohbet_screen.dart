@@ -394,7 +394,8 @@ class _TeklifFotografTamEkran extends StatelessWidget {
               child: InteractiveViewer(
                 minScale: 1,
                 maxScale: 4,
-                child: yerelGorsel(yol),
+                // 28 Eki: yakınlaştırma için TAM çözünürlük (bkz. gorsel_cozumu.dart).
+                child: yerelGorsel(yol, tamCozunurluk: true),
               ),
             ),
             Positioned(

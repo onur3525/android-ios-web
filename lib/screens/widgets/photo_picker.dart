@@ -7,6 +7,7 @@ import '../../data/remote/api/storage_api.dart';
 import '../../ui/ref_widgets.dart';
 import '../../ui/ref_tokens.dart';
 import 'fotograf_kaynak_paneli.dart';
+import '../../core/platform/gorsel_cozumu.dart';
 import '../../core/platform/yerel_gorsel.dart';
 
 /// İLAN FOTOĞRAFI SEÇİCİ
@@ -204,7 +205,12 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
 
   /// Deneme (mock) modunda fotoğraf cihazda/tarayıcıda SAKLANIR; web'de
   /// yerel depo sınırlı olduğu için seçim sırasında küçültülür (mobilde
-  /// sınır `null` — davranış değişmez). Gerçek API modunda dokunulmaz.
+  /// sınır `null` — davranış değişmez).
+  ///
+  /// ⚠ 28 Eki: gerçek API modunda fotoğraf en çok
+  /// `kYuklemeGorselEnFazlaGenislik` (1600 px) genişliğe küçültülür —
+  /// önceden küçültülmüyordu (12–50 MP kamera fotoğrafı olduğu gibi
+  /// yükleniyordu). Bkz. `core/platform/gorsel_cozumu.dart`.
   bool get _yerelSaklanir => !ApiConfig.useRealApi;
 
   Future<void> _pick(ImageSource source) async {
@@ -219,13 +225,17 @@ class _ListingPhotoPickerState extends State<ListingPhotoPicker> {
         final one = await _picker.pickImage(
             source: ImageSource.camera,
             imageQuality: 85,
-            maxWidth: _yerelSaklanir ? kaliciGorselEnFazlaGenislik : null);
+            maxWidth: _yerelSaklanir
+                ? kaliciGorselEnFazlaGenislik
+                : kYuklemeGorselEnFazlaGenislik);
         picked = one == null ? const [] : [one];
       } else {
         // ÇOKLU SEÇİM
         final many = await _picker.pickMultiImage(
             imageQuality: 85,
-            maxWidth: _yerelSaklanir ? kaliciGorselEnFazlaGenislik : null);
+            maxWidth: _yerelSaklanir
+                ? kaliciGorselEnFazlaGenislik
+                : kYuklemeGorselEnFazlaGenislik);
         picked = many.take(remaining).toList();
       }
       if (picked.isEmpty || !mounted) {

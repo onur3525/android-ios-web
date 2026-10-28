@@ -5,6 +5,7 @@ import '../ui/olcu.dart';
 import 'package:flutter/foundation.dart';
 // `context.read<T>()` bu paketin BuildContext eklentisidir.
 import 'package:provider/provider.dart';
+import '../core/platform/gorsel_cozumu.dart';
 import '../core/sys_state.dart';
 import '../domain/cikar_catismasi.dart';
 import '../data/models/account.dart';
@@ -1105,17 +1106,24 @@ class _AlanKarti extends StatelessWidget {
               // modu) varsa o; yüklenirken / hata olursa paket fotoğrafı.
               child: alan.fotoUrl == null
                   ? Image.asset(alan.gorsel, fit: BoxFit.cover)
-                  : Image.network(
-                      alan.fotoUrl!,
-                      fit: BoxFit.cover,
-                      // Web: CORS engelinde tarayıcının <img> öğesine düşer.
-                      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
-                      frameBuilder: (_, child, kare, esZamanli) =>
-                          esZamanli || kare != null
-                              ? child
-                              : Image.asset(alan.gorsel, fit: BoxFit.cover),
-                      errorBuilder: (_, __, ___) =>
-                          Image.asset(alan.gorsel, fit: BoxFit.cover),
+                  // ⚠ 28 Eki: kart boyutunda çözülür (bkz.
+                  // `gorsel_cozumu.dart`); admin'in yüklediği büyük
+                  // fotoğraf belleği şişirmez. Web'de değişiklik yok.
+                  : LayoutBuilder(
+                      builder: (context, kisit) => Image.network(
+                        alan.fotoUrl!,
+                        fit: BoxFit.cover,
+                        cacheWidth: kisittanCozumGenisligi(context, kisit),
+                        // Web: CORS engelinde tarayıcının <img> öğesine düşer.
+                        webHtmlElementStrategy:
+                            WebHtmlElementStrategy.fallback,
+                        frameBuilder: (_, child, kare, esZamanli) =>
+                            esZamanli || kare != null
+                                ? child
+                                : Image.asset(alan.gorsel, fit: BoxFit.cover),
+                        errorBuilder: (_, __, ___) =>
+                            Image.asset(alan.gorsel, fit: BoxFit.cover),
+                      ),
                     ),
             ),
             Padding(

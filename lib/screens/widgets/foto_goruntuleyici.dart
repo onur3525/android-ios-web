@@ -188,8 +188,10 @@ class _SayfaState extends State<_Sayfa> {
           child: Center(
             // ⚠ KÖPRÜ ÜZERİNDEN: mobilde `Image.file`, web'de blob
             // adresi için `Image.network`.
+            // 28 Eki: yakınlaştırma için TAM çözünürlük (bkz. gorsel_cozumu.dart).
             child: yerelGorsel(
               widget.yol,
+              tamCozunurluk: true,
               fit: BoxFit.contain,
               hataYedegi: (_) => Padding(
                 padding: const EdgeInsets.all(32),

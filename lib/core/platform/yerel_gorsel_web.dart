@@ -49,6 +49,9 @@ Widget yerelGorsel(
   double? height,
   BoxFit? fit,
   WidgetBuilder? hataYedegi,
+  // ⚠ 28 Eki: mobil imzasıyla AYNI olsun diye var; web'de etkisi yok
+  // (tarayıcı görseli kendi çözer — bkz. `gorsel_cozumu.dart`).
+  bool tamCozunurluk = false,
 }) {
   // ⚠ KALICI YEREL GÖRSEL (`data:`): sayfa yenilense de çizilir.
   if (_veriAdresiMi(yol)) {
