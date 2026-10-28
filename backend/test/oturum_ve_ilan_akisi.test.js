@@ -103,6 +103,154 @@ test('pay başka cihazın oturumunu döndürmez (aynı soy + aynı cihaz şartı
   assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } })).durum, 401);
 });
 
+// ═════ YARIŞ: HALEFİN AYNI YANITI (28 Eki) ═════
+// İki isteği oturumu OKUDUKTAN sonra bekletir: ikisi de satırı açık görür,
+// ikisi de döndürmeye çalışır → yarış HER SEFERİNDE oluşur (rastlantı yok).
+async function yarisla(istekler) {
+  const ozgun = db.prepare;
+  let bekleyen = istekler.length;
+  let birak;
+  const kapi = new Promise((r) => { birak = r; });
+  db.prepare = function (sql) {
+    const h = ozgun.call(this, sql);
+    if (!sql.startsWith('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL')) return h;
+    return {
+      ...h,
+      get: async (...p) => {
+        const r = await h.get(...p);
+        if (--bekleyen <= 0) birak();
+        await Promise.race([kapi, new Promise((ok) => setTimeout(ok, 2000))]);
+        return r;
+      },
+    };
+  };
+  try {
+    return await Promise.all(istekler.map((f) => f()));
+  } finally {
+    db.prepare = ozgun;
+  }
+}
+// İkinci pencere: B oturumu okur ve bekler; bu sırada A döndürmeyi TAMAMEN
+// bitirir; sonra B devam eder (döndürmeden önceki son denetimde yakalanır).
+async function ikinciPencere(f) {
+  const ozgun = db.prepare;
+  let sayac = 0; let birak; let durdu;
+  const kapi = new Promise((r) => { birak = r; });
+  const durduSoz = new Promise((r) => { durdu = r; });
+  db.prepare = function (sql) {
+    const h = ozgun.call(this, sql);
+    if (!sql.startsWith('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL')) return h;
+    return {
+      ...h,
+      get: async (...p) => {
+        const r = await h.get(...p);
+        if (++sayac === 1) { durdu(); await Promise.race([kapi, new Promise((ok) => setTimeout(ok, 5000))]); }
+        return r;
+      },
+    };
+  };
+  try {
+    const bSoz = f();
+    await durduSoz;
+    const a = await f();
+    birak();
+    return [a, await bSoz];
+  } finally {
+    db.prepare = ozgun;
+  }
+}
+const aktifSayisi = async (id) => Number((await db.prepare('SELECT COUNT(*) n FROM user_sessions WHERE user_id = ? AND revoked_at IS NULL').get(id)).n);
+const tekrarKullanimVar = async (id) => !!(await db.prepare(`SELECT 1 FROM user_sessions WHERE user_id = ? AND revoke_reason = 'REUSE_DETECTED'`).get(id));
+
+test('web: GERÇEK yarış — iki sekme aynı anda; ikisi de 200 ve AYNI belirteç; tek oturum', async () => {
+  const k = await kisi('5410000911', 'CUSTOMER', WEB);
+  const rt = cerez(k.cerezler);
+  const yenile = () => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(rt)}` } });
+  const [a, b] = await yarisla([yenile, yenile]);
+  assert.equal(a.durum, 200, JSON.stringify(a.json));
+  assert.equal(b.durum, 200, 'yarışı kaybeden sekme çıkış yaptırılmamalı');
+  assert.equal(cerez(a.cerezler), cerez(b.cerezler), 'iki sekme AYNI yeni belirteci alır');
+  assert.notEqual(cerez(a.cerezler), '', 'çerez silinmez');
+  assert.equal(await aktifSayisi(k.id), 1);
+  for (const y of [a, b]) assert.equal((await istek('/api/v1/users/me', { token: y.json.accessToken })).durum, 200);
+  assert.equal(await tekrarKullanimVar(k.id), false);
+});
+
+test('web: yanıtlar TERS sırayla gelse de pay dolunca bütün oturumlar kapanmaz', async () => {
+  const k = await kisi('5410000912', 'CUSTOMER', WEB);
+  const rt = cerez(k.cerezler);
+  const yenile = (c) => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(c)}` } });
+  const [a, b] = await yarisla([() => yenile(rt), () => yenile(rt)]);
+  // Tarayıcıda kalan çerez hangisi olursa olsun (ilk ya da son yanıt), 2 dk sonra çalışır.
+  await db.prepare(`UPDATE user_sessions SET revoked_at = ? WHERE user_id = ? AND revoke_reason = 'ROTATED'`).run(new Date(Date.now() - 120_000).toISOString(), k.id);
+  const sonra = await yenile(cerez(a.cerezler));
+  assert.equal(sonra.durum, 200, JSON.stringify(sonra.json));
+  assert.equal(cerez(a.cerezler), cerez(b.cerezler));
+  assert.equal(await tekrarKullanimVar(k.id), false, 'yarış "çalınmış belirteç" sayılmamalı');
+  assert.equal(await aktifSayisi(k.id), 1);
+});
+
+test('mobil: GERÇEK yarış — iki istek aynı belirteçle; ikisi de 200, aynı yanıt', async () => {
+  const k = await kisi('5410000913', 'CUSTOMER');
+  const yenile = () => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } });
+  const [a, b] = await yarisla([yenile, yenile]);
+  assert.equal(a.durum, 200, JSON.stringify(a.json));
+  assert.equal(b.durum, 200, JSON.stringify(b.json));
+  assert.equal(a.json.refreshToken, b.json.refreshToken);
+  assert.equal(await aktifSayisi(k.id), 1);
+  // Sonraki yenileme normal döner.
+  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: a.json.refreshToken } })).durum, 200);
+});
+
+test('yarışın ikinci penceresi: diğer istek arada döndürmeyi bitirse de 200 ve aynı belirteç (web + mobil)', async () => {
+  const w = await kisi('5410000917', 'CUSTOMER', WEB);
+  const rt = cerez(w.cerezler);
+  const [a, b] = await ikinciPencere(() => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(rt)}` } }));
+  assert.equal(a.durum, 200);
+  assert.equal(b.durum, 200, 'arada döndürülen oturum 401 vermemeli');
+  assert.equal(cerez(a.cerezler), cerez(b.cerezler));
+  assert.equal(await aktifSayisi(w.id), 1);
+  const m = await kisi('5410000918', 'CUSTOMER');
+  const [c, d] = await ikinciPencere(() => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: m.refresh } }));
+  assert.equal(c.durum, 200);
+  assert.equal(d.durum, 200, JSON.stringify(d.json));
+  assert.equal(c.json.refreshToken, d.json.refreshToken);
+  assert.equal(await aktifSayisi(m.id), 1);
+});
+
+test('geç gelen kopya (pay içinde) halefi DÖNDÜRMEZ; kazananın belirteci geçerli kalır', async () => {
+  const k = await kisi('5410000914', 'CUSTOMER', WEB);
+  const rt = cerez(k.cerezler);
+  const yenile = (c) => istek('/api/v1/auth/refresh', { yontem: 'POST', govde: {}, basliklar: { ...WEB, Cookie: `hc_rt=${encodeURIComponent(c)}` } });
+  const a = await yenile(rt);
+  const b = await yenile(rt); // aynı eski çerezle, sonradan
+  assert.equal(b.durum, 200);
+  assert.equal(cerez(b.cerezler), cerez(a.cerezler), 'aynı yanıt; yeni döndürme yok');
+  assert.equal((await yenile(cerez(a.cerezler))).durum, 200, 'kazananın belirteci geçerli');
+});
+
+test('halef belirteci saklanmayan eski satır (041 öncesi): önceki davranış sürer', async () => {
+  const k = await kisi('5410000915', 'CUSTOMER');
+  const y1 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } });
+  await db.prepare('UPDATE user_sessions SET halef_id = NULL, halef_token_enc = NULL WHERE user_id = ?').run(k.id);
+  const y2 = await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: k.refresh } });
+  assert.equal(y2.durum, 200, 'soyun güncel halkası döndürülür');
+  assert.notEqual(y2.json.refreshToken, y1.json.refreshToken);
+  assert.equal(await tekrarKullanimVar(k.id), false);
+});
+
+test('şifreli halef belirteci yalnız son halkada durur; toplu kapatmada silinir', async () => {
+  const k = await kisi('5410000916', 'CUSTOMER');
+  let rt = k.refresh;
+  for (let i = 0; i < 3; i++) rt = (await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: rt } })).json.refreshToken;
+  const sayi = async () => Number((await db.prepare('SELECT COUNT(*) n FROM user_sessions WHERE user_id = ? AND halef_token_enc IS NOT NULL').get(k.id)).n);
+  assert.equal(await sayi(), 1);
+  const { oturumlariIptal } = await import('../src/routes/kullanici.js');
+  await oturumlariIptal(db, k.id, 'TEST');
+  assert.equal(await sayi(), 0);
+  assert.equal((await istek('/api/v1/auth/refresh', { yontem: 'POST', govde: { refreshToken: rt } })).durum, 401);
+});
+
 // ═════ YENİ İLAN BİLDİRİMİ ═════
 async function ustaProfili(u, kategoriler, ilceler) {
   const r = await istek('/api/v1/profiles/me/provider', { yontem: 'PUT', token: u.token, govde: { categories: kategoriler, districts: ilceler } });

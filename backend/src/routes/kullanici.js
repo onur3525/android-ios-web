@@ -10,7 +10,7 @@
 // bütün oturumları da iptal edilir.
 // ═══════════════════════════════════════════════════════════════
 import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
-import { sifreDogrulaAsenkron, sifreOzetleAsenkron } from '../auth.js';
+import { sifreDogrulaAsenkron, sifreOzetleAsenkron, sirCoz, sirSifrele } from '../auth.js';
 import { gonder, kanalHazir } from '../bildirim.js';
 import { config, uretim } from '../config.js';
 import { simdi } from '../db.js';
@@ -230,6 +230,12 @@ export async function oturumlariIptal(db, kullaniciId, neden, haric) {
   await db.prepare(
     `UPDATE user_sessions SET revoked_at = ?, revoke_reason = ? WHERE user_id = ? AND revoked_at IS NULL ${haric ? 'AND id <> ?' : ''}`,
   ).run(simdi(), neden, kullaniciId, ...(haric ? [haric] : []));
+  // 28 Eki: kapanan soyların şifreli saklanan halef belirteçleri de silinir
+  // (bkz. 041). Korunan oturumun (haric) yarış yanıtı için tutulanı kalır.
+  await db.prepare(
+    `UPDATE user_sessions SET halef_token_enc = NULL
+      WHERE user_id = ? AND halef_token_enc IS NOT NULL ${haric ? 'AND halef_id <> ?' : ''}`,
+  ).run(kullaniciId, ...(haric ? [haric] : []));
   // Açık gerçek zamanlı bağlantılar da kapanır.
   await olaylar.yayinla('user.sessions.revoked', { userId: kullaniciId, haric: haric ?? null });
 }
@@ -699,12 +705,29 @@ export function kullaniciRotalar(r, db) {
     // sürer. Soy kapatılmışsa (çıkış, şifre/telefon değişikliği, askı)
     // halef yoktur ve yenileme reddedilir. Web'de 60 sn payı aynen.
     const mobil = !webIstemcisi(ctx.req);
-    if (o.revoked_at && o.revoke_reason === 'ROTATED' && (mobil || Date.now() - Date.parse(o.revoked_at) < YENILEME_YARIS_PAYI_MS)) {
-      const halef = await db.prepare(
-        `SELECT * FROM user_sessions WHERE user_id = ? AND created_at = ? AND revoked_at IS NULL
-           AND (user_agent IS NOT DISTINCT FROM ?) ORDER BY last_used DESC LIMIT 1`,
-      ).get(o.user_id, o.created_at, o.user_agent);
-      if (halef) o = halef;
+    const payIcinde = (s) => !!s?.revoked_at && s.revoke_reason === 'ROTATED'
+      && (mobil || Date.now() - Date.parse(s.revoked_at) < YENILEME_YARIS_PAYI_MS);
+    // ── ⚠ 28 Eki: HALEFİN AYNI YANITI (yarış düzeltmesi) ──
+    // Pay içindeki döndürülmüş belirteç, soyun güncel halkasının KENDİ
+    // belirtecini geri alır (yeni oturum açılmaz, halef döndürülmez).
+    // Önceden halef YENİDEN döndürülüyordu: iki sekmenin yanıtları ters
+    // sırayla gelirse çerezde geçersiz belirteç kalıyor, pay dolunca
+    // "tekrar kullanım" sayılıp bütün oturumlar kapanıyordu.
+    let tekrarBelirteci = null;
+    if (payIcinde(o)) {
+      const t = await halefTekrari(o);
+      if (t) {
+        o = t.satir;
+        tekrarBelirteci = t.belirtec;
+      } else {
+        // 041 öncesi döndürülmüş satır (halef belirteci saklanmamış):
+        // önceki davranış — soyun güncel halkası döndürülür.
+        const halef = await db.prepare(
+          `SELECT * FROM user_sessions WHERE user_id = ? AND created_at = ? AND revoked_at IS NULL
+             AND (user_agent IS NOT DISTINCT FROM ?) ORDER BY last_used DESC LIMIT 1`,
+        ).get(o.user_id, o.created_at, o.user_agent);
+        if (halef) o = halef;
+      }
     }
     if (o.revoked_at) {
       // İptal edilmiş yenileme token'ı tekrar kullanıldı → çalınmış olabilir:
@@ -723,23 +746,74 @@ export function kullaniciRotalar(r, db) {
     await bakimGirisKapisi(db, u, ctx.req);
     // Firebase'de dışarıda yapılan şifre sıfırlama / iptal (bkz. yukarı).
     await firebaseDisDegisiklikleriniUzlastir(db, u);
-    if ((await db.prepare('SELECT revoked_at FROM user_sessions WHERE id = ?').get(o.id))?.revoked_at) throw hata.kimlik('Oturum sonlandırılmış');
+    const guncel = await db.prepare('SELECT * FROM user_sessions WHERE id = ?').get(o.id);
+    if (guncel?.revoked_at) {
+      // 28 Eki: denetimler sürerken AYNI belirteçle gelen başka istek
+      // döndürmeyi bitirmiş olabilir (yarışın ikinci penceresi): onun AYNI
+      // yanıtı verilir. Başka nedenle kapandıysa (çıkış vb.) 401 aynen.
+      const t = payIcinde(guncel) ? await halefTekrari(guncel) : null;
+      if (t) return { accessToken: erisimTokeni(u.id, t.satir.id), refreshToken: t.belirtec };
+      throw hata.kimlik('Oturum sonlandırılmış');
+    }
+    // Yarış/tekrar: soyun güncel halkası AYNEN geri verilir (döndürme yok).
+    if (tekrarBelirteci) return { accessToken: erisimTokeni(u.id, o.id), refreshToken: tekrarBelirteci };
     const yeniJti = randomUUID();
     const yeni = randomBytes(32).toString('base64url');
     const z = simdi();
+    let kaybetti = false;
     await db.tx(async () => {
-      // Koşullu döndürme: aynı yenileme token'ı eşzamanlı iki istekte
-      // kullanılırsa yalnız BİRİ yeni oturum alır (diğeri tekrar kullanım
-      // sayılır ve bütün oturumlar kapanır).
-      const d = await db.prepare(`UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'ROTATED' WHERE id = ? AND revoked_at IS NULL`).run(z, o.id);
-      if (d.changes !== 1) throw hata.kimlik();
+      // Koşullu döndürme: aynı belirteç eşzamanlı iki istekte kullanılırsa
+      // yalnız BİRİ döndürür. Halefin kimliği ve (şifreli) belirteci eski
+      // satıra yazılır: kaybeden istek aşağıda AYNI yanıtı alır.
+      const d = await db.prepare(
+        `UPDATE user_sessions SET revoked_at = ?, revoke_reason = 'ROTATED', halef_id = ?, halef_token_enc = ?
+          WHERE id = ? AND revoked_at IS NULL`,
+      ).run(z, yeniJti, sirSifrele(yeni), o.id);
+      if (d.changes !== 1) {
+        kaybetti = true;
+        return;
+      }
+      // Yalnız son halka saklanır: bir önceki halkadaki belirteç artık gereksiz.
+      await db.prepare('UPDATE user_sessions SET halef_token_enc = NULL WHERE halef_id = ?').run(o.id);
       await db.prepare(
         `INSERT INTO user_sessions (id, user_id, refresh_hash, created_at, last_used, expires_at, ip, user_agent)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(yeniJti, u.id, ozet(yeni), o.created_at, z,
         mobil ? new Date(Date.now() + config.yenilemeSuresi).toISOString() : o.expires_at, ctx.ip, o.user_agent);
     });
+    if (kaybetti) {
+      // Yarışı kaybeden istek (iki sekme aynı anda): kazananın AYNI yanıtı.
+      // Önceden 401 dönüyor, web'de ortak çerez silinip iki sekme de çıkış
+      // yapıyordu. Satır başka nedenle kapandıysa (çıkış vb.) 401 aynen.
+      const son = await db.prepare('SELECT * FROM user_sessions WHERE id = ?').get(o.id);
+      const t = payIcinde(son) ? await halefTekrari(son) : null;
+      if (!t) throw hata.kimlik();
+      return { accessToken: erisimTokeni(u.id, t.satir.id), refreshToken: t.belirtec };
+    }
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
+  }
+
+  /**
+   * Döndürülmüş bir halkadan soyun AÇIK güncel halkasına yürür; o halkanın
+   * belirtecini (bir önceki halkada şifreli saklanan) döner. Bulunamaz,
+   * çözülemez ya da doğrulanamazsa null (çağıran önceki davranışa düşer).
+   */
+  async function halefTekrari(s) {
+    let onceki = s;
+    for (let i = 0; i < 50 && onceki?.halef_id; i++) {
+      const h = await db.prepare('SELECT * FROM user_sessions WHERE id = ?').get(onceki.halef_id);
+      // Aynı kullanıcı + AYNI CİHAZ (önceki pay kuralıyla aynı şart).
+      if (!h || h.user_id !== s.user_id || (h.user_agent ?? null) !== (s.user_agent ?? null)) return null;
+      if (!h.revoked_at) {
+        if (!onceki.halef_token_enc || Date.parse(h.expires_at) < Date.now()) return null;
+        let belirtec;
+        try { belirtec = sirCoz(onceki.halef_token_enc); } catch { return null; }
+        return ozet(belirtec) === h.refresh_hash ? { satir: h, belirtec } : null;
+      }
+      if (h.revoke_reason !== 'ROTATED') return null; // soy kapatılmış (çıkış, şifre, askı…)
+      onceki = h;
+    }
+    return null;
   }
 
   // ── FIREBASE İLE OTURUM ──

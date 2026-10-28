@@ -77,14 +77,21 @@ function ornek(sema) {
 
 test('çok örnek: A\'daki admin temizliği B\'nin önbelleğini de temizler', { skip: !pg && 'yalnız HC_TEST_DB=postgres', timeout: 60_000 }, async () => {
   const sema = `t_${randomUUID().replace(/-/g, '').slice(0, 20)}`;
-  const A = ornek(sema); const B = ornek(sema);
+  // ⚠ B, A şemayı kurup HAZIR olduktan SONRA başlar: iki süreç aynı yeni
+  // şemayı aynı anda oluşturursa PostgreSQL "zaten var" hatası verebilir
+  // (CREATE SCHEMA IF NOT EXISTS eşzamanlılıkta güvenli değil) — CI'daki
+  // takılmanın nedeni buydu.
+  const A = ornek(sema);
+  let B = null;
   try {
-    await Promise.all([A.hazir, B.hazir]);
+    await A.hazir;
+    B = ornek(sema);
+    await B.hazir;
     assert.equal((await B.komut('oku')).n, 1);
     assert.equal((await B.komut('oku')).n, 1, 'B önbellekten okuyor');
     await A.komut('temizle');
     let n = 1;
     for (let i = 0; i < 40 && n === 1; i++) { await new Promise((r) => setTimeout(r, 50)); n = (await B.komut('oku')).n; }
     assert.equal(n, 2, 'B, A\'nın temizliğini olay yoluyla aldı ve yeniden yükledi');
-  } finally { await Promise.all([A.cik(), B.cik()]); }
+  } finally { await Promise.all([A.cik(), B?.cik()]); }
 });
