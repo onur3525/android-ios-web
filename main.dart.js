@@ -61138,6 +61138,8 @@
           return new A.ValidationError(text);
         case "RATE_LIMITED":
           return new A.ValidationError(text);
+        case "LOGIN_LOCKED":
+          return new A.ValidationError(text);
         case "FREE_RIGHTS_EXHAUSTED":
           return B.ValidationError_its;
         case "OFFER_ALREADY_EXISTS":
@@ -254125,8 +254127,13 @@
               $async$handler = 4;
               $async$exception = $async$errorStack.pop();
               e = A.unwrapException($async$exception);
-              t1 = A.FirebaseKimlik__hata(e);
-              $async$returnValue = new A._Record_2_error_idToken(t1, null);
+              if (e instanceof A.FirebaseAuthException && e.code === "too-many-requests") {
+                $async$returnValue = new A._Record_2_error_idToken(B.ValidationError_QFI, null);
+                // goto return
+                $async$goto = 1;
+                break;
+              }
+              $async$returnValue = new A._Record_2_error_idToken(A.FirebaseKimlik__hata(e), null);
               // goto return
               $async$goto = 1;
               break;
@@ -313854,6 +313861,7 @@
     B.ValidationError_J4i = new A.ValidationError("Do\u011frulama tamamlanamad\u0131");
     B.ValidationError_L3h = new A.ValidationError("Oturum bulunamad\u0131.");
     B.ValidationError_Nyi = new A.ValidationError("Rol eklemek i\xe7in \u015fifrenizi girin.");
+    B.ValidationError_QFI = new A.ValidationError("\xc7ok fazla hatal\u0131 deneme. \u015eifremi Unuttum ile \u015fifrenizi yenileyerek ya da SMS koduyla hemen giri\u015f yapabilirsiniz; dilerseniz biraz bekleyip tekrar deneyin.");
     B.ValidationError_Rq2 = new A.ValidationError("Foto\u011fraf y\xfcklenemedi. L\xfctfen tekrar deneyin.");
     B.ValidationError_TdB = new A.ValidationError("Bu i\u015flem s\xfcr\xfcyor \u2014 l\xfctfen bekleyin");
     B.ValidationError_YlU = new A.ValidationError("Mesaj g\xf6nderiliyor \u2014 l\xfctfen bekleyin");
