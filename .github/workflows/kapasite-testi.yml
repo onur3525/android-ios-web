@@ -1,0 +1,79 @@
+# ═══════════════════════════════════════════════════════════════
+# KAPASİTE ÖLÇÜMÜ — ELLE BAŞLATILAN, SALT OKUMA (28 Eki 2026)
+#
+# Sunucunun saniyede kaç isteği "rahat" karşıladığını bulur: her hız
+# (varsayılan 250…500) AYRI ve sabit ölçülür, kademe başına tablo çıkar.
+# Ölçüt: hata < %1, p95 < 500 ms, hedef hızın ≥ %98'i.
+#
+# • Yalnız ELLE başlar; onay metni birebir: KAPASITE
+# • Yalnız giriş istemeyen GET uçları; canlı veriye yazmaz, sır kullanmaz.
+# • Hata %5'i aşarsa ölçüm durur.
+# • Bir ölçüm (rapor) aracıdır: sonuç yeşil/kırmızı değil, TABLODUR.
+# Betik: yuk-testi/kapasite.js, rapor: yuk-testi/kapasite_ozet.js
+# ═══════════════════════════════════════════════════════════════
+name: kapasite-testi
+on:
+  workflow_dispatch:
+    inputs:
+      seviyeler:
+        description: 'Ölçülecek hızlar (istek/sn, virgülle)'
+        required: true
+        default: '250,300,350,400,450,500'
+      sure_sn:
+        description: 'Her kademenin süresi (sn)'
+        required: true
+        default: '120'
+      taban_url:
+        description: 'Test edilecek backend adresi'
+        required: true
+        default: 'https://hizmetcep-backend.onrender.com'
+      onay:
+        description: 'Birebir yazın: KAPASITE'
+        required: true
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: yuk-testi
+  cancel-in-progress: false
+jobs:
+  olcum:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Onay denetimi
+        if: ${{ inputs.onay != 'KAPASITE' }}
+        run: |
+          echo "::error::Onay metni hatalı. Ölçüm başlatılmadı."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - name: Kapasite ölçümü
+        env:
+          SEVIYELER: ${{ inputs.seviyeler }}
+          SURE_SN: ${{ inputs.sure_sn }}
+          TABAN_URL: ${{ inputs.taban_url }}
+        shell: bash
+        run: |
+          set +e -o pipefail
+          k6 run --summary-export=sonuc.json yuk-testi/kapasite.js 2>&1 | tee cikti.txt
+          echo "k6 çıkış kodu: ${PIPESTATUS[0]}"
+          exit 0
+      - name: Rapor
+        if: always()
+        env:
+          SURE_SN: ${{ inputs.sure_sn }}
+        shell: bash
+        run: |
+          [ -f sonuc.json ] || { echo "::error::sonuc.json yok (ölçüm başlamadı)"; exit 1; }
+          node yuk-testi/kapasite_ozet.js sonuc.json "$SURE_SN" | tee rapor.txt
+          { echo "## Kapasite ölçümü"; grep -v '^::' rapor.txt; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kapasite-sonucu
+          path: |
+            sonuc.json
+            cikti.txt
+            rapor.txt
+          retention-days: 30
