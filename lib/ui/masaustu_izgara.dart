@@ -83,13 +83,7 @@ class MasaustuIzgara extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, kisit) {
         final genislik = kisit.maxWidth;
-        var kolon = ((genislik + aralik) / (_enAzKart + aralik)).floor();
-        if (kolon < 1) {
-          kolon = 1;
-        }
-        if (kolon > _enFazlaKolon) {
-          kolon = _enFazlaKolon.toInt();
-        }
+        final kolon = masaustuKolonSayisi(genislik, aralik);
         // ⚠ TEK KOLONDA `Wrap` KURULMAZ: gereksiz katman olur ve
         // kartlar `stretch` yerine kendi genişliğine büzülebilir.
         if (kolon == 1) {
@@ -133,10 +127,21 @@ class MasaustuIzgara extends StatelessWidget {
 /// aynı `separatorBuilder` aralığı, aynı `itemBuilder`. Mobil yolda
 /// gerçekten `ListView.separated` döner — taklidi değil, kendisi.
 ///
-/// ⚠ MASAÜSTÜNDE KAYDIRMA KORUNUR: `Wrap` kendi başına kaydırmaz, bu
-/// yüzden `SingleChildScrollView` içine konur ve aynı `physics` ile
-/// aynı `padding` verilir. "Aşağı çekip yenile" davranışı da böylece
-/// çalışmaya devam eder.
+/// ⚠ MASAÜSTÜNDE KAYDIRMA KORUNUR: aynı `physics` ve aynı `padding`;
+/// "aşağı çekip yenile" davranışı çalışmaya devam eder.
+///
+/// ## ⚠ MASAÜSTÜ DE TEMBEL ÇİZİLİR (28 Eki, kullanıcı kararı)
+///
+/// Önceden masaüstünde BÜTÜN kartlar tek seferde çiziliyordu
+/// (`SingleChildScrollView` + `Wrap`): 500 ilan = 500 kart. Artık ızgara
+/// SATIR SATIR `ListView` ile kurulur: yalnız ekranda görünen satırlar
+/// (ve kaydırma akıcı olsun diye hemen altındaki kısa pay) çizilir;
+/// kaydırdıkça sıradakiler çizilir, ekrandan çıkanlar bırakılır.
+///
+/// GÖRÜNÜM `MasaustuIzgara` İLE AYNI: kolon sayısı aynı kuraldan
+/// (`masaustuKolonSayisi`), kartlar eşit genişlikte, satırdaki kartlar
+/// ÜSTTEN hizalı ve her kart KENDİ yüksekliğinde (`Wrap` gibi); yatay ve
+/// dikey aralık `aralik`. Son satır eksikse kartlar soldan dizilir.
 class MasaustuListe extends StatelessWidget {
   const MasaustuListe({
     super.key,
@@ -164,13 +169,53 @@ class MasaustuListe extends StatelessWidget {
         itemBuilder: itemBuilder,
       );
     }
-    return SingleChildScrollView(
-      physics: physics,
-      padding: padding,
-      child: MasaustuIzgara(
-        aralik: aralik,
-        children: [for (var i = 0; i < adet; i++) itemBuilder(context, i)],
-      ),
+    return LayoutBuilder(
+      builder: (context, kisit) {
+        final yatayDolgu =
+            padding.resolve(Directionality.of(context)).horizontal;
+        final kolon = masaustuKolonSayisi(kisit.maxWidth - yatayDolgu, aralik);
+        final satirSayisi = (adet + kolon - 1) ~/ kolon;
+        return ListView.separated(
+          physics: physics,
+          padding: padding,
+          itemCount: satirSayisi,
+          separatorBuilder: (_, __) => SizedBox(height: aralik),
+          itemBuilder: (context, satir) {
+            if (kolon == 1) {
+              return itemBuilder(context, satir);
+            }
+            final ilk = satir * kolon;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var k = 0; k < kolon; k++) ...[
+                  if (k > 0) SizedBox(width: aralik),
+                  Expanded(
+                    child: ilk + k < adet
+                        ? itemBuilder(context, ilk + k)
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            );
+          },
+        );
+      },
     );
   }
+}
+
+/// Masaüstü ızgarasının kolon sayısı — `MasaustuIzgara` ve `MasaustuListe`
+/// için TEK KAYNAK.
+int masaustuKolonSayisi(double genislik, double aralik) {
+  var kolon = ((genislik + aralik) /
+          (MasaustuIzgara._enAzKart + aralik))
+      .floor();
+  if (kolon < 1) {
+    kolon = 1;
+  }
+  if (kolon > MasaustuIzgara._enFazlaKolon) {
+    kolon = MasaustuIzgara._enFazlaKolon.toInt();
+  }
+  return kolon;
 }
