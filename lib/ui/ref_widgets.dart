@@ -2589,17 +2589,12 @@ class RefShell extends StatelessWidget {
       // ⚠ KENAR ÇUBUĞU BURADA DEĞİL: `GlobalWebKabugu` çiziyor.
       // Burada da çizilirse EKRANDA İKİ ÇUBUK olurdu. Bu yapı
       // yalnız içerik sütununu ve alt barı yönetir.
+      // ⚠ 28 Eki (2. karar): masaüstünde içerik TAM GENİŞLİK (sınır yok).
       body: ustMenu
           ? RefScroll(
               padding:
                   EdgeInsets.fromLTRB(horizontal, topExtra, horizontal, 14),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxWidth: IcerikGenisligi.izgara),
-                  child: child,
-                ),
-              ),
+              child: child,
             )
           : Column(
         children: [

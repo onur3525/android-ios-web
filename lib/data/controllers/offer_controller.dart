@@ -17,7 +17,9 @@ class OfferController extends BaseController {
       _offers.myOfferFor(listingId, providerId);
   Offer? byId(String id) => _offers.byId(id);
 
-  Future<DomainError?> loadMine() => runLoad(() => _offers.loadMine());
+  // `sessiz`: arka plan tazelemesi (bkz. `BaseController.runLoad`).
+  Future<DomainError?> loadMine({bool sessiz = false}) =>
+      runLoad(() => _offers.loadMine(), sessiz: sessiz);
   Future<DomainError?> loadForListing(String listingId) =>
       runLoad(() => _offers.loadForListing(listingId));
 

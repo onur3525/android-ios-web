@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { yenidenDogrulamaIste, yetkiIste, yetkiliMi } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
+import { anlikHaberEkle } from '../anlik_haber.js';
 import { simdi, tekilIhlaliMi } from '../db.js';
 import { dosyalariDogrula, imzaliGorselAdresi } from '../depo_dogrulama.js';
 import { depolamaAyari } from '../entegrasyon.js';
@@ -115,6 +116,9 @@ export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, ref
   // DIŞINDA tetiklenir (bkz. db.commitSonrasi). Böylece yeni satır görünür
   // olur ve iş isteğin bağlantısını kullanmaz.
   if (fcmEtkin()) db.commitSonrasi(() => pushTetikle(db));
+  // 28 Eki: açık uygulamaya anlık haber (bkz. anlik_haber.js) — uygulama
+  // ilgili veriyi yeniler; 30 saniyelik yoklama kaldırıldı.
+  db.commitSonrasi(() => anlikHaberEkle(kullaniciId, tur));
 }
 
 // ── ⚠ YENİ İLAN → EŞLEŞEN HİZMET VERENLERE BİLDİRİM (15 Eki, kullanıcı isteği) ──

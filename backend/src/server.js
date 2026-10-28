@@ -17,7 +17,7 @@ import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
   ApiHatasi, Yonlendirici, cerezleriOku, govdeOku, hata, istekKimligi,
-  ipTeshisi, istemciIp, jsonGonder,
+  ipTeshisi, istemciIp, jsonGonder, okumaYanitiGonder,
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
@@ -130,12 +130,14 @@ export function uygulamaKur(db) {
       res.setHeader('Access-Control-Allow-Origin', koken);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Vary', 'Origin');
+      // Web istemcisi değişmedi denetimi için yanıt özetini okuyabilmeli.
+      res.setHeader('Access-Control-Expose-Headers', 'ETag');
     }
     if (req.method === 'OPTIONS' && corsYolu) {
       if (corsIzinli) {
         res.writeHead(204, {
           'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key, X-HC-Web, X-HC-Cihaz, X-HC-Platform',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept, Idempotency-Key, X-HC-Web, X-HC-Cihaz, X-HC-Platform, If-None-Match',
           'Access-Control-Max-Age': '600',
         });
       } else {
@@ -247,6 +249,8 @@ export function uygulamaKur(db) {
       if (sonuc !== undefined && yol.startsWith('/api/v1/')) sonuc = await gorselAdresleriEkle(db, sonuc);
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};
       if (sonuc === undefined) return jsonGonder(res, 204, undefined, baslik);
+      // 28 Eki: kullanıcı API'si okumaları sıkıştırılır ve değişmediyse 304 (bkz. http.js).
+      if (req.method === 'GET' && yol.startsWith('/api/v1/')) return okumaYanitiGonder(req, res, sonuc, baslik);
       return jsonGonder(res, 200, sonuc, baslik);
     } catch (e) {
       const bilinen = e instanceof ApiHatasi;

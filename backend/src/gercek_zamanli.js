@@ -30,6 +30,7 @@
 import { gorselAdresleriEkle } from './gorsel_adresleri.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { olaylar } from './olaylar.js';
+import { ANLIK_HABER_KANALI } from './anlik_haber.js';
 import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
@@ -264,6 +265,14 @@ export function gercekZamanliKur(sunucu, db) {
     // Fotoğraflı mesajda imzalı görüntüleme adresi (HTTP yanıtıyla aynı).
     await gorselAdresleriEkle(db, veri);
     for (const b of alicilar) b.olay('message.new', veri);
+  });
+  // 28 Eki: uygulama içi bildirim → yalnız O KULLANICININ açık soketlerine
+  // tür bilgisiyle haber (içerik taşımaz; bkz. anlik_haber.js).
+  olaylar.on(ANLIK_HABER_KANALI, ({ h } = {}) => {
+    if (!Array.isArray(h)) return;
+    for (const [kullaniciId, tur] of h) {
+      for (const b of hub.kullanicilar.get(kullaniciId) ?? []) b.olay(ANLIK_HABER_KANALI, { type: tur });
+    }
   });
   olaylar.on('message.read', ({ offerId, readerId }) => {
     for (const b of hub.odalar.get(offerId) ?? []) b.olay('message.read', { offerId, readerId });

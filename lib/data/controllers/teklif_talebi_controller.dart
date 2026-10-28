@@ -18,6 +18,12 @@ class TeklifTalebiController extends BaseController {
       _port.bySaglayici(saglayiciId);
   TeklifTalebi? byId(String id) => _port.byId(id);
 
+  /// ANLIK YENİLEME (28 Eki): talep haberi / öne gelme / yeniden bağlanma.
+  Future<void> yenile() => _port.yenile();
+
+  /// Oturum sahibi değişti: önceki kullanıcının talepleri bırakılır.
+  void oturumDegisti() => _port.oturumDegisti();
+
   // ── ⚠ "TEKLİF İSTEKLERİ" SEKMESİ ROZETİ — YENİ GELEN, HENÜZ
   // AÇILMAMIŞ TALEP SAYISI ──
   //

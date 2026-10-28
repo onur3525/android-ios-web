@@ -90,6 +90,7 @@ import 'data/remote/token_store.dart' show oturumIziVar;
 import 'ui/web_header.dart' show masaustuNav;
 import 'ui/yasal_kabul_kapisi.dart';
 import 'ui/push_kapisi.dart';
+import 'ui/anlik_tazeleme.dart';
 import 'core/sekme_durumu.dart';
 import 'data/repositories/sekme_anligi.dart';
 import 'screens/bulunamadi_screen.dart';
@@ -152,6 +153,11 @@ class AppPorts {
   /// Yalnız mock modda: web'de yenilemede veriyi korumak için (sekme anlığı).
   final MockDepolar? mockDepolar;
 
+  /// ANLIK BAĞLANTI (28 Eki): yalnız API modunda. Sohbetle AYNI bağlantı;
+  /// girişte kurulur, sunucunun yeni ilan/teklif/talep haberlerini taşır
+  /// (`AnlikTazelemeKapisi`). Mock modda yoktur.
+  final WsClient? anlikBaglanti;
+
   const AppPorts({
     required this.auth,
     required this.listings,
@@ -164,6 +170,7 @@ class AppPorts {
     required this.apiClient,
     this.expiry,
     this.mockDepolar,
+    this.anlikBaglanti,
     this.notifRepo,
     this.teklifTalebiRepo,
     this.authRepo,
@@ -225,6 +232,7 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
       // ÜCRETSİZ HAK: kaynağı sunucu belirler; istemci SEÇEMEZ.
       // KAYITLI KART: kart verisi sağlayıcıda kalır.
       apiClient: client,
+      anlikBaglanti: ws,
     );
   }
 
@@ -652,6 +660,8 @@ Future<void> main() async {
       // `Navigator.push` ve `RoleGuard` altındaki tüm ekranlar bu
       // kapsamı görür.
       Provider<ApiClient>.value(value: ports.apiClient),
+      // Anlık bağlantı (API modu); mock modda null.
+      Provider<WsClient?>.value(value: ports.anlikBaglanti),
 
       ChangeNotifierProvider(create: (_) => AuthController(ports.auth)),
       // Faturalar SALT OKUNUR gelir; port gerektirmez.
@@ -729,11 +739,15 @@ class HizmetCepApp extends StatelessWidget {
         // builder yapısı (GlobalWebKabugu → OfflineBanner) AYNEN korunur.
         // ⚠ BakimKapisi (22 Eki): PushKapisi yalnız yaşam döngüsü sarmalayıcısı
         // olduğundan bakım katmanı onun hemen içinde, BÜTÜN ekranların üstünde.
+        // ⚠ AnlikTazelemeKapisi (28 Eki): anlık bağlantı + öne gelmede
+        // sessiz tazeleme; ekran çizmez, yalnız dinler.
         builder: (context, child) => PushKapisi(
-          child: BakimKapisi(
-            child: YasalKabulKapisi(
-              child: GlobalWebKabugu(
-                child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+          child: AnlikTazelemeKapisi(
+            child: BakimKapisi(
+              child: YasalKabulKapisi(
+                child: GlobalWebKabugu(
+                  child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+                ),
               ),
             ),
           ),

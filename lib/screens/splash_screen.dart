@@ -14,9 +14,7 @@ import '../data/models/account.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api/config_api.dart';
 import '../data/category_tree.dart';
-import '../data/remote/api/category_api.dart';
-import 'category_ui.dart' show sunucuIkonlariniAyarla;
-import '../data/hizmet_alanlari.dart' show sunucuAlanlariniAyarla;
+import '../ui/katalog_tazeleme.dart';
 import '../data/remote/api_config.dart';
 import '../data/store_links.dart';
 import '../core/native_splash.dart';
@@ -708,15 +706,11 @@ class _SplashScreenState extends State<SplashScreen> {
     // kullanılıyor.
     if (ApiConfig.useRealApi) {
       try {
-        final apiKoku = Uri.parse(ApiConfig.baseUrl).origin;
         BootLog.olay('CATALOG_FETCH_START');
-        final j = await CategoryApi(client!).tree().timeout(_kConfigButce);
-        final agac = CategoryApi.parse(j);
-        KatalogKaynagi.i.guncelle(agac);
-        sunucuIkonlariniAyarla(CategoryApi.ikonlar(j));
-        // Ana sayfa çatıları (22 Eki): ad, açıklama, fotoğraf, kategoriler.
-        sunucuAlanlariniAyarla(j['roofs'], apiKoku: apiKoku);
-        BootLog.olay('CATALOG_FETCH_END', 'ok:${agac.length}');
+        // ⚠ TEK KAYNAK (28 Eki): öne gelmedeki tazelemeyle AYNI işlev —
+        // katalog, ikonlar ve ana sayfa çatıları (`KatalogTazeleme`).
+        await KatalogTazeleme.tazele(client!).timeout(_kConfigButce);
+        BootLog.olay('CATALOG_FETCH_END', 'ok:${KatalogKaynagi.i.aktif.length}');
       } catch (e) {
         // ⚠ Gömülü katalog devrede kalır — kategorisiz uygulama olmaz.
         BootLog.olay('CATALOG_FETCH_END', 'fail:${e.runtimeType}');

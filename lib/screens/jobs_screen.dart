@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'widgets/ilan_baslik_satiri.dart';
 import '../domain/iletisim_maskesi.dart';
@@ -83,7 +82,7 @@ class JobsScreen extends StatefulWidget {
   State<JobsScreen> createState() => _JobsScreenState();
 }
 
-class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
+class _JobsScreenState extends State<JobsScreen> {
   /// ÜST SEKME — yalnız `/provider/jobs` ekranında anlamlıdır.
   ///
   /// 0 → Yeni işler · 1 → Teklif verdiklerim · 2 → Teklif istekleri
@@ -105,50 +104,17 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
   /// Kazandığım sekmesinin sıralaması — bkz. `myOffers` notu.
   String _kazSort = 'yeni';
 
-  // ── ⚠ OTOMATİK YENİLEME (15 Eki, kullanıcı isteği) ──
-  // "Hizmet alan ilan oluşturduğunda hizmet veren ekranı kendiliğinden
-  // yenilenmeli." Üç yol: (1) uygulama açıkken gelen yeni ilan bildirimi
-  // listeyi tazeler (`PushKapisi`), (2) ekran açıkken 30 sn'de bir, (3)
-  // uygulama/sekme yeniden öne gelince. Bildirim izni kapalı ya da push
-  // yapılandırılmamış olsa da liste güncel kalır.
-  static const Duration _kOtomatikYenileme = Duration(seconds: 30);
-  Timer? _zamanlayici;
-  bool _yenileniyor = false;
-
+  // ── ⚠ KENDİLİĞİNDEN YENİLEME (15 Eki; 28 Eki kullanıcı kararı) ──
+  // "Ekran 30 saniyede bir yenilenmesin; yeni teklif veya ilan gelince
+  // yenilensin." 30 sn'lik zamanlayıcı ve ekranın kendi öne gelme
+  // dinleyicisi KALDIRILDI. Liste; yeni ilan/teklif haberi (anlık bağlantı
+  // ya da push), uygulamanın öne gelmesi ve bağlantının yeniden kurulması
+  // ile uygulama genelinde tek yerden sessizce tazelenir (`AnlikTazeleme`).
+  // Ekran açılışta bir kez yükler; aşağı çekince yine yenilenir.
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
-    _zamanlayici = Timer.periodic(_kOtomatikYenileme, (_) => _sessizYenile());
-  }
-
-  @override
-  void dispose() {
-    _zamanlayici?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _sessizYenile();
-    }
-  }
-
-  /// Arka planda tazeleme: üst üste binmez, ekran kapandıysa yapılmaz.
-  Future<void> _sessizYenile() async {
-    if (_yenileniyor || !mounted) {
-      return;
-    }
-    _yenileniyor = true;
-    try {
-      await _refresh();
-    } catch (_) {
-    } finally {
-      _yenileniyor = false;
-    }
   }
 
   /// Uygun işler ve kendi tekliflerim yeniden yüklenir.

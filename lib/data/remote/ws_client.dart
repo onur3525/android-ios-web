@@ -21,11 +21,16 @@ class WsClient {
   final _messageDelivered = StreamController<Map<String, dynamic>>.broadcast();
   final _messageRead = StreamController<Map<String, dynamic>>.broadcast();
   final _connection = StreamController<bool>.broadcast();
+  final _notificationNew = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onMessageNew => _messageNew.stream;
   Stream<Map<String, dynamic>> get onMessageDelivered => _messageDelivered.stream;
   Stream<Map<String, dynamic>> get onMessageRead => _messageRead.stream;
   Stream<bool> get onConnectionChange => _connection.stream;
+
+  /// ANLIK HABER (28 Eki): yeni ilan/teklif/talep/mesaj bildirimi oluştu.
+  /// Yük yalnız `{type}`; veri ayrıca REST ile çekilir.
+  Stream<Map<String, dynamic>> get onNotificationNew => _notificationNew.stream;
 
   Future<void> connect() async {
     if (_socket != null) {
@@ -80,6 +85,7 @@ class WsClient {
       s.on(WsAuth.eventMessageNew, (d) => _emit(_messageNew, d));
       s.on(WsAuth.eventMessageDelivered, (d) => _emit(_messageDelivered, d));
       s.on(WsAuth.eventMessageRead, (d) => _emit(_messageRead, d));
+      s.on(WsAuth.eventNotificationNew, (d) => _emit(_notificationNew, d));
 
       _socket = s;
       s.connect();
@@ -125,5 +131,6 @@ class WsClient {
     await _messageDelivered.close();
     await _messageRead.close();
     await _connection.close();
+    await _notificationNew.close();
   }
 }

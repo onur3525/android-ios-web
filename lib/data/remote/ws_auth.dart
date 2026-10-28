@@ -24,6 +24,8 @@ class WsAuth {
   static const String eventMessageNew = 'message.new';
   static const String eventMessageDelivered = 'message.delivered';
   static const String eventMessageRead = 'message.read';
+  /// ANLIK HABER (28 Eki): uygulama içi bildirim oluştu; yük yalnız {type}.
+  static const String eventNotificationNew = 'notification.new';
 
   /// İstemciden gönderilen olaylar.
   static const String actionJoin = 'conversation.join';

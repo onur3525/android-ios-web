@@ -49,11 +49,13 @@ void main() {
   });
 
   group('2 — HİZMET VEREN LİSTESİ KENDİLİĞİNDEN YENİLENİR', () {
-    test('30 sn zamanlayıcı ve öne gelince tazeleme; ekran kapanınca durur', () {
+    // ⚠ 28 Eki kullanıcı kararı: 30 sn zamanlayıcı kaldırıldı; tazeleme
+    // anlık haberle ve öne gelmede uygulama genelinden (anlik_tazeleme_test).
+    test('ekranda 30 sn zamanlayıcı yok; öne gelme tazelemesi tek yerde', () {
       final j = _oku('lib/screens/jobs_screen.dart');
-      expect(j.contains('Timer.periodic(_kOtomatikYenileme'), isTrue);
-      expect(j.contains('AppLifecycleState.resumed'), isTrue);
-      expect(j.contains('_zamanlayici?.cancel();'), isTrue);
+      expect(j.contains('Timer.periodic'), isFalse);
+      expect(j.contains('AppLifecycleState.resumed'), isFalse);
+      expect(_oku('lib/ui/anlik_tazeleme.dart').contains('AppLifecycleState.resumed'), isTrue);
     });
 
     test('ilk açılışta teklif verdiğim ilan bir an görünüp kaybolmaz: '
@@ -67,8 +69,8 @@ void main() {
 
     test('uygulama açıkken gelen yeni ilan bildirimi listeyi tazeler', () {
       final p = _oku('lib/ui/push_kapisi.dart');
-      expect(p.contains("tur == 'NEW_LISTING' && _auth?.activeRole == Role.provider"), isTrue);
-      expect(p.contains('ilanlar?.loadAvailable()'), isTrue);
+      expect(p.contains('AnlikTazeleme.habereGore(context,'), isTrue);
+      expect(_oku('lib/ui/anlik_tazeleme.dart').contains('await ilan.loadAvailable(sessiz: true);'), isTrue);
     });
 
     test('yeni ilan bildirimi türü tanınır', () {

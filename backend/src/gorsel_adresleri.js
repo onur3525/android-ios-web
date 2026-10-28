@@ -25,6 +25,17 @@ import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 
 const GECERLI_REF = /^[A-Za-z0-9/_.-]{1,200}$/;
 const SURE_SN = 3600;
+
+// ── ⚠ İMZA ZAMANI 15 DAKİKALIK KOVAYA YUVARLANIR (28 Eki, telefon performansı) ──
+// İmza her istekte o anın saniyesiyle üretiliyordu: fotoğraflı ilan listesi
+// HER yanıtta farklı görünüyor, "değişmediyse yeniden gönderme / yeniden
+// çizme" hiç işlemiyordu. Kova başlangıcıyla imzalanan adres aynı 15 dakika
+// içinde birebir aynıdır; süre kova başından 1 saat olduğu için verilen
+// adresin en az 45 dakika ömrü kalır. Profil fotoğrafı da aynı kuralla
+// (depo_dogrulama.js `imzaliGorselAdresi`).
+export const IMZA_KOVASI_SN = 900;
+export const imzaZamani = (simdi = Date.now()) =>
+  new Date(Math.floor(simdi / (IMZA_KOVASI_SN * 1000)) * IMZA_KOVASI_SN * 1000);
 const AZAMI_DERINLIK = 6;
 
 function topla(deger, hedefler, derinlik = 0) {
@@ -75,8 +86,9 @@ export async function gorselAdresleriEkle(db, yanit) {
   } catch {
     ayar = null; // depolama/okuma hatası: yanıt yine döner, adres eklenmez
   }
+  const zaman = imzaZamani();
   const imzala = (r) => (ayar && typeof r === 'string' && gecerli.has(r)
-    ? s3ImzaliAdres(ayar, { yontem: 'GET', anahtar: r, sureSn: SURE_SN })
+    ? s3ImzaliAdres(ayar, { yontem: 'GET', anahtar: r, sureSn: SURE_SN, simdi: zaman })
     : null);
   for (const [o, kaynak, hedef, dizi] of hedefler) {
     o[hedef] = dizi ? o[kaynak].map(imzala) : imzala(o[kaynak]);

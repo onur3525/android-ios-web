@@ -33,7 +33,15 @@ List<({
   //
   // ⚠ `watch`: yeni bildirim gelince alt bar KENDİLİĞİNDEN yenilenir;
   // kullanıcı ekrana girmeden noktayı görür.
-  final me = context.watch<AuthController>().currentAccount;
+  //
+  // ── ⚠ YALNIZ ROZET DEĞİŞİNCE ÇİZİM (28 Eki, telefon performansı) ──
+  // Bu işlev ekranın KENDİ `build`inde çağrılır (İlanlarım, İşlerim,
+  // Bildirimler, Profil …). `watch` ile her bildirim/talep/oturum
+  // değişikliği BÜTÜN ekranı (ilan listesi dahil) yeniden çiziyordu.
+  // Artık `select`: ekran yalnız kullanıcı, nokta ya da sayı DEĞİŞİNCE
+  // yeniden çizilir. Ölçütler aynen.
+  final meId = context.select<AuthController, String?>((a) => a.currentAccount?.id);
+  final rol = saglayici ? Role.provider : Role.customer;
   // ── ⚠ ROZET AKTİF ROLE GÖRE SÜZÜLÜR (kullanıcı kuralı, 9 Eyl) ──
   //
   // "Rol değiştirince diğer rolüne ait bildirimleri görmemeli."
@@ -43,12 +51,8 @@ List<({
   // liste bulurdu — karşı rolün bildirimi noktayı yakıyor olurdu.
   //
   // Süzme kuralı `domain/bildirim_rolu.dart` içinde TEK yerde.
-  final okunmamis = me != null &&
-      rolOkunmamisSayisi(
-            context.watch<NotificationController>().forUser(me.id),
-            saglayici ? Role.provider : Role.customer,
-          ) >
-          0;
+  final okunmamis = context.select<NotificationController, bool>((n) =>
+      meId != null && rolOkunmamisSayisi(n.forUser(meId), rol) > 0);
 
   // ── ⚠ "BUL" İKONU — GELEN TEKLİF GÖSTERGESİ ──
   //
@@ -61,9 +65,8 @@ List<({
   // SAYISINI gösteriyor. Ölçüt `yeniTeklifVarMi` ile AYNI — o da
   // "son görülme"den sonra gelen `teklifGeldi` kayıtlarına bakar,
   // yani sekmeye girilince rozet sıfırlanır.
-  final yeniTeklifSayi = (!saglayici && me != null)
-      ? context.watch<TeklifTalebiController>().yeniTeklifSayisi(me.id)
-      : 0;
+  final yeniTeklifSayi = context.select<TeklifTalebiController, int>((t) =>
+      (!saglayici && meId != null) ? t.yeniTeklifSayisi(meId) : 0);
 
   final t = <({
   String key,

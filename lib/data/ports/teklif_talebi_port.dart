@@ -63,6 +63,14 @@ abstract class TeklifTalebiPort extends ChangeNotifier {
   /// ⚠ YENİ — karşı taraf sohbet ekranını açtığında "okundu" tik
   /// durumunu tetikler.
   Future<void> mesajlariOkunduIsaretle(String talepId, String okuyanId);
+
+  /// ANLIK YENİLEME (28 Eki): talep haberi gelince ya da uygulama öne
+  /// gelince sunucudan tazelenir. Mock modda yapılacak iş yoktur.
+  Future<void> yenile() async {}
+
+  /// Oturum sahibi değişti (giriş/çıkış): önceki kullanıcının önbelleği
+  /// bırakılır; ilk okumada yeniden yüklenir. Mock modda iş yoktur.
+  void oturumDegisti() {}
 }
 
 /// ── ⚠ BİLDİRİM ZİNCİRİ — MEVCUT `NotificationRepository`YE YAZAR ──

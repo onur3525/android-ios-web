@@ -6,14 +6,13 @@ import 'package:provider/provider.dart';
 
 import '../core/push/push_platform.dart';
 import '../data/controllers/auth_controller.dart';
-import '../data/controllers/listing_controller.dart';
-import '../data/models/account.dart' show Role;
 import '../data/controllers/notification_controller.dart';
 import '../data/remote/api_client.dart';
 import '../data/remote/api_config.dart';
 import '../data/remote/mappers.dart';
 import '../domain/bildirim_rolu.dart';
 import '../screens/notifications_screen.dart';
+import 'anlik_tazeleme.dart';
 import 'gezgin.dart';
 import 'global_web_kabugu.dart' show AktifRota;
 
@@ -203,24 +202,16 @@ class _PushKapisiState extends State<PushKapisi> {
   }
 
   void _mesajGeldi(Map<String, dynamic> veri) {
-    final id = _auth?.currentAccount?.id;
-    if (id == null || !mounted) {
+    if (_auth?.currentAccount == null || !mounted) {
       return;
     }
-    final n = context.read<NotificationController>();
-    unawaited(n.load(id));
-    unawaited(n.refreshBadge(id));
     // ── ⚠ UYGULAMA AÇIKKEN EKRAN KENDİLİĞİNDEN TAZELENİR (15 Eki) ──
-    // Yeni iş ilanı → hizmet verenin "Yeni işler" listesi; yeni teklif →
-    // hizmet alanın ilanı ve teklifleri. Kullanıcı yenilemek zorunda kalmaz.
+    // ⚠ TEK KAYNAK (28 Eki): anlık bağlantıyla AYNI eşleme
+    // (`AnlikTazeleme`); ikisi aynı olay için gelirse birleştirilir.
     final tur = veri['type'];
     final refId = veri['id'];
-    final ilanlar = context.read<ListingController?>();
-    if (tur == 'NEW_LISTING' && _auth?.activeRole == Role.provider) {
-      unawaited(ilanlar?.loadAvailable());
-    } else if (tur == 'NEW_OFFER' && refId is String && _kimlikDeseni.hasMatch(refId)) {
-      unawaited(ilanlar?.loadOne(refId));
-    }
+    AnlikTazeleme.habereGore(context, tur is String ? tur : null,
+        ilanId: refId is String && _kimlikDeseni.hasMatch(refId) ? refId : null);
   }
 
   void _acildi(Map<String, dynamic> veri) {

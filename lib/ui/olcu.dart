@@ -114,15 +114,14 @@ abstract final class IcerikGenisligi {
   /// Kart ızgaraları ve ana sayfa — çok sütunlu yüzeyler.
   static const double izgara = 1200;
 
-  /// ── ⚠ MASAÜSTÜ İÇERİK SÜTUNU (28 Eki, kullanıcı kararı) ──
-  ///
-  /// Kenar çubuklu masaüstü web'de BÜTÜN ekranlar (iki rolde de) sol
-  /// menünün HEMEN YANINDAN başlayan, en çok bu genişlikte bir sütunda
-  /// çizilir; geniş monitörde sağda boşluk kalır. Önceden her ekran kendi
-  /// kuralını uyguluyordu: kimi ortalanmış 1200, kimi 760, kimi bütün
-  /// genişlik — hizmet alan ile hizmet veren ekranları ayrışıyordu.
-  /// Değer: ızgara + sayfa iskeletinin (RefShell) iki yandaki 14 px'i.
-  static const double masaustuSutun = izgara + 28;
+  // ── ⚠ MASAÜSTÜ: TAM GENİŞLİK (28 Eki, kullanıcı kararı — 2.) ──
+  //
+  // Kenar çubuklu masaüstü web'de BÜTÜN ekranlar (iki rolde de) sol
+  // menünün yanından SAĞ KENARA kadar çizilir; genişlik sınırı yoktur.
+  // Önceki karar (en çok 1228 px sütun) geniş monitörde ekranın yarısını
+  // boş bırakıyordu ("yarım kalmamalı, tüm ekranlara sığmalı").
+  // Listeler genişledikçe sütun ekler (`masaustuKolonSayisi`), kartlar
+  // büyümez. Form/ayar PANELLERİ (açılır pencere) kendi ölçüsünde kalır.
 }
 
 /// ⚠ IZGARA SÜTUN SAYISI — KARTLAR GERİLMEZ, ÇOĞALIR.

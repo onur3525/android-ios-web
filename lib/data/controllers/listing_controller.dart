@@ -21,11 +21,15 @@ class ListingController extends BaseController {
   Listing? byIlanNo(String ilanNo) => _listings.byIlanNo(ilanNo);
 
   // ── yükleme (pull-to-refresh ve açılış) ──
-  Future<DomainError?> loadMine(String ownerId) =>
-      runLoad(() => _listings.loadMine(ownerId));
-  Future<DomainError?> loadAvailable({String? category, String? district}) =>
-      runLoad(() => _listings.loadAvailable(category: category, district: district));
-  Future<DomainError?> loadOne(String id) => runLoad(() => _listings.loadOne(id));
+  // `sessiz`: arka plan tazelemesi (bkz. `BaseController.runLoad`).
+  Future<DomainError?> loadMine(String ownerId, {bool sessiz = false}) =>
+      runLoad(() => _listings.loadMine(ownerId), sessiz: sessiz);
+  Future<DomainError?> loadAvailable(
+          {String? category, String? district, bool sessiz = false}) =>
+      runLoad(() => _listings.loadAvailable(category: category, district: district),
+          sessiz: sessiz);
+  Future<DomainError?> loadOne(String id, {bool sessiz = false}) =>
+      runLoad(() => _listings.loadOne(id), sessiz: sessiz);
 
   /// KURAL: Müşteri ücretsiz ve sınırsız ilan verebilir.
   Future<({Listing? listing, DomainError? error})> publish({

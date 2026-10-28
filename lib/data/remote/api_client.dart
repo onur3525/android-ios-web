@@ -79,6 +79,21 @@ class ApiClient {
   static const _uuid = Uuid();
   Future<bool>? _refreshing; // eşzamanlı 401'lerde TEK yenileme
 
+  // ── ⚠ DEĞİŞMEDİYSE YENİDEN İNDİRME YOK (28 Eki, telefon performansı) ──
+  //
+  // Sunucu GET yanıtlarına içerik özeti (ETag) koyar. Son yanıt adresiyle
+  // birlikte BELLEKTE tutulur; aynı adres yeniden istenince özet
+  // `If-None-Match` ile gönderilir. Veri değişmediyse sunucu gövdesiz
+  // 304 döner ve saklı gövde kullanılır (ağ ve pil tasarrufu). Özet
+  // içerikten üretildiği için eşleşme = birebir aynı veri.
+  // ⚠ Kalıcı depoya yazılmaz; oturum kapanınca silinir. En çok
+  // [okumaOnbellegiSiniri] adres, en büyük [okumaOnbellegiAzamiBayt].
+  static const int okumaOnbellegiSiniri = 64;
+  static const int okumaOnbellegiAzamiBayt = 1024 * 1024;
+  final Map<String, ({String etiket, String govde})> _okumaOnbellegi = {};
+
+  void _okumaOnbellegiTemizle() => _okumaOnbellegi.clear();
+
   Future<Map<String, dynamic>> get(String path, {Map<String, String>? query}) =>
       _send('GET', path, query: query);
 
@@ -160,6 +175,12 @@ class ApiClient {
       headers['Authorization'] = 'Bearer $token';
     }
 
+    final okumaAnahtari = method == 'GET' ? uri.toString() : null;
+    final saklanan = okumaAnahtari == null ? null : _okumaOnbellegi[okumaAnahtari];
+    if (saklanan != null) {
+      headers['If-None-Match'] = saklanan.etiket;
+    }
+
     http.Response res;
     try {
       final req = http.Request(method, uri)..headers.addAll(headers);
@@ -215,12 +236,32 @@ class ApiClient {
     // karakterler bozulur ("Kazımdirik" → "KazÄ±mdirik").
     // JSON, RFC 8259 gereği UTF-8'dir; bu yüzden ham baytlar doğrudan
     // utf8 ile çözülür.
-    final govde = res.bodyBytes.isEmpty
+    var govde = res.bodyBytes.isEmpty
         ? ''
         : utf8.decode(res.bodyBytes, allowMalformed: true);
+    var durum = res.statusCode;
+    if (okumaAnahtari != null) {
+      if (durum == 304 && saklanan != null) {
+        // Değişmedi: saklı gövde kullanılır (sonuna taşınır: en yeni).
+        govde = saklanan.govde;
+        durum = 200;
+        _okumaOnbellegi
+          ..remove(okumaAnahtari)
+          ..[okumaAnahtari] = saklanan;
+      } else if (durum == 200) {
+        final etiket = res.headers['etag'];
+        _okumaOnbellegi.remove(okumaAnahtari);
+        if (etiket != null && etiket.isNotEmpty && govde.length <= okumaOnbellegiAzamiBayt) {
+          _okumaOnbellegi[okumaAnahtari] = (etiket: etiket, govde: govde);
+          while (_okumaOnbellegi.length > okumaOnbellegiSiniri) {
+            _okumaOnbellegi.remove(_okumaOnbellegi.keys.first);
+          }
+        }
+      }
+    }
     final decoded = govde.isEmpty ? null : _decode(govde);
 
-    if (res.statusCode >= 200 && res.statusCode < 300) {
+    if (durum >= 200 && durum < 300) {
       if (decoded is List) {
         return {'_list': decoded};
       }
@@ -230,7 +271,7 @@ class ApiClient {
       //   • 200 + tamamen boş gövde   → decoded == null
       // Üçü de AYNI şekilde işaretlenir; getOrNull bunu null'a çevirir.
       // Not: gerçek boş nesne `{}` bundan AYRIDIR ve null sayılmaz.
-      if (res.statusCode == 204 || decoded == null) {
+      if (durum == 204 || decoded == null) {
         return <String, dynamic>{_kNullBody: true};
       }
       return (decoded as Map<String, dynamic>?) ?? const {};
@@ -338,6 +379,7 @@ class ApiClient {
         // ⚠ WEB: sunucu çerezi KESİN reddettiyse (401) oturum izi silinir;
         // açılış artık sunucuyu beklemez. Ağ/uyku hatası izi SİLMEZ.
         if (cerezliOturum && res.statusCode == 401) {
+          _okumaOnbellegiTemizle();
           await tokens.clear();
         }
         return false;
@@ -358,10 +400,14 @@ class ApiClient {
   }
 
   Future<void> _forceLogout() async {
+    _okumaOnbellegiTemizle();
     await tokens.clear();
     onSessionExpired?.call();
   }
 
   /// Oturumu kapat (yerel): tokenlar silinir.
-  Future<void> clearSession() => tokens.clear();
+  Future<void> clearSession() {
+    _okumaOnbellegiTemizle();
+    return tokens.clear();
+  }
 }
