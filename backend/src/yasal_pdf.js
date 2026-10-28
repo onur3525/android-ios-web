@@ -11,6 +11,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 import { ApiHatasi } from './http.js';
+import { depodanAkit } from './depo_akisi.js';
 
 export const PDF_AZAMI = 10 * 1024 * 1024; // 10 MB
 export const PDF_ANAHTAR = /^yasal\/[0-9a-f-]{36}\.pdf$/;
@@ -36,14 +37,13 @@ export async function pdfGonder(db, anahtar, res, dosyaAdi = 'belge.pdf') {
   const bulunamadi = () => { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); res.end('Bulunamadı'); };
   if (!PDF_ANAHTAR.test(String(anahtar || ''))) return bulunamadi();
   const ayar = await depolamaAyari(db);
-  const r = ayar ? await fetch(s3ImzaliAdres(ayar, { yontem: 'GET', anahtar, sureSn: 120 }), { signal: AbortSignal.timeout(20000) }).catch(() => null) : null;
-  if (!r || !r.ok) return bulunamadi();
-  res.writeHead(200, {
+  // 28 Eki: belleğe almadan akış (bkz. depo_akisi.js). Başlıklar AYNI.
+  const yazildi = ayar && await depodanAkit(ayar, anahtar, res, () => ({
     'Content-Type': 'application/pdf',
     'Content-Disposition': `inline; filename="${dosyaAdi.replace(/[^A-Za-z0-9._-]/g, '_')}"`,
     'Cache-Control': 'public, max-age=31536000, immutable', // anahtar benzersiz
     'X-Content-Type-Options': 'nosniff',
     'Content-Security-Policy': "default-src 'none'; sandbox",
-  });
-  res.end(Buffer.from(await r.arrayBuffer()));
+  }), { baslikMs: 20_000 });
+  if (!yazildi) return bulunamadi();
 }

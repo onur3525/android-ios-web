@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
+import 'gorsel_cozumu.dart';
 import 'gorsel_yedegi.dart';
 
 // ⚠ MOBİL UYGULAMA — ANDROID VE iOS.
@@ -24,20 +25,38 @@ Widget yerelGorsel(
   double? height,
   BoxFit? fit,
   WidgetBuilder? hataYedegi,
+  // ⚠ 28 Eki: tam ekran yakınlaştırmalı görüntüleyiciler `true` verir;
+  // ağ görseli eskisi gibi TAM çözünürlükte çözülür.
+  bool tamCozunurluk = false,
 }) =>
     // ⚠ SUNUCU FOTOĞRAFI (imzalı https adresi): ağdan çizilir. Yerel
     // dosya yolları `https://` ile başlamaz; onların davranışı AYNEN.
     _uzakMi(yol)
-        ? Image.network(
-            yol,
-            width: width,
-            height: height,
-            fit: fit,
-            // ⚠ YEDEK HER ZAMAN VAR (11 Eki): verilmezse nötr yer
-            // tutucu çizilir; ham hata kutusu kullanıcıya görünmez.
-            errorBuilder: (context, _, __) =>
-                (hataYedegi ?? varsayilanGorselYedegi)(context),
-          )
+        ? (tamCozunurluk
+            ? Image.network(
+                yol,
+                width: width,
+                height: height,
+                fit: fit,
+                errorBuilder: (context, _, __) =>
+                    (hataYedegi ?? varsayilanGorselYedegi)(context),
+              )
+            // ⚠ 28 Eki: ekrandaki boyuta göre çözülür (bkz.
+            // `gorsel_cozumu.dart`). Görünüm aynı, bellek çok daha az.
+            : LayoutBuilder(
+                builder: (context, kisit) => Image.network(
+                  yol,
+                  width: width,
+                  height: height,
+                  fit: fit,
+                  cacheWidth: kisittanCozumGenisligi(context, kisit,
+                      genislik: width, yukseklik: height),
+                  // ⚠ YEDEK HER ZAMAN VAR (11 Eki): verilmezse nötr yer
+                  // tutucu çizilir; ham hata kutusu kullanıcıya görünmez.
+                  errorBuilder: (context, _, __) =>
+                      (hataYedegi ?? varsayilanGorselYedegi)(context),
+                ),
+              ))
         : Image.file(
             File(yol),
             width: width,

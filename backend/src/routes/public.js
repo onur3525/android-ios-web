@@ -12,6 +12,7 @@
 import { hata } from '../http.js';
 import { DESTEK_BILGISI } from '../destek_bilgisi.js';
 import { bakimIstisnasiMi, testCihaziMi } from '../bakim_modu.js';
+import { onbellekten } from '../genel_onbellek.js';
 
 export async function katalogYaniti(db) {
   const kat = await db.prepare(
@@ -84,15 +85,17 @@ export async function destekBilgisi() {
 }
 
 export function publicRotalar(r, db) {
-  r.get('/api/v1/categories', async () => katalogYaniti(db));
-  r.get('/api/v1/regions/tree', async () => bolgeAgaci(db));
+  // 28 Eki: herkese açık okumalar 60 sn önbellekte (bkz. genel_onbellek.js);
+  // yanıt biçimleri DEĞİŞMEZ, admin değişikliği önbelleği hemen temizler.
+  r.get('/api/v1/categories', async () => onbellekten('katalog', () => katalogYaniti(db)));
+  r.get('/api/v1/regions/tree', async () => onbellekten('bolgeler', () => bolgeAgaci(db)));
 
-  r.get('/api/v1/legal', async () =>
+  r.get('/api/v1/legal', async () => onbellekten('yasal:liste', async () =>
     (await db.prepare(
       `SELECT d.slug, d.title, v.version, v.effective_date
          FROM legal_documents d JOIN legal_versions v ON v.slug = d.slug
         WHERE d.active = TRUE AND v.status = 'PUBLISHED' ORDER BY d.slug`,
-    ).all()).map((x) => ({ slug: x.slug, title: x.title, version: String(x.version), effectiveDate: x.effective_date })),
+    ).all()).map((x) => ({ slug: x.slug, title: x.title, version: String(x.version), effectiveDate: x.effective_date }))),
   );
 
   r.get('/api/v1/legal/:slug', async (ctx) => {
@@ -101,17 +104,24 @@ export function publicRotalar(r, db) {
       if (!d) throw hata.bulunamadi('Destek bilgisi bulunamadı');
       return d;
     }
-    const v = await yayindakiSurum(db, ctx.params.slug);
-    if (!v) throw hata.bulunamadi('Belge bulunamadı');
-    return { slug: v.slug, title: v.title, version: String(v.version), effectiveDate: v.effective_date, body: v.body,
-      // 031: PDF'li sürümde kısa özet + PDF adresi (sürüme özgü, değişmez).
-      ...(v.pdf_ref ? { summary: v.summary, pdfUrl: `/api/v1/legal/${v.slug}/pdf/${v.version}` } : {}) };
+    // Bulunamayan belge önbelleğe ALINMAZ (undefined) → her seferinde 404.
+    const belge = await onbellekten(`yasal:${ctx.params.slug}`, async () => {
+      const v = await yayindakiSurum(db, ctx.params.slug);
+      if (!v) return undefined;
+      return { slug: v.slug, title: v.title, version: String(v.version), effectiveDate: v.effective_date, body: v.body,
+        // 031: PDF'li sürümde kısa özet + PDF adresi (sürüme özgü, değişmez).
+        ...(v.pdf_ref ? { summary: v.summary, pdfUrl: `/api/v1/legal/${v.slug}/pdf/${v.version}` } : {}) };
+    });
+    if (!belge) throw hata.bulunamadi('Belge bulunamadı');
+    return belge;
   });
 
   r.get('/api/v1/config/app', async (ctx) => {
     const p = ctx.query.get('platform');
     if (!['android', 'ios', 'web'].includes(p)) throw hata.dogrulama('platform android, ios ya da web olmalıdır');
-    const c = await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p);
+    // Yalnız platform SATIRI önbellekte (satır yoksa null); kişiye özel
+    // bakım alanları (bypass, testerDevice) aşağıda HER İSTEKTE hesaplanır.
+    const c = await onbellekten(`ayar:${p}`, async () => (await db.prepare('SELECT * FROM app_config WHERE platform = ?').get(p)) ?? null);
     const aktif = c ? c.maintenance_active === 1 : false;
     return {
       maintenance: {

@@ -28,6 +28,8 @@ import { adminRotalar } from './routes/admin.js';
 import { depolamaEntegrasyonRotalar } from './routes/depolama_entegrasyon.js';
 import { gercekZamanliKur } from './gercek_zamanli.js';
 import { olaylar } from './olaylar.js';
+import { onbellegiHerYerdeTemizle } from './genel_onbellek.js';
+import { isTuru } from './is_turu.js';
 import { fotoGonder, varlikGonder } from './katalog_foto.js';
 import { epostaVarligiGonder } from './eposta_tasarimi.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
@@ -128,6 +130,10 @@ export function uygulamaKur(db) {
       }
       return res.end();
     }
+    // ⚠ 28 Eki: aşağıdaki ham yanıt yazan yardımcılar (fotoğraf, PDF,
+    // varlık) `return await` ile çağrılır. `await` olmadan dönen sözün
+    // hatası bu try/catch'e YAKALANMIYOR, işlenmemiş hata olarak SÜRECİ
+    // kapatıyordu (yavaş depo indirmesinde tek istek tüm sunucuyu düşürdü).
     try {
       // Geçici IP teşhisi: yalnız HC_IP_TESHIS=true iken (bkz. http.js ipTeshisi).
       if (req.method === 'GET' && yol === '/teshis/ip' && process.env.HC_IP_TESHIS === 'true') {
@@ -136,7 +142,7 @@ export function uygulamaKur(db) {
       // Katalog görselleri (ham yanıt): yüklenen fotoğraf (depodan, özel) ve
       // uygulama paketindeki katalog görselleri (beyaz listeli, salt okunur).
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
-        return fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
+        return await fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
       }
       // ── YASAL BELGE PDF'İ (031): yayında ya da arşivdeki sürüm herkese açık
       // (kullanıcı kabul ettiği sürümü görebilmeli); taslak YALNIZ admin.
@@ -144,7 +150,7 @@ export function uygulamaKur(db) {
         const m = req.method === 'GET' && /^\/api\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/pdf\/(\d{1,6})$/.exec(yol);
         if (m) {
           const v = await db.prepare(`SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ? AND status <> 'DRAFT'`).get(m[1], Number(m[2]));
-          return pdfGonder(db, v?.pdf_ref, res, `${m[1]}-v${m[2]}.pdf`);
+          return await pdfGonder(db, v?.pdf_ref, res, `${m[1]}-v${m[2]}.pdf`);
         }
         const a = req.method === 'GET' && /^\/admin\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/versions\/(\d{1,6})\/pdf$/.exec(yol);
         if (a) {
@@ -152,16 +158,16 @@ export function uygulamaKur(db) {
           if (!c) throw hata.kimlik();
           if (!yetkiliMi(c.admin.role, 'legal.read')) throw hata.yetki();
           const v = await db.prepare('SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ?').get(a[1], Number(a[2]));
-          return pdfGonder(db, v?.pdf_ref, res, `${a[1]}-v${a[2]}.pdf`);
+          return await pdfGonder(db, v?.pdf_ref, res, `${a[1]}-v${a[2]}.pdf`);
         }
       }
       // Destek e-postaları (Resend Receiving webhook'u): ham gövde + imza (gelen_eposta.js).
       if (yol === GELEN_YOL) return await gelenEpostaWebhook(db, req, res);
       if (req.method === 'GET' && yol.startsWith('/eposta-varlik/')) {
-        return epostaVarligiGonder(yol.slice('/eposta-varlik/'.length), res);
+        return await epostaVarligiGonder(yol.slice('/eposta-varlik/'.length), res);
       }
       if (req.method === 'GET' && yol.startsWith('/katalog-varlik/')) {
-        return varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res);
+        return await varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res);
       }
       if (req.method === 'GET' && (yol === '/admin' || (yol.startsWith('/admin/') && !yol.startsWith('/admin/v1/')))) {
         return await panelDosyasi(res, yol);
@@ -211,7 +217,16 @@ export function uygulamaKur(db) {
         ctx.body = await govdeOku(req, pdfYolu ? 15 * 1024 * 1024 : fotoYolu ? 8 * 1024 * 1024 : undefined);
       }
 
-      let sonuc = await bulunan.isleyici(ctx);
+      // 28 Eki: admin'de değişiklik yapan (GET dışı) her istek bitince —
+      // başarılı ya da hatalı — herkese açık önbellek temizlenir (işleyicinin
+      // işlemi commit edilmiş olur; yanıttan ÖNCE). Bkz. genel_onbellek.js.
+      const adminDegisikligi = yol.startsWith('/admin/v1/') && req.method !== 'GET';
+      let sonuc;
+      try {
+        sonuc = await bulunan.isleyici(ctx);
+      } finally {
+        if (adminDegisikligi) onbellegiHerYerdeTemizle();
+      }
       // Kullanıcı API'si: dosya referanslarının yanına imzalı görüntüleme
       // adresi eklenir (ilan/talep/sohbet fotoğrafları; bkz. gorsel_adresleri.js).
       if (sonuc !== undefined && yol.startsWith('/api/v1/')) sonuc = await gorselAdresleriEkle(db, sonuc);
@@ -266,8 +281,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   ];
   // Arka plan işleri her örnekte zamanlanır ama danışma kilidiyle YALNIZ
   // BİRİ çalıştırır; örnek düşerse sonraki turda başka biri devralır.
+  // ⚠ 28 Eki: işler HEPSİ AYNI ANDA değil, en çok 2'şer koşar (bkz.
+  // is_turu.js — havuz kendi kendini kilitliyordu). Önceki tur bitmeden
+  // yenisi başlamaz.
+  let turSuruyor = false;
   const zamanlayici = setInterval(() => {
-    for (const [ad, f] of isler) db.isKilidi(`is:${ad}`, () => f(db)).catch((e) => console.error(ad, JSON.stringify(hataOzeti(e))));
+    if (!turSuruyor) {
+      turSuruyor = true;
+      isTuru(isler.map(([ad, f]) => [ad, () => db.isKilidi(`is:${ad}`, () => f(db))]),
+        (ad, e) => console.error(ad, JSON.stringify(hataOzeti(e))))
+        .finally(() => { turSuruyor = false; });
+    }
     // Push kendi kilit yuvalarını yönetir (HC_PUSH_PARALEL ile çok işçi).
     pushKuyrugunuIsle(db).catch((e) => console.error('push_gonderimi', JSON.stringify(hataOzeti(e))));
   }, 60_000);
@@ -289,7 +313,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         .then(() => jsonGonder(res, 200, { ok: true }))
         .catch(() => jsonGonder(res, 503, { ok: false }));
     }
-    return uygulama(req, res);
+    // ⚠ GÜVENLİK AĞI (28 Eki): istek işleyicisinden kaçan bir hata SÜRECİ
+    // kapatmasın (bütün kullanıcılar düşerdi); yalnız o istek başarısız olur.
+    return uygulama(req, res).catch((e) => {
+      console.error('istek_isleyici', JSON.stringify(hataOzeti(e)));
+      if (!res.headersSent) jsonGonder(res, 500, { error: { code: 'INTERNAL_ERROR', message: 'Beklenmeyen bir hata oluştu' } });
+      else if (!res.destroyed) res.destroy();
+    });
   });
   sunucu.keepAliveTimeout = 65_000; // yük dengeleyicinin boşta süresinden uzun
   const hub = gercekZamanliKur(sunucu, db);

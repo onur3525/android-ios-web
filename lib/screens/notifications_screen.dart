@@ -64,6 +64,41 @@ class NotificationsScreen extends StatefulWidget {
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 
+  // ── ⚠ ÇİZİM SINIRI: EN FAZLA 2 EKRANLIK BİLDİRİM (28 Eki, kullanıcı kararı) ──
+  //
+  // "Bildirimler en fazla 2 ekranlık çizilsin; 2. ekrandan sonrası,
+  // eskide kalanlar çizilmesin."
+  //
+  // Liste EN YENİDEN ESKİYE sıralıdır (sunucu `ORDER BY created_at DESC`,
+  // yerel depo `createdAt` azalan); baştan alınan kartlar en yenilerdir,
+  // dışarıda kalanlar en eskilerdir.
+  //
+  // ⚠ YALNIZ ÇİZİM SINIRLANIR, VERİ DEĞİŞMEZ: zildeki okunmamış sayısı ve
+  // "Tümünü Okundu Yap" çizilmeyen eski bildirimleri de kapsar (kullanıcı
+  // seçimi: sayı değişmez). Bildirimler silinmez.
+  //
+  // ⚠ "2 EKRAN" YAKLAŞIKTIR: kart yüksekliği gövde metninin satır sayısına
+  // göre değişir; sınır, ekran yüksekliğinin iki katına sığan TAHMİNİ kart
+  // sayısıdır. Tahmini kart (iki satır gövde metniyle):
+  //   13 üst dolgu + 14,5 başlık (~17) + 3 boşluk + 2 × 12,5 × 1,5 gövde
+  //   + 13 alt dolgu ≈ 84, kartlar arası 10 boşluk → ≈ 94 px.
+  // Tek satırlık kartlarda çizilen alan 2 ekrandan biraz kısa, çok satırlı
+  // kartlarda biraz uzun olur.
+  //
+  // ⚠ TEK KAYNAK: sınır yalnız buradan hesaplanır.
+  static const double kTahminiKartYuksekligi = 94;
+
+  /// Çok kısa pencerede (ör. yatay telefon, küçük web penceresi) liste
+  /// birkaç karta düşmesin diye alt sınır.
+  static const int kEnAzCizilenBildirim = 10;
+
+  /// Ekran yüksekliğine göre en fazla kaç bildirim kartı çizilir (≈ 2 ekran).
+  static int cizilecekEnFazla(BuildContext context) {
+    final yukseklik = MediaQuery.sizeOf(context).height;
+    final sayi = (2 * yukseklik / kTahminiKartYuksekligi).floor();
+    return sayi < kEnAzCizilenBildirim ? kEnAzCizilenBildirim : sayi;
+  }
+
   /// Bildirim hedefi — mevcut yönlendirme kuralı KORUNDU.
   /// BİLDİRİMDEN İLGİLİ İÇERİĞE YÖNLENDİRME.
   ///
@@ -399,6 +434,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // ⚠ SAYI DA SÜZÜLÜR: ham sayı gösterilseydi "3 okunmamış" yazıp
     // listede hiçbiri görünmeyebilirdi.
     final okunmamis = liste.where((n) => !n.read).length;
+    // ⚠ YALNIZ ÇİZİLECEKLER (≈ 2 ekran, en yeniler) — bkz.
+    // `NotificationsScreen.cizilecekEnFazla`. Sayı ve "Tümünü Okundu Yap"
+    // yukarıdaki TAM `liste` üzerinden kalır.
+    final cizilecek =
+        liste.take(NotificationsScreen.cizilecekEnFazla(context)).toList();
 
     // "Tümünü Okundu Yap" — TEK tanım; başlık satırı (mobil) ve web
     // başlığının altı bu nesneyi kullanır.
@@ -503,7 +543,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: bosMetin,
             )
           else
-            for (final n in liste) ...[
+            for (final n in cizilecek) ...[
               _BildirimKarti(
                 bildirim: n,
                 zaman: _zaman(n.createdAt),

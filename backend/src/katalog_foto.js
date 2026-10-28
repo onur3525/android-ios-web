@@ -17,6 +17,7 @@ import { dirname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { depolamaAyari, s3ImzaliAdres } from './entegrasyon.js';
 import { ApiHatasi } from './http.js';
+import { depodanAkit } from './depo_akisi.js';
 
 export const FOTO_AZAMI = 5 * 1024 * 1024; // 5 MB
 const TURLER = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
@@ -70,16 +71,17 @@ export async function fotoGonder(db, anahtar, res) {
     ?? await db.prepare('SELECT 1 FROM catalog_roofs WHERE photo_ref = ?').get(anahtar);
   if (!bagli) return bulunamadi(res);
   const ayar = await depolamaAyari(db);
-  const r = ayar ? await fetch(s3ImzaliAdres(ayar, { yontem: 'GET', anahtar, sureSn: 120 }), { signal: AbortSignal.timeout(10000) }).catch(() => null) : null;
-  if (!r || !r.ok) return bulunamadi(res);
-  const tur = r.headers.get('content-type') || 'application/octet-stream';
-  res.writeHead(200, {
-    'Content-Type': TURLER[tur] ? tur : 'application/octet-stream',
-    'Cache-Control': 'public, max-age=31536000, immutable', // anahtar benzersiz
-    'X-Content-Type-Options': 'nosniff',
-    'Content-Security-Policy': "default-src 'none'",
-  });
-  res.end(Buffer.from(await r.arrayBuffer()));
+  // 28 Eki: belleğe almadan akış (bkz. depo_akisi.js). Başlıklar AYNI.
+  const yazildi = ayar && await depodanAkit(ayar, anahtar, res, (r) => {
+    const tur = r.headers.get('content-type') || 'application/octet-stream';
+    return {
+      'Content-Type': TURLER[tur] ? tur : 'application/octet-stream',
+      'Cache-Control': 'public, max-age=31536000, immutable', // anahtar benzersiz
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'",
+    };
+  }, { baslikMs: 10_000 });
+  if (!yazildi) return bulunamadi(res);
 }
 
 // ── Uygulama paketindeki katalog görselleri (admin önizlemesi) ──
