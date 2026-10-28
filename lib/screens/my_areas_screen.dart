@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import '../domain/form_mesajlari.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +27,9 @@ class MyAreasScreen extends StatefulWidget {
 class _MyAreasScreenState extends State<MyAreasScreen> {
   final _search = TextEditingController();
   Set<String> _selected = {};
+  // 28 Eki: son BAŞARILI kayıttaki değer; ekrandaki değer buna eşitse
+  // düğme "✓ Kaydedildi" gösterir (bkz. core/kaydedildi.dart).
+  Set<String>? _sonKaydedilen;
   bool _saving = false;
   String? _error;
 
@@ -252,6 +256,7 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
       _error = err?.message;
     });
     if (err == null) {
+      setState(() => _sonKaydedilen = {..._selected});
       sysToastOk(context, 'Hizmet bölgeleriniz güncellendi');
       // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
       kayittanSonra(context, () => geriGit(context));
@@ -492,6 +497,8 @@ class _MyAreasScreenState extends State<MyAreasScreen> {
                   width: double.infinity,
                   child: SysButton('Kaydet',
                       busy: _saving,
+                      kaydedildi: _sonKaydedilen != null &&
+                          setEquals(_selected, _sonKaydedilen),
                       onPressed: _selected.isEmpty ? null : _save),
                 ),
                 // 28 Eki (kullanıcı isteği): Kaydet altındaki "Hizmet

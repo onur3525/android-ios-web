@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import '../data/services/search_service.dart';
 import '../domain/form_mesajlari.dart';
@@ -31,6 +32,9 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
   final _search = TextEditingController();
 
   Set<String> _selected = {};
+  // 28 Eki: son BAŞARILI kayıttaki değer; ekrandaki değer buna eşitse
+  // düğme "✓ Kaydedildi" gösterir (bkz. core/kaydedildi.dart).
+  Set<String>? _sonKaydedilen;
   bool _loaded = false;
   bool _saving = false;
   String? _error;
@@ -172,6 +176,7 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
       _error = err?.message;
     });
     if (err == null) {
+      setState(() => _sonKaydedilen = {..._selected});
       sysToastOk(context, 'Kategorileriniz güncellendi');
       // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
       kayittanSonra(context, () => geriGit(context));
@@ -428,6 +433,8 @@ class _MyCategoriesScreenState extends State<MyCategoriesScreen> {
                   width: double.infinity,
                   child: SysButton('Kaydet',
                       busy: _saving,
+                      kaydedildi: _sonKaydedilen != null &&
+                          setEquals(_selected, _sonKaydedilen),
                       onPressed: _selected.isEmpty ? null : _save),
                 ),
               ]),

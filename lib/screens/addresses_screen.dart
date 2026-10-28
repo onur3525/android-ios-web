@@ -35,6 +35,9 @@ class _AddressesScreenState extends State<AddressesScreen> {
 
   bool _saving = false;
   String? _error;
+  // 28 Eki: son BAŞARILI kayıttaki değer; ekrandaki değer buna eşitse
+  // düğme "✓ Kaydedildi" gösterir (bkz. core/kaydedildi.dart).
+  (String?, String?)? _sonKaydedilen;
 
   /// Kullanıcı alanlara DOKUNDU mu?
   ///
@@ -168,9 +171,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
       // dışarıdan gelecek değişiklikler yeniden yansıyabilir.
       _kullaniciDegistirdi = false;
       _sonYansiyan = null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adresiniz güncellendi')),
-      );
+      // 28 Eki: alttaki "Adresiniz güncellendi" bildirimi yerine onay
+      // düğmede gösterilir (öteki form sayfalarıyla aynı; alt bildirimler
+      // 9 Eyl'den beri kullanılmıyor).
+      setState(() => _sonKaydedilen = (_district, _neighborhood));
       // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
       kayittanSonra(context, () => Navigator.of(context).maybePop());
     }
@@ -292,6 +296,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
                     'Adresi Güncelle',
                     iconAsset: 'assets/svg/ic_pen.svg',
                     busy: _saving,
+                    kaydedildi: _sonKaydedilen != null &&
+                        _sonKaydedilen == (_district, _neighborhood),
                     onPressed: _valid ? _save : null,
                   ),
                 ],

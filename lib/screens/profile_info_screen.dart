@@ -119,6 +119,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   bool get _dogrulamaGerekli => _telefonDegisti || _epostaDegisti;
 
   bool _busy = false;
+  // 28 Eki: son kayıt başarılı oldu mu? Değişiklik kalmadıysa düğme
+  // "✓ Kaydedildi" gösterir (bkz. core/kaydedildi.dart). Bekleyen e-posta
+  // değişikliği "değişiklik" sayıldığından o durumda gösterilmez.
+  bool _kaydedildi = false;
 
   /// ── ⚠ E-POSTA GÖNDERİM DURUMU — ALANIN ALTINDA KALICI YAZI (21 Eki) ──
   ///
@@ -371,7 +375,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     if (!_hepsiniDenetle()) {
       return;
     }
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _kaydedildi = false;
+    });
     final auth = context.read<AuthController>();
     final profile = context.read<ProfileController>();
     final newPhone = Validators.phoneFmt(_phone.text);
@@ -496,6 +503,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
         ),
       );
     } else {
+      setState(() => _kaydedildi = true);
       sysToastOk(
           context,
           epostaBeklemede
@@ -794,6 +802,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
               _dogrulamaGerekli ? 'Doğrula ve Kaydet' : 'Bilgileri Güncelle',
               iconAsset: 'assets/svg/ic_pen.svg',
               busy: _busy,
+              kaydedildi: _kaydedildi && !_degisiklikVar,
               onPressed: (_formGecerli && _degisiklikVar) ? _save : null,
             ),
           ],

@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'ref_tokens.dart';
 import 'package:flutter/foundation.dart';
 import 'olcu.dart';
+import '../core/kaydedildi.dart';
 import 'gezgin.dart';
 import '../core/oturum_temizligi.dart';
 import '../data/services/share_service.dart';
@@ -2732,6 +2733,7 @@ class RefNextButton extends StatelessWidget {
     this.iconAsset,
     this.onPressed,
     this.busy = false,
+    this.kaydedildi = false,
   });
 
   final String label;
@@ -2739,11 +2741,16 @@ class RefNextButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool busy;
 
+  /// 28 Eki: kayıt başarılı ve o günden beri değişiklik yok → yeşil
+  /// "✓ Kaydedildi", basılamaz (bkz. `core/kaydedildi.dart`).
+  final bool kaydedildi;
+
   @override
   Widget build(BuildContext context) {
-    final aktif = onPressed != null && !busy;
+    final onay = kaydedildi && !busy;
+    final aktif = onPressed != null && !busy && !onay;
     return Opacity(
-      opacity: aktif ? 1 : 0.6,
+      opacity: aktif || onay ? 1 : 0.6,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(RR.r13),
         child: Material(
@@ -2761,12 +2768,17 @@ class RefNextButton extends StatelessWidget {
             focusColor:
                 kIsWeb ? RC.white.withValues(alpha: 0.22) : Colors.transparent,
             child: Ink(
-              decoration: const BoxDecoration(gradient: RG.blueCta),
+              decoration: onay
+                  ? const BoxDecoration(color: kKaydedildiRengi)
+                  : const BoxDecoration(gradient: RG.blueCta),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(15),
                 alignment: Alignment.center,
-                child: busy
+                child: onay
+                    ? KaydedildiIcerik(
+                        yaziStili: refText(size: RF.s16, weight: RF.w700, color: RC.white))
+                    : busy
                     ? const SizedBox(
                         width: 20,
                         height: 20,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'kaydedildi.dart';
 import 'theme.dart';
 
 /// Ortak sistem durumları — HTML v56 kütüphanesinin birebir Flutter karşılığı.
@@ -199,18 +200,29 @@ class SysButton extends StatelessWidget {
   final bool busy;
   final bool disabled;
   final VoidCallback? onPressed;
+
+  /// 28 Eki: kayıt başarılı ve o günden beri değişiklik yok → yeşil
+  /// "✓ Kaydedildi", basılamaz (bkz. `core/kaydedildi.dart`).
+  final bool kaydedildi;
   const SysButton(this.label,
-      {super.key, required this.onPressed, this.busy = false, this.disabled = false});
+      {super.key, required this.onPressed, this.busy = false, this.disabled = false, this.kaydedildi = false});
 
   @override
   Widget build(BuildContext context) => ElevatedButton(
-        onPressed: (busy || disabled) ? null : onPressed,
-        style: disabled
+        onPressed: (busy || disabled || kaydedildi) ? null : onPressed,
+        style: kaydedildi && !busy
+            ? ElevatedButton.styleFrom(
+                backgroundColor: kKaydedildiRengi,
+                disabledBackgroundColor: kKaydedildiRengi,
+                disabledForegroundColor: Colors.white)
+            : disabled
             ? ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC9D2DE),
                 disabledBackgroundColor: const Color(0xFFC9D2DE))
             : null,
-        child: busy
+        child: kaydedildi && !busy
+            ? const KaydedildiIcerik()
+            : busy
             ? const SizedBox(
                 width: 19, height: 19,
                 child: CircularProgressIndicator(
