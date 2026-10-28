@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/firebase/firebase_baslatici.dart';
 import '../../domain/failures.dart';
+import '../../domain/hata_mesajlari.dart' show kGirisKilidiMesaji;
 
 /// ═══════════════════════════════════════════════════════════════
 /// FIREBASE KİMLİK — telefon OTP, e-posta doğrulama, şifre sıfırlama
@@ -205,6 +206,11 @@ class FirebaseKimlik {
       final s = await a.signInWithEmailAndPassword(email: email.trim(), password: sifre);
       return (idToken: await s.user?.getIdToken(true), error: null);
     } catch (e) {
+      // 28 Eki: Firebase'in deneme kilidinde kullanıcı kendi açabileceği
+      // yolu görür (Şifremi Unuttum / SMS kodu) — tek metin kaynağı.
+      if (e is FirebaseAuthException && e.code == 'too-many-requests') {
+        return (idToken: null, error: const ValidationError(kGirisKilidiMesaji));
+      }
       return (idToken: null, error: _hata(e));
     }
   }

@@ -30,8 +30,51 @@ import { bakimGirisKapisi } from '../bakim_modu.js';
 
 const OTP_SURESI = 3 * 60 * 1000;
 const OTP_DENEME = 5;
-const GIRIS_KILIT_ESIGI = 5;
-const GIRIS_KILIT_SURESI = 15 * 60 * 1000;
+// ── GİRİŞ KİLİDİ (28 Eki, kullanıcı kararı: "kullanıcı admine bağlı kalmadan
+// kilidi açabilmeli") ──
+// Önceden 5 hatalı şifre HESABIN TAMAMINI 15 dk kilitliyordu: başkasının
+// numarasıyla 5 yanlış şifre giren biri gerçek kullanıcıyı da kilitliyordu.
+// Artık iki katman:
+//   · HESAP + BAĞLANTI (IP): 15 dk'lık pencerede 5 hatalı şifre → yalnız o
+//     bağlantıdan giriş kapanır; kullanıcı kendi cihazından girebilir.
+//   · HESAP GENELİ: art arda 30 hatalı şifre (farklı bağlantılardan toplu
+//     deneme) → hesap 60 dk kilitlenir.
+// Kullanıcı ikisini de KENDİSİ açar: Şifremi Unuttum ile sıfırlama ya da SMS
+// koduyla giriş kilitleri hemen kaldırır (admin'e gerek yok).
+const GIRIS_KILIT_ESIGI = 30;
+const GIRIS_KILIT_SURESI = 60 * 60 * 1000;
+const BAGLANTI_HATA_ESIGI = 5;
+const BAGLANTI_HATA_PENCERESI = 15 * 60 * 1000;
+// Sayaçlar `rate_limits` tablosunda; eski pencereler ortak temizlikle silinir.
+const BAGLANTI_HATA_ONEKI = 'giris_hata';
+HizSiniri.hepsi.push({ ad: BAGLANTI_HATA_ONEKI, pencereMs: BAGLANTI_HATA_PENCERESI });
+const GIRIS_KILIDI_MESAJI = 'Çok fazla hatalı deneme. Şifremi Unuttum ile şifrenizi yenileyerek ya da SMS koduyla hemen giriş yapabilirsiniz; dilerseniz biraz bekleyip tekrar deneyin.';
+const girisKilidi = () => new ApiHatasi(429, 'LOGIN_LOCKED', GIRIS_KILIDI_MESAJI);
+const baglantiAnahtari = (kullaniciId, ip) => `${BAGLANTI_HATA_ONEKI}:${kullaniciId}:${ip || '?'}`;
+async function baglantiKilitliMi(db, kullaniciId, ip) {
+  const k = await db.prepare('SELECT window_start, count FROM rate_limits WHERE key = ?').get(baglantiAnahtari(kullaniciId, ip));
+  return !!k && Number(k.window_start) === Math.floor(Date.now() / BAGLANTI_HATA_PENCERESI) && Number(k.count) >= BAGLANTI_HATA_ESIGI;
+}
+async function baglantiHatasiSay(db, kullaniciId, ip) {
+  await db.prepare(
+    `INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, 1)
+     ON CONFLICT(key) DO UPDATE SET
+       count = CASE WHEN rate_limits.window_start = excluded.window_start THEN rate_limits.count + 1 ELSE 1 END,
+       window_start = excluded.window_start`,
+  ).run(baglantiAnahtari(kullaniciId, ip), Math.floor(Date.now() / BAGLANTI_HATA_PENCERESI));
+}
+/** Şu an giriş kilidi bulunan bağlantı (IP) sayısı — admin kullanıcı detayı için. */
+export async function kilitliBaglantiSayisi(db, kullaniciId) {
+  const onek = `${BAGLANTI_HATA_ONEKI}:${kullaniciId}:`;
+  const r = await db.prepare('SELECT COUNT(*) n FROM rate_limits WHERE substr(key, 1, ?) = ? AND window_start = ? AND count >= ?')
+    .get(onek.length, onek, Math.floor(Date.now() / BAGLANTI_HATA_PENCERESI), BAGLANTI_HATA_ESIGI);
+  return Number(r?.n ?? 0);
+}
+/** Kullanıcının bütün giriş kilitlerini kaldırır (başarılı giriş, sıfırlama, SMS girişi). */
+export async function girisKilitleriniKaldir(db, kullaniciId) {
+  const onek = `${BAGLANTI_HATA_ONEKI}:${kullaniciId}:`;
+  await db.prepare('DELETE FROM rate_limits WHERE substr(key, 1, ?) = ?').run(onek.length, onek);
+}
 const otpIpSiniri = new HizSiniri('otp_ip', 20, 60 * 60 * 1000);
 const girisIpSiniri = new HizSiniri('giris_ip', 30, 15 * 60 * 1000);
 // Rol ekleme: kullanıcı başına 15 dakikada en çok 5 deneme (şifre denemesi
@@ -709,11 +752,13 @@ export function kullaniciRotalar(r, db) {
       await sifreOzetleAsenkron('zamanlama-esitleme');
       throw genel();
     }
-    if (u.locked_until && Date.parse(u.locked_until) > Date.now()) throw hata.hiz('Çok fazla hatalı deneme. Lütfen 15 dakika sonra tekrar deneyin.');
+    if (u.locked_until && Date.parse(u.locked_until) > Date.now()) throw girisKilidi();
+    if (await baglantiKilitliMi(db, u.id, ctx.ip)) throw girisKilidi();
     const sifre = String(ctx.body.password ?? '');
     // Firebase'e bağlı hesapta şifrenin kaynağı Firebase'dir (e-postayla
     // sıfırlama sonrası da geçerli); yapılandırılmamışsa yerel özet.
     if (!(await sifreDogruMu(db, u, sifre))) {
+      await baglantiHatasiSay(db, u.id, ctx.ip);
       const n = u.failed_logins + 1;
       await db.prepare('UPDATE users SET failed_logins = ?, locked_until = ? WHERE id = ?').run(
         n >= GIRIS_KILIT_ESIGI ? 0 : n,
@@ -723,6 +768,7 @@ export function kullaniciRotalar(r, db) {
     durumKapisi(u);
     await bakimGirisKapisi(db, u, ctx.req); // 032: bakımda yalnız test hesabı (tanınmış cihaz)
     await db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(u.id);
+    await girisKilitleriniKaldir(db, u.id);
     return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req));
   });
 
@@ -912,6 +958,7 @@ export function kullaniciRotalar(r, db) {
     await db.prepare(`UPDATE users SET firebase_uid = ?, email_verified = CASE WHEN ? THEN TRUE ELSE email_verified END,
                         failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?`)
       .run(yuk.sub, epostaDogru ? 1 : 0, simdi(), u.id);
+    await girisKilitleriniKaldir(db, u.id); // SMS koduyla / Firebase girişi kilidi açar
     return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req));
   });
 
@@ -966,6 +1013,7 @@ export function kullaniciRotalar(r, db) {
       }
     }
     await db.prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(yeni), simdi(), u.id);
+    await girisKilitleriniKaldir(db, u.id); // Şifremi Unuttum kilidi açar
     await oturumlariIptal(db, u.id, 'PASSWORD_RESET');
     await firebaseOturumlariniKapat(db, u, gecerlilikSn, { firebaseYazildi });
     return undefined;

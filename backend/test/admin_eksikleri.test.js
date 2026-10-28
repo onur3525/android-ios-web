@@ -84,15 +84,17 @@ test('kullanıcı detayı: oturumların cihaz türü (uygulama / telefon tarayı
   assert.deepEqual(d2.json.sessions.map((o) => o.device).sort(), ['mobil', 'web', 'web_mobil']);
 });
 
-test('giriş kilidi: 5 hatalı şifreden sonra detayda görünür; gerekçeyle kaldırılır, denetime yazılır', async () => {
+test('giriş kilidi: bağlantı kilidi (5 hatalı şifre) detayda görünür; gerekçeyle kaldırılır, denetime yazılır', async () => {
   const tel = '5430000002';
   const id = await kayit(tel);
   let d = await istek(`/admin/v1/users/${id}`);
   assert.equal(d.json.loginLockedUntil, null);
+  assert.equal(d.json.lockedConnections, 0);
   for (let i = 0; i < 5; i += 1) assert.equal((await giris(tel, 'yanlis-sifre')).durum, 401);
   assert.equal((await giris(tel, 'sifre1234')).durum, 429, 'doğru şifre de kilitte reddedilir');
   d = await istek(`/admin/v1/users/${id}`);
-  assert.ok(d.json.loginLockedUntil && Date.parse(d.json.loginLockedUntil) > Date.now());
+  assert.equal(d.json.loginLockedUntil, null, 'hesabın tamamı kilitlenmez');
+  assert.equal(d.json.lockedConnections, 1, 'yalnız deneme yapılan bağlantı');
 
   const gerekcesiz = await istek(`/admin/v1/users/${id}/unlock-login`, { yontem: 'POST', govde: {} });
   assert.equal(gerekcesiz.durum, 400, 'gerekçe zorunlu');
@@ -101,6 +103,7 @@ test('giriş kilidi: 5 hatalı şifreden sonra detayda görünür; gerekçeyle k
   const k = await istek(`/admin/v1/users/${id}/unlock-login`, { yontem: 'POST', govde: { reason: 'Kullanıcı destek talebiyle bildirdi' } });
   assert.equal(k.durum, 200, k.ham);
   assert.equal(k.json.loginLockedUntil, null);
+  assert.equal(k.json.lockedConnections, 0);
   assert.equal((await giris(tel, 'sifre1234')).durum, 200, 'kilit kalkınca giriş açılır');
   const denetim = await db.prepare(`SELECT 1 FROM audit_log WHERE action = 'user.login.unlock' AND target_id = ?`).get(id);
   assert.ok(denetim, 'denetim kaydı');

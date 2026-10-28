@@ -15,6 +15,16 @@
 
 import 'failures.dart';
 
+/// ── GİRİŞ KİLİDİ (28 Eki, kullanıcı kararı) ──
+///
+/// Çok fazla hatalı şifreden sonra kullanıcı ADMİNE BAĞLI KALMADAN
+/// girebilmeli: Şifremi Unuttum (giriş ekranında, hemen altında) ya da SMS
+/// koduyla giriş kilidi kaldırır. ⚠ Metin sunucudaki `GIRIS_KILIDI_MESAJI`
+/// ile AYNIDIR (backend/src/routes/kullanici.js); telefon+şifre girişinde
+/// sunucunun mesajı, e-posta+şifre (Firebase) girişinde bu sabit gösterilir.
+const String kGirisKilidiMesaji =
+    'Çok fazla hatalı deneme. Şifremi Unuttum ile şifrenizi yenileyerek ya da SMS koduyla hemen giriş yapabilirsiniz; dilerseniz biraz bekleyip tekrar deneyin.';
+
 /// Hatanın nasıl gösterileceği.
 enum HataBicimi {
   /// Ekran kullanılabilir, iş arka planda — üstte ince şerit.

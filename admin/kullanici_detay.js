@@ -118,10 +118,17 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);
     }
   };
-  // 28 Eki: 5 hatalı şifreyle konan 15 dk'lık giriş kilidini kaldırır.
+  // 28 Eki: giriş kilidi — hesap geneli (art arda 30 hatalı şifre, 60 dk) ya
+  // da tek bağlantı (5 hatalı şifre, 15 dk). Kullanıcı Şifremi Unuttum ya da
+  // SMS koduyla kendisi de açabilir; admin son çaredir.
+  const girisKilitli = !!u.loginLockedUntil || u.lockedConnections > 0;
+  const kilitMetni = [
+    u.loginLockedUntil ? `Hesap kilitli: art arda 30 hatalı şifre · ${tarihSaat(u.loginLockedUntil)} saatine kadar` : null,
+    u.lockedConnections > 0 ? `${u.lockedConnections} bağlantıda 5 hatalı şifre · o bağlantılardan 15 dk giriş kapalı` : null,
+  ].filter(Boolean).join(' · ');
   const kilitKaldir = async () => {
     const neden = await gerekceIle('Giriş kilidi kaldırılsın mı?', 'Kilidi kaldır',
-      'Kullanıcı 15 dakikayı beklemeden yeniden giriş yapabilir. Hesap durumu ve oturumlar değişmez; işlem gerekçesiyle denetim kaydına yazılır.');
+      'Kullanıcı beklemeden yeniden giriş yapabilir (kullanıcı Şifremi Unuttum ya da SMS koduyla kendisi de açabilir). Hesap durumu ve oturumlar değişmez; işlem gerekçesiyle denetim kaydına yazılır.');
     if (!neden) return;
     try {
       await api(`/users/${id}/unlock-login`, { yontem: 'POST', govde: { reason: neden } });
@@ -149,7 +156,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
     u.status === 'SUSPENDED' ? h('button', { class: 'btn', onclick: () => islem('unsuspend', 'Askıdan çıkar', 'Kullanıcı yeniden giriş yapabilir; bildirim gönderilir.') }, 'Askıdan çıkar') : null,
     u.status !== 'BANNED' ? h('button', { class: 'btn tehlike', onclick: () => islem('ban', 'Banla', 'Hesap kalıcı olarak kapatılır; bütün oturumlar sonlanır, giriş yapılamaz.') }, 'Banla') : null,
     u.status === 'BANNED' ? h('button', { class: 'btn', onclick: () => islem('unban', 'Banı kaldır', 'Kullanıcı yeniden giriş yapabilir; bildirim gönderilir.') }, 'Banı kaldır') : null,
-    u.loginLockedUntil ? h('button', { class: 'btn', onclick: kilitKaldir }, 'Giriş kilidini kaldır') : null,
+    girisKilitli ? h('button', { class: 'btn', onclick: kilitKaldir }, 'Giriş kilidini kaldır') : null,
   ].filter(Boolean);
 
   const sonEtkinlik = u.sessions.reduce((m, o) => (o.lastUsedAt && (!m || o.lastUsedAt > m) ? o.lastUsedAt : m), null);
@@ -164,7 +171,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
           h('span', { class: `ku-durum ${u.status}` }, DURUM_ADI[u.status] ?? u.status),
           u.roles.map((r) => h('span', { class: `oz-rol ${r}` }, ROL_ADI[r] ?? r)),
           silindi ? h('span', { class: 'ku-durum BANNED' }, 'Hesap silinmiş') : null,
-          u.loginLockedUntil ? h('span', { class: 'ku-durum SUSPENDED', title: '5 hatalı şifre denemesi' }, 'Giriş kilitli') : null),
+          girisKilitli ? h('span', { class: 'ku-durum SUSPENDED', title: kilitMetni }, 'Giriş kilitli') : null),
         h('div', { class: 'kd-id', title: 'Kullanıcı kimliği' }, `ID: ${u.id}`))),
     tuslar.length ? h('div', { class: 'kd-tuslar' }, tuslar) : null);
 
@@ -176,7 +183,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       bilgi('Aktif rol', ROL_ADI[u.activeRole] ?? u.activeRole),
       bilgi('Kayıt tarihi', tarihSaat(u.createdAt)),
       bilgi('Son oturum etkinliği', sonEtkinlik ? tarihSaat(sonEtkinlik) : 'Henüz bulunmuyor'),
-      u.loginLockedUntil ? bilgi('Giriş kilidi', `5 hatalı şifre denemesi · ${tarihSaat(u.loginLockedUntil)} saatine kadar`) : null,
+      girisKilitli ? bilgi('Giriş kilidi', kilitMetni) : null,
       bilgi('Adres', u.address ? `${u.address.neighborhood}, ${u.address.district}, ${u.address.city}` : 'Henüz bulunmuyor'),
       u.providerProfile ? bilgi('Hizmet kategorileri', u.providerProfile.categories.join(', ') || '—') : null,
       u.providerProfile ? bilgi('Hizmet ilçeleri', u.providerProfile.districts.join(', ') || '—') : null),

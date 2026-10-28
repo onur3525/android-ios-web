@@ -15,7 +15,7 @@ import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
 import { simdi } from '../db.js';
 import { hata } from '../http.js';
-import { kullaniciGorunumu, oturumlariIptal, satirIstemcisi } from './kullanici.js';
+import { girisKilitleriniKaldir, kilitliBaglantiSayisi, kullaniciGorunumu, oturumlariIptal, satirIstemcisi } from './kullanici.js';
 
 const GECISLER = {
   suspend: { from: ['ACTIVE'], to: 'SUSPENDED', sablon: 'HESAP_ASKIYA_ALINDI', islem: 'user.suspend' },
@@ -96,6 +96,9 @@ export function adminKullaniciRotalar(r, db) {
       `SELECT id, created_at, last_used, user_agent, istemci, revoked_at, revoke_reason FROM user_sessions
         WHERE user_id = ? ORDER BY last_used DESC LIMIT 20`,
     ).all(u.id);
+    // Giriş kilidi bulunan bağlantı (IP) sayısı — yalnız İÇİNDE bulunulan
+    // pencerede 5+ hatalı şifre (kullanici.js, BAGLANTI_HATA_*).
+    const kilitliBaglanti = await kilitliBaglantiSayisi(db, u.id);
     const mesaj = await db.prepare(
       `SELECT id, channel, template, status, provider_response, created_at, sent_at FROM outbound_messages
         WHERE user_id = ? AND template <> 'OTP' ORDER BY created_at DESC LIMIT 50`,
@@ -107,9 +110,12 @@ export function adminKullaniciRotalar(r, db) {
       termsAccepted: u.terms_accepted === 1, deletedAt: u.deleted_at,
       // Kullanıcının kendi dondurduğu hesap (giriş yapınca açılır); askı/ban DEĞİL.
       frozenAt: u.frozen_at ?? null,
-      // 28 Eki: 5 hatalı şifre → 15 dk giriş kilidi (kullanici.js). Yalnız
-      // SÜRESİ DOLMAMIŞ kilit döner; admin kaldırabilir (unlock-login).
+      // 28 Eki: giriş kilidi (kullanici.js) — hesap geneli (art arda 30 hatalı
+      // şifre, 60 dk; yalnız SÜRESİ DOLMAMIŞ) ve kilitli bağlantı sayısı
+      // (bir bağlantıdan 5 hatalı şifre, 15 dk). Kullanıcı kendisi açabilir;
+      // admin de kaldırabilir (unlock-login).
       loginLockedUntil: u.locked_until && Date.parse(u.locked_until) > Date.now() ? u.locked_until : null,
+      lockedConnections: kilitliBaglanti,
       address: adres ?? null,
       statusHistory: gecmis.map((h) => ({ from: h.old_status, to: h.new_status, reason: h.reason, admin: h.admin_email, at: h.created_at })),
       sessions: oturum.map((o) => ({ id: o.id, createdAt: o.created_at, lastUsedAt: o.last_used, userAgent: o.user_agent, device: satirIstemcisi(o), revokedAt: o.revoked_at, revokeReason: o.revoke_reason })),
@@ -126,15 +132,17 @@ export function adminKullaniciRotalar(r, db) {
     const neden = gerekce(ctx.body.reason);
     const u = await db.prepare('SELECT id, locked_until, failed_logins FROM users WHERE id = ? AND deleted_at IS NULL').get(ctx.params.id);
     if (!u) throw hata.bulunamadi('Kullanıcı bulunamadı');
-    if (!(u.locked_until && Date.parse(u.locked_until) > Date.now())) throw hata.durum('Hesapta giriş kilidi yok');
+    const baglanti = await kilitliBaglantiSayisi(db, u.id);
+    if (!(u.locked_until && Date.parse(u.locked_until) > Date.now()) && !baglanti) throw hata.durum('Hesapta giriş kilidi yok');
     await db.tx(async () => {
       await db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(u.id);
+      await girisKilitleriniKaldir(db, u.id);
       await denetimYaz(db, {
         adminId: ctx.admin.id, ip: ctx.ip, islem: 'user.login.unlock', hedefTur: 'user', hedefId: u.id,
-        once: { lockedUntil: u.locked_until }, sonra: { lockedUntil: null }, gerekce: neden,
+        once: { lockedUntil: u.locked_until, lockedConnections: baglanti }, sonra: { lockedUntil: null, lockedConnections: 0 }, gerekce: neden,
       });
     });
-    return { id: u.id, loginLockedUntil: null };
+    return { id: u.id, loginLockedUntil: null, lockedConnections: 0 };
   });
 
   for (const [eylem, g] of Object.entries(GECISLER)) {

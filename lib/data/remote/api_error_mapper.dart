@@ -52,6 +52,10 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return ValidationError(text);
     case 'RATE_LIMITED':
       return ValidationError(text);
+    // 28 Eki: giriş kilidi — sunucunun mesajı kullanıcının kendi açabileceği
+    // yolu söyler (Şifremi Unuttum / SMS kodu); olduğu gibi gösterilir.
+    case 'LOGIN_LOCKED':
+      return ValidationError(text);
 
     // ── ⚠ NİHAİ SÖZLEŞME KODLARI (§13) ──
     //
