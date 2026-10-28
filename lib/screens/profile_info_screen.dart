@@ -496,8 +496,13 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
                 _phone.text = Validators.phoneLocal(guncel.phone);
               }
               sysToastOk(c, 'Telefon numaranız güncellendi');
+              // 28 Eki: yalnız doğrulama ekranı kapanır; profil ekranında
+              // kalınır ve düğme "✓ Kaydedildi" gösterir (kullanıcı kendi
+              // çıkmadan otomatik çıkılmaz — bkz. kayittanSonra).
               Navigator.pop(c);
-              geriGit(c);
+              if (mounted) {
+                setState(() => _kaydedildi = true);
+              }
             },
           ),
         ),

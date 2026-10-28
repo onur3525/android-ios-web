@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// GÜVENLİ GERİ
@@ -20,17 +19,15 @@ void geriGit(BuildContext context) {
 
 /// ── KAYIT SONRASI GEZİNME — TEK KAYNAK ──
 ///
-/// Kenar çubuğundan açılan form sayfalarında (Adreslerim, Profil
-/// Bilgilerim, Hizmet Bölgelerim, Hizmet Kategorilerim) "Güncelle"ye
-/// basılınca:
-///   · WEB: AYNI SAYFADA KALINIR (kullanıcı kararı). Sayfa kenar
-///     çubuğunun bir bölümüdür; geri gitmek kullanıcıyı alakasız bir
-///     ekrana atıyordu. Başarı bildirimi zaten gösteriliyor.
-///   · MOBİL: [mobilde] çağrılır — ekranın bugünkü davranışı AYNEN
-///     (geri dönüş).
-void kayittanSonra(BuildContext context, VoidCallback mobilde) {
-  if (kIsWeb) {
-    return;
-  }
-  mobilde();
-}
+/// Form sayfalarında (Adreslerim, Profil Bilgilerim, Hizmet Bölgelerim,
+/// Hizmet Kategorilerim) kaydedince AYNI SAYFADA KALINIR — web'de de
+/// mobilde de.
+///
+/// ⚠ 28 Eki (kullanıcı kararı): "Kaydedildi yazısı kalmalı ve ekranda
+/// kalmalı; kullanıcı kendi çıkmadan otomatik çıkmamalı." Önceden mobilde
+/// [mobilde] çağrılıp ekran hemen kapanıyordu; kullanıcı düğmedeki
+/// "✓ Kaydedildi" onayını göremeden profil ekranına atılıyordu. Onay
+/// düğmede kalır (bkz. core/kaydedildi.dart); kullanıcı geri okuyla çıkar.
+///
+/// [mobilde] artık ÇAĞRILMAZ; çağrı yerleri değişmesin diye imza korundu.
+void kayittanSonra(BuildContext context, VoidCallback mobilde) {}
