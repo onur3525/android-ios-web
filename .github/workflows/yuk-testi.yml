@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════
+# YÜK TESTİ — ELLE BAŞLATILAN, KADEMELİ, SALT OKUMA (28 Eki 2026)
+#
+# • Yalnız ELLE başlar (Actions → yuk-testi → Run workflow); push ya da
+#   zamanlamayla ASLA kendiliğinden çalışmaz.
+# • Onay metni birebir: YUKTESTI  (yanlışlıkla tıklamaya karşı).
+# • Yalnız giriş istemeyen GET uçları; canlı veriye yazmaz, sır kullanmaz.
+# • Hata %1'i ya da p95 500 ms'yi aşarsa test kendiliğinden durur.
+# • Sonuç özeti işin "Summary" sayfasında ve sonuc.json ürününde.
+# Betik: yuk-testi/kademeli.js
+# ═══════════════════════════════════════════════════════════════
+name: yuk-testi
+on:
+  workflow_dispatch:
+    inputs:
+      hedef_rps:
+        description: 'Ulaşılacak en yüksek saniyedeki istek (10–500)'
+        required: true
+        default: '500'
+      taban_url:
+        description: 'Test edilecek backend adresi'
+        required: true
+        default: 'https://hizmetcep-backend.onrender.com'
+      onay:
+        description: 'Birebir yazın: YUKTESTI'
+        required: true
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: yuk-testi
+  cancel-in-progress: false
+jobs:
+  kademeli:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Onay denetimi
+        if: ${{ inputs.onay != 'YUKTESTI' }}
+        run: |
+          echo "::error::Onay metni hatalı. Test başlatılmadı."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - name: Kademeli yük testi
+        env:
+          HEDEF_RPS: ${{ inputs.hedef_rps }}
+          TABAN_URL: ${{ inputs.taban_url }}
+        run: k6 run --summary-export=sonuc.json yuk-testi/kademeli.js 2>&1 | tee cikti.txt
+      - name: Özet
+        if: always()
+        run: |
+          {
+            echo "## Yük testi sonucu"
+            echo '```'
+            sed -n '/█ THRESHOLDS/,$p' cikti.txt 2>/dev/null || tail -60 cikti.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: yuk-testi-sonucu
+          path: |
+            sonuc.json
+            cikti.txt
+          retention-days: 30
