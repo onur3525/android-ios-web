@@ -465,3 +465,11 @@ button.oz-tarih:hover, .oz-tarih-sar.acik button.oz-tarih { border-color:#BFD3FB
 .sd-ayrinti > summary::after { content:'›'; font-size:20px; color:var(--oz-soluk); transition:transform .15s ease; }
 .sd-ayrinti[open] > summary::after { transform:rotate(90deg); }
 .sd-ayrinti[open] > summary { margin-bottom:12px; }
+
+/* 28 Eki: yönetici izi ve okunur denetim kaydı (.dn-*) */
+.dn-suzgec { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 12px; }
+.dn-suzgec select, .dn-suzgec input { padding:7px 9px; border:1px solid var(--oz-cizgi, #E2E8F0); border-radius:8px; font:inherit; font-size:13px; background:#fff; }
+.dn-suzgec label { font-size:13px; color:#64748B; display:inline-flex; align-items:center; gap:6px; }
+.dn-ozet { font-weight:600; }
+.dn-degisiklik { margin-top:3px; font-size:12.5px; color:#64748B; word-break:break-word; }
+.dn-daha { margin-top:12px; }

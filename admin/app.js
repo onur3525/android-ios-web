@@ -16,6 +16,8 @@ import { tekliflerSayfasi } from './teklifler.js';
 import { teklifTalepleriSayfasi } from './teklif_talepleri.js';
 import { degerlendirmelerSayfasi } from './degerlendirmeler.js';
 import { katalogSayfasi } from './katalog.js';
+import { yoneticiDetaySayfasi, yoneticiDuzenle, yoneticiSil } from './yonetici_detay.js';
+import { ROL_ADLARI, degisiklikAyrintisi, islemOzeti, listedeGorunur } from './denetim_dili.js';
 import { bildirimOzeti } from './kanal_durumu.js';
 
 const kok = document.getElementById('kok');
@@ -160,7 +162,8 @@ const OZET_ALT_SAYFALARI = new Set(['sistem', 'kullanicilar', 'kullanici', 'ilan
 function duzen(sayfa, icerik) {
   const menu = MENU.filter(([, , roller]) => roller.includes(ben.role));
   const ozetAlti = OZET_ALT_SAYFALARI.has(sayfa) && menu.some(([k]) => k === 'ozet') && !menu.some(([k]) => k === sayfa);
-  const secili = ozetAlti ? 'ozet' : sayfa;
+  // 28 Eki: yönetici detayında menüde "Yöneticiler" seçili kalır.
+  const secili = ozetAlti ? 'ozet' : (sayfa === 'yonetici' ? 'yoneticiler' : sayfa);
   return h('div', { class: 'duzen' },
     h('nav', { class: 'yan' },
       h('div', { class: 'marka' }, 'HizmetCep', h('small', {}, `${ben.name} · ${ben.role}`)),
@@ -762,10 +765,42 @@ SAYFALAR.geribildirim = async () => h('div', {}, h('h2', {}, 'Uygulama Geri Bild
   { baslik: 'Platform', deger: (f) => `${f.platform} ${f.appVersion}` }, { baslik: 'Tarih', deger: (f) => tarih(f.updatedAt) },
 ], await api('/feedback'), (f) => (location.hash = `#/kullanici/${f.userId}`)));
 
-SAYFALAR.denetim = async () => h('div', {}, h('h2', {}, 'Denetim Kaydı'), h('p', { class: 'not' }, 'Kayıtlar değiştirilemez ve silinemez.'),
-  tablo([{ baslik: 'Tarih', deger: (x) => tarih(x.createdAt) }, { baslik: 'Admin', deger: (x) => x.admin ?? 'sistem' }, { baslik: 'İşlem', deger: (x) => x.action },
-    { baslik: 'Hedef', deger: (x) => `${x.targetType ?? ''} ${x.targetId ?? ''}` }, { baslik: 'Gerekçe', deger: (x) => x.reason ?? '—' },
-    { baslik: 'Değişiklik', deger: (x) => (x.before || x.after ? `${JSON.stringify(x.before)} → ${JSON.stringify(x.after)}` : '—') }], await api('/audit-log?limit=300')));
+// 28 Eki: okunur Türkçe (denetim_dili.js — yönetici detayıyla aynı metinler),
+// yönetici süzgeci ve "Daha fazla" ile geçmişe sayfalama. Yöneticinin adına
+// tıklayınca onun detay sayfası (oturumlar + işlemler) açılır.
+SAYFALAR.denetim = async () => {
+  const yoneticiler = await api('/admins').catch(() => []);
+  const sec = h('select', { 'aria-label': 'Yönetici' }, h('option', { value: '' }, 'Bütün yöneticiler'),
+    yoneticiler.map((a) => h('option', { value: a.id }, `${a.name} (${a.email})`)));
+  const alan = h('div', {});
+  let kayitlar = [];
+  let imlec = null;
+  const SAYFA = 100;
+  async function yukle(devam) {
+    const q = new URLSearchParams({ limit: String(SAYFA) });
+    if (devam && imlec) q.set('before', String(imlec));
+    if (sec.value) q.set('adminId', sec.value);
+    const yeni = await guvenli(() => api(`/audit-log?${q}`));
+    if (!yeni) return;
+    const gorunen = yeni.filter(listedeGorunur);
+    kayitlar = devam ? [...kayitlar, ...gorunen] : gorunen;
+    imlec = yeni.length === SAYFA ? yeni.at(-1).id : null;
+    alan.replaceChildren(...[
+      tablo([
+        { baslik: 'Tarih', deger: (x) => tarih(x.createdAt) },
+        { baslik: 'Yönetici', deger: (x) => (x.adminId ? h('a', { href: `#/yonetici/${x.adminId}` }, x.adminName ?? x.admin ?? 'yönetici') : 'sistem') },
+        { baslik: 'İşlem', deger: (x) => h('div', {}, h('div', { class: 'dn-ozet' }, islemOzeti(x)), degisiklikAyrintisi(x)) },
+        { baslik: 'Gerekçe', deger: (x) => x.reason ?? '—' },
+        { baslik: 'IP', deger: (x) => x.ip ?? '—' },
+      ], kayitlar),
+      imlec ? h('button', { class: 'btn ikincil dn-daha', onclick: () => yukle(true) }, 'Daha fazla') : null,
+    ].filter(Boolean));
+  }
+  sec.addEventListener('change', () => yukle(false));
+  await yukle(false);
+  return h('div', {}, h('h2', {}, 'Denetim Kaydı'), h('p', { class: 'not' }, 'Kayıtlar değiştirilemez ve silinemez.'),
+    h('div', { class: 'dn-suzgec' }, sec), alan);
+};
 
 // ── Silme Kuyrukları (15 Eki güvenlik denetimi) ───────────────
 // Hesap silmede Firebase kaydı ve dosyalar kuyrukla silinir. Kimlikler
@@ -890,7 +925,7 @@ SAYFALAR.entegrasyonlar = async () => {
 };
 
 // ── Yöneticiler ───────────────────────────────────────────────
-const ROL_TR = [['super_admin', 'Süper yönetici'], ['moderator', 'Moderatör'], ['content', 'İçerik yöneticisi'], ['operations', 'Operasyon'], ['readonly', 'Salt okunur']];
+const ROL_TR = ROL_ADLARI; // tek kaynak: denetim_dili.js
 SAYFALAR.yoneticiler = async () => {
   const liste = await api('/admins');
   const ekle = async () => {
@@ -903,23 +938,21 @@ SAYFALAR.yoneticiler = async () => {
       yenile();
     }
   };
-  const duzenle = async (a) => {
-    const d = await form(`${a.email}`, [{ ad: 'role', etiket: 'Rol', tur: 'select', deger: a.role, secenekler: ROL_TR }, { ad: 'active', etiket: 'Aktif', tur: 'checkbox', deger: a.active }]);
-    if (d && await guvenli(() => api(`/admins/${a.id}`, { yontem: 'PATCH', govde: d }))) { bildir('Güncellendi'); yenile(); }
-  };
-  // Süper yönetici diğer yöneticileri silebilir (22 Eki). Kendini silemez.
-  const sil = async (a) => {
-    const n = await gerekceIle(`"${a.name}" (${a.email}) silinsin mi?`, 'Sil', 'Hesap kapanır, oturumları sonlanır ve listeden kalkar. Geçmiş işlemleri denetim kaydında kalır. Aynı e-postayla yeniden yönetici eklenebilir.');
-    if (n && await guvenli(() => api(`/admins/${a.id}`, { yontem: 'DELETE', govde: { reason: n } }))) { bildir('Yönetici silindi'); yenile(); }
-  };
+  // Düzenle / Sil: yönetici detay sayfasıyla ORTAK işlevler (yonetici_detay.js).
+  const duzenle = (a) => yoneticiDuzenle(a, yenile);
+  const sil = (a) => yoneticiSil(a, yenile);
   return h('div', {}, h('div', { class: 'ust' }, h('h2', {}, 'Yöneticiler'), h('button', { class: 'btn', onclick: ekle }, 'Yönetici ekle')),
-    tablo([{ baslik: 'Ad', deger: (a) => a.name }, { baslik: 'E-posta', deger: (a) => a.email }, { baslik: 'Rol', deger: (a) => ROL_TR.find(([v]) => v === a.role)?.[1] },
+    h('p', { class: 'not' }, 'Bir yöneticinin yaptığı işlemleri ve oturum geçmişini görmek için adına tıklayın.'),
+    tablo([{ baslik: 'Ad', deger: (a) => h('a', { href: `#/yonetici/${a.id}` }, a.name) }, { baslik: 'E-posta', deger: (a) => a.email }, { baslik: 'Rol', deger: (a) => ROL_TR.find(([v]) => v === a.role)?.[1] },
       { baslik: 'MFA', deger: (a) => (a.mfa ? 'Kurulu' : 'Yok') }, { baslik: 'Durum', deger: (a) => rozet(a.active ? 'aktif' : 'pasif') },
       { baslik: '', deger: (a) => (a.id !== ben.id
         ? h('span', {}, h('button', { class: 'btn ikincil', onclick: (e) => { e.stopPropagation(); duzenle(a); } }, 'Düzenle'), ' ',
           h('button', { class: 'btn tehlike', onclick: (e) => { e.stopPropagation(); sil(a); } }, 'Sil'))
-        : h('span', { class: 'not' }, 'Siz')) }], liste, (a) => (a.id !== ben.id ? duzenle(a) : null)));
+        : h('span', { class: 'not' }, 'Siz')) }], liste,
+    // 28 Eki: isme (satıra) tıklayınca yöneticinin işlem ve oturum izi açılır.
+    (a) => { location.hash = `#/yonetici/${a.id}`; }));
 };
+SAYFALAR.yonetici = (id) => yoneticiDetaySayfasi(id, ben.id, yenile);
 
 // ── Başlangıç ─────────────────────────────────────────────────
 (async () => {

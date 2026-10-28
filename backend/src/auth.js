@@ -17,8 +17,9 @@
 // ═══════════════════════════════════════════════════════════════
 import {
   createCipheriv, createDecipheriv, createHash, createHmac,
-  randomBytes, scrypt, scryptSync, timingSafeEqual,
+  randomBytes, randomUUID, scrypt, scryptSync, timingSafeEqual,
 } from 'node:crypto';
+import { denetimYaz } from './audit.js';
 import { config } from './config.js';
 import { simdi } from './db.js';
 import { hata, istemciIp } from './http.js';
@@ -206,15 +207,78 @@ export async function oturumAc(db, adminId, asama, req) {
   const token = randomBytes(32).toString('base64url');
   const z = simdi();
   await db.prepare(
-    `INSERT INTO admin_sessions (token_hash, admin_id, stage, created_at, last_seen, ip, user_agent)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(ozetle(token), adminId, asama, z, z, istemciIp(req),
+    `INSERT INTO admin_sessions (token_hash, id, admin_id, stage, created_at, last_seen, ip, user_agent)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(ozetle(token), randomUUID(), adminId, asama, z, z, istemciIp(req),
     String(req.headers['user-agent'] || '').slice(0, 200));
   return token;
 }
 
-export async function oturumKapat(db, token) {
-  if (token) await db.prepare('DELETE FROM admin_sessions WHERE token_hash = ?').run(ozetle(token));
+// ── ADMİN OTURUM İZİ (28 Eki, kullanıcı isteği) ──
+// Süper admin her yöneticinin oturumunu ne zaman açıp kapattığını görür.
+// Bir admin oturumu HER KAPANDIĞINDA (çıkış, 15 dk hareketsizlik, 8 saatlik
+// süre, şifre değişimi, yöneticinin silinmesi/pasife alınması, hesap kilidi,
+// MFA yenileme) denetime `auth.session_end` yazılır: neden, açılış, son
+// işlem ve kapanış saati. Tarayıcıyı kapatıp giden yöneticinin oturumu
+// dakikalık bakımda (bostaAdminOturumlariniKapat) kapanır; kapanış saati
+// son işlem + hareketsizlik süresidir. Yalnız TAM oturumlar (MFA geçmiş)
+// yazılır; yarım kalan girişler giriş/kod denemesi olarak zaten kayıtlı.
+export const OTURUM_KAPANIS = Object.freeze({
+  CIKIS: 'CIKIS', HAREKETSIZLIK: 'HAREKETSIZLIK', SURE_DOLDU: 'SURE_DOLDU',
+  SIFRE_DEGISTI: 'SIFRE_DEGISTI', YONETICI_SILINDI: 'YONETICI_SILINDI',
+  YONETICI_PASIF: 'YONETICI_PASIF', HESAP_KILITLENDI: 'HESAP_KILITLENDI',
+  MFA_YENILENDI: 'MFA_YENILENDI',
+});
+
+function kapanisZamani(o, neden) {
+  if (neden === OTURUM_KAPANIS.HAREKETSIZLIK) return new Date(Date.parse(o.last_seen) + config.adminOturumBosta).toISOString();
+  if (neden === OTURUM_KAPANIS.SURE_DOLDU) {
+    const mutlak = Date.parse(o.created_at) + config.adminOturumMutlak;
+    const bosta = Date.parse(o.last_seen) + config.adminOturumBosta;
+    return new Date(Math.min(mutlak, bosta)).toISOString();
+  }
+  return simdi();
+}
+
+/**
+ * Koşula uyan admin oturumlarını kapatır ve her TAM oturum için kapanışı
+ * denetime yazar. Başka örnek aynı oturumu kapattıysa (silme 0 satır) yazmaz.
+ */
+export async function adminOturumlariniKapat(db, kosul, parametreler, neden) {
+  const satirlar = await db.prepare(
+    `SELECT token_hash, id, admin_id, stage, created_at, last_seen, ip FROM admin_sessions WHERE ${kosul}`,
+  ).all(...parametreler);
+  let kapanan = 0;
+  for (const o of satirlar) {
+    const r = await db.prepare('DELETE FROM admin_sessions WHERE token_hash = ?').run(o.token_hash);
+    if (!((r.changes ?? 0) > 0) || o.stage !== 'full') continue;
+    kapanan += 1;
+    await denetimYaz(db, {
+      adminId: o.admin_id, islem: 'auth.session_end', hedefTur: 'admin_session', hedefId: o.id ?? null, ip: o.ip,
+      sonra: { neden, acilis: o.created_at, sonIslem: o.last_seen, kapanis: kapanisZamani(o, neden) },
+    });
+  }
+  return kapanan;
+}
+
+export async function oturumKapat(db, token, neden = OTURUM_KAPANIS.CIKIS) {
+  if (token) await adminOturumlariniKapat(db, 'token_hash = ?', [ozetle(token)], neden);
+}
+
+/** Dakikalık bakım: hareketsiz ya da süresi dolmuş (terk edilmiş) oturumları kapatır. */
+export async function bostaAdminOturumlariniKapat(db) {
+  const an = Date.now();
+  const bostaSiniri = new Date(an - config.adminOturumBosta).toISOString();
+  const mutlakSiniri = new Date(an - config.adminOturumMutlak).toISOString();
+  const sure = await adminOturumlariniKapat(db, 'created_at < ?', [mutlakSiniri], OTURUM_KAPANIS.SURE_DOLDU);
+  const bosta = await adminOturumlariniKapat(db, 'last_seen < ?', [bostaSiniri], OTURUM_KAPANIS.HAREKETSIZLIK);
+  return sure + bosta;
+}
+
+/** Oturumun kalıcı kimliği (denetimde giriş ↔ kapanış eşleşmesi için). */
+export async function oturumKimligi(db, token) {
+  if (!token) return null;
+  return (await db.prepare('SELECT id FROM admin_sessions WHERE token_hash = ?').get(ozetle(token)))?.id ?? null;
 }
 
 export async function oturumYukselt(db, token) {
@@ -266,7 +330,7 @@ export async function oturumCoz(db, token, beklenenAsama = 'full', { etkinlik = 
   const bosta = an - Date.parse(o.last_seen) > config.adminOturumBosta;
   const mutlak = an - Date.parse(o.created_at) > config.adminOturumMutlak;
   if (bosta || mutlak || o.stage !== beklenenAsama) {
-    if (bosta || mutlak) await oturumKapat(db, token);
+    if (bosta || mutlak) await oturumKapat(db, token, mutlak ? OTURUM_KAPANIS.SURE_DOLDU : OTURUM_KAPANIS.HAREKETSIZLIK);
     return null;
   }
   const admin = await db.prepare('SELECT * FROM admins WHERE id = ? AND active = TRUE').get(o.admin_id);

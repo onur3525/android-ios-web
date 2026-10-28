@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { createHash, randomUUID } from 'node:crypto';
 import {
-  OTURUM_CEREZI, ROLLER, base32Uret, oturumAc, oturumKapat, oturumYukselt,
+  OTURUM_CEREZI, OTURUM_KAPANIS, ROLLER, adminOturumlariniKapat, base32Uret, oturumAc, oturumKapat, oturumKimligi, oturumYukselt,
   sifreDogrulaAsenkron, sifreKurali, sifreOzetleAsenkron, sirCoz, sirSifrele, totpDogrula,
   yenidenDogrulamaIste, yenidenDogrulandi, yetkiIste,
 } from '../auth.js';
@@ -60,6 +60,17 @@ function tarihVeyaBos(v, alan) {
   return new Date(v).toISOString();
 }
 const etkinlik = (x) => ({ ...x, active: x.active === 1 });
+
+/** Denetim satırı görünümü (genel kayıt ve yönetici izi aynı biçim). */
+function denetimGorunumu(x) {
+  const json = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+  return {
+    id: x.id, adminId: x.admin_id ?? null, admin: x.admin_email, adminName: x.admin_name ?? null,
+    action: x.action, targetType: x.target_type, targetId: x.target_id,
+    before: json(x.before_json), after: json(x.after_json),
+    reason: x.reason, ip: x.ip, createdAt: x.created_at,
+  };
+}
 
 function adminGorunumu(a) {
   return { id: a.id, email: a.email, name: a.name, role: a.role, active: a.active === 1, mfa: !!a.totp_secret_enc, createdAt: a.created_at };
@@ -123,7 +134,7 @@ export function adminRotalar(r, db) {
     const c = await ctx.oturumAsamasi('mfa');
     if (!c) throw hata.kimlik();
     if (c.admin.locked_until && Date.parse(c.admin.locked_until) > Date.now()) {
-      await oturumKapat(db, ctx.token);
+      await oturumKapat(db, ctx.token, OTURUM_KAPANIS.HESAP_KILITLENDI);
       throw hata.hiz('Hesap geçici olarak kilitli');
     }
     if (!totpDogrula(totpSirri(c.admin), ctx.body.code)) {
@@ -134,7 +145,7 @@ export function adminRotalar(r, db) {
       await db.prepare('UPDATE admins SET failed_count = ?, locked_until = ? WHERE id = ?').run(
         kilit ? 0 : n, kilit ? new Date(Date.now() + KILIT_SURESI).toISOString() : null, c.admin.id,
       );
-      if (kilit) await oturumKapat(db, ctx.token);
+      if (kilit) await oturumKapat(db, ctx.token, OTURUM_KAPANIS.HESAP_KILITLENDI);
       await denetimYaz(db, { adminId: c.admin.id, islem: 'auth.mfa_failed', ip: ctx.ip });
       throw new ApiHatasi(401, 'AUTH_FAILED', 'Doğrulama kodu hatalı');
     }
@@ -143,7 +154,12 @@ export function adminRotalar(r, db) {
     ctx.cerezEkle(cerez(OTURUM_CEREZI, ctx.token, {
       secure: config.cerezSecure, maxAgeSn: Math.floor(config.adminOturumMutlak / 1000),
     }));
-    await denetimYaz(db, { adminId: c.admin.id, islem: 'auth.login', ip: ctx.ip });
+    // 28 Eki: oturum kimliği (kapanışla eşleşir) ve cihaz/tarayıcı da yazılır.
+    await denetimYaz(db, {
+      adminId: c.admin.id, islem: 'auth.login', ip: ctx.ip,
+      hedefTur: 'admin_session', hedefId: await oturumKimligi(db, ctx.token),
+      sonra: { cihaz: String(ctx.req.headers['user-agent'] || '').slice(0, 200) },
+    });
     return { ...adminGorunumu(c.admin), idleTimeoutSeconds: Math.floor(config.adminOturumBosta / 1000) };
   });
 
@@ -154,7 +170,7 @@ export function adminRotalar(r, db) {
     await yenidenDogrulamaSiniri.denetle(db, ctx.ip);
     const a = ctx.admin;
     if (a.locked_until && Date.parse(a.locked_until) > Date.now()) {
-      await oturumKapat(db, ctx.token);
+      await oturumKapat(db, ctx.token, OTURUM_KAPANIS.HESAP_KILITLENDI);
       throw hata.hiz('Hesap geçici olarak kilitli');
     }
     const sifreDogru = await sifreDogrulaAsenkron(String(ctx.body.password ?? ''), a.password_hash);
@@ -165,7 +181,7 @@ export function adminRotalar(r, db) {
       await db.prepare('UPDATE admins SET failed_count = ?, locked_until = ? WHERE id = ?').run(
         kilit ? 0 : n, kilit ? new Date(Date.now() + KILIT_SURESI).toISOString() : null, a.id,
       );
-      if (kilit) await oturumKapat(db, ctx.token);
+      if (kilit) await oturumKapat(db, ctx.token, OTURUM_KAPANIS.HESAP_KILITLENDI);
       await yaz(ctx, { islem: 'auth.reauth_failed' });
       throw new ApiHatasi(401, 'AUTH_FAILED', 'Şifre ya da doğrulama kodu hatalı');
     }
@@ -185,14 +201,14 @@ export function adminRotalar(r, db) {
     const ozet = await sifreOzetleAsenkron(yeni);
     await db.tx(async () => {
       await db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(ozet, ctx.admin.id);
-      await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ? AND token_hash <> ?').run(ctx.admin.id, ctx.oturum.token_hash);
+      await adminOturumlariniKapat(db, 'admin_id = ? AND token_hash <> ?', [ctx.admin.id, ctx.oturum.token_hash], OTURUM_KAPANIS.SIFRE_DEGISTI);
     });
     await yaz(ctx, { islem: 'auth.password_changed', hedefTur: 'admin', hedefId: ctx.admin.id });
     return { ok: true };
   });
 
   r.post('/admin/v1/auth/logout', async (ctx) => {
-    await oturumKapat(db, ctx.token);
+    await oturumKapat(db, ctx.token, OTURUM_KAPANIS.CIKIS);
     ctx.cerezEkle(cerez(OTURUM_CEREZI, '', { secure: config.cerezSecure, maxAgeSn: 0 }));
     await yaz(ctx, { islem: 'auth.logout' });
     return { ok: true };
@@ -226,7 +242,7 @@ export function adminRotalar(r, db) {
     const z = simdi();
     await db.tx(async () => {
       await db.prepare('UPDATE admins SET deleted_at = ?, active = FALSE, email = ? WHERE id = ?').run(z, `silindi-${a.id}@yonetici.invalid`, a.id);
-      await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(a.id);
+      await adminOturumlariniKapat(db, 'admin_id = ?', [a.id], OTURUM_KAPANIS.YONETICI_SILINDI);
       await yaz(ctx, { islem: 'admin.delete', hedefTur: 'admin', hedefId: a.id, once: { email: a.email, name: a.name, role: a.role }, gerekce: neden });
     });
     return undefined;
@@ -268,7 +284,7 @@ export function adminRotalar(r, db) {
     if (ctx.body.active !== undefined) yeni.active = bool(ctx.body.active, 'active') ? 1 : 0;
     await db.tx(async () => {
       await db.prepare('UPDATE admins SET role = ?, active = ? WHERE id = ?').run(yeni.role, yeni.active, a.id);
-      if (yeni.active === 0) await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(a.id);
+      if (yeni.active === 0) await adminOturumlariniKapat(db, 'admin_id = ?', [a.id], OTURUM_KAPANIS.YONETICI_PASIF);
       await yaz(ctx, { islem: 'admin.update', hedefTur: 'admin', hedefId: a.id, once: { role: a.role, active: a.active === 1 }, sonra: { role: yeni.role, active: yeni.active === 1 } });
     });
     return adminGorunumu(await db.prepare('SELECT * FROM admins WHERE id = ?').get(a.id));
@@ -971,17 +987,103 @@ export function adminRotalar(r, db) {
   });
 
   // ── DENETİM KAYDI ────────────────────────────────────────
+  // 28 Eki: `adminId` süzgeci eklendi (yanıt biçimi aynı; adminId/adminName ek alan).
   r.get('/admin/v1/audit-log', async (ctx) => {
     yetkiIste(ctx.admin, 'audit.read');
     const limit = Math.min(Number(ctx.query.get('limit') || 100), 500);
     const once = Number(ctx.query.get('before') || Number.MAX_SAFE_INTEGER);
+    const adminId = ctx.query.get('adminId');
     return (await db.prepare(
-      `SELECT l.*, a.email admin_email FROM audit_log l LEFT JOIN admins a ON a.id = l.admin_id
-        WHERE l.id < ? ORDER BY l.id DESC LIMIT ?`,
-    ).all(once, limit)).map((x) => ({
-      id: x.id, admin: x.admin_email, action: x.action, targetType: x.target_type, targetId: x.target_id,
-      before: x.before_json ? JSON.parse(x.before_json) : null, after: x.after_json ? JSON.parse(x.after_json) : null,
-      reason: x.reason, ip: x.ip, createdAt: x.created_at,
-    }));
+      `SELECT l.*, a.email admin_email, a.name admin_name FROM audit_log l LEFT JOIN admins a ON a.id = l.admin_id
+        WHERE l.id < ? ${adminId ? 'AND l.admin_id = ?' : ''} ORDER BY l.id DESC LIMIT ?`,
+    ).all(...[once, ...(adminId ? [adminId] : []), limit])).map(denetimGorunumu);
+  });
+
+  // ── YÖNETİCİ İZİ (28 Eki, kullanıcı isteği): süper admin her yöneticinin
+  // yaptığı bütün işlemleri ve oturumlarını (açılış/kapanış saati, neden,
+  // IP, cihaz) görür. Yalnız `audit.read` (süper admin). Silinmiş yöneticinin
+  // izi de görülebilir.
+  const yoneticiGetir = async (id) => {
+    const a = await db.prepare('SELECT * FROM admins WHERE id = ?').get(id);
+    if (!a) throw hata.bulunamadi('Yönetici bulunamadı');
+    return a;
+  };
+  const sayiParam = (v, varsayilan, azami) => {
+    const n = Number(v);
+    return Number.isInteger(n) && n > 0 ? Math.min(n, azami) : varsayilan;
+  };
+  const tarihParam = (v) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : null);
+
+  r.get('/admin/v1/admins/:id/detail', async (ctx) => {
+    yetkiIste(ctx.admin, 'audit.read');
+    const a = await yoneticiGetir(ctx.params.id);
+    const son = await db.prepare(`SELECT created_at, ip FROM audit_log WHERE admin_id = ? AND action = 'auth.login' ORDER BY id DESC LIMIT 1`).get(a.id);
+    const acik = Number((await db.prepare(`SELECT COUNT(*) n FROM admin_sessions WHERE admin_id = ? AND stage = 'full'`).get(a.id)).n);
+    const toplam = Number((await db.prepare('SELECT COUNT(*) n FROM audit_log WHERE admin_id = ?').get(a.id)).n);
+    return {
+      ...adminGorunumu(a), deletedAt: a.deleted_at ?? null,
+      lastLoginAt: son?.created_at ?? null, lastLoginIp: son?.ip ?? null, openSessions: acik, auditCount: toplam,
+    };
+  });
+
+  r.get('/admin/v1/admins/:id/sessions', async (ctx) => {
+    yetkiIste(ctx.admin, 'audit.read');
+    const a = await yoneticiGetir(ctx.params.id);
+    const limit = sayiParam(ctx.query.get('limit'), 50, 200);
+    const once = sayiParam(ctx.query.get('before'), Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    const acik = new Map((await db.prepare(
+      `SELECT id, created_at, last_seen, ip, user_agent FROM admin_sessions WHERE admin_id = ? AND stage = 'full' AND id IS NOT NULL`,
+    ).all(a.id)).map((o) => [o.id, o]));
+    const girisler = await db.prepare(
+      `SELECT id, target_id, ip, after_json, created_at FROM audit_log
+        WHERE admin_id = ? AND action = 'auth.login' AND id < ? ORDER BY id DESC LIMIT ?`,
+    ).all(a.id, once, limit);
+    const kimlikler = girisler.map((g) => g.target_id).filter(Boolean);
+    const kapanislar = new Map();
+    for (let i = 0; i < kimlikler.length; i += 200) {
+      const parca = kimlikler.slice(i, i + 200);
+      for (const k of await db.prepare(
+        `SELECT target_id, after_json, created_at FROM audit_log
+          WHERE admin_id = ? AND action = 'auth.session_end' AND target_id IN (${parca.map(() => '?').join(', ')})`,
+      ).all(a.id, ...parca)) kapanislar.set(k.target_id, k);
+    }
+    const json = (v) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+    return {
+      sessions: girisler.map((g) => {
+        const ek = json(g.after_json) ?? {};
+        const k = g.target_id ? kapanislar.get(g.target_id) : null;
+        const kj = json(k?.after_json) ?? {};
+        const ac = g.target_id ? acik.get(g.target_id) : null;
+        return {
+          sessionId: g.target_id ?? null, openedAt: g.created_at, ip: g.ip, device: ek.cihaz ?? ac?.user_agent ?? null,
+          // ACIK: oturum hâlâ açık · KAPALI: kapanış kaydı var · BILINMIYOR: 28 Eki öncesi oturum (kapanış tutulmuyordu)
+          status: ac ? 'ACIK' : k ? 'KAPALI' : 'BILINMIYOR',
+          closedAt: k ? (kj.kapanis ?? k.created_at) : null, closeReason: kj.neden ?? null,
+          lastActivityAt: ac ? ac.last_seen : (kj.sonIslem ?? null),
+        };
+      }),
+      nextBefore: girisler.length === limit ? girisler.at(-1).id : null,
+    };
+  });
+
+  r.get('/admin/v1/admins/:id/activity', async (ctx) => {
+    yetkiIste(ctx.admin, 'audit.read');
+    const a = await yoneticiGetir(ctx.params.id);
+    const limit = sayiParam(ctx.query.get('limit'), 50, 200);
+    const once = sayiParam(ctx.query.get('before'), Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    const kosul = ['l.admin_id = ?', 'l.id < ?'];
+    const p = [a.id, once];
+    const bas = tarihParam(ctx.query.get('from'));
+    const bit = tarihParam(ctx.query.get('to'));
+    if (bas) { kosul.push('l.created_at >= ?'); p.push(new Date(`${bas}T00:00:00+03:00`).toISOString()); }
+    if (bit) { kosul.push('l.created_at < ?'); p.push(new Date(Date.parse(`${bit}T00:00:00+03:00`) + 86_400_000).toISOString()); }
+    // Tür süzgeci: işlem adının ön eki (catalog, user, auth…). Yalnız harf.
+    const tur = ctx.query.get('type');
+    if (tur && /^[a-z_]{2,30}$/.test(tur)) { kosul.push('substr(l.action, 1, ?) = ?'); p.push(tur.length + 1, `${tur}.`); }
+    const satirlar = await db.prepare(
+      `SELECT l.*, a.email admin_email, a.name admin_name FROM audit_log l LEFT JOIN admins a ON a.id = l.admin_id
+        WHERE ${kosul.join(' AND ')} ORDER BY l.id DESC LIMIT ?`,
+    ).all(...p, limit);
+    return { items: satirlar.map(denetimGorunumu), nextBefore: satirlar.length === limit ? satirlar.at(-1).id : null };
   });
 }

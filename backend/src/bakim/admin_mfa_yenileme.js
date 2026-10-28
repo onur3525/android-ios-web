@@ -26,7 +26,7 @@
 // ⚠ Düz sır hiçbir dönüşe, mesaja ya da kayda YAZILMAZ.
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
-import { anahtarParmakIzi, sirCoz, sirSifrele } from '../auth.js';
+import { OTURUM_KAPANIS, adminOturumlariniKapat, anahtarParmakIzi, sirCoz, sirSifrele } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { simdi } from '../db.js';
 
@@ -103,7 +103,7 @@ export async function adminMfaYenile(db, { email, yeniSir, mod, sunucuParmakIzi 
       'UPDATE admins SET totp_secret_enc = ?, failed_count = 0, locked_until = NULL WHERE id = ? AND totp_secret_enc = ?',
     ).run(yeniEnc, a.id, a.totp_secret_enc);
     if (g.changes !== 1) throw new BakimHatasi(`Beklenmeyen güncelleme sayısı (${g.changes}); işlem geri alındı.`);
-    await db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(a.id);
+    await adminOturumlariniKapat(db, 'admin_id = ?', [a.id], OTURUM_KAPANIS.MFA_YENILENDI);
     await denetimYaz(db, { adminId: null, islem: 'admin.mfa_yenilendi', hedefTur: 'admin', hedefId: a.id, gerekce: 'Çözülemeyen MFA sırrı bakım aracıyla yenilendi' });
     const kontrol = await db.prepare('SELECT totp_secret_enc FROM admins WHERE id = ?').get(a.id);
     if (sirCoz(kontrol.totp_secret_enc) !== sir) throw new BakimHatasi('Yazılan sır doğrulanamadı; işlem geri alındı.');

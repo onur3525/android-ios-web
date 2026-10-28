@@ -16,6 +16,7 @@
 //   · iş verisi (ilan, teklif, mesaj, bildirim, denetim kaydı) — dokunulmaz
 // ═══════════════════════════════════════════════════════════════
 import { hizKayitlariniTemizle } from './http.js';
+import { OTURUM_KAPANIS, adminOturumlariniKapat, bostaAdminOturumlariniKapat } from './auth.js';
 
 const GUN = 24 * 60 * 60 * 1000;
 const once = (ms) => new Date(Date.now() - ms).toISOString();
@@ -24,7 +25,9 @@ export async function kayitBakimi(db) {
   const hiz = await hizKayitlariniTemizle(db);
   const otp = (await db.prepare('DELETE FROM otp_codes WHERE created_at < ?').run(once(GUN))).changes ?? 0;
   const oturum = (await db.prepare('DELETE FROM user_sessions WHERE expires_at < ?').run(once(30 * GUN))).changes ?? 0;
-  const admin = (await db.prepare('DELETE FROM admin_sessions WHERE created_at < ?').run(once(2 * GUN))).changes ?? 0;
+  // 28 Eki: terk edilen admin oturumları kapanış kaydıyla kapatılır (izlenebilir).
+  const admin = await bostaAdminOturumlariniKapat(db)
+    + await adminOturumlariniKapat(db, 'created_at < ?', [once(2 * GUN)], OTURUM_KAPANIS.SURE_DOLDU);
   return { hiz, otp, oturum, admin };
 }
 
