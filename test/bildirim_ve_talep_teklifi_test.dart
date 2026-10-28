@@ -212,13 +212,15 @@ void main() {
   });
 
   group('7 — DETAY EKRANLARI MASAÜSTÜNDE DE TEK SÜTUN (14 Eki)', () {
-    test('düzen yan yana çizmez; masaüstünde ortalı tek sütun', () {
+    test('düzen yan yana çizmez; masaüstünde tek sütun (28 Eki: tam genişlik)', () {
       // ⚠ KULLANICI KARARI: "Masaüstü görünümde yan yana olmamalı —
       // sayfa tek sütun olsun." Kural ortak widget'ta; iki detay ekranı
       // (ilan ve Bul akışı) birlikte uyar.
       final k = _kodu('lib/ui/masaustu_detay.dart');
       expect(k.contains('Row('), isFalse, reason: 'iki kolon geri gelmiş');
-      expect(k.contains('maxWidth: IcerikGenisligi.liste'), isTrue);
+      // ⚠ 28 Eki (2. karar): masaüstünde dar ortalı sütun kaldırıldı,
+      // detay tam genişlikte; tek sütun kuralı aynen.
+      expect(k.contains('maxWidth: IcerikGenisligi.liste'), isFalse);
       expect(k.contains('children: [ana, SizedBox(height: aralik), yan]'),
           isTrue);
       for (final yol in [
