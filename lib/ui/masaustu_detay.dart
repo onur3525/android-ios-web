@@ -59,16 +59,32 @@ class MasaustuDetay extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [ana, SizedBox(height: aralik), yan],
     );
+    return MasaustuOkunurSutun(child: sutun);
+  }
+}
+
+/// ── OKUNUR DETAY SÜTUNU — TEK KAYNAK (28 Eki) ──
+///
+/// Masaüstü web'de detay ekranları okunabilir genişlikte
+/// (`IcerikGenisligi.liste`) ve ortalı çizilir. Hizmet verenin iş detayı
+/// ([MasaustuDetay]) ile hizmet alanın ilan detayı AYNI kuralı kullanır;
+/// önceden hizmet alan detayı bütün genişliğe yayılıyordu.
+/// ⚠ MOBİLDE ARAYA HİÇBİR ŞEY GİRMEZ.
+class MasaustuOkunurSutun extends StatelessWidget {
+  const MasaustuOkunurSutun({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     if (!kIsWeb || !ekranSinifi(context).masaustuMu) {
-      // ⚠ BUGÜNKÜ DAVRANIŞ: alt alta, aynı sırayla, aynı boşlukla.
-      return sutun;
+      return child;
     }
-    // Masaüstü: aynı tek sütun, okunabilir genişlikte ve ortalı.
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: IcerikGenisligi.liste),
-        child: sutun,
+        child: child,
       ),
     );
   }

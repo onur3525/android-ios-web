@@ -538,7 +538,9 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
           // ⚠ 21 Eki (kullanıcı kararı): "İşlerim" / "Kazandığım" üst
           // başlığı web ve mobilde KALDIRILDI; bölüm adı alt bar ve kenar
           // çubuğunda seçili sekmeden belli. Üst boşluk korunur.
-          const SizedBox(height: 8),
+          // 28 Eki: masaüstünde üst boşluk ve kenarlar hizmet alanın
+          // sayfa iskeletiyle (RefShell: üst 12, yanlar 14) AYNI.
+          SizedBox(height: ustMenu ? 12 : 8),
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve
@@ -553,7 +555,9 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
           // gösterir; orada sekme çubuğu çizmek kullanıcıya olmayan bir
           // seçim sunardı.
           if (!widget.kazandigim)
-            RefSegmentTabs(
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: ustMenu ? 14 : 0),
+              child: RefSegmentTabs(
               selected: _sekme,
               onChanged: (i) {
                 setState(() => _sekme = i);
@@ -588,7 +592,7 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
                   label: 'Teklif istekleri'
                 ),
               ],
-            ),
+            )),
 
           // ── `.cust-bar` — sayı + araçlar ──
           //
@@ -666,7 +670,7 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
                     // tasarımı, aralık, dolgu ve kaydırma değişmez.
                     : MasaustuListe(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                        padding: EdgeInsets.fromLTRB(ustMenu ? 14 : 20, 4, ustMenu ? 14 : 20, 24),
                         // ⚠ Kapsam genişlemesi SİSTEM İÇİDİR.
                         // Kullanıcıya bilgi satırı/uyarı GÖSTERİLMEZ;
                         // liste sessizce genişler.
@@ -711,7 +715,7 @@ class _JobsScreenState extends State<JobsScreen> with WidgetsBindingObserver {
                     // aynı yapı.
                     : MasaustuListe(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                        padding: EdgeInsets.fromLTRB(ustMenu ? 14 : 20, 4, ustMenu ? 14 : 20, 24),
                         // ⚠ İKİ LİSTE BİRLEŞİK — `myOffers` (normal
                         // İlan Ver akışı) + `secilenTalepler` ("Bul"
                         // akışından kazanılan, yalnız `kazandigim`

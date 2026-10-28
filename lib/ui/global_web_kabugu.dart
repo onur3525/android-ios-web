@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'olcu.dart';
 import 'gezgin.dart';
+import 'ref_tokens.dart';
 import 'ref_widgets.dart';
 import 'web_kenar_cubugu.dart';
 import '../screens/nav_actions.dart';
@@ -157,7 +158,26 @@ class GlobalWebKabugu extends StatelessWidget {
                 activeKey: _sekmeAnahtari(rota),
                 eylem: (e) => RefShell.menuEylemi(context, e),
               ),
-              Expanded(child: child),
+              // 28 Eki: içerik sütunu menünün yanından başlar, en çok
+              // `IcerikGenisligi.masaustuSutun` (bkz. olcu.dart). Kalan
+              // alan sayfa zemini rengindedir.
+              Expanded(
+                child: ColoredBox(
+                  color: RC.pageBg,
+                  child: LayoutBuilder(
+                    builder: (context, k) => Align(
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: k.maxWidth < IcerikGenisligi.masaustuSutun
+                            ? k.maxWidth
+                            : IcerikGenisligi.masaustuSutun,
+                        height: k.maxHeight,
+                        child: child,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           );
         },

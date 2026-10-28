@@ -22,6 +22,7 @@ import '../domain/kullanici_konumu.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/masaustu_detay.dart' show MasaustuOkunurSutun;
 import '../core/geri.dart';
 import '../core/tutar_bicimi.dart';
 import '../core/platform/yerel_gorsel.dart';
@@ -395,7 +396,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen>
         child: RefScroll(
           // `.ld-wrap{padding:calc(6px + safe-area) 12px 84px}`
           padding: const EdgeInsets.fromLTRB(12, 6, 12, 84),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          child: MasaustuOkunurSutun(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             // .ld-topbar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -634,7 +635,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen>
                           size: 13, weight: RF.w600, color: RC.textSoft)),
                 ),
             ],
-          ]),
+          ])),
         ),
       ),
     );

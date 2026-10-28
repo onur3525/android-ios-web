@@ -19,6 +19,8 @@ import '../ui/ref_tokens.dart';
 import 'widgets/teklif_rozeti.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/kalan_alanda_ortala.dart';
+import '../ui/masaustu_izgara.dart';
+import '../ui/web_header.dart' show masaustuNav;
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
 import 'teklif_talebi_detay_screen.dart';
@@ -183,6 +185,45 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           _ => b.createdAt.compareTo(a.createdAt), // 'new'
         });
 
+    // ⚠ İKİ KAYNAK, TARİHE GÖRE TEK LİSTEDE BİRLEŞTİRİLDİ (en yeni üstte).
+    final ogeler = [
+              ...liste.map((l) => (listing: l, talep: null as TeklifTalebi?)),
+              ...kabulEdilenTalepler
+                  .map((t) => (listing: null as Listing?, talep: t)),
+            ]..sort((a, b) {
+                final ta = a.listing?.createdAt ??
+                    a.talep!.teklifTarihi ??
+                    DateTime(2000);
+                final tb = b.listing?.createdAt ??
+                    b.talep!.teklifTarihi ??
+                    DateTime(2000);
+                return tb.compareTo(ta);
+              });
+    // Liste öğesi kartı — mobil liste ve masaüstü ızgara AYNI kartı çizer.
+    Widget ilanOgesi(({Listing? listing, TeklifTalebi? talep}) oge) =>
+      oge.listing != null
+                    ? _IlanKarti(
+                        listing: oge.listing!,
+                        teklifSayisi: teklif(oge.listing!),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => ListingDetailScreen(
+                                listingId: oge.listing!.id),
+                          ),
+                        ),
+                      )
+                    : _TeklifTalebiIsKarti(
+                        talep: oge.talep!,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => TeklifTalebiDetayScreen(
+                                talepId: oge.talep!.id),
+                          ),
+                        ),
+                      );
+
     return RefShell(
       nav: RefBottomNav(
         activeKey: 'ilanlarim',
@@ -282,44 +323,20 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
             // yeni üstte. `_sort`/`_filtre` yalnız `liste` (Listing)
             // tarafına uygulanmış olarak buraya gelir; birleşik sıra
             // yalnız tarihtir (bkz. yukarıdaki not).
-            for (final oge in [
-              ...liste.map((l) => (listing: l, talep: null as TeklifTalebi?)),
-              ...kabulEdilenTalepler
-                  .map((t) => (listing: null as Listing?, talep: t)),
-            ]..sort((a, b) {
-                final ta = a.listing?.createdAt ??
-                    a.talep!.teklifTarihi ??
-                    DateTime(2000);
-                final tb = b.listing?.createdAt ??
-                    b.talep!.teklifTarihi ??
-                    DateTime(2000);
-                return tb.compareTo(ta);
-              }))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: oge.listing != null
-                    ? _IlanKarti(
-                        listing: oge.listing!,
-                        teklifSayisi: teklif(oge.listing!),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => ListingDetailScreen(
-                                listingId: oge.listing!.id),
-                          ),
-                        ),
-                      )
-                    : _TeklifTalebiIsKarti(
-                        talep: oge.talep!,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => TeklifTalebiDetayScreen(
-                                talepId: oge.talep!.id),
-                          ),
-                        ),
-                      ),
-              ),
+            // ⚠ 28 Eki: MASAÜSTÜ WEB'DE IZGARA — hizmet verenin
+            // "İşlerim"iyle aynı diziliş (MasaustuIzgara). Mobil ve
+            // tablette bugünkü alt alta liste AYNEN.
+            if (masaustuNav(context))
+              MasaustuIzgara(
+                aralik: 8,
+                children: [for (final oge in ogeler) ilanOgesi(oge)],
+              )
+            else
+              for (final oge in ogeler)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ilanOgesi(oge),
+                ),
           ],
         ],
       ),
