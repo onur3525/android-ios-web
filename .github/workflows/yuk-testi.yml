@@ -42,11 +42,22 @@ jobs:
           exit 1
       - uses: actions/checkout@v4
       - uses: grafana/setup-k6-action@v1
+      # Test adımı k6 durdursa bile BAŞARISIZ OLMAZ (sonraki özet adımları
+      # çalışsın diye); çıkış kodu ve süre kaydedilir, KARAR en sondaki
+      # "Karar" adımında verilir. (Eski hata: `| tee` k6'nın çıkış kodunu
+      # gizliyordu; eşikte durdurulan test "başarılı" görünüyordu.)
       - name: Kademeli yük testi
         env:
           HEDEF_RPS: ${{ inputs.hedef_rps }}
           TABAN_URL: ${{ inputs.taban_url }}
-        run: k6 run --summary-export=sonuc.json yuk-testi/kademeli.js 2>&1 | tee cikti.txt
+        shell: bash
+        run: |
+          set +e -o pipefail
+          bas=$(date +%s)
+          k6 run --summary-export=sonuc.json yuk-testi/kademeli.js 2>&1 | tee cikti.txt
+          echo "${PIPESTATUS[0]}" > k6_cikis.txt
+          echo $(( $(date +%s) - bas )) > k6_sure.txt
+          exit 0
       - name: Özet
         if: always()
         run: |
@@ -72,4 +83,17 @@ jobs:
           path: |
             sonuc.json
             cikti.txt
+            k6_cikis.txt
+            k6_sure.txt
           retention-days: 30
+      # KARAR: aşağıdakilerden BİRİ bile varsa iş BAŞARISIZ (kırmızı) olur:
+      #   1) k6 sıfır dışı kodla bitti (eşik aşımı, erken durdurma, betik hatası)
+      #   2) sonuc.json yok ya da okunamıyor (test hiç başlamadı / yarıda öldü)
+      #   3) sonuc.json'da aşılmış (true) bir eşik var
+      #   4) test planlanan süreyi tamamlamadı (eksik test)
+      - name: Karar
+        if: always()
+        shell: bash
+        env:
+          HEDEF_RPS: ${{ inputs.hedef_rps }}
+        run: bash yuk-testi/karar.sh
