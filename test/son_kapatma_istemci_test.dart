@@ -86,7 +86,8 @@ void main() {
     test('uzak (https) adres mobilde ağdan çizilir', () {
       final k = _kod('lib/core/platform/yerel_gorsel_io.dart');
       expect(k.contains("yol.startsWith('https://')"), isTrue);
-      expect(k.contains('Image.network('), isTrue);
+      // 28 Eki: ağdan çizim kalıcı önbellekli ortak bileşenle (agGorseli).
+      expect(k.contains('agGorseli('), isTrue);
     });
   });
 

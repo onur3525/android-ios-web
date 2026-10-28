@@ -129,7 +129,8 @@ void _fotografTestleri() {
     // `Image.file` `dart:io` ister ve web derlemesini kırıyordu. Mobil
     // köprü yine `Image.file` kullanır.
     expect(k.contains('yerelGorsel(yol'), isTrue);
-    expect(k.contains('Image.network(yol'), isTrue);
+    // 28 Eki: ağ görseli kalıcı önbellekli ortak bileşenden (agGorseli).
+    expect(k.contains('agGorseli(yol'), isTrue);
     expect(_kodu('lib/core/platform/yerel_gorsel_io.dart')
         .contains('Image.file('), isTrue);
   });

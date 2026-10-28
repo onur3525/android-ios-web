@@ -17,6 +17,7 @@ import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../domain/config.dart';
 import 'widgets/sohbet_fotograf_akisi.dart';
+import '../core/platform/ag_gorseli.dart';
 import '../core/platform/gorsel_cozumu.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/olcu.dart';
@@ -763,8 +764,9 @@ class _SohbetFotografi extends StatelessWidget {
     if (_ag) {
       // 28 Eki: küçük resim ekrandaki boyutuna göre çözülür (bkz.
       // `gorsel_cozumu.dart`); tam ekran görüntüleyici tam çözünürlükte kalır.
+      // Kalıcı önbellekli (bkz. `ag_gorseli.dart`).
       return LayoutBuilder(
-        builder: (context, kisit) => Image.network(yol,
+        builder: (context, kisit) => agGorseli(yol,
             fit: BoxFit.cover,
             cacheWidth: kisittanCozumGenisligi(context, kisit),
             errorBuilder: _hata),
@@ -814,7 +816,7 @@ class _FotografTamEkran extends StatelessWidget {
                 minScale: 1,
                 maxScale: 4,
                 child: ag
-                    ? Image.network(yol)
+                    ? agGorseli(yol)
                     // 28 Eki: yakınlaştırma için TAM çözünürlük.
                     : yerelGorsel(yol, tamCozunurluk: true),
               ),

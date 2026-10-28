@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
+import 'ag_gorseli.dart';
 import 'gorsel_cozumu.dart';
 import 'gorsel_yedegi.dart';
 
@@ -29,11 +30,13 @@ Widget yerelGorsel(
   // ağ görseli eskisi gibi TAM çözünürlükte çözülür.
   bool tamCozunurluk = false,
 }) =>
-    // ⚠ SUNUCU FOTOĞRAFI (imzalı https adresi): ağdan çizilir. Yerel
-    // dosya yolları `https://` ile başlamaz; onların davranışı AYNEN.
+    // ⚠ SUNUCU FOTOĞRAFI (imzalı https adresi): ağdan çizilir — 28 Eki'den
+    // beri KALICI ÖNBELLEKLE (bkz. `ag_gorseli.dart`): uygulama yeniden
+    // açılınca telefondan gelir. Yerel dosya yolları `https://` ile
+    // başlamaz; onların davranışı AYNEN.
     _uzakMi(yol)
         ? (tamCozunurluk
-            ? Image.network(
+            ? agGorseli(
                 yol,
                 width: width,
                 height: height,
@@ -44,7 +47,7 @@ Widget yerelGorsel(
             // ⚠ 28 Eki: ekrandaki boyuta göre çözülür (bkz.
             // `gorsel_cozumu.dart`). Görünüm aynı, bellek çok daha az.
             : LayoutBuilder(
-                builder: (context, kisit) => Image.network(
+                builder: (context, kisit) => agGorseli(
                   yol,
                   width: width,
                   height: height,

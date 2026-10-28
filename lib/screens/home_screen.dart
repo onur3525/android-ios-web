@@ -5,6 +5,7 @@ import '../ui/olcu.dart';
 import 'package:flutter/foundation.dart';
 // `context.read<T>()` bu paketin BuildContext eklentisidir.
 import 'package:provider/provider.dart';
+import '../core/platform/ag_gorseli.dart';
 import '../core/platform/gorsel_cozumu.dart';
 import '../core/sys_state.dart';
 import '../domain/cikar_catismasi.dart';
@@ -1109,8 +1110,10 @@ class _AlanKarti extends StatelessWidget {
                   // ⚠ 28 Eki: kart boyutunda çözülür (bkz.
                   // `gorsel_cozumu.dart`); admin'in yüklediği büyük
                   // fotoğraf belleği şişirmez. Web'de değişiklik yok.
+                  // 28 Eki: kalıcı önbellekli (bkz. `ag_gorseli.dart`):
+                  // uygulama yeniden açılınca telefondan gelir.
                   : LayoutBuilder(
-                      builder: (context, kisit) => Image.network(
+                      builder: (context, kisit) => agGorseli(
                         alan.fotoUrl!,
                         fit: BoxFit.cover,
                         cacheWidth: kisittanCozumGenisligi(context, kisit),
