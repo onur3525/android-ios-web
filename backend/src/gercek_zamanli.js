@@ -34,6 +34,7 @@ import { ANLIK_HABER_KANALI } from './anlik_haber.js';
 import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
+import { istemciIp } from './http.js';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const NSP = '/ws';
@@ -51,23 +52,58 @@ function cerceve(metin, opkod = 0x1) {
   return Buffer.concat([bas, veri]);
 }
 
+// ── ⚠ KÖTÜ NİYETLİ İSTEMCİYE KARŞI SINIRLAR (29 Eki, güvenlik incelemesi) ──
+// · Parçalı mesaj (FIN=0 çerçeveler) TOPLAMDA en çok AZAMI_YUK: sınır
+//   çerçeve BAŞLIĞI okunur okunmaz denetlenir (gövde beklenmeden); aşımda
+//   biriken parçalar bırakılır, bağlantı kapanır. Önceden yalnız tek
+//   çerçeve sınırlıydı; kimliksiz bir bağlantı FIN'siz çerçevelerle saniyede
+//   onlarca MB biriktirebiliyordu.
+// · Denetim çerçeveleri (ping/pong/close) en çok 125 bayt ve bölünmez
+//   (RFC 6455 §5.5); yarım parça varken yeni veri mesajı ya da başlangıçsız
+//   devam çerçevesi protokol ihlalidir → kapanır.
+// · Bağlantı başına mesaj hızı: MESAJ_PENCERESI_MS içinde en çok
+//   AZAMI_MESAJ paket ya da ping (normal kullanım: 25 sn'de bir pong +
+//   sohbet aç/kapa).
+// · Paketler SIRAYLA işlenir (eşzamanlı veritabanı sorgusu yağmuru yok).
+// · Yazma tamponu YAZMA_TAMPONU_SINIRI'nı aşarsa (okumayan istemci; ping
+//   yankısı/olaylar birikir) bağlantı kapanır.
+// · Kimliksiz (henüz `40` göndermemiş) bağlantı: IP başına en çok
+//   IP_BASINA_KIMLIKSIZ; kimlik süresi (10 sn) aynen.
+// · Kapanışta tampon ve parçalar bırakılır; karşı taraf kapanışa yanıt
+//   vermezse soket KAPANIS_BEKLEME_MS sonra zorla kapatılır.
+const AZAMI_DENETIM_YUKU = 125;
+const AZAMI_MESAJ = 60;
+const MESAJ_PENCERESI_MS = 10_000;
+const YAZMA_TAMPONU_SINIRI = 1024 * 1024;
+const IP_BASINA_KIMLIKSIZ = 20;
+const KAPANIS_BEKLEME_MS = 5_000;
+export const WS_SINIRLARI = { AZAMI_YUK, AZAMI_DENETIM_YUKU, AZAMI_MESAJ, MESAJ_PENCERESI_MS, YAZMA_TAMPONU_SINIRI, IP_BASINA_KIMLIKSIZ };
+
 const KIMLIK_ZAMAN_ASIMI = 10_000;
 const KULLANICI_BASINA_AZAMI_BAGLANTI = 10;
 export const YENIDEN_DOGRULAMA_MS = 60_000;
 const DOGRULAMA_PARCASI = 200;
 
 class Baglanti {
-  constructor(soket, hub) {
+  constructor(soket, hub, ip) {
     this.soket = soket;
     this.hub = hub;
+    this.ip = ip;
     this.tampon = Buffer.alloc(0);
     this.parcalar = [];
+    this.parcaBoyu = 0;
+    this.pencereBasi = Date.now();
+    this.penceredekiMesaj = 0;
+    this.kuyruk = Promise.resolve();
     this.kullanici = null;
     this.odalar = new Set();
     this.sid = randomBytes(12).toString('base64url');
     this.pongBekleniyor = false;
     soket.on('data', (d) => this._veri(d));
     soket.on('close', () => this.kapat());
+    // Karşı taraf bağlantıyı kapattı (FIN): HTTP sunucusu soketleri yarı açık
+    // tutar; dinlenmezse kapanış ancak ping zaman aşımında (~50 sn) olurdu.
+    soket.on('end', () => this.kapat());
     soket.on('error', () => this.kapat());
     this._gonderHam(`0${JSON.stringify({ sid: this.sid, upgrades: [], pingInterval: PING_ARALIK, pingTimeout: PING_ZAMAN_ASIMI, maxPayload: AZAMI_YUK })}`);
     this.ping = setInterval(() => {
@@ -83,7 +119,10 @@ class Baglanti {
     this.kimlikZamani.unref?.();
   }
   _gonderHam(metin) {
-    if (!this.soket.destroyed) this.soket.write(cerceve(metin));
+    if (this.soket.destroyed) return;
+    // Okumayan istemci: yazılanlar bellekte birikir → bağlantı kapanır.
+    if (this.soket.writableLength > YAZMA_TAMPONU_SINIRI) { this.kapat(); return; }
+    this.soket.write(cerceve(metin));
   }
   olay(ad, veri) {
     this._gonderHam(`42${NSP},${JSON.stringify([ad, veri])}`);
@@ -93,13 +132,22 @@ class Baglanti {
     this.kapandi = true;
     clearInterval(this.ping);
     clearTimeout(this.kimlikZamani);
+    // Biriken veri hemen bırakılır.
+    this.tampon = Buffer.alloc(0);
+    this.parcalar = [];
+    this.parcaBoyu = 0;
+    this.hub.kimliksizCikar(this);
     for (const o of this.odalar) this.hub.odadanCik(o, this);
     this.hub.baglantiCikar(this);
     if (!this.soket.destroyed) {
       try { this.soket.end(cerceve('', 0x8)); } catch { /* yoksay */ }
+      const zorla = setTimeout(() => this.soket.destroy(), KAPANIS_BEKLEME_MS);
+      zorla.unref?.();
+      this.soket.once('close', () => clearTimeout(zorla));
     }
   }
   _veri(d) {
+    if (this.kapandi) return;
     this.tampon = Buffer.concat([this.tampon, d]);
     if (this.tampon.length > AZAMI_YUK * 2) return this.kapat();
     for (;;) {
@@ -114,20 +162,46 @@ class Baglanti {
       if (n === 126) { if (this.tampon.length < 4) return; n = this.tampon.readUInt16BE(2); o = 4; }
       else if (n === 127) { if (this.tampon.length < 10) return; n = Number(this.tampon.readBigUInt64BE(2)); o = 10; }
       if (!maskeli || n > AZAMI_YUK) return this.kapat(); // istemci çerçeveleri maskeli olmak ZORUNDA
+      // ⚠ SINIR BAŞLIKTA (gövde beklenmeden) denetlenir; bkz. dosya başı.
+      const denetim = opkod >= 0x8;
+      if (denetim) {
+        if (!fin || n > AZAMI_DENETIM_YUKU) return this.kapat();
+      } else {
+        if (opkod !== 0x0 && opkod !== 0x1 && opkod !== 0x2) return this.kapat(); // tanımsız opkod
+        if (opkod === 0x0 && !this.parcalar.length) return this.kapat(); // başlangıçsız devam
+        if (opkod !== 0x0 && this.parcalar.length) return this.kapat(); // yarım mesaj varken yeni mesaj
+        if (this.parcaBoyu + n > AZAMI_YUK) return this.kapat();
+      }
       if (this.tampon.length < o + 4 + n) return;
       const maske = this.tampon.subarray(o, o + 4);
       const yuk = Buffer.from(this.tampon.subarray(o + 4, o + 4 + n));
       for (let i = 0; i < n; i++) yuk[i] ^= maske[i & 3];
       this.tampon = this.tampon.subarray(o + 4 + n);
       if (opkod === 0x8) return this.kapat();
-      if (opkod === 0x9) { this.soket.write(cerceve(yuk.toString(), 0xa)); continue; }
+      if (opkod === 0x9) {
+        if (this._hizAsildi()) return this.kapat(); // ping yağmuru da sayılır
+        if (this.soket.writableLength > YAZMA_TAMPONU_SINIRI) return this.kapat();
+        this.soket.write(cerceve(yuk.toString(), 0xa));
+        continue;
+      }
       if (opkod === 0xa) continue;
       this.parcalar.push(yuk);
+      this.parcaBoyu += n;
       if (!fin) continue;
       const metin = Buffer.concat(this.parcalar).toString('utf8');
       this.parcalar = [];
-      this._paket(metin).catch(() => this.kapat());
+      this.parcaBoyu = 0;
+      if (this._hizAsildi()) return this.kapat(); // bağlantı başına mesaj hızı
+      // Sırayla işlenir: eşzamanlı sorgu yağmuru olmaz; hız sınırı kuyruğu da sınırlar.
+      this.kuyruk = this.kuyruk.then(() => (this.kapandi ? undefined : this._paket(metin))).catch(() => this.kapat());
+      if (this.kapandi) return;
     }
+  }
+  /** Bu pencerede bir mesaj daha sayılır; sınır aşıldıysa true. */
+  _hizAsildi() {
+    const simdiMs = Date.now();
+    if (simdiMs - this.pencereBasi >= MESAJ_PENCERESI_MS) { this.pencereBasi = simdiMs; this.penceredekiMesaj = 0; }
+    return ++this.penceredekiMesaj > AZAMI_MESAJ;
   }
   async _paket(p) {
     if (p === '3') { this.pongBekleniyor = false; return; }
@@ -145,14 +219,17 @@ class Baglanti {
     }
     if (nsp !== NSP) return this._gonderHam(`44${nsp},${JSON.stringify({ message: 'Invalid namespace' })}`);
     if (tur === '0') {
+      if (this.kullanici) return; // kimlik bir kez doğrulanır (tekrar = sorgu yağmuru)
       let auth = {};
       try { auth = geri ? JSON.parse(geri) : {}; } catch { /* boş */ }
       try {
         const { u, oturum } = await kullaniciCoz(this.hub.db, { headers: { authorization: `Bearer ${auth.token ?? ''}` } });
         // Bakım modu REST kapısından geçmeyen soketlere de uygulanır.
         if (!(await this.hub.oturumlarGecerli([{ oturumId: oturum.id, kullaniciId: u.id }])).has(oturum.id)) throw new Error('gecersiz');
+        if (this.kapandi) return;
         this.kullanici = u;
         this.oturumId = oturum.id;
+        this.hub.kimliksizCikar(this);
         this.hub.baglantiEkle(this);
         this._gonderHam(`40${NSP},${JSON.stringify({ sid: this.sid })}`);
       } catch {
@@ -185,6 +262,20 @@ export function gercekZamanliKur(sunucu, db) {
     db,
     odalar: new Map(),
     kullanicilar: new Map(),
+    /** IP → kimliksiz bağlantı kümesi. */
+    kimliksizler: new Map(),
+    kimliksizEkle(b) {
+      const set = this.kimliksizler.get(b.ip) ?? new Set();
+      if (set.size >= IP_BASINA_KIMLIKSIZ) return false;
+      set.add(b);
+      this.kimliksizler.set(b.ip, set);
+      return true;
+    },
+    kimliksizCikar(b) {
+      const set = this.kimliksizler.get(b.ip);
+      if (!set?.delete(b)) return;
+      if (set.size === 0) this.kimliksizler.delete(b.ip);
+    },
     baglantiEkle(b) {
       if (!this.kullanicilar.has(b.kullanici.id)) this.kullanicilar.set(b.kullanici.id, new Set());
       const set = this.kullanicilar.get(b.kullanici.id);
@@ -293,6 +384,7 @@ export function gercekZamanliKur(sunucu, db) {
   hub.hepsiniKapat = () => {
     clearInterval(dogrulamaZamanlayici);
     for (const set of hub.kullanicilar.values()) for (const b of [...set]) b.kapat();
+    for (const set of hub.kimliksizler.values()) for (const b of [...set]) b.kapat();
   };
 
   sunucu.on('upgrade', (req, soket) => {
@@ -308,7 +400,8 @@ export function gercekZamanliKur(sunucu, db) {
     soket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n'
       + `Sec-WebSocket-Accept: ${kabul}\r\n\r\n`);
     soket.setNoDelay(true);
-    new Baglanti(soket, hub); // eslint-disable-line no-new
+    const b = new Baglanti(soket, hub, istemciIp(req));
+    if (!hub.kimliksizEkle(b)) b.kapat(); // IP başına kimliksiz bağlantı sınırı
   });
   return hub;
 }

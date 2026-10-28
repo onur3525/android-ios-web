@@ -253,22 +253,37 @@ abstract final class SertifikaSabitleme {
   /// için düzenlenmiş sertifika da pini tutar. Bu yüzden `host` artık
   /// ayrıca `API_BASE_URL`'in adıyla karşılaştırılır (`hostIzinli`).
   ///
-  /// ⚠ GERİ ÇAĞRIYA GELEN SERTİFİKA: Dart, doğrulamanın başarısız
-  /// olduğu zincir halkasını verir; sistem kökleri kapalıyken bu
-  /// cihazdan cihaza yaprak ya da ara sertifika olabilir. CERT_PINS
-  /// bu yüzden hem yaprak hem ara sertifikanın SPKI pinini içermelidir
-  /// (bkz. docs/guvenlik_sertlestirme.md).
+  /// ⚠ GERİ ÇAĞRIYA GELEN SERTİFİKA HEP YAPRAKTIR (29 Eki, Dart SDK
+  /// kaynağıyla doğrulandı): Android'de `X509_STORE_CTX_get0_cert`
+  /// (doğrulanan hedef = yaprak), iOS'ta zincirin 0. öğesi verilir.
+  /// Zincirdeki HER hata (güvenilmeyen kök, imza, ad uyuşmazlığı) geri
+  /// çağrıya yaprakla gelir ve yalnız YAPRAĞIN anahtarı pinliyse kabul
+  /// edilir — sahte zincirle atlatılamaz. Bunun sonucu: ARA sertifika
+  /// pinleri HİÇBİR ZAMAN eşleşmez; CERT_PINS sunucunun (yaprak) açık
+  /// anahtarını + yedek yaprak anahtarını içermelidir. Sertifika
+  /// yenilenirken anahtar korunmuyorsa (barındırıcının yönettiği
+  /// sertifika) uygulama bağlanamaz hâle gelir (bkz.
+  /// docs/guvenlik_sertlestirme.md).
   ///
   /// ⚠ PIN YOKSA DAVRANIŞ DEĞİŞMEZ: normal sistem doğrulaması
   /// geçerlidir. Release'te bunun sessizce olmaması için
   /// `pinDenetimi` ayrıca çağrılır.
-  static HttpClient istemci() {
-    final c = HttpClient();
+  ///
+  /// [uret] verilirse istemci onunla kurulur (WebSocket bölgesi: bölge
+  /// içinden `HttpClient()` çağrılırsa bölge kendini yeniden çağırır ve
+  /// sonsuz döngüye girer — bkz. `sabitlemeli_istemci_io.dart`).
+  static HttpClient istemci(
+      [HttpClient Function(SecurityContext? context)? uret]) {
+    final yap = uret ?? (SecurityContext? c) => HttpClient(context: c);
+    // ⚠ 29 Eki: düz istemci YALNIZ pin yokken üretilir. Önceden her
+    // çağrıda üretiliyor, pin varken kullanılmadan bırakılıyordu (her
+    // REST istemcisinde ve her WebSocket bağlantı denemesinde boşa bir
+    // HttpClient). Davranış aynı.
     if (!etkin) {
-      return c;
+      return yap(null);
     }
     // ⚠ GÜVEN DEPOSU BOŞ: sistem CA'ları devre dışı.
-    final sabitli = HttpClient(context: SecurityContext(withTrustedRoots: false));
+    final sabitli = yap(SecurityContext(withTrustedRoots: false));
     sabitli.badCertificateCallback = (sertifika, host, port) {
       // ⚠ İKİ KOŞUL BİRLİKTE: izinli ad VE pin + geçerlilik süresi.
       final tamam = hostIzinli(host) && kabulEdilir(sertifika);

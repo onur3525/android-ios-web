@@ -40,12 +40,28 @@ void pinDenetimi({required bool gercekApi}) =>
 /// uygulamadaki BÜTÜN bağlantıları API pinlerine bağlar ve kırardı.
 ///
 /// Pin verilmemişse (sabitleme kapalı) [f] olduğu gibi çalışır.
+///
+/// ── ⚠ SONSUZ DÖNGÜ DÜZELTİLDİ (29 Eki, güvenlik incelemesi) ──
+/// Önceden `HttpOverrides.runZoned(createHttpClient: (_) =>
+/// SertifikaSabitleme.istemci())` kullanılıyordu. `istemci()` içindeki
+/// `HttpClient(...)` çağrısı AYNI bölgede çalıştığı için yine bu geri
+/// çağrıya düşüyordu (Dart SDK `_HttpOverridesScope.createHttpClient`):
+/// pin verilmiş HER sürümde WebSocket bağlantısı yığın taşmasıyla
+/// kurulamazdı (pin verilmiş sürüm henüz çıkmadığı için görülmedi).
+/// Artık istemci, bölgeyi YENİDEN ÇAĞIRMAYAN temel üretimle
+/// (`HttpOverrides.createHttpClient` = SDK'nın kendi istemcisi) kurulur;
+/// pin + ad + süre denetimi aynen `SertifikaSabitleme.istemci` içinde.
 T sabitliBolgede<T>(T Function() f) {
   if (!SertifikaSabitleme.etkin) {
     return f();
   }
-  return HttpOverrides.runZoned<T>(
-    f,
-    createHttpClient: (_) => SertifikaSabitleme.istemci(),
-  );
+  return HttpOverrides.runWithHttpOverrides<T>(f, SabitliHttpOverrides());
+}
+
+/// WebSocket bölgesinin `HttpClient` üretimi: SDK'nın temel üretimi +
+/// sabitleme kuralları (tek kaynak: `SertifikaSabitleme.istemci`).
+class SabitliHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) =>
+      SertifikaSabitleme.istemci(super.createHttpClient);
 }
