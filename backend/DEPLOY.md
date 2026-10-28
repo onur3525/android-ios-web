@@ -33,6 +33,14 @@ Hız sınırları (giriş, Firebase oturumu, OTP, admin giriş/MFA/yeniden
 doğrulama), kullanıcı ve admin oturum kayıtları ve admin denetim kayıtları
 IP'yi TEK yerden alır (`src/http.js` → `istemciIp`).
 
+⚠ **WebSocket (29 Eki):** anlık bağlantının "IP başına en çok 20 kimliksiz
+bağlantı" sınırı da aynı IP'yi kullanır (`src/gercek_zamanli.js`). Değer
+Render'da TANIMSIZ ya da EKSİKSE bütün kullanıcılar Render'ın tek adresinden
+geliyor görünür: sınır bütün site için 20'ye iner ve bir saldırgan 20
+kimliksiz bağlantıyı açık tutarak herkesin anlık bağlantısını
+geciktirebilir. Bu sürüm canlıya çıkmadan ÖNCE değer aşağıdaki ölçümle
+belirlenmelidir.
+
 - `X-Forwarded-For`'un **en soldaki** değeri istemcinin kendi yazdığı değerdir
   ve doğrulanmaz; proxy'ler gerçek adresi **sona** ekler. Bu yüzden değer
   **sağdan** sayılarak alınır.

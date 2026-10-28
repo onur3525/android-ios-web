@@ -245,7 +245,10 @@ class Baglanti {
     const [ad, veri] = JSON.parse(m[2]);
     const offerId = String(veri?.offerId ?? '');
     if (ad === 'conversation.join') {
-      if (await this.hub.katilabilir(this.kullanici.id, offerId)) {
+      const izinli = await this.hub.katilabilir(this.kullanici.id, offerId);
+      // ⚠ 29 Eki: yetki sorgusu sürerken bağlantı kapandıysa odaya EKLENMEZ
+      // (kapalı bağlantı odada kalır, bellekte birikirdi).
+      if (izinli && !this.kapandi) {
         this.odalar.add(offerId);
         this.hub.odayaKat(offerId, this);
       }

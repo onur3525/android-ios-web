@@ -6,7 +6,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import net from 'node:net';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
@@ -14,12 +14,19 @@ const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { gercekZamanliKur, WS_SINIRLARI } = await import('../src/gercek_zamanli.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
+const { olaylar } = await import('../src/olaylar.js');
+const { anlikHaberEkle, anlikHaberleriYayinla } = await import('../src/anlik_haber.js');
 
-let db, sunucu, hub, port, token;
+let db, sunucu, hub, port, token, taban, kullaniciId, usta, offerId;
+const sus = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
-/** Ham TCP üzerinden WebSocket: çerçeveler elle kurulur. */
-async function ham() {
-  const c = net.connect(port, '127.0.0.1');
+/**
+ * Ham TCP üzerinden WebSocket: çerçeveler elle kurulur.
+ * [basliklar]: el sıkışmaya eklenecek HTTP başlıkları (ör. X-Forwarded-For).
+ * [yariAcik]: karşı taraf kapanışa YANIT VERMEYEN istemci (FIN göndermez).
+ */
+async function ham({ basliklar = {}, yariAcik = false } = {}) {
+  const c = net.connect({ port, host: '127.0.0.1', allowHalfOpen: yariAcik });
   const gelen = [];
   let tampon = Buffer.alloc(0);
   let el = false;
@@ -43,7 +50,8 @@ async function ham() {
       tampon = tampon.subarray(o + n);
     }
   });
-  c.write(`GET /socket.io/?EIO=4&transport=websocket HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ${randomBytes(16).toString('base64')}\r\nSec-WebSocket-Version: 13\r\n\r\n`);
+  const ek = Object.entries(basliklar).map(([k, v]) => `${k}: ${v}\r\n`).join('');
+  c.write(`GET /socket.io/?EIO=4&transport=websocket HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ${randomBytes(16).toString('base64')}\r\nSec-WebSocket-Version: 13\r\n${ek}\r\n`);
   const cerceve = (op, fin, veri) => {
     const yuk = Buffer.from(veri);
     const maske = randomBytes(4);
@@ -73,16 +81,39 @@ before(async () => {
   hub = gercekZamanliKur(sunucu, db);
   await new Promise((ok) => sunucu.listen(0, ok));
   port = sunucu.address().port;
-  const taban = `http://127.0.0.1:${port}`;
-  const istek = async (yol, govde) => {
-    const r = await fetch(taban + yol, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) });
-    const m = await r.text();
-    return m ? JSON.parse(m) : null;
-  };
-  await istek('/api/v1/auth/otp/request', { phone: '5480000001', purpose: 'REGISTER' });
-  const k = await istek('/api/v1/auth/register', { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: '5480000001', password: 'sifre1234', name: 'Soket Deneme', email: 'soket@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp });
-  token = k.accessToken;
+  taban = `http://127.0.0.1:${port}`;
+  const k = await kayit('5480000001', 'CUSTOMER');
+  token = k.token;
+  kullaniciId = k.id;
+  // Normal akış testi için: ilan + teklif + açılmış iletişim (sohbet odası).
+  usta = await kayit('5480000002', 'PROVIDER');
+  const hizmet = (await db.prepare('SELECT name FROM services WHERE deleted_at IS NULL LIMIT 1').get()).name;
+  const l = await istek('/api/v1/listings', { yontem: 'POST', token, govde: { title: hizmet, location: 'Bayraklı', description: 'kapı kilidi değişecek acil' } });
+  offerId = (await istek('/api/v1/offers', { yontem: 'POST', token: usta.token, govde: { listingId: l.json.id, amountTl: 400, note: '' } })).json.id;
+  await istek(`/api/v1/offers/${offerId}/communication`, { yontem: 'POST', token });
 });
+
+async function istek(yol, { yontem = 'GET', govde, token: t } = {}) {
+  const r = await fetch(taban + yol, { method: yontem, headers: { ...(govde ? { 'Content-Type': 'application/json' } : {}), ...(t ? { Authorization: `Bearer ${t}` } : {}) }, body: govde ? JSON.stringify(govde) : undefined });
+  const m = await r.text();
+  return { durum: r.status, json: m ? JSON.parse(m) : null };
+}
+async function kayit(tel, rol) {
+  await db.prepare('DELETE FROM rate_limits').run();
+  await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
+  const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Soket Deneme', email: `s${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  return { token: r.json.accessToken, id: (await istek('/api/v1/users/me', { token: r.json.accessToken })).json.id };
+}
+/** Kimliği doğrulanmış ham bağlantı. */
+async function kimlikli(t = token, sec = {}) {
+  const w = await ham(sec);
+  w.gonder(0x1, true, `40/ws,${JSON.stringify({ token: t })}`);
+  assert.ok(await w.bekle(() => w.gelen.some((p) => p.startsWith('40/ws,{"sid"'))), 'kimlik doğrulanmalı');
+  return w;
+}
+/** Hub'daki sunucu tarafı bağlantı nesneleri. */
+const sunucuBaglantilari = (id) => [...(hub.kullanicilar.get(id) ?? [])];
 after(async () => { hub?.hepsiniKapat(); sunucu?.closeAllConnections?.(); sunucu?.close(); await db?.close(); });
 
 test('FIN\'siz parçaların TOPLAMI sınırı aşınca bağlantı kapanır (kimlik beklenmez)', async () => {
@@ -162,4 +193,118 @@ test('kimlik bir kez doğrulanır: tekrar eden kimlik paketi yeniden sorgu yapt�
   await new Promise((ok) => setTimeout(ok, 300));
   assert.equal(w.gelen.filter((p) => p.startsWith('40/ws,{"sid"')).length, 1);
   w.c.destroy();
+});
+
+// ═══════════ 29 Eki — EKSİK TESTLER (güvenlik düzeltme planı) ═══════════
+
+test('yazma tamponu: okumayan istemcide 1 MB aşılınca bağlantı kapanır; tampon sınırın üstüne çıkmaz', async () => {
+  const w = await kimlikli();
+  w.c.pause(); // istemci okumayı bırakır: sunucunun yazdıkları birikir
+  const [b] = sunucuBaglantilari(kullaniciId);
+  assert.ok(b, 'sunucu bağlantısı bulunmalı');
+  const buyuk = 'x'.repeat(60_000);
+  let enCok = 0;
+  for (let i = 0; i < 3000 && !b.kapandi; i++) {
+    b.olay('message.read', { offerId: buyuk });
+    enCok = Math.max(enCok, b.soket.writableLength);
+  }
+  assert.equal(b.kapandi, true, 'okumayan istemci kapatılmalı');
+  assert.ok(enCok <= WS_SINIRLARI.YAZMA_TAMPONU_SINIRI + 70_000, `tampon ${enCok} bayta çıktı`);
+  w.c.destroy();
+});
+
+test('zorla kapatma: kapanışa yanıt vermeyen soket 5 sn sonra kesilir', async () => {
+  const w = await ham({ yariAcik: true });
+  const [b] = [...(hub.kimliksizler.get('127.0.0.1') ?? [])];
+  assert.ok(b, 'kimliksiz bağlantı izlenmeli');
+  w.gonder(0x0, true, 'devam'); // protokol ihlali → sunucu kapatır
+  await sus(1000);
+  assert.equal(b.kapandi, true);
+  assert.equal(b.soket.destroyed, false, 'karşı taraf yanıt vermedi; soket henüz açık (yarı kapalı)');
+  await sus(4600);
+  assert.equal(b.soket.destroyed, true, '5 sn sonra zorla kapatılmalı');
+  w.c.destroy();
+});
+
+test('oda yarışı: yetki sorgusu sürerken bağlantı kapanırsa odaya EKLENMEZ', async () => {
+  const w = await kimlikli();
+  const asil = hub.katilabilir;
+  hub.katilabilir = async (...a) => { await sus(300); return asil.apply(hub, a); };
+  try {
+    w.gonder(0x1, true, `42/ws,${JSON.stringify(['conversation.join', { offerId }])}`);
+    await sus(50);
+    w.c.destroy(); // sorgu sürerken kapanır
+    await sus(500);
+    assert.equal(hub.odalar.has(offerId), false, 'kapalı bağlantı odada kalmamalı');
+  } finally {
+    hub.katilabilir = asil;
+  }
+});
+
+test('proxy ayarı TANIMSIZKEN X-Forwarded-For yok sayılır: sahte başlıkla IP sınırı atlatılamaz', async () => {
+  // HC_TRUST_PROXY_HOPS tanımsız (bu dosya) → herkes soket adresiyle sayılır.
+  const acik = [];
+  for (let i = 0; i < WS_SINIRLARI.IP_BASINA_KIMLIKSIZ; i++) acik.push(await ham({ basliklar: { 'X-Forwarded-For': `10.0.0.${i + 1}` } }));
+  const fazla = await ham({ basliklar: { 'X-Forwarded-For': '10.9.9.9' } });
+  assert.ok(await fazla.bekle(() => fazla.durum.kapandi), 'farklı sahte başlık sınırı aşmamalı');
+  assert.deepEqual([...hub.kimliksizler.keys()], ['127.0.0.1'], 'yalnız soket adresi kullanılmalı');
+  for (const w of acik) w.c.destroy();
+  await sus(200);
+});
+
+test('normal kullanım: kimlik, odaya giriş/çıkış, mesaj, bildirim, yeniden bağlanma — hiçbiri sınıra takılmaz', async () => {
+  const w = await kimlikli();
+  const katil = (x) => x.gonder(0x1, true, `42/ws,${JSON.stringify(['conversation.join', { offerId }])}`);
+  const ayril = (x) => x.gonder(0x1, true, `42/ws,${JSON.stringify(['conversation.leave', { offerId }])}`);
+  const mesaj = async (metin) => assert.ok((await istek('/api/v1/messages', { yontem: 'POST', token: usta.token, govde: { offerId, text: metin, idempotencyKey: randomUUID() } })).durum < 300);
+  katil(w);
+  await sus(150);
+  await mesaj('Merhaba 1');
+  assert.ok(await w.bekle(() => w.gelen.some((p) => p.includes('message.new') && p.includes('Merhaba 1'))), 'odadaki mesaj gelmeli');
+  ayril(w);
+  await sus(150);
+  await mesaj('Merhaba 2');
+  await sus(300);
+  assert.equal(w.gelen.some((p) => p.includes('Merhaba 2')), false, 'odadan çıkınca mesaj gelmemeli');
+  katil(w);
+  await sus(150);
+  // Hızlı sohbet: arka arkaya 10 mesaj (REST); soket tarafında yalnız gelen olaylar.
+  for (let i = 0; i < 10; i++) await mesaj(`Hızlı ${i}`);
+  assert.ok(await w.bekle(() => w.gelen.filter((p) => p.includes('Hızlı')).length === 10), '10 mesajın hepsi gelmeli');
+  // Bildirim haberi.
+  anlikHaberEkle(kullaniciId, 'NEW_OFFER');
+  await anlikHaberleriYayinla();
+  assert.ok(await w.bekle(() => w.gelen.some((p) => p.includes('notification.new'))));
+  // Engine.IO ping/pong (sunucu her 25 sn ping atar; istemci 3 ile yanıtlar).
+  for (let i = 0; i < 5; i++) w.gonder(0x1, true, '3');
+  await sus(100);
+  assert.equal(w.durum.kapandi, false, 'normal kullanım kapatılmamalı');
+  // Yeniden bağlanma: kopma → yeni bağlantı → odaya yeniden katılma.
+  w.c.destroy();
+  await sus(100);
+  const y = await kimlikli();
+  katil(y);
+  await sus(150);
+  await mesaj('Yeniden bağlandım');
+  assert.ok(await y.bekle(() => y.gelen.some((p) => p.includes('Yeniden bağlandım'))));
+  assert.equal(y.durum.kapandi, false);
+  y.c.destroy();
+});
+
+test('saldırı paketleri dururken meşru parçalı mesaj aynı bağlantıda bozulmaz', async () => {
+  const w = await kimlikli();
+  // Parçalı oda isteği (3 parça) çalışır.
+  const paket = `42/ws,${JSON.stringify(['conversation.join', { offerId }])}`;
+  const u = Math.ceil(paket.length / 3);
+  w.gonder(0x1, false, paket.slice(0, u));
+  w.gonder(0x0, false, paket.slice(u, 2 * u));
+  w.gonder(0x0, true, paket.slice(2 * u));
+  await sus(200);
+  assert.ok([...(hub.odalar.get(offerId) ?? [])].some((b) => b.kullanici?.id === kullaniciId), 'parçalı istek işlenmeli');
+  // Aynı bağlantıda sınır aşan parça → kapanır.
+  w.gonder(0x1, false, 'a'.repeat(40_000));
+  w.gonder(0x0, false, 'a'.repeat(40_000));
+  assert.ok(await w.bekle(() => w.durum.kapandi));
+  await sus(100);
+  assert.equal([...(hub.odalar.get(offerId) ?? [])].some((b) => b.kapandi), false, 'kapanan bağlantı odadan çıkmalı');
 });
