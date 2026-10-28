@@ -32,6 +32,7 @@ import { onbellegiHerYerdeTemizle } from './genel_onbellek.js';
 import { isTuru } from './is_turu.js';
 import { fotoGonder, varlikGonder } from './katalog_foto.js';
 import { epostaVarligiGonder } from './eposta_tasarimi.js';
+import { indirmeSiniriKur, cokFazlaIndirme } from './indirme_siniri.js';
 import { adminKullaniciRotalar } from './routes/admin_kullanici.js';
 import { silmeKuyruklariRotalar } from './routes/silme_kuyruklari.js';
 import { kullaniciRotalar } from './routes/kullanici.js';
@@ -80,6 +81,8 @@ async function panelDosyasi(res, yol) {
 }
 
 export function uygulamaKur(db) {
+  // 28 Eki: fotoğraf/PDF/varlık indirme sınırı (bkz. indirme_siniri.js).
+  const indirmeSiniri = indirmeSiniriKur();
   const r = new Yonlendirici();
   // ⚠ SIRA: özel yollar ('/legal/pending-acceptances') genel desenden
   // ('/legal/:slug') ÖNCE kaydedilir; yönlendirici ilk eşleşeni alır.
@@ -99,6 +102,16 @@ export function uygulamaKur(db) {
     const url = new URL(req.url, 'http://yerel');
     const yol = url.pathname;
     const cerezler = [];
+    // Depodan/diskten dosya akıtan uçlar sınırlı çalışır: izin yoksa 429.
+    const sinirli = async (is) => {
+      const izin = await indirmeSiniri.al(istemciIp(req), res);
+      if (!izin.ok) return cokFazlaIndirme(res, izin.sonraSn);
+      try {
+        return await is();
+      } finally {
+        izin.birak();
+      }
+    };
     // ── SİSTEM DURUMU ÖLÇÜMÜ (22 Eki): kullanıcı API'sinin her yanıtı
     // (durum kodu + süre) sayılır; 5xx'te hata kodu ve istek kimliği de.
     if (yol.startsWith('/api/v1/')) {
@@ -142,7 +155,7 @@ export function uygulamaKur(db) {
       // Katalog görselleri (ham yanıt): yüklenen fotoğraf (depodan, özel) ve
       // uygulama paketindeki katalog görselleri (beyaz listeli, salt okunur).
       if (req.method === 'GET' && yol.startsWith('/api/v1/categories/photo/')) {
-        return await fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res);
+        return await sinirli(() => fotoGonder(db, decodeURIComponent(yol.slice('/api/v1/categories/photo/'.length)), res));
       }
       // ── YASAL BELGE PDF'İ (031): yayında ya da arşivdeki sürüm herkese açık
       // (kullanıcı kabul ettiği sürümü görebilmeli); taslak YALNIZ admin.
@@ -150,7 +163,7 @@ export function uygulamaKur(db) {
         const m = req.method === 'GET' && /^\/api\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/pdf\/(\d{1,6})$/.exec(yol);
         if (m) {
           const v = await db.prepare(`SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ? AND status <> 'DRAFT'`).get(m[1], Number(m[2]));
-          return await pdfGonder(db, v?.pdf_ref, res, `${m[1]}-v${m[2]}.pdf`);
+          return await sinirli(() => pdfGonder(db, v?.pdf_ref, res, `${m[1]}-v${m[2]}.pdf`));
         }
         const a = req.method === 'GET' && /^\/admin\/v1\/legal\/([a-z][a-z0-9-]{1,40})\/versions\/(\d{1,6})\/pdf$/.exec(yol);
         if (a) {
@@ -158,16 +171,18 @@ export function uygulamaKur(db) {
           if (!c) throw hata.kimlik();
           if (!yetkiliMi(c.admin.role, 'legal.read')) throw hata.yetki();
           const v = await db.prepare('SELECT pdf_ref FROM legal_versions WHERE slug = ? AND version = ?').get(a[1], Number(a[2]));
-          return await pdfGonder(db, v?.pdf_ref, res, `${a[1]}-v${a[2]}.pdf`);
+          return await sinirli(() => pdfGonder(db, v?.pdf_ref, res, `${a[1]}-v${a[2]}.pdf`));
         }
       }
       // Destek e-postaları (Resend Receiving webhook'u): ham gövde + imza (gelen_eposta.js).
       if (yol === GELEN_YOL) return await gelenEpostaWebhook(db, req, res);
+      // E-posta görselleri SINIRSIZ: Gmail vb. görselleri az sayıda ortak
+      // vekil IP'den çeker; sınır e-postalardaki logoyu kırardı (küçük, diskten).
       if (req.method === 'GET' && yol.startsWith('/eposta-varlik/')) {
         return await epostaVarligiGonder(yol.slice('/eposta-varlik/'.length), res);
       }
       if (req.method === 'GET' && yol.startsWith('/katalog-varlik/')) {
-        return await varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res);
+        return await sinirli(() => varlikGonder(decodeURIComponent(yol.slice('/katalog-varlik/'.length)), res));
       }
       if (req.method === 'GET' && (yol === '/admin' || (yol.startsWith('/admin/') && !yol.startsWith('/admin/v1/')))) {
         return await panelDosyasi(res, yol);

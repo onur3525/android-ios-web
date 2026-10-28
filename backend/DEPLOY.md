@@ -106,6 +106,17 @@ PgBouncer kullanılacaksa **transaction** modunda havuz bağlantıları için
 uygundur; LISTEN bağlantısı ise **session** modu ister (ayrı havuz ya da
 doğrudan bağlantı).
 
+## İndirme sınırı (28 Eki) — fotoğraf / PDF / katalog varlığı
+
+Bellekte, ÖRNEK BAŞINA (çok örnekte her örnek kendi sayar). Ayar gerekmez;
+varsayılanlar: IP başına aynı anda 6 (`HC_INDIRME_IP_ESZ`), örnek genelinde
+40 (`HC_INDIRME_TOPLAM_ESZ`), IP başına dakikada 300 indirme
+(`HC_INDIRME_IP_DAKIKA`). Fazlası en çok 10 sn sıra bekler
+(`HC_INDIRME_BEKLEME_MS`; sıra: IP başına 20, genel 200), sonra 429 +
+`Retry-After`. E-posta görselleri (`/eposta-varlik/`) sınırsızdır. IP,
+`HC_TRUST_PROXY_HOPS` ile seçilen istemci IP'sidir; yanlış ayarda bütün
+kullanıcılar tek IP sayılır.
+
 ## Otomatik ölçekleme önerisi
 
 - Başlangıç: 2 örnek (biri düşerse hizmet sürer), en fazla N.
