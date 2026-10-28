@@ -56,6 +56,15 @@ jobs:
             sed -n '/█ THRESHOLDS/,$p' cikti.txt 2>/dev/null || tail -60 cikti.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Sonuç notları (rakamlar API'den de okunabilsin)
+        if: always()
+        run: |
+          [ -f sonuc.json ] || { echo "::warning::sonuc.json yok (test başlamadan durdu)"; exit 0; }
+          jq -r '.metrics as $m
+            | "::notice title=Genel::istek=\($m.http_reqs.count) hiz=\($m.http_reqs.rate|floor)/sn hata=\(($m.http_req_failed.value*10000|floor)/100)% p95=\($m.http_req_duration["p(95)"]|floor)ms p99=\($m.http_req_duration["p(99)"]|floor)ms max=\($m.http_req_duration.max|floor)ms dusen=\($m.dropped_iterations.count // 0) vu_max=\($m.vus_max.max // $m.vus_max.value // 0)",
+              ($m | to_entries[] | select(.key|startswith("http_req_duration{uc:"))
+                | "::notice title=\(.key|ltrimstr("http_req_duration{uc:")|rtrimstr("}"))::ort=\(.value.avg|floor)ms p95=\(.value["p(95)"]|floor)ms p99=\(.value["p(99)"]|floor)ms max=\(.value.max|floor)ms")' sonuc.json
+          grep -E "thresholds on metrics .* crossed|aborted" cikti.txt | head -3 | sed 's/^/::warning title=Durdu::/' || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
