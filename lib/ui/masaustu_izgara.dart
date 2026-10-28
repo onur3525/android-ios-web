@@ -34,9 +34,8 @@ import 'olcu.dart';
 ///
 /// Sabit "2 kolon" demek 1024'te kartları daraltır, 2560'ta ise boşa
 /// yer bırakırdı. Kolon sayısı, kartın okunabilir en küçük genişliğine
-/// (`_enAzKart`) göre hesaplanır ve üst sınır `_enFazlaKolon`'dur:
-/// üçten fazla kolon, kartları kartvizit boyutuna indirir ve içerik
-/// hiyerarşisini bozar.
+/// (`_enAzKart`) göre hesaplanır. ⚠ 28 Eki (2. karar): üst sınır
+/// KALDIRILDI — geniş monitörde ekran yarım kalmasın diye sütun eklenir.
 ///
 /// ## ⚠ KAPSAM DIŞI
 ///
@@ -62,8 +61,6 @@ class MasaustuIzgara extends StatelessWidget {
   /// Bir kartın altına düşmemesi gereken genişlik.
   static const double _enAzKart = 360;
 
-  /// Üst sınır.
-  static const double _enFazlaKolon = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -211,11 +208,7 @@ int masaustuKolonSayisi(double genislik, double aralik) {
   var kolon = ((genislik + aralik) /
           (MasaustuIzgara._enAzKart + aralik))
       .floor();
-  if (kolon < 1) {
-    kolon = 1;
-  }
-  if (kolon > MasaustuIzgara._enFazlaKolon) {
-    kolon = MasaustuIzgara._enFazlaKolon.toInt();
-  }
-  return kolon;
+  // ⚠ ÜST SINIR YOK (28 Eki, 2. karar): ekran genişledikçe sütun eklenir;
+  // kartlar en az 360 px kalır, büyümez.
+  return kolon < 1 ? 1 : kolon;
 }

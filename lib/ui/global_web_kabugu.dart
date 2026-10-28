@@ -158,25 +158,10 @@ class GlobalWebKabugu extends StatelessWidget {
                 activeKey: _sekmeAnahtari(rota),
                 eylem: (e) => RefShell.menuEylemi(context, e),
               ),
-              // 28 Eki: içerik sütunu menünün yanından başlar, en çok
-              // `IcerikGenisligi.masaustuSutun` (bkz. olcu.dart). Kalan
-              // alan sayfa zemini rengindedir.
+              // 28 Eki (2. karar): içerik menünün yanından SAĞ KENARA
+              // kadar; genişlik sınırı yok (bkz. olcu.dart).
               Expanded(
-                child: ColoredBox(
-                  color: RC.pageBg,
-                  child: LayoutBuilder(
-                    builder: (context, k) => Align(
-                      alignment: Alignment.topLeft,
-                      child: SizedBox(
-                        width: k.maxWidth < IcerikGenisligi.masaustuSutun
-                            ? k.maxWidth
-                            : IcerikGenisligi.masaustuSutun,
-                        height: k.maxHeight,
-                        child: child,
-                      ),
-                    ),
-                  ),
-                ),
+                child: ColoredBox(color: RC.pageBg, child: child),
               ),
             ],
           );

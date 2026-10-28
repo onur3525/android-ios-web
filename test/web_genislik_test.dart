@@ -1,23 +1,27 @@
-// MASAÜSTÜ WEB GENİŞLİĞİ (28 Eki, kullanıcı kararı): kenar çubuklu masaüstü
-// web'de iki rolün bütün ekranları menünün yanından başlayan, en çok 1228 px
-// genişlikte tek sütunda çizilir; listeler ızgara, detaylar okunur sütun.
+// MASAÜSTÜ WEB GENİŞLİĞİ (28 Eki, kullanıcı kararı — 2.): kenar çubuklu
+// masaüstü web'de iki rolün bütün ekranları menünün yanından SAĞ KENARA
+// kadar çizilir ("yarım kalmamalı, tüm ekranlara sığmalı"); listeler
+// genişledikçe sütun ekler, detaylar da tam genişlik.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hizmetcep/ui/olcu.dart';
 
 String _kod(String p) => File(p).readAsStringSync();
 
 void main() {
-  test('içerik sütunu tek kaynak: ızgara + iki yanda 14 px', () {
-    expect(IcerikGenisligi.masaustuSutun, IcerikGenisligi.izgara + 28);
+  test('kabuk içeriği menünün yanından sağ kenara kadar çizer (sınır yok)', () {
+    final k = _kod('lib/ui/global_web_kabugu.dart');
+    expect(k.contains('child: ColoredBox(color: RC.pageBg, child: child),'), isTrue);
+    expect(k.contains('masaustuSutun'), isFalse);
+    // Sayfa iskeleti de masaüstünde genişliği sınırlamaz.
+    final r = _kod('lib/ui/ref_widgets.dart');
+    expect(r.contains('const BoxConstraints(maxWidth: IcerikGenisligi.izgara)'), isFalse);
   });
 
-  test('kabuk içerik sütununu menünün yanına (sola) yaslar ve sınırlar', () {
-    final k = _kod('lib/ui/global_web_kabugu.dart');
-    expect(k.contains('alignment: Alignment.topLeft'), isTrue);
-    expect(k.contains('IcerikGenisligi.masaustuSutun'), isTrue);
-    expect(k.contains('color: RC.pageBg'), isTrue);
+  test('ızgarada sütun sınırı yok; detay sütunu tam genişlik', () {
+    expect(_kod('lib/ui/masaustu_izgara.dart').contains('_enFazlaKolon'), isFalse);
+    final d = _kod('lib/ui/masaustu_detay.dart');
+    expect(d.contains('maxWidth: IcerikGenisligi.liste'), isFalse);
   });
 
   test('hizmet alan listesi masaüstünde ızgara (hizmet verenle aynı diziliş)', () {

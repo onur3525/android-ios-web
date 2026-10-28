@@ -7,12 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/ui/masaustu_izgara.dart';
 
 void main() {
-  test('kolon sayısı: en az 360 px kart, en çok 3 kolon', () {
+  test('kolon sayısı: en az 360 px kart, üst sınır yok', () {
     expect(masaustuKolonSayisi(300, 10), 1);
     expect(masaustuKolonSayisi(729, 10), 1);
     expect(masaustuKolonSayisi(730, 10), 2);
     expect(masaustuKolonSayisi(1100, 10), 3);
-    expect(masaustuKolonSayisi(2560, 10), 3);
+    // ⚠ 28 Eki (2. karar): üst sınır yok — geniş ekranda sütun eklenir.
+    expect(masaustuKolonSayisi(1480, 10), 4);
+    expect(masaustuKolonSayisi(2560, 10), 6);
+    expect(masaustuKolonSayisi(3200, 10), 8);
   });
 
   testWidgets('mobilde liste tembel: 500 kartın yalnız görünenleri çizilir', (t) async {

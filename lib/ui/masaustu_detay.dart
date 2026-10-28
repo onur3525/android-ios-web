@@ -1,7 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import 'olcu.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// DETAY DÜZENİ — ANA İÇERİK + YARDIMCI BÖLÜM, TEK SÜTUN
@@ -16,8 +13,8 @@ import 'olcu.dart';
 /// görünümde yan yana olmamalı — sayfa tek sütun olsun."
 ///
 /// Artık HER ekran sınıfında `ana` ÖNCE, `yan` SONRA, alt alta çizilir.
-/// Masaüstünde sütun okunabilir genişlikte (`IcerikGenisligi.liste`)
-/// ortalanır; kenardan kenara gerilmez.
+/// Masaüstünde sütun tam genişliktedir (28 Eki, 2. karar; önceden
+/// `liste` genişliğinde ortalıydı).
 ///
 /// ## ⚠ TEK YER
 ///
@@ -66,7 +63,7 @@ class MasaustuDetay extends StatelessWidget {
 /// ── OKUNUR DETAY SÜTUNU — TEK KAYNAK (28 Eki) ──
 ///
 /// Masaüstü web'de detay ekranları okunabilir genişlikte
-/// (`IcerikGenisligi.liste`) ve ortalı çizilir. Hizmet verenin iş detayı
+/// (28 Eki 2. karar: tam genişlik) çizilir. Hizmet verenin iş detayı
 /// ([MasaustuDetay]) ile hizmet alanın ilan detayı AYNI kuralı kullanır;
 /// önceden hizmet alan detayı bütün genişliğe yayılıyordu.
 /// ⚠ MOBİLDE ARAYA HİÇBİR ŞEY GİRMEZ.
@@ -77,15 +74,9 @@ class MasaustuOkunurSutun extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb || !ekranSinifi(context).masaustuMu) {
-      return child;
-    }
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: IcerikGenisligi.liste),
-        child: child,
-      ),
-    );
+    // ⚠ 28 Eki (2. karar): masaüstünde de TAM GENİŞLİK — detay ekranları
+    // dar ortalı sütunda değil, menünün yanından sağ kenara kadar.
+    // Bileşen tek kaynak olarak duruyor: kural değişirse yalnız burası.
+    return child;
   }
 }
