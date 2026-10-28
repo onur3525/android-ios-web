@@ -81,8 +81,14 @@ bağlanır) → veritabanı kapanır. En fazla 25 sn.
 
 ## PostgreSQL bağlantı bütçesi
 
-Her örnek `HC_DB_POOL` (varsayılan 10) + 1 LISTEN bağlantısı açar.
-`örnek_sayısı_azami × (HC_DB_POOL + 1) < max_connections` olmalı.
+Her örnek en çok `HC_DB_POOL` (varsayılan 10) bağlantı açar.
+`örnek_sayısı_azami × HC_DB_POOL < max_connections` olmalı (bakım ve
+yönetim bağlantıları için birkaç bağlantı boş bırakın).
+
+⚠ (28 Eki düzeltmesi) LISTEN bağlantısı havuzun DIŞINDA değil, İÇİNDEN
+alınır ve kalıcı tutulur: isteklere ve işlere `HC_DB_POOL − 1` bağlantı
+kalır. Arka plan işleri en çok 2'şer koşar (`src/is_turu.js`; iş başına
+≈ 2 bağlantı: danışma kilidi + iş sorgusu). Önerilen: tek örnekte 20–30.
 
 **Şifre özeti iş parçacığı havuzu:** şifre doğrulama (scrypt, ~100 ms CPU,
 ~32 MB bellek) olay döngüsünü kilitlememek için libuv iş parçacığı havuzunda
