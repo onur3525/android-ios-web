@@ -8,6 +8,7 @@ import '../ports/teklif_talebi_port.dart';
 import 'api_client.dart';
 import 'api_error_mapper.dart';
 import 'gorsel_adresi.dart';
+import 'veri_imzasi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// TEKLİF TALEBİ — GERÇEK API PORTU (`/api/v1/teklif-talepleri`)
@@ -17,7 +18,7 @@ import 'gorsel_adresi.dart';
 /// (`ApiConfig.useRealApi`) kurulur; mock mod/web demosu aynen.
 ///
 /// Okumalar (`byHizmetAlan`, `bySaglayici`, `byId`) senkron kalır:
-/// önbellekten döner ve en fazla 15 sn'de bir arka planda tazelenir;
+/// önbellekten döner; ilk okumada yüklenir, sonra anlık haberle tazelenir;
 /// her yazma işleminden sonra sunucu yanıtı önbelleğe işlenir.
 ///
 /// İş kuralları (durum makinesi, taraf denetimi, 30 saatlik teklif
@@ -30,8 +31,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
   final Map<String, TeklifTalebi> _onbellek = {};
   DateTime? _sonTazeleme;
   bool _tazeleniyor = false;
-
-  static const _tazelemeAraligi = Duration(seconds: 15);
+  String? _imza;
 
   /// Sunucunun talep görünümündeki değerlendirmeler (talepId → Review).
   final Map<String, Review> _degerlendirmeler = {};
@@ -58,30 +58,54 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
     );
   }
 
+  // ── ⚠ OKUMADA YOKLAMA KALDIRILDI (28 Eki, kullanıcı kararı) ──
+  // Eskiden her okumada 15 sn geçtiyse arka planda yeniden çekiliyordu
+  // (ekran açık kaldıkça sürekli istek + yeniden çizim). Artık yalnız İLK
+  // okumada yüklenir; sonrası talep haberi (anlık bağlantı / push),
+  // uygulamanın öne gelmesi ve yeniden bağlanma ile tazelenir
+  // (`AnlikTazeleme`).
   void _gerekirseTazele() {
-    final son = _sonTazeleme;
-    if (_tazeleniyor || (son != null && DateTime.now().difference(son) < _tazelemeAraligi)) {
+    if (_tazeleniyor || _sonTazeleme != null) {
       return;
     }
     unawaited(yenile());
   }
 
+  @override
+  void oturumDegisti() {
+    _sonTazeleme = null;
+    _imza = null;
+    if (_onbellek.isEmpty && _degerlendirmeler.isEmpty) {
+      return;
+    }
+    _onbellek.clear();
+    _degerlendirmeler.clear();
+    notifyListeners();
+  }
+
   /// Sunucudan kullanıcının taraf olduğu bütün talepleri çeker.
+  @override
   Future<void> yenile() async {
     _tazeleniyor = true;
     try {
       final liste = await _c.getList('/teklif-talepleri');
+      _sonTazeleme = DateTime.now();
+      // ⚠ DEĞİŞMEYEN VERİ (28 Eki): aynı yanıt yeniden uygulanmaz.
+      final imza = veriImzasi(liste);
+      if (imza != null && imza == _imza) {
+        return;
+      }
+      _imza = imza;
       final kayitlar = liste.whereType<Map<String, dynamic>>().toList();
       _onbellek
         ..clear()
         ..addEntries(kayitlar.map(_talep).map((t) => MapEntry(t.id, t)));
       _degerlendirmeler.clear();
       kayitlar.forEach(_degerlendirmeyiOku);
-      _sonTazeleme = DateTime.now();
       notifyListeners();
     } catch (_) {
       // Ağ/oturum hatası: önbellek korunur; sonraki okumada yeniden denenir.
-      _sonTazeleme = DateTime.now();
+      _sonTazeleme = null;
     } finally {
       _tazeleniyor = false;
     }
@@ -116,6 +140,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
       final j = await f();
       if (j['id'] is String) {
         final t = _talep(j);
+        _imza = null; // önbellek liste dışı yoldan değişti
         _onbellek[t.id] = t;
         _degerlendirmeyiOku(j);
         notifyListeners();
@@ -186,6 +211,7 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
     try {
       await _c.post('/teklif-talepleri/$talepId/okundu');
       final t = _onbellek[talepId];
+      _imza = null;
       if (t != null) {
         for (final m in t.mesajlar) {
           if (m.gonderenId != okuyanId) {

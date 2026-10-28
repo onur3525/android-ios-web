@@ -20,6 +20,7 @@ import '../../../core/boot.dart' show currentPlatform;
 import '../api_client.dart';
 import '../api_error_mapper.dart';
 import '../mappers.dart';
+import '../veri_imzasi.dart';
 
 /// Sunucu çağrısını DomainError'a çeviren ortak sarmalayıcı.
 /// İŞ KURALLARI SUNUCUDA yaşar; burada yalnız taşıma ve dönüşüm vardır.
@@ -429,7 +430,17 @@ class ApiListingRepository extends ChangeNotifier {
     return _teklifIlanlari[id];
   }
 
+  /// Son uygulanan liste yanıtının imzası (bkz. `veriImzasi`).
+  String? _listeImzasi;
+
   void _merge(List<dynamic> rows) {
+    // ⚠ DEĞİŞMEYEN VERİ (28 Eki): aynı yanıt yeniden uygulanmaz; ekran
+    // yeniden çizilmez.
+    final imza = veriImzasi(rows);
+    if (imza != null && imza == _listeImzasi) {
+      return;
+    }
+    _listeImzasi = imza;
     _cache
       ..clear()
       ..addAll(rows.map((e) => Mappers.listing(e as Map<String, dynamic>)));
@@ -464,6 +475,7 @@ class ApiListingRepository extends ChangeNotifier {
       return err;
     }
     final l = Mappers.listing(res!);
+    _listeImzasi = null; // önbellek liste dışı yoldan değişti
     final i = _cache.indexWhere((e) => e.id == l.id);
     if (i >= 0) {
       _cache[i] = l;
@@ -495,6 +507,7 @@ class ApiListingRepository extends ChangeNotifier {
       return (null, err);
     }
     final l = Mappers.listing(res!);
+    _listeImzasi = null;
     _cache.insert(0, l);
     notifyListeners();
     return (l, null);
@@ -505,6 +518,7 @@ class ApiListingRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
+    _listeImzasi = null;
     _cache.removeWhere((l) => l.id == id);
     notifyListeners();
     return null;
@@ -559,11 +573,20 @@ class ApiOfferRepository extends ChangeNotifier {
     return loadMine();
   }
 
+  /// Son uygulanan `/offers/my` yanıtının imzası (bkz. `veriImzasi`).
+  String? _benimImza;
+
   Future<DomainError?> loadMine() async {
     final (rows, err) = await _guard(() => _api.my());
     if (err != null) {
       return err;
     }
+    // ⚠ DEĞİŞMEYEN VERİ (28 Eki): aynı yanıt yeniden uygulanmaz.
+    final imza = veriImzasi(rows);
+    if (imza != null && imza == _benimImza) {
+      return null;
+    }
+    _benimImza = imza;
     for (final id in _benimkiler) {
       _cache.remove(id);
     }
@@ -598,6 +621,7 @@ class ApiOfferRepository extends ChangeNotifier {
       return (null, err);
     }
     final o = Mappers.offer(res!);
+    _benimImza = null;
     _cache[o.id] = o;
     _benimkiler.add(o.id);
     notifyListeners();

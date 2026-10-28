@@ -50,7 +50,22 @@ abstract class BaseController extends ChangeNotifier {
   }
 
   /// VERİ YÜKLEME sarmalayıcısı: loading + hata durumunu yönetir.
-  Future<DomainError?> runLoad(Future<DomainError?> Function() task) async {
+  ///
+  /// ⚠ SESSİZ YÜKLEME (28 Eki, telefon performansı): anlık haber ya da
+  /// uygulamanın öne gelmesiyle yapılan arka plan tazelemesinde `sessiz`
+  /// verilir: yükleniyor bayrağı açılmaz (iki gereksiz yeniden çizim yok),
+  /// yalnız hata durumu DEĞİŞİRSE haber verilir. Veri değiştiyse depo
+  /// zaten haber verir.
+  Future<DomainError?> runLoad(Future<DomainError?> Function() task,
+      {bool sessiz = false}) async {
+    if (sessiz) {
+      final err = await task();
+      if (err?.message != _lastError?.message) {
+        _lastError = err;
+        notifyListeners();
+      }
+      return err;
+    }
     _loading = true;
     _lastError = null;
     notifyListeners();

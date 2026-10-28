@@ -14,6 +14,7 @@ import '../api/notification_api.dart';
 import '../api/review_api.dart';
 import '../api_error_mapper.dart';
 import '../mappers.dart';
+import '../veri_imzasi.dart';
 import '../ws_client.dart';
 
 Future<(T?, DomainError?)> _guard<T>(Future<T> Function() fn) async {
@@ -343,11 +344,20 @@ class ApiNotificationRepository extends ChangeNotifier {
   List<AppNotification> get items => _items;
   int get unread => _unread;
 
+  /// Son uygulanan liste yanıtının imzası (bkz. `veriImzasi`).
+  String? _imza;
+
   Future<DomainError?> load() async {
     final (rows, err) = await _guard(() => _api.list());
     if (err != null) {
       return err;
     }
+    // ⚠ DEĞİŞMEYEN VERİ (28 Eki): aynı liste yeniden kurulmaz.
+    final imza = veriImzasi(rows);
+    if (imza != null && imza == _imza) {
+      return null;
+    }
+    _imza = imza;
     _items = rows!.map((e) => Mappers.notification(e as Map<String, dynamic>)).toList();
     _unread = _items.where((n) => !n.read).length;
     notifyListeners();
@@ -359,7 +369,11 @@ class ApiNotificationRepository extends ChangeNotifier {
     if (err != null) {
       return err;
     }
-    _unread = (res!['count'] as num?)?.toInt() ?? 0;
+    final sayi = (res!['count'] as num?)?.toInt() ?? 0;
+    if (sayi == _unread) {
+      return null; // rozet değişmedi: yeniden çizim yok
+    }
+    _unread = sayi;
     notifyListeners();
     return null;
   }

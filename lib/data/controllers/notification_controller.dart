@@ -12,7 +12,9 @@ class NotificationController extends BaseController {
   int unreadCount(String userId) => _notifs.unreadCount(userId);
 
   /// Liste yenileme (açılış ve aşağı çekerek yenileme).
-  Future<DomainError?> load(String userId) => runLoad(() => _notifs.load(userId));
+  // `sessiz`: arka plan tazelemesi (bkz. `BaseController.runLoad`).
+  Future<DomainError?> load(String userId, {bool sessiz = false}) =>
+      runLoad(() => _notifs.load(userId), sessiz: sessiz);
 
   /// Yalnız rozet sayısı (ana sayfada liste yüklemeden).
   Future<DomainError?> refreshBadge(String userId) => _notifs.loadUnreadCount(userId);
