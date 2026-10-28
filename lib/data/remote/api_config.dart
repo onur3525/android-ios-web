@@ -98,10 +98,7 @@ abstract final class ApiConfig {
   /// ⚠ DEBUG'TA `ws://` SERBEST: geliştirme sunucusu (10.0.2.2) TLS
   /// sunmaz.
   static String get wsUrl {
-    final u = baseUrl
-            .replaceFirst(RegExp(r'^http'), 'ws')
-            .replaceFirst(RegExp(r'/api/v1/?$'), '') +
-        '/ws';
+    final u = wsAdresi(baseUrl);
     if (kReleaseMode && !u.startsWith('wss://')) {
       throw StateError(
         'RELEASE derlemede WebSocket adresi wss:// ile başlamalıdır. '
@@ -109,6 +106,24 @@ abstract final class ApiConfig {
       );
     }
     return u;
+  }
+
+  /// API adresinden WebSocket adresi — TEK KAYNAK.
+  ///
+  /// ── ⚠ KAPI NUMARASI AÇIK YAZILIR (29 Eki, canlı denetim bulgusu) ──
+  ///
+  /// `https://alan/api/v1` → `wss://alan/ws` üretiliyordu. Dart'ın `Uri`
+  /// sınıfı ws/wss şemasının varsayılan kapısını bilmez (0 döner); bu
+  /// yüzden socket.io istemcisi bağlantıyı `wss://alan:0/socket.io/`
+  /// adresine kurmaya çalışıyor, bağlantı HİÇ kurulamıyordu (anlık
+  /// sohbet ve anlık yenileme çalışmıyordu). Artık kapı her zaman açık:
+  /// adreste yazılıysa o, yoksa güvenli bağlantıda 443, düzde 80.
+  static String wsAdresi(String apiAdresi) {
+    final a = Uri.parse(apiAdresi.replaceFirst(RegExp(r'/api/v1/?$'), ''));
+    final guvenli = a.scheme == 'https';
+    final kapi = a.hasPort ? a.port : (guvenli ? 443 : 80);
+    final yol = a.path.endsWith('/') ? a.path.substring(0, a.path.length - 1) : a.path;
+    return '${guvenli ? 'wss' : 'ws'}://${a.host}:$kapi$yol/ws';
   }
 
   static const Duration connectTimeout = Duration(seconds: 10);
