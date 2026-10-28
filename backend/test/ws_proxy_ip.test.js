@@ -14,7 +14,7 @@ process.env.HC_SESSIZ = '1';
 process.env.HC_TRUST_PROXY_HOPS = '1';
 const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
-const { gercekZamanliKur, WS_SINIRLARI } = await import('../src/gercek_zamanli.js');
+const { gercekZamanliKur, WS_SINIRLARI, ipAnahtari } = await import('../src/gercek_zamanli.js');
 const { istemciIp } = await import('../src/http.js');
 
 let db, sunucu, hub, port;
@@ -74,4 +74,21 @@ test('saldırgan solda sahte adresler yazarak sınırı atlatamaz (proxy en sağ
   assert.deepEqual([...hub.kimliksizler.keys()], ['198.51.100.77']);
   for (const w of acik) w.c.destroy();
   await sus(200);
+});
+
+test('IPv6: sınır /64 ağı başına — saldırgan adres değiştirerek atlatamaz, başka ağ etkilenmez', async () => {
+  assert.equal(ipAnahtari('2001:db8:1:2:3:4:5:6'), '2001:db8:1:2::/64');
+  assert.equal(ipAnahtari('2001:DB8:0001:0002::ffff'), '2001:db8:1:2::/64', 'yazım farkı aynı ağ');
+  assert.equal(ipAnahtari('203.0.113.7'), '203.0.113.7', 'IPv4 değişmez');
+  const acik = [];
+  for (let i = 0; i < WS_SINIRLARI.IP_BASINA_KIMLIKSIZ; i++) acik.push(await baglan(`2001:db8:aa:bb::${(i + 1).toString(16)}`));
+  const fazla = await baglan('2001:db8:aa:bb::ffff');
+  for (let i = 0; i < 100 && !fazla.durum.kapandi; i++) await sus(20);
+  assert.equal(fazla.durum.kapandi, true, 'aynı /64 içinde yeni adres sınırı aşmamalı');
+  const baska = await baglan('2001:db8:aa:cc::1');
+  await sus(200);
+  assert.equal(baska.durum.kapandi, false, 'başka /64 ağı engellenmemeli');
+  for (const w of [...acik, baska]) w.c.destroy();
+  await sus(200);
+  assert.equal(hub.kimliksizler.size, 0);
 });

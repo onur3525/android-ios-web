@@ -35,6 +35,7 @@ import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
 import { istemciIp } from './http.js';
+import { isIP } from 'node:net';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const NSP = '/ws';
@@ -68,7 +69,8 @@ function cerceve(metin, opkod = 0x1) {
 // · Yazma tamponu YAZMA_TAMPONU_SINIRI'nı aşarsa (okumayan istemci; ping
 //   yankısı/olaylar birikir) bağlantı kapanır.
 // · Kimliksiz (henüz `40` göndermemiş) bağlantı: IP başına en çok
-//   IP_BASINA_KIMLIKSIZ; kimlik süresi (10 sn) aynen.
+//   IP_BASINA_KIMLIKSIZ (IPv6'da /64 ağı başına; bkz. `ipAnahtari`); kimlik
+//   süresi (10 sn) aynen.
 // · Kapanışta tampon ve parçalar bırakılır; karşı taraf kapanışa yanıt
 //   vermezse soket KAPANIS_BEKLEME_MS sonra zorla kapatılır.
 const AZAMI_DENETIM_YUKU = 125;
@@ -78,6 +80,24 @@ const YAZMA_TAMPONU_SINIRI = 1024 * 1024;
 const IP_BASINA_KIMLIKSIZ = 20;
 const KAPANIS_BEKLEME_MS = 5_000;
 export const WS_SINIRLARI = { AZAMI_YUK, AZAMI_DENETIM_YUKU, AZAMI_MESAJ, MESAJ_PENCERESI_MS, YAZMA_TAMPONU_SINIRI, IP_BASINA_KIMLIKSIZ };
+
+/**
+ * IP sınırının anahtarı (29 Eki): IPv4 olduğu gibi; IPv6 /64 ağına indirgenir.
+ * Tek bir IPv6 abonesi genelde bütün bir /64 ağına sahiptir; adres başına
+ * sayılsaydı saldırgan her bağlantıda başka adres kullanıp sınırı aşardı.
+ */
+export function ipAnahtari(ip) {
+  const yalin = String(ip ?? '').split('%')[0];
+  if (isIP(yalin) !== 6) return yalin;
+  const yari = yalin.split('::');
+  const parca = (x) => (x ? x.split(':') : []);
+  const say = (a) => a.reduce((n, g) => n + (g.includes('.') ? 2 : 1), 0);
+  const sol = parca(yari[0]);
+  const sag = yari.length > 1 ? parca(yari[1]) : [];
+  const sifirlar = yari.length > 1 ? Array(Math.max(0, 8 - say(sol) - say(sag))).fill('0') : [];
+  const gruplar = [...sol, ...sifirlar, ...sag];
+  return `${gruplar.slice(0, 4).map((g) => parseInt(g, 16).toString(16)).join(':')}::/64`;
+}
 
 const KIMLIK_ZAMAN_ASIMI = 10_000;
 const KULLANICI_BASINA_AZAMI_BAGLANTI = 10;
@@ -403,7 +423,7 @@ export function gercekZamanliKur(sunucu, db) {
     soket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n'
       + `Sec-WebSocket-Accept: ${kabul}\r\n\r\n`);
     soket.setNoDelay(true);
-    const b = new Baglanti(soket, hub, istemciIp(req));
+    const b = new Baglanti(soket, hub, ipAnahtari(istemciIp(req)));
     if (!hub.kimliksizEkle(b)) b.kapat(); // IP başına kimliksiz bağlantı sınırı
   });
   return hub;
