@@ -138,6 +138,8 @@ export function indirmeSiniriKur({
 /** 429 yanıtı (ham; fotoğraf/PDF uçları JSON beklemez). */
 export function cokFazlaIndirme(res, sonraSn) {
   if (res.headersSent || res.destroyed) return;
+  // Sistem Durumu'nda ayrı sayılır (sistem_izleme.js, 043).
+  res.hcHataKodu = 'DOWNLOAD_LIMIT';
   res.writeHead(429, {
     'Content-Type': 'text/plain; charset=utf-8',
     'Cache-Control': 'no-store',

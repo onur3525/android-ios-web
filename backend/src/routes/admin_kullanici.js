@@ -15,7 +15,7 @@ import { denetimYaz } from '../audit.js';
 import { kullaniciyaBildir } from '../bildirim.js';
 import { simdi } from '../db.js';
 import { hata } from '../http.js';
-import { kullaniciGorunumu, oturumlariIptal } from './kullanici.js';
+import { kullaniciGorunumu, oturumlariIptal, satirIstemcisi } from './kullanici.js';
 
 const GECISLER = {
   suspend: { from: ['ACTIVE'], to: 'SUSPENDED', sablon: 'HESAP_ASKIYA_ALINDI', islem: 'user.suspend' },
@@ -93,7 +93,7 @@ export function adminKullaniciRotalar(r, db) {
         WHERE h.user_id = ? ORDER BY h.created_at DESC`,
     ).all(u.id);
     const oturum = await db.prepare(
-      `SELECT id, created_at, last_used, user_agent, revoked_at, revoke_reason FROM user_sessions
+      `SELECT id, created_at, last_used, user_agent, istemci, revoked_at, revoke_reason FROM user_sessions
         WHERE user_id = ? ORDER BY last_used DESC LIMIT 20`,
     ).all(u.id);
     const mesaj = await db.prepare(
@@ -107,11 +107,34 @@ export function adminKullaniciRotalar(r, db) {
       termsAccepted: u.terms_accepted === 1, deletedAt: u.deleted_at,
       // Kullanıcının kendi dondurduğu hesap (giriş yapınca açılır); askı/ban DEĞİL.
       frozenAt: u.frozen_at ?? null,
+      // 28 Eki: 5 hatalı şifre → 15 dk giriş kilidi (kullanici.js). Yalnız
+      // SÜRESİ DOLMAMIŞ kilit döner; admin kaldırabilir (unlock-login).
+      loginLockedUntil: u.locked_until && Date.parse(u.locked_until) > Date.now() ? u.locked_until : null,
       address: adres ?? null,
       statusHistory: gecmis.map((h) => ({ from: h.old_status, to: h.new_status, reason: h.reason, admin: h.admin_email, at: h.created_at })),
-      sessions: oturum.map((o) => ({ id: o.id, createdAt: o.created_at, lastUsedAt: o.last_used, userAgent: o.user_agent, revokedAt: o.revoked_at, revokeReason: o.revoke_reason })),
+      sessions: oturum.map((o) => ({ id: o.id, createdAt: o.created_at, lastUsedAt: o.last_used, userAgent: o.user_agent, device: satirIstemcisi(o), revokedAt: o.revoked_at, revokeReason: o.revoke_reason })),
       notifications: mesaj.map((m) => ({ id: m.id, channel: m.channel, template: m.template, status: m.status, providerResponse: m.provider_response, createdAt: m.created_at, sentAt: m.sent_at })),
     };
+  });
+
+  // ── GİRİŞ KİLİDİNİ KALDIR (28 Eki) ──
+  // 5 hatalı şifre hesabı 15 dk kilitler; biri başkasının numarasıyla bunu
+  // bilerek tetikleyebilir. Admin gerekçe yazarak kilidi kaldırır; hesap
+  // durumu (askı/ban) ve oturumlar DEĞİŞMEZ, denetim kaydına yazılır.
+  r.post('/admin/v1/users/:id/unlock-login', async (ctx) => {
+    yetkiIste(ctx.admin, 'users.status.write');
+    const neden = gerekce(ctx.body.reason);
+    const u = await db.prepare('SELECT id, locked_until, failed_logins FROM users WHERE id = ? AND deleted_at IS NULL').get(ctx.params.id);
+    if (!u) throw hata.bulunamadi('Kullanıcı bulunamadı');
+    if (!(u.locked_until && Date.parse(u.locked_until) > Date.now())) throw hata.durum('Hesapta giriş kilidi yok');
+    await db.tx(async () => {
+      await db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(u.id);
+      await denetimYaz(db, {
+        adminId: ctx.admin.id, ip: ctx.ip, islem: 'user.login.unlock', hedefTur: 'user', hedefId: u.id,
+        once: { lockedUntil: u.locked_until }, sonra: { lockedUntil: null }, gerekce: neden,
+      });
+    });
+    return { id: u.id, loginLockedUntil: null };
   });
 
   for (const [eylem, g] of Object.entries(GECISLER)) {

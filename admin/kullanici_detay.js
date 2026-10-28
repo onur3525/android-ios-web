@@ -34,7 +34,12 @@ const OTURUM_KAPANIS = {
   LOGOUT: 'Çıkış yaptı', ROTATED: 'Yenilendi', USER_REVOKED: 'Kullanıcı sonlandırdı', PASSWORD_CHANGED: 'Şifre değişti',
   PASSWORD_RESET: 'Şifre sıfırlandı', SUSPENDED: 'Askıya alındı', BANNED: 'Banlandı', FROZEN: 'Hesap donduruldu',
   DELETED: 'Hesap silindi', REUSE_DETECTED: 'Güvenlik: token yeniden kullanımı',
+  // 28 Eki: sunucunun kullandığı ama panelde karşılığı olmayan nedenler.
+  NEW_DEVICE: 'Yeni cihazdan giriş yapıldı', EPOSTA_DEGISTI: 'E-posta değişti', PHONE_CHANGED: 'Telefon değişti',
+  FIREBASE_DISABLED: 'Firebase: hesap devre dışı', FIREBASE_REVOKED: 'Firebase: oturumlar iptal edildi',
 };
+// 28 Eki: oturumun açıldığı istemci (tek cihaz kuralı, sunucu: satirIstemcisi).
+const CIHAZ_ADI = { mobil: 'Mobil uygulama', web_mobil: 'Telefon/tablet tarayıcısı', web: 'Bilgisayar (web)' };
 
 const tarihSaat = (v) => (v ? new Date(v).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
 const kisaTarih = (v) => (v ? new Date(v).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
@@ -113,6 +118,19 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);
     }
   };
+  // 28 Eki: 5 hatalı şifreyle konan 15 dk'lık giriş kilidini kaldırır.
+  const kilitKaldir = async () => {
+    const neden = await gerekceIle('Giriş kilidi kaldırılsın mı?', 'Kilidi kaldır',
+      'Kullanıcı 15 dakikayı beklemeden yeniden giriş yapabilir. Hesap durumu ve oturumlar değişmez; işlem gerekçesiyle denetim kaydına yazılır.');
+    if (!neden) return;
+    try {
+      await api(`/users/${id}/unlock-login`, { yontem: 'POST', govde: { reason: neden } });
+      bildir('Giriş kilidi kaldırıldı');
+      yenile();
+    } catch (e) {
+      bildir(e.durum === 403 && e.kod !== 'REAUTH_REQUIRED' ? 'Bu işlem için yetkiniz yok.' : e.message, true);
+    }
+  };
   const yorumKaldir = async (y) => {
     const neden = await gerekceIle('Değerlendirme kaldırılsın mı?', 'Kaldır',
       'Değerlendirme yayından kalkar ve hizmet verenin puanına sayılmaz; işlem gerekçesiyle denetim kaydına yazılır.');
@@ -131,6 +149,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
     u.status === 'SUSPENDED' ? h('button', { class: 'btn', onclick: () => islem('unsuspend', 'Askıdan çıkar', 'Kullanıcı yeniden giriş yapabilir; bildirim gönderilir.') }, 'Askıdan çıkar') : null,
     u.status !== 'BANNED' ? h('button', { class: 'btn tehlike', onclick: () => islem('ban', 'Banla', 'Hesap kalıcı olarak kapatılır; bütün oturumlar sonlanır, giriş yapılamaz.') }, 'Banla') : null,
     u.status === 'BANNED' ? h('button', { class: 'btn', onclick: () => islem('unban', 'Banı kaldır', 'Kullanıcı yeniden giriş yapabilir; bildirim gönderilir.') }, 'Banı kaldır') : null,
+    u.loginLockedUntil ? h('button', { class: 'btn', onclick: kilitKaldir }, 'Giriş kilidini kaldır') : null,
   ].filter(Boolean);
 
   const sonEtkinlik = u.sessions.reduce((m, o) => (o.lastUsedAt && (!m || o.lastUsedAt > m) ? o.lastUsedAt : m), null);
@@ -144,7 +163,8 @@ export async function kullaniciDetaySayfasi(id, yenile) {
         h('div', { class: 'kd-rozetler' },
           h('span', { class: `ku-durum ${u.status}` }, DURUM_ADI[u.status] ?? u.status),
           u.roles.map((r) => h('span', { class: `oz-rol ${r}` }, ROL_ADI[r] ?? r)),
-          silindi ? h('span', { class: 'ku-durum BANNED' }, 'Hesap silinmiş') : null),
+          silindi ? h('span', { class: 'ku-durum BANNED' }, 'Hesap silinmiş') : null,
+          u.loginLockedUntil ? h('span', { class: 'ku-durum SUSPENDED', title: '5 hatalı şifre denemesi' }, 'Giriş kilitli') : null),
         h('div', { class: 'kd-id', title: 'Kullanıcı kimliği' }, `ID: ${u.id}`))),
     tuslar.length ? h('div', { class: 'kd-tuslar' }, tuslar) : null);
 
@@ -156,6 +176,7 @@ export async function kullaniciDetaySayfasi(id, yenile) {
       bilgi('Aktif rol', ROL_ADI[u.activeRole] ?? u.activeRole),
       bilgi('Kayıt tarihi', tarihSaat(u.createdAt)),
       bilgi('Son oturum etkinliği', sonEtkinlik ? tarihSaat(sonEtkinlik) : 'Henüz bulunmuyor'),
+      u.loginLockedUntil ? bilgi('Giriş kilidi', `5 hatalı şifre denemesi · ${tarihSaat(u.loginLockedUntil)} saatine kadar`) : null,
       bilgi('Adres', u.address ? `${u.address.neighborhood}, ${u.address.district}, ${u.address.city}` : 'Henüz bulunmuyor'),
       u.providerProfile ? bilgi('Hizmet kategorileri', u.providerProfile.categories.join(', ') || '—') : null,
       u.providerProfile ? bilgi('Hizmet ilçeleri', u.providerProfile.districts.join(', ') || '—') : null),
@@ -196,7 +217,10 @@ export async function kullaniciDetaySayfasi(id, yenile) {
     ], yorumlar, (y) => (y.listingId ? (location.hash = `#/ilan/${y.listingId}`) : y.talepId ? (location.hash = `#/talep/${y.talepId}`) : null)))],
     ['Oturumlar', u.sessions.length, () => tablo([
       ['Durum', (o) => (o.revokedAt ? h('span', { class: 'ku-durum kd-kapali' }, 'Kapalı') : h('span', { class: 'ku-durum ACTIVE' }, 'Açık'))],
-      ['Cihaz / tarayıcı', (o) => o.userAgent || '—'],
+      // 28 Eki: cihaz türü üst satırda, tarayıcı bilgisi altında (ayrı sütun
+      // tabloyu genişletip "Kapanış"ı kesiyordu).
+      ['Cihaz / tarayıcı', (o) => h('div', {}, h('div', {}, CIHAZ_ADI[o.device] ?? '—'),
+        o.userAgent ? h('div', { class: 'ku-eposta' }, o.userAgent) : null)],
       ['Açılış', (o) => tarihSaat(o.createdAt)], ['Son kullanım', (o) => tarihSaat(o.lastUsedAt)],
       ['Kapanış', (o) => (o.revokedAt ? `${tarihSaat(o.revokedAt)} · ${OTURUM_KAPANIS[o.revokeReason] ?? o.revokeReason ?? ''}` : '—')],
     ], u.sessions)],

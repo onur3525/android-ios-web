@@ -221,7 +221,7 @@ export function istemciTuru(req) {
 }
 
 /** Oturum satırının istemci türü; 042 öncesi satırda user_agent'tan tahmin. */
-function satirIstemcisi(s) {
+export function satirIstemcisi(s) {
   if (s.istemci) return s.istemci;
   const ua = String(s.user_agent ?? '');
   if (/^Dart\//.test(ua)) return 'mobil';

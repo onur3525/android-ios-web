@@ -56,11 +56,13 @@ export function istekOlc({ yontem, yol, durum, ms, kod, istekId }) {
   if (kod === 'MAINTENANCE') return;
   const b = Math.floor(Date.now() / DAKIKA);
   let x = birikim.get(b);
-  if (!x) birikim.set(b, (x = { requests: 0, errors_4xx: 0, errors_5xx: 0, total_ms: 0, max_ms: 0, lat_100: 0, lat_300: 0, lat_1000: 0, lat_3000: 0, lat_over: 0 }));
+  if (!x) birikim.set(b, (x = { requests: 0, errors_4xx: 0, errors_5xx: 0, total_ms: 0, max_ms: 0, lat_100: 0, lat_300: 0, lat_1000: 0, lat_3000: 0, lat_over: 0, download_limited: 0 }));
   const sure = Math.max(0, Math.round(ms));
   x.requests += 1;
   if (durum >= 400 && durum < 500) x.errors_4xx += 1;
   if (durum >= 500) x.errors_5xx += 1;
+  // 043: fotoğraf/PDF indirme sınırına takılan istek ayrıca sayılır.
+  if (kod === 'DOWNLOAD_LIMIT') x.download_limited += 1;
   x.total_ms += sure;
   x.max_ms = Math.max(x.max_ms, sure);
   x[kova(sure)] += 1;
@@ -74,7 +76,7 @@ export async function olcumleriYaz(db) {
   if (!birikim.size && !hatalar.length) return;
   const b = birikim; const h = hatalar;
   birikim = new Map(); hatalar = [];
-  const alanlar = ['requests', 'errors_4xx', 'errors_5xx', 'total_ms', 'lat_100', 'lat_300', 'lat_1000', 'lat_3000', 'lat_over'];
+  const alanlar = ['requests', 'errors_4xx', 'errors_5xx', 'total_ms', 'lat_100', 'lat_300', 'lat_1000', 'lat_3000', 'lat_over', 'download_limited'];
   try {
     for (const [bucket, x] of b) {
       await db.prepare(
@@ -106,7 +108,8 @@ async function pencereOzeti(db, dakika) {
     `SELECT COALESCE(SUM(requests),0) requests, COALESCE(SUM(errors_4xx),0) e4, COALESCE(SUM(errors_5xx),0) e5,
             COALESCE(SUM(total_ms),0) total_ms, COALESCE(MAX(max_ms),0) max_ms,
             COALESCE(SUM(lat_100),0) l100, COALESCE(SUM(lat_300),0) l300, COALESCE(SUM(lat_1000),0) l1000,
-            COALESCE(SUM(lat_3000),0) l3000, COALESCE(SUM(lat_over),0) lover
+            COALESCE(SUM(lat_3000),0) l3000, COALESCE(SUM(lat_over),0) lover,
+            COALESCE(SUM(download_limited),0) indirme
        FROM api_metrics WHERE bucket >= ?`,
   ).get(bas);
   const n = Number(r.requests);
@@ -114,6 +117,8 @@ async function pencereOzeti(db, dakika) {
   return {
     minutes: dakika, requests: n,
     errors4xx: Number(r.e4), errors5xx: Number(r.e5), rate4xx: oran(r.e4), rate5xx: oran(r.e5),
+    // 043: indirme sınırına takılan istek (4xx içinde de sayılır).
+    downloadLimited: Number(r.indirme),
     avgMs: n ? Math.round(Number(r.total_ms) / n) : null, maxMs: n ? Number(r.max_ms) : null,
     latency: { under100: Number(r.l100), under300: Number(r.l300), under1000: Number(r.l1000), under3000: Number(r.l3000), over3000: Number(r.lover) },
   };

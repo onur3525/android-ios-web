@@ -184,8 +184,11 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
       ['Son 24 saat', `${sayi(s24.requests)} istek`],
       ['Sunucu hatası (24 sa)', s24.requests ? `${sayi(s24.errors5xx)} · ${yuzde(s24.rate5xx)}` : '—'],
       ['Ortalama yanıt (24 sa)', s24.avgMs === null ? '—' : `${sayi(s24.avgMs)} ms`],
+      // 28 Eki: fotoğraf/PDF indirme sınırına takılan istek — yalnız varsa
+      // görünür (son 24 saat kuralı); çoğu toplu indirme girişimidir.
+      s24.downloadLimited > 0 ? ['İndirme sınırına takılan (24 sa)', sayi(s24.downloadLimited)] : null,
       ['Bu sunucu örneği açık', sure(s.api.uptimeSeconds)],
-    ],
+    ].filter(Boolean),
     not: 'Sunucu her güncellemede yeniden başlar; "açık" süresi son başlatmadan beri geçen süredir.',
   }));
 
@@ -331,6 +334,7 @@ export async function sistemSayfasi({ yedekYenile = false } = {}) {
     ['İstek', (x) => sayi(x[1].requests)],
     ['Sunucu hatası (5xx)', (x) => (x[1].requests ? rozet(`${sayi(x[1].errors5xx)} · ${yuzde(x[1].rate5xx)}`, x[1].errors5xx ? (x[1].rate5xx >= 5 ? 'kotu' : 'uyari') : 'iyi') : '—')],
     ['İstemci hatası (4xx)', (x) => (x[1].requests ? `${sayi(x[1].errors4xx)} · ${yuzde(x[1].rate4xx)}` : '—')],
+    ['İndirme sınırına takılan', (x) => (x[1].requests ? sayi(x[1].downloadLimited ?? 0) : '—')],
     ['Ortalama yanıt', (x) => (x[1].avgMs === null ? '—' : `${sayi(x[1].avgMs)} ms`)],
     ['En yavaş', (x) => (x[1].maxMs === null ? '—' : `${sayi(x[1].maxMs)} ms`)],
     ['1 sn üstü', (x) => (x[1].requests ? sayi(x[1].latency.under3000 + x[1].latency.over3000) : '—')],
