@@ -116255,6 +116255,9 @@
     get$hasAuthority() {
       return this._host != null;
     },
+    get$hasPort() {
+      return this._port != null;
+    },
     get$hasQuery() {
       return this._query != null;
     },
@@ -258180,13 +258183,21 @@
   };
   A.WsClient_connect_closure.prototype = {
     call$0() {
-      var parsed, id, path, sameNamespace, newConnection, io, t3, t4, t5, socket, t6, _null = null,
+      var kapi, yol, t1, u, t2, opts, parsed, id, path, sameNamespace, newConnection, io, t3, t4, t5, socket, t6, _null = null,
         _s11_ = "autoConnect",
         _s5_ = "query",
-        u = B.JSString_methods.replaceFirst$2(B.JSString_methods.replaceFirst$2(A.ApiConfig_baseUrl(), A.RegExp_RegExp("^http", true, false), "ws"), A.RegExp_RegExp("/api/v1/?$", true, false), "") + "/ws",
-        t1 = type$.String,
-        t2 = type$.dynamic,
-        opts = A.LinkedHashMap_LinkedHashMap$_empty(t1, t2);
+        a = A.Uri_parse(B.JSString_methods.replaceFirst$2(A.ApiConfig_baseUrl(), A.RegExp_RegExp("/api/v1/?$", true, false), ""), 0, _null),
+        guvenli = a.get$scheme() === "https";
+      if (a.get$hasPort())
+        kapi = a.get$port(a);
+      else
+        kapi = guvenli ? 443 : 80;
+      yol = B.JSString_methods.endsWith$1(a.get$path(a), "/") ? B.JSString_methods.substring$2(a.get$path(a), 0, a.get$path(a).length - 1) : a.get$path(a);
+      t1 = guvenli ? "wss" : "ws";
+      u = t1 + "://" + a.get$host(a) + ":" + kapi + yol + "/ws";
+      t1 = type$.String;
+      t2 = type$.dynamic;
+      opts = A.LinkedHashMap_LinkedHashMap$_empty(t1, t2);
       opts.$indexSet(0, "transports", type$.List_String._as(A._setArrayType(["websocket"], type$.JSArray_String)));
       opts.$indexSet(0, "auth", this.handshake);
       opts.remove$1(0, "reconnection");
