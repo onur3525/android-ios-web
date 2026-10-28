@@ -82,8 +82,12 @@ class GorselOnbellegi {
   /// Fotoğrafın baytları: önbellekte (süresi geçmemiş) varsa oradan, yoksa ağdan.
   static Future<Uint8List> getir(String url) {
     final anahtar = gorselOnbellekAnahtari(url);
-    return _ucuslar[anahtar] ??=
-        _getir(url, anahtar).whenComplete(() => _ucuslar.remove(anahtar));
+    // ⚠ `whenComplete` geri çağrısı BİR ŞEY DÖNDÜRMEMELİ: `remove` kaldırdığı
+    // değeri (bu sözün kendisini) döndürür; `whenComplete` dönen sözü
+    // bekleyeceği için söz KENDİNİ bekler ve hiç tamamlanmazdı.
+    return _ucuslar[anahtar] ??= _getir(url, anahtar).whenComplete(() {
+      _ucuslar.remove(anahtar);
+    });
   }
 
   static Future<Uint8List> _getir(String url, String anahtar) async {
