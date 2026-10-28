@@ -20,6 +20,19 @@ const { yavaslama, genelDurum } = await import('../src/sistem_izleme.js');
 let db;
 const ileri = (sn) => new Date(Date.now() + sn * 1000).toISOString();
 const uyarilar = () => db.prepare(`SELECT target, subject, body FROM outbound_messages WHERE template = 'YONETICI_UYARISI' ORDER BY created_at, id`).all();
+// Aynı milisaniyede yazılan iki e-postanın sırası `id`ye (rastgele) kalır;
+// "son e-posta" yerine bir adımda YENİ eklenen konular karşılaştırılır.
+/** `once`tan sonra eklenen, konusu `konu` olan e-posta (sıradan bağımsız). */
+const konuyla = (u, once, konu) => u.slice(once).find((x) => x.subject === konu);
+function yeniKonular(onceki, simdi) {
+  const kalan = onceki.map((x) => x.subject);
+  return simdi.map((x) => x.subject).filter((k) => {
+    const i = kalan.indexOf(k);
+    if (i < 0) return true;
+    kalan.splice(i, 1);
+    return false;
+  });
+}
 async function talepEkle({ no, konu, mesaj, kaynak = 'EMAIL', zaman = ileri(1) }) {
   const id = randomUUID();
   await db.prepare(`INSERT INTO support_tickets (id, ticket_no, user_id, subject, message, status, created_at, updated_at, source, sender_email)
@@ -66,8 +79,8 @@ test('yönetici girişi: her başarılı giriş bildirilir; 15 dakikada 5 hatal�
   await yoneticiUyarilariniIsle(db);
   let u = await uyarilar();
   assert.equal(u.length, once + 1);
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Yönetim paneline giriş yapıldı');
-  assert.ok(u.at(-1).body.includes('203.0.113.7'));
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Yönetim paneline giriş yapıldı'), 'HizmetCep uyarısı: Yönetim paneline giriş yapıldı');
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Yönetim paneline giriş yapıldı').body.includes('203.0.113.7'));
   await yoneticiUyarilariniIsle(db);
   assert.equal((await uyarilar()).length, once + 1, 'aynı giriş ikinci kez bildirilmez');
 
@@ -78,8 +91,8 @@ test('yönetici girişi: her başarılı giriş bildirilir; 15 dakikada 5 hatal�
   await yoneticiUyarilariniIsle(db);
   u = await uyarilar();
   assert.equal(u.length, once + 2);
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Şüpheli yönetici girişi denemesi');
-  assert.ok(u.at(-1).body.includes('5 hatalı'));
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Şüpheli yönetici girişi denemesi'), 'HizmetCep uyarısı: Şüpheli yönetici girişi denemesi');
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Şüpheli yönetici girişi denemesi').body.includes('5 hatalı'));
   await denetimYaz(db, { adminId: null, islem: 'auth.login_failed', ip: '198.51.100.1' });
   await yoneticiUyarilariniIsle(db);
   assert.equal((await uyarilar()).length, once + 2, 'sürdükçe tekrar gönderilmez');
@@ -93,8 +106,8 @@ test('sistem sorunu: başlayınca, değişince ve düzelince birer e-posta; 15 d
   await yoneticiUyarilariniIsle(db);
   let u = await uyarilar();
   assert.equal(u.length, once + 1);
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Sistemde sorun var');
-  assert.ok(u.at(-1).body.includes('Dosya depolamaya erişilemiyor'));
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Sistemde sorun var'), 'HizmetCep uyarısı: Sistemde sorun var');
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Sistemde sorun var').body.includes('Dosya depolamaya erişilemiyor'));
 
   // 15 dakika dolmadan kontrol yapılmaz (durum değişse bile).
   sonuc = { overall: { status: 'OK', problems: [] }, apiOlcum: { last15m: { requests: 0 } } };
@@ -109,15 +122,17 @@ test('sistem sorunu: başlayınca, değişince ve düzelince birer e-posta; 15 d
   sonuc = { overall: { status: 'PROBLEM', problems: ['Dosya depolamaya erişilemiyor (otomatik kontrol başarısız)', 'Bellek kullanımı %95'] }, apiOlcum: { last15m: { requests: 0 } } };
   await sistemiYenidenKontrolEttir();
   await yoneticiUyarilariniIsle(db);
+  let onceki = u;
   u = await uyarilar();
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Sistemde sorun var (güncelleme)');
+  assert.deepEqual(yeniKonular(onceki, u), ['HizmetCep uyarısı: Sistemde sorun var (güncelleme)']);
 
   // Düzeldi.
   sonuc = { overall: { status: 'WARNING', problems: [] }, apiOlcum: { last15m: { requests: 0 } } };
   await sistemiYenidenKontrolEttir();
   await yoneticiUyarilariniIsle(db);
+  onceki = u;
   u = await uyarilar();
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Sistem sorunu düzeldi');
+  assert.deepEqual(yeniKonular(onceki, u), ['HizmetCep uyarısı: Sistem sorunu düzeldi']);
   const say = u.length;
   await sistemiYenidenKontrolEttir();
   await yoneticiUyarilariniIsle(db);
@@ -139,13 +154,13 @@ test('yavaşlama: ≥20 istekte %20 üstü 1 sn\'den uzun → e-posta; düzelinc
   await yoneticiUyarilariniIsle(db);
   let u = await uyarilar();
   assert.equal(u.length, once + 1);
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Uygulamada yavaşlama');
-  assert.ok(u.at(-1).body.includes("%30'i 1 saniyeden uzun"));
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Uygulamada yavaşlama'), 'HizmetCep uyarısı: Uygulamada yavaşlama');
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Uygulamada yavaşlama').body.includes("%30'i 1 saniyeden uzun"));
   s15 = { requests: 40, avgMs: 120, maxMs: 600, latency: { under3000: 0, over3000: 0 } };
   await sistemiYenidenKontrolEttir();
   await yoneticiUyarilariniIsle(db);
   u = await uyarilar();
-  assert.equal(u.at(-1).subject, 'HizmetCep uyarısı: Yavaşlama düzeldi');
+  assert.ok(konuyla(u, once, 'HizmetCep uyarısı: Yavaşlama düzeldi'), 'HizmetCep uyarısı: Yavaşlama düzeldi');
 });
 
 test('panel sayacı: bekleyen talep sayısı döner; sorgu hareketsizlik süresini UZATMAZ, normal istek uzatır', async () => {
