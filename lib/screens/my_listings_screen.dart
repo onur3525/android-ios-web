@@ -24,6 +24,7 @@ import '../ui/web_header.dart' show masaustuNav;
 import 'listing_detail_screen.dart';
 import 'nav_actions.dart';
 import 'teklif_talebi_detay_screen.dart';
+import 'widgets/yeni_mesaj_seridi.dart';
 
 /// ═══════════════════════════════════════════════════════════════
 /// İLANLARIM — referans `vCust()`
@@ -571,6 +572,8 @@ class _IlanKarti extends StatelessWidget {
             // custBadge(x.offers)
             const SizedBox(height: 6), // .cc-badge{margin-top:6px}
             TeklifRozeti(sayi: teklifSayisi),
+            // 29 Eki: tekliflerden gelen okunmamış mesaj (okununca kalkar).
+            IlanYeniMesaj(listingId: listing.id),
           ],
         ),
       ),
@@ -726,6 +729,12 @@ class _TeklifTalebiIsKarti extends StatelessWidget {
               Text(tutarMetni(talep.teklifFiyati!),
                   style: refText(
                       size: RF.s135, weight: RF.w700, color: HC.green)),
+            ],
+            // 29 Eki: kabul edilen talepte gelen okunmamış mesaj (ilan
+            // kartıyla aynı işaret; sayım `okunmamisMesajSayisi`).
+            if (okunmamisMesajSayisi(talep, talep.hizmetAlanId) > 0) ...[
+              const SizedBox(height: 8),
+              YeniMesajSeridi(okunmamisMesajSayisi(talep, talep.hizmetAlanId)),
             ],
           ],
         ),

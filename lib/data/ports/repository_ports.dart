@@ -10,6 +10,7 @@ import '../models/chat.dart';
 import '../models/notification.dart';
 import '../models/offer.dart';
 import '../models/review.dart';
+import '../../domain/sohbet_okunmamis.dart';
 
 /// VERİ KAYNAĞI PORTLARI — controller'lar somut repository OLUŞTURMAZ,
 /// yalnız bu arayüzlere bağlıdır. İki uygulaması vardır:
@@ -332,6 +333,21 @@ abstract class ChatPort extends ChangeNotifier {
   Future<void> connectRealtime();
   Future<void> disconnectRealtime();
   bool get realtimeConnected;
+
+  /// ── YENİ MESAJ SAYISI — TEK KAYNAK (29 Eki) ──
+  ///
+  /// Bir teklifin sohbetinde karşı taraftan gelip okunmamış mesaj
+  /// sayısı. Varsayılan: yüklenmiş konuşmadan sayılır (mock). API portu
+  /// sunucunun sohbet listesindeki sayıyla birleştirir — açılmamış
+  /// sohbetteki mesaj da sayılır.
+  int okunmamisMesaj(String offerId, String benimId) =>
+      okunmamisSohbetMesaji(threadFor(offerId), benimId);
+
+  /// Bir ilanın bütün tekliflerindeki okunmamış mesajların toplamı
+  /// (hizmet alanın "İlanlarım" kartı).
+  int ilanOkunmamisMesaj(String listingId, String benimId) => conversationsFor(benimId)
+      .where((o) => o.listingId == listingId)
+      .fold(0, (t, o) => t + okunmamisMesaj(o.id, benimId));
 }
 
 abstract class ReviewPort extends ChangeNotifier {

@@ -108,16 +108,20 @@ void main() {
   });
 
   group('3 — ⚠ BALON KARTTA ÇİZİLİR', () {
+    // 29 Eki: kart işareti tek bileşende (`TeklifYeniMesaj`), sayı tek
+    // kaynakta (`ChatController.okunmamisMesaj`; sunucu + anlık).
     test('ilan akışı kartı sayımı ortak kaynaktan okur', () {
       final j = _kod('lib/screens/jobs_screen.dart');
-      expect(j.contains('okunmamisSohbetMesaji('), isTrue);
-      expect(j.contains('YeniMesajSeridi('), isTrue);
+      expect(j.contains('TeklifYeniMesaj(offerId: mine.id)'), isTrue);
+      final w = _kod('lib/screens/widgets/yeni_mesaj_seridi.dart');
+      expect(w.contains('c?.okunmamisMesaj(offerId, ben)'), isTrue);
+      expect(w.contains('YeniMesajSeridi(sayi)'), isTrue);
     });
 
     test('⚠ SIFIRDA ÇİZİLMEZ', () {
       // Boş bir balon "mesaj var" izlenimi verirdi.
-      final j = _kod('lib/screens/jobs_screen.dart');
-      expect(j.contains('if (sayi == 0)'), isTrue);
+      final w = _kod('lib/screens/widgets/yeni_mesaj_seridi.dart');
+      expect(w.contains('if (sayi <= 0) {'), isTrue);
     });
 
     test('⚠ BALONUN KUYRUĞU VAR', () {

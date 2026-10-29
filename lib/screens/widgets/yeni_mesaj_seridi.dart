@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/controllers/auth_controller.dart';
+import '../../data/controllers/chat_controller.dart';
 import '../../ui/ref_tokens.dart';
 import '../../ui/ref_widgets.dart';
 
@@ -102,4 +105,70 @@ class _KuyrukBoyaci extends CustomPainter {
   // ⚠ Çizim girdiye bağlı değil: renk sabit, ölçü çağıranda.
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// ═══════════════════════════════════════════════════════════════
+/// İLAN SOHBETİNDE YENİ MESAJ — KART İŞARETLERİ (29 Eki, kullanıcı isteği)
+///
+/// "Mesaj geldiğinde hangi ilana veya hangi teklife geldiği kartın
+/// üzerinde görünmeli; mesaj okununca kaybolmalı."
+///
+/// Sayı TEK kaynaktan: `ChatController.okunmamisMesaj` (sunucunun sohbet
+/// listesindeki sayı + anlık gelen mesaj). Sohbet açılıp okununca sayı
+/// sıfırlanır ve işaret kendiliğinden kalkar. Sayı yoksa hiçbir şey
+/// çizilmez (boşluk da bırakılmaz).
+///
+///   · [TeklifYeniMesaj]: tek teklifin sohbeti — hizmet alanın ilan
+///     detayındaki teklif kartı, hizmet verenin "Tekliflerim" kartı.
+///   · [IlanYeniMesaj]: ilanın bütün teklifleri — hizmet alanın
+///     "İlanlarım" kartı.
+/// ═══════════════════════════════════════════════════════════════
+class TeklifYeniMesaj extends StatelessWidget {
+  const TeklifYeniMesaj({super.key, required this.offerId, this.ustBosluk = 8});
+
+  final String offerId;
+  final double ustBosluk;
+
+  @override
+  Widget build(BuildContext context) {
+    final ben = context.select<AuthController?, String?>((a) => a?.currentAccount?.id);
+    final sayi = ben == null
+        ? 0
+        : context.select<ChatController?, int>((c) => c?.okunmamisMesaj(offerId, ben) ?? 0);
+    return _YeniMesajKutusu(sayi: sayi, ustBosluk: ustBosluk);
+  }
+}
+
+class IlanYeniMesaj extends StatelessWidget {
+  const IlanYeniMesaj({super.key, required this.listingId, this.ustBosluk = 8});
+
+  final String listingId;
+  final double ustBosluk;
+
+  @override
+  Widget build(BuildContext context) {
+    final ben = context.select<AuthController?, String?>((a) => a?.currentAccount?.id);
+    final sayi = ben == null
+        ? 0
+        : context.select<ChatController?, int>((c) => c?.ilanOkunmamisMesaj(listingId, ben) ?? 0);
+    return _YeniMesajKutusu(sayi: sayi, ustBosluk: ustBosluk);
+  }
+}
+
+class _YeniMesajKutusu extends StatelessWidget {
+  const _YeniMesajKutusu({required this.sayi, required this.ustBosluk});
+
+  final int sayi;
+  final double ustBosluk;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sayi <= 0) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: EdgeInsets.only(top: ustBosluk),
+      child: Align(alignment: Alignment.centerLeft, child: YeniMesajSeridi(sayi)),
+    );
+  }
 }

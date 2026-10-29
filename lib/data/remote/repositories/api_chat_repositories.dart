@@ -15,6 +15,7 @@ import '../api/review_api.dart';
 import '../api_error_mapper.dart';
 import '../fotograf_yukleyici.dart';
 import '../mappers.dart';
+import '../../../domain/sohbet_okunmamis.dart';
 import '../veri_imzasi.dart';
 import '../ws_client.dart';
 
@@ -57,11 +58,25 @@ class ApiChatRepository extends ChangeNotifier {
   // fotoğraf İKİNCİ KEZ yüklenmez, aynı kayıtla (aynı anahtarla) gider.
   final Map<String, String> _yuklenenRef = {};
   List<Offer> _conversations = const [];
+  // Sunucunun sohbet listesinde bildirdiği okunmamış mesaj sayısı
+  // (offerId → sayı). Açılmamış sohbetteki mesaj da sayılır (29 Eki).
+  final Map<String, int> _sunucuOkunmamis = {};
   final List<StreamSubscription<dynamic>> _subs = [];
   bool _connected = false;
 
   bool get realtimeConnected => _connected;
   List<ChatMessage>? threadFor(String offerId) => _threads[offerId];
+
+  /// Okunmamış mesaj (29 Eki): sunucunun sayısı ile yüklenmiş/anlık
+  /// gelmiş mesajlardan sayılanın BÜYÜĞÜ — açılmamış sohbet de sayılır,
+  /// anlık gelen mesaj sunucu listesi yenilenmeden de görünür. Sohbet
+  /// okununca (markRead) ikisi de sıfırlanır.
+  int okunmamis(String offerId, String benimId) {
+    final yerel = okunmamisSohbetMesaji(_threads[offerId], benimId);
+    final sunucu = _sunucuOkunmamis[offerId] ?? 0;
+    return yerel > sunucu ? yerel : sunucu;
+  }
+
   List<Offer> get conversations => _conversations;
 
   void _bindRealtime() {
@@ -118,6 +133,16 @@ class ApiChatRepository extends ChangeNotifier {
     _conversations = rows!
         .map((e) => Mappers.conversationOffer(e as Map<String, dynamic>))
         .toList();
+    _sunucuOkunmamis.clear();
+    for (final e in rows) {
+      final j = e as Map<String, dynamic>;
+      final o = j['offer'];
+      final id = o is Map ? o['id'] : null;
+      final n = j['unread'];
+      if (id is String && n is num && n > 0) {
+        _sunucuOkunmamis[id] = n.toInt();
+      }
+    }
     notifyListeners();
     return null;
   }
@@ -248,6 +273,8 @@ class ApiChatRepository extends ChangeNotifier {
         m.status = MessageStatus.read;
       }
     }
+    // 29 Eki: okundu → kartlardaki "yeni mesaj" işareti kalkar.
+    _sunucuOkunmamis.remove(offerId);
     notifyListeners();
     return null;
   }

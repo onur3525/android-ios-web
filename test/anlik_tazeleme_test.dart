@@ -94,19 +94,26 @@ void main() {
       }
     });
 
-    test('mesaj, duyuru ve bilinmeyen tür yalnız bildirimleri tazeler', () {
-      for (final t in ['NEW_MESSAGE', 'ANNOUNCEMENT', 'BILINMEYEN', null]) {
+    // 29 Eki: yeni mesaj kartlardaki okunmamış sayıları da tazeler.
+    test('yeni mesaj sohbet sayılarını tazeler', () {
+      for (final r in Role.values) {
+        expect(AnlikTazeleme.isler('NEW_MESSAGE', r), {TazelemeIsi.bildirimler, TazelemeIsi.sohbetler});
+      }
+    });
+
+    test('duyuru ve bilinmeyen tür yalnız bildirimleri tazeler', () {
+      for (final t in ['ANNOUNCEMENT', 'BILINMEYEN', null]) {
         expect(AnlikTazeleme.isler(t, Role.provider), {TazelemeIsi.bildirimler}, reason: '$t');
       }
     });
 
     test('öne gelme / yeniden bağlanma: etkin rolün bütün listeleri', () {
       expect(AnlikTazeleme.hepsi(Role.provider), {
-        TazelemeIsi.bildirimler, TazelemeIsi.talepler,
+        TazelemeIsi.bildirimler, TazelemeIsi.talepler, TazelemeIsi.sohbetler,
         TazelemeIsi.tekliflerim, TazelemeIsi.yeniIsler,
       });
       expect(AnlikTazeleme.hepsi(Role.customer),
-          {TazelemeIsi.bildirimler, TazelemeIsi.talepler, TazelemeIsi.ilanlarim});
+          {TazelemeIsi.bildirimler, TazelemeIsi.talepler, TazelemeIsi.sohbetler, TazelemeIsi.ilanlarim});
     });
   });
 

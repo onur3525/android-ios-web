@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/chat_controller.dart';
 import '../data/controllers/listing_controller.dart';
 import '../data/controllers/notification_controller.dart';
 import '../data/controllers/offer_controller.dart';
@@ -30,6 +31,10 @@ enum TazelemeIsi {
 
   /// Doğrudan teklif talepleri (iki taraf).
   talepler,
+
+  /// İlan sohbetlerinin okunmamış mesaj sayıları (kartlardaki "yeni
+  /// mesaj" işareti; 29 Eki).
+  sohbetler,
 }
 
 /// ═══════════════════════════════════════════════════════════════
@@ -67,6 +72,8 @@ class AnlikTazeleme {
       case 'CONTACT_OPENED':
       case 'LISTING_EXPIRED':
         s.add(saglayici ? TazelemeIsi.tekliflerim : TazelemeIsi.ilanlarim);
+      case 'NEW_MESSAGE':
+        s.add(TazelemeIsi.sohbetler);
       case 'TALEP_REQUEST':
       case 'TALEP_OFFER':
       case 'TALEP_ACCEPTED':
@@ -81,6 +88,7 @@ class AnlikTazeleme {
   static Set<TazelemeIsi> hepsi(Role rol) => {
         TazelemeIsi.bildirimler,
         TazelemeIsi.talepler,
+        TazelemeIsi.sohbetler,
         if (rol == Role.provider) ...[TazelemeIsi.tekliflerim, TazelemeIsi.yeniIsler]
         else TazelemeIsi.ilanlarim,
       };
@@ -136,7 +144,10 @@ class AnlikTazeleme {
     final ilan = context.read<ListingController?>();
     final teklif = context.read<OfferController?>();
     final talep = context.read<TeklifTalebiController?>();
+    final sohbet = context.read<ChatController?>();
     final islerListesi = <Future<void>>[
+      if (isler.contains(TazelemeIsi.sohbetler) && sohbet != null)
+        sohbet.okunmamislariTazele(me.id),
       if (isler.contains(TazelemeIsi.bildirimler) && bildirim != null) ...[
         bildirim.load(me.id, sessiz: true),
         bildirim.refreshBadge(me.id),
@@ -261,6 +272,14 @@ class _AnlikTazelemeKapisiState extends State<AnlikTazelemeKapisi>
     if (id != null) {
       _ilkBaglanti = true;
       unawaited(_ws?.connect());
+      // 29 Eki: kartlardaki "yeni mesaj" sayıları açılışta da gelsin
+      // (yalnız API modunda; zamanlayıcısız, doğrudan ve sessiz).
+      if (ApiConfig.useRealApi) {
+        final sohbet = context.read<ChatController?>();
+        if (sohbet != null) {
+          unawaited(sohbet.okunmamislariTazele(id));
+        }
+      }
     }
   }
 
