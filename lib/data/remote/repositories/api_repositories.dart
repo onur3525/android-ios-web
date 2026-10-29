@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 
 import '../../../domain/failures.dart';
@@ -14,8 +11,7 @@ import '../api/contact_api.dart';
 import '../api/listing_api.dart';
 import '../api/offer_api.dart';
 import '../api/profile_api.dart';
-import '../api/storage_api.dart';
-import '../../../core/platform/yerel_gorsel.dart';
+import '../fotograf_yukleyici.dart';
 import '../../../core/boot.dart' show currentPlatform;
 import '../api_client.dart';
 import '../api_error_mapper.dart';
@@ -257,27 +253,15 @@ class ApiAuthRepository extends ChangeNotifier {
     final rolKodu = rol == Role.provider ? 'PROVIDER' : 'CUSTOMER';
     String? ref;
     if (yol.isNotEmpty) {
-      final veri = await _fotoVerisi(yol);
-      if (veri == null) {
-        return const ValidationError('Yalnızca JPG, PNG ya da WEBP yüklenebilir.');
-      }
-      final depo = StorageApi(_client);
-      final (yanit, hata) = await _guard(() => depo.createUploadRef(
-          kind: 'profile-photo', contentType: veri.$2, sizeBytes: veri.$1.length));
-      if (hata != null) {
-        return hata;
-      }
-      ref = yanit!['storageRef'] as String?;
-      final adres = yanit['uploadUrl'] as String?;
-      if (ref == null || adres == null) {
-        return const ValidationError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
-      }
+      // 29 Eki: yükleme TEK KAYNAKTAN (sohbet fotoğraflarıyla aynı yol).
       try {
-        await depo.uploadBytes(uploadUrl: adres, bytes: veri.$1, contentType: veri.$2);
+        ref = await FotografYukleyici.yukle(_client, yol, tur: 'profile-photo');
+      } on FotografYuklemeHatasi catch (e) {
+        return ValidationError(e.mesaj);
+      } on ApiFailure catch (e) {
+        return e.error;
       } catch (_) {
-        final atilacak = ref;
-        unawaited(depo.discardPending(atilacak).then((_) {}, onError: (_) {}));
-        return const ValidationError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
+        return const ValidationError(FotografYukleyici.yuklemeHatasi);
       }
     }
     final (res, err) = await _guard(() => _profile.updatePhoto(ref, rolKodu));
@@ -287,35 +271,6 @@ class ApiAuthRepository extends ChangeNotifier {
     _hesabiYaz(res!);
     notifyListeners();
     return null;
-  }
-
-  /// (bayt, içerik türü) — web'de `data:` adresi, mobilde dosya yolu.
-  /// Tür çözülemezse null (yanlış `Content-Type` gönderilmez).
-  static Future<(List<int>, String)?> _fotoVerisi(String yol) async {
-    const turler = {
-      'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
-      // ⚠ 23 Eki: HEIC KABUL EDİLMEZ — konum meta verisi güvenle
-      // ayıklanamıyor (gorsel_meta_temizleyici.dart). Sunucu da reddeder.
-      'webp': 'image/webp',
-    };
-    if (yol.startsWith('data:')) {
-      final virgul = yol.indexOf(',');
-      if (virgul < 0) {
-        return null;
-      }
-      final baslik = yol.substring(5, virgul);
-      final tur = baslik.split(';').first.toLowerCase();
-      if (!turler.values.contains(tur) || !baslik.contains('base64')) {
-        return null;
-      }
-      return (base64Decode(yol.substring(virgul + 1)), tur);
-    }
-    final nokta = yol.lastIndexOf('.');
-    final tur = nokta < 0 ? null : turler[yol.substring(nokta + 1).toLowerCase()];
-    if (tur == null) {
-      return null;
-    }
-    return (await yerelBaytlar(yol), tur);
   }
 
   /// E-POSTA DEĞİŞİM BAĞLANTISI İSTER.

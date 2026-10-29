@@ -57,9 +57,13 @@ void main() {
     expect(k.contains('body: temiz,'), isTrue);
   });
 
-  test('HEIC yüklenmez: profil fotoğrafı tür tablosunda yok (23 Eki)', () {
-    final k = File('lib/data/remote/repositories/api_repositories.dart').readAsStringSync();
-    expect(k.contains("'heic': 'image/heic'"), isFalse);
-    expect(k.contains("'Yalnızca JPG, PNG ya da WEBP yüklenebilir.'"), isTrue);
+  // 29 Eki: tür artık dosya İÇERİĞİNDEN tek kaynakta bulunur
+  // (`fotograf_yukleyici.dart`; profil + iki sohbet). HEIC imzası tanınmaz.
+  test('HEIC yüklenmez: tür yalnız JPEG/PNG/WEBP imzasından (23 Eki, 29 Eki)', () {
+    final k = File('lib/data/remote/fotograf_yukleyici.dart').readAsStringSync();
+    expect(k.contains("'image/heic'"), isFalse);
+    expect(k.contains("'Yalnızca JPG, PNG ya da WEBP fotoğraf gönderilebilir.'"), isTrue);
+    expect(File('lib/data/remote/repositories/api_repositories.dart').readAsStringSync()
+        .contains("FotografYukleyici.yukle(_client, yol, tur: 'profile-photo')"), isTrue);
   });
 }
