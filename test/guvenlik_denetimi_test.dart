@@ -207,10 +207,13 @@ void main() {
           .toList();
       expect(overrideKullanan, ['lib/data/remote/sabitlemeli_istemci_io.dart'],
           reason: 'beklenmeyen HttpOverrides: $overrideKullanan');
-      expect(
-          _kod('lib/data/remote/sabitlemeli_istemci_io.dart').contains(
-              'createHttpClient: (_) => SertifikaSabitleme.istemci(),'),
-          isTrue);
+      // 29 Eki: bölge kendini yeniden çağırmayan temel üretimle kurulur
+      // (sonsuz döngü düzeltmesi); kural yine tek kaynakta.
+      final io = _kod('lib/data/remote/sabitlemeli_istemci_io.dart');
+      expect(io.contains('HttpOverrides.runWithHttpOverrides<T>(f, SabitliHttpOverrides())'), isTrue);
+      expect(io.contains('SertifikaSabitleme.istemci(super.createHttpClient)'), isTrue);
+      expect(io.contains('createHttpClient: (_) => SertifikaSabitleme.istemci()'), isFalse,
+          reason: 'bölge içinden HttpClient() yeniden bölgeye düşer (sonsuz döngü)');
 
       // ── ⚠ `badCertificateCallback` TEK İSTİSNA: SABİTLEME ──
       //

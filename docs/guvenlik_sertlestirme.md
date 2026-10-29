@@ -26,14 +26,22 @@ Kart numarası ve CVV alanlarında seçim ve kopyala/yapıştır menüsü
 kapalıdır. Panoya alınan kart bilgisini cihazdaki başka uygulamalar
 okuyabilir.
 
-## 4. Sertifika sabitleme — ALTYAPI HAZIR, PİN BEKLİYOR
+## 4. Sertifika sabitleme — ALTYAPI HAZIR, YAYIN PİNSİZ (29 Eki kararı)
+
+**Karar (29 Eki):** Sunucu Render'da kaldığı sürece mağaza sürümü PİNSİZ
+çıkar. Render sertifikayı ve anahtarını kendisi yönetir; anahtar
+yenilemede değişirse pinli sürüm bütün telefonlarda bağlanamaz. Pinsiz
+sürümde normal TLS doğrulaması (sistem kökleri, alan adı, süre) aynen
+geçerlidir. Anahtarı yönetilen bir sertifikaya geçildiğinde pin yalnız
+`CERT_PINS` verilerek açılır; kod ve testler (`test/sertifika_pinli_test.dart`)
+hazırdır.
 
     flutter build apk --release \
       --dart-define=CERT_PINS=<pin1>,<pin2>
 
-⚠ Pin verilmezse sabitleme DEVRE DIŞIDIR ve davranış değişmez.
-Bilerek böyledir: yanlış pinle çıkılan sürüm uygulamayı tamamen
-çalışmaz hâle getirir.
+⚠ Pin verilmezse sabitleme DEVRE DIŞIDIR ve davranış değişmez (mağaza
+sürümü dahil — 29 Eki kararı). Yanlış pinle çıkılan sürüm uygulamayı
+tamamen çalışmaz hâle getirir.
 
 ⚠ EN AZ İKİ PİN verilmelidir (mevcut + yedek). Tek pinli sürüm,
 sertifika yenilendiği gün kırılır.
@@ -49,11 +57,20 @@ sertifika yenilendiği gün kırılır.
 
   Öneksiz değerler eski biçimdir (tam sertifika özeti); geriye dönük
   uyumluluk için kabul edilir, yeni sürümlerde kullanılmamalıdır.
-- **Hangi sertifikalar:** Sistem kökleri kapalıyken Dart, doğrulamanın
-  başarısız olduğu zincir halkasını geri çağrıya verir (yaprak ya da ara
-  sertifika olabilir). CERT_PINS hem yaprak hem ara sertifikanın SPKI
-  pinini ve bir YEDEK anahtar pinini içermelidir. Pinler ilk sürümden
-  önce gerçek sunucuya karşı bir test derlemesiyle DOĞRULANMALIDIR.
+- **Hangi sertifikalar (29 Eki düzeltmesi):** Geri çağrıya HER ZAMAN
+  sunucunun YAPRAK sertifikası gelir (Dart SDK kaynağı:
+  `runtime/bin/security_context.cc` → `X509_STORE_CTX_get0_cert`; iOS'ta
+  `security_context_macos.cc` → zincirin 0. öğesi). Önceki not "yaprak
+  ya da ara" diyordu; YANLIŞTI. Ara sertifika pinleri hiçbir zaman
+  eşleşmez. CERT_PINS = sunucunun yaprak SPKI pini + önceden üretilmiş
+  YEDEK anahtarın SPKI pini.
+- **⚠ Barındırıcının yönettiği sertifika:** Render gibi sağlayıcılar
+  sertifikayı kendileri yeniler; yenilemede ANAHTAR değişebilir ve yedek
+  anahtar önceden bilinemez. Bu durumda yaprak pinli sürüm, yenilemeden
+  sonra bağlanamaz. Mağaza sürümünden önce karar gerekir: anahtarı
+  sizin yönettiğiniz (yenilemede anahtarı koruyan) bir sertifika ya da
+  sabitlemesiz yayın. Pinler ilk sürümden önce gerçek sunucuya karşı bir
+  test derlemesiyle DOĞRULANMALIDIR.
 - **Ad denetimi:** Sabitlemeli istemci yalnız `API_BASE_URL`'in ana
   bilgisayar adına bağlanır; başka ad pin tutsa bile reddedilir.
 - **Süre denetimi:** Süresi dolmuş/başlamamış sertifika reddedilir.
@@ -67,10 +84,15 @@ sertifika yenilendiği gün kırılır.
   `STORAGE_HOSTS` boşsa yükleme REDDEDİLİR.
 - **Web:** Sabitleme yapılamaz; tarayıcının TLS modeli geçerlidir.
 
-Pin üretimi (sunucu canlıya çıktıktan sonra):
+Pin üretimi (sunucu canlıya çıktıktan sonra) — yaprağın SPKI pini,
+`sha256/` önekiyle verilir:
 
-    openssl s_client -connect hizmetcep-backend.onrender.com:443 -showcerts </dev/null \
-      | openssl x509 -outform DER | openssl dgst -sha256 -binary | base64
+    openssl s_client -connect hizmetcep-backend.onrender.com:443 -servername hizmetcep-backend.onrender.com </dev/null \
+      | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der \
+      | openssl dgst -sha256 -binary | base64
+
+(Önceki komut sertifikanın TAMAMININ özetini veriyordu = eski biçim;
+her yenilemede değişir.)
 
 ## 5. Karartma (obfuscation) — SÜRÜM KOMUTUNA EKLENECEK
 

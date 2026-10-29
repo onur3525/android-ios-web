@@ -47,7 +47,7 @@ Environment variables → hepsi "secure" işaretli:
 | `KEY_ALIAS` | `hizmetcep` |
 | `KEY_PASSWORD` | anahtar parolası |
 | `API_BASE_URL` | `https://...` (release'te https zorunlu) |
-| `CERT_PINS` | en az iki pin, virgülle (önerilen: `sha256/<SPKI base64>`) |
+| `CERT_PINS` | İSTEĞE BAĞLI (29 Eki: Render'da pinsiz yayın). Verilirse en az iki pin, virgülle (`sha256/<SPKI base64>`) |
 | `STORAGE_HOSTS` | izinli depolama alan adları, virgülle (boşsa yükleme reddedilir) |
 | `APK_SIGNATURE_SHA256` | Google'ın imza anahtarının özeti (aşağıda) |
 | `GCLOUD_SERVICE_ACCOUNT_CREDENTIALS` | Play'deki son derleme numarasını okumak için servis hesabı (bölüm 5) |
@@ -125,7 +125,7 @@ arttığı için numara yine geriye gitmez.
 
 - [ ] `key.properties` / CI değişkenleri hazır
 - [ ] `API_BASE_URL` gerçek sunucuyu gösteriyor ve `https://`
-- [ ] `CERT_PINS` en az iki pin içeriyor
+- [ ] `CERT_PINS` boş (pinsiz yayın kararı) ya da verildiyse en az iki pin
 - [ ] `APK_SIGNATURE_SHA256` doğru biçimde (base64)
 - [ ] `.aab` üretildi ve `build/symbols` saklandı
 - [ ] Gizlilik politikası yayında
