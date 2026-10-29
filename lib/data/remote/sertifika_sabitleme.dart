@@ -295,27 +295,26 @@ abstract final class SertifikaSabitleme {
     return sabitli;
   }
 
-  /// ── ⚠ RELEASE'TE SESSİZ FAIL-OPEN YASAK ──
+  /// ── ⚠ PİNSİZ YAYIN (29 Eki, işletmeci kararı) ──
   ///
-  /// Pin verilmeden çıkılan bir sürümde sabitleme kapalıdır ve bunu
-  /// hiçbir şey haber vermez. `API_BASE_URL` için zaten bir zorunluluk
-  /// var (`ApiConfig.baseUrl`); aynı katılık pin için de gerekir.
+  /// Sunucu Render'da; sertifikayı ve ANAHTARI Render yönetir. Geri
+  /// çağrıya yalnız yaprak sertifika geldiği için (bkz. `istemci`) pin
+  /// yaprak anahtara bağlıdır; Render yenilemede anahtarı değiştirirse
+  /// pinli sürüm bütün telefonlarda bağlanamaz ve yeni sürüm çıkana dek
+  /// düzelmez. Bu yüzden mağaza sürümünde pin ZORUNLU DEĞİL: pin
+  /// verilmezse normal TLS doğrulaması (sistem kökleri, alan adı, süre)
+  /// geçerlidir — sertifika doğrulaması KAPATILMAZ.
+  ///
+  /// ⚠ PİN VERİLİRSE kurallar aynen: en az İKİ pin (mevcut + yedek). Tek
+  /// pinli sürüm, sertifika yenilendiği an uygulamayı tamamen çalışmaz
+  /// hâle getirir. Anahtarı yönetilen bir sertifikaya geçilince pin,
+  /// yalnız `CERT_PINS` verilerek yeniden açılır (kod hazır, testli).
   ///
   /// ⚠ YALNIZ GERÇEK API MODUNDA: mock derlemede sunucuya hiç
-  /// bağlanılmaz, pin istemek anlamsız olur.
-  ///
-  /// ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiği an
-  /// uygulamayı tamamen çalışmaz hâle getirir. Yedek pin (sonraki
-  /// sertifikanın anahtarı) zorunludur.
+  /// bağlanılmaz.
   static void pinDenetimi({required bool gercekApi}) {
-    if (!kReleaseMode || !gercekApi) {
+    if (!kReleaseMode || !gercekApi || pinler.isEmpty) {
       return;
-    }
-    if (pinler.isEmpty) {
-      throw StateError(
-        'RELEASE derlemede CERT_PINS zorunludur: '
-        '--dart-define=CERT_PINS=<mevcut>,<yedek>',
-      );
     }
     if (pinler.length < 2) {
       throw StateError(

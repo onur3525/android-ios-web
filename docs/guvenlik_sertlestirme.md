@@ -26,14 +26,22 @@ Kart numarası ve CVV alanlarında seçim ve kopyala/yapıştır menüsü
 kapalıdır. Panoya alınan kart bilgisini cihazdaki başka uygulamalar
 okuyabilir.
 
-## 4. Sertifika sabitleme — ALTYAPI HAZIR, PİN BEKLİYOR
+## 4. Sertifika sabitleme — ALTYAPI HAZIR, YAYIN PİNSİZ (29 Eki kararı)
+
+**Karar (29 Eki):** Sunucu Render'da kaldığı sürece mağaza sürümü PİNSİZ
+çıkar. Render sertifikayı ve anahtarını kendisi yönetir; anahtar
+yenilemede değişirse pinli sürüm bütün telefonlarda bağlanamaz. Pinsiz
+sürümde normal TLS doğrulaması (sistem kökleri, alan adı, süre) aynen
+geçerlidir. Anahtarı yönetilen bir sertifikaya geçildiğinde pin yalnız
+`CERT_PINS` verilerek açılır; kod ve testler (`test/sertifika_pinli_test.dart`)
+hazırdır.
 
     flutter build apk --release \
       --dart-define=CERT_PINS=<pin1>,<pin2>
 
-⚠ Pin verilmezse sabitleme DEVRE DIŞIDIR ve davranış değişmez.
-Bilerek böyledir: yanlış pinle çıkılan sürüm uygulamayı tamamen
-çalışmaz hâle getirir.
+⚠ Pin verilmezse sabitleme DEVRE DIŞIDIR ve davranış değişmez (mağaza
+sürümü dahil — 29 Eki kararı). Yanlış pinle çıkılan sürüm uygulamayı
+tamamen çalışmaz hâle getirir.
 
 ⚠ EN AZ İKİ PİN verilmelidir (mevcut + yedek). Tek pinli sürüm,
 sertifika yenilendiği gün kırılır.

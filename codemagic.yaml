@@ -389,7 +389,8 @@ workflows:
   #
   # ⚠ ÜÇ TANIM ZORUNLU:
   #   API_BASE_URL          — release'te https:// olmalı (kod zorluyor)
-  #   CERT_PINS             — en az iki pin; boşsa sabitleme KAPALI
+  #   CERT_PINS             — İSTEĞE BAĞLI (29 Eki: Render'da pinsiz yayın);
+  #                           verilirse en az iki pin; boşsa normal TLS
   #                           (önerilen biçim: sha256/<SPKI base64>)
   #   STORAGE_HOSTS         — izinli depolama alan adları; boşsa release'te
   #                           dosya yükleme REDDEDİLİR (güvenlik turu 2)
@@ -430,30 +431,33 @@ workflows:
           # ── ⚠ SESSİZ FAIL-OPEN YASAK ──
           #
           # `KEYSTORE_B64` için zaten bir kontrol vardı. Ama
-          # `CERT_PINS` ve `APK_SIGNATURE_SHA256` boş geçildiğinde
-          # derleme SESSİZCE devam ediyor, sabitleme ve imza denetimi
-          # kapalı bir sürüm üretiliyordu. Dart tarafı da bunları
-          # boşsa devre dışı bırakacak şekilde yazılmış (bilinçli
-          # fail-open) — dolayısıyla tek savunma hattı BURASI.
+          # `APK_SIGNATURE_SHA256` boş geçildiğinde derleme SESSİZCE
+          # devam ediyor, imza denetimi kapalı bir sürüm üretiliyordu —
+          # tek savunma hattı BURASI. (`CERT_PINS` 29 Eki'den beri
+          # isteğe bağlı: Render'da pinsiz yayın kararı; aşağıya bkz.)
           #
           # ⚠ `API_BASE_URL` DART TARAFINDA DA ZORUNLU: orada
           # StateError fırlıyor. Burada erken yakalamak, 40 dakikalık
           # bir derlemeden sonra çökmeyi önler.
           eksik=""
           [ -z "$API_BASE_URL" ]         && eksik="$eksik API_BASE_URL"
-          [ -z "$CERT_PINS" ]            && eksik="$eksik CERT_PINS"
           [ -z "$STORAGE_HOSTS" ]        && eksik="$eksik STORAGE_HOSTS"
           [ -z "$APK_SIGNATURE_SHA256" ] && eksik="$eksik APK_SIGNATURE_SHA256"
           if [ -n "$eksik" ]; then
             echo "Sürüm derlemesi için zorunlu tanımlar eksik:$eksik"
             exit 1
           fi
-          # ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiğinde
-          # uygulamayı tamamen çalışmaz hâle getirir.
-          case "$CERT_PINS" in
-            *,*) : ;;
-            *) echo "CERT_PINS en az iki pin içermelidir (mevcut,yedek)."; exit 1 ;;
-          esac
+          # ⚠ PİNSİZ YAYIN (29 Eki, işletmeci kararı): sunucu Render'da ve
+          # sertifika anahtarını Render yönetiyor; pin ZORUNLU DEĞİL (boşsa
+          # normal TLS doğrulaması). Pin VERİLİRSE en az iki olmalı: tek
+          # pinli sürüm, sertifika yenilendiğinde uygulamayı tamamen
+          # çalışmaz hâle getirir.
+          if [ -n "$CERT_PINS" ]; then
+            case "$CERT_PINS" in
+              *,*) : ;;
+              *) echo "CERT_PINS verildiyse en az iki pin içermelidir (mevcut,yedek)."; exit 1 ;;
+            esac
+          fi
           # ⚠ DEĞERLER LOGA BASILMAZ: yalnız varlık/biçim denetlenir.
           echo "Zorunlu tanımlar tamam."
 

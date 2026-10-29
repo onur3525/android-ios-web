@@ -132,11 +132,13 @@ void main() {
       expect(k.contains('static bool dogrula('), isFalse);
     });
 
-    test('⚠ RELEASE\'TE PIN EKSİKSE DERLEME DEĞİL, AÇILIŞ DURUR', () {
-      // `API_BASE_URL` için zaten bir zorunluluk vardı; pin için
-      // yoktu ve sabitleme sessizce kapalı kalabiliyordu.
+    test('⚠ PİNSİZ YAYIN (29 Eki kararı): pin verilmezse açılış durmaz; verilirse en az iki', () {
+      // Render sertifika anahtarını kendisi yönettiği için mağaza
+      // sürümünde pin zorunlu değil; normal TLS doğrulaması geçerli.
       final k = _kod('lib/data/remote/sertifika_sabitleme.dart');
       expect(k.contains('static void pinDenetimi('), isTrue);
+      expect(k.contains('if (!kReleaseMode || !gercekApi || pinler.isEmpty) {'), isTrue);
+      expect(k.contains('RELEASE derlemede CERT_PINS zorunludur'), isFalse);
       // ⚠ EN AZ İKİ PIN: tek pinli sürüm, sertifika yenilendiğinde
       // uygulamayı tamamen çalışmaz hâle getirir.
       expect(k.contains('pinler.length < 2'), isTrue);
