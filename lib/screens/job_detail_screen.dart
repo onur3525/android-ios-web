@@ -2,6 +2,7 @@ import 'dart:async';
 import 'widgets/ilan_no_etiketi.dart';
 import 'widgets/ilan_baslik_satiri.dart';
 import '../domain/iletisim_maskesi.dart';
+import '../domain/hizmet_alan_ozeti.dart' show hizmetAlanTamamlananIs;
 import 'widgets/is_zamani_secici.dart';
 import '../domain/form_mesajlari.dart';
 
@@ -311,11 +312,12 @@ class _JobDetailScreenState extends State<JobDetailScreen>
                               ?.fotografi(Role.customer) ??
                           '')
                       : '',
-                  tamamlananIs: listingCtl
-                      .byOwner(l.ownerId)
-                      // ⚠ Tamamlanmışlık ilişkiden türetilir (§24).
-                      .where((x) => x.isTamamlanmisIs)
-                      .length,
+                  // ⚠ İLETİŞİM AÇIK OLMASA DA GÖRÜNÜR (29 Eki, kullanıcı
+                  // isteği): sayı hizmet verenin KENDİ listesinden
+                  // türetiliyordu (`listingCtl.byOwner`); hizmet veren
+                  // başkasının ilanlarını görmediği için 0 çıkıyordu.
+                  // Artık tek kaynak: sunucu özeti + türetmenin büyüğü.
+                  tamamlananIs: hizmetAlanTamamlananIs(context, l.ownerId),
                   // ⚠ YENİ — kullanıcı isteği: hizmet alanın ne
                   // zamandır üye olduğu, tamamlanan iş sayısının
                   // altına eklendi.

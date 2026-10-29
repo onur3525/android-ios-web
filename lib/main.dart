@@ -217,13 +217,18 @@ AppPorts buildPorts({DataSourceMode? mode, void Function()? onSessionExpired}) {
     // Teklif verdiğim ilanlar (seçilmiş olsa da) ilan deposunda bulunur
     // (16 Eki: Kazandığım kartında "İlan kaldırıldı" görünüyordu).
     offerRepo.ilanlariAktar = listingRepo.teklifIlanlariniAl;
+    // 29 Eki: iletişim kim açarsa açsın İKİ taraf için de açık — teklif
+    // listelerindeki `contactOpen` iletişim deposuna aktarılır.
+    final contactRepo = ApiContactRepository(ContactApi(client));
+    offerRepo.iletisimAciklariAktar = contactRepo.sunucudanAcik;
+    listingRepo.iletisimAciklariAktar = contactRepo.sunucudanAcik;
     // Gerçek zamanlı mesajlaşma: /ws namespace, access token ile kimlik.
     final ws = WsClient(WsAuth(client.tokens));
     return AppPorts(
       auth: ApiAuthPort(ApiAuthRepository(client, AuthApi(client), ProfileApi(client))),
       listings: ApiListingPort(listingRepo),
       offers: offersPort,
-      contact: ApiContactPort(ApiContactRepository(ContactApi(client))),
+      contact: ApiContactPort(contactRepo),
       chat: ApiChatPort(ApiChatRepository(ChatApi(client), ws: ws)),
       reviews: ApiReviewPort(ApiReviewRepository(ReviewApi(client)), offersPort),
       notifications: ApiNotificationPort(ApiNotificationRepository(NotificationApi(client))),

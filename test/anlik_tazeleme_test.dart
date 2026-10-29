@@ -76,8 +76,18 @@ void main() {
       expect(AnlikTazeleme.isler('NEW_LISTING', Role.customer), {TazelemeIsi.bildirimler});
     });
 
+    // 29 Eki: iletişim açıldı → iki rolün teklif listeleri + sohbetler
+    // (iletişim kim açarsa açsın karşı tarafta da açık görünür).
+    test('iletişim açıldı: hangi rolde olunursa olsun teklif listeleri ve sohbetler', () {
+      for (final r in Role.values) {
+        expect(AnlikTazeleme.isler('CONTACT_OPENED', r), {
+          TazelemeIsi.bildirimler, TazelemeIsi.tekliflerim, TazelemeIsi.ilanlarim, TazelemeIsi.sohbetler,
+        });
+      }
+    });
+
     test('teklif olayları: hizmet alanda ilanlarım, hizmet verende tekliflerim', () {
-      for (final t in ['NEW_OFFER', 'OFFER_SELECTED', 'CONTACT_OPENED', 'LISTING_EXPIRED']) {
+      for (final t in ['NEW_OFFER', 'OFFER_SELECTED', 'LISTING_EXPIRED']) {
         expect(AnlikTazeleme.isler(t, Role.customer),
             {TazelemeIsi.bildirimler, TazelemeIsi.ilanlarim}, reason: t);
         expect(AnlikTazeleme.isler(t, Role.provider),

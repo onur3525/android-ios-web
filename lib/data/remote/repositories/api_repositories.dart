@@ -352,10 +352,18 @@ class ApiListingRepository extends ChangeNotifier {
   /// `main()` bağlar: `ApiOfferRepository.ilanTeklifleriniAl`.
   void Function(String listingId, List<Offer> teklifler)? teklifleriAktar;
 
+  /// İletişimi açılmış teklifler (sunucu `contactOpen`; 29 Eki) —
+  /// `main()` bağlar: `ApiContactRepository.sunucudanAcik`.
+  void Function(Iterable<String> teklifIdleri)? iletisimAciklariAktar;
+
   void _teklifleriAyikla(Map<String, dynamic> j) {
     final ham = j['offers'];
+    if (ham is! List) {
+      return;
+    }
+    iletisimAciklariAktar?.call(iletisimiAcikTeklifler(ham));
     final aktar = teklifleriAktar;
-    if (ham is! List || aktar == null) {
+    if (aktar == null) {
       return;
     }
     aktar(j['id'] as String,
@@ -440,7 +448,7 @@ class ApiListingRepository extends ChangeNotifier {
     lastDetailOffers = ((res['offers'] ?? const []) as List)
         .map((e) => Mappers.offer(e as Map<String, dynamic>))
         .toList();
-    _teklifleriAyikla(res);
+    _teklifleriAyikla(res); // iletişim durumu da buradan işlenir
     notifyListeners();
     return null;
   }
@@ -492,6 +500,10 @@ class ApiListingRepository extends ChangeNotifier {
 class ApiOfferRepository extends ChangeNotifier {
   final OfferApi _api;
   ApiOfferRepository(this._api);
+
+  /// İletişimi açılmış teklifler (sunucu `contactOpen`; 29 Eki) —
+  /// `main()` bağlar: `ApiContactRepository.sunucudanAcik`.
+  void Function(Iterable<String> teklifIdleri)? iletisimAciklariAktar;
 
   final Map<String, Offer> _cache = {};
 
@@ -547,7 +559,9 @@ class ApiOfferRepository extends ChangeNotifier {
     }
     _benimkiler.clear();
     final ilanlar = <Listing>[];
-    for (final e in rows!) {
+    final satirlar = rows!;
+    iletisimAciklariAktar?.call(iletisimiAcikTeklifler(satirlar));
+    for (final e in satirlar) {
       final j = e as Map<String, dynamic>;
       final o = Mappers.offer(j);
       _cache[o.id] = o;
@@ -606,6 +620,21 @@ class ApiContactRepository extends ChangeNotifier {
   final Set<String> _open = {};
   bool isOpen(String offerId) => _open.contains(offerId);
 
+  /// ── ⚠ İKİ TARAF İÇİN DE AÇIK (29 Eki, kullanıcı isteği) ──
+  /// "İletişimi hangi taraf açarsa açsın iki taraf için de açılmalı."
+  /// Sunucu kaydı teklif başına tektir; önceden uygulama bunu yalnız
+  /// kendisi "İletişimi Aç"a basınca öğreniyordu. Artık teklif listeleri
+  /// (`contactOpen`) geldikçe işlenir. İletişim kapanmaz; yalnız eklenir.
+  void sunucudanAcik(Iterable<String> teklifIdleri) {
+    var degisti = false;
+    for (final id in teklifIdleri) {
+      degisti = _open.add(id) || degisti;
+    }
+    if (degisti) {
+      notifyListeners();
+    }
+  }
+
   Future<DomainError?> refresh(String offerId) async {
     final (res, err) = await _guard(() => _api.status(offerId));
     if (err != null) {
@@ -629,3 +658,9 @@ class ApiContactRepository extends ChangeNotifier {
     return null;
   }
 }
+
+/// Ham teklif listesinden iletişimi açık olanların kimlikleri (`contactOpen`).
+List<String> iletisimiAcikTeklifler(List<dynamic> ham) => [
+      for (final e in ham)
+        if (e is Map && e['contactOpen'] == true && e['id'] is String) e['id'] as String,
+    ];

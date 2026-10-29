@@ -74,17 +74,35 @@ export const teklifGorunumu = (o) => ({
   id: o.id, listingId: o.listing_id, providerId: o.provider_id, amountTl: o.amount_tl,
   note: o.note, status: o.status, createdAt: o.created_at,
 });
+/**
+ * İletişimi açılmış teklifler (29 Eki): iletişim kaydı teklif başınadır;
+ * kim açarsa açsın İKİ taraf için de açıktır. Teklif görünümleri bu
+ * bilgiyi `contactOpen` ile taşır — karşı tarafın uygulaması da iletişimi
+ * kendiliğinden açık görür.
+ */
+async function iletisimiAciklar(db, teklifIdleri) {
+  const acik = new Set();
+  for (let i = 0; i < teklifIdleri.length; i += 500) {
+    const parca = teklifIdleri.slice(i, i + 500);
+    if (!parca.length) continue;
+    for (const c of await db.prepare(`SELECT offer_id FROM contacts WHERE offer_id IN (${parca.map(() => '?').join(', ')})`).all(...parca)) acik.add(c.offer_id);
+  }
+  return acik;
+}
+
 /** İlanların teklifleri (ilan kimliği → teklif görünümleri); YALNIZ ilan sahibine verilir. */
 async function ilanTeklifleri(db, ilanIdleri) {
   const m = new Map();
   if (!ilanIdleri.length) return m;
   for (let i = 0; i < ilanIdleri.length; i += 500) {
     const parca = ilanIdleri.slice(i, i + 500);
-    for (const o of await db.prepare(
+    const teklifler = await db.prepare(
       `SELECT * FROM offers WHERE listing_id IN (${parca.map(() => '?').join(', ')}) ORDER BY created_at`,
-    ).all(...parca)) {
+    ).all(...parca);
+    const acik = await iletisimiAciklar(db, teklifler.map((o) => o.id));
+    for (const o of teklifler) {
       if (!m.has(o.listing_id)) m.set(o.listing_id, []);
-      m.get(o.listing_id).push(teklifGorunumu(o));
+      m.get(o.listing_id).push({ ...teklifGorunumu(o), contactOpen: acik.has(o.id) });
     }
   }
   return m;
@@ -420,9 +438,10 @@ export function ilanRotalar(r, db) {
       const parca = kimlikler.slice(i, i + 500);
       for (const l of await db.prepare(`SELECT * FROM listings WHERE id IN (${parca.map(() => '?').join(', ')})`).all(...parca)) ilanlar.set(l.id, l);
     }
+    const acik = await iletisimiAciklar(db, teklifler.map((o) => o.id));
     return teklifler.map((o) => {
       const l = ilanlar.get(o.listing_id);
-      return { ...teklifGorunumu(o), ...(l ? { listing: ilanGorunumu(l) } : {}) };
+      return { ...teklifGorunumu(o), contactOpen: acik.has(o.id), ...(l ? { listing: ilanGorunumu(l) } : {}) };
     });
   }));
 

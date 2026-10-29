@@ -6,7 +6,12 @@ import 'package:provider/provider.dart';
 
 import '../core/push/push_platform.dart';
 import '../data/controllers/auth_controller.dart';
+import '../data/controllers/listing_controller.dart';
 import '../data/controllers/notification_controller.dart';
+import '../data/controllers/offer_controller.dart';
+import '../data/controllers/teklif_talebi_controller.dart';
+import '../data/models/account.dart' show Role;
+import '../data/models/notification.dart' show NotifType;
 import '../data/remote/api_client.dart';
 import '../data/remote/api_config.dart';
 import '../data/remote/mappers.dart';
@@ -68,7 +73,55 @@ String pushRotasi(Map<String, dynamic> veri) {
   return '/notifications';
 }
 
+/// ── BİLDİRİMİN AÇACAĞI EKRANIN İSTEDİĞİ ROL (29 Eki, kullanıcı isteği) ──
+///
+/// "Bildirime dokununca uygulamada hangi ekran açık olursa olsun
+/// bildirimin geldiği ekrana gidilmeli." Push her rolde gelir; ekranlar
+/// ise role bağlıdır (RoleGuard / yanlış taraf kapısı). Etkin rol farklıysa
+/// önce kullanıcının KENDİ rolleri arasında geçilir, sonra ekran açılır.
+///
+/// `null` = rol fark etmez (sohbet, duyuru). "İletişim açıldı" iki tarafa
+/// da gider: okuyan ilan sahibiyse hizmet alan, değilse hizmet veren.
+Role? pushGerekenRol(NotifType tur, {String? benId, String? ilanSahibiId}) {
+  final r = bildirimRolu(tur);
+  if (r != null) {
+    return r;
+  }
+  if (tur == NotifType.contactOpened && benId != null && ilanSahibiId != null) {
+    return ilanSahibiId == benId ? Role.customer : Role.provider;
+  }
+  return null;
+}
+
+/// AYNI BİLDİRİM İKİ KEZ AÇILMAZ: bazı cihazlarda aynı dokunuş hem
+/// "kapalıyken açıldı" hem "arka plandan açıldı" olarak gelir; hedef
+/// ekran üst üste iki kez açılıyordu. Kısa pencerede aynı bildirim
+/// yok sayılır; sonra yeniden dokunmak yine açar.
+class PushTekrarSuzgeci {
+  PushTekrarSuzgeci({this.pencere = const Duration(seconds: 3), DateTime Function()? saat})
+      : _saat = saat ?? DateTime.now;
+
+  final Duration pencere;
+  final DateTime Function() _saat;
+  String? _son;
+  DateTime? _zaman;
+
+  bool tekrarMi(Map<String, dynamic> veri) {
+    final a = '${veri['bildirimId'] ?? ''}|${veri['type'] ?? ''}|${veri['id'] ?? ''}';
+    final t = _saat();
+    final z = _zaman;
+    if (a == _son && z != null && t.difference(z) < pencere) {
+      return true;
+    }
+    _son = a;
+    _zaman = t;
+    return false;
+  }
+}
+
 class _PushKapisiState extends State<PushKapisi> {
+  final PushTekrarSuzgeci _tekrar = PushTekrarSuzgeci();
+
   AuthController? _auth;
   String? _kullanici;
   String? _token; // ⚠ yalnız bellekte
@@ -222,34 +275,130 @@ class _PushKapisiState extends State<PushKapisi> {
       _bekleyeniIsle();
       return;
     }
-    // ⚠ TEK KAYNAK (14 Eki): uygulama içi bildirim kartıyla AYNI
-    // yönlendirme (`NotificationsScreen.hedefeGit`) — tür + kimlikten
-    // ilgili içerik (teklif bölümüne odaklanma, sohbet, doğru tarafın
-    // ekranı). Orada gidilecek yer bulunamazsa (veri henüz yüklenmedi,
-    // tür eşlenmedi) güvenli hedef tablosu (`pushRotasi`) kullanılır.
-    final id = veri['id'];
+    if (_tekrar.tekrarMi(veri)) {
+      return;
+    }
+    unawaited(_yonlendir(veri));
+  }
+
+  // ── ⚠ HER DURUMDA BİLDİRİMİN EKRANINA (29 Eki, kullanıcı isteği) ──
+  //
+  // "Telefon kilitli, uygulama kapalı ya da arka plandayken bildirime
+  // dokununca, uygulamada hangi ekran açık olursa olsun bildirimin
+  // geldiği ekrana gidilmeli."
+  //
+  // Önceden iki yerde kalınıyordu:
+  //   1. ROL: bildirim etkin rolden farklı roldeyse ortak yönlendirme
+  //      atlanıyor, rota tablosuna düşülüyor, RoleGuard da ekranı
+  //      engelliyordu. Artık kullanıcının KENDİ rolleri arasında geçilir
+  //      (rol eklenmez), yeni rolün paneli kök olur, hedef üstüne açılır.
+  //   2. VERİ: "iletişim açıldı" ve teklif talebi sohbeti, kaydı bellekte
+  //      bulamayınca Bildirimler listesine düşüyordu (kapalıyken açılışta
+  //      listeler henüz yüklenmemiş olur). Artık önce kayıt yüklenir.
+  //
+  // ⚠ GÜVENLİK AYNEN: hedef yalnız tür + kimlikten, sabit tablodan çözülür;
+  // ekranların kendi taraf denetimleri ve sunucu yetkisi değişmedi.
+  Future<void> _yonlendir(Map<String, dynamic> veri) async {
+    final ham = veri['id'];
+    final id = ham is String && _kimlikDeseni.hasMatch(ham) ? ham : null;
     final hedef = veri['hedef'];
     final tur = Mappers.notifType(
         '${veri['type'] ?? ''}', hedef is String ? hedef : null);
-    final baglam = gezginAnahtari.currentContext;
-    final bildirimId = veri['bildirimId'];
-    if (baglam != null && bildirimId is String && _kimlikDeseni.hasMatch(bildirimId)) {
-      // Dokunulan bildirim okundu sayılır (kartla aynı davranış).
-      unawaited(baglam.read<NotificationController>().markRead(bildirimId));
+    final ilkBaglam = gezginAnahtari.currentContext;
+    if (ilkBaglam == null) {
+      return;
     }
-    // ⚠ ROL: uygulama içi liste etkin role göre süzülür; push ise her
-    // rolde gelebilir. Bildirimin rolü etkin rolden farklıysa ortak
-    // yönlendirme KULLANILMAZ — rota tablosundaki RoleGuard devreye girer.
-    final rol = bildirimRolu(tur);
-    final rolUygun = rol == null || rol == _auth?.activeRole;
+    final bildirimId = veri['bildirimId'];
+    if (bildirimId is String && _kimlikDeseni.hasMatch(bildirimId)) {
+      // Dokunulan bildirim okundu sayılır (kartla aynı davranış).
+      unawaited(ilkBaglam.read<NotificationController>().markRead(bildirimId));
+    }
+    final teklifler = ilkBaglam.read<OfferController>();
+    final ilanlar = ilkBaglam.read<ListingController>();
+    final talepler = ilkBaglam.read<TeklifTalebiController>();
+    if (id != null) {
+      await _veriyiHazirla(tur, id, teklifler, ilanlar, talepler);
+    }
+    final auth = _auth;
+    final ben = auth?.currentAccount;
+    if (!mounted || auth == null || ben == null) {
+      return;
+    }
+
+    String? ilanSahibi;
+    if (tur == NotifType.contactOpened && id != null) {
+      final o = teklifler.byId(id);
+      ilanSahibi = o == null ? null : ilanlar.byId(o.listingId)?.ownerId;
+    }
+    final rol = pushGerekenRol(tur, benId: ben.id, ilanSahibiId: ilanSahibi);
+    if (rol != null && rol != auth.activeRole) {
+      // Kullanıcının o rolü yoksa (ya da geçiş olmadıysa) ekran açılmaz;
+      // Bildirimler listesi gösterilir.
+      if (!ben.roles.contains(rol) || await auth.switchRole(rol) != null) {
+        if (mounted) {
+          gezginAnahtari.currentState?.pushNamed('/notifications');
+        }
+        return;
+      }
+      if (!mounted) {
+        return;
+      }
+      // Yeni rolün paneli kök olur (geri tuşu panele döner).
+      gezginAnahtari.currentState?.pushNamedAndRemoveUntil(
+          rol == Role.provider ? '/provider/jobs' : '/customer/listings',
+          (r) => false);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) {
+        return;
+      }
+    }
+
+    // ⚠ TEK KAYNAK (14 Eki): uygulama içi bildirim kartıyla AYNI
+    // yönlendirme (`NotificationsScreen.hedefeGit`). Orada gidilecek yer
+    // bulunamazsa (kayıt yok, tür eşlenmedi) güvenli hedef tablosu.
+    final baglam = gezginAnahtari.currentContext;
     if (baglam != null &&
-        rolUygun &&
-        id is String &&
-        _kimlikDeseni.hasMatch(id) &&
+        id != null &&
         NotificationsScreen.hedefeGit(baglam, tur, id)) {
       return;
     }
     gezginAnahtari.currentState?.pushNamed(pushRotasi(veri));
+  }
+
+  /// Hedef ekranın yönlendirme kararı için gereken kayıt bellekte yoksa
+  /// yüklenir (en çok birkaç saniye beklenir; ağ yoksa yine devam edilir).
+  /// Ekranlar kendi verisini zaten yükleyenler için burada bir şey yapılmaz.
+  Future<void> _veriyiHazirla(NotifType tur, String id, OfferController teklifler,
+      ListingController ilanlar, TeklifTalebiController talepler) async {
+    Future<void> bekle(Future<void> f) => f
+        .timeout(const Duration(seconds: 6))
+        .then((_) {}, onError: (Object _) {});
+    final ben = _auth?.currentAccount;
+    if (ben == null) {
+      return;
+    }
+    switch (tur) {
+      case NotifType.contactOpened:
+        // `id` TEKLİF kimliğidir; ilan teklif üzerinden bulunur. Teklif
+        // benim verdiğim (hizmet veren) ya da ilanıma gelen (hizmet alan)
+        // olabilir: iki liste birlikte yüklenir.
+        if (teklifler.byId(id) == null) {
+          await Future.wait([
+            bekle(teklifler.loadMine(sessiz: true)),
+            bekle(ilanlar.loadMine(ben.id, sessiz: true)),
+          ]);
+        }
+        final o = teklifler.byId(id);
+        if (o != null && ilanlar.byId(o.listingId) == null) {
+          await bekle(ilanlar.loadOne(o.listingId, sessiz: true));
+        }
+      case NotifType.teklifYeniMesaj:
+        if (talepler.byId(id) == null) {
+          await bekle(talepler.yenile());
+        }
+      default:
+        break;
+    }
   }
 
   @override
