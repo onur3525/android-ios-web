@@ -67,9 +67,13 @@ class AnlikTazeleme {
     switch (tur) {
       case 'NEW_LISTING':
         if (saglayici) s.add(TazelemeIsi.yeniIsler);
+      // 29 Eki: iletişim karşı tarafça açıldı → iki rolün teklif
+      // listeleri de (iletişim durumu `contactOpen` ile gelir) ve sohbet
+      // listesi yenilenir; hangi rolde olunursa olsun karşı taraf açık görür.
+      case 'CONTACT_OPENED':
+        s.addAll({TazelemeIsi.tekliflerim, TazelemeIsi.ilanlarim, TazelemeIsi.sohbetler});
       case 'NEW_OFFER':
       case 'OFFER_SELECTED':
-      case 'CONTACT_OPENED':
       case 'LISTING_EXPIRED':
         s.add(saglayici ? TazelemeIsi.tekliflerim : TazelemeIsi.ilanlarim);
       case 'NEW_MESSAGE':

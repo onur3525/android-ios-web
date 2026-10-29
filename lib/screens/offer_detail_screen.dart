@@ -296,19 +296,20 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
                               // sayılır. Böylece seçim anında
                               // kendiliğinden artar ve saklanan sayı
                               // ile gerçek veri ayrışamaz.
-                              if (_tamamlananIs(context, offer.providerId) >
-                                  0) ...[
-                                // ⚠ Ayraç, SOLUNDA öğe varsa çizilir.
-                                if ((prov?.onayliHizmetVeren ?? false) ||
-                                    _olumluOran(revs) != null)
-                                  _prAyrac(),
-                                Text(
-                                    '${_tamamlananIs(context, offer.providerId)} iş tamamladı',
-                                    style: refText(
-                                        size: 11.8,
-                                        weight: RF.w400,
-                                        color: const Color(0xFF3A4658))),
-                              ],
+                              // ⚠ 0 DA YAZILIR (29 Eki, kullanıcı isteği):
+                              // "İletişim açılmamış olsa bile tamamlanan
+                              // iş sayısı görünür olmalı." Satır sayı
+                              // 0 iken gizleniyordu.
+                              // ⚠ Ayraç, SOLUNDA öğe varsa çizilir.
+                              if ((prov?.onayliHizmetVeren ?? false) ||
+                                  _olumluOran(revs) != null)
+                                _prAyrac(),
+                              Text(
+                                  '${_tamamlananIs(context, offer.providerId)} iş tamamladı',
+                                  style: refText(
+                                      size: 11.8,
+                                      weight: RF.w400,
+                                      color: const Color(0xFF3A4658))),
                             ],
                           ),
                         ],

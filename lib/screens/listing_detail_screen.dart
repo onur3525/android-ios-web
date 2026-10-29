@@ -18,6 +18,7 @@ import 'widgets/foto_goruntuleyici.dart';
 import 'widgets/yanlis_taraf_kapisi.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/kullanici_konumu.dart';
+import '../domain/saglayici_ozeti.dart' show tamamlananIsSayisi;
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
@@ -955,6 +956,24 @@ class _TeklifKarti extends StatelessWidget {
                                   size: 11,
                                   weight: RF.w400,
                                   color: RC.textSoft)),
+                        ],
+                      ),
+                      // ── TAMAMLANAN İŞ (29 Eki, kullanıcı isteği) ──
+                      // İletişim açılmamış olsa da görünür; sayı tek
+                      // kaynaktan (`tamamlananIsSayisi`: sunucu özeti +
+                      // türetme). Ad maskesi değişmedi.
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const RefSvg('assets/svg/ic_briefcase.svg',
+                              size: 12, color: Color(0xFF5B6472)),
+                          const SizedBox(width: 4),
+                          Text(
+                              '${tamamlananIsSayisi(context, offer.providerId)} iş tamamladı',
+                              style: refText(
+                                  size: 11,
+                                  weight: RF.w400,
+                                  color: const Color(0xFF5B6472))),
                         ],
                       ),
                     ],

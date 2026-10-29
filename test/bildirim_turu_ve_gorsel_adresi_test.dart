@@ -53,8 +53,9 @@ void main() {
       expect(k.contains('Mappers.notifType('), isTrue);
       // Yedek: güvenli hedef tablosu korunur.
       expect(k.contains('pushNamed(pushRotasi(veri))'), isTrue);
-      // Rol farklıysa ortak yönlendirme yok (RoleGuard'lı rota).
-      expect(k.contains('rol == null || rol == _auth?.activeRole'), isTrue);
+      // 29 Eki: rol farklıysa kullanıcının KENDİ rolüne geçilip açılır.
+      expect(k.contains('rol == null || rol == _auth?.activeRole'), isFalse);
+      expect(k.contains('await auth.switchRole(rol)'), isTrue);
       final n = _kod('lib/screens/notifications_screen.dart');
       expect(n.contains('static bool hedefeGit('), isTrue);
       expect(n.contains('NotificationsScreen.hedefeGit(context, n.type, n.refId)'), isTrue);
