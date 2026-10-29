@@ -14,7 +14,7 @@ process.env.HC_SESSIZ = '1';
 process.env.HC_TRUST_PROXY_HOPS = '1';
 const { testDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
-const { gercekZamanliKur, WS_SINIRLARI, ipAnahtari } = await import('../src/gercek_zamanli.js');
+const { gercekZamanliKur, WS_SINIRLARI, ipAnahtari, ipSiniriEtkinMi } = await import('../src/gercek_zamanli.js');
 const { istemciIp } = await import('../src/http.js');
 
 let db, sunucu, hub, port;
@@ -91,4 +91,11 @@ test('IPv6: sınır /64 ağı başına — saldırgan adres değiştirerek atlat
   for (const w of [...acik, baska]) w.c.destroy();
   await sus(200);
   assert.equal(hub.kimliksizler.size, 0);
+});
+
+test('üretimde proxy ayarı TANIMSIZSA IP sınırı uygulanmaz (herkes tek adreste toplanıp birbirini engellemesin)', () => {
+  assert.equal(ipSiniriEtkinMi({ uretimde: true, hop: 0 }), false, 'tanımsız: sınır kapalı');
+  assert.equal(ipSiniriEtkinMi({ uretimde: true, hop: 1 }), true, 'ölçülmüş değer: sınır açık');
+  assert.equal(ipSiniriEtkinMi({ uretimde: false, hop: 0 }), true, 'geliştirme/test: proxy yok, sınır açık');
+  assert.equal(ipSiniriEtkinMi(), true, 'bu test dosyası: HOPS=1');
 });

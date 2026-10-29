@@ -35,6 +35,7 @@ import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
 import { istemciIp } from './http.js';
+import { config, uretim } from './config.js';
 import { isIP } from 'node:net';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
@@ -98,6 +99,19 @@ export function ipAnahtari(ip) {
   const gruplar = [...sol, ...sifirlar, ...sag];
   return `${gruplar.slice(0, 4).map((g) => parseInt(g, 16).toString(16)).join(':')}::/64`;
 }
+
+/**
+ * IP başına kimliksiz bağlantı sınırı uygulanabilir mi? (29 Eki)
+ *
+ * Üretimde sunucu bir proxy (Render) arkasındadır. `HC_TRUST_PROXY_HOPS`
+ * tanımsızsa (0) bütün kullanıcılar proxy'nin TEK adresinden geliyor
+ * görünür; sınır o zaman bütün site için 20'ye iner ve bir saldırgan
+ * herkesin anlık bağlantısını engelleyebilirdi. Bu durumda sınır
+ * UYGULANMAZ (açılışta uyarı yazılır); bağlantı başına bellek sınırları ve
+ * 10 sn kimlik süresi aynen geçerlidir. Değer ölçülüp girilince sınır
+ * kendiliğinden devreye girer. Geliştirme/test (proxy yok): sınır açık.
+ */
+export const ipSiniriEtkinMi = ({ uretimde = uretim, hop = config.guvenilirProxySayisi } = {}) => !(uretimde && hop === 0);
 
 const KIMLIK_ZAMAN_ASIMI = 10_000;
 const KULLANICI_BASINA_AZAMI_BAGLANTI = 10;
@@ -281,6 +295,10 @@ class Baglanti {
 }
 
 export function gercekZamanliKur(sunucu, db) {
+  const ipSiniri = ipSiniriEtkinMi();
+  if (!ipSiniri && !process.env.HC_SESSIZ) {
+    console.warn('[gercek_zamanli] HC_TRUST_PROXY_HOPS tanımsız: WebSocket IP başına kimliksiz bağlantı sınırı DEVRE DIŞI (bkz. DEPLOY.md).');
+  }
   const hub = {
     db,
     odalar: new Map(),
@@ -289,7 +307,7 @@ export function gercekZamanliKur(sunucu, db) {
     kimliksizler: new Map(),
     kimliksizEkle(b) {
       const set = this.kimliksizler.get(b.ip) ?? new Set();
-      if (set.size >= IP_BASINA_KIMLIKSIZ) return false;
+      if (ipSiniri && set.size >= IP_BASINA_KIMLIKSIZ) return false;
       set.add(b);
       this.kimliksizler.set(b.ip, set);
       return true;
