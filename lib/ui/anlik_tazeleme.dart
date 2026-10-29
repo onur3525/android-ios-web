@@ -62,6 +62,11 @@ class AnlikTazeleme {
   /// Haber türü → yapılacak işler (etkin role göre). Bilinmeyen tür
   /// yalnız bildirimleri tazeler.
   static Set<TazelemeIsi> isler(String? tur, Role rol) {
+    // 29 Eki: karşı taraf mesajı aldı/okudu → yalnız talepler (tikler);
+    // bildirim listesi değişmedi.
+    if (tur == 'TALEP_DURUM') {
+      return {TazelemeIsi.talepler};
+    }
     final saglayici = rol == Role.provider;
     final s = {TazelemeIsi.bildirimler};
     switch (tur) {

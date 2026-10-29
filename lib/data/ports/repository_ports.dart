@@ -343,6 +343,11 @@ abstract class ChatPort extends ChangeNotifier {
   int okunmamisMesaj(String offerId, String benimId) =>
       okunmamisSohbetMesaji(threadFor(offerId), benimId);
 
+  /// Sohbet ekranı açık/kapandı (29 Eki): açıkken gelen mesaj da
+  /// okundu işaretlenir. Mock modda no-op.
+  void sohbetAcik(String offerId, String okuyanId) {}
+  void sohbetKapandi(String offerId) {}
+
   /// Bir ilanın bütün tekliflerindeki okunmamış mesajların toplamı
   /// (hizmet alanın "İlanlarım" kartı).
   int ilanOkunmamisMesaj(String listingId, String benimId) => conversationsFor(benimId)

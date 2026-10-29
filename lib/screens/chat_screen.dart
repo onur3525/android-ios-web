@@ -48,10 +48,15 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _sohbet?.sohbetKapandi(widget.offerId);
     _input.dispose();
     _scroll.dispose();
     super.dispose();
   }
+
+  // Ekran kapanınca "açık sohbet" kaydı bırakılır (dispose'da context
+  // okunmaz; açılışta saklanır).
+  ChatController? _sohbet;
 
   @override
   void initState() {
@@ -66,9 +71,13 @@ class _ChatScreenState extends State<ChatScreen>
       }
       // Geçmiş sunucudan yüklenir, okundu işaretlenir ve gerçek zamanlı
       // bağlantı kurulur (mock modda bellek içi çalışır).
-      final r = await context
-          .read<ChatController>()
-          .openThread(widget.offerId, actorId: me.id);
+      final sohbet = context.read<ChatController>();
+      _sohbet = sohbet;
+      final r = await sohbet.openThread(widget.offerId, actorId: me.id);
+      // 29 Eki: ekran açıkken gelen mesajlar da okundu işaretlenir.
+      if (r.error == null && mounted) {
+        sohbet.sohbetAcik(widget.offerId, me.id);
+      }
       if (mounted) {
         setState(() {
           _accessError = r.error;

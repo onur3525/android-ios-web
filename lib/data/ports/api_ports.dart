@@ -748,6 +748,12 @@ class ApiChatPort extends ChatPort {
   int okunmamisMesaj(String offerId, String benimId) => repo.okunmamis(offerId, benimId);
 
   @override
+  void sohbetAcik(String offerId, String okuyanId) => repo.sohbetAcik(offerId, okuyanId);
+
+  @override
+  void sohbetKapandi(String offerId) => repo.sohbetKapandi(offerId);
+
+  @override
   Future<DomainError?> loadConversations(String actorId) => repo.loadConversations();
 
   @override

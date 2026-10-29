@@ -97,22 +97,87 @@ class ApiChatRepository extends ChangeNotifier {
       final list = _threads.putIfAbsent(offerId, () => []);
       if (list.every((e) => e.id != m.id)) list.add(m); // çift ekleme yok
       notifyListeners();
+      // 29 Eki: sohbet ekranı AÇIKKEN karşı taraftan gelen mesaj da
+      // "okundu" (önceden yalnız açılışta işaretleniyor, sonrakiler
+      // karşı tarafta gri kalıyordu).
+      if (offerId == _acikSohbet && m.senderId != _acikOkuyan) {
+        _okunduPlanla(offerId);
+      }
     }));
-    _subs.add(w.onMessageDelivered.listen((d) => _applyStatus(d, MessageStatus.delivered)));
-    _subs.add(w.onMessageRead.listen((d) => _applyStatus(d, MessageStatus.read)));
+    _subs.add(w.onMessageDelivered.listen((d) =>
+        _applyStatus(d, MessageStatus.delivered, d['aliciId'] as String?)));
+    _subs.add(w.onMessageRead.listen((d) =>
+        _applyStatus(d, MessageStatus.read, d['readerId'] as String?)));
   }
 
-  void _applyStatus(Map<String, dynamic> d, MessageStatus s) {
+  // Durum sırası: tikler YALNIZ İLERİ gider (okunan mesaj "iletildi"ye
+  // düşmez).
+  static int _sira(MessageStatus s) => switch (s) {
+        MessageStatus.sent => 1,
+        MessageStatus.delivered => 2,
+        MessageStatus.read => 3,
+        _ => 0,
+      };
+
+  // Teklif → son durum olayı (yarış: olay, gönderim yanıtından ÖNCE
+  // gelebilir; yanıt gelince bu bilgiyle tamamlanır).
+  final Map<String, ({MessageStatus durum, DateTime an})> _sonDurumOlayi = {};
+
+  /// Karşı tarafın uygulaması mesajları aldı ([s] = delivered) ya da
+  /// okudu ([s] = read). Yalnız [karsiId] DIŞINDAKİLERİN (yani benim)
+  /// gönderdiği, durumu daha geride olan mesajlar ilerler.
+  void _applyStatus(Map<String, dynamic> d, MessageStatus s, String? karsiId) {
     final offerId = d['offerId'] as String?;
     if (offerId == null) {
       return;
     }
+    _sonDurumOlayi[offerId] = (durum: s, an: DateTime.now());
+    var degisti = false;
     for (final m in _threads[offerId] ?? const <ChatMessage>[]) {
-      if (m.status != MessageStatus.failed && m.status != MessageStatus.sending) {
+      if (karsiId != null && m.senderId == karsiId) {
+        continue;
+      }
+      final simdiki = _sira(m.status);
+      if (simdiki > 0 && simdiki < _sira(s)) {
         m.status = s;
+        degisti = true;
       }
     }
-    notifyListeners();
+    if (degisti) {
+      notifyListeners();
+    }
+  }
+
+  // ── AÇIK SOHBET (29 Eki) ──
+  String? _acikSohbet;
+  String? _acikOkuyan;
+  Timer? _okunduZamanlayici;
+
+  /// Sohbet ekranı açıldı: açıkken gelen mesajlar okundu işaretlenir.
+  void sohbetAcik(String offerId, String okuyanId) {
+    _acikSohbet = offerId;
+    _acikOkuyan = okuyanId;
+  }
+
+  /// Sohbet ekranı kapandı.
+  void sohbetKapandi(String offerId) {
+    if (_acikSohbet == offerId) {
+      _acikSohbet = null;
+      _acikOkuyan = null;
+      _okunduZamanlayici?.cancel();
+      _okunduZamanlayici = null;
+    }
+  }
+
+  // Art arda gelen mesajlar tek istekte işaretlenir.
+  void _okunduPlanla(String offerId) {
+    _okunduZamanlayici?.cancel();
+    _okunduZamanlayici = Timer(const Duration(milliseconds: 400), () {
+      _okunduZamanlayici = null;
+      if (_acikSohbet == offerId) {
+        unawaited(markRead(offerId));
+      }
+    });
   }
 
   Future<void> connectRealtime() async {
@@ -193,6 +258,7 @@ class ApiChatRepository extends ChangeNotifier {
       local.status = MessageStatus.sending;
     }
     notifyListeners();
+    final gonderimBasi = DateTime.now();
 
     // ── ⚠ 29 Eki: FOTOĞRAF ÖNCE DEPOYA YÜKLENİR ──
     // Önceden telefondaki dosya YOLU `storageRef` diye gidiyor, sunucu
@@ -231,6 +297,12 @@ class ApiChatRepository extends ChangeNotifier {
     }
 
     final saved = Mappers.message(res!);
+    // Yarış: alıcı odadaysa "iletildi/okundu" olayı yanıttan önce gelmiş
+    // olabilir — gönderim başladıktan sonraki olay yanıta uygulanır.
+    final olay = _sonDurumOlayi[offerId];
+    if (olay != null && !olay.an.isBefore(gonderimBasi) && _sira(saved.status) < _sira(olay.durum)) {
+      saved.status = olay.durum;
+    }
     final list = _threads.putIfAbsent(offerId, () => []);
     final i = list.indexWhere((m) => m.id == local.id);
     if (list.any((m) => m.id == saved.id)) {
@@ -281,6 +353,7 @@ class ApiChatRepository extends ChangeNotifier {
 
   @override
   void dispose() {
+    _okunduZamanlayici?.cancel();
     for (final s in _subs) {
       s.cancel();
     }
