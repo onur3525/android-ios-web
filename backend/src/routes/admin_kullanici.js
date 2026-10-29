@@ -145,31 +145,11 @@ export function adminKullaniciRotalar(r, db) {
     return { id: u.id, loginLockedUntil: null, lockedConnections: 0 };
   });
 
-  for (const [eylem, g] of Object.entries(GECISLER)) {
+  for (const eylem of Object.keys(GECISLER)) {
     r.post(`/admin/v1/users/:id/${eylem}`, async (ctx) => {
       yetkiIste(ctx.admin, 'users.status.write');
       yenidenDogrulamaIste(ctx.oturum);
-      const neden = gerekce(ctx.body.reason);
-      const u = await db.prepare('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL').get(ctx.params.id);
-      if (!u) throw hata.bulunamadi('Kullanıcı bulunamadı');
-      if (!g.from.includes(u.status)) throw hata.durum(`Bu işlem ${u.status} durumundaki hesaba uygulanamaz`);
-      const z = simdi();
-      const denetimRef = randomUUID();
-      await db.tx(async () => {
-        await db.prepare('UPDATE users SET status = ?, status_reason = ?, status_changed_at = ?, status_changed_by = ?, updated_at = ? WHERE id = ?')
-          .run(g.to, neden, z, ctx.admin.id, z, u.id);
-        await db.prepare('INSERT INTO user_status_history (id, user_id, old_status, new_status, reason, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-          .run(randomUUID(), u.id, u.status, g.to, neden, ctx.admin.id, z);
-        if (g.to !== 'ACTIVE') await oturumlariIptal(db, u.id, g.to);
-        await denetimYaz(db, {
-          adminId: ctx.admin.id, ip: ctx.ip, islem: g.islem, hedefTur: 'user', hedefId: u.id,
-          once: { status: u.status }, sonra: { status: g.to, ref: denetimRef }, gerekce: neden,
-        });
-      });
-      // Bildirim işlemden SONRA: sağlayıcı hatası durumu geri almaz,
-      // sonuç kaydedilir ve admin'e döner.
-      const bildirim = ctx.body.notify === false ? [] : await kullaniciyaBildir(db, u, g.sablon, { NEDEN: neden }, denetimRef);
-      return { id: u.id, status: g.to, notifications: bildirim };
+      return hesapDurumunuDegistir(db, { adminId: ctx.admin.id, ip: ctx.ip, kullaniciId: ctx.params.id, eylem, gerekceHam: ctx.body.reason, bildir: ctx.body.notify !== false });
     });
   }
 
@@ -190,4 +170,36 @@ export function adminKullaniciRotalar(r, db) {
       auditRef: m.audit_ref, createdAt: m.created_at, sentAt: m.sent_at,
     }));
   });
+}
+
+/**
+ * Hesap durumu geçişi — TEK KAYNAK (29 Eki): kullanıcı ekranındaki
+ * askı/ban uçları ve Şikâyetler ekranı (routes/sikayet.js) aynı yolu
+ * kullanır. Davranış önceki uçla AYNI: tek işlemde durum + geçmiş +
+ * oturum iptali + denetim; bildirim işlemden SONRA.
+ */
+export async function hesapDurumunuDegistir(db, { adminId, ip, kullaniciId, eylem, gerekceHam, bildir = true, ek = null }) {
+  const g = GECISLER[eylem];
+  if (!g) throw hata.dogrulama('Geçersiz işlem');
+  const neden = gerekce(gerekceHam);
+  const u = await db.prepare('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL').get(kullaniciId);
+  if (!u) throw hata.bulunamadi('Kullanıcı bulunamadı');
+  if (!g.from.includes(u.status)) throw hata.durum(`Bu işlem ${u.status} durumundaki hesaba uygulanamaz`);
+  const z = simdi();
+  const denetimRef = randomUUID();
+  await db.tx(async () => {
+    await db.prepare('UPDATE users SET status = ?, status_reason = ?, status_changed_at = ?, status_changed_by = ?, updated_at = ? WHERE id = ?')
+      .run(g.to, neden, z, adminId, z, u.id);
+    await db.prepare('INSERT INTO user_status_history (id, user_id, old_status, new_status, reason, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(randomUUID(), u.id, u.status, g.to, neden, adminId, z);
+    if (g.to !== 'ACTIVE') await oturumlariIptal(db, u.id, g.to);
+    await denetimYaz(db, {
+      adminId, ip, islem: g.islem, hedefTur: 'user', hedefId: u.id,
+      once: { status: u.status }, sonra: { status: g.to, ref: denetimRef, ...(ek ?? {}) }, gerekce: neden,
+    });
+  });
+  // Bildirim işlemden SONRA: sağlayıcı hatası durumu geri almaz,
+  // sonuç kaydedilir ve admin'e döner.
+  const bildirim = bildir ? await kullaniciyaBildir(db, u, g.sablon, { NEDEN: neden }, denetimRef) : [];
+  return { id: u.id, status: g.to, notifications: bildirim };
 }

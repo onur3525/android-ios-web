@@ -148,6 +148,35 @@ function fcmDenetimi() {
   return true;
 }
 
+// 29 Eki (5651): istemcinin kaynak portunu taşıyan başlığın adı. Cloudflare
+// Transform Rule bu başlığa `cf.edge.client_port` yazar. Başlığa YALNIZ
+// köken sırrı doğrulanınca güvenilir (HC_ORIGIN_SECRET).
+function istemciPortBasligi() {
+  const ad = (env.HC_CLIENT_PORT_HEADER ?? '').trim().toLowerCase();
+  if (!ad) return null;
+  if (!/^[a-z0-9-]{1,64}$/.test(ad)) throw new Error('HC_CLIENT_PORT_HEADER geçersiz başlık adı (yalnız harf, rakam ve tire).');
+  // IP/kimlik taşıyan standart başlıklar port başlığı olarak kullanılamaz.
+  if (/^(x-forwarded-|forwarded$|x-real-ip$|cf-connecting-ip$|host$|authorization$|cookie$)/.test(ad)) throw new Error('HC_CLIENT_PORT_HEADER bu başlık olamaz.');
+  return ad;
+}
+
+// 29 Eki: KÖKEN SIRRI — Render'ın `*.onrender.com` adresine kendi
+// Cloudflare bölgenizi (ör. api.hizmetcep.com) atlayarak gelen istekleri
+// reddetmek için. Cloudflare Transform Rule her isteğe bu başlığı bu
+// sırla YAZAR; başlık yoksa/yanlışsa istek reddedilir (bkz. http.js
+// kokenDogrulandi). ⚠ IP aralığı denetimi KULLANILMAZ: Render'ın kendi
+// kenar ağı da Cloudflare'dir; onrender.com'a doğrudan gelen istek de
+// Cloudflare adresinden geliyormuş gibi görünür.
+// Tanımsız → kural KAPALI (bugünkü davranış). Sır en az 32 karakter.
+function kokenSirri() {
+  const sir = (env.HC_ORIGIN_SECRET ?? '').trim();
+  const ad = (env.HC_ORIGIN_SECRET_HEADER ?? 'x-hc-origin-secret').trim().toLowerCase();
+  if (!sir) return null;
+  if (sir.length < 32) throw new Error('HC_ORIGIN_SECRET en az 32 karakter olmalıdır.');
+  if (!/^x-[a-z0-9-]{1,62}$/.test(ad)) throw new Error('HC_ORIGIN_SECRET_HEADER "x-" ile başlayan geçerli bir başlık adı olmalıdır.');
+  return { ad, sir };
+}
+
 // İstemci IP'si: GÜVENİLEN proxy altyapısının X-Forwarded-For başlığının
 // SAĞINA eklediği DEĞER sayısı (bkz. http.js istemciIp).
 // ⚠ Bu, fiziksel proxy sayısı DEĞİLDİR: bir proxy birden fazla değer
@@ -182,6 +211,11 @@ export const config = {
   port: Number(env.PORT || 8080),
   // Güvenilen altyapının X-Forwarded-For'un SAĞINA eklediği değer sayısı (proxy sayısı değil; 0 = başlığa güvenme).
   guvenilirProxySayisi: proxyHopSayisi(),
+  // 29 Eki (5651): istemcinin kaynak portunu taşıyan başlık (Cloudflare
+  // Transform Rule ile `cf.edge.client_port` yazılır). Boş = port kaydedilmez.
+  istemciPortBasligi: istemciPortBasligi(),
+  // 29 Eki: { ad, sir } → yalnız kendi Cloudflare bölgenizden gelen istek kabul edilir; null → kural kapalı.
+  kokenSirri: kokenSirri(),
   jwtSirri: jwtSirri(),
   erisimSuresi: 15 * 60 * 1000, // erişim token'ı 15 dk
   yenilemeSuresi: 30 * 24 * 60 * 60 * 1000, // yenileme token'ı 30 gün

@@ -5,7 +5,7 @@
 //   { "error": { "code": "NOT_FOUND", "message": "..." }, "requestId": "..." }
 // Başarı yanıtı ZARFSIZ düz JSON'dur (istemci `_list`/nesne bekler).
 // ═══════════════════════════════════════════════════════════════
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { isIP } from 'node:net';
 import { config } from './config.js';
@@ -174,6 +174,55 @@ export function istemciIp(req) {
   return ipBicimle(aday);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// KÖKEN SIRRI (29 Eki) — doğrudan onrender.com erişimini kapatma
+//
+// Kendi Cloudflare bölgeniz (ör. api.hizmetcep.com) her isteğe Transform
+// Rule ile gizli bir başlık yazar; sunucu başlığı sabit sürede karşılaştırır.
+// Başlık yoksa/yanlışsa istek reddedilir: onrender.com adresine doğrudan
+// gelen istek Cloudflare WAF'ını atlayamaz ve Cloudflare'in yazdığı başlıkları
+// (kaynak port) taklit edemez.
+// ⚠ IP aralığı denetimi işe yaramaz: Render'ın kendi kenar ağı da
+// Cloudflare'dir; doğrudan istek de Cloudflare adresinden gelir.
+// Kural kapalıyken (HC_ORIGIN_SECRET yok) her istek kabul edilir.
+// ═══════════════════════════════════════════════════════════════
+export function kokenDogrulandi(req, kural = config.kokenSirri) {
+  if (!kural) return true;
+  const ham = req.headers?.[kural.ad];
+  const v = Array.isArray(ham) ? ham[ham.length - 1] : ham;
+  if (typeof v !== 'string') return false;
+  const a = createHash('sha256').update(v).digest();
+  const b = createHash('sha256').update(kural.sir).digest();
+  return timingSafeEqual(a, b);
+}
+
+/** Köken kuralının dışında kalan yollar (altyapı sağlık denetimi). */
+export const KOKEN_MUAF_YOLLAR = new Set(['/healthz', '/readyz']);
+
+/**
+ * 29 Eki (5651) — istemcinin KAYNAK PORTU.
+ * · Doğrudan bağlantıda (vekil yok; geliştirme/test) soketin uzak portu.
+ * · Vekil arkasında YALNIZ köken sırrı kuralı açıksa (HC_ORIGIN_SECRET;
+ *   istek kendi Cloudflare bölgenizden geldiği kanıtlanmıştır) ve işletme
+ *   başlığı (HC_CLIENT_PORT_HEADER) verilmişse o başlıktan okunur.
+ *   Cloudflare Transform Rule başlığı her istekte YENİDEN yazar; kural
+ *   kapalıyken başlık doğrudan isteklerde sahte olabileceği için okunmaz.
+ * Başlık yoksa/geçersizse NULL — değer uydurulmaz.
+ */
+export function kaynakPort(req, { kural = config.kokenSirri } = {}) {
+  if (!config.guvenilirProxySayisi) {
+    const p = req.socket?.remotePort;
+    return Number.isInteger(p) && p >= 0 && p <= 65535 ? p : null;
+  }
+  const ad = config.istemciPortBasligi;
+  if (!ad || !kural) return null;
+  const ham = req.headers?.[ad];
+  const v = Array.isArray(ham) ? ham[ham.length - 1] : ham;
+  if (typeof v !== 'string' || !/^\d{1,5}$/.test(v.trim())) return null;
+  const n = Number(v.trim());
+  return n <= 65535 ? n : null;
+}
+
 /**
  * Geçerli bir IP'yi tek yazıma indirir: IPv4-eşlenmiş IPv6
  * (`::ffff:a.b.c.d`, `::ffff:7f00:1`, `0:0:0:0:0:ffff:…`) → `a.b.c.d`.
@@ -256,7 +305,7 @@ export class Yonlendirici {
         }) +
         '/?$',
     );
-    this.rotalar.push({ yontem, re, anahtarlar, isleyici });
+    this.rotalar.push({ yontem, desen, re, anahtarlar, isleyici });
   }
   get(d, f) { this.ekle('GET', d, f); }
   post(d, f) { this.ekle('POST', d, f); }
@@ -277,7 +326,7 @@ export class Yonlendirici {
       } catch {
         throw hata.dogrulama('Geçersiz adres'); // bozuk yüzde kodlaması: 500 değil 400
       }
-      return { isleyici: r.isleyici, params };
+      return { isleyici: r.isleyici, params, desen: r.desen };
     }
     return yolVar ? 'YONTEM' : null;
   }

@@ -83,6 +83,22 @@ seçilir: herkes tek IP'de toplanır ve gerçek kullanıcılar birbirinin hız
 sınırına takılır. Değer **fazla** verilirse istemcinin yazdığı sahte değer
 seçilir: sahtecilik geri gelir.
 
+## 5651 trafik kaydı, kaynak port ve köken sırrı (29 Eki)
+
+Oturumlu kullanıcının her başarılı değişiklik isteği ile giriş, kayıt ve oturum yenilemesi `trafik_kayitlari` tablosuna yazılır (IP, kaynak port, işlem, zaman). Kayıtlar 365 gün tutulur, hesap silinse de silinmez; hesap silinirken ad, telefon ve e-posta `yasal_kimlik_arsivi` tablosuna 365 gün için alınır. Bakım işi (`yasal_kayit_bakimi`) süresi dolanları her gün siler.
+
+Render istemcinin kaynak portunu iletmez. Port yalnız API kendi Cloudflare bölgenizin arkasındayken kaydedilebilir. Bugün uygulama `hizmetcep-backend.onrender.com` adresine doğrudan bağlandığı ve hizmetcep.com DNS'i Netlify'da olduğu için port alanı BOŞ kalır (uydurulmaz).
+
+⚠ X-Forwarded-For'daki Cloudflare adresi Render'ın KENDİ kenar ağıdır; bu yüzden "yalnız Cloudflare IP'lerini kabul et" denetimi doğrudan onrender.com isteklerini ayırt edemez. Bunun yerine köken sırrı kullanılır.
+
+Etkinleştirme (API alan adı kendi Cloudflare bölgenize alındığında, sırayla):
+
+1. API alan adı (ör. api.hizmetcep.com) Cloudflare'de "proxied" olarak Render'a yönlendirilir; uygulama ve web yeni adresle derlenir (API_BASE_URL, CORS).
+2. Cloudflare › Rules › Transform Rules › Modify Request Header, tüm istekler için iki "Set" işlemi: `X-HC-Origin-Secret` = rastgele en az 32 karakterlik sır (statik); `X-HC-Client-Port` = dinamik `cf.edge.client_port`. "Set" istemcinin gönderdiği aynı adlı başlığın üzerine yazar.
+3. Render ortamına `HC_ORIGIN_SECRET` (aynı sır) ve `HC_CLIENT_PORT_HEADER=X-HC-Client-Port` eklenir. Bundan sonra sırsız gelen her istek (onrender.com'a doğrudan) 403 alır; yalnız `/healthz` ve `/readyz` muaftır. Dışarıdan sunucuya gelen webhook'lar (ör. Resend gelen e-posta) da Cloudflare adresini kullanmalıdır.
+4. `HC_TRUST_PROXY_HOPS` yeni zincirde yeniden ölçülür (`HC_IP_TESHIS` yöntemi).
+5. Doğrulama: onrender.com adresine doğrudan istek 403; bir girişten sonra `trafik_kayitlari` son satırında `kaynak_port` dolu.
+
 ## Düzgün kapanış
 
 `SIGTERM` → `/readyz` 503 döner (5 sn) → yeni bağlantı alınmaz → açık

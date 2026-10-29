@@ -7,6 +7,7 @@ import '../data/models/review.dart';
 import '../domain/yorum_gorunumu.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/sikayet_et.dart';
 
 /// BİR HİZMET VERENİN ALDIĞI YORUMLAR — HERKESE AÇIK, SALT-OKUNUR.
 ///
@@ -56,6 +57,11 @@ class ProviderReviewsScreen extends StatelessWidget {
                         style: refText(
                             size: RF.s18, weight: RF.w700, color: RC.text)),
                   ),
+                  // 29 Eki: hizmet veren profilini şikâyet etme.
+                  SikayetEtDugmesi(
+                      hedef: SikayetHedefi.kullanici,
+                      hedefId: providerId,
+                      sahipId: providerId),
                 ],
               ),
             ),
@@ -155,13 +161,28 @@ class YorumKarti extends StatelessWidget {
   final Review review;
   final String? yazarAdi;
 
+  // 29 Eki: kartın altında "Şikâyet Et" (yorum). TEK KART, ÜÇ EKRAN
+  // kuralı gereği üç ekranda birlikte görünür; yorumun yazarına çizilmez.
   @override
-  Widget build(BuildContext context) => YorumKartiGovde(
-        adTam: yazarAdi,
-        hizmet: yorumHizmetAdi(context, review),
-        tarih: kisaTarih(review.createdAt),
-        yildiz: review.stars,
-        metin: review.text,
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          YorumKartiGovde(
+            adTam: yazarAdi,
+            hizmet: yorumHizmetAdi(context, review),
+            tarih: kisaTarih(review.createdAt),
+            yildiz: review.stars,
+            metin: review.text,
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SikayetEtDugmesi(
+                hedef: SikayetHedefi.yorum,
+                hedefId: review.id,
+                sahipId: review.authorId),
+          ),
+        ],
       );
 }
 

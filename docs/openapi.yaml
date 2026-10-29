@@ -1593,6 +1593,23 @@ paths:
         '200': { description: Başarılı }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /reports:
+    post:
+      tags: [Other]
+      summary: Şikâyet Et — ilan, kullanıcı profili veya yorum (29 Eki)
+      description: |
+        Oturum gerekir. Gövde { targetType: LISTING|USER|REVIEW, targetId (uuid),
+        reason: FRAUD|INSULT|MISLEADING|OTHER, note? (≤500; OTHER'da en az 10) }.
+        Kendi içeriği şikâyet edilemez. Aynı içerik için açık şikâyet varsa
+        ikinci kayıt açılmaz, ilki döner ({ duplicate: true }). Kullanıcı başına
+        24 saatte 10 şikâyet. Şikâyet edenin kimliği karşı tarafa bildirilmez.
+      responses:
+        '200': { description: '{ id, status: OPEN, duplicate }' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /support/tickets/{ticketId}:
     parameters:
       - { name: ticketId, in: path, required: true, schema: { type: string, format: uuid } }
