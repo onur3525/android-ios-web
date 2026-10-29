@@ -8,11 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 String _kod(String yol) => File(yol).readAsStringSync();
 
 void main() {
-  test('ilan detayındaki teklif kartı hizmet verenin sayısını gösterir', () {
-    final k = _kod('lib/screens/listing_detail_screen.dart');
-    expect(k.contains("'\${tamamlananIsSayisi(context, offer.providerId)} iş tamamladı'"), isTrue);
-  });
-
+  // ⚠ İlan detayındaki teklif ÖNİZLEME kartına eklenmez (21 Eki kullanıcı
+  // kararı, `teklif_karti_sadelestirme_test`): sayı teklif detayında görünür.
   test('teklif detayı 0 iken de yazar', () {
     final k = _kod('lib/screens/offer_detail_screen.dart');
     expect(k.contains('if (_tamamlananIs(context, offer.providerId) >'), isFalse);
