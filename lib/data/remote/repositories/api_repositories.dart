@@ -559,8 +559,9 @@ class ApiOfferRepository extends ChangeNotifier {
     }
     _benimkiler.clear();
     final ilanlar = <Listing>[];
-    iletisimAciklariAktar?.call(iletisimiAcikTeklifler(rows!));
-    for (final e in rows) {
+    final satirlar = rows!;
+    iletisimAciklariAktar?.call(iletisimiAcikTeklifler(satirlar));
+    for (final e in satirlar) {
       final j = e as Map<String, dynamic>;
       final o = Mappers.offer(j);
       _cache[o.id] = o;
