@@ -95,17 +95,32 @@ void main() {
     c.close(force: true);
   }, skip: atla);
 
-  test('WebSocket: sabitleme bölgesinde doğru pinle bağlanır, döngü yok', () async {
-    final ws = await sabitliBolgede(
-        () => WebSocket.connect('wss://localhost:${dogru.port}/'));
+  // ⚠ NOT (29 Eki, CI bulgusu): Dart'ın `WebSocket.connect`i istemci
+  // verilmezse SÜREÇ BOYU TEK bir statik `HttpClient` kullanır ve onu ilk
+  // çağrıda üretir. `flutter test` kendi altyapısı için testten ÖNCE bir
+  // WebSocket açtığından o statik istemci bölge dışında üretilmiş olur;
+  // bu yüzden WebSocket burada pinli istemciyle doğrudan sınanır, bölgenin
+  // ürettiği istemci ise ayrıca HTTPS ile sınanır.
+  test('WebSocket: pinli istemciyle doğru sunucuya bağlanır', () async {
+    final ws = await WebSocket.connect('wss://localhost:${dogru.port}/',
+        customClient: SertifikaSabitleme.istemci());
     expect(await ws.first, 'merhaba');
     await ws.close();
   }, skip: atla);
 
-  test('WebSocket: pinlenmemiş sunucuya bağlanamaz', () async {
+  test('WebSocket: pinli istemci pinlenmemiş sunucuya bağlanamaz', () async {
     await expectLater(
-        sabitliBolgede(() => WebSocket.connect('wss://localhost:${yabanci.port}/')),
+        WebSocket.connect('wss://localhost:${yabanci.port}/',
+            customClient: SertifikaSabitleme.istemci()),
         throwsA(isA<Exception>()));
+  }, skip: atla);
+
+  test('sabitleme bölgesi: bölgede üretilen istemci pinli ve döngüsüz', () async {
+    final c = sabitliBolgede(() => HttpClient());
+    expect(await _getir(c, 'https://localhost:${dogru.port}/'), 'tamam');
+    await expectLater(_getir(c, 'https://localhost:${yabanci.port}/'),
+        throwsA(isA<TlsException>()));
+    c.close(force: true);
   }, skip: atla);
 
   test('pinli istemci üretimi: üretici bir kez, boş güven deposuyla çağrılır', () {
