@@ -37,7 +37,6 @@ import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../data/controllers/incelenen_ilan_controller.dart';
-import '../data/controllers/chat_controller.dart';
 import 'teklif_istekleri_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
 
