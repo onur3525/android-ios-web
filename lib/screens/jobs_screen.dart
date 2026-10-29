@@ -37,7 +37,6 @@ import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
 import '../data/controllers/incelenen_ilan_controller.dart';
-import '../domain/sohbet_okunmamis.dart';
 import '../data/controllers/chat_controller.dart';
 import 'teklif_istekleri_screen.dart';
 import 'teklif_talebi_detay_screen.dart';
@@ -1184,7 +1183,7 @@ class _JobsScreenState extends State<JobsScreen> {
               // akışında HİÇ YOKTU — hizmet veren yalnız bildirimden
               // haberdar oluyordu.
               //
-              // ⚠ SAYIM TEK KAYNAKTAN: `okunmamisSohbetMesaji`.
+              // ⚠ SAYIM TEK KAYNAKTAN: `ChatController.okunmamisMesaj`.
               // Ekran kendi süzgecini yazmaz.
               //
               // ⚠ SOHBET TEKLİF ÜZERİNDEN YÜRÜR: teklif yoksa sohbet
@@ -1197,18 +1196,9 @@ class _JobsScreenState extends State<JobsScreen> {
                 if (mine == null || me == null) {
                   return const SizedBox.shrink();
                 }
-                final sayi = okunmamisSohbetMesaji(
-                    c.watch<ChatController>().threadFor(mine.id), me.id);
-                if (sayi == 0) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: YeniMesajSeridi(sayi),
-                  ),
-                );
+                // 29 Eki: sayı tek kaynaktan (sunucu + anlık); açılmamış
+                // sohbetteki mesaj da sayılır, okununca kalkar.
+                return TeklifYeniMesaj(offerId: mine.id);
               }),
 
               // ── ⚠ TEKLİF DURUMU — ARTIK KARTIN GERÇEK SAĞ ALT

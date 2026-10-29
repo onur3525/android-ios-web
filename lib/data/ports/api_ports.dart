@@ -745,6 +745,9 @@ class ApiChatPort extends ChatPort {
   List<Offer> conversationsFor(String actorId) => repo.conversations;
 
   @override
+  int okunmamisMesaj(String offerId, String benimId) => repo.okunmamis(offerId, benimId);
+
+  @override
   Future<DomainError?> loadConversations(String actorId) => repo.loadConversations();
 
   @override

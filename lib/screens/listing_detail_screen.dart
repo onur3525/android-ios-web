@@ -26,6 +26,7 @@ import '../core/geri.dart';
 import '../core/tutar_bicimi.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/sayfa_bildirimleri.dart';
+import 'widgets/yeni_mesaj_seridi.dart';
 
 /// Müşteri — İlan Detayı (HTML vListing): ilan bilgisi, durum,
 /// Gelen Teklifler listesi ve duruma göre aksiyonlar
@@ -986,6 +987,8 @@ class _TeklifKarti extends StatelessWidget {
                 ),
               ],
             ),
+            // 29 Eki: bu hizmet verenden gelen okunmamış mesaj.
+            TeklifYeniMesaj(offerId: offer.id, ustBosluk: 6),
 
             // ── ⚠ NOT KUTUSU YALNIZ NOT VARSA (12 Eyl, kullanıcı
             // isteği) ──

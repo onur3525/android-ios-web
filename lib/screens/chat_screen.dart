@@ -21,7 +21,6 @@ import '../core/platform/ag_gorseli.dart';
 import '../core/platform/gorsel_cozumu.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/olcu.dart';
-import '../domain/sohbet_okunmamis.dart';
 import '../ui/sayfa_bildirimleri.dart';
 
 /// Sohbet (HTML vChat): balonlar, mesaj durumları
@@ -651,8 +650,9 @@ class _KonusmaListesi extends StatelessWidget {
               me.id == o.providerId ? (l?.ownerId ?? '') : o.providerId;
           final other = auth.accountById(otherId);
           final ad = (other?.name ?? '').trim();
-          final okunmamis =
-              okunmamisSohbetMesaji(chatCtl.threadFor(o.id), me.id);
+          // 29 Eki: sayı tek kaynaktan — açılmamış sohbetteki mesaj da
+          // sayılır (önceden yalnız açılmış sohbetler sayılıyordu).
+          final okunmamis = chatCtl.okunmamisMesaj(o.id, me.id);
           final aktif = o.id == aktifId;
 
           return RefTap(

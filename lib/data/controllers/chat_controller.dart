@@ -15,6 +15,20 @@ class ChatController extends BaseController {
   List<ChatMessage>? threadFor(String offerId) => _chats.threadFor(offerId);
   List<Offer> conversationsFor(String actorId) => _chats.conversationsFor(actorId);
 
+  /// Teklif sohbetindeki okunmamış mesaj (kartlardaki "yeni mesaj").
+  int okunmamisMesaj(String offerId, String benimId) =>
+      _chats.okunmamisMesaj(offerId, benimId);
+
+  /// İlanın bütün tekliflerindeki okunmamış mesaj toplamı.
+  int ilanOkunmamisMesaj(String listingId, String benimId) =>
+      _chats.ilanOkunmamisMesaj(listingId, benimId);
+
+  /// Kartlardaki sayılar için sohbet listesini SESSİZCE yeniler
+  /// (yükleniyor göstergesi yok; hata ekranı kesmez).
+  Future<void> okunmamislariTazele(String actorId) async {
+    await _chats.loadConversations(actorId);
+  }
+
   Future<DomainError?> loadConversations(String actorId) =>
       runLoad(() => _chats.loadConversations(actorId));
 
