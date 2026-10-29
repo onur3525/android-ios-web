@@ -31,6 +31,7 @@ import { gorselAdresleriEkle } from './gorsel_adresleri.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { olaylar } from './olaylar.js';
 import { ANLIK_HABER_KANALI } from './anlik_haber.js';
+import { ilanMesajlariIletildi, mesajDurumu } from './mesaj_durumu.js';
 import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
@@ -393,10 +394,16 @@ export function gercekZamanliKur(sunucu, db) {
     if (!alicilar?.size) return;
     const m = await db.prepare('SELECT * FROM messages WHERE id = ?').get(messageId).catch(() => null);
     if (!m) return;
-    const veri = { id: m.id, offerId: m.offer_id, senderId: m.sender_id, text: m.text, storageRef: m.storage_ref, status: m.read_at ? 'READ' : 'DELIVERED', createdAt: m.created_at };
+    const veri = { id: m.id, offerId: m.offer_id, senderId: m.sender_id, text: m.text, storageRef: m.storage_ref, status: mesajDurumu(m), createdAt: m.created_at };
     // Fotoğraflı mesajda imzalı görüntüleme adresi (HTTP yanıtıyla aynı).
     await gorselAdresleriEkle(db, veri);
-    for (const b of alicilar) b.olay('message.new', veri);
+    const alicilarIletildi = new Set();
+    for (const b of alicilar) {
+      b.olay('message.new', veri);
+      if (b.kullanici?.id && b.kullanici.id !== m.sender_id) alicilarIletildi.add(b.kullanici.id);
+    }
+    // 29 Eki: alıcı sohbet odasında → mesaj onun uygulamasına ULAŞTI.
+    for (const alici of alicilarIletildi) await ilanMesajlariIletildi(db, [offerId], alici).catch(() => {});
   });
   // 28 Eki: uygulama içi bildirim → yalnız O KULLANICININ açık soketlerine
   // tür bilgisiyle haber (içerik taşımaz; bkz. anlik_haber.js).
@@ -405,6 +412,9 @@ export function gercekZamanliKur(sunucu, db) {
     for (const [kullaniciId, tur] of h) {
       for (const b of hub.kullanicilar.get(kullaniciId) ?? []) b.olay(ANLIK_HABER_KANALI, { type: tur });
     }
+  });
+  olaylar.on('message.delivered', ({ offerId, aliciId }) => {
+    for (const b of hub.odalar.get(offerId) ?? []) b.olay('message.delivered', { offerId, aliciId });
   });
   olaylar.on('message.read', ({ offerId, readerId }) => {
     for (const b of hub.odalar.get(offerId) ?? []) b.olay('message.read', { offerId, readerId });

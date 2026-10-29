@@ -36,6 +36,8 @@ import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 import { ilanTelefonuGorunur } from './kisi_ozeti.js';
 import { kimlikArsivle } from '../trafik_kaydi.js';
+import { anlikHaberEkle } from '../anlik_haber.js';
+import { ilanMesajlariIletildi, mesajDurumu, talepMesajlariIletildi } from '../mesaj_durumu.js';
 
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
 // Silme talebinden sonraki bekleme (talep bu sürede geri çekilebilir). Süre
@@ -61,7 +63,7 @@ function goruntulemeGerekcesi(ctx) {
 
 const mesajGorunumu = (m) => ({
   id: m.id, offerId: m.offer_id, senderId: m.sender_id, text: m.text, storageRef: m.storage_ref,
-  status: m.read_at ? 'READ' : 'DELIVERED', createdAt: m.created_at,
+  status: mesajDurumu(m), createdAt: m.created_at, // 29 Eki: SENT → DELIVERED → READ
 });
 
 export function talepGorunumu(t, mesajlar = [], degerlendirme = null) {
@@ -77,7 +79,7 @@ export function talepGorunumu(t, mesajlar = [], degerlendirme = null) {
     // talebi pasif görür ("Hizmet veren reddetti"); hizmet verenin
     // listesinden kalkar.
     saglayiciReddetti: t.durum === 'REDDEDILDI' && t.reddeden_id != null && t.reddeden_id === t.saglayici_id,
-    mesajlar: mesajlar.map((m) => ({ id: m.id, gonderenId: m.gonderen_id, metin: m.metin, fotografRef: m.fotograf_ref, createdAt: m.created_at, okundu: !!m.read_at })),
+    mesajlar: mesajlar.map((m) => ({ id: m.id, gonderenId: m.gonderen_id, metin: m.metin, fotografRef: m.fotograf_ref, createdAt: m.created_at, okundu: !!m.read_at, iletildi: !!(m.delivered_at || m.read_at) })),
     // Talebin değerlendirmesi (yoksa null): istemci "Değerlendirme Yapıldı"
     // durumunu yeniden girişten sonra da doğru gösterir.
     degerlendirme: degerlendirme
@@ -147,11 +149,14 @@ export function sohbetTalepRotalar(r, db) {
         lastMessage: son ? mesajGorunumu(son) : null, unread: okunmamis,
       });
     }
+    // 29 Eki: alıcının uygulaması listeyi çekti → gelen mesajlar "iletildi".
+    await ilanMesajlariIletildi(db, teklifler, id);
     return out;
   }));
 
   r.get('/api/v1/messages/:offerId', korumali(async (ctx) => {
     const { o } = await sohbetTarafi(ctx.params.offerId, ctx.kullanici);
+    await ilanMesajlariIletildi(db, [o.id], ctx.kullanici.id); // 29 Eki
     const once = ctx.query.get('before');
     const liste = once
       ? await db.prepare('SELECT * FROM messages WHERE offer_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT 50').all(o.id, once)
@@ -192,7 +197,8 @@ export function sohbetTalepRotalar(r, db) {
 
   r.post('/api/v1/messages/:offerId/read', korumali(async (ctx) => {
     const { o } = await sohbetTarafi(ctx.params.offerId, ctx.kullanici);
-    const n = await db.prepare('UPDATE messages SET read_at = ? WHERE offer_id = ? AND sender_id <> ? AND read_at IS NULL').run(simdi(), o.id, ctx.kullanici.id);
+    const z = simdi();
+    const n = await db.prepare('UPDATE messages SET read_at = ?, delivered_at = COALESCE(delivered_at, ?) WHERE offer_id = ? AND sender_id <> ? AND read_at IS NULL').run(z, z, o.id, ctx.kullanici.id);
     if (n.changes) await olaylar.yayinla('message.read', { offerId: o.id, readerId: ctx.kullanici.id });
     return { ok: true, changed: n.changes };
   }));
@@ -244,10 +250,16 @@ export function sohbetTalepRotalar(r, db) {
         ORDER BY t.created_at DESC`,
     ).all(u.id, u.id, u.id, u.id); // ⚠ hizmet alanın SİLDİĞİ / hizmet verenin REDDETTİĞİ talep o tarafın listesine dönmez
     const out = await talepleriTopluTamamla(liste);
+    // 29 Eki: alıcı listeyi çekti → gelen talep mesajları "iletildi".
+    await talepMesajlariIletildi(db, liste.map((t) => t.id), u.id);
     return out;
   }));
 
-  r.get('/api/v1/teklif-talepleri/:id', korumali(async (ctx) => talepTam(await talepGetir(ctx.params.id, ctx.kullanici))));
+  r.get('/api/v1/teklif-talepleri/:id', korumali(async (ctx) => {
+    const t = await talepGetir(ctx.params.id, ctx.kullanici);
+    await talepMesajlariIletildi(db, [t.id], ctx.kullanici.id); // 29 Eki
+    return talepTam(t);
+  }));
 
   r.post('/api/v1/teklif-talepleri', korumali(async (ctx) => {
     const u = ctx.kullanici;
@@ -414,7 +426,10 @@ export function sohbetTalepRotalar(r, db) {
 
   r.post('/api/v1/teklif-talepleri/:id/okundu', korumali(async (ctx) => {
     const t = await talepGetir(ctx.params.id, ctx.kullanici);
-    await db.prepare('UPDATE teklif_mesajlari SET read_at = ? WHERE talep_id = ? AND gonderen_id <> ? AND read_at IS NULL').run(simdi(), t.id, ctx.kullanici.id);
+    const z = simdi();
+    const n = await db.prepare('UPDATE teklif_mesajlari SET read_at = ?, delivered_at = COALESCE(delivered_at, ?) WHERE talep_id = ? AND gonderen_id <> ? AND read_at IS NULL').run(z, z, t.id, ctx.kullanici.id);
+    // 29 Eki: gönderen açık uygulamada mavi tiki hemen görsün.
+    if (n.changes) anlikHaberEkle(ctx.kullanici.id === t.hizmet_alan_id ? t.saglayici_id : t.hizmet_alan_id, 'TALEP_DURUM');
     return { ok: true };
   }));
 

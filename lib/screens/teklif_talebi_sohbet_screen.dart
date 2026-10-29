@@ -53,6 +53,30 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
   final _metin = TextEditingController();
   bool _gonderiliyor = false;
 
+  // ── ⚠ 29 Eki: SOHBET AÇIKKEN GELEN MESAJ DA "OKUNDU" ──
+  // Önceden yalnız açılışta işaretleniyordu; açıkken gelen mesajlar
+  // karşı tarafta gri kalıyordu. Yeni bir gelen mesaj görününce bir kez
+  // istenir (aynı mesaj için tekrar istenmez; başarısızsa sonraki yeni
+  // mesajda ya da sohbet yeniden açılınca eşitlenir).
+  String? _sonOkunduIstegi;
+
+  void _gelenleriOkunduYap(TeklifTalebi? t, String? benimId) {
+    if (t == null || benimId == null || okunmamisMesajSayisi(t, benimId) == 0) {
+      return;
+    }
+    final son = t.mesajlar.lastWhere((m) => m.gonderenId != benimId).id;
+    if (son == _sonOkunduIstegi) {
+      return;
+    }
+    _sonOkunduIstegi = son;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.read<TeklifTalebiController>().mesajlariOkunduIsaretle(widget.talepId, benimId);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -128,6 +152,7 @@ class _TeklifTalebiSohbetScreenState extends State<TeklifTalebiSohbetScreen> {
         ? talepKaydi
         : null;
     final mesajlar = talep?.mesajlar ?? const <TeklifMesaj>[];
+    _gelenleriOkunduYap(talep, me?.id);
     // ⚠ TEKLİFİN SÜRESİ DOLUNCA MESAJLAŞMA KAPANIR (11 Eki, kullanıcı
     // kararı): geçmiş mesajlar okunur, yeni mesaj yazılamaz. Kural tek
     // yerde (`talepIletisimAcikMi`); sunucu da aynı durumda 409 döner.

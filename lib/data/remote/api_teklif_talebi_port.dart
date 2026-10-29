@@ -296,7 +296,12 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
                   zaman: _zaman(m['createdAt']),
                   metin: m['metin'] as String?,
                   fotografYolu: gorselYolu(m['fotografRef'], m['fotografUrl']),
-                  durum: m['okundu'] == true ? TeklifMesajDurumu.okundu : TeklifMesajDurumu.iletildi,
+                  // 29 Eki: tek tik (sunucuda) → iki gri (alıcıya ulaştı) → mavi (okundu).
+                  durum: m['okundu'] == true
+                      ? TeklifMesajDurumu.okundu
+                      : m['iletildi'] == true
+                          ? TeklifMesajDurumu.iletildi
+                          : TeklifMesajDurumu.gonderildi,
                 ))
             .toList(),
       );
