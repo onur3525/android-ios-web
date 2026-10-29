@@ -29,7 +29,7 @@ SELECT '7b0e6f2a-3c1d-4e5f-9a8b-29102026f001', 'privacy',
        (SELECT COALESCE(MAX(version), 0) + 1 FROM legal_versions WHERE slug = 'privacy'),
        '## 1. Veri sorumlusu
 
-HizmetCep''in işletmecisi ve kişisel veriler bakımından veri sorumlusu Onur Bütün''dür.
+HizmetCep''in işletmecisi ve kişisel veriler bakımından veri sorumlusu: Onur Bütün (Bütün Mühendislik).
 Adres: İzmir/Türkiye
 E-posta: onur@hizmetcep.com
 
@@ -154,7 +154,7 @@ KVKK''nın 11. maddesindeki haklarınız için onur@hizmetcep.com adresine başv
 ## 13. Güncellemeler
 
 Politika güncellendiğinde yeni sürüm, sürüm numarası ve yürürlük tarihiyle uygulamada ve web sitesinde yayımlanır.',
-       'f07c6ad401aaabdbf6ef4452f7ed10c461801a2d5ecb67a7b70d717499768af5', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
+       '153411cce8e96d7e202cbbfa04a4d9fb1c4fe9e33b222bcf5c0839530447560c', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
  WHERE EXISTS (SELECT 1 FROM legal_documents WHERE slug = 'privacy')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE id = '7b0e6f2a-3c1d-4e5f-9a8b-29102026f001')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE slug = 'privacy' AND status = 'PUBLISHED');
@@ -168,9 +168,9 @@ SELECT '7b0e6f2a-3c1d-4e5f-9a8b-29102026f002', 'terms',
        (SELECT COALESCE(MAX(version), 0) + 1 FROM legal_versions WHERE slug = 'terms'),
        '## 1. Taraflar ve tanımlar
 
-İşbu Kullanım Sözleşmesi (“Sözleşme”), HizmetCep isimli dijital platformu işleten Onur Bütün (“İşletmeci”) ile HizmetCep’e kayıt olan veya platformu kullanan gerçek kişi (“Kullanıcı”) arasında, Kullanıcı’nın elektronik ortamda Sözleşme’yi kabul etmesiyle yürürlüğe girer.
+İşbu Kullanım Sözleşmesi (“Sözleşme”), HizmetCep isimli dijital platformu işleten Onur Bütün (Bütün Mühendislik) (“İşletmeci”) ile HizmetCep’e kayıt olan veya platformu kullanan gerçek kişi (“Kullanıcı”) arasında, Kullanıcı’nın elektronik ortamda Sözleşme’yi kabul etmesiyle yürürlüğe girer.
 
-İşletmeci iletişim bilgileri: Onur Bütün. Adres: İzmir/Türkiye. E-posta: onur@hizmetcep.com.
+İşletmeci iletişim bilgileri: Onur Bütün (Bütün Mühendislik). Adres: İzmir/Türkiye. E-posta: onur@hizmetcep.com.
 
 “Platform”; HizmetCep mobil uygulamasını, web arayüzünü ve bunlarla bağlantılı kullanıcı ekranlarını ifade eder. “Hizmet Alan”; platform üzerinden hizmet arayan, talep veya ilan oluşturan kullanıcıdır. “Hizmet Veren”; profil oluşturan, hizmet sunmayı tanıtan veya taleplere teklif veren kullanıcıdır. Bir kullanıcı, platformun izin verdiği ölçüde her iki rolde de işlem yapabilir.
 
@@ -325,7 +325,7 @@ Kullanıcı kayıt sırasında Sözleşme''nin tam metnini açabilir. Kabul edil
 Sözleşme’nin bir hükmünün geçersiz veya uygulanamaz olması, diğer hükümlerin geçerliliğini kendiliğinden ortadan kaldırmaz; ilgili hüküm emredici mevzuata uygun şekilde değerlendirilir.
 
 Kullanıcı, “Kullanım Sözleşmesi’ni okudum ve kabul ediyorum” şeklindeki ayrı sözleşme kabul işlemini tamamlayarak bu metni elektronik ortamda kabul eder. Bu kabul; KVKK Aydınlatma Metni’nin okunduğuna dair bilgilendirme, gerekli açık rızalar veya ticari elektronik ileti izinleriyle aynı işlem olarak değerlendirilmez.',
-       '60c440b1cc631ce191070381c5e5e2b2e7c9a08d107ba577d2ed0ca90cdbde11', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
+       '901cbc52d51a6129037f0a74a65d608eeea170d887491716d1e08ae0c2fd73c1', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
  WHERE EXISTS (SELECT 1 FROM legal_documents WHERE slug = 'terms')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE id = '7b0e6f2a-3c1d-4e5f-9a8b-29102026f002')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE slug = 'terms' AND status = 'PUBLISHED');
@@ -341,7 +341,7 @@ SELECT '7b0e6f2a-3c1d-4e5f-9a8b-29102026f003', 'kvkk',
 
 ## 1. Veri sorumlusu
 
-Veri sorumlusu: Onur Bütün
+Veri sorumlusu: Onur Bütün (Bütün Mühendislik)
 Adres: İzmir/Türkiye
 E-posta: onur@hizmetcep.com
 
@@ -409,7 +409,7 @@ KVKK''nın 11. maddesi uyarınca şu haklara sahipsiniz:
 ## 8. Başvuru
 
 Taleplerinizi, kimliğinizi ve talebinizi değerlendirmeye yetecek bilgilerle birlikte onur@hizmetcep.com adresine e-postayla iletebilirsiniz. Başvurular en geç 30 gün içinde ücretsiz olarak sonuçlandırılır. Başvurunuzun reddedilmesi, cevabın yetersiz bulunması veya süresinde cevap verilmemesi hâlinde Kişisel Verileri Koruma Kurulu''na şikâyette bulunabilirsiniz.',
-       '4d5023498dedcbab6d068bc52c2d393c7fe90cb9caba936dfa13f293a184e066', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
+       'd323cd23802844d71c65044a81fd91771a54a9dfa23144d852667f8114318f38', '2026-10-29', 'PUBLISHED', NULL, '2026-10-29T13:00:00.000Z', NULL, '2026-10-29T13:00:00.000Z'
  WHERE EXISTS (SELECT 1 FROM legal_documents WHERE slug = 'kvkk')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE id = '7b0e6f2a-3c1d-4e5f-9a8b-29102026f003')
    AND NOT EXISTS (SELECT 1 FROM legal_versions WHERE slug = 'kvkk' AND status = 'PUBLISHED');
