@@ -23,6 +23,12 @@ class ChatController extends BaseController {
   int ilanOkunmamisMesaj(String listingId, String benimId) =>
       _chats.ilanOkunmamisMesaj(listingId, benimId);
 
+  /// Sohbet ekranı açık: açıkken gelen mesaj da okundu işaretlenir.
+  void sohbetAcik(String offerId, String okuyanId) => _chats.sohbetAcik(offerId, okuyanId);
+
+  /// Sohbet ekranı kapandı.
+  void sohbetKapandi(String offerId) => _chats.sohbetKapandi(offerId);
+
   /// Kartlardaki sayılar için sohbet listesini SESSİZCE yeniler
   /// (yükleniyor göstergesi yok; hata ekranı kesmez).
   Future<void> okunmamislariTazele(String actorId) async {
