@@ -12,11 +12,14 @@ import 'ref_widgets.dart';
 ///   1. "Kullanım Sözleşmesi'ni okudum ve kabul ediyorum. *"
 ///      HizmetCep'i kullanırken geçerli olan kuralları, hak ve
 ///      sorumluluklarımı içerir.
-///   2. "Kişisel verilerimin işlenmesi ve aktarılmasına ilişkin
-///      Aydınlatma Metni'ni okudum, bilgilendirildim. *"
-///      ⚠ 22 Eki (KVKK): aydınlatma BİLGİLENDİRMEDİR — kabul veya rıza
-///      ifadesi kullanılmaz (açık rızayla karıştırılmamalı; Aydınlatma
-///      Tebliği). Satır, metnin gösterildiğinin ispatıdır.
+///   2. "Gizlilik Politikası ve Aydınlatma Metni'ni okudum; kişisel
+///      verilerimin hizmet sunumu amacıyla yurt dışındaki sunucularda
+///      işlenmesine yasal haklarım saklı kalmak kaydıyla AÇIK RIZA
+///      veriyorum. *"
+///      ⚠ 29 Eki (işletmeci kararı, metin birebir): "yurt dışı sunucu"
+///      ifadesi ve açık rıza kutuda AÇIKÇA geçer; ülke adları ve hukuki
+///      ayrıntı metinlerin içindedir. Sunucu iki belgenin sürümünü +
+///      SHA-256'sını + zamanını kaydeder (rızanın ispatı).
 /// İkisi de işaretlenmeden kayıt tamamlanmaz. 18 yaş koşulu Kullanım
 /// Sözleşmesi'nin 4. maddesindedir — ayrı yaş kutusu YOKTUR.
 ///
@@ -42,6 +45,7 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
 
   static const String kBaslik = 'Kullanım Sözleşmesi';
   static const String kAydinlatma = 'Aydınlatma Metni';
+  static const String kGizlilik = 'Gizlilik Politikası';
   static const String kCerez = 'Çerez Politikası';
 
   @override
@@ -70,15 +74,22 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
             onChanged: onAydinlatma,
             parcalar: [
               (
-                text: 'Kişisel verilerimin işlenmesi ve aktarılmasına ilişkin ',
-                onTap: null,
+                text: kGizlilik,
+                onTap: () => Navigator.pushNamed(context, '/legal',
+                    arguments: {'slug': 'privacy', 'title': kGizlilik}),
               ),
+              (text: ' ve ', onTap: null),
               (
                 text: kAydinlatma,
                 onTap: () => Navigator.pushNamed(context, '/legal',
                     arguments: {'slug': 'kvkk', 'title': kAydinlatma}),
               ),
-              (text: '’ni okudum, bilgilendirildim.', onTap: null),
+              (
+                text: '’ni okudum; kişisel verilerimin hizmet sunumu '
+                    'amacıyla yurt dışındaki sunucularda işlenmesine yasal '
+                    'haklarım saklı kalmak kaydıyla AÇIK RIZA veriyorum.',
+                onTap: null,
+              ),
             ],
             altYazi: 'Hangi kişisel verilerimin, hangi amaçla ve hangi '
                 'hukuki sebeple işlendiğini ve haklarımı anlatır.',

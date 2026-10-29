@@ -16,8 +16,8 @@ import { OTURUM_CEREZI, anahtarParmakIzi, oturumCoz, yetkiliMi, yenidenDogrulama
 import { config } from './config.js';
 import { veritabaniAc } from './db.js';
 import {
-  ApiHatasi, Yonlendirici, cerezleriOku, govdeOku, hata, istekKimligi,
-  ipTeshisi, istemciIp, jsonGonder, okumaYanitiGonder,
+  ApiHatasi, KOKEN_MUAF_YOLLAR, Yonlendirici, cerezleriOku, govdeOku, hata, istekKimligi,
+  ipTeshisi, istemciIp, jsonGonder, kokenDogrulandi, okumaYanitiGonder,
 } from './http.js';
 import { GELEN_YOL, gelenEpostaWebhook } from './gelen_eposta.js';
 import { pdfGonder } from './yasal_pdf.js';
@@ -45,6 +45,8 @@ import { pushKuyrugunuIsle } from './fcm.js';
 import { publicRotalar } from './routes/public.js';
 import { destekRotalar } from './routes/destek.js';
 import { kayitBakimi, saklamaSuresiBakimi } from './bakim.js';
+import { islemKaydi, yasalKayitBakimi } from './trafik_kaydi.js';
+import { sikayetRotalar } from './routes/sikayet.js';
 import { firebaseSilmeKuyrugunuIsle } from './firebase_silme.js';
 import { firebaseIslemKuyrugunuIsle } from './firebase_islemleri.js';
 import { baslangicVerisiniHazirla } from './baslangic_verisi.js';
@@ -92,6 +94,7 @@ export function uygulamaKur(db) {
   kisiOzetiRotalar(r, db);
   depolamaEntegrasyonRotalar(r, db);
   destekRotalar(r, db);
+  sikayetRotalar(r, db);
   publicRotalar(r, db);
   adminRotalar(r, db);
   adminKullaniciRotalar(r, db);
@@ -150,6 +153,12 @@ export function uygulamaKur(db) {
     // hatası bu try/catch'e YAKALANMIYOR, işlenmemiş hata olarak SÜRECİ
     // kapatıyordu (yavaş depo indirmesinde tek istek tüm sunucuyu düşürdü).
     try {
+      // 29 Eki — KÖKEN SIRRI: kural açıksa (HC_ORIGIN_SECRET) kendi
+      // Cloudflare bölgenizi atlayıp onrender.com'a doğrudan gelen istek ilk
+      // adımda reddedilir (sahte başlık, WAF atlatma). Bkz. http.js.
+      if (!KOKEN_MUAF_YOLLAR.has(yol) && !kokenDogrulandi(req)) {
+        throw hata.yetki('Bu adrese doğrudan erişim kapalıdır');
+      }
       // Geçici IP teşhisi: yalnız HC_IP_TESHIS=true iken (bkz. http.js ipTeshisi).
       if (req.method === 'GET' && yol === '/teshis/ip' && process.env.HC_IP_TESHIS === 'true') {
         return jsonGonder(res, 200, ipTeshisi(req));
@@ -244,6 +253,10 @@ export function uygulamaKur(db) {
       } finally {
         if (adminDegisikligi) onbellegiHerYerdeTemizle();
       }
+      // 29 Eki (5651): oturumlu kullanıcının BAŞARILI değişiklik isteği
+      // trafik kaydına yazılır (IP, kaynak port, işlem, zaman). Tek kaynak:
+      // rotalara ayrı kayıt satırı eklenmez. Bkz. trafik_kaydi.js.
+      await islemKaydi(db, ctx, bulunan.desen, sonuc);
       // Kullanıcı API'si: dosya referanslarının yanına imzalı görüntüleme
       // adresi eklenir (ilan/talep/sohbet fotoğrafları; bkz. gorsel_adresleri.js).
       if (sonuc !== undefined && yol.startsWith('/api/v1/')) sonuc = await gorselAdresleriEkle(db, sonuc);
@@ -289,6 +302,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['kayit_bakimi', kayitBakimi],
     // 23 Eki: Gizlilik Politikası'ndaki 2 yıllık saklama süreleri.
     ['saklama_suresi', saklamaSuresiBakimi],
+    // 29 Eki (5651): 365 günü dolan trafik kayıtları / yasal kimlik arşivi,
+    // 2 yılı dolan sonuçlanmış şikâyetler.
+    ['yasal_kayit_bakimi', yasalKayitBakimi],
     ['firebase_silme', firebaseSilmeKuyrugunuIsle],
     ['firebase_islemleri', firebaseIslemKuyrugunuIsle],
     ['izleme_bakimi', izlemeBakimi],

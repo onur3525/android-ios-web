@@ -16,11 +16,16 @@ void main() {
     expect(o.contains("static const String kBaslik = 'Kullanım Sözleşmesi';"), isTrue);
     expect(o.contains("static const String kAydinlatma = 'Aydınlatma Metni';"), isTrue);
     expect(o.contains("(text: '’ni okudum ve kabul ediyorum.', onTap: null)"), isTrue);
-    expect(o.contains("'Kişisel verilerimin işlenmesi ve aktarılmasına ilişkin '"), isTrue);
+    // 29 Eki: ikinci kutu Gizlilik Politikası + Aydınlatma Metni; "yurt dışı
+    // sunucu" ifadesi açıkça geçer.
+    expect(o.contains("static const String kGizlilik = 'Gizlilik Politikası';"), isTrue);
+    expect(o.contains("arguments: {'slug': 'privacy', 'title': kGizlilik}"), isTrue);
+    expect(o.contains("'amacıyla yurt dışındaki sunucularda işlenmesine yasal '"), isTrue);
     expect(o.contains("'HizmetCep’i kullanırken geçerli olan kuralları, hak ve '\n                'sorumluluklarımı içerir.'"), isTrue);
     // ⚠ 22 Eki (KVKK): aydınlatma bilgilendirmedir — "kabul / izin" denmez.
-    expect(o.contains("(text: '’ni okudum, bilgilendirildim.', onTap: null)"), isTrue);
-    expect(o.contains('izin veriyorum'), isFalse, reason: 'aydınlatma açık rızayla karıştırılmış');
+    // 29 Eki (işletmeci kararı): ikinci kutu yurt dışı işlemeye AÇIK RIZA.
+    expect(o.contains("'haklarım saklı kalmak kaydıyla AÇIK RIZA veriyorum.'"), isTrue);
+    expect(o.contains('izin veriyorum'), isFalse);
     expect(o.contains("'Hangi kişisel verilerimin, hangi amaçla ve hangi '\n                'hukuki sebeple işlendiğini ve haklarımı anlatır.'"), isTrue);
     // Web'de çerez bilgilendirmesi (onay istemez).
     expect(o.contains("arguments: {'slug': 'cookies', 'title': kCerez}"), isTrue);
@@ -65,6 +70,6 @@ void main() {
     // sözleşme + aydınlatma metnine yazılır (eski tek onaylı yol kaldırıldı).
     final k = _oku('backend/src/routes/kullanici.js');
     expect(k.contains("if (ctx.body.aydinlatmaAccepted !== true) throw new ApiHatasi(400, 'AYDINLATMA_REQUIRED'"), isTrue);
-    expect(k.contains("const onaylananlar = ['terms', 'kvkk'];"), isTrue);
+    expect(k.contains("const onaylananlar = ['terms', 'kvkk', 'privacy'];"), isTrue);
   });
 }

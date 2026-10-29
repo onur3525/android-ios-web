@@ -15,6 +15,7 @@ import { ilanlarSayfasi } from './ilanlar.js';
 import { tekliflerSayfasi } from './teklifler.js';
 import { teklifTalepleriSayfasi } from './teklif_talepleri.js';
 import { degerlendirmelerSayfasi } from './degerlendirmeler.js';
+import { sikayetlerSayfasi } from './sikayetler.js';
 import { katalogSayfasi } from './katalog.js';
 import { yoneticiDetaySayfasi, yoneticiDuzenle, yoneticiSil } from './yonetici_detay.js';
 import { ROL_ADLARI, degisiklikAyrintisi, islemOzeti, listedeGorunur } from './denetim_dili.js';
@@ -32,6 +33,8 @@ const MENU = [
   ['ayarlar', 'Uygulama Ayarları', ['super_admin', 'operations', 'readonly']],
   ['gonderimler', 'SMS / E-posta Kayıtları', ['super_admin', 'moderator', 'operations']],
   ['hesaptalepleri', 'Gelen Talepler', ['super_admin', 'moderator', 'readonly']],
+  // 29 Eki: Şikâyet Et (UGC) — backend reports.read ile aynı roller.
+  ['sikayetler', 'Şikâyetler', ['super_admin', 'moderator', 'readonly']],
   ['geribildirim', 'Uygulama Geri Bildirimleri', ['super_admin', 'moderator', 'readonly']],
   ['entegrasyonlar', 'Entegrasyonlar', ['super_admin', 'operations']],
   // Özet'i olan roller Silme Kuyrukları'nı Özet içinden açar; Özet'i
@@ -305,6 +308,9 @@ SAYFALAR.talep = async (id) => {
 
 // Tasarım ve veri kaynakları: degerlendirmeler.js (yalnız mevcut admin API'leri).
 SAYFALAR.yorumlar = () => degerlendirmelerSayfasi(ben.role);
+
+// Tasarım ve veri kaynakları: sikayetler.js (backend routes/sikayet.js).
+SAYFALAR.sikayetler = () => sikayetlerSayfasi(ben.role);
 
 // ── Katalog ───────────────────────────────────────────────────
 // Tasarım ve veri kaynakları: katalog.js (yalnız mevcut admin katalog API'leri).

@@ -42,6 +42,7 @@ import 'widgets/teklif_aciklama_karti.dart';
 import 'widgets/yanlis_taraf_kapisi.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/sayfa_bildirimleri.dart';
+import '../ui/sikayet_et.dart';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not);
@@ -241,10 +242,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: RefBackButton(),
-            ),
+            // 29 Eki: sağda "Şikâyet Et" (ilan; tek kaynak `sikayet_et.dart`).
+            Row(children: [
+              const RefBackButton(),
+              const Spacer(),
+              SikayetEtDugmesi(
+                  hedef: SikayetHedefi.ilan, hedefId: l.id, sahipId: l.ownerId),
+            ]),
             const SizedBox(height: 4),
             // ── ⚠ ANA İÇERİK + YARDIMCI BÖLÜM — HER EKRANDA TEK SÜTUN
             // (14 Eki, kullanıcı kararı: masaüstünde yan yana olmaz;

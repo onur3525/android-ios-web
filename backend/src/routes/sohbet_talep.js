@@ -35,6 +35,7 @@ import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 import { ilanTelefonuGorunur } from './kisi_ozeti.js';
+import { kimlikArsivle } from '../trafik_kaydi.js';
 
 const TALEP_TEKLIF_OMRU = 30 * 60 * 60 * 1000;
 // Silme talebinden sonraki bekleme (talep bu sürede geri çekilebilir). Süre
@@ -682,7 +683,11 @@ export async function silmeTalepleriniIsle(db) {
     await db.tx(async () => {
       // Firebase kimlik kaydı (telefon/e-posta kopyası) da silinir — uid
       // aşağıda NULL yapılmadan önce kuyruğa yazılır (bkz. firebase_silme.js).
-      const fb = await db.prepare('SELECT firebase_uid, phone, name, email FROM users WHERE id = ?').get(a.user_id);
+      const fb = await db.prepare('SELECT firebase_uid, phone, name, email, created_at FROM users WHERE id = ?').get(a.user_id);
+      // 29 Eki (5651): trafik kayıtları 365 gün kalır; yetkili merci
+      // talebinde eşleştirilebilmeleri için kimlik, anonimleşmeden ÖNCE
+      // ayrı yasal arşive (365 gün) alınır. Bkz. trafik_kaydi.js.
+      await kimlikArsivle(db, { id: a.user_id, ad: fb?.name, telefon: fb?.phone, eposta: fb?.email, kayitTarihi: fb?.created_at }, z);
       await firebaseSilmeKuyrugunaEkle(db, fb?.firebase_uid);
       // Yönetici kayıtlarındaki kişisel değerler (ad/telefon/e-posta/metin)
       // kullanıcı satırı anonimleşmeden ÖNCE, bilinen değerlerle maskelenir.
@@ -736,6 +741,8 @@ async function kisiselIcerigiTemizle(db, id, eskiTelefon, z) {
   // İlan mesajları ve talep mesajları: kişinin yazdığı metin ve ek dosya.
   await c('UPDATE messages SET text = ?, storage_ref = NULL WHERE sender_id = ?', KALDIRILDI, id);
   await c('UPDATE teklif_mesajlari SET metin = ?, fotograf_ref = NULL WHERE gonderen_id = ?', KALDIRILDI, id);
+  // 29 Eki: şikâyet açıklaması kişinin yazdığı metindir (kayıt kalır).
+  await c('UPDATE reports SET note = NULL WHERE reporter_id = ?', id);
   // İlanlar: açıklama, konum ve fotoğraflar kaldırılır; açık ilan kapanır.
   await c(
     `UPDATE listings SET description = ?, location = '-', photo_refs_json = '[]',

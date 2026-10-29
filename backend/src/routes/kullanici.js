@@ -27,6 +27,7 @@ import {
 } from '../firebase_token.js';
 import { firebaseIslemiKuyrugaEkle } from '../firebase_islemleri.js';
 import { bakimGirisKapisi } from '../bakim_modu.js';
+import { trafikYaz } from '../trafik_kaydi.js';
 
 const OTP_SURESI = 3 * 60 * 1000;
 const OTP_DENEME = 5;
@@ -214,7 +215,7 @@ async function otpTuket(db, tel, amaclar, kod) {
 }
 
 // ── Oturum ──────────────────────────────────────────────────
-async function oturumVer(db, kullaniciId, req) {
+async function oturumVer(db, kullaniciId, req, olay = 'LOGIN') {
   // DONDURULMUŞ HESAP YENİDEN GİRİŞLE ETKİNLEŞİR (uygulamadaki metin:
   // "Dilediğiniz zaman tekrar giriş yaparak hesabınızı etkinleştirebilirsiniz").
   // Oturum yalnız kimlik doğrulandıktan sonra verildiği için tek kapı burası.
@@ -237,6 +238,8 @@ async function oturumVer(db, kullaniciId, req) {
     istemciIp(req), String(req.headers['user-agent'] ?? '').slice(0, 200), istemci, jti);
   // ⚠ TEK CİHAZ KURALI (28 Eki): uygulamaya yeni giriş → diğer cihazlar kapanır.
   if (istemci === 'mobil') await digerCihazlariKapat(db, kullaniciId, jti);
+  // 29 Eki (5651): oturum açılışı trafik kaydına (IP, kaynak port, zaman).
+  await trafikYaz(db, req, { kullaniciId, olay, hedefTur: 'session', hedefId: jti });
   return { accessToken: erisimTokeni(kullaniciId, jti), refreshToken: yenileme };
 }
 
@@ -731,15 +734,18 @@ export function kullaniciRotalar(r, db) {
     // Kullanıcı Kullanım Sözleşmesi'ni kabul eder ve Aydınlatma Metni'nin
     // gösterildiğini işaretler; ikisinin yayımdaki sürümü (sürüm + SHA-256)
     // kaydedilir. (23 Eki: tek onay satırlı eski istemci yolu kaldırıldı.)
-    const onaylananlar = ['terms', 'kvkk'];
+    // 29 Eki: ikinci kutu "Gizlilik Politikası ve Aydınlatma Metni'ni okudum;
+    // … yurt dışındaki sunucularda işlenmesine … AÇIK RIZA veriyorum" oldu —
+    // İKİ belgenin sürümü + SHA-256'sı + zamanı kaydedilir (rızanın ispatı).
+    const onaylananlar = ['terms', 'kvkk', 'privacy'];
     for (const v of await db.prepare(
       `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
-        WHERE v.slug IN (?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
+        WHERE v.slug IN (?, ?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
     ).all(...onaylananlar)) {
       await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         .run(randomUUID(), id, v.slug, v.id, v.version, v.sha256, pl, z);
     }
-    return oturumYaniti(ctx, await oturumVer(db, id, ctx.req));
+    return oturumYaniti(ctx, await oturumVer(db, id, ctx.req, 'REGISTER'));
   });
 
   // ── GİRİŞ ──
@@ -899,6 +905,9 @@ export function kullaniciRotalar(r, db) {
       if (!t) throw hata.kimlik();
       return { accessToken: erisimTokeni(u.id, t.satir.id), refreshToken: t.belirtec };
     }
+    // 29 Eki (5651): oturum yenileme de trafik kaydıdır — IP değişimi
+    // (mobil ağ/CGNAT) oturum boyunca izlenebilir.
+    await trafikYaz(db, ctx.req, { kullaniciId: u.id, olay: 'SESSION_REFRESH', hedefTur: 'session', hedefId: yeniJti });
     return { accessToken: erisimTokeni(u.id, yeniJti), refreshToken: yeni };
   }
 

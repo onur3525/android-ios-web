@@ -29,6 +29,7 @@ import 'widgets/profil_avatari.dart';
 import 'widgets/durum_seridi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/sikayet_et.dart';
 
 /// Müşteri — Teklif / Teklif Veren Profili (HTML vOffer):
 /// usta kartı (ad, doğrulanmış rozeti, puan), teklif tutarı+notu,
@@ -145,10 +146,16 @@ class _OfferDetailScreenState extends State<OfferDetailScreen>
             children: [
               // ── .pr-head ──
               // ⚠ GERİ OKU HER PLATFORMDA VARDIR (nihai karar).
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: RefBackButton(),
-              ),
+              // 29 Eki: sağda hizmet vereni (profil) şikâyet etme.
+              Row(children: [
+                const RefBackButton(),
+                const Spacer(),
+                SikayetEtDugmesi(
+                    hedef: SikayetHedefi.kullanici,
+                    hedefId: offer.providerId,
+                    sahipId: offer.providerId,
+                    etiket: 'Hizmet Vereni Şikâyet Et'),
+              ]),
               const SizedBox(height: 2),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -955,25 +955,7 @@ export function ilanRotalar(r, db) {
   r.post('/admin/v1/listings/:id/remove', async (ctx) => {
     yetkiIste(ctx.admin, 'listings.remove');
     yenidenDogrulamaIste(ctx.oturum);
-    const neden = String(ctx.body.reason ?? '').trim();
-    if (neden.length < 5 || neden.length > 1000) throw hata.dogrulama('İşlem nedeni 5-1000 karakter olmalıdır');
-    const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(ctx.params.id);
-    if (!l) throw hata.bulunamadi('İlan bulunamadı');
-    if (l.status === 'ADMIN_REMOVED') throw hata.durum('İlan zaten kaldırılmış');
-    const z = simdi();
-    const ref = randomUUID();
-    await db.tx(async () => {
-      await db.prepare(`UPDATE listings SET status = 'ADMIN_REMOVED', removed_reason = ?, removed_by = ?, removed_at = ?, updated_at = ? WHERE id = ?`)
-        .run(neden, ctx.admin.id, z, z, l.id);
-      await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND status IN ('ACTIVE','SELECTED')`).run(z, l.id);
-      await denetimYaz(db, {
-        adminId: ctx.admin.id, ip: ctx.ip, islem: 'listing.remove', hedefTur: 'listing', hedefId: l.id,
-        once: { status: l.status, ilanNo: l.ilan_no, ownerId: l.owner_id }, sonra: { status: 'ADMIN_REMOVED', ref }, gerekce: neden,
-      });
-    });
-    const sahip = await db.prepare('SELECT * FROM users WHERE id = ?').get(l.owner_id);
-    const bildirim = ctx.body.notify === false ? [] : await kullaniciyaBildir(db, sahip, 'ILAN_KALDIRILDI', { ILAN: `${l.title} (No: ${l.ilan_no})`, NEDEN: neden }, ref);
-    return { id: l.id, status: 'ADMIN_REMOVED', notifications: bildirim };
+    return ilaniYonetimKaldir(db, { adminId: ctx.admin.id, ip: ctx.ip, ilanId: ctx.params.id, gerekceHam: ctx.body.reason, bildir: ctx.body.notify !== false });
   });
 
   r.get('/admin/v1/offers', async (ctx) => {
@@ -1002,17 +984,7 @@ export function ilanRotalar(r, db) {
   r.post('/admin/v1/reviews/:id/remove', async (ctx) => {
     yetkiIste(ctx.admin, 'reviews.remove');
     yenidenDogrulamaIste(ctx.oturum);
-    const neden = String(ctx.body.reason ?? '').trim();
-    if (neden.length < 5 || neden.length > 1000) throw hata.dogrulama('İşlem nedeni 5-1000 karakter olmalıdır');
-    const y = await db.prepare('SELECT * FROM reviews WHERE id = ?').get(ctx.params.id);
-    if (!y) throw hata.bulunamadi('Değerlendirme bulunamadı');
-    if (y.status === 'ADMIN_DELETED') throw hata.durum('Değerlendirme zaten kaldırılmış');
-    const z = simdi();
-    await db.tx(async () => {
-      await db.prepare(`UPDATE reviews SET status = 'ADMIN_DELETED', removed_reason = ?, removed_by = ?, removed_at = ? WHERE id = ?`).run(neden, ctx.admin.id, z, y.id);
-      await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'review.remove', hedefTur: 'review', hedefId: y.id, once: { status: y.status, stars: y.stars, text: y.text }, sonra: { status: 'ADMIN_DELETED' }, gerekce: neden });
-    });
-    return { id: y.id, status: 'ADMIN_DELETED' };
+    return yorumuYonetimKaldir(db, { adminId: ctx.admin.id, ip: ctx.ip, yorumId: ctx.params.id, gerekceHam: ctx.body.reason });
   });
 
   r.post('/admin/v1/announcements', async (ctx) => {
@@ -1048,4 +1020,50 @@ export function ilanRotalar(r, db) {
     return (await db.prepare(`SELECT f.*, u.name FROM app_feedback f JOIN users u ON u.id = f.user_id ORDER BY f.updated_at DESC LIMIT 500`).all())
       .map((f) => ({ userId: f.user_id, name: f.name, stars: f.stars, comment: f.comment, platform: f.platform, appVersion: f.app_version, updatedAt: f.updated_at }));
   });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// YÖNETİM KALDIRMASI — TEK KAYNAK (29 Eki)
+// İlan/yorum kaldırma hem kendi admin ucundan hem Şikâyetler ekranından
+// (routes/sikayet.js) AYNI fonksiyonla yapılır; davranış önceki uçla aynı.
+// [ek]: denetim kaydının "sonra" alanına eklenecek bağlam (ör. şikâyet no).
+// ═══════════════════════════════════════════════════════════════
+function yonetimGerekcesi(ham) {
+  const neden = String(ham ?? '').trim();
+  if (neden.length < 5 || neden.length > 1000) throw hata.dogrulama('İşlem nedeni 5-1000 karakter olmalıdır');
+  return neden;
+}
+
+export async function ilaniYonetimKaldir(db, { adminId, ip, ilanId, gerekceHam, bildir = true, ek = null }) {
+  const neden = yonetimGerekcesi(gerekceHam);
+  const l = await db.prepare('SELECT * FROM listings WHERE id = ?').get(ilanId);
+  if (!l) throw hata.bulunamadi('İlan bulunamadı');
+  if (l.status === 'ADMIN_REMOVED') throw hata.durum('İlan zaten kaldırılmış');
+  const z = simdi();
+  const ref = randomUUID();
+  await db.tx(async () => {
+    await db.prepare(`UPDATE listings SET status = 'ADMIN_REMOVED', removed_reason = ?, removed_by = ?, removed_at = ?, updated_at = ? WHERE id = ?`)
+      .run(neden, adminId, z, z, l.id);
+    await db.prepare(`UPDATE offers SET status = 'CLOSED', updated_at = ? WHERE listing_id = ? AND status IN ('ACTIVE','SELECTED')`).run(z, l.id);
+    await denetimYaz(db, {
+      adminId, ip, islem: 'listing.remove', hedefTur: 'listing', hedefId: l.id,
+      once: { status: l.status, ilanNo: l.ilan_no, ownerId: l.owner_id }, sonra: { status: 'ADMIN_REMOVED', ref, ...(ek ?? {}) }, gerekce: neden,
+    });
+  });
+  const sahip = await db.prepare('SELECT * FROM users WHERE id = ?').get(l.owner_id);
+  const bildirim = bildir ? await kullaniciyaBildir(db, sahip, 'ILAN_KALDIRILDI', { ILAN: `${l.title} (No: ${l.ilan_no})`, NEDEN: neden }, ref) : [];
+  return { id: l.id, status: 'ADMIN_REMOVED', notifications: bildirim };
+}
+
+export async function yorumuYonetimKaldir(db, { adminId, ip, yorumId, gerekceHam, ek = null }) {
+  const neden = yonetimGerekcesi(gerekceHam);
+  const y = await db.prepare('SELECT * FROM reviews WHERE id = ?').get(yorumId);
+  if (!y) throw hata.bulunamadi('Değerlendirme bulunamadı');
+  if (y.status === 'ADMIN_DELETED') throw hata.durum('Değerlendirme zaten kaldırılmış');
+  const z = simdi();
+  await db.tx(async () => {
+    await db.prepare(`UPDATE reviews SET status = 'ADMIN_DELETED', removed_reason = ?, removed_by = ?, removed_at = ? WHERE id = ?`).run(neden, adminId, z, y.id);
+    await denetimYaz(db, { adminId, ip, islem: 'review.remove', hedefTur: 'review', hedefId: y.id, once: { status: y.status, stars: y.stars, text: y.text }, sonra: { status: 'ADMIN_DELETED', ...(ek ?? {}) }, gerekce: neden });
+  });
+  return { id: y.id, status: 'ADMIN_DELETED' };
 }

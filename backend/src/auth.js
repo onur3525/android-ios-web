@@ -161,6 +161,10 @@ const YETKI = {
   'messages.read': ['super_admin', 'moderator'],
   'listings.remove': ['super_admin', 'moderator'],
   'reviews.remove': ['super_admin', 'moderator'],
+  // 29 Eki: Şikâyet Et (UGC) — okuma içerik okuyan rollerle aynı; sonuçlandırma
+  // içerik kaldırabilen rollerle aynı (işleme göre ek yetki de istenir).
+  'reports.read': ['super_admin', 'moderator', 'readonly'],
+  'reports.resolve': ['super_admin', 'moderator'],
   'catalog.read': ['super_admin', 'content', 'moderator', 'operations', 'readonly'],
   'catalog.write': ['super_admin', 'content'],
   'regions.read': ['super_admin', 'content', 'moderator', 'operations', 'readonly'],

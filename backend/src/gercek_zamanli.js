@@ -34,7 +34,7 @@ import { ANLIK_HABER_KANALI } from './anlik_haber.js';
 import { kullaniciCoz } from './routes/kullanici.js';
 import { bakimDurumu } from './bakim_modu.js';
 import { simdi } from './db.js';
-import { istemciIp } from './http.js';
+import { istemciIp, kokenDogrulandi } from './http.js';
 import { config, uretim } from './config.js';
 import { isIP } from 'node:net';
 
@@ -435,6 +435,11 @@ export function gercekZamanliKur(sunucu, db) {
         || url.searchParams.get('transport') !== 'websocket' || !anahtar
         || String(req.headers.upgrade).toLowerCase() !== 'websocket') {
       soket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+      return;
+    }
+    // 29 Eki — KÖKEN SIRRI (bkz. http.js): doğrudan bağlantı reddedilir.
+    if (!kokenDogrulandi(req)) {
+      soket.end('HTTP/1.1 403 Forbidden\r\n\r\n');
       return;
     }
     const kabul = createHash('sha1').update(anahtar + GUID).digest('base64');
