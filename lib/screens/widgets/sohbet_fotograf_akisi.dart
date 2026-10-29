@@ -65,9 +65,12 @@ Future<List<String>> sohbetFotograflariSec(BuildContext context) async {
     }
     // ⚠ GALERİ: çoklu seçim. Kullanıcı tek tek seçer, sistem seçicisi
     // sırayı korur.
+    // ⚠ 29 Eki: gerçek API modunda sohbet fotoğrafı en fazla 1920 px
+    // genişliğe indirilir — çok büyük galeri fotoğrafı 10 MB yükleme
+    // sınırını aşmasın, mobil veride yükleme uzamasın (kamera 1280).
     final coklu = await ImagePicker().pickMultiImage(
         imageQuality: 85,
-        maxWidth: ApiConfig.useRealApi ? null : kaliciGorselEnFazlaGenislik);
+        maxWidth: ApiConfig.useRealApi ? sohbetFotografiEnFazlaGenislik : kaliciGorselEnFazlaGenislik);
     return [for (final x in coklu) await _kalici(x.path)];
   } catch (_) {
     // Seçici açılamadı ya da izin reddedildi — sessizce vazgeçilir.
@@ -75,9 +78,13 @@ Future<List<String>> sohbetFotograflariSec(BuildContext context) async {
   }
 }
 
+/// Gerçek API modunda galeriden seçilen sohbet fotoğrafının en fazla genişliği.
+const double sohbetFotografiEnFazlaGenislik = 1920;
+
 /// ⚠ DENEME MODUNDA KALICI YOL (14 Eki): web'de `blob:` adresi sayfa
 /// yenilenince ölür; mesajdaki fotoğraf "Masaüstü sitesi"ne geçince
-/// açılamıyordu. Gerçek API modunda yol AYNEN döner (fotoğraf sunucuya
-/// yüklenir); mobilde dosya yolu zaten kalıcıdır.
+/// açılamıyordu. Gerçek API modunda yol AYNEN döner; fotoğraf gönderimde
+/// depoya yüklenir (`fotograf_yukleyici.dart`, 29 Eki); mobilde dosya
+/// yolu zaten kalıcıdır.
 Future<String> _kalici(String yol) =>
     ApiConfig.useRealApi ? Future.value(yol) : kaliciYerelYol(yol);

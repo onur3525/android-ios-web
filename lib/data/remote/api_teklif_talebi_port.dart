@@ -7,6 +7,7 @@ import '../models/teklif_talebi.dart';
 import '../ports/teklif_talebi_port.dart';
 import 'api_client.dart';
 import 'api_error_mapper.dart';
+import 'fotograf_yukleyici.dart';
 import 'gorsel_adresi.dart';
 import 'veri_imzasi.dart';
 
@@ -25,7 +26,17 @@ import 'veri_imzasi.dart';
 /// süresi) SUNUCUDA zorlanır; burada yalnız yanıt eşlenir.
 /// ═══════════════════════════════════════════════════════════════
 class ApiTeklifTalebiPort extends TeklifTalebiPort {
-  ApiTeklifTalebiPort(this._c);
+  ApiTeklifTalebiPort(this._c, {Future<String> Function(String yol)? fotografYukleyici})
+      : _ozelYukleyici = fotografYukleyici;
+
+  /// Testlerde sahte yükleyici; verilmezse `FotografYukleyici.yukle`.
+  final Future<String> Function(String yol)? _ozelYukleyici;
+
+  /// Telefondaki fotoğrafı depoya yükleyip `storageRef` döndürür.
+  Future<String> _fotografYukle(String yol) {
+    final ozel = _ozelYukleyici;
+    return ozel != null ? ozel(yol) : FotografYukleyici.yukle(_c, yol);
+  }
 
   final ApiClient _c;
   final Map<String, TeklifTalebi> _onbellek = {};
@@ -200,11 +211,28 @@ class ApiTeklifTalebiPort extends TeklifTalebiPort {
 
   @override
   Future<DomainError?> mesajGonder(String id,
-          {required String gonderenId, String? metin, String? fotografYolu}) =>
-      _yaz(() => _c.post('/teklif-talepleri/$id/mesajlar', idempotencyKey: ApiClient.newIdempotencyKey(), body: {
-            if (metin != null) 'metin': metin,
-            if (fotografYolu != null) 'fotografRef': fotografYolu,
-          }));
+      {required String gonderenId, String? metin, String? fotografYolu}) async {
+    // ── ⚠ 29 Eki: FOTOĞRAF ÖNCE DEPOYA YÜKLENİR (ilan sohbetiyle aynı) ──
+    // Önceden telefondaki dosya YOLU `fotografRef` diye gidiyor, sunucu
+    // "Geçersiz fotoğraf" diyordu. Yükleme bitmeden mesaj gönderilmez.
+    var ref = fotografYolu;
+    if (ref != null && !FotografYukleyici.sunucuRefMi(ref)) {
+      try {
+        ref = await _fotografYukle(ref);
+      } on FotografYuklemeHatasi catch (e) {
+        return ValidationError(e.mesaj);
+      } on ApiFailure catch (e) {
+        return e.error;
+      } catch (_) {
+        return const ValidationError(FotografYukleyici.yuklemeHatasi);
+      }
+    }
+    final gidecek = ref;
+    return _yaz(() => _c.post('/teklif-talepleri/$id/mesajlar', idempotencyKey: ApiClient.newIdempotencyKey(), body: {
+          if (metin != null) 'metin': metin,
+          if (gidecek != null) 'fotografRef': gidecek,
+        }));
+  }
 
   @override
   Future<void> mesajlariOkunduIsaretle(String talepId, String okuyanId) async {

@@ -13,6 +13,7 @@ import '../api/chat_api.dart';
 import '../api/notification_api.dart';
 import '../api/review_api.dart';
 import '../api_error_mapper.dart';
+import '../fotograf_yukleyici.dart';
 import '../mappers.dart';
 import '../veri_imzasi.dart';
 import '../ws_client.dart';
@@ -34,13 +35,27 @@ Future<(T?, DomainError?)> _guard<T>(Future<T> Function() fn) async {
 class ApiChatRepository extends ChangeNotifier {
   final ChatApi _api;
   final WsClient? ws;
-  ApiChatRepository(this._api, {this.ws}) {
+
+  /// Testlerde sahte yükleyici; verilmezse `FotografYukleyici.yukle`.
+  final Future<String> Function(String yol)? _ozelYukleyici;
+
+  ApiChatRepository(this._api, {this.ws, Future<String> Function(String yol)? fotografYukleyici})
+      : _ozelYukleyici = fotografYukleyici {
     _bindRealtime();
+  }
+
+  /// Telefondaki fotoğrafı depoya yükleyip `storageRef` döndürür.
+  Future<String> _fotografYukle(String yol) {
+    final ozel = _ozelYukleyici;
+    return ozel != null ? ozel(yol) : FotografYukleyici.yukle(_api.c, yol);
   }
 
   static const _uuid = Uuid();
   final Map<String, List<ChatMessage>> _threads = {};
   final Map<String, String> _idemOf = {}; // messageId → idempotencyKey (tekrar için)
+  // Yerel mesaj → yüklenmiş fotoğrafın storageRef'i: tekrar denemede
+  // fotoğraf İKİNCİ KEZ yüklenmez, aynı kayıtla (aynı anahtarla) gider.
+  final Map<String, String> _yuklenenRef = {};
   List<Offer> _conversations = const [];
   final List<StreamSubscription<dynamic>> _subs = [];
   bool _connected = false;
@@ -154,8 +169,36 @@ class ApiChatRepository extends ChangeNotifier {
     }
     notifyListeners();
 
+    // ── ⚠ 29 Eki: FOTOĞRAF ÖNCE DEPOYA YÜKLENİR ──
+    // Önceden telefondaki dosya YOLU `storageRef` diye gidiyor, sunucu
+    // "Geçersiz fotoğraf" diyordu. Yerel yol → yükle → sunucu kaydı.
+    // Ekranda yerel görsel (imagePath) kalır; sunucu onayında sunucunun
+    // kaydı yerini alır. Yükleme bitmeden mesaj gönderilmez.
+    var gidecekRef = storageRef;
+    if (storageRef != null && !FotografYukleyici.sunucuRefMi(storageRef)) {
+      gidecekRef = _yuklenenRef[local.id];
+      if (gidecekRef == null) {
+        DomainError? yuklemeHatasi;
+        try {
+          gidecekRef = await _fotografYukle(storageRef);
+          _yuklenenRef[local.id] = gidecekRef;
+        } on FotografYuklemeHatasi catch (e) {
+          yuklemeHatasi = ValidationError(e.mesaj);
+        } on ApiFailure catch (e) {
+          yuklemeHatasi = e.error;
+        } catch (_) {
+          yuklemeHatasi = const ValidationError(FotografYukleyici.yuklemeHatasi);
+        }
+        if (yuklemeHatasi != null) {
+          local.status = MessageStatus.failed; // sahte başarı YOK
+          notifyListeners();
+          return (message: local, error: yuklemeHatasi);
+        }
+      }
+    }
+
     final (res, err) = await _guard(() => _api.send(
-        offerId: offerId, idempotencyKey: key, text: text, storageRef: storageRef));
+        offerId: offerId, idempotencyKey: key, text: text, storageRef: gidecekRef));
     if (err != null) {
       local.status = MessageStatus.failed; // sahte başarı YOK
       notifyListeners();
@@ -176,6 +219,7 @@ class ApiChatRepository extends ChangeNotifier {
       list.add(saved);
     }
     _idemOf.remove(local.id);
+    _yuklenenRef.remove(local.id);
     _idemOf[saved.id] = key;
     notifyListeners();
     return (message: saved, error: null);

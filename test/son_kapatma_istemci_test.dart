@@ -74,10 +74,13 @@ void main() {
       final p = _kod('lib/data/ports/api_ports.dart');
       expect(p.contains('repo.profilFotografiniKaydet(photoPath, acc.activeRole)'),
           isTrue);
+      // 29 Eki: yükleme tek kaynakta (`fotograf_yukleyici.dart`; sohbet
+      // fotoğraflarıyla aynı yol). Profil bu yolu `profile-photo` ile çağırır.
       final r = _kod('lib/data/remote/repositories/api_repositories.dart');
-      expect(r.contains("kind: 'profile-photo'"), isTrue);
-      expect(r.contains('depo.uploadBytes('), isTrue);
-      expect(r.contains('depo.discardPending('), isTrue,
+      expect(r.contains("FotografYukleyici.yukle(_client, yol, tur: 'profile-photo')"), isTrue);
+      final y = _kod('lib/data/remote/fotograf_yukleyici.dart');
+      expect(y.contains('s.uploadBytes('), isTrue);
+      expect(y.contains('s.discardPending('), isTrue,
           reason: 'yarım yükleme temizlenir');
       expect(_kod('lib/data/remote/api/profile_api.dart')
           .contains("{'photoRef': ref, 'photoRole': role}"), isTrue);
