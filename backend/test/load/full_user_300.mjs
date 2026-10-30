@@ -158,8 +158,8 @@ try {
     failureSamples: failures.slice(0, 10),
   };
   console.log(JSON.stringify(summary, null, 2));
-  await import('node:fs/promises').then(({ writeFile }) =>
-    writeFile(process.env.GITHUB_STEP_SUMMARY, [
+  await import('node:fs/promises').then(async ({ writeFile, mkdir }) => {
+    const report = [
       '# HizmetCep 300 kullanicili tam akis testi',
       '',
       '- Ortam: GitHub Actions icinde gecici SQLite + yerel backend.',
