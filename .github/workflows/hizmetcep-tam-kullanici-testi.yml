@@ -1,0 +1,54 @@
+name: HizmetCep 300 Kullanıcılı Tam Kullanıcı Testi
+
+on:
+  workflow_dispatch:
+    inputs:
+      onay:
+        description: "Yalnız izole test ortamı için TAM-TEST onayı yaz"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hizmetcep-full-user-300
+  cancel-in-progress: false
+
+jobs:
+  full-user-flow:
+    if: ${{ inputs.onay == 'TAM-TEST' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: test/full-user-300
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run 300-user isolated full-flow test
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          HC_DB_DRIVER: sqlite
+          HC_TEST_OTP_KANCASI: "1"
+          HC_SESSIZ: "1"
+          HC_JWT_SECRET: "github-actions-isolated-full-user-test-secret-2026"
+        run: node --no-warnings test/load/full_user_300.mjs
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hizmetcep-300-tam-kullanici-test-raporu
+          path: backend/test-results/
+          if-no-files-found: ignore
