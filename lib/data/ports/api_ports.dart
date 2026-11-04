@@ -393,8 +393,8 @@ class ApiAuthPort extends AuthPort {
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
         firebaseIdToken: kayitYetkisi,
         firebaseEmailToken: epostaBelgesi,
-        termsAccepted: termsAccepted,
-        ticariIleti: ticariIleti);
+        ticariIleti: ticariIleti,
+        termsAccepted: termsAccepted);
     if (err != null) {
       // Az önce açılan Firebase kullanıcısı sahipsiz kalmasın.
       if (epostaBelgesi != null) {
