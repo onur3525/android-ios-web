@@ -6,6 +6,7 @@ import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/sifre_dogrulama_paneli.dart' show sosyalIleDogrula;
 
 /// ROL DEĞİŞTİR
 ///
@@ -181,6 +182,13 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
   /// Şifre paneli — şifre sunucuda doğrulanır (`verifyPassword`);
   /// doğruysa panel kapanır ve şifre döner. Ekran şifreyi SAKLAMAZ.
   Future<String?> _sifreAl(AuthController auth) async {
+    // 4 Kas: Google/Apple ile açılmış şifresiz hesap → aynı sağlayıcıyla
+    // yeniden giriş (tek kaynak: `sosyalIleDogrula`).
+    if (auth.currentAccount?.sifresiVar == false) {
+      return sosyalIleDogrula(context,
+          aciklama: 'Hesabınıza yeni rol eklemek için kimliğinizi doğrulayın.',
+          renk: RC.blue);
+    }
     final ctl = TextEditingController();
     final hataNot = ValueNotifier<String?>(null);
     final doluNot = ValueNotifier<bool>(false);

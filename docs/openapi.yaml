@@ -477,11 +477,37 @@ paths:
         okunur (Admin SDK checkRevoked ile aynı): devre dışı/silinmiş kullanıcı
         ya da Firebase'de iptal edilmiş belge reddedilir; Firebase'e
         ulaşılamazsa 503.
+        GOOGLE / APPLE (4 Kas): belgenin sağlayıcısı google.com ya da
+        apple.com ise ve hesap yoksa 404 SOCIAL_SIGNUP_REQUIRED döner; istemci
+        /auth/firebase/register ile kaydı tamamlar. E-postası bizde
+        doğrulanmamış hesabın adresiyle Google'dan gelinir ve Firebase o
+        hesabın şifresini kaldırmışsa hesabın eski şifresi geçersiz olur ve
+        açık oturumları kapanır.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Eşleşen hesap yok }
+        '404': { description: Eşleşen hesap yok (Google/Apple'da SOCIAL_SIGNUP_REQUIRED) }
+
+  /auth/firebase/register:
+    post:
+      tags: [Auth]
+      summary: Google ya da Apple ile kayıt
+      description: |
+        Gövde — idToken (Google/Apple girişinin Firebase ID token'ı), role,
+        name, termsAccepted, aydinlatmaAccepted, platform.
+        E-posta sağlayıcıda doğrulanmış olmalı (yoksa 400 EMAIL_REQUIRED).
+        Hesap şifresiz açılır (hasPassword = false); telefon ve adres e-postalı
+        kayıttaki aynı profil tamamlama adımında alınır. Bu kimliğin hesabı
+        zaten varsa yeni hesap açılmaz: rol yoksa eklenir (giriş son 10
+        dakikada yapılmış olmalı, yoksa 401 REAUTH_REQUIRED), oturum açılır.
+        Adres başka bir hesapta kayıtlıysa 409.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { description: Çok fazla deneme }
 
   /auth/otp/request:
     post:
@@ -519,6 +545,11 @@ paths:
         Hesap silme gibi kritik işlemlerden önce yeniden kimlik doğrulama (§20).
         Kullanıcı başına 15 dakikada en çok 10 deneme (telefon değiştirme ve
         silme talebiyle ortak sayaç); aşılırsa 429.
+        ŞİFRESİZ HESAP (Google/Apple, 4 Kas): bu uçta ve şifre isteyen bütün
+        kritik işlemlerde (rol ekleme, telefon/e-posta değiştirme, silme
+        talebi) `password`/`currentPassword` alanına aynı sağlayıcıyla son 10
+        dakikada yapılmış girişin Firebase ID token'ı yazılır. Şifre
+        değiştirme bu hesaplarda 400 NO_PASSWORD döner.
       responses:
         '200': { description: Başarılı }
         '400': { $ref: '#/components/responses/BadRequest' }

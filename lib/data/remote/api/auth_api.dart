@@ -45,6 +45,26 @@ class AuthApi {
   Future<Map<String, dynamic>> firebaseSession(String idToken) =>
       c.post('/auth/firebase/session', body: {'idToken': idToken});
 
+  /// 4 Kas: Google/Apple ile KAYIT. Hesap şifresiz açılır; telefon ve
+  /// adres profil tamamlamada alınır. Bu kimliğin hesabı varsa sunucu yeni
+  /// hesap açmaz (rol yoksa ekler, oturum açar).
+  Future<Map<String, dynamic>> firebaseRegister({
+    required String idToken,
+    required String role,
+    String? name,
+    required bool termsAccepted,
+    String? platform,
+  }) =>
+      c.post('/auth/firebase/register', body: {
+        'idToken': idToken,
+        'role': role,
+        if (name != null) 'name': name,
+        'termsAccepted': termsAccepted,
+        // E-postalı kayıtla aynı: iki kutu da işaretliyse true.
+        'aydinlatmaAccepted': termsAccepted,
+        if (platform != null) 'platform': platform,
+      });
+
   Future<Map<String, dynamic>> login({required String phone, required String password}) =>
       c.post('/auth/login', body: {'phone': phone, 'password': password});
 

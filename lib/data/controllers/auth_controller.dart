@@ -1,4 +1,5 @@
 import '../../domain/failures.dart';
+import '../../domain/sosyal_saglayici.dart';
 import '../models/account.dart';
 import '../ports/repository_ports.dart';
 import 'base_controller.dart';
@@ -132,6 +133,31 @@ class AuthController extends BaseController {
             ));
     return err?.message;
   }
+
+  // ── GOOGLE / APPLE İLE GİRİŞ (4 Kas) — karar porttadır (sunucu).
+  Future<SosyalGirisSonucu> sosyalGiris(SosyalSaglayici saglayici,
+          {Role? rol}) =>
+      _auth.sosyalGiris(saglayici, rol: rol);
+
+  /// Başarıda `null`, aksi hâlde gösterilecek mesaj.
+  Future<String?> sosyalKayit({
+    required String belge,
+    required Role rol,
+    required String ad,
+    required bool sozlesmeOnayi,
+  }) async {
+    final err = await runAction(
+        'sosyalKayit',
+        () => _auth.sosyalKayit(
+            belge: belge, rol: rol, ad: ad, sozlesmeOnayi: sozlesmeOnayi));
+    return err?.message;
+  }
+
+  /// Şifresiz hesapta kritik işlem kanıtı (aynı sağlayıcıyla yeniden giriş).
+  Future<({String? kanit, bool iptal, DomainError? error})>
+      sosyalKimlikKaniti() => _auth.sosyalKimlikKaniti();
+
+  Future<void> sosyalBaglantiyiKaldir() => _auth.sosyalBaglantiyiKaldir();
 
   // ══════════════════════════════════════════════════════════════
   // TELEFON SAHİPLİĞİ — CHALLENGE / YETKİ

@@ -87,6 +87,9 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return ProfilEksikError(text);
     case 'PHONE_CLAIM_REQUIRED':
       return TelefonSahiplenmeError(text);
+    // 4 Kas: Google/Apple ile ilk giriş — kayıt adımına geçilir.
+    case 'SOCIAL_SIGNUP_REQUIRED':
+      return SosyalKayitGerekliError(text);
     case 'CONFLICT':
     case 'DUPLICATE_OPERATION':
     case 'STATE_CONFLICT':

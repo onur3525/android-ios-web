@@ -146,7 +146,31 @@ export async function hesapYaniti(db, u) {
     ...kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u)),
     // 4 Kas: rol bazlı eksik profil bilgileri (boş liste = tamamlandı).
     profileMissing: await profilEksikleri(db, u),
+    // 4 Kas: Google/Apple ile açılmış, şifresi olmayan hesapta istemci kritik
+    // işlemlerde şifre yerine aynı sağlayıcıyla yeniden giriş ister.
+    hasPassword: u.password_set !== 0,
+    socialProvider: u.social_provider ?? null,
   };
+}
+
+/**
+ * ── KAYITTA ONAYLANAN BELGELER — TEK KAYNAK (e-postalı ve Google/Apple kaydı) ──
+ * 16 Eki: kayıtta iki zorunlu onay. Kullanıcı Kullanım Sözleşmesi'ni kabul
+ * eder ve Aydınlatma Metni'nin gösterildiğini işaretler; yayımdaki sürümleri
+ * (sürüm + SHA-256) kaydedilir. 29 Eki: ikinci kutu "Gizlilik Politikası ve
+ * Aydınlatma Metni'ni okudum; … yurt dışındaki sunucularda işlenmesine …
+ * AÇIK RIZA veriyorum" oldu — İKİ belgenin sürümü + SHA-256'sı + zamanı
+ * kaydedilir (rızanın ispatı).
+ */
+async function kayitOnaylariniYaz(db, kullaniciId, platform, zaman) {
+  const pl = ['android', 'ios', 'web'].includes(platform) ? platform : null;
+  for (const v of await db.prepare(
+    `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
+      WHERE v.slug IN (?, ?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
+  ).all('terms', 'kvkk', 'privacy')) {
+    await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(randomUUID(), kullaniciId, v.slug, v.id, v.version, v.sha256, pl, zaman);
+  }
 }
 
 /**
@@ -541,10 +565,45 @@ export async function sifreDogruMu(db, u, sifre) {
     }
   }
   if (fb === null) return await sifreDogrulaAsenkron(sifre, u.password_hash);
-  if (fb === true && !await sifreDogrulaAsenkron(sifre, u.password_hash)) {
-    await db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(sifre), simdi(), u.id);
+  if (fb === true && (sifresizMi(u) || !await sifreDogrulaAsenkron(sifre, u.password_hash))) {
+    // Google/Apple hesabı Firebase'de şifre belirlediyse (e-postayla
+    // sıfırlama bağlantısı) şifre artık hesabındır: password_set = TRUE.
+    await db.prepare('UPDATE users SET password_hash = ?, password_set = TRUE, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(sifre), simdi(), u.id);
   }
   return fb;
+}
+
+// ── GOOGLE / APPLE İLE GİRİŞ (4 Kas, kullanıcı talebi) ──
+// Firebase kimliği doğrular; belgedeki `firebase.sign_in_provider` hangi
+// sağlayıcıdan geldiğini söyler. Yalnız bu ikisi "sosyal" sayılır.
+const SOSYAL_SAGLAYICILAR = new Set(['google.com', 'apple.com']);
+export const sosyalSaglayici = (yuk) => {
+  const s = yuk?.firebase?.sign_in_provider;
+  return SOSYAL_SAGLAYICILAR.has(s) ? s : null;
+};
+/** Google/Apple ile açılmış, kullanıcının belirlediği şifresi olmayan hesap. */
+export const sifresizMi = (u) => u.password_set === 0;
+/** Şifresiz hesapta kritik işlem için yeni girişin en çok bu kadar eski olabilir. */
+const TAZE_GIRIS_SN = 10 * 60;
+/** Google/Apple hesabında hiçbir şifreyle eşleşmeyen yer tutucu özet. */
+const sifresizOzet = () => `sosyal-giris$${randomUUID()}`;
+
+/**
+ * ── KRİTİK İŞLEMDE KİMLİK KANITI — TEK KAYNAK ──
+ * Şifreli hesap: mevcut şifre (`sifreDogruMu`, davranış AYNI).
+ * Şifresiz (Google/Apple) hesap: şifre yerine aynı sağlayıcıyla az önce
+ * yapılmış girişin Firebase belgesi. Belge bu hesabın Firebase kullanıcısına
+ * ait, iptal sınırından yeni ve son 10 dakika içinde alınmış olmalı
+ * (çalınmış bir oturum tek başına yetmez; kullanıcı Google/Apple'da yeniden
+ * kimliğini doğrular).
+ */
+export async function kimlikKanitiDogruMu(db, u, deger) {
+  if (!sifresizMi(u)) return sifreDogruMu(db, u, deger);
+  if (!u.firebase_uid) return false;
+  const yuk = await firebaseTokenDogrula(String(deger ?? '')).catch(() => null);
+  if (!yuk || yuk.sub !== u.firebase_uid) return false;
+  if (u.firebase_valid_since && yuk.auth_time < Number(u.firebase_valid_since)) return false;
+  return Math.floor(Date.now() / 1000) - yuk.auth_time <= TAZE_GIRIS_SN;
 }
 
 /** Firebase ID token → yük; geçersizse 401. */
@@ -926,22 +985,75 @@ export function kullaniciRotalar(r, db) {
     // Gizlilik Politikası) YAYINDAKİ sürümleri onaylandı olarak kaydedilir:
     // hangi metnin onaylandığı (sürüm + SHA-256) sonradan kanıtlanabilir.
     // Onay isteyen diğer belgeler girişteki onay akışında istenir.
-    const pl = ['android', 'ios', 'web'].includes(ctx.body.platform) ? ctx.body.platform : null;
-    // ── 16 Eki: KAYITTA İKİ ZORUNLU ONAY ──
-    // Kullanıcı Kullanım Sözleşmesi'ni kabul eder ve Aydınlatma Metni'nin
-    // gösterildiğini işaretler; ikisinin yayımdaki sürümü (sürüm + SHA-256)
-    // kaydedilir. (23 Eki: tek onay satırlı eski istemci yolu kaldırıldı.)
-    // 29 Eki: ikinci kutu "Gizlilik Politikası ve Aydınlatma Metni'ni okudum;
-    // … yurt dışındaki sunucularda işlenmesine … AÇIK RIZA veriyorum" oldu —
-    // İKİ belgenin sürümü + SHA-256'sı + zamanı kaydedilir (rızanın ispatı).
-    const onaylananlar = ['terms', 'kvkk', 'privacy'];
-    for (const v of await db.prepare(
-      `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
-        WHERE v.slug IN (?, ?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
-    ).all(...onaylananlar)) {
-      await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-        .run(randomUUID(), id, v.slug, v.id, v.version, v.sha256, pl, z);
+    await kayitOnaylariniYaz(db, id, ctx.body.platform, z);
+    return oturumYaniti(ctx, await oturumVer(db, id, ctx.req, 'REGISTER'));
+  });
+
+  // ── GOOGLE / APPLE İLE KAYIT (4 Kas, kullanıcı talebi) ──
+  // İstemci önce `/auth/firebase/session` dener; SOCIAL_SIGNUP_REQUIRED
+  // gelirse ad, rol ve sözleşme onaylarını alıp buraya gönderir.
+  //   · Kimlik Google/Apple'dan: belge imzalı, sağlayıcısı google.com ya da
+  //     apple.com, e-postası sağlayıcıda DOĞRULANMIŞ olmalı.
+  //   · Şifre YOK (password_set = FALSE); kritik işlemlerde aynı sağlayıcıyla
+  //     yeniden giriş istenir (`kimlikKanitiDogruMu`).
+  //   · Telefon boş ve doğrulanmamış kaydedilir; telefon + adres (hizmet
+  //     verende kategori + bölge) e-postalı kayıttaki AYNI profil tamamlama
+  //     adımında alınır — kapılar aynen geçerli.
+  //   · Bu kimliğin hesabı zaten varsa yeni hesap açılmaz: rol hesapta yoksa
+  //     eklenir (bir kişi, bir hesap), varsa oturum açılır.
+  //   · Adres bizde başka (doğrulanmamış) bir hesapta kayıtlıysa o hesap
+  //     devralınmaz ve ikinci hesap açılmaz.
+  r.post('/api/v1/auth/firebase/register', async (ctx) => {
+    await kayitIpSiniri.denetle(db, ctx.ip);
+    const yuk = await firebaseKimlikIste(ctx.body.idToken);
+    const sosyal = sosyalSaglayici(yuk);
+    if (!sosyal) throw new ApiHatasi(400, 'AUTH_FAILED', 'Bu kayıt yalnız Google ya da Apple ile yapılabilir');
+    const rol = rolDogrula(ctx.body.role);
+    const mail = String(yuk.email || '').trim().toLowerCase();
+    if (!mail || yuk.email_verified !== true) {
+      throw new ApiHatasi(400, 'EMAIL_REQUIRED', 'Hesabınızın e-posta adresi doğrulanamadı. Lütfen e-posta ve şifreyle kayıt olun.');
     }
+    let u = await db.prepare('SELECT * FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(yuk.sub)
+      ?? await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND email_verified = TRUE AND deleted_at IS NULL').get(mail);
+    if (u) {
+      // Hesap zaten var: giriş ucuyla AYNI denetimler, sonra gerekiyorsa rol.
+      if (u.firebase_uid && u.firebase_uid !== yuk.sub) throw new ApiHatasi(401, 'AUTH_FAILED', 'Hesap başka bir doğrulamaya bağlı');
+      durumKapisi(u);
+      await bakimGirisKapisi(db, u, ctx.req);
+      await firebaseBelgesiIptalDenetimi(db, u, yuk);
+      const mevcutRoller = roller(u);
+      if (!mevcutRoller.includes(rol)) {
+        await rolEklemeSiniri.denetle(db, u.id);
+        // Rol ekleme şifreli hesapta şifre ister; burada kanıt az önce
+        // yapılmış Google/Apple girişidir (rol ekleme ucundaki süre sınırı).
+        if (Math.floor(Date.now() / 1000) - yuk.auth_time > TAZE_GIRIS_SN) {
+          throw new ApiHatasi(401, 'REAUTH_REQUIRED', 'Güvenlik için lütfen yeniden giriş yapın');
+        }
+        await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?')
+          .run([...mevcutRoller, rol].join(','), rol, simdi(), u.id);
+      }
+      if (!u.firebase_uid) {
+        await db.prepare('UPDATE users SET firebase_uid = ?, updated_at = ? WHERE id = ?').run(yuk.sub, simdi(), u.id);
+      }
+      await girisKilitleriniKaldir(db, u.id);
+      return oturumYaniti(ctx, await oturumVer(db, u.id, ctx.req, 'REGISTER', { rolKoru: !mevcutRoller.includes(rol) }));
+    }
+    // Yeni hesap: ad ve iki zorunlu onay, e-postalı kayıttakiyle AYNI kural.
+    const isim = adSoyad(ctx.body.name);
+    if (ctx.body.termsAccepted !== true) throw new ApiHatasi(400, 'TERMS_REQUIRED', 'Kullanım Sözleşmesi onayı zorunludur');
+    if (ctx.body.aydinlatmaAccepted !== true) throw new ApiHatasi(400, 'AYDINLATMA_REQUIRED', 'Aydınlatma Metni bilgilendirmesi zorunludur');
+    if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(mail)) {
+      throw hata.cakisma('Bu e-posta adresiyle kayıtlı bir hesap var. Telefon numaranız ya da e-postanız ve şifrenizle giriş yapın.');
+    }
+    const id = randomUUID();
+    const z = simdi();
+    await db.prepare(
+      `INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role,
+                          status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid, age_confirmed_at,
+                          password_set, social_provider)
+       VALUES (?, '', ?, ?, ?, FALSE, TRUE, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?, ?, FALSE, ?)`,
+    ).run(id, mail, isim, sifresizOzet(), rol, rol, z, z, yuk.sub, z, sosyal);
+    await kayitOnaylariniYaz(db, id, ctx.body.platform, z);
     return oturumYaniti(ctx, await oturumVer(db, id, ctx.req, 'REGISTER'));
   });
 
@@ -1154,12 +1266,39 @@ export function kullaniciRotalar(r, db) {
     if (!u && yuk.email && yuk.email_verified === true) {
       u = await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND email_verified = TRUE AND deleted_at IS NULL').get(String(yuk.email).toLowerCase());
     }
+    // Google/Apple ile ilk giriş: hesap yoksa istemci kayıt adımına geçer
+    // (`/auth/firebase/register`; ad, rol ve sözleşme onayı orada alınır).
+    const sosyal = sosyalSaglayici(yuk);
+    if (!u && sosyal) throw new ApiHatasi(404, 'SOCIAL_SIGNUP_REQUIRED', 'Bu hesapla kayıtlı bir HizmetCep hesabı yok. Kaydınızı tamamlayın.');
     if (!u) throw hata.bulunamadi('Bu bilgilerle kayıtlı hesap bulunamadı');
     if (u.firebase_uid && u.firebase_uid !== yuk.sub) throw new ApiHatasi(401, 'AUTH_FAILED', 'Hesap başka bir doğrulamaya bağlı');
     durumKapisi(u);
     await bakimGirisKapisi(db, u, ctx.req); // 032: bakımda yalnız test hesabı (tanınmış cihaz)
     // İptal edilmiş (şifre sıfırlama/değiştirme, telefon değişikliği öncesi) belgeyle oturum açılmaz.
     await firebaseBelgesiIptalDenetimi(db, u, yuk);
+    // ── ⚠ DOĞRULANMAMIŞ E-POSTALI HESABIN SAHİBİ GOOGLE İLE GELDİ ──
+    // Firebase, e-postası doğrulanmamış e-posta/şifre kullanıcısına aynı
+    // adresle Google girişi yapılınca hesabı Google'a bırakır ve şifreyi
+    // SİLER (adresin sahibi kanıtlandı; şifreyi başkası koymuş olabilir).
+    // Aynısı burada da yapılır: eski şifre geçersiz, açık oturumlar kapanır.
+    // Yalnız Firebase şifreyi GERÇEKTEN kaldırdıysa (kullanıcı şifreyle
+    // doğrulanmış adresine Google'ı bağladıysa şifresi korunur).
+    if (sosyal && u.email_verified !== 1 && yuk.email_verified === true
+        && String(yuk.email || '').toLowerCase() === String(u.email || '').toLowerCase()
+        && firebaseYonetimiHazir()
+        && !((await firebaseKullaniciBilgisi(yuk.sub).catch(() => null))?.saglayicilar ?? ['password']).includes('password')) {
+      await db.tx(async () => {
+        await db.prepare('UPDATE users SET password_hash = ?, password_set = FALSE, social_provider = ?, email_verified = TRUE, updated_at = ? WHERE id = ?')
+          .run(sifresizOzet(), sosyal, simdi(), u.id);
+        await oturumlariIptal(db, u.id, 'SOCIAL_CLAIM');
+      });
+      await olaylar.yayinla('user.sessions.revoked', { userId: u.id, haric: null });
+      u = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    }
+    // Şifresiz hesap Firebase'de şifre belirleyip onunla girdiyse şifre artık hesabındır.
+    if (sifresizMi(u) && yuk.firebase?.sign_in_provider === 'password') {
+      await db.prepare('UPDATE users SET password_set = TRUE, updated_at = ? WHERE id = ?').run(simdi(), u.id);
+    }
     // E-posta: tek kaynak (firebaseEpostasiniIsle). Farklı adres YALNIZ
     // sunucuda şifreyle başlatılmış bekleyen istekle eşleşirse işlenir (Y2).
     const fbEposta = String(yuk.email || '').toLowerCase();
@@ -1185,6 +1324,10 @@ export function kullaniciRotalar(r, db) {
   r.post('/api/v1/auth/password/change', korumali(async (ctx) => {
     const yeni = sifreKurali(ctx.body.newPassword);
     const u = ctx.kullanici;
+    // Google/Apple hesabında değiştirilecek bir şifre yok (4 Kas).
+    if (sifresizMi(u)) {
+      throw new ApiHatasi(400, 'NO_PASSWORD', 'Hesabınız Google ya da Apple ile giriş yapıyor; tanımlı bir şifreniz yok. Şifre belirlemek için giriş ekranındaki "Şifremi Unuttum" adımını kullanabilirsiniz.');
+    }
     const mevcut = String(ctx.body.currentPassword ?? '');
     if (!(await sifreDogruMu(db, u, mevcut))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
     // Firebase'e bağlı hesapta giriş Firebase şifresiyle doğrulanır: yeni şifre
@@ -1225,7 +1368,8 @@ export function kullaniciRotalar(r, db) {
         throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Şifre şu anda sıfırlanamıyor. Lütfen daha sonra tekrar deneyin.');
       }
     }
-    await db.prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(yeni), simdi(), u.id);
+    // Google/Apple hesabı bu adımla şifre de belirlemiş olur (password_set).
+    await db.prepare('UPDATE users SET password_hash = ?, password_set = TRUE, failed_logins = 0, locked_until = NULL, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(yeni), simdi(), u.id);
     await girisKilitleriniKaldir(db, u.id); // Şifremi Unuttum kilidi açar
     await oturumlariIptal(db, u.id, 'PASSWORD_RESET');
     await firebaseOturumlariniKapat(db, u, gecerlilikSn, { firebaseYazildi });
@@ -1234,7 +1378,7 @@ export function kullaniciRotalar(r, db) {
 
   r.post('/api/v1/auth/verify-password', korumali(async (ctx) => {
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
+    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
     return undefined;
   }));
 
@@ -1243,7 +1387,7 @@ export function kullaniciRotalar(r, db) {
     // denetiminden ÖNCE sayılır; çok örnekte ortak (rate_limits tablosu).
     await rolEklemeSiniri.denetle(db, ctx.kullanici.id);
     const rol = rolDogrula(ctx.body.role);
-    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
+    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
     // ⚠ 21 Eki (kullanıcı kararı): rol eklerken telefon/SMS doğrulaması
     // İSTENMEZ. Oturum açık + mevcut şifre + kullanıcı başına hız sınırı
     // yeterli sayıldı. Eski uygulamaların gönderdiği kanıt/kod yok sayılır.
@@ -1366,7 +1510,7 @@ export function kullaniciRotalar(r, db) {
     // Mevcut şifre, telefon kanıtı TÜKETİLMEDEN önce denetlenir (yanlış
     // şifre kodu harcamaz). Mevcut kontroller (kanıt, benzersizlik) aynen.
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.currentPassword ?? '')))) {
+    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.currentPassword ?? '')))) {
       throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
     }
     const u0 = ctx.kullanici;
@@ -1454,7 +1598,7 @@ export function kullaniciRotalar(r, db) {
     let u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
     // ⚠ Y2: adres DEĞİŞİKLİĞİ erişim belgesiyle yetinmez; mevcut şifre
     // SUNUCUDA (Firebase'e bağlı hesapta Firebase'de) doğrulanır.
-    if (yeni && !(await sifreDogruMu(db, u, String(ctx.body.currentPassword ?? '')))) {
+    if (yeni && !(await kimlikKanitiDogruMu(db, u, String(ctx.body.currentPassword ?? '')))) {
       throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
     }
     // Kullanıcı bağlantıya zaten tıkladıysa yeniden e-posta gönderilmez.

@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/firebase/firebase_baslatici.dart';
+import '../../core/firebase/sosyal_giris_ayarlari.dart';
+import '../../domain/sosyal_saglayici.dart';
 import '../../domain/failures.dart';
 import '../../domain/hata_mesajlari.dart' show kGirisKilidiMesaji;
 
@@ -391,14 +394,153 @@ class FirebaseKimlik {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // GOOGLE / APPLE İLE GİRİŞ (4 Kas, kullanıcı talebi)
+  //
+  // Firebase kimliği doğrular; dönen ID token sunucuya gider (oturum ya da
+  // kayıt). Platform ayrımı `kIsWeb` + `defaultTargetPlatform` ile:
+  //   GOOGLE · Android/iOS: google_sign_in (yerel hesap seçici) → Firebase
+  //            kimlik bilgisi · Web: Firebase açılır penceresi.
+  //   APPLE  · iOS: yerel Apple penceresi · Android: Firebase'in Apple web
+  //            akışı · Web: Firebase açılır penceresi.
+  // ══════════════════════════════════════════════════════════════
+
+  Future<void>? _googleBaslatma;
+
+  /// google_sign_in 7: `initialize` yalnız BİR KEZ çağrılır.
+  Future<void> _googleHazirla() => _googleBaslatma ??= _googleBaslat();
+
+  Future<void> _googleBaslat() async {
+    try {
+      await GoogleSignIn.instance.initialize(
+        clientId: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+            ? SosyalGirisAyarlari.googleIosIstemciKimligi
+            : null,
+        serverClientId: SosyalGirisAyarlari.googleWebIstemciKimligi,
+      );
+    } catch (_) {
+      _googleBaslatma = null; // sonraki denemede yeniden
+      rethrow;
+    }
+  }
+
+  /// Son Apple girişinin yetki kodu (yalnız Apple platformlarında gelir):
+  /// hesap silinirken Apple bağlantısını kaldırmak için (App Review 5.1.1).
+  String? _appleYetkiKodu;
+
+  static const _iptalKodlari = {
+    'canceled',
+    'cancelled',
+    'web-context-cancelled',
+    'web-context-canceled',
+    'popup-closed-by-user',
+    'cancelled-popup-request',
+    'user-cancelled',
+  };
+
+  /// Google ya da Apple ile Firebase'e giriş yapar. Sunucuya DOKUNMAZ.
+  Future<({String? idToken, String? ad, String? eposta, bool iptal, DomainError? error})>
+      sosyalGiris(SosyalSaglayici saglayici) async {
+    const yok = ValidationError('Doğrulama hizmetine ulaşılamadı');
+    final a = await _auth();
+    if (a == null) {
+      return (idToken: null, ad: null, eposta: null, iptal: false, error: yok);
+    }
+    try {
+      final UserCredential s;
+      String? ad;
+      if (saglayici == SosyalSaglayici.google) {
+        if (kIsWeb) {
+          s = await a.signInWithPopup(GoogleAuthProvider());
+        } else {
+          await _googleHazirla();
+          final hesap = await GoogleSignIn.instance.authenticate();
+          ad = hesap.displayName;
+          final belge = hesap.authentication.idToken;
+          if (belge == null) {
+            return (idToken: null, ad: null, eposta: null, iptal: false,
+                error: const ValidationError('Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.'));
+          }
+          s = await a.signInWithCredential(GoogleAuthProvider.credential(idToken: belge));
+        }
+      } else {
+        final p = AppleAuthProvider()
+          ..addScope('email')
+          ..addScope('name');
+        s = kIsWeb ? await a.signInWithPopup(p) : await a.signInWithProvider(p);
+        _appleYetkiKodu = s.additionalUserInfo?.authorizationCode;
+      }
+      final u = s.user;
+      if (u == null) {
+        return (idToken: null, ad: null, eposta: null, iptal: false, error: _hata(Exception()));
+      }
+      ad ??= u.displayName;
+      final profilAdi = s.additionalUserInfo?.profile?['name'];
+      if ((ad == null || ad.trim().isEmpty) && profilAdi is String) {
+        ad = profilAdi;
+      }
+      return (idToken: await u.getIdToken(), ad: ad, eposta: u.email, iptal: false, error: null);
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled ||
+          e.code == GoogleSignInExceptionCode.interrupted) {
+        return (idToken: null, ad: null, eposta: null, iptal: true, error: null);
+      }
+      debugPrint('GOOGLE_GIRIS ${e.code.name}');
+      return (idToken: null, ad: null, eposta: null, iptal: false,
+          error: const ValidationError('Google ile giriş şu anda yapılamıyor. Lütfen daha sonra tekrar deneyin.'));
+    } on FirebaseAuthException catch (e) {
+      if (_iptalKodlari.contains(e.code) || (e.message ?? '').contains('1001')) {
+        return (idToken: null, ad: null, eposta: null, iptal: true, error: null);
+      }
+      if (e.code == 'account-exists-with-different-credential') {
+        return (idToken: null, ad: null, eposta: null, iptal: false,
+            error: const ValidationError('Bu e-posta adresiyle kayıtlı bir hesabınız var. '
+                'E-posta ya da telefon numaranız ve şifrenizle giriş yapın.'));
+      }
+      if (e.code == 'operation-not-allowed' || e.code == 'unauthorized-domain' ||
+          e.code == 'invalid-credential' || e.code == 'internal-error') {
+        debugPrint('SOSYAL_GIRIS ${e.code}');
+        return (idToken: null, ad: null, eposta: null, iptal: false,
+            error: ValidationError('${saglayici.ad} ile giriş şu anda yapılamıyor. Lütfen daha sonra tekrar deneyin.'));
+      }
+      return (idToken: null, ad: null, eposta: null, iptal: false, error: _hata(e));
+    } catch (e) {
+      return (idToken: null, ad: null, eposta: null, iptal: false, error: _hata(e));
+    }
+  }
+
+  /// Hesap silme talebinden sonra: Apple ile girişin uygulamaya verdiği
+  /// yetkiyi kaldırır (Apple'ın hesap silme kuralı). Yetki kodu yalnız az
+  /// önce yapılmış Apple girişinden gelir (silme onayındaki yeniden giriş);
+  /// yoksa ya da başarısızsa sessizce geçilir — silme talebini etkilemez.
+  Future<void> appleYetkisiniKaldir() async {
+    final kod = _appleYetkiKodu;
+    _appleYetkiKodu = null;
+    if (kod == null || kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return;
+    }
+    try {
+      await (await _auth())?.revokeTokenWithAuthorizationCode(kod);
+    } catch (e) {
+      debugPrint('APPLE_YETKI_KALDIRILAMADI ${e.runtimeType}');
+    }
+  }
+
   Future<void> cikis() async {
     _bekleyen.clear();
     _tokenTelefonu.clear();
+    _appleYetkiKodu = null;
     try {
       if (await firebaseHazirla() != null) {
         await FirebaseAuth.instance.signOut();
       }
     } catch (_) {}
+    // Google hesap seçicisi bir sonraki girişte yeniden sorsun.
+    if (!kIsWeb && _googleBaslatma != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
   }
 }
 

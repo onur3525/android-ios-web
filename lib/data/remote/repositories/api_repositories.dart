@@ -175,6 +175,30 @@ class ApiAuthRepository extends ChangeNotifier {
     return loadMe();
   }
 
+  /// 4 Kas: Google/Apple ile kayıt → HizmetCep oturumu.
+  Future<DomainError?> firebaseKayit({
+    required String idToken,
+    required Role role,
+    String? name,
+    required bool termsAccepted,
+  }) async {
+    final (res, err) = await _guard(() => _auth.firebaseRegister(
+          idToken: idToken,
+          role: Mappers.roleApi(role),
+          name: name,
+          termsAccepted: termsAccepted,
+          platform: currentPlatform(),
+        ));
+    if (err != null) {
+      return err;
+    }
+    await _client.tokens.save(
+      access: res!['accessToken'] as String,
+      refresh: res['refreshToken'] as String,
+    );
+    return loadMe();
+  }
+
   Future<DomainError?> forgotCompleteFirebase(String phone, String idToken, String newPass) async =>
       (await _guard(() => _auth.forgotComplete(
               phone: phone, otpCode: '', newPassword: newPass, firebaseIdToken: idToken)))

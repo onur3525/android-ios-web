@@ -2,6 +2,7 @@ import '../../core/validators.dart';
 import '../../domain/cikar_catismasi.dart';
 import '../../domain/config.dart';
 import '../../domain/failures.dart';
+import '../../domain/sosyal_saglayici.dart';
 import '../../domain/listing_state_machine.dart';
 import '../../domain/bildirim_metinleri.dart';
 import '../models/account.dart';
@@ -112,6 +113,32 @@ class MockAuthPort extends AuthPort {
         taslakKimligi: taslakKimligi,
         telefonDogrulamasiz: telefonDogrulamasiz,
       );
+
+  // 4 Kas: Google/Apple ile giriş yalnız gerçek sunucuyla çalışır (kimliği
+  // Firebase doğrular); bellek içi modda sahte başarı ÜRETİLMEZ.
+  static const _sosyalYok = 'Google ve Apple ile giriş yalnız canlı bağlantıda kullanılabilir';
+
+  @override
+  Future<SosyalGirisSonucu> sosyalGiris(SosyalSaglayici saglayici,
+          {Role? rol}) async =>
+      const SosyalGirisSonucu(hata: _sosyalYok);
+
+  @override
+  Future<DomainError?> sosyalKayit({
+    required String belge,
+    required Role rol,
+    required String ad,
+    required bool sozlesmeOnayi,
+  }) async =>
+      const ValidationError(_sosyalYok);
+
+  @override
+  Future<({String? kanit, bool iptal, DomainError? error})>
+      sosyalKimlikKaniti() async =>
+          (kanit: null, iptal: false, error: const ValidationError(_sosyalYok));
+
+  @override
+  Future<void> sosyalBaglantiyiKaldir() async {}
 
   // 4 Kas: profil tamamlama — mock depo aynı kayıt kodu düzeneğini kullanır.
   @override

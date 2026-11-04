@@ -58,7 +58,11 @@ dependencies:
   # Yalnız API modunda kullanılır; hesap/rol/iş verisi backend'de kalır.
   firebase_auth: ^5.3.1
   flutter_secure_storage: ^9.2.2  # token saklama (Keychain / EncryptedSharedPreferences)
-  # ⚠ `google_sign_in` KALDIRILDI — üçüncü taraf girişi yok.
+  # Google ile giriş (4 Kas): Android/iOS'ta yerel hesap seçici; kimliği
+  # Firebase doğrular (web'de Firebase açılır penceresi kullanılır, bu paket
+  # değil). Apple ile giriş firebase_auth'un kendi sağlayıcısıyla yapılır.
+  # 7.x API'si (`GoogleSignIn.instance`) Firebase belgeleriyle aynıdır.
+  google_sign_in: ^7.2.0
   socket_io_client: ^2.0.3  # gerçek zamanlı mesajlaşma (/ws namespace)
 
 dev_dependencies:

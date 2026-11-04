@@ -136,9 +136,9 @@ void main() {
       expect(o.contains('TapGestureRecognizer()'), isTrue);
     });
 
-    // ⚠ "veya" ayırıcısı + Google düğmesi KALDIRILDI (ürün kararı:
-    // üçüncü taraf girişi yok). Yokluğu test/ucuncu_taraf_giris_test.dart
-    // kilitler; burada eski varlık iddiası tutulmaz.
+    // 4 Kas: Google/Apple düğmeleri ortak bileşenle geri geldi
+    // (`SosyalGirisDugmeleri`); kuralı test/ucuncu_taraf_giris_test.dart
+    // kilitler.
 
     test('sözleşme kabul zorunluluğu korunur', () {
       // 16 Eki: iki zorunlu onay (Kullanım Sözleşmesi + Aydınlatma Metni).
@@ -157,7 +157,7 @@ void main() {
       expect(w.contains('this.iconColor = RC.blue'), isTrue);
     });
 
-    test('şifremi unuttum var (Google girişi yok)', () {
+    test('şifremi unuttum var', () {
       expect(src.contains('Şifremi Unuttum'), isTrue);
     });
 

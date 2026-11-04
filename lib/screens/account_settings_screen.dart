@@ -18,6 +18,7 @@ import '../ui/web_panel.dart';
 import '../ui/sifre_dogrulama_paneli.dart';
 import '../data/repositories/oturum_tercihi.dart';
 import '../data/remote/api_config.dart';
+import '../domain/sosyal_saglayici.dart';
 
 /// HESAP AYARLARI — dondurma ve silme talebi
 ///
@@ -216,7 +217,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // ⚠ MOCK MODDA AĞ ÇAĞRISI YAPILMAZ — akış aynen yürür.
       if (ApiConfig.useRealApi) {
         final api = AccountApi(context.read<ApiClient>());
+        final auth = context.read<AuthController>();
         await api.requestDeletion(password: _dogrulananSifre);
+        // 4 Kas: Apple ile girişte uygulamaya verilen yetki de kaldırılır
+        // (Apple'ın hesap silme kuralı). Yalnız iOS + Apple hesabı; hata
+        // silme talebini etkilemez.
+        await auth.sosyalBaglantiyiKaldir();
       }
       if (!mounted) {
         return;
@@ -400,6 +406,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   // kullanıcı neyin nerede olduğunu aramak zorunda
                   // kalıyordu.
                   const _Bolum('Güvenlik'),
+                  // 4 Kas: Google/Apple ile açılmış hesabın değiştirilecek
+                  // şifresi yok; giriş yöntemi bilgisi gösterilir.
+                  if (_sosyalGirisAdi case final ad?)
+                    _SatirKart(
+                      ikon: 'assets/svg/ic_plock.svg',
+                      zemin: const Color(0xFFEFF3FA),
+                      renk: RC.blue,
+                      baslik: 'Giriş Yöntemi',
+                      aciklama:
+                          '$ad ile giriş yapıyorsunuz; hesabınızın şifresi yok.',
+                      onTap: null,
+                    )
+                  else
                   _SatirKart(
                     ikon: 'assets/svg/ic_plock.svg',
                     zemin: const Color(0xFFEFF3FA),
@@ -833,6 +852,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   /// telefonda üç dokunuşla hesap kapatılabilirdi. Doğrulanan şifre silme
   /// talebiyle sunucuya da gider; sunucu yeniden doğrular (15 Eki).
   String? _dogrulananSifre;
+
+  /// Google/Apple ile açılmış şifresiz hesapta sağlayıcının adı; şifreli
+  /// hesapta `null` (4 Kas).
+  String? get _sosyalGirisAdi {
+    final a = context.watch<AuthController>().currentAccount;
+    if (a == null || a.sifresiVar) {
+      return null;
+    }
+    return SosyalSaglayici.kimliktenBul(a.sosyalSaglayici)?.ad ??
+        'Google/Apple';
+  }
 
   Future<bool> _sifreDogrula() async {
     _dogrulananSifre = await sifreIleDogrula(

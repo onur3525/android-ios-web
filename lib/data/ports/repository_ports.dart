@@ -11,6 +11,7 @@ import '../models/notification.dart';
 import '../models/offer.dart';
 import '../models/review.dart';
 import '../../domain/sohbet_okunmamis.dart';
+import '../../domain/sosyal_saglayici.dart';
 
 /// VERİ KAYNAĞI PORTLARI — controller'lar somut repository OLUŞTURMAZ,
 /// yalnız bu arayüzlere bağlıdır. İki uygulaması vardır:
@@ -141,6 +142,34 @@ abstract class AuthPort extends ChangeNotifier {
     Set<String>? kategoriler,
     Set<String>? bolgeler,
   });
+
+  // ══════════════════════════════════════════════════════════════
+  // GOOGLE / APPLE İLE GİRİŞ (4 Kas, kullanıcı talebi)
+  //
+  // Kimliği Firebase doğrular; hesap, rol ve kapılar sunucudadır. Hesap
+  // yoksa giriş HESAP AÇMAZ: sonuç kayıt belgesini döndürür, kayıt ekranı
+  // ad + rol + sözleşme onayını alıp `sosyalKayit` çağırır.
+  // ══════════════════════════════════════════════════════════════
+
+  /// Google/Apple ile giriş. [rol] verilirse (kayıt ekranından) ve hesapta
+  /// o rol yoksa rol de eklenir (bir kişi, bir hesap).
+  Future<SosyalGirisSonucu> sosyalGiris(SosyalSaglayici saglayici, {Role? rol});
+
+  /// Google/Apple ile kayıt — [belge] `sosyalGiris`in döndürdüğü kayıt belgesi.
+  Future<DomainError?> sosyalKayit({
+    required String belge,
+    required Role rol,
+    required String ad,
+    required bool sozlesmeOnayi,
+  });
+
+  /// Şifresiz (Google/Apple) hesapta kritik işlem kanıtı: aynı sağlayıcıyla
+  /// yeniden giriş; dönen belge şifre yerine sunucuya gider.
+  Future<({String? kanit, bool iptal, DomainError? error})> sosyalKimlikKaniti();
+
+  /// Hesap silme talebinden sonra Apple yetkisini kaldırır (yalnız iOS,
+  /// yalnız Apple hesabı; başarısızlık silmeyi etkilemez).
+  Future<void> sosyalBaglantiyiKaldir();
 
   // ══════════════════════════════════════════════════════════════
   // TELEFON SAHİPLİĞİ — CHALLENGE / YETKİ SÖZLEŞMESİ
