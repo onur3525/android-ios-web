@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/geri.dart';
-import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';

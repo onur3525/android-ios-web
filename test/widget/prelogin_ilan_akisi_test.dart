@@ -89,6 +89,10 @@ void main() {
     final acc = repo.currentAccount!;
     acc.roles.addAll(roller);
     acc.activeRole = aktif ?? roller.first;
+    // 4 Kas: İlan Oluştur profil kapısından geçer (telefon doğrulaması +
+    // adres). Bu testler gezinmeyi sınar; profil tamamlanmış kurulur.
+    acc.address = Address(
+        id: 'addr-${acc.id}', district: 'Bornova', neighborhood: 'Erzene');
   }
 
   group('A — Giriş yolları', () {
