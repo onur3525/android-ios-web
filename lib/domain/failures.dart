@@ -133,6 +133,13 @@ class TelefonSahiplenmeError extends InvalidStateError {
   const TelefonSahiplenmeError(super.message);
 }
 
+/// 4 Kas: Google/Apple ile ilk giriş — bu kimliğin HizmetCep hesabı yok;
+/// kayıt ekranı açılır (ad, rol, sözleşme onayı) — sunucu
+/// `SOCIAL_SIGNUP_REQUIRED`.
+class SosyalKayitGerekliError extends NotFoundError {
+  const SosyalKayitGerekliError(super.message);
+}
+
 class ValidationError extends DomainError {
   @override
   final String message;

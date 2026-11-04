@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../../domain/failures.dart';
+import '../../domain/sosyal_saglayici.dart';
 import '../remote/firebase_kimlik.dart';
 import '../models/account.dart';
 import '../remote/api/region_api.dart';
@@ -443,6 +444,69 @@ class ApiAuthPort extends AuthPort {
       bolgeler: bolgeler,
     );
   }
+
+  // ── GOOGLE / APPLE İLE GİRİŞ (4 Kas) ── Firebase kimliği doğrular;
+  // belge önce oturum ucuna gider. Hesap yoksa sunucu
+  // SOCIAL_SIGNUP_REQUIRED döner ve belge kayıt ekranına taşınır.
+  @override
+  Future<SosyalGirisSonucu> sosyalGiris(SosyalSaglayici saglayici,
+      {Role? rol}) async {
+    final g = await FirebaseKimlik.i.sosyalGiris(saglayici);
+    if (g.iptal) {
+      return const SosyalGirisSonucu(iptal: true);
+    }
+    if (g.error != null || g.idToken == null) {
+      return SosyalGirisSonucu(
+          hata: (g.error ?? const ValidationError('Giriş tamamlanamadı')).message);
+    }
+    final belge = g.idToken!;
+    final err = await repo.firebaseOturum(belge);
+    if (err is SosyalKayitGerekliError) {
+      // Firebase oturumu AÇIK kalır: kayıttan sonra profil tamamlamadaki
+      // telefon doğrulaması aynı Firebase kullanıcısına eklenir.
+      return SosyalGirisSonucu(kayitBelgesi: belge, ad: g.ad, eposta: g.eposta);
+    }
+    if (err != null) {
+      await FirebaseKimlik.i.cikis();
+      return SosyalGirisSonucu(hata: err.message);
+    }
+    // Kayıt ekranından gelindi ve hesapta o rol yok: aynı hesaba rol eklenir.
+    final acc = repo.currentAccount;
+    if (rol != null && acc != null && !acc.roles.contains(rol)) {
+      final rerr = await repo.firebaseKayit(
+          idToken: belge, role: rol, termsAccepted: true);
+      if (rerr != null) {
+        return SosyalGirisSonucu(girisYapildi: true, hata: rerr.message);
+      }
+    }
+    return const SosyalGirisSonucu(girisYapildi: true);
+  }
+
+  @override
+  Future<DomainError?> sosyalKayit({
+    required String belge,
+    required Role rol,
+    required String ad,
+    required bool sozlesmeOnayi,
+  }) =>
+      repo.firebaseKayit(
+          idToken: belge, role: rol, name: ad, termsAccepted: sozlesmeOnayi);
+
+  @override
+  Future<({String? kanit, bool iptal, DomainError? error})>
+      sosyalKimlikKaniti() async {
+    final s = SosyalSaglayici.kimliktenBul(repo.currentAccount?.sosyalSaglayici);
+    if (s == null) {
+      return (kanit: null, iptal: false,
+          error: const ValidationError('Hesabınızın giriş yöntemi bulunamadı'));
+    }
+    final g = await FirebaseKimlik.i.sosyalGiris(s);
+    return (kanit: g.idToken, iptal: g.iptal, error: g.error);
+  }
+
+  @override
+  Future<void> sosyalBaglantiyiKaldir() =>
+      FirebaseKimlik.i.appleYetkisiniKaldir();
 
   /// ⚠ `switchRole` GERİ EKLENDİ.
   ///

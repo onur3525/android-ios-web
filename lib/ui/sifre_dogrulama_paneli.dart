@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
 import '../data/controllers/auth_controller.dart';
+import '../domain/sosyal_saglayici.dart';
 import 'ref_tokens.dart';
 import 'ref_widgets.dart';
 
@@ -24,6 +25,11 @@ Future<String?> sifreIleDogrula(
   required String aciklama,
   Color renk = HC.red,
 }) async {
+  // 4 Kas: Google/Apple ile açılmış şifresiz hesap → aynı sağlayıcıyla
+  // yeniden giriş (tek kaynak: `sosyalIleDogrula`).
+  if (context.read<AuthController>().currentAccount?.sifresiVar == false) {
+    return sosyalIleDogrula(context, aciklama: aciklama, renk: renk);
+  }
   final ctl = TextEditingController();
   final hataNot = ValueNotifier<String?>(null);
   // ⚠ Alan dolu mu? Düğmenin aktifliği buna bağlı.
@@ -118,6 +124,105 @@ Future<String?> sifreIleDogrula(
       ctl.dispose();
       hataNot.dispose();
       doluNot.dispose();
+    });
+  }
+  return dogrulanan;
+}
+
+/// ═══════════════════════════════════════════════════════════════
+/// ŞİFRESİZ HESAPTA KİMLİK DOĞRULAMA — TEK KAYNAK (4 Kas)
+///
+/// Google ya da Apple ile açılmış hesabın şifresi yoktur. Kritik işlemden
+/// önce kullanıcı AYNI sağlayıcıyla yeniden giriş yapar; dönen kısa ömürlü
+/// belge şifre yerine geçer: önce `verifyPassword` ile sunucuda denetlenir,
+/// sonra kritik işlemin kendisi de onu sunucuya iletir (sunucu yeniden
+/// doğrular — yalnız son 10 dakikadaki, bu hesaba ait giriş geçer).
+/// Vazgeçilirse `null`. Şifre paneliyle AYNI sözleşme.
+/// ═══════════════════════════════════════════════════════════════
+Future<String?> sosyalIleDogrula(
+  BuildContext context, {
+  required String aciklama,
+  Color renk = HC.red,
+}) async {
+  final auth = context.read<AuthController>();
+  final s = SosyalSaglayici.kimliktenBul(auth.currentAccount?.sosyalSaglayici);
+  final ad = s?.ad ?? 'Google/Apple';
+  final hataNot = ValueNotifier<String?>(null);
+  final mesgulNot = ValueNotifier<bool>(false);
+  String? dogrulanan;
+  try {
+    await RefBottomSheet.goster<void>(
+      context,
+      title: 'Kimliğinizi Doğrulayın',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$aciklama\n\nHesabınızın şifresi yok; $ad ile yeniden giriş '
+            'yaparak doğrulayın.',
+            style: refText(
+                size: RF.s135,
+                weight: RF.w400,
+                color: RC.textDark,
+                height: RF.lh155),
+          ),
+          ValueListenableBuilder<String?>(
+            valueListenable: hataNot,
+            builder: (_, hata, __) => hata == null
+                ? const SizedBox(height: 16)
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(hata,
+                        style: refText(
+                            size: RF.s125,
+                            weight: RF.w600,
+                            color: RC.danger)),
+                  ),
+          ),
+          Builder(
+            builder: (c) => ValueListenableBuilder<bool>(
+              valueListenable: mesgulNot,
+              builder: (_, mesgul, __) => RefPrimaryButton(
+                '$ad ile doğrula',
+                busy: mesgul,
+                onPressed: mesgul || s == null
+                    ? null
+                    : () async {
+                        mesgulNot.value = true;
+                        hataNot.value = null;
+                        final k = await auth.sosyalKimlikKaniti();
+                        if (k.iptal || k.kanit == null) {
+                          mesgulNot.value = false;
+                          if (!k.iptal) {
+                            hataNot.value = k.error?.message ??
+                                'Doğrulama tamamlanamadı';
+                          }
+                          return;
+                        }
+                        final err = await auth.verifyPassword(k.kanit!);
+                        mesgulNot.value = false;
+                        if (err != null) {
+                          hataNot.value =
+                              'Doğrulama bu hesaba ait değil ya da süresi doldu. '
+                              'Lütfen hesabınızın $ad hesabıyla tekrar deneyin.';
+                          return;
+                        }
+                        dogrulanan = k.kanit;
+                        if (c.mounted) {
+                          Navigator.of(c).pop();
+                        }
+                      },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  } finally {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      hataNot.dispose();
+      mesgulNot.dispose();
     });
   }
   return dogrulanan;

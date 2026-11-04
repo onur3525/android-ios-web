@@ -10,24 +10,32 @@ String _kodu(String yol) => File(yol)
     .join('\n');
 
 void main() {
-  group('GOOGLE / APPLE GİRİŞİ YOK', () {
-    test('⚠ HİÇBİR EKRANDA DÜĞME YOK', () {
+  // ── 4 Kas: ÜRÜN KARARI DEĞİŞTİ — Google ve Apple ile giriş EKLENDİ ──
+  //
+  // Önceki grup "Google/Apple girişi yok" kararını kilitliyordu; kullanıcı
+  // Google ve Apple girişini istedi (4 Kas). Grup yeni kararı kilitler:
+  // kimliği Firebase doğrular, ekranlar tek kaynak bileşeni kullanır, eski
+  // Google servis dosyası ve `googleSub`/`googleLogin` izleri geri gelmez.
+  group('GOOGLE / APPLE GİRİŞİ — TEK KAYNAK', () {
+    test('⚠ giriş ve kayıt ekranı yalnız ortak bileşeni kullanır', () {
       for (final yol in const [
         'lib/screens/login_screen.dart',
         'lib/screens/register_screen.dart',
       ]) {
         final k = _kodu(yol);
-        expect(k.toLowerCase().contains('google'), isFalse, reason: yol);
-        expect(k.toLowerCase().contains('apple'), isFalse, reason: yol);
+        expect(k.contains('SosyalGirisDugmeleri('), isTrue, reason: yol);
+        // Ekran kendi Google/Apple çağrısını yazmaz.
+        expect(k.contains('GoogleSignIn'), isFalse, reason: yol);
+        expect(k.contains('AppleAuthProvider'), isFalse, reason: yol);
       }
     });
 
-    test('servis dosyası SİLİNDİ', () {
+    test('eski Google servis dosyası geri gelmedi', () {
       expect(File('lib/data/services/google_auth_service.dart').existsSync(),
           isFalse);
     });
 
-    test('⚠ VERİ VE PORT KATMANINDA İZ YOK', () {
+    test('⚠ veri ve port katmanında eski iz yok', () {
       for (final yol in const [
         'lib/data/models/account.dart',
         'lib/data/controllers/auth_controller.dart',
@@ -44,24 +52,49 @@ void main() {
       }
     });
 
-    test('paket bağımlılığı KALDIRILDI', () {
+    test('paketler: google_sign_in var, Apple firebase_auth ile', () {
       final p = File('pubspec.yaml').readAsLinesSync().where(
           (l) => !l.trimLeft().startsWith('#')).join('\n');
-      expect(p.contains('google_sign_in'), isFalse);
+      expect(p.contains('google_sign_in'), isTrue);
       expect(p.contains('sign_in_with_apple'), isFalse);
     });
 
-    test('⚠ SÖZLEŞMEDEN DE ÇIKARILDI', () {
-      // İstemcinin çağırmadığı bir ucu sözleşmede bırakmak,
-      // backend'in gereksiz yere uygulamasına yol açardı.
+    test('⚠ sözleşmede eski uç yok, Firebase kayıt ucu var', () {
       final y = File('docs/openapi.yaml').readAsLinesSync().where(
           (l) => !l.trimLeft().startsWith('#')).join('\n');
       expect(y.contains('/auth/google'), isFalse);
+      expect(y.contains('/auth/firebase/register'), isTrue);
     });
 
     test('platform kapısı gereksiz kaldı', () {
       final k = _kodu('lib/core/platform_kapilari.dart');
       expect(k.contains('googleGirisiGosterilir'), isFalse);
+    });
+
+    test('⚠ platform ayrımı web-güvenli (Platform.isIOS yok)', () {
+      for (final yol in const [
+        'lib/core/firebase/sosyal_giris_ayarlari.dart',
+        'lib/data/remote/firebase_kimlik.dart',
+        'lib/ui/sosyal_giris_dugmeleri.dart',
+      ]) {
+        final k = _kodu(yol);
+        expect(k.contains('Platform.is'), isFalse, reason: yol);
+        expect(k.contains("dart:io"), isFalse, reason: yol);
+      }
+    });
+
+    test('⚠ iOS\'ta Google, Apple olmadan gösterilmez (App Review 4.8)', () {
+      final k = _kodu('lib/core/firebase/sosyal_giris_ayarlari.dart');
+      expect(k.contains('if (_ios && !s.contains(SosyalSaglayici.apple))'),
+          isTrue);
+    });
+
+    test('şifresiz hesapta kritik işlem aynı sağlayıcıyla doğrulanır', () {
+      final k = _kodu('lib/ui/sifre_dogrulama_paneli.dart');
+      expect(k.contains('sifresiVar == false'), isTrue);
+      expect(k.contains('sosyalKimlikKaniti()'), isTrue);
+      final r = _kodu('lib/screens/role_switch_screen.dart');
+      expect(r.contains('sosyalIleDogrula('), isTrue);
     });
   });
 

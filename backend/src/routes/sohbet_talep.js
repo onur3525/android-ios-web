@@ -30,7 +30,7 @@ const mesajSiniri = new HizSiniri('mesaj', 60, 60 * 1000);
 const talepOlusturSiniri = new HizSiniri('teklif_talebi', 30, 60 * 60 * 1000);
 import { olaylar } from '../olaylar.js';
 import { uygulamaIciBildir } from './ilan.js';
-import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, profilKapisi, sifreDogruMu } from './kullanici.js';
+import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, profilKapisi, kimlikKanitiDogruMu } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
@@ -488,7 +488,7 @@ export function sohbetTalepRotalar(r, db) {
     // şifre yalnız istemcide ayrı bir uçla soruluyordu; doğrudan bu uca
     // gelen istek (çalınmış oturum) şifresiz silme talebi açabiliyordu.
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    if (!(await sifreDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) {
+    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) {
       throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
     }
     const id = randomUUID();

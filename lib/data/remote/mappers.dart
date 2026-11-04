@@ -193,6 +193,10 @@ abstract final class Mappers {
         Role.provider: liste(eksik['provider']),
       };
     }
+    // 4 Kas: Google/Apple ile açılan şifresiz hesap (alan yoksa şifreli).
+    a.sifresiVar = j['hasPassword'] != false;
+    final sosyal = j['socialProvider'];
+    a.sosyalSaglayici = sosyal is String && sosyal.isNotEmpty ? sosyal : null;
     return a;
   }
 

@@ -29,6 +29,7 @@ import '../data/remote/api_config.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/kullanim_sozlesmesi_onayi.dart';
 import '../ui/panel_rotasi.dart';
+import '../ui/sosyal_giris_dugmeleri.dart';
 
 /// Kayıt — iki rol için AYNI altı alan (4 Kas, kullanıcı kararı): ad,
 /// soyad, telefon, e-posta, şifre, şifre tekrar + sözleşme onayı. SMS
@@ -1432,6 +1433,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   valueListenable: _formGecerli,
                   builder: (_, gecerli, __) => RefPrimaryButton('Devam Et',
                       busy: _busy, onPressed: gecerli ? _next : null),
+                ),
+                // 4 Kas: Google/Apple ile kayıt (tek kaynak bileşen). Rol bu
+                // ekrandaki rol; hesap varsa o rol aynı hesaba eklenir.
+                // Sonrası e-postalı kayıtla AYNI (`_kayitTamam`).
+                SosyalGirisDugmeleri(
+                  rol: widget.role,
+                  aktif: !_busy,
+                  tamam: (eposta) => _kayitTamam(context, eposta ?? ''),
                 ),
 
               ]),

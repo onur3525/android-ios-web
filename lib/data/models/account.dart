@@ -256,6 +256,19 @@ class Account {
   /// eski sunucu) → yerel kural.
   Map<Role, List<String>>? sunucuProfilEksikleri;
 
+  // ── GOOGLE / APPLE İLE GİRİŞ (4 Kas) ──
+  //
+  // Google ya da Apple ile açılan hesabın kullanıcının belirlediği bir
+  // şifresi YOKTUR: kritik işlemlerde (rol ekleme, telefon değiştirme,
+  // hesap silme) şifre yerine aynı sağlayıcıyla yeniden giriş istenir
+  // (`sifre_dogrulama_paneli.dart`). Varsayılan: şifreli hesap.
+
+  /// Hesabın kullanıcının belirlediği bir şifresi var mı (sunucu `hasPassword`).
+  bool sifresiVar = true;
+
+  /// Hesabın açıldığı sağlayıcı: 'google.com' · 'apple.com' · `null`.
+  String? sosyalSaglayici;
+
   List<String> profilEksikleri(Role rol) {
     final s = sunucuProfilEksikleri?[rol];
     if (s != null) {

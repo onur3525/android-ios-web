@@ -12,6 +12,7 @@ import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
 import '../data/repositories/oturum_tercihi.dart';
 import '../ui/panel_rotasi.dart';
+import '../ui/sosyal_giris_dugmeleri.dart';
 
 /// Giriş — HTML davranışlarının birebir karşılığı:
 /// alan-altı hatalar, buton loading + çift tıklama kilidi,
@@ -624,6 +625,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: (!_zorunlularDolu)
                               ? null
                               : _submit,
+                        ),
+
+                        // 4 Kas: Google/Apple ile giriş (tek kaynak bileşen).
+                        // Hesap yoksa kayıt ekranı açılır; sonrası şifreli
+                        // girişle AYNI yönlendirme.
+                        SosyalGirisDugmeleri(
+                          aktif: !_busy,
+                          tamam: (_) {
+                            sysToastOk(context, 'Hoş geldiniz! Giriş yapıldı');
+                            _girisSonrasiYonlendir();
+                          },
                         ),
 
                         // .lg-reg{margin-top:16px}
