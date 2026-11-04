@@ -1,0 +1,31 @@
+[Unit]
+Description=HizmetCep backend (/api/v1, /admin)
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=hizmetcep
+Group=hizmetcep
+WorkingDirectory=/opt/hizmetcep/uygulama/backend
+EnvironmentFile=/etc/hizmetcep/backend.env
+ExecStart=/usr/bin/node --no-warnings src/server.js
+# Çökerse 3 sn sonra yeniden başlar. Düzgün kapanış en fazla 25 sn sürer.
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=35
+# Çok sayıda WebSocket bağlantısı için dosya tanıtıcısı sınırı.
+LimitNOFILE=65536
+# Sertleştirme: uygulama diske yazmaz, sistem dosyalarına dokunamaz.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
