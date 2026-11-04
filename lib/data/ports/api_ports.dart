@@ -348,6 +348,7 @@ class ApiAuthPort extends AuthPort {
     bool emailVerified = false,
     String? kayitYetkisi,
     String? taslakKimligi,
+    bool telefonDogrulamasiz = false,
   }) async {
     // ⚠ Sözleşme onayı SUNUCUDA da doğrulanır (15 Eki;
     // önceden sunucu onayı denetlemiyordu). Buradaki erken çıkış
@@ -359,14 +360,27 @@ class ApiAuthPort extends AuthPort {
             'Kullanım Sözleşmesi onayı zorunludur'),
       );
     }
+    // ── 4 Kas: SMS'SİZ KAYIT ── Telefon kanıtı yoksa Firebase'de önce
+    // e-posta/şifre kullanıcısı açılır; hesap ona bağlanır (e-posta ile
+    // giriş ve doğrulama e-postası korunur). Telefon profil tamamlamada
+    // AYNI Firebase kullanıcısına eklenir.
+    String? epostaBelgesi;
+    if (kayitYetkisi == null && telefonDogrulamasiz && email.isNotEmpty) {
+      epostaBelgesi = await FirebaseKimlik.i.epostaKullanicisiOlustur(email, pass);
+    }
     // otpVerified mock akışının kalıntısıdır; sunucu OTP kodunu kendi doğrular.
     final err = await repo.register(
         phone: phone, password: pass, name: name,
         email: email, role: role, otpCode: otpCode,
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
         firebaseIdToken: kayitYetkisi,
+        firebaseEmailToken: epostaBelgesi,
         termsAccepted: termsAccepted);
     if (err != null) {
+      // Az önce açılan Firebase kullanıcısı sahipsiz kalmasın.
+      if (epostaBelgesi != null) {
+        await FirebaseKimlik.i.acikKullaniciyiSil();
+      }
       return (account: null, error: err);
     }
     // E-posta/şifre Firebase kullanıcısına bağlanır ve DOĞRULAMA E-POSTASI
@@ -392,6 +406,42 @@ class ApiAuthPort extends AuthPort {
       }
     }
     return (account: repo.currentAccount, error: null);
+  }
+
+  // ── PROFİL TAMAMLAMA (4 Kas) ── Kod Firebase'den gider; doğrulanan kod
+  // AÇIK Firebase kullanıcısına (kayıtta açılan e-posta kullanıcısı)
+  // eklenir, belgesi sunucuya kanıt olarak gider. Karar sunucunundur.
+  @override
+  Future<({String? challengeId, DomainError? error})> profilTelefonKoduGonder(
+      String telefon) async {
+    final r = await FirebaseKimlik.i.kodGonder(telefon);
+    return (challengeId: r.id, error: r.error);
+  }
+
+  @override
+  Future<DomainError?> profiliTamamla({
+    String? telefon,
+    String? challengeId,
+    String? kod,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
+  }) async {
+    String? belge;
+    if (challengeId != null && kod != null) {
+      final r = await FirebaseKimlik.i.kodDogrula(challengeId, kod, mevcutKullanici: true);
+      if (r.error != null || r.idToken == null) {
+        return r.error ?? const ValidationError('Doğrulama tamamlanamadı');
+      }
+      belge = r.idToken;
+    }
+    return repo.profiliTamamla(
+      telefon: telefon,
+      firebaseIdToken: belge,
+      adres: adres,
+      kategoriler: kategoriler,
+      bolgeler: bolgeler,
+    );
   }
 
   /// ⚠ `switchRole` GERİ EKLENDİ.

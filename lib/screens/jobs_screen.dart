@@ -33,6 +33,8 @@ import 'widgets/teklif_rozeti.dart';
 import 'widgets/yeni_mesaj_seridi.dart';
 import 'widgets/hizmet_alan_ozet_satiri.dart';
 import 'nav_actions.dart';
+import 'profil_tamamlama_screen.dart' show profilKapisi;
+import '../data/models/account.dart' show Role;
 import '../domain/config.dart';
 import '../domain/eslestirme.dart';
 import '../domain/yorum_gorunumu.dart' show kisaTarih;
@@ -112,7 +114,27 @@ class _JobsScreenState extends State<JobsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    // ── ⚠ 4 KAS: PROFİL KAPISI (kullanıcı kararı) ──
+    // Hizmet veren paneli açılır açılmaz (kayıttan ya da rol geçişinden
+    // sonra) telefon doğrulaması, adres, uzmanlık kategorileri ve hizmet
+    // bölgeleri eksikse tamamlama formu açılır. Tamamlanmadan iş listesi
+    // ve teklif verme SUNUCUDA da kapalıdır.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final me = context.read<AuthController>().currentAccount;
+      if (me != null && !me.profilTamam(Role.provider)) {
+        _profiliTamamla();
+      } else {
+        _refresh();
+      }
+    });
+  }
+
+  Future<void> _profiliTamamla() async {
+    final tamam = await profilKapisi(context, Role.provider);
+    if (!mounted || !tamam) {
+      return;
+    }
+    await _refresh();
   }
 
   /// Uygun işler ve kendi tekliflerim yeniden yüklenir.
@@ -505,6 +527,14 @@ class _JobsScreenState extends State<JobsScreen> {
           // 28 Eki: masaüstünde üst boşluk ve kenarlar hizmet alanın
           // sayfa iskeletiyle (RefShell: üst 12, yanlar 14) AYNI.
           SizedBox(height: ustMenu ? 12 : 8),
+          // 4 Kas: profil tamamlanmadan iş listesi açılmaz; form
+          // kapatıldıysa buradan yeniden açılır.
+          if (!me.profilTamam(Role.provider))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              child: RefWideButton('Profilinizi Tamamlayın',
+                  onPressed: _profiliTamamla),
+            ),
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve

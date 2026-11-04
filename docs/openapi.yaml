@@ -871,6 +871,24 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /profiles/me/complete:
+    post:
+      tags: [Profile]
+      summary: Profil tamamlama (telefon doğrulaması + adres; hizmet verende kategori + bölge)
+      description: |
+        4 Kas: kayıt SMS kodu istemez; telefon doğrulanmamış kaydedilir. Bu uç telefon kanıtını
+        (firebaseIdToken ya da otpCode, amaç PHONE_VERIFY), adresi (address) ve hizmet veren
+        listelerini (provider.categories + provider.districts, ikisi de en az bir öğe) TEK işlemde
+        kaydeder. Gönderilmeyen parça değişmez; kanıt doğrulanmadan telefon doğrulanmış sayılmaz.
+        Doğrulanmamış bir hesaptaki numara kanıtı veren hesaba geçer; doğrulanmış numara alınamaz (409).
+        Yanıt hesap görünümüdür; `profileMissing` rol bazlı eksikleri verir (boş = tamam).
+        İlan açma, teklif isteme, iş listesi ve teklif verme eksik profilde 403 PROFILE_INCOMPLETE döner.
+      responses:
+        '200': { description: Başarılı }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
   /profiles/me/provider/approval:
     get:
       tags: [Profile]

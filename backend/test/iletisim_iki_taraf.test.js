@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 
@@ -21,6 +21,8 @@ async function kisi(tel, rol) {
   await db.prepare('DELETE FROM rate_limits').run();
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, phone: tel, password: 'sifre1234', name: 'Kişi', email: `i${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  // 4 Kas: kayıt artık profil istemiyor; akışı sınamayan bu testlerde profil tamamlanır (bkz. destek.js).
+  if (r.json?.accessToken) await profilTamamlaDb(db, r.json.accessToken);
   return { token: r.json.accessToken, id: (await istek('/api/v1/users/me', { token: r.json.accessToken })).json.id };
 }
 async function teklifAc() {

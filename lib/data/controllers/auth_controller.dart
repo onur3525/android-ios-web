@@ -81,6 +81,8 @@ class AuthController extends BaseController {
 
     /// Kayıt denemesinin kimliği — yetkiyle eşleşmek zorundadır.
     String? taslakKimligi,
+    /// 4 Kas: SMS'siz kayıt (doğrulama profil tamamlamada).
+    bool telefonDogrulamasiz = false,
   }) async {
     if (isBusy('register')) {
       return (account: null, error: const ValidationError('Kayıt işlemi sürüyor — lütfen bekleyin'));
@@ -96,10 +98,39 @@ class AuthController extends BaseController {
         emailVerified: emailVerified,
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,
+        telefonDogrulamasiz: telefonDogrulamasiz,
       );
       return result.error;
     });
     return result;
+  }
+
+  // ── PROFİL TAMAMLAMA (4 Kas) — ekran kodu doğrulamaz; karar porttadır.
+  Future<({String? challengeId, String? hata})> profilTelefonKoduGonder(
+      String telefon) async {
+    final r = await _auth.profilTelefonKoduGonder(telefon);
+    return (challengeId: r.challengeId, hata: r.error?.message);
+  }
+
+  Future<String?> profiliTamamla({
+    String? telefon,
+    String? challengeId,
+    String? kod,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
+  }) async {
+    final err = await runAction(
+        'profiliTamamla',
+        () => _auth.profiliTamamla(
+              telefon: telefon,
+              challengeId: challengeId,
+              kod: kod,
+              adres: adres,
+              kategoriler: kategoriler,
+              bolgeler: bolgeler,
+            ));
+    return err?.message;
   }
 
   // ══════════════════════════════════════════════════════════════

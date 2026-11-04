@@ -271,7 +271,11 @@ export function uygulamaKur(db) {
       res.hcHataKodu = bilinen ? e.kod : 'INTERNAL_ERROR';
       const baslik = cerezler.length ? { 'Set-Cookie': cerezler } : {};
       return jsonGonder(res, bilinen ? e.durum : 500, {
-        error: { code: bilinen ? e.kod : 'INTERNAL_ERROR', message: bilinen ? e.message : 'Beklenmeyen bir hata oluştu' },
+        error: {
+          code: bilinen ? e.kod : 'INTERNAL_ERROR', message: bilinen ? e.message : 'Beklenmeyen bir hata oluştu',
+          // 4 Kas: yalnız açıkça "ayrıntı" olarak verilen güvenli alanlar (ör. eksik profil parçaları).
+          ...(bilinen && e.ek?.ayrinti ? { details: e.ek.ayrinti } : {}),
+        },
         requestId: istekId,
       }, baslik);
     }

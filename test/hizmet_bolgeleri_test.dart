@@ -74,7 +74,10 @@ void main() {
     });
   });
 
-  test('Rol Değiştir aynı kaynaktan il seçer', () {
-    expect(_oku('lib/screens/role_switch_screen.dart').contains('r.ilceleriIcerenIl(_bolgeler)'), isTrue);
+  // 4 Kas: Rol Değiştir artık il/ilçe sormaz; hizmet bölgeleri hizmet veren
+  // paneli açılınca profil tamamlama ekranında, aktif ilin ilçelerinden seçilir.
+  test('hizmet bölgeleri profil tamamlamada seçili ilin ilçelerinden seçilir', () {
+    expect(_oku('lib/screens/role_switch_screen.dart').contains('ilceleriIcerenIl'), isFalse);
+    expect(_oku('lib/screens/profil_tamamlama_screen.dart').contains('options: r.districtsOf(_il)'), isTrue);
   });
 }

@@ -143,19 +143,17 @@ void main() {
     expect(acc.roles, {Role.customer}, reason: 'rol EKLENMEDİ');
   });
 
-  test('eksik rol: zorunlu bilgiler olmadan addRole REDDEDİLİR', () {
+  // 4 Kas (kullanıcı kararı): kategori + bölge rol eklenirken DEĞİL,
+  // hizmet veren paneli açılınca profil tamamlamada istenir. Rol eklenir;
+  // profil eksik kalır ve tamamlanana kadar teklif kapalıdır.
+  test('eksik rol: rol bilgisiz eklenir; hizmet veren profili tamamlanmamış kalır', () {
     auth.girisEposta(kTestEmail, kTestPass);
     final acc = auth.currentAccount!;
 
-    // Kategori yok → reddedilir.
-    expect(auth.addRole(Role.provider), isA<ValidationError>());
-    expect(acc.roles, {Role.customer});
-
-    // Yalnız kategori de yeterli değil (bölge zorunlu).
-    expect(
-        auth.addRole(Role.provider, categories: {'Tesisat'}),
-        isA<ValidationError>());
-    expect(acc.roles, {Role.customer});
+    expect(auth.addRole(Role.provider), isNull);
+    expect(acc.roles, containsAll({Role.customer, Role.provider}));
+    expect(acc.profilTamam(Role.provider), isFalse);
+    expect(acc.profilEksikleri(Role.provider), contains('SERVICES'));
   });
 
   test('eksik rol: bilgiler tamamlanınca rol eklenir ve aktif olur', () {

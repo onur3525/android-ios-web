@@ -139,12 +139,14 @@ class ApiAuthRepository extends ChangeNotifier {
     required String phone, required String password, required String name,
     required String email, required Role role, required String otpCode,
     String? firebaseIdToken,
+    String? firebaseEmailToken,
     required bool termsAccepted,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
           email: email, role: Mappers.roleApi(role), otpCode: otpCode,
           firebaseIdToken: firebaseIdToken,
+          firebaseEmailToken: firebaseEmailToken,
           termsAccepted: termsAccepted,
           platform: currentPlatform(),
         ));
@@ -309,6 +311,33 @@ class ApiAuthRepository extends ChangeNotifier {
   }) async {
     final err = (await _guard(() => _profile.saveAddress(
           city: city, district: district, neighborhood: neighborhood,
+        ))).$2;
+    return err ?? await loadMe();
+  }
+
+  /// 4 Kas: PROFİL TAMAMLAMA (`POST /profiles/me/complete`). Başarıda
+  /// hesap (eksik listesi dahil) sunucudan yeniden okunur.
+  Future<DomainError?> profiliTamamla({
+    String? telefon,
+    String? firebaseIdToken,
+    String? otpCode,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
+  }) async {
+    final err = (await _guard(() => _profile.profiliTamamla(
+          phone: telefon,
+          firebaseIdToken: firebaseIdToken,
+          otpCode: otpCode,
+          address: adres == null
+              ? null
+              : {
+                  'city': adres.city,
+                  'district': adres.district,
+                  'neighborhood': adres.neighborhood,
+                },
+          categories: kategoriler?.toList(),
+          districts: bolgeler?.toList(),
         ))).$2;
     return err ?? await loadMe();
   }

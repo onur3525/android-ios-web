@@ -11,13 +11,11 @@ import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import 'otp_screen.dart';
-import 'register_done_screen.dart';
-import '../data/controllers/region_controller.dart';
-import 'widgets/region_picker.dart';
+import 'profil_tamamlama_screen.dart' show profilKapisi;
+import '../domain/failures.dart' show TelefonSahiplenmeError;
 import '../ui/ref_widgets.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/web_panel.dart';
-import '../data/controllers/profile_controller.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import '../data/models/pending_listing.dart';
 import '../data/controllers/listing_controller.dart';
@@ -28,16 +26,13 @@ import 'widgets/photo_picker.dart';
 import '../core/geri.dart';
 import '../core/teshis.dart';
 import '../data/remote/api_config.dart';
-import 'widgets/kategori_secim_paneli.dart';
 import '../core/platform/yerel_gorsel.dart';
-import '../ui/alt_panel.dart';
 import '../ui/kullanim_sozlesmesi_onayi.dart';
 import '../ui/panel_rotasi.dart';
 
-/// Kayıt Adım 1 — HTML kayıt formlarının birebir karşılığı.
-/// Müşteri: ad, soyad, e-posta*, telefon, İl (yalnız İzmir), ilçe, mahalle,
-/// şifre ×2, sözleşme onayı.
-/// Hizmet veren: + hizmet kategorileri (çoklu) ve hizmet ilçeleri (çoklu).
+/// Kayıt — iki rol için AYNI altı alan (4 Kas, kullanıcı kararı): ad,
+/// soyad, telefon, e-posta, şifre, şifre tekrar + sözleşme onayı. SMS
+/// kodu, adres ve (hizmet verende) kategori/bölge profil tamamlamada.
 class RegisterScreen extends StatefulWidget {
   final Role role;
   const RegisterScreen({super.key, required this.role});
@@ -51,7 +46,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _last = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
-  final _hood = TextEditingController();
 
   /// ── FORM ZİNCİRİ: GÖRÜNMEZ KADEMELER ──
   ///
@@ -76,9 +70,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   ///
   /// ⚠ Bu GLOBAL bir sarmalayıcı değildir: yalnız kullanıcının bir
   /// seçimi bitirdiği anda, açıkça çağrılır.
-  final _ilKaydirKey = GlobalKey();
-  final _ilceKaydirKey = GlobalKey();
-  final _mahalleKaydirKey = GlobalKey();
   final _sozlesmeKaydirKey = GlobalKey();
   // ⚠ Şifre alanı için AYRI anahtar açılmaz: doğrulama anahtarı
   // (`_sifreKey`) zaten o alana bağlıdır ve `currentContext` verir.
@@ -109,18 +100,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
   final _pass = TextEditingController();
   final _pass2 = TextEditingController();
-  String? _district;                 // müşteri ilçesi
-  final Set<String> _cats = {};      // sağlayıcı kategorileri
-  final Set<String> _provDistricts = {}; // sağlayıcı ilçeleri
+  // ── ⚠ 4 KAS (kullanıcı kararı): KAYIT FORMU YALNIZ 6 ALAN ──
+  // Ad, soyad, telefon, e-posta, şifre, şifre tekrar. İl/ilçe/mahalle,
+  // (hizmet verende) kategori + hizmet bölgeleri ve SMS doğrulaması
+  // kayıttan ÇIKTI; işlemin gerektirdiği anda `ProfilTamamlamaScreen`de
+  // istenir (hizmet alan: ilk Bul / İlan Oluştur; hizmet veren: panel).
   bool _agree = false;
 
   /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
   bool _aydinlatma = false;
 
 
-  /// Seçili il — sunucudan gelen aktif iller arasından seçilir.
-  /// ⚠ HARD-CODE DEĞİLDİR; tek il varsa kendiliğinden seçilir.
-  String? _city;
   bool _busy = false;
 
   /// ⚠ BU KAYIT DENEMESİNİN KİMLİĞİ (Y1).
@@ -142,12 +132,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _sifreKey = GlobalKey<FormFieldState<String>>();
   final _sifre2Key = GlobalKey<FormFieldState<String>>();
 
-  /// ⚠ BÖLGE YÜKLEMESİ YALNIZ BİR KEZ PLANLANIR.
-  ///
-  /// `didChangeDependencies` birden çok kez çağrılabilir (bağımlılık
-  /// değişimi, tema/medya değişimi). Bu bayrak olmadan her çağrıda
-  /// yeni bir post-frame görevi kuyruğa girerdi.
-  bool _regionYuklemePlanlandi = false;
   /// ⚠ ŞİFRE VE ŞİFRE TEKRAR MASKELERİ BAĞIMSIZDIR.
   /// Tek bayrak kullanılırsa bir göze dokunmak İKİSİNİ birden açar.
   bool _obscure = true;
@@ -178,7 +162,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _fPhone = FocusNode();
   final _fPass = FocusNode();
   final _fPass2 = FocusNode();
-  String? _chipsError; // kategori/ilçe seçim hataları (alan-altı)
 
   bool get isProvider => widget.role == Role.provider;
 
@@ -193,50 +176,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     FocusIzle.kaydet(_fPhone, 'Telefon');
     FocusIzle.kaydet(_fPass, 'Şifre');
     FocusIzle.kaydet(_fPass2, 'Şifre Tekrar');
-    // ⚠ BÖLGE VERİSİ EKRAN AÇILIRKEN YÜKLENİR.
-    //
-    // `ChangeNotifierProvider` LAZY'dir: `RegionController` ilk
-    // okumaya kadar oluşturulmaz ve `load()` başlamaz. İlçe seçimi
-    // sayfası bu yüklemeden ÖNCE açılırsa liste boş gelir ve
-    // kullanıcı "Sonuç bulunamadı" görür.
-    //
-    // `load()` zaten yüklenmişse erken döner (tekrar istek yok).
-    // Aynı desen `addresses_screen` içinde de kullanılır.
-    //
-    // ⚠ ÇAĞRI İLK KAREDEN SONRAYA ERTELENİR — İŞ KURALI DEĞİŞMEZ.
-    //
-    // `load()` ilk `await`ten ÖNCE `setBusy` + `notifyListeners`
-    // çağırır. `didChangeDependencies` build aşamasının içinde
-    // koştuğu için bu, hâlâ build edilmekte olan dinleyicilerde
-    // `markNeedsBuild` tetikliyor ve
-    // "setState() or markNeedsBuild() called during build"
-    // assertion'ı atıyordu. Görev ilk kareden sonraya alınınca
-    // bildirim güvenli aşamada yayılır.
-    //
-    // Yükleme YİNE ekran açılışında başlar; yalnız zamanlaması
-    // değişti. Çift yükleme iki katmanda engellenir:
-    //   1) buradaki `_regionYuklemePlanlandi` bayrağı,
-    //   2) `RegionController.load()` içindeki `_tree != null` erken
-    //      dönüşü ve `setBusy` kilidi (dokunulmadı).
-    // Lazy provider'ı örnekle (yükleme aşağıda post-frame'de başlar).
-    context.read<RegionController>();
-    if (!_regionYuklemePlanlandi) {
-      _regionYuklemePlanlandi = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        context.read<RegionController>().load();
-      });
-    }
-    // ⚠ İL OTOMATİK SEÇİLMEZ.
-    //
-    // Önceden tek aktif il varsa (`soleCityName`) alan kendiliğinden
-    // "İzmir" ile doluyordu. Kullanıcı bir seçim YAPMAMIŞ oluyor,
-    // buna rağmen alan seçilmiş görünüyordu. Artık alan boş açılır,
-    // `* İl` yazar ve zorunlu seçim olarak davranır; listede o an
-    // AKTİF olan iller görünür (admin yeni il eklerse kendiliğinden
-    // listeye düşer).
   }
 
 
@@ -244,8 +183,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   ///
   /// Ön koşullar (hepsi zorunlu):
   ///   • hesap Hizmet Alan (customer) rolünde,
-  ///   • `Account.customerOnboardingComplete` true
-  ///     (telefon+SMS OTP, e-posta doğrulaması, adres, sözleşme).
+  ///   • hizmet alan profili TAMAM (`Account.profilTamam`: telefon SMS
+  ///     koduyla doğrulandı + adres). 4 Kas: kayıt formu bunları artık
+  ///     almıyor; taslak varsa kayıttan hemen sonra tamamlama ekranı
+  ///     açılır (ilan oluşturma aşaması), tamamlanınca yayınlanır.
   ///
   /// ⚠ FOTOĞRAF OPSİYONELDİR: 0 fotoğrafla yayın YAPILABİLİR.
   /// Yalnız kullanıcının EKLEDİĞİ dosyalardan biri cihazdan
@@ -256,10 +197,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     final acc = c.read<AuthController>().currentAccount;
-    // ⚠ Onboarding TAMAMLANMADAN yayın YOK.
+    // ⚠ Profil TAMAMLANMADAN yayın YOK (sunucu da reddeder).
     if (acc == null ||
         !acc.roles.contains(Role.customer) ||
-        !acc.customerOnboardingComplete) {
+        !acc.profilTamam(Role.customer)) {
       return;
     }
 
@@ -287,19 +228,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   ///
   /// Yükleme başarısız olursa `false` döner — ilan SAHTE BAŞARILI
   /// gösterilmez ve taslak korunur.
-  /// Kayıt formundaki adresle konum dizesi üretir.
+  /// Tamamlanmış profil adresiyle konum dizesi üretir (4 Kas: adres
+  /// kayıt formunda değil, profil tamamlamada alınır).
   ///
   /// Eksikse `null` döner ve yayın yapılmaz.
-  /// ⚠ `BuildContext` ALMAZ.
-  ///
-  String? _kayitKonumu(String varsayilanIl) {
-    final ilce = _district;
-    final mah = _hood.text.trim();
-    if (ilce == null || ilce.isEmpty || mah.isEmpty) {
+  String? _kayitKonumu(Account? hesap) {
+    final a = hesap?.address;
+    if (a == null || !a.isComplete) {
       return null;
     }
-    final il = _city ?? varsayilanIl;
-    return '$mah, $ilce / $il';
+    return a.display;
   }
 
   Future<bool> _yayinla(
@@ -328,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // ⚠ ÇİFT YAYIN RİSKİ YOK: `publish` çağrısı bu akışta TEK
     final storage = StorageApi(c.read<ApiClient>());
     final listingCtl = c.read<ListingController>();
-    final sehir = c.read<RegionController>().cityName ?? '';
+    final hesap = c.read<AuthController>().currentAccount;
     final refs = <String>[];
     try {
       for (final yol in fotograflar) {
@@ -410,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // adresini KAYIT formunda girer. Taslakta konum yoksa kayıt
     // verisiyle tamamlanır. Eksikse yayın YAPILMAZ.
     final konum = p.district.trim().isEmpty || p.neighborhood.trim().isEmpty
-        ? _kayitKonumu(sehir)
+        ? _kayitKonumu(hesap)
         : p.location;
     if (konum == null) {
       if (c.mounted) {
@@ -493,100 +431,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       sysToastOk(c, 'İlanınız yayınlandı');
     } else if (sonuc == PendingPublishOutcome.hata) {
       sysToastErr(c, SysKind.genericError, extra: 'İlan yayınlanamadı');
-    }
-  }
-
-  /// İL SEÇİMİ — sunucudan gelen aktif iller.
-  ///
-  /// ⚠ İl DEĞİŞİRSE ilçe ve mahalle SIFIRLANIR; sağlayıcı tarafında
-  /// hizmet bölgeleri de temizlenir (başka ilin ilçeleri taşınamaz).
-  Future<void> _ilSec(BuildContext context) async {
-    final sel = await altPanelGoster<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (_) => Consumer<RegionController>(
-        builder: (_, r, __) => RegionPickerSheet(
-          title: 'İl Seçin',
-          options: r.cityNames,
-          selected: _city,
-          searchable: true,
-        ),
-      ),
-    );
-    if (sel == null || !mounted || sel == _city) {
-      return;
-    }
-    setState(() {
-      _city = sel;
-      _district = null;
-      _hood.text = '';
-      _provDistricts.clear();
-    });
-    // ⚠ Seçim de zorunlu alanları etkiler; düğme bildirimi tazelenir.
-    _tazele();
-    // Zincirin sıradaki halkası.
-    await _gorunurYap(_ilceKaydirKey);
-  }
-
-  /// İlçe seçimi — `RegionPickerSheet` (kontrollü liste).
-  Future<void> _ilceSec(BuildContext context) async {
-    final sel = await altPanelGoster<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      // ⚠ `read` ile ANLIK liste geçilirse, veri sonradan gelse bile
-      // sayfa güncellenmez. `Consumer` ile dinlenir.
-      builder: (_) => Consumer<RegionController>(
-        builder: (_, r, __) => RegionPickerSheet(
-          title: 'İlçe Seçin',
-          options: r.districtsOf(_city),
-          selected: _district,
-          searchable: true,
-        ),
-      ),
-    );
-    if (sel != null && mounted) {
-      setState(() {
-        _district = sel;
-        // İlçe değişince mahalle SIFIRLANIR (kontrollü zincir).
-        _hood.text = '';
-      });
-      _tazele();
-      // Sıradaki zorunlu alan görünür olsun.
-      await _gorunurYap(_mahalleKaydirKey);
-    }
-  }
-
-  /// Mahalle seçimi — ilçeye bağlı liste; serbest metin YOK.
-  Future<void> _mahalleSec(BuildContext context) async {
-    final sel = await altPanelGoster<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (_) => Consumer<RegionController>(
-        builder: (_, r, __) => RegionPickerSheet(
-          title: 'Mahalle Seçin',
-          options: r.neighborhoodsOf(_district!, city: _city),
-          selected: _hood.text.isEmpty ? null : _hood.text,
-          searchable: true,
-        ),
-      ),
-    );
-    if (sel != null && mounted) {
-      setState(() => _hood.text = sel);
-      _tazele();
-      // Adres zinciri bitti; sırada şifre var.
-      await _gorunurYap(_sifreKey);
     }
   }
 
@@ -744,23 +588,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _pass2.text.isEmpty) {
       return false;
     }
-    // ⚠ İL ZORUNLU SEÇİMDİR — her iki rolde de.
-    if (_city == null) {
-      return false;
-    }
-    // ⚠ MAHALLE ARTIK HER İKİ ROLDE DE ZORUNLU (ürün kararı) —
-    // hizmet verenin KİŞİSEL adresidir, "hizmet verdiği ilçeler"
-    // (`_provDistricts`) İLE KARIŞTIRILMAZ; o ayrı ve hâlâ yalnız
-    // ilçe düzeyindedir. Bu mahalle müşteriye HİÇ GÖSTERİLMEZ —
-    // yalnız yönetim amaçlı tutulur (bkz. `addresses_screen.dart`
-    // ve `account.dart`daki not).
-    if (_district == null || _hood.text.trim().isEmpty) {
-      return false;
-    }
-    // Sağlayıcıda EK OLARAK kategori + hizmet bölgesi de gerekir.
-    if (widget.role == Role.provider) {
-      return _cats.isNotEmpty && _provDistricts.isNotEmpty;
-    }
+    // 4 Kas: adres ve (hizmet verende) kategori/bölge kayıtta istenmez;
+    // profil tamamlamada alınır (`ProfilTamamlamaScreen`).
     return true;
   }
 
@@ -771,35 +600,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // ⚠ Gönderimde TÜM alanlar denetlenir; alanlar "terk edilmiş"
     // sayılır ki uyarı gönderimden sonra da doğru yerde kalsın —
     // ama odak kuralı geri açılır, uyarı asılı kalmaz.
-    setState(() => _chipsError = null);
     _terkEdilen.addAll(_siraliAlanlar);
     _gonderimAninda = true;
     final formOk = _form.currentState!.validate();
     _gonderimAninda = false;
     setState(() {});
-    String? chips;
-    if (isProvider) {
-      if (_cats.isEmpty) {
-        chips = FormMesaj.kategoriSec;
-      } else if (_provDistricts.isEmpty) {
-        chips = FormMesaj.bolgeSec;
-      }
-    }
-    if (chips != null) setState(() => _chipsError = chips);
-    // İl/ilçe/mahalle artık seçici olduğundan form validator'ına
-    // takılmaz; kontrol burada yapılır (iş kuralı korunur).
-    if (_city == null) {
-      sysToastErr(context, SysKind.genericError, extra: FormMesaj.ilSec);
-      return;
-    }
-    // ⚠ MAHALLE ARTIK HER İKİ ROLDE DE ZORUNLU — bkz. `_alanlarTamam`
-    // içindeki AYNI kural ve gerekçe.
-    if (_district == null || _hood.text.trim().isEmpty) {
-      sysToastErr(context, SysKind.genericError,
-          extra: 'İlçe ve mahalle seçiniz');
-      return;
-    }
-    if (!formOk || chips != null) {
+    if (!formOk) {
       return;
     }
     if (!_agree || !_aydinlatma) {
@@ -809,14 +615,79 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     setState(() => _busy = true);
     final phone = Validators.phoneFmt(_phone.text);
-    // ── CHALLENGE ÜRETİLİR VE SMS GÖNDERİLİR ──
+    // ── ⚠ 4 KAS: KAYIT SMS KODU İSTEMEZ (kullanıcı kararı) ──
     //
-    // ⚠ Eski `requestOtp` yolu bırakıldı: o yalnız kod gönderiyordu,
-    // doğrulamanın sonucunu ekran veriyordu. Artık challenge
-    // üretiliyor ve doğrulamayı use-case yapıyor.
-    //
-    // ⚠ TASLAK KİMLİĞİ: bu kayıt denemesini temsil eder (Y1).
-    // Kullanıcı formu kapatıp yeniden açarsa yeni taslak üretilir ve
+    // Hesap hemen açılır; telefon doğrulanmamış kaydedilir. Telefon
+    // doğrulaması ve adres (hizmet verende ayrıca kategori + bölge)
+    // işlemin gerektirdiği anda `ProfilTamamlamaScreen`de istenir.
+    // Kayıt ile telefon doğrulaması ön yüzde de arka uçta da AYRI.
+    final r = await context.read<AuthController>().register(
+        phone: phone,
+        pass: _pass.text,
+        role: widget.role,
+        otpVerified: false,
+        telefonDogrulamasiz: true,
+        name: '${_first.text.trim()} ${_last.text.trim()}',
+        // Kayda küçük harfe çevrilmiş biçim yazılır.
+        email: epostaNormalize(_email.text),
+        // Sözleşme onayı domain katmanına İLETİLİR:
+        // yalnız UI kontrolüne güvenilmez.
+        termsAccepted: _agree && _aydinlatma);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _busy = false);
+    // Numara doğrulanmamış başka bir hesapta: numara bu kişinin ise SMS
+    // koduyla doğrulayarak kayda devam eder (bir numara, bir hesap).
+    if (r.error is TelefonSahiplenmeError) {
+      sysToastErr(context, SysKind.genericError, extra: r.error!.message);
+      await _numarayiDogrulayarakKaydol(phone);
+      return;
+    }
+    if (r.error != null && r.account == null) {
+      sysToastErr(context, SysKind.genericError, extra: r.error!.message);
+      return;
+    }
+    await _kayitTamam(context, phone);
+  }
+
+  /// Kayıt başarılı: cihaz hesabı hatırlar, kullanıcı DOĞRUDAN kendi ana
+  /// sayfasına gider (4 Kas). Kayıttan önce oturumsuz hazırlanmış bir ilan
+  /// taslağı varsa kullanıcı ilan oluşturma aşamasındadır: tamamlama ekranı
+  /// hemen açılır, tamamlanınca taslak yayınlanır.
+  Future<void> _kayitTamam(BuildContext c, String phone) async {
+    // ── ⚠ CİHAZ BU HESABI HATIRLASIN ──
+    // Giriş ekranındaki AYNI mekanizma (`OturumTercihi`); yeni kaydolan
+    // kullanıcı için varsayılan "hatırla"dır.
+    unawaited(OturumTercihi().kaydet(phone));
+    // ⚠ Bağımlılıklar gezinmeden ÖNCE okunur: kayıt ekranı aşağıdaki
+    // geçişle ağaçtan çıkar, sonrasında `c.read` kullanılamaz.
+    final rol = c.read<AuthController>().activeRole;
+    final taslakVar = c.read<PendingListingController>().hasDraft;
+    final nav = Navigator.of(c);
+    nav.pushNamedAndRemoveUntil(
+      rol == Role.provider ? '/provider/jobs' : '/customer/listings',
+      (r) => false,
+    );
+    if (rol == Role.customer && taslakVar) {
+      await WidgetsBinding.instance.endOfFrame;
+      final baglam = nav.context;
+      if (!baglam.mounted) {
+        return;
+      }
+      if (await profilKapisi(baglam, Role.customer) && baglam.mounted) {
+        await _bekleyenIlaniYayinla(baglam);
+      }
+    }
+  }
+
+  /// NUMARAYI SAHİPLENME — numara doğrulanmamış bir hesapta kayıtlı.
+  ///
+  /// ⚠ EKRAN KODU DOĞRULAMAZ: kod use-case'te doğrulanır, başarıda kısa
+  /// ömürlü KAYIT YETKİSİ döner ve kayıt isteğiyle sunucuya gider; sunucu
+  /// numarayı doğrulanmamış hesaptan bu yeni hesaba geçirir.
+  Future<void> _numarayiDogrulayarakKaydol(String phone) async {
+    setState(() => _busy = true);
     var ch = await context
         .read<AuthController>()
         .kayitKodGonder(phone, taslakKimligi: _taslakKimligi);
@@ -825,28 +696,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     setState(() => _busy = false);
     // ⚠ KOD GÖNDERİLEMEDİYSE DOĞRULAMA EKRANI AÇILMAZ (15 Eki).
-    //
-    // Gerçek API modunda kodu Firebase gönderir; gönderim başarısızsa
-    // (yetkisiz alan adı, reCAPTCHA, kota, ağ) challenge boş döner.
-    // Eskiden yine de doğrulama ekranı açılıyor, kullanıcı hiç gelmeyecek
-    // bir kodu bekliyordu.
     if (ch.challengeId.isEmpty) {
       sysToastErr(context, SysKind.genericError,
           extra: FormMesaj.otpGonderilemedi);
       return;
     }
-    Navigator.push(
+    await Navigator.push(
       context,
       panelRotasi<void>(
-        // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
-        // adından seçer; adsız rota tanınmıyordu. Gezinme davranışı
-        // DEĞİŞMEZ.
         settings: const RouteSettings(name: '/dogrulama'),
         builder: (_) => OtpScreen(
           phone: phone,
           purpose: OtpPurpose.register,
-          // ⚠ EKRAN KODU DOĞRULAMAZ. Sonucu use-case verir; başarıda
-          // kısa ömürlü KAYIT YETKİSİ döner. Hesap burada OLUŞMAZ.
           dogrula: (kod) async {
             final d = await context
                 .read<AuthController>()
@@ -854,14 +715,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _kayitYetkisi = d.yetki;
             return d.hata;
           },
-          // ⚠ AKIŞA ÖZEL: yeni KAYIT challenge'ı üretilir, eskisi
-          // iptal olur (C7). Aynı taslak kimliği korunur.
+          // ⚠ AKIŞA ÖZEL: yeni KAYIT challenge'ı üretilir (C7).
           yenidenGonder: () async {
             final yeni = await context
                 .read<AuthController>()
                 .kayitKodGonder(phone, taslakKimligi: _taslakKimligi);
-            // ⚠ SAHTE BAŞARI YOK: gönderilemediyse sayaç yeniden
-            // başlamaz, hata ekranda görünür; eski challenge korunur.
             if (yeni.challengeId.isEmpty) {
               return FormMesaj.otpGonderilemedi;
             }
@@ -879,27 +737,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 taslakKimligi: _taslakKimligi,
                 otpCode: otpCode,
                 name: '${_first.text.trim()} ${_last.text.trim()}',
-                // Kayda küçük harfe çevrilmiş biçim yazılır.
                 email: epostaNormalize(_email.text),
-                categories: _cats,
-                serviceDistricts: _provDistricts,
-                // ⚠ E-POSTA DOĞRULANMIŞ SAYILMAZ.
-                //
-                // Telefon OTP'si e-postayı doğrulamaz; iki doğrulama
-                // BİRBİRİNDEN BAĞIMSIZDIR. `emailVerified`
-                // verilmiyor (varsayılan false).
-                // Sözleşme onayı domain katmanına İLETİLİR:
-                // yalnız UI kontrolüne güvenilmez.
                 termsAccepted: _agree && _aydinlatma);
             if (!otpContext.mounted) {
               return;
             }
-            // ⚠ KISMİ BAŞARI (15 Eki): hesap açıldı ama hizmet veren
-            // profili kaydedilemediyse forma DÖNÜLMEZ (aynı numarayla
-            // yeniden kayıt "kayıtlı" hatası verirdi); uyarı aşağıda,
-            // başarı akışının sonunda gösterilir.
-            final profilUyarisi =
-                r.account != null ? r.error?.message : null;
             if (r.error != null && r.account == null) {
               ScaffoldMessenger.of(otpContext)
                 ..clearSnackBars()
@@ -910,63 +752,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Navigator.pop(otpContext); // forma geri
               return;
             }
-            // ── ⚠ CİHAZ BU HESABI HATIRLASIN ──
-            //
-            // Giriş ekranında "Beni Hatırla" kutucuğu VAR; kayıtta
-            // YOK — yeni kaydolan kullanıcı için varsayılan zaten
-            // "hatırla"dır (aksi hâlde az önce doldurduğu formu
-            // uygulamayı kapatır kapatmaz yeniden yaşardı). Giriş
-            // ekranındaki AYNI mekanizma (`OturumTercihi`), AYNI
-            // güvenli/sessiz hata kuralıyla kullanılır.
-            unawaited(OturumTercihi().kaydet(phone));
-            // ── KAYIT ADRESİNİ KALICI HALE GETİR ──
-            //
-            // Kullanıcı formda İl/İlçe/Mahalle seçti; bu değerler
-            // `Account.address` modeline YAZILMALI. Aksi hâlde
-            // Profil > Adreslerim boş açılır ve kullanıcı yeniden
-            // seçim yapmak zorunda kalır.
-            //
-            // Müşteri rolüne özgüdür (sağlayıcıda hizmet bölgesi ayrı).
-            // ⚠ ADRES HER ROL İÇİN KAYDEDİLİR.
-            //
-            // Önceden yalnız `Role.customer` dalında kaydediliyordu;
-            // sağlayıcı olarak kaydolan kullanıcı sonradan müşteri
-            // rolüne geçtiğinde Adreslerim ekranı BOŞ geliyordu.
-            //
-            // `city` de boş geçilmez: seçili il yoksa aktif il
-            // kullanılır (aksi hâlde Adreslerim'de il görünmez).
-            if (_district != null && _hood.text.trim().isNotEmpty) {
-              final il = _city ??
-                  otpContext.read<RegionController>().cityName ??
-                  '';
-              await otpContext.read<ProfileController>().saveAddress(
-                    district: _district!,
-                    neighborhood: _hood.text.trim(),
-                    city: il,
-                  );
-              if (!otpContext.mounted) {
-                return;
-              }
-            }
-            // ── BEKLEYEN İLANI YAYINLA ──
-            //
-            // ⚠ Körlemesine "kayıt başarılı" callback'i DEĞİLDİR.
-            // Yayın yalnız sistem kullanıcıyı TAMAMLANMIŞ Hizmet Alan
-            // hesabı kabul ettiğinde yapılır: SMS OTP + e-posta
-            // doğrulaması + zorunlu profil/adres + onboarding.
-            //
-            // Eksik varsa ilan YAYINLANMAZ; taslak korunur ve
-            // kullanıcı eksikleri tamamlayınca yayınlanır.
-            await _bekleyenIlaniYayinla(otpContext);
-            if (!otpContext.mounted) {
-              return;
-            }
-            if (profilUyarisi != null) {
-              sysToastErr(otpContext, SysKind.genericError,
-                  extra: profilUyarisi);
-            }
-            Navigator.pushReplacement(otpContext,
-                MaterialPageRoute(builder: (_) => const RegisterDoneScreen()));
+            await _kayitTamam(otpContext, phone);
           },
         ),
       ),
@@ -1011,96 +797,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         errorStyle:
             refText(size: RF.s115, weight: RF.w600, color: RC.danger),
       );
-
-  /// Seçim özeti: "Tesisat, Elektrik +2"
-  ///
-  /// ⚠ Ana forma chip DÖKÜLMEZ; tek satır özet gösterilir.
-  String _ozet(Set<String> secilenler) {
-    final l = secilenler.toList()..sort();
-    if (l.length <= 2) {
-      return l.join(', ');
-    }
-    return '${l.take(2).join(', ')} +${l.length - 2}';
-  }
-
-  /// Seçim çubuğunun altındaki açıklama satırı.
-  Widget _altAciklama(String metin) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 0, 4, 11),
-        child: Text(metin,
-            style: refText(
-                size: RF.s125, weight: RF.w400, color: RC.textSoft)),
-      );
-
-  /// HİZMET KATEGORİLERİ — çoklu seçim.
-  ///
-  /// Seçimler `_cats` içinde tutulur; sheet kapanınca, widget yeniden
-  /// çizilince ve doğrulama sırasında KAYBOLMAZ.
-  Future<void> _kategoriSec(BuildContext context) async {
-    final sonuc = await altPanelGoster<Set<String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      // ── ⚠ DÜZ LİSTE DEĞİL, ARAMA TABANLI SEÇİM ──
-      //
-      // Rol Değiştir ve Hizmet Kategorilerim ekranlarıyla AYNI panel.
-      // Eskiden 53 ana kategori onay kutusu listesiydi; kullanıcı ALT
-      // HİZMET seçemiyor, "Kombi Servis" diyen usta iki alt hizmetin
-      // tamamına bağlanıyordu.
-      //
-      // ⚠ ANA KATEGORİ SAYI SINIRI YOKTUR.
-      builder: (_) => KategoriSecimPaneli(baslangic: _cats),
-    );
-    if (sonuc != null && mounted) {
-      setState(() {
-        _cats
-          ..clear()
-          ..addAll(sonuc);
-        _chipsError = null;
-      });
-      // Sağlayıcı için kategori de ZORUNLU alandır — bkz. bölge notu.
-      _tazele();
-    }
-  }
-
-  /// HİZMET VERİLEN İLÇELER — çoklu seçim + "Tüm İlçeler".
-  ///
-  /// "Tüm İlçeler" ayrı bir değer DEĞİLDİR: ildeki tüm ilçeleri
-  /// işaretler. Böylece mevcut iş kuralı (hizmet bölgesi listesi)
-  /// değişmeden korunur.
-  Future<void> _ilceSecCoklu(BuildContext context) async {
-    final sonuc = await altPanelGoster<Set<String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      // ⚠ Controller state'i DİNLENİR: bölge verisi sonradan gelirse
-      // liste kendiliğinden dolar (boş "Sonuç bulunamadı" oluşmaz).
-      builder: (_) => Consumer<RegionController>(
-        builder: (_, r, __) => RefMultiSelectSheet(
-          title: 'Hizmet Verilen İlçeler',
-          options: r.districtsOf(_city),
-          initial: _provDistricts,
-          tumuEtiketi: 'Tüm İlçeler',
-        ),
-      ),
-    );
-    if (sonuc != null && mounted) {
-      setState(() {
-        _provDistricts
-          ..clear()
-          ..addAll(sonuc);
-        _chipsError = null;
-      });
-      // ⚠ Sağlayıcı için bölge seçimi ZORUNLU alandır; düğme bildirimi
-      // tazelenmezse "Devam Et" pasif kalır.
-      _tazele();
-    }
-  }
 
   /// Etiket + KIRMIZI yıldız.  /// Etiket + KIRMIZI yıldız.
   ///
@@ -1212,7 +908,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _phone.dispose();
     _pass.dispose();
     _pass2.dispose();
-    _hood.dispose();
     super.dispose();
   }
 
@@ -1570,111 +1265,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // ── İl / İlçe / Mahalle — HER İKİ ROLDE DE ──
-                //
-                // ⚠ ÖNCEDEN yalnız müşteride gösteriliyordu. Artık
-                // hizmet veren de KENDİ (kişisel) adresini verir —
-                // "hizmet verdiği ilçeler" (`_provDistricts`, aşağıda)
-                // İLE KARIŞTIRILMAZ, o AYRI ve hâlâ yalnız ilçe
-                // düzeyinde çoklu seçimdir. Bu mahalle müşteriye HİÇ
-                // GÖSTERİLMEZ — yalnız yönetim amaçlı tutulur.
-                //
-                // Referans `rgDrop()`: üçü de AYNI `.rg-f` kutu
-                // ailesini kullanır. Alt çizgili Material görünümü
-                // veya farklı üç stil KULLANILMAZ.
-                //
-                // Kontrollü seçim korunur: serbest metin yok,
-                // ilçe seçilmeden mahalle açılmaz.
-                // ⚠ İL GERÇEK SEÇİM ALANIDIR — hard-code YOKTUR.
-                // Aktif iller sunucudan gelir; bugün mock veride
-                // yalnız İzmir vardır, yeni il eklenince aynı alan
-                // onu kendiliğinden gösterir.
-                Builder(builder: (_) {
-                  // ⚠ TEŞHİS E3: bölge bildirimlerinin odak üzerindeki
-                  // etkisini izole etmek için `watch` yerine tek
-                  // seferlik okuma kullanılır.
-                  // ⚠ Otomatik seçim YOK — bkz. didChangeDependencies
-                  // notu. Controller yalnız DİNLENİR: aktif il listesi
-                  // sunucudan gelince alan tazelenir, ama değeri
-                  // kullanıcının seçimi belirler.
-                  if (Teshis.staticRegion) {
-                    context.read<RegionController>();
-                  } else {
-                    context.watch<RegionController>();
-                  }
-                  return RefRegDropdown(
-                    key: _ilKaydirKey,
-                    iconAsset: 'assets/svg/ic_pin.svg',
-                    label: 'İl',
-                    value: _city,
-                    onTap: () => _ilSec(context),
-                  );
-                }),
-                RefRegDropdown(
-                  key: _ilceKaydirKey,
-                  iconAsset: 'assets/svg/ic_build.svg',
-                  label: 'İlçe',
-                  value: _district,
-                  // ⚠ İL SEÇİLMEDEN İLÇE AÇILMAZ (mahalle zinciriyle
-                  // aynı kural). Kısıt metinle yazılmaz.
-                  onTap: _city == null ? null : () => _ilceSec(context),
-                ),
-                RefRegDropdown(
-                  key: _mahalleKaydirKey,
-                  iconAsset: 'assets/svg/ic_home2.svg',
-                  label: 'Mahalle',
-                  value: _hood.text.isEmpty ? null : _hood.text,
-                  // İlçe seçilmeden mahalle AÇILMAZ.
-                  onTap: _district == null ? null : () => _mahalleSec(context),
-                ),
-                if (isProvider) ...[
-                  // ── HİZMET VEREN: TEK SEÇİM ÇUBUKLARI ──
-                  //
-                  // ⚠ Referans `rgPickRow()` / `rgDrop()`: kategoriler ve
-                  // ilçeler ANA FORMA chip olarak DÖKÜLMEZ. Ana formda
-                  // yalnız tek satır özet bulunur; seçim alttan açılan
-                  // çoklu seçim sayfasında yapılır.
-                  RefRegDropdown(
-                    iconAsset: 'assets/svg/ic_grid.svg',
-                    label: 'Hizmet Kategorileri',
-                    value: _cats.isEmpty ? null : _ozet(_cats),
-                    onTap: () => _kategoriSec(context),
-                  ),
-                  _altAciklama(FormMesaj.kategoriSec),
-
-                  // ── ⚠ "HİZMET VERİLEN İL" KALDIRILDI ──
-                  //
-                  // Zaten AYRI bir veri DEĞİLDİ — kişisel "İl" alanıyla
-                  // (yukarıda) AYNI `_city` değişkenini paylaşan,
-                  // kilitli (`onTap: null`), yalnız KOPYASINI gösteren
-                  // bir satırdı. Kullanıcı isteğiyle: "hizmet verilen
-                  // il" artık kişisel İl'in KENDİSİ SAYILIR, ayrıca
-                  // gösterilmez. Aşağıdaki "Hizmet Verilen İlçeler"e
-                  // (gerçek, çoklu seçilebilir veri) DOKUNULMADI.
-
-                  RefRegDropdown(
-                    iconAsset: 'assets/svg/ic_build.svg',
-                    label: 'Hizmet Verilen İlçeler',
-                    value: _provDistricts.isEmpty
-                        ? null
-                        : _ozet(_provDistricts),
-                    // ⚠ İL SEÇİLMEDEN İLÇE AÇILMAZ.
-                    onTap: _city == null ? null : () => _ilceSecCoklu(context),
-                  ),
-                  _altAciklama('Bir veya birden fazla ilçe seçebilirsiniz.'),
-
-                  if (_chipsError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, left: 4),
-                      child: Text(_chipsError!,
-                          style: refText(
-                              size: RF.s115,
-                              weight: RF.w600,
-                              color: RC.danger)),
-                    ),
-                ],
-                const SizedBox(height: 12),
-
+                // ── 4 Kas: İl/İlçe/Mahalle ve (hizmet verende) kategori +
+                // hizmet bölgeleri kayıt formundan çıktı; profil
+                // tamamlamada istenir (`ProfilTamamlamaScreen`).
                 TextFormField(
                   // Odaklanınca alan klavyenin ve alt düğmenin ÜSTÜNE
                   // kaydırılır — bkz. `kAlanKaydirmaPayi`.

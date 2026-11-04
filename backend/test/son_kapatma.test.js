@@ -19,7 +19,7 @@ process.env.HC_S3_REGION = 'auto';
 process.env.HC_S3_ACCESS_KEY_ID = 'TESTANAHTAR123';
 process.env.HC_S3_SECRET_ACCESS_KEY = 'testgizlianahtar-yalnizca-test';
 const { simdi } = await import('../src/db.js');
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { olaylar } = await import('../src/olaylar.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
@@ -50,6 +50,8 @@ async function kisi(tel, rol, { kategoriler, ilceler, adres } = {}) {
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: `Usta ${tel.slice(-3)}`, email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  // 4 Kas: kayıt artık profil istemiyor; akışı sınamayan bu testlerde profil tamamlanır (bkz. destek.js).
+  if (r.json?.accessToken) await profilTamamlaDb(db, r.json.accessToken);
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
   const k = { token: r.json.accessToken, refresh: r.json.refreshToken, id: me.json.id, tel };
@@ -57,7 +59,7 @@ async function kisi(tel, rol, { kategoriler, ilceler, adres } = {}) {
     const p = await istek('/api/v1/profiles/me/provider', { yontem: 'PUT', token: k.token, govde: { categories: kategoriler, districts: ilceler ?? ['Konak'] } });
     assert.equal(p.durum, 200, JSON.stringify(p.json));
   }
-  if (adres) await db.prepare('INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?)').run(k.id, adres[0], adres[1], adres[2], simdi());
+  if (adres) await db.prepare('INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET city = excluded.city, district = excluded.district, neighborhood = excluded.neighborhood').run(k.id, adres[0], adres[1], adres[2], simdi());
   return k;
 }
 

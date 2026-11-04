@@ -11,7 +11,7 @@ import { createServer } from 'node:http';
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
 
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { baslangicVerisiniHazirla } = await import('../src/baslangic_verisi.js');
 const { pushGonderiminiIsle } = await import('../src/fcm.js');
@@ -31,6 +31,8 @@ async function kaydol(tel, rol, ad, email) {
   const o = await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   assert.equal(o.durum, 204, JSON.stringify(o.json));
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'GucluSifre12', name: ad, email, role: rol, otpCode: globalThis.__sonOtp } });
+  // 4 Kas: kayıt artık profil istemiyor; akışı sınamayan bu testlerde profil tamamlanır (bkz. destek.js).
+  if (r.json?.accessToken) await profilTamamlaDb(db, r.json.accessToken);
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   return r.json.accessToken;
 }

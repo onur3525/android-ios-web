@@ -30,7 +30,7 @@ const ilanSiniri = new HizSiniri('ilan_olustur', 30, 60 * 60 * 1000);
 const teklifSiniri = new HizSiniri('teklif_ver', 120, 60 * 60 * 1000);
 // Hizmet veren dizini toplu kazınmasın diye (kullanıcı başına).
 const saglayiciAramaSiniri = new HizSiniri('saglayici_ara', 60, 60 * 1000);
-import { kullaniciCoz } from './kullanici.js';
+import { kullaniciCoz, profilKapisi } from './kullanici.js';
 import { ilanTelefonuGorunur, kisaAd, saglayiciTamamlananIs } from './kisi_ozeti.js';
 import { silinmekUzereIsaretle } from '../dosya_temizligi.js';
 import { fcmEtkin, pushTetikle } from '../fcm.js';
@@ -226,6 +226,8 @@ export function ilanRotalar(r, db) {
   // ── İLAN ──
   r.post('/api/v1/listings', korumali(async (ctx) => {
     rolIste(ctx.kullanici, 'CUSTOMER', 'İlanı yalnız hizmet alan rolüyle verebilirsiniz');
+    // 4 Kas: telefon doğrulaması + adres tamamlanmadan ilan açılmaz (sunucu kapısı).
+    await profilKapisi(db, ctx.kullanici, 'CUSTOMER');
     const baslik = String(ctx.body.title ?? '').trim();
     const konum = String(ctx.body.location ?? '').trim();
     const aciklama = String(ctx.body.description ?? '').trim();
@@ -250,6 +252,12 @@ export function ilanRotalar(r, db) {
     ).get(baslik, baslik);
     if (!katalogda) throw hata.dogrulama('Geçerli bir hizmet seçiniz');
     if (konum.length < 2 || konum.length > 200) throw hata.dogrulama('Konum zorunludur');
+    // 4 Kas: konum TANIMLI ve aktif bir ilçeyi içermeli ("…, null / İzmir"
+    // gibi bozuk konumlu ilan yayımlanabiliyordu).
+    if (!(await db.prepare(
+      `SELECT d.name FROM districts d JOIN cities c ON c.id = d.city_id
+        WHERE d.active = TRUE AND d.deleted_at IS NULL AND c.active = TRUE AND c.deleted_at IS NULL`,
+    ).all()).some((d) => konum.includes(d.name))) throw hata.dogrulama('Geçerli bir ilçe ve mahalle seçiniz');
     if (kelimeSayisi(aciklama) < 3) throw hata.dogrulama('Açıklamanız en az 3 kelime olmalıdır');
     if (aciklama.length > 2000) throw hata.dogrulama('Açıklama en fazla 2000 karakter olabilir');
     if (!Array.isArray(foto) || foto.length > 10 || foto.some((f) => typeof f !== 'string' || !/^[A-Za-z0-9/_.-]{1,200}$/.test(f))) throw hata.dogrulama('Geçersiz fotoğraf listesi');
@@ -286,6 +294,8 @@ export function ilanRotalar(r, db) {
 
   r.get('/api/v1/listings/available', korumali(async (ctx) => {
     rolIste(ctx.kullanici, 'PROVIDER', 'Bu liste hizmet veren rolüne aittir');
+    // 4 Kas: profil (telefon, adres, kategori, bölge) tamamlanmadan iş listesi açılmaz.
+    await profilKapisi(db, ctx.kullanici, 'PROVIDER');
     await suresiDolanlariIsle(db);
     const kosul = [`status = 'ACTIVE'`, 'selected_offer_id IS NULL', 'expires_at > ?', 'owner_id <> ?'];
     const p = [simdi(), ctx.kullanici.id];
@@ -384,6 +394,8 @@ export function ilanRotalar(r, db) {
   // ── TEKLİF ──
   r.post('/api/v1/offers', korumali(async (ctx) => {
     rolIste(ctx.kullanici, 'PROVIDER', 'Teklifi yalnız hizmet veren rolüyle verebilirsiniz');
+    // 4 Kas: telefon doğrulaması + dolu profil olmadan teklif verilmez (sunucu kapısı).
+    await profilKapisi(db, ctx.kullanici, 'PROVIDER');
     const TEKLIF_IDEM = { tablo: 'offers', sahipSutun: 'provider_id' };
     const anahtar = idemAnahtari(ctx);
     const teklifOzeti = govdeOzeti({ listingId: String(ctx.body.listingId ?? ''), amountTl: ctx.body.amountTl, note: String(ctx.body.note ?? '').trim() });

@@ -238,6 +238,45 @@ class Account {
   /// göstermek sahte doğrulama olurdu.
   bool get onayliHizmetVeren => providerOnboardingComplete;
 
+  // ═══════════════════════════════════════════════════════════════
+  // ── ⚠ PROFİL TAMAMLAMA — TEK KAYNAK (4 Kas, kullanıcı kararı) ──
+  //
+  // Kayıt formu yalnız ad, soyad, telefon, e-posta ve şifre alır. Telefon
+  // doğrulaması ve konum (hizmet verende ayrıca kategori + hizmet bölgesi)
+  // işlemin gerektirdiği anda tamamlatılır: hizmet alanda Bul ve İlan
+  // Oluştur'da, hizmet verende panel açılırken.
+  //
+  // API modunda SON SÖZ SUNUCUNUNDUR (`profileMissing`; sunucu aynı
+  // kuralı ilan/teklif/iş listesi uçlarında da uygular). Mock modda aynı
+  // kural yerel alanlardan hesaplanır.
+  //   'PHONE' · 'ADDRESS' · 'SERVICES' (yalnız hizmet veren)
+  // ═══════════════════════════════════════════════════════════════
+
+  /// Sunucunun bildirdiği eksikler; `null` = sunucu bildirmedi (mock /
+  /// eski sunucu) → yerel kural.
+  Map<Role, List<String>>? sunucuProfilEksikleri;
+
+  List<String> profilEksikleri(Role rol) {
+    final s = sunucuProfilEksikleri?[rol];
+    if (s != null) {
+      return s;
+    }
+    final e = <String>[];
+    if (!phoneVerified || phone.trim().isEmpty) {
+      e.add('PHONE');
+    }
+    if (!(address?.isComplete ?? false)) {
+      e.add('ADDRESS');
+    }
+    if (rol == Role.provider &&
+        (categories.isEmpty || serviceDistricts.isEmpty)) {
+      e.add('SERVICES');
+    }
+    return e;
+  }
+
+  bool profilTamam(Role rol) => profilEksikleri(rol).isEmpty;
+
   /// Aktif role göre kayıt tamamlanmış mı?
   bool get onboardingComplete => activeRole == Role.provider
       ? providerOnboardingComplete

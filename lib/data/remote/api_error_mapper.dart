@@ -82,6 +82,11 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return const ListingClosedError();
     case 'BUSINESS_RULE_VIOLATION':
       return InvalidStateError(text);
+    // 4 Kas: eksik profil ve numara sahiplenme (kayıt/profil tamamlama).
+    case 'PROFILE_INCOMPLETE':
+      return ProfilEksikError(text);
+    case 'PHONE_CLAIM_REQUIRED':
+      return TelefonSahiplenmeError(text);
     case 'CONFLICT':
     case 'DUPLICATE_OPERATION':
     case 'STATE_CONFLICT':

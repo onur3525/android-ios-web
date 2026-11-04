@@ -18,7 +18,7 @@ process.env.HC_S3_ACCESS_KEY_ID = 'TESTANAHTAR123';
 process.env.HC_S3_SECRET_ACCESS_KEY = 'testgizlianahtar-yalnizca-test';
 
 const { veritabaniAc, simdi } = await import('../src/db.js');
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { gercekZamanliKur } = await import('../src/gercek_zamanli.js');
 const { olaylar } = await import('../src/olaylar.js');
@@ -52,6 +52,8 @@ async function istek(taban, yol, { yontem = 'GET', govde, token, cerez } = {}) {
 async function kisi(taban, tel, rol) {
   await istek(taban, '/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const r = await istek(taban, '/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Kişi', email: `k${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  // 4 Kas: kayıt artık profil istemiyor; akışı sınamayan bu testlerde profil tamamlanır (bkz. destek.js).
+  if (r.json?.accessToken) await profilTamamlaDb(db, r.json.accessToken);
   return { token: r.json.accessToken, id: (await istek(taban, '/api/v1/users/me', { token: r.json.accessToken })).json.id };
 }
 function sio(taban, token) {

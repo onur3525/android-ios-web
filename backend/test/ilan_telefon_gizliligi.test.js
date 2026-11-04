@@ -10,7 +10,7 @@ import { createServer } from 'node:http';
 
 process.env.HC_TEST_OTP_KANCASI = '1';
 process.env.HC_SESSIZ = '1';
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { ilanTelefonuGorunur } = await import('../src/routes/kisi_ozeti.js');
@@ -30,9 +30,11 @@ async function kisi(tel, rol, ad) {
   await db.prepare('UPDATE otp_codes SET created_at = ? WHERE phone = ?').run('2000-01-01T00:00:00.000Z', tel);
   await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: 'REGISTER' } });
   const r = await istek('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: ad, email: `o${tel}@ornek.com`, role: rol, otpCode: globalThis.__sonOtp } });
+  // 4 Kas: kayıt artık profil istemiyor; akışı sınamayan bu testlerde profil tamamlanır (bkz. destek.js).
+  if (r.json?.accessToken) await profilTamamlaDb(db, r.json.accessToken);
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   const me = await istek('/api/v1/users/me', { token: r.json.accessToken });
-  await db.prepare('INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?)')
+  await db.prepare('INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET city = excluded.city, district = excluded.district, neighborhood = excluded.neighborhood')
     .run(me.json.id, 'İzmir', 'Karşıyaka', 'İmbatlı', new Date().toISOString());
   return { token: r.json.accessToken, id: me.json.id, tel };
 }

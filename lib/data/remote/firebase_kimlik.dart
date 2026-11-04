@@ -215,6 +215,43 @@ class FirebaseKimlik {
     }
   }
 
+  /// ── 4 Kas: SMS'SİZ KAYIT ──
+  /// Kayıtta telefon doğrulanmadığı için Firebase kullanıcısı e-posta/şifre
+  /// ile açılır ve doğrulama e-postası gönderilir; belgesi kayıt isteğiyle
+  /// sunucuya gider (hesap bu kullanıcıya bağlanır, e-posta ile giriş
+  /// korunur). Telefon sonradan profil tamamlamada AYNI kullanıcıya eklenir.
+  /// Adres Firebase'de zaten varsa ya da hizmete ulaşılamazsa `null` döner
+  /// ve kayıt bağsız sürer (sunucu e-posta eşleşmesini ayrıca denetler).
+  Future<String?> epostaKullanicisiOlustur(String email, String sifre) async {
+    final a = await _auth();
+    if (a == null) {
+      return null;
+    }
+    try {
+      final s = await a.createUserWithEmailAndPassword(email: email.trim(), password: sifre);
+      final u = s.user;
+      if (u == null) {
+        return null;
+      }
+      try {
+        await u.sendEmailVerification();
+      } catch (_) {
+        // Doğrulama e-postası sonra yeniden istenebilir.
+      }
+      return await u.getIdToken(true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Kayıt sunucuda başarısız olduysa az önce açılan Firebase kullanıcısı
+  /// silinir (sahipsiz kayıt kalmasın).
+  Future<void> acikKullaniciyiSil() async {
+    try {
+      await (await _auth())?.currentUser?.delete();
+    } catch (_) {}
+  }
+
   /// Kayıttan sonra: e-posta/şifreyi telefonla açılan Firebase kullanıcısına
   /// bağlar ve DOĞRULAMA E-POSTASI gönderir (Firebase şablonu).
   Future<DomainError?> epostaBaglaVeDogrulamaGonder(String email, String sifre) async {

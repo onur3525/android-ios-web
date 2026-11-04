@@ -802,8 +802,13 @@ class AuthRepository extends ChangeNotifier {
     /// oluşamaz.
     String? hazirTuz,
     String? hazirOzet,
+
+    /// 4 Kas: SMS'SİZ KAYIT — telefon doğrulanmamış kaydedilir;
+    /// doğrulama profil tamamlamada (`profiliTamamla`).
+    bool telefonDogrulamasiz = false,
   }) {
-    // ── SMS OTP ZORUNLU ──
+    final telefonDogrulandi = kayitYetkisi != null || otpVerified;
+    // ── SMS OTP ZORUNLU (SMS'siz kayıt hariç; bkz. `telefonDogrulamasiz`) ──
     //
     // ⚠ YETKİ VARSA BAYRAĞA BAKILMAZ. Yetki gerçek doğrulamadan
     // üretildiği için istemcinin sözüne göre daha güçlüdür ve
@@ -820,7 +825,7 @@ class AuthRepository extends ChangeNotifier {
           taslakKimligi: taslakKimligi)) {
         return (account: null, error: const OtpRequiredError());
       }
-    } else if (!otpVerified) {
+    } else if (!otpVerified && !telefonDogrulamasiz) {
       return (account: null, error: const OtpRequiredError());
     }
     if (!termsAccepted) {
@@ -861,8 +866,8 @@ class AuthRepository extends ChangeNotifier {
         salt: salt,
         roles: {role},
         activeRole: role,
-        // SMS OTP bu noktada doğrulanmıştır.
-        phoneVerified: true,
+        // SMS'siz kayıtta telefon doğrulanmamış başlar (4 Kas).
+        phoneVerified: telefonDogrulandi,
         // ⚠ E-posta AYRICA doğrulanır (`verifyEmail`).
         emailVerified: emailVerified,
         termsAccepted: termsAccepted,
@@ -879,7 +884,9 @@ class AuthRepository extends ChangeNotifier {
       acc.roles.add(role);
       acc.activeRole = role;
       // Mevcut hesapta doğrulama durumları KORUNUR; yalnız yükseltilir.
-      acc.phoneVerified = true;
+      if (telefonDogrulandi) {
+        acc.phoneVerified = true;
+      }
       if (emailVerified) {
         acc.emailVerified = true;
       }
@@ -978,13 +985,14 @@ class AuthRepository extends ChangeNotifier {
     if (acc == null) {
       return const UnauthorizedError('Oturum bulunamadı');
     }
-    if (role == Role.provider) {
-      if (categories == null || categories.isEmpty) {
-        return const ValidationError(FormMesaj.kategoriSec);
-      }
-      if (serviceDistricts == null || serviceDistricts.isEmpty) {
-        return const ValidationError(FormMesaj.bolgeSec);
-      }
+    // 4 Kas: kategori + bölge rol eklenirken ZORUNLU DEĞİL; hizmet veren
+    // paneli açılınca profil tamamlamada istenir (sunucuyla aynı kural).
+    // Verilirse (eski akışlar) yine yazılır.
+    if (role == Role.provider &&
+        categories != null &&
+        categories.isNotEmpty &&
+        serviceDistricts != null &&
+        serviceDistricts.isNotEmpty) {
       acc.categories
         ..clear()
         ..addAll(categories);
@@ -1244,6 +1252,60 @@ class AuthRepository extends ChangeNotifier {
       neighborhood: neighborhood,
     );
     notifyListeners();
+  }
+
+  /// 4 Kas: PROFİL TAMAMLAMA (mock). Telefon YALNIZ kod doğrulandıysa
+  /// doğrulanmış sayılır; doğrulanmış telefon bu yoldan değiştirilemez.
+  DomainError? profiliTamamla({
+    String? telefon,
+    required bool telefonDogrulandi,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
+  }) {
+    final acc = currentAccount;
+    if (acc == null) {
+      return const UnauthorizedError('Oturum bulunamadı');
+    }
+    final p = telefon == null ? acc.phone : _norm(telefon);
+    if (acc.phoneVerified && p != acc.phone) {
+      return const ValidationError(
+          'Doğrulanmış telefon numaranızı Hesap Ayarları bölümünden değiştirebilirsiniz.');
+    }
+    if (!acc.phoneVerified) {
+      if (!telefonDogrulandi) {
+        return const ValidationError('Telefon numaranızı doğrulayın');
+      }
+      final tutan = findByPhone(p);
+      if (tutan != null && tutan.id != acc.id) {
+        if (tutan.phoneVerified) {
+          return const ValidationError('Bu telefon numarası kayıtlı');
+        }
+        tutan.phone = '';
+      }
+      acc.phone = p;
+      acc.phoneVerified = true;
+    }
+    if (kategoriler != null && bolgeler != null) {
+      if (kategoriler.isEmpty || bolgeler.isEmpty) {
+        return const ValidationError(
+            'En az bir hizmet kategorisi ve bir hizmet bölgesi seçiniz');
+      }
+      acc.categories
+        ..clear()
+        ..addAll(kategoriler);
+      acc.serviceDistricts
+        ..clear()
+        ..addAll(bolgeler);
+    }
+    if (adres != null) {
+      setAddress(
+          district: adres.district,
+          neighborhood: adres.neighborhood,
+          city: adres.city);
+    }
+    notifyListeners();
+    return null;
   }
 
   void setAddress({
