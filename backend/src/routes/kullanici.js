@@ -275,26 +275,79 @@ const smsYok = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama ko
 // kod üretilip AYNI sınırlar işletilir ama kişiye kod GÖNDERİLMEZ; kayıtlı
 // kod hiç kimseye ulaşmadığı için kullanılamaz. Böylece yanıt, süre ve hız
 // sınırı davranışı kayıtlı/kayıtsız numarada AYNIDIR (E3, 22 Eki).
-async function otpUret(db, tel, amac, ip, { sablon = 'OTP' } = {}) {
+// ── ⚠ SMS KODU GÖNDERİM KURALI — TEK KAYNAK (4 Kas, kullanıcı kuralı) ──
+// Kod gönderilen HER yerde (kayıt/numara sahiplenme, profil tamamlama,
+// giriş, şifremi unuttum, telefon değiştirme, rol ekleme) aynı kural:
+//   · İki kod arasında en az 60 saniye (istemcide geri sayım).
+//   · Bir numaraya en fazla 3 kod; üçüncüden sonra doğrulama yapılmazsa
+//     son gönderimden itibaren 15 dakika yeni kod yok.
+//   · Doğrulama başarılı olunca sayaç sıfırlanır; 15 dakika hiç kod
+//     istenmezse de sıfırlanır.
+// Sayaç sunucuda tutulur (rate_limits, anahtar `sms:<numara>`): uygulamayı
+// kapatıp açmak ya da sayfayı yenilemek sıfırlamaz. SMS'i Firebase
+// gönderdiğinde istemci her gönderimden ÖNCE `/auth/otp/permit` ile izin
+// alır; sunucunun kendi SMS yolu (`/auth/otp/request`) aynı fonksiyonu
+// kullanır. Kayıtlı/kayıtsız numarada davranış AYNIDIR (bilgi sızmaz).
+const SMS_BEKLEME_MS = 60_000;
+const SMS_TUR_SINIRI = 3;
+const SMS_KILIT_MS = 15 * 60_000;
+const smsAnahtari = (tel) => `sms:${tel}`;
+const sn = (ms) => Math.max(1, Math.ceil(ms / 1000));
+
+/** İzin verirse gönderimi sayar; vermezse 429 (OTP_WAIT / OTP_LOCKED, kalan süreyle). */
+export async function smsGonderimIzni(db, tel, ip) {
   await otpIpSiniri.denetle(db, ip);
-  const son = await db.prepare(
-    `SELECT created_at FROM otp_codes WHERE phone = ? AND purpose = ? ORDER BY created_at DESC LIMIT 1`,
-  ).get(tel, amac);
-  if (son && Date.now() - Date.parse(son.created_at) < 60_000) throw hata.hiz('Yeni kod istemek için 60 saniye bekleyin');
-  const saatlik = await db.prepare(
-    `SELECT COUNT(*) n FROM otp_codes WHERE phone = ? AND created_at > ?`,
-  ).get(tel, new Date(Date.now() - 3_600_000).toISOString());
-  if (saatlik.n >= 5) throw hata.hiz('Bu numara için çok fazla kod istendi. Lütfen daha sonra deneyin.');
+  const an = Date.now();
+  const k = await db.prepare('SELECT window_start, count FROM rate_limits WHERE key = ?').get(smsAnahtari(tel));
+  const son = k ? Number(k.window_start) : 0;
+  let adet = k && an - son < SMS_KILIT_MS ? Number(k.count) : 0;
+  if (adet >= SMS_TUR_SINIRI) {
+    const kalan = son + SMS_KILIT_MS - an;
+    throw new ApiHatasi(429, 'OTP_LOCKED',
+      `Çok fazla kod istendi. ${Math.ceil(kalan / 60_000)} dakika sonra tekrar deneyebilirsiniz.`,
+      { ayrinti: { retryAfterSec: sn(kalan) } });
+  }
+  if (adet > 0 && an - son < SMS_BEKLEME_MS) {
+    const kalan = son + SMS_BEKLEME_MS - an;
+    throw new ApiHatasi(429, 'OTP_WAIT', `Yeni kod istemek için ${sn(kalan)} saniye bekleyin.`,
+      { ayrinti: { retryAfterSec: sn(kalan) } });
+  }
+  adet += 1;
+  await db.prepare(
+    `INSERT INTO rate_limits (key, window_start, count) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET window_start = excluded.window_start, count = excluded.count`,
+  ).run(smsAnahtari(tel), an, adet);
+  return { retryAfterSec: SMS_BEKLEME_MS / 1000, remaining: SMS_TUR_SINIRI - adet, onceki: k ?? null };
+}
+
+/** Kod kişiye ULAŞMADIYSA gönderim hakkı iade edilir (sayaç önceki hâline döner). */
+async function smsGonderimIade(db, tel, izin) {
+  if (izin.onceki) {
+    await db.prepare('UPDATE rate_limits SET window_start = ?, count = ? WHERE key = ?')
+      .run(izin.onceki.window_start, izin.onceki.count, smsAnahtari(tel));
+  } else {
+    await db.prepare('DELETE FROM rate_limits WHERE key = ?').run(smsAnahtari(tel));
+  }
+}
+
+/** Telefon doğrulandı: sayaç sıfırlanır. */
+export async function smsSayaciniSifirla(db, tel) {
+  if (tel) await db.prepare('DELETE FROM rate_limits WHERE key = ?').run(smsAnahtari(tel));
+}
+
+async function otpUret(db, tel, amac, izin, { sablon = 'OTP' } = {}) {
   const kod = String(randomInt(0, 1_000_000)).padStart(6, '0');
   await db.prepare(
     `INSERT INTO otp_codes (id, phone, purpose, code_hash, expires_at, attempts, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)`,
   ).run(randomUUID(), tel, amac, otpOzet(tel, amac, kod), new Date(Date.now() + OTP_SURESI).toISOString(), simdi());
   const g = await gonder(db, { kanal: 'SMS', hedef: `+90${tel}`, sablon, degerler: sablon === 'OTP' ? { KOD: kod } : {}, gizliGovde: true });
   if (g.status !== 'SENT') {
-    // Kod kullanıcıya ULAŞMADI: kayıt geri alınır (60 sn bekleme/saatlik
-    // sınır boşa harcanmasın). Neden outbound_messages'ta FAILED durur.
+    // Kod kullanıcıya ULAŞMADI: kayıt geri alınır ve gönderim hakkı iade
+    // edilir (60 sn bekleme / 3 kod sınırı boşa harcanmasın). Neden
+    // outbound_messages'ta FAILED durur.
     await db.prepare('DELETE FROM otp_codes WHERE phone = ? AND purpose = ? AND consumed_at IS NULL AND code_hash = ?')
       .run(tel, amac, otpOzet(tel, amac, kod));
+    await smsGonderimIade(db, tel, izin);
     // Kayıtlı OLMAYAN numara için yapılan amaçlarda (REGISTER/PHONE_CHANGE)
     // hata açıkça döner. FORGOT/LOGIN/ROLE_ADD yanıtı NÖTR kalır: aksi hâlde
     // "503 = numara kayıtlı" diye kayıt bilgisi sızardı. (Sağlayıcı hiç
@@ -795,9 +848,11 @@ async function telefonKaniti(db, body, tel, amaclar, { yakinDogrulama = null } =
       yuk = await firebaseKimlikIste(body.firebaseIdToken);
     }
     firebaseTelefonu(yuk, tel);
+    await smsSayaciniSifirla(db, tel);
     return { uid: yuk.sub, yuk };
   }
   await otpTuket(db, tel, amaclar, body.otpCode);
+  await smsSayaciniSifirla(db, tel);
   return { uid: null, yuk: null };
 }
 
@@ -872,9 +927,14 @@ export function kullaniciRotalar(r, db) {
     // profil tamamlamada GERÇEK kod gider (numarayı sahiplenme); doğrulama
     // gerektiren giriş/şifre yollarında böyle hesap yok sayılır.
     const dogrulanmis = !!var_ && var_.phone_verified === 1;
+    if (amac === 'PHONE_VERIFY' && dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    // PHONE_CHANGE: oturum açmış kullanıcıya özgü; açık hata korunur.
+    if (amac === 'PHONE_CHANGE' && dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    // 4 Kas: gönderim kuralı (60 sn / 3 kod / 15 dk) numaraya BAKILMADAN
+    // sayılır — kayıtlı ve kayıtsız numarada aynı yanıt ve aynı sınır.
+    const izin = await smsGonderimIzni(db, tel, ctx.ip);
     if (amac === 'PHONE_VERIFY') {
-      if (dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
-      const kod = await otpUret(db, tel, amac, ctx.ip);
+      const kod = await otpUret(db, tel, amac, izin);
       if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = kod; // yalnız test kancası
       return undefined;
     }
@@ -884,18 +944,27 @@ export function kullaniciRotalar(r, db) {
     // sahibine kod yerine "hesabınız var, giriş yapın" bilgisi gider; kayıt
     // ucu (sahiplik kanıtından SONRA) yine 409 döner.
     if (amac === 'REGISTER' && dogrulanmis) {
-      await otpUret(db, tel, amac, ctx.ip, { sablon: 'KAYITLI_NUMARA' });
+      await otpUret(db, tel, amac, izin, { sablon: 'KAYITLI_NUMARA' });
       if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = null;
       return undefined;
     }
-    // PHONE_CHANGE: oturum açmış kullanıcıya özgü; açık hata korunur.
-    if (amac === 'PHONE_CHANGE' && dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
     // FORGOT/LOGIN: numara kayıtlı değilse de AYNI yanıt (kayıt bilgisi sızmaz),
     // ama SMS gönderilmez.
     if ((amac === 'FORGOT' || amac === 'LOGIN' || amac === 'ROLE_ADD') && !dogrulanmis) return undefined;
-    const kod = await otpUret(db, tel, amac, ctx.ip);
+    const kod = await otpUret(db, tel, amac, izin);
     if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = kod; // yalnız test kancası
     return undefined;
+  });
+
+  // ── SMS GÖNDERİM İZNİ (4 Kas) ── SMS'i Firebase gönderdiğinde istemci her
+  // koddan ÖNCE buraya sorar; kural `/auth/otp/request` ile AYNI
+  // (`smsGonderimIzni`). Numaranın kayıtlı olup olmadığına bakılmaz.
+  r.post('/api/v1/auth/otp/permit', async (ctx) => {
+    const tel = telefon(ctx.body.phone);
+    const amac = String(ctx.body.purpose ?? '');
+    if (!['REGISTER', 'LOGIN', 'FORGOT', 'PHONE_CHANGE', 'ROLE_ADD', 'PHONE_VERIFY'].includes(amac)) throw hata.dogrulama('Geçersiz amaç');
+    const izin = await smsGonderimIzni(db, tel, ctx.ip);
+    return { retryAfterSec: izin.retryAfterSec, remaining: izin.remaining };
   });
 
   // ── KAYIT ──
@@ -1254,6 +1323,10 @@ export function kullaniciRotalar(r, db) {
     await girisIpSiniri.denetle(db, ctx.ip);
     const yuk = await firebaseKimlikIste(ctx.body.idToken);
     let u = await db.prepare('SELECT * FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(yuk.sub);
+    // SMS koduyla Firebase girişi: numara doğrulandı → gönderim sayacı sıfır.
+    if (yuk.firebase?.sign_in_provider === 'phone' && yuk.phone_number) {
+      try { await smsSayaciniSifirla(db, firebaseTelefonu(yuk)); } catch { /* yurt dışı numara: sayaç yok */ }
+    }
     if (!u && yuk.phone_number) {
       const tel = firebaseTelefonu(yuk);
       // 4 Kas: yalnız DOĞRULANMIŞ numara eşleşir (kayıtta SMS yok; numarayı

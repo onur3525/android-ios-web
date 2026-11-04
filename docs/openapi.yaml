@@ -462,6 +462,21 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /auth/otp/permit:
+    post:
+      tags: [Auth]
+      summary: SMS gönderim izni (Firebase ile gönderimden önce)
+      description: |
+        SMS'i Firebase gönderdiğinde istemci her koddan ÖNCE bu uca sorar.
+        Gövde — phone, purpose. Kural /auth/otp/request ile aynıdır (60 sn,
+        3 kod, 15 dk; 429 OTP_WAIT / OTP_LOCKED, error.details.retryAfterSec).
+        Numaranın kayıtlı olup olmadığına bakılmaz. Yanıt: retryAfterSec,
+        remaining.
+      responses:
+        '200': { description: İzin verildi }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '429': { description: Bekleme süresi ya da 15 dakikalık kilit }
+
   /auth/firebase/session:
     post:
       tags: [Auth]
@@ -514,6 +529,12 @@ paths:
       tags: [Auth]
       summary: SMS kodu iste
       description: |
+        ⚠ GÖNDERİM KURALI (4 Kas, tek kaynak): iki kod arasında 60 saniye;
+        bir numaraya en fazla 3 kod, üçüncüden sonra doğrulama yapılmazsa son
+        gönderimden itibaren 15 dakika yeni kod yok (429 OTP_LOCKED). 60 saniye
+        dolmadan istek 429 OTP_WAIT. İkisinde de error.details.retryAfterSec.
+        Doğrulama başarılı olunca sayaç sıfırlanır. Kayıtlı/kayıtsız numarada
+        aynı yanıt.
         ⚠ Yeniden gönderme 60 saniye. Cevap NÖTRDÜR — numaranın kayıtlı olup olmadığı sızdırılmaz.
         503: SMS gönderim yolu yok (numaraya bakılmadan) ya da REGISTER/PHONE_CHANGE
         kodu sağlayıcıya iletilemedi. FORGOT/LOGIN/ROLE_ADD'de iletim hatası nötr

@@ -87,6 +87,16 @@ DomainError mapErrorBody(int status, Map<String, dynamic>? body) {
       return ProfilEksikError(text);
     case 'PHONE_CLAIM_REQUIRED':
       return TelefonSahiplenmeError(text);
+    // 4 Kas: SMS gönderim kuralı (60 sn / 3 kod / 15 dk) — kalan süreyle.
+    case 'OTP_WAIT':
+    case 'OTP_LOCKED':
+      {
+        final ayrinti = err?['details'];
+        final kalan = ayrinti is Map ? ayrinti['retryAfterSec'] : null;
+        return KodSiniriError(text,
+            kalanSaniye: kalan is num ? kalan.toInt() : 60,
+            kilit: code == 'OTP_LOCKED');
+      }
     // 4 Kas: Google/Apple ile ilk giriş — kayıt adımına geçilir.
     case 'SOCIAL_SIGNUP_REQUIRED':
       return SosyalKayitGerekliError(text);

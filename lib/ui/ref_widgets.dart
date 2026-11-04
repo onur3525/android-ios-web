@@ -662,6 +662,48 @@ Widget refYerTutucu(String metin, {required bool zorunlu, double? boyut}) {
   );
 }
 
+/// ── İKONLU FORM ALANI GÖRÜNÜMÜ (4 Kas) ──
+/// Kayıt formundaki telefon/e-posta alanlarının görünümü: solda ikon,
+/// kutunun içinde SİLİK örnek biçim (ör. "5XX XXX XX XX"), zorunluysa
+/// solda kırmızı yıldız. Profil tamamlama ekranının telefon ve SMS kodu
+/// alanları bunu kullanır.
+InputDecoration refIkonluAlanDekoru(
+  String yerTutucu,
+  String ikon, {
+  bool zorunlu = false,
+  Widget? suffix,
+  String? hata,
+}) {
+  OutlineInputBorder cerceve(Color c) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RR.r13),
+        borderSide: BorderSide(color: c, width: 1.5),
+      );
+  return InputDecoration(
+    hint: refYerTutucu(yerTutucu, zorunlu: zorunlu, boyut: RF.s15),
+    filled: true,
+    fillColor: RC.white,
+    isDense: true,
+    counterText: '',
+    errorText: hata,
+    errorMaxLines: 2,
+    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 15),
+    prefixIcon: Padding(
+      padding: const EdgeInsets.fromLTRB(15, 0, 12, 0),
+      child: RefSvg(ikon, size: 20, color: const Color(0xFF4A5568)),
+    ),
+    prefixIconConstraints: const BoxConstraints(minWidth: 47, minHeight: 22),
+    suffixIcon: suffix,
+    suffixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 24),
+    border: cerceve(RC.borderLight),
+    enabledBorder: cerceve(RC.borderLight),
+    disabledBorder: cerceve(RC.borderLight),
+    focusedBorder: cerceve(RC.blue),
+    errorBorder: cerceve(RC.danger),
+    focusedErrorBorder: cerceve(RC.danger),
+    errorStyle: refText(size: RF.s115, weight: RF.w600, color: RC.danger),
+  );
+}
+
 /// `.rg-f` — form alanı kabı (ikon + girdi + son ek).
 ///
 /// ```css

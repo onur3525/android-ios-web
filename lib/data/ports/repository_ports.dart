@@ -132,6 +132,11 @@ abstract class AuthPort extends ChangeNotifier {
   Future<({String? challengeId, DomainError? error})> profilTelefonKoduGonder(
       String telefon);
 
+  /// 4 Kas: telefonun SMS'i yakaladığı kod (Android, Google Play
+  /// hizmetleri). `id` gönderimin `challengeId`si; `kod` boşsa numara kod
+  /// girilmeden doğrulanmıştır. Desteklenmeyen platformda hep `null`.
+  ValueListenable<({String id, String kod})?> get otomatikSmsKodu;
+
   /// [challengeId] + [kod] verilirse önce telefon doğrulanır; ardından
   /// verilen parçalar (adres, kategori + bölge) TEK istekte kaydedilir.
   Future<DomainError?> profiliTamamla({

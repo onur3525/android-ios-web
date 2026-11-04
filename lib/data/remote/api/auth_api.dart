@@ -9,6 +9,11 @@ class AuthApi {
   Future<void> requestOtp({required String phone, required String purpose}) =>
       c.post('/auth/otp/request', body: {'phone': phone, 'purpose': purpose});
 
+  /// 4 Kas: SMS'i Firebase gönderdiğinde her koddan ÖNCE sunucu izni
+  /// (60 sn / 3 kod / 15 dk kuralı sunucuda sayılır).
+  Future<Map<String, dynamic>> otpPermit({required String phone, required String purpose}) =>
+      c.post('/auth/otp/permit', body: {'phone': phone, 'purpose': purpose});
+
   Future<Map<String, dynamic>> register({
     required String phone,
     required String password,
