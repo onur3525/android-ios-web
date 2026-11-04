@@ -631,7 +631,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Hesap yoksa kayıt ekranı açılır; sonrası şifreli
                         // girişle AYNI yönlendirme.
                         SosyalGirisDugmeleri(
-                          enabled: !_busy,
+                          aktif: !_busy,
                           tamam: (_) {
                             sysToastOk(context, 'Hoş geldiniz! Giriş yapıldı');
                             _girisSonrasiYonlendir();

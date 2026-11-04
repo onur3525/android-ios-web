@@ -1439,7 +1439,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Sonrası e-postalı kayıtla AYNI (`_kayitTamam`).
                 SosyalGirisDugmeleri(
                   rol: widget.role,
-                  enabled: !_busy,
+                  aktif: !_busy,
                   tamam: (eposta) => _kayitTamam(context, eposta ?? ''),
                 ),
 

@@ -31,7 +31,7 @@ class SosyalGirisDugmeleri extends StatefulWidget {
     super.key,
     this.rol,
     required this.tamam,
-    this.enabled = true,
+    this.aktif = true,
   });
 
   /// Kayıt ekranındaki rol; giriş ekranında `null` (kayıtta sorulur).
@@ -40,7 +40,8 @@ class SosyalGirisDugmeleri extends StatefulWidget {
   /// Oturum açıldı (giriş ya da kayıt) — çağıran ekran yönlendirir.
   final void Function(String? eposta) tamam;
 
-  final bool enabled;
+  /// İstek sürerken (çağıran ekran meşgulken) düğmeler pasif.
+  final bool aktif;
 
   @override
   State<SosyalGirisDugmeleri> createState() => _SosyalGirisDugmeleriState();
@@ -125,7 +126,7 @@ class _SosyalGirisDugmeleriState extends State<SosyalGirisDugmeleri> {
           _SosyalDugme(
             saglayici: s,
             busy: _mesgul == s,
-            onPressed: widget.enabled && _mesgul == null ? () => _devam(s) : null,
+            onPressed: widget.aktif && _mesgul == null ? () => _devam(s) : null,
           ),
           const SizedBox(height: 10),
         ],

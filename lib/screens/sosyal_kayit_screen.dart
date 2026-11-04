@@ -48,6 +48,7 @@ class SosyalKayitScreen extends StatefulWidget {
 class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
   final _ad = TextEditingController();
   final _soyad = TextEditingController();
+  final _fSoyad = FocusNode();
   Role? _rol;
   bool _sozlesme = false;
   bool _aydinlatma = false;
@@ -74,6 +75,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
   void dispose() {
     _ad.dispose();
     _soyad.dispose();
+    _fSoyad.dispose();
     super.dispose();
   }
 
@@ -186,6 +188,8 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                     controller: _ad,
                     enabled: !_mesgul,
                     textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    onEditingComplete: () => _fSoyad.requestFocus(),
                     onChanged: (_) => setState(() => _hata = null),
                     decoration: _alan('Ad *').copyWith(
                         errorText: _ad.text.trim().isEmpty
@@ -195,8 +199,11 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _soyad,
+                    focusNode: _fSoyad,
                     enabled: !_mesgul,
                     textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.done,
+                    onEditingComplete: () => FocusScope.of(context).unfocus(),
                     onChanged: (_) => setState(() => _hata = null),
                     decoration: _alan('Soyad *').copyWith(
                         errorText: _soyad.text.trim().isEmpty

@@ -164,10 +164,11 @@ export async function hesapYaniti(db, u) {
  */
 async function kayitOnaylariniYaz(db, kullaniciId, platform, zaman) {
   const pl = ['android', 'ios', 'web'].includes(platform) ? platform : null;
+  const onaylananlar = ['terms', 'kvkk', 'privacy'];
   for (const v of await db.prepare(
     `SELECT v.* FROM legal_versions v JOIN legal_documents d ON d.slug = v.slug
       WHERE v.slug IN (?, ?, ?) AND v.status = 'PUBLISHED' AND d.active = TRUE`,
-  ).all('terms', 'kvkk', 'privacy')) {
+  ).all(...onaylananlar)) {
     await db.prepare('INSERT INTO legal_acceptances (id, user_id, slug, version_id, version, sha256, platform, accepted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .run(randomUUID(), kullaniciId, v.slug, v.id, v.version, v.sha256, pl, zaman);
   }
