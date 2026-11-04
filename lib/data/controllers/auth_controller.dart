@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../domain/failures.dart';
 import '../../domain/sosyal_saglayici.dart';
 import '../models/account.dart';
@@ -107,11 +109,23 @@ class AuthController extends BaseController {
   }
 
   // ── PROFİL TAMAMLAMA (4 Kas) — ekran kodu doğrulamaz; karar porttadır.
-  Future<({String? challengeId, String? hata})> profilTelefonKoduGonder(
-      String telefon) async {
+  /// 4 Kas: gönderim kuralına takılırsa (60 sn / 3 kod / 15 dk) kalan süre
+  /// ve kilit bilgisi de döner — ekran geri sayımı buna göre gösterir.
+  Future<({String? challengeId, String? hata, int? kalanSaniye, bool kilit})>
+      profilTelefonKoduGonder(String telefon) async {
     final r = await _auth.profilTelefonKoduGonder(telefon);
-    return (challengeId: r.challengeId, hata: r.error?.message);
+    final e = r.error;
+    return (
+      challengeId: r.challengeId,
+      hata: e?.message,
+      kalanSaniye: e is KodSiniriError ? e.kalanSaniye : null,
+      kilit: e is KodSiniriError && e.kilit,
+    );
   }
+
+  /// Android'de SMS'ten otomatik okunan kod (bkz. `AuthPort.otomatikSmsKodu`).
+  ValueListenable<({String id, String kod})?> get otomatikSmsKodu =>
+      _auth.otomatikSmsKodu;
 
   Future<String?> profiliTamamla({
     String? telefon,

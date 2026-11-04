@@ -1,7 +1,12 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/geri.dart';
+import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
@@ -13,7 +18,6 @@ import '../ui/panel_rotasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/web_panel.dart';
-import 'otp_screen.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import 'widgets/region_picker.dart';
 
@@ -37,6 +41,10 @@ import 'widgets/region_picker.dart';
 /// sunucuya (Firebase belgesi olarak) gider; karar sunucunundur.
 /// Tamamlanınca `true` ile kapanır ve kullanıcı bastığı işleme devam eder.
 /// ═══════════════════════════════════════════════════════════════
+/// İki SMS kodu arasındaki bekleme — sunucu kuralıyla (`smsGonderimIzni`,
+/// 60 sn) ve kod ekranındaki sayaçla aynı.
+const int _kSmsBeklemeSaniye = 60;
+
 class ProfilTamamlamaScreen extends StatefulWidget {
   const ProfilTamamlamaScreen({super.key, required this.rol});
 
@@ -57,6 +65,23 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   final Set<String> _bolgeler = {};
   bool _mesgul = false;
   String? _hata;
+
+  // ── 4 Kas: SMS KODU AYNI EKRANDA ──
+  // "SMS Kodu Gönder" → kod kutusu açılır, 60 sn geri sayım; sayım bitince
+  // "Kodu tekrar gönder". 6 hane girilince (ya da Android'de SMS'ten
+  // otomatik dolunca) düğme "Devam Et" olur; kod ve bilgiler TEK istekte
+  // sunucuya gider. Gönderim kuralı (60 sn / 3 kod / 15 dk) sunucudadır;
+  // ekran yalnız kalan süreyi gösterir.
+  final _kod = TextEditingController();
+  final _fKod = FocusNode();
+  String? _challengeId;
+  String? _gonderilenTelefon;
+  String? _kodHata;
+  bool _otomatikDogrulandi = false;
+  int _sayac = 0;
+  bool _kilit = false;
+  Timer? _zamanlayici;
+  ValueListenable<({String id, String kod})?>? _otomatikKod;
 
   bool get _saglayici => widget.rol == Role.provider;
 
@@ -89,12 +114,87 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
         context.read<RegionController>().load();
       }
     });
+    try {
+      _otomatikKod = context.read<AuthController>().otomatikSmsKodu
+        ..addListener(_otomatikKodGeldi);
+    } catch (_) {
+      _otomatikKod = null; // otomatik kod desteklenmiyor
+    }
   }
 
   @override
   void dispose() {
+    _otomatikKod?.removeListener(_otomatikKodGeldi);
+    _zamanlayici?.cancel();
     _telefon.dispose();
+    _kod.dispose();
+    _fKod.dispose();
     super.dispose();
+  }
+
+  /// Android: telefon SMS'i yakaladı → kod kutusu kendiliğinden dolar.
+  void _otomatikKodGeldi() {
+    final o = _otomatikKod?.value;
+    if (!mounted || o == null || o.id != _challengeId) {
+      return;
+    }
+    setState(() {
+      _kodHata = null;
+      if (o.kod.isNotEmpty) {
+        _kod.text = o.kod;
+      } else {
+        _otomatikDogrulandi = true; // kod girilmeden doğrulandı
+      }
+    });
+  }
+
+  void _sayaciBaslat(int saniye, {required bool kilit}) {
+    _zamanlayici?.cancel();
+    setState(() {
+      _sayac = saniye;
+      _kilit = kilit;
+    });
+    _zamanlayici = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        _sayac--;
+        if (_sayac <= 0) {
+          _sayac = 0;
+          _kilit = false;
+          t.cancel();
+        }
+      });
+    });
+  }
+
+  String get _sayacMetni {
+    final dk = _sayac ~/ 60;
+    final sn = (_sayac % 60).toString().padLeft(2, '0');
+    return dk > 0 ? '$dk:$sn' : '$_sayac sn';
+  }
+
+  bool get _kodGonderildi =>
+      _challengeId != null &&
+      _gonderilenTelefon == Validators.phoneFmt(_telefon.text);
+
+  bool get _kodGirildi =>
+      _otomatikDogrulandi || RegExp(r'^\d{6}$').hasMatch(_kod.text);
+
+  /// Numara değişirse gönderilmiş kod o numaraya ait değildir: sıfırlanır.
+  void _telefonDegisti(String _) {
+    setState(() {
+      _hata = null;
+      if (_challengeId != null &&
+          _gonderilenTelefon != Validators.phoneFmt(_telefon.text)) {
+        _challengeId = null;
+        _kod.clear();
+        _kodHata = null;
+        _otomatikDogrulandi = false;
+      }
+    });
   }
 
   bool get _tamam {
@@ -125,64 +225,79 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
             bolgeler: _saglayici ? _bolgeler : null,
           );
 
+  /// "SMS Kodu Gönder" / "Kodu tekrar gönder".
+  Future<void> _kodGonder() async {
+    if (_mesgul || !_tamam || _sayac > 0) {
+      return;
+    }
+    final tel = Validators.phoneFmt(_telefon.text);
+    setState(() {
+      _mesgul = true;
+      _hata = null;
+      _kodHata = null;
+    });
+    final r = await context.read<AuthController>().profilTelefonKoduGonder(tel);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _mesgul = false);
+    if (r.challengeId == null) {
+      if (r.kalanSaniye != null) {
+        // Bekleme ya da 15 dk kilit: kalan süre geri sayımla gösterilir.
+        _sayaciBaslat(r.kalanSaniye!, kilit: r.kilit);
+      } else {
+        setState(() => _kodHata = r.hata ?? FormMesaj.otpGonderilemedi);
+      }
+      return;
+    }
+    setState(() {
+      _challengeId = r.challengeId;
+      _gonderilenTelefon = tel;
+      _kod.clear();
+      _otomatikDogrulandi = false;
+    });
+    _sayaciBaslat(_kSmsBeklemeSaniye, kilit: false);
+    _fKod.requestFocus();
+    // Android bazen kodu gönderim yanıtından ÖNCE yakalar: kaçmasın.
+    _otomatikKodGeldi();
+  }
+
+  /// "Devam Et": telefon doğrulanmışsa yalnız kayıt; değilse kod + kayıt
+  /// TEK istekte (kod yanlışsa hiçbir şey kaydedilmez).
   Future<void> _devam() async {
     if (_mesgul || !_tamam) {
+      return;
+    }
+    if (!_telefonDogrulanmis && !(_kodGonderildi && _kodGirildi)) {
       return;
     }
     setState(() {
       _mesgul = true;
       _hata = null;
+      _kodHata = null;
     });
-    final auth = context.read<AuthController>();
-    // Telefon doğrulanmışsa kod sorulmadan kaydedilir.
-    if (_telefonDogrulanmis) {
-      final hata = await _kaydet();
-      if (!mounted) {
-        return;
-      }
-      setState(() => _mesgul = false);
-      if (hata != null) {
-        setState(() => _hata = hata);
-        return;
-      }
-      Navigator.of(context).pop(true);
-      return;
-    }
-    final tel = Validators.phoneFmt(_telefon.text);
-    var ch = await auth.profilTelefonKoduGonder(tel);
+    final hata = _telefonDogrulanmis
+        ? await _kaydet()
+        : await _kaydet(challengeId: _challengeId, kod: _kod.text);
     if (!mounted) {
       return;
     }
     setState(() => _mesgul = false);
-    if (ch.challengeId == null) {
-      setState(() => _hata = ch.hata ?? FormMesaj.otpGonderilemedi);
+    if (hata != null) {
+      setState(() {
+        if (_telefonDogrulanmis) {
+          _hata = hata;
+        } else {
+          _kodHata = hata;
+          _kod.clear();
+          _otomatikDogrulandi = false;
+        }
+      });
       return;
     }
-    final dogrulandi = await Navigator.of(context).push<bool>(panelRotasi<bool>(
-      settings: const RouteSettings(name: '/dogrulama'),
-      builder: (_) => OtpScreen(
-        phone: tel,
-        purpose: OtpPurpose.phoneChange,
-        // ⚠ Kod doğrulaması ve bilgilerin kaydı TEK istekte: kod yanlışsa
-        // hiçbir şey kaydedilmez.
-        dogrula: (kod) => _kaydet(challengeId: ch.challengeId, kod: kod),
-        yenidenGonder: () async {
-          final yeni = await auth.profilTelefonKoduGonder(tel);
-          if (yeni.challengeId == null) {
-            return yeni.hata ?? FormMesaj.otpGonderilemedi;
-          }
-          ch = yeni;
-          return null;
-        },
-        onVerified: (otpContext, _) => Navigator.of(otpContext).pop(true),
-      ),
-    ));
-    if (!mounted) {
-      return;
-    }
-    if (dogrulandi == true) {
-      Navigator.of(context).pop(true);
-    }
+    _zamanlayici?.cancel();
+    sysToastOk(context, 'Bilgileriniz kaydedildi');
+    Navigator.of(context).pop(true);
   }
 
   /// ⚠ Seçim sayfası bölge verisini DİNLER (`Consumer`): veri sonradan
@@ -286,6 +401,36 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     return s.length <= 2 ? s.join(', ') : '${s.take(2).join(', ')} +${s.length - 2}';
   }
 
+  /// Kod kutusunun altı: geri sayım, "Kodu tekrar gönder" ya da 15 dk kilit.
+  Widget _kodAltSatiri() {
+    final kucuk = refText(size: RF.s125, weight: RF.w500, color: RC.textSoft);
+    if (_kilit && _sayac > 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6, left: 2),
+        child: Text(
+            'Çok fazla kod istendi. $_sayacMetni sonra tekrar deneyebilirsiniz.',
+            style: refText(size: RF.s125, weight: RF.w600, color: RC.danger)),
+      );
+    }
+    if (_sayac > 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6, left: 2),
+        child: Text('Yeni kodu $_sayacMetni sonra isteyebilirsiniz', style: kucuk),
+      );
+    }
+    if (!_kodGonderildi) {
+      return const SizedBox(height: 6);
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton(
+        onPressed: _mesgul ? null : _kodGonder,
+        child: Text('Kodu tekrar gönder',
+            style: refText(size: RF.s13, weight: RF.w700, color: RC.blue)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Bölge verisi gelince il/ilçe satırları tazelensin.
@@ -329,19 +474,26 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
                       height: RF.lh145),
                 ),
                 const SizedBox(height: 20),
+                // 4 Kas: kutunun içinde açıklama yazısı yok — telefon ikonu
+                // ve silik örnek biçim (kayıt formundaki telefon alanı gibi).
                 TextField(
                   controller: _telefon,
                   enabled: !dogrulanmis && !_mesgul,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
                   inputFormatters: const [TelefonBicimlendirici()],
-                  onChanged: (_) => setState(() => _hata = null),
-                  decoration: InputDecoration(
-                    labelText: dogrulanmis
-                        ? 'Telefon (doğrulandı)'
-                        : 'Telefon (SMS kodu gönderilecek)',
-                    hintText: '05XX XXX XX XX',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(RR.r13)),
+                  onChanged: _telefonDegisti,
+                  decoration: refIkonluAlanDekoru(
+                    '5XX XXX XX XX',
+                    'assets/svg/ic_phone.svg',
+                    zorunlu: true,
+                    suffix: dogrulanmis
+                        ? const Tooltip(
+                            message: 'Telefon numaranız doğrulandı',
+                            child: Icon(Icons.verified_rounded,
+                                color: RC.success, size: 20),
+                          )
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -377,6 +529,36 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
                     onTap: _il == null || _mesgul ? null : _bolgeSec,
                   ),
                 ],
+                // 4 Kas: SMS kodu kutusu (en altta — hizmet alanda Mahalle'nin
+                // altı). Kod gönderilene kadar pasif.
+                if (!dogrulanmis) ...[
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: _kod,
+                    focusNode: _fKod,
+                    enabled: _kodGonderildi && !_mesgul && !_otomatikDogrulandi,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    // iOS: klavyenin üstünde "Mesajlar'dan" önerisi; web:
+                    // tarayıcının tek kullanımlık kod önerisi.
+                    autofillHints: const [AutofillHints.oneTimeCode],
+                    maxLength: 6,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+                    onChanged: (_) => setState(() => _kodHata = null),
+                    onSubmitted: (_) => _devam(),
+                    decoration: refIkonluAlanDekoru(
+                      _otomatikDogrulandi
+                          ? 'Numaranız otomatik doğrulandı'
+                          : 'Telefonunuza gelen 6 haneli kodu girin',
+                      'assets/svg/ic_plock.svg',
+                      hata: _kodHata,
+                    ),
+                  ),
+                  _kodAltSatiri(),
+                ],
                 if (_hata != null) ...[
                   const SizedBox(height: 8),
                   Text(_hata!,
@@ -386,11 +568,21 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
                           color: RC.danger)),
                 ],
                 const SizedBox(height: 16),
-                RefPrimaryButton(
-                  dogrulanmis ? 'Kaydet ve Devam Et' : 'Kodu Gönder ve Devam Et',
-                  busy: _mesgul,
-                  onPressed: _tamam ? _devam : null,
-                ),
+                // Doğrulanmış telefonda doğrudan "Devam Et"; değilse kod
+                // girilene kadar "SMS Kodu Gönder", girilince "Devam Et".
+                if (dogrulanmis || (_kodGonderildi && _kodGirildi))
+                  RefPrimaryButton(
+                    'Devam Et',
+                    busy: _mesgul,
+                    onPressed: _tamam ? _devam : null,
+                  )
+                else
+                  RefPrimaryButton(
+                    'SMS Kodu Gönder',
+                    busy: _mesgul,
+                    onPressed:
+                        _tamam && !_kodGonderildi && _sayac == 0 ? _kodGonder : null,
+                  ),
               ],
             ),
           ),

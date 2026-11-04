@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../../domain/failures.dart';
 import '../../domain/sosyal_saglayici.dart';
 import '../remote/firebase_kimlik.dart';
@@ -213,6 +214,21 @@ class ApiAuthPort extends AuthPort {
     }));
   }
 
+  /// ── ⚠ SMS KODU GÖNDERİMİ — TEK KAYNAK (4 Kas) ──
+  /// Firebase'den kod istenmeden ÖNCE sunucudan izin alınır: iki kod arası
+  /// 60 sn, bir numaraya en fazla 3 kod, sonra 15 dakika kilit (sayaç
+  /// sunucuda). İzin yoksa kod istenmez; hata kalan süreyi taşır
+  /// (`KodSiniriError`). Kodun gönderildiği HER akış buradan geçer.
+  Future<({String? id, DomainError? error})> _firebaseKodGonder(
+      String telefon, String amac) async {
+    final izinHatasi = await repo.smsIzni(telefon, amac);
+    if (izinHatasi != null) {
+      FirebaseKimlik.i.gonderimHatasiniBildir(izinHatasi);
+      return (id: null, error: izinHatasi);
+    }
+    return FirebaseKimlik.i.kodGonder(telefon);
+  }
+
   // ═══ FIREBASE AUTHENTICATION (kalıcı üretim yolu) ═══
   // Firebase kimliği doğrular; backend ID token'ı doğrulayıp KENDİ
   // oturumunu verir (hesap/rol/iş verisi backend'de). Mock mod aynen.
@@ -235,7 +251,7 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<({String? challengeId, DomainError? error})> girisTelefonKodGonder(
       String phone) async {
-    final r = await FirebaseKimlik.i.kodGonder(phone);
+    final r = await _firebaseKodGonder(phone, 'LOGIN');
     return (challengeId: r.id, error: r.error);
   }
 
@@ -253,7 +269,7 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<({String challengeId})> kayitKodGonder(String phone,
       {required String taslakKimligi}) async {
-    final r = await FirebaseKimlik.i.kodGonder(phone);
+    final r = await _firebaseKodGonder(phone, 'REGISTER');
     return (challengeId: r.id ?? '');
   }
 
@@ -269,7 +285,7 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<({String? challengeId, DomainError? error})> telefonDegisimiKodGonder(
       String yeniTelefon) async {
-    final r = await FirebaseKimlik.i.kodGonder(yeniTelefon);
+    final r = await _firebaseKodGonder(yeniTelefon, 'PHONE_CHANGE');
     return (challengeId: r.id, error: r.error);
   }
 
@@ -294,7 +310,7 @@ class ApiAuthPort extends AuthPort {
 
   @override
   Future<({String challengeId})> hesapKurtarmaKodGonder(String phone) async {
-    final r = await FirebaseKimlik.i.kodGonder(phone);
+    final r = await _firebaseKodGonder(phone, 'FORGOT');
     return (challengeId: r.id ?? '');
   }
 
@@ -415,9 +431,13 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<({String? challengeId, DomainError? error})> profilTelefonKoduGonder(
       String telefon) async {
-    final r = await FirebaseKimlik.i.kodGonder(telefon);
+    final r = await _firebaseKodGonder(telefon, 'PHONE_VERIFY');
     return (challengeId: r.id, error: r.error);
   }
+
+  @override
+  ValueListenable<({String id, String kod})?> get otomatikSmsKodu =>
+      FirebaseKimlik.i.otomatikKod;
 
   @override
   Future<DomainError?> profiliTamamla({
@@ -532,7 +552,7 @@ class ApiAuthPort extends AuthPort {
     if (tel.isEmpty) {
       return (challengeId: null, error: const ValidationError('Hesapta kayıtlı telefon yok'));
     }
-    final r = await FirebaseKimlik.i.kodGonder(tel);
+    final r = await _firebaseKodGonder(tel, 'ROLE_ADD');
     return (challengeId: r.id, error: r.error);
   }
 

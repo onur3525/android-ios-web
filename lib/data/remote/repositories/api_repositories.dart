@@ -225,6 +225,10 @@ class ApiAuthRepository extends ChangeNotifier {
     return null;
   }
 
+  /// 4 Kas: Firebase ile SMS göndermeden önce sunucu izni. Başarıda `null`.
+  Future<DomainError?> smsIzni(String phone, String purpose) async =>
+      (await _guard(() => _auth.otpPermit(phone: phone, purpose: purpose))).$2;
+
   Future<DomainError?> requestOtp(String phone, String purpose) async =>
       (await _guard(() => _auth.requestOtp(phone: phone, purpose: purpose))).$2;
 
