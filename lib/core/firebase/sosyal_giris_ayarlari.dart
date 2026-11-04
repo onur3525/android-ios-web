@@ -46,11 +46,15 @@ class SosyalGirisAyarlari {
       defaultValue:
           '262578778971-vralmbcac95ndp4jl78ofq8tgstgc6sk.apps.googleusercontent.com');
 
-  /// ⚠ ANDROID: mağaza uygulamasının (com.hizmetcep.app) SHA-1 parmak izi
-  /// Firebase'e eklenmeden Google girişi Android'de "yapılandırma hatası"
-  /// verir. Parmak izi eklenip google-services.json yenilenince `true`.
+  /// ⚠ ANDROID: Google girişi uygulamayı imzalayan anahtarın SHA-1'i
+  /// Firebase'de kayıtlıysa çalışır. 4 Kas: yükleme anahtarının (hizmetcep.jks)
+  /// SHA-1'i eklendi → Codemagic'in imzaladığı paketlerde açık.
+  /// ⚠ MAĞAZA: Play'e ilk yüklemeden sonra Play Console → Uygulama bütünlüğü
+  /// → "Uygulama imzalama anahtarı"nın SHA-1'i de Firebase'e eklenmelidir;
+  /// eklenmezse mağazadan inen sürümde Google girişi hata verir.
+  /// Kapatmak için: --dart-define=GOOGLE_ANDROID=0
   static const bool googleAndroidAcik =
-      String.fromEnvironment('GOOGLE_ANDROID') == '1';
+      String.fromEnvironment('GOOGLE_ANDROID', defaultValue: '1') == '1';
   static const bool appleAcik =
       String.fromEnvironment('APPLE_GIRIS') == '1';
 

@@ -5,6 +5,7 @@ import '../core/firebase/sosyal_giris_ayarlari.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
+import '../data/remote/api_config.dart';
 import '../domain/sosyal_saglayici.dart';
 import '../screens/sosyal_kayit_screen.dart';
 import 'panel_rotasi.dart';
@@ -94,7 +95,12 @@ class _SosyalGirisDugmeleriState extends State<SosyalGirisDugmeleri> {
 
   @override
   Widget build(BuildContext context) {
-    final liste = SosyalGirisAyarlari.gorunenler;
+    // Google/Apple girişi kimliği Firebase'de doğrular ve sunucuya gider;
+    // bellek içi (mock) modda çalışmadığı için düğme gösterilmez.
+    final liste =
+        ApiConfig.useRealApi
+        ? SosyalGirisAyarlari.gorunenler
+        : const <SosyalSaglayici>[];
     if (liste.isEmpty) {
       return const SizedBox.shrink();
     }

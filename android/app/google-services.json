@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "262578778971-rmncii8aue2u8519bmkdgilc923ilrd8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hizmetcep.app",
+            "certificate_hash": "3a23e0a9ee445f7044a490eeffa781f3b315c70b"
+          }
+        },
+        {
           "client_id": "262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com",
           "client_type": 3
         }

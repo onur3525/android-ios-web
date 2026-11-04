@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hizmetcep/core/firebase/sosyal_giris_ayarlari.dart';
 import 'package:hizmetcep/data/remote/api_error_mapper.dart';
@@ -36,13 +38,18 @@ void main() {
     expect(e.message, 'Kaydınızı tamamlayın');
   });
 
-  test('Android\'de parmak izi bayrağı kapalıyken düğme gösterilmez', () {
-    // Testler Android hedefinde koşar: mağaza SHA-1'i eklenip
-    // GOOGLE_ANDROID açılana kadar Google, Apple da yapılandırılana kadar
-    // gizli.
+  test('Android: Google açık, Apple yapılandırılana kadar gizli', () {
+    // Testler Android hedefinde koşar (4 Kas: yükleme anahtarının SHA-1'i
+    // Firebase'de kayıtlı).
     expect(SosyalGirisAyarlari.googleWebIstemciKimligi, isNotEmpty);
-    expect(SosyalGirisAyarlari.googleAndroidAcik, isFalse);
-    expect(SosyalGirisAyarlari.gorunenler, isEmpty);
+    expect(SosyalGirisAyarlari.googleAndroidAcik, isTrue);
+    expect(SosyalGirisAyarlari.gorunenler, [SosyalSaglayici.google]);
+  });
+
+  test('mock modda düğme gösterilmez (sunucusuz çalışmaz)', () {
+    final k = File('lib/ui/sosyal_giris_dugmeleri.dart').readAsStringSync();
+    expect(k.contains('? SosyalGirisAyarlari.gorunenler'),
+        isTrue);
   });
 
   test('sağlayıcı kimlikleri sunucuyla aynı', () {
