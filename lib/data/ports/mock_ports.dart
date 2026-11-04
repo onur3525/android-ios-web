@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/validators.dart';
 import '../../domain/cikar_catismasi.dart';
 import '../../domain/config.dart';
@@ -152,6 +154,13 @@ class MockAuthPort extends AuthPort {
           : null,
     );
   }
+
+  // Bellek içi modda SMS yok: otomatik kod hiç gelmez.
+  static final _otomatikKodYok = ValueNotifier<({String id, String kod})?>(null);
+
+  @override
+  ValueListenable<({String id, String kod})?> get otomatikSmsKodu =>
+      _otomatikKodYok;
 
   @override
   Future<DomainError?> profiliTamamla({

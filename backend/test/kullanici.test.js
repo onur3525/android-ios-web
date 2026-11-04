@@ -36,6 +36,8 @@ async function istek(yol, { yontem = 'GET', govde, token, cerez } = {}) {
 async function otpAl(tel, amac) {
   // OTP zaman sınırı (60 sn) testte geri alınır: son kaydın zamanı eskitilir.
   await db.prepare(`UPDATE otp_codes SET created_at = ? WHERE phone = ?`).run('2000-01-01T00:00:00.000Z', tel);
+  // 4 Kas: gönderim sayacı (60 sn / 3 kod / 15 dk) rate_limits'te — testte sıfırlanır.
+  await db.prepare('DELETE FROM rate_limits WHERE key = ?').run(`sms:${tel}`);
   const r = await istek('/api/v1/auth/otp/request', { yontem: 'POST', govde: { phone: tel, purpose: amac } });
   assert.equal(r.durum, 204, JSON.stringify(r.json));
   return globalThis.__sonOtp;

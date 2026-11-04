@@ -89,6 +89,18 @@ class FirebaseKimlik {
     return const ValidationError('İşlem tamamlanamadı. Lütfen tekrar deneyin.');
   }
 
+  /// Gönderim sunucu izni yüzünden yapılmadıysa (60 sn / 3 kod / 15 dk)
+  /// doğrulama adımı bu hatayı gösterir.
+  void gonderimHatasiniBildir(DomainError hata) => _sonGonderimHatasi = hata;
+
+  /// ── 4 Kas: OTOMATİK KOD (Android) ──
+  /// Google Play hizmetleri SMS'i yakalayınca kod (kimlik, kod) olarak
+  /// yayınlanır; ekran kod kutusunu kendisi doldurur. Kod yerine yalnız
+  /// "anında doğrulandı" bilgisi geldiyse kod boş dizedir — doğrulama yine
+  /// sunucuda yapılır (belge otomatik kimlikle alınır).
+  final ValueNotifier<({String id, String kod})?> otomatikKod =
+      ValueNotifier<({String id, String kod})?>(null);
+
   /// SMS kodu gönderir. Dönen kimlik `kodDogrula`ya verilir.
   Future<({String? id, DomainError? error})> kodGonder(String telefon10) async {
     _sonGonderimHatasi = null;
@@ -118,6 +130,7 @@ class FirebaseKimlik {
           } else {
             _bekleyen[id] = _Bekleyen(telefon10)..otomatik = kimlik;
           }
+          otomatikKod.value = (id: id, kod: kimlik.smsCode ?? '');
           if (!bitti.isCompleted) bitti.complete(null);
         },
         verificationFailed: (e) {

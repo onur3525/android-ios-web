@@ -287,6 +287,11 @@ export async function hizKayitlariniTemizle(db) {
       .run(onek.length, onek, Math.floor(Date.now() / s.pencereMs));
     silinen += r.changes ?? 0;
   }
+  // 4 Kas: SMS gönderim sayaçları (`sms:<numara>`, window_start = son
+  // gönderim ms) 15 dakika işlem görmezse zaten sıfır sayılır; silinir.
+  const r = await db.prepare(`DELETE FROM rate_limits WHERE substr(key, 1, 4) = 'sms:' AND window_start < ?`)
+    .run(Date.now() - 15 * 60_000);
+  silinen += r.changes ?? 0;
   return silinen;
 }
 
