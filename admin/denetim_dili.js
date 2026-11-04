@@ -27,6 +27,7 @@ const ISLEM_ADI = {
   'user.suspend': 'Kullanıcıyı askıya aldı',
   'user.unsuspend': 'Kullanıcının askısını kaldırdı',
   'user.ban': 'Kullanıcıyı banladı',
+  'user.deletion.apply_now': 'Kullanıcının silme talebini beklemeden uyguladı',
   'user.unban': 'Kullanıcının banını kaldırdı',
   'user.login.unlock': 'Kullanıcının giriş kilidini kaldırdı',
   'listing.remove': 'İlanı kaldırdı',

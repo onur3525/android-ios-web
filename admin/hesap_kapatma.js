@@ -10,7 +10,7 @@
 //   · Silindi       — kişisel bilgiler silindi; yalnız hesabın silindiği ve
 //                     tarihleri görünür (ad gösterilmez).
 // ═══════════════════════════════════════════════════════════════
-import { alanlarListesi, api, bilgiPenceresi, h } from './cekirdek.js';
+import { alanlarListesi, api, bildir, bilgiPenceresi, form, h } from './cekirdek.js';
 
 const gun = (v) => (v ? new Date(v).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
 const zaman = (v) => (v ? new Date(v).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
@@ -25,8 +25,28 @@ export const kapatmaAdi = (k) => (k.state === 'DELETED' ? 'Silinmiş hesap' : (k
 /** Listede gösterilen tarih: silinene silinme, silinecek/dondurulana talep tarihi. */
 export const kapatmaTarihi = (k) => gun(k.deletedAt ?? k.frozenAt ?? k.requestedAt);
 
+// ── ⚠ SİLME TALEBİNİ HEMEN UYGULA (4 Kas, işletmeci kararı) ──
+// Yalnız kullanıcının açtığı bekleyen silme talebi; 30 gün beklemeden aynı
+// silme kurallarıyla uygulanır. Geri alınamaz: yalnız süper yönetici,
+// şifre + kodla (sunucu denetler; yetkisiz rolde sunucu reddeder).
+async function hemenUygula(k, yenile) {
+  const onay = await form('Silme talebini şimdi uygula', [], 'Hesabı şimdi sil', {
+    tehlike: true,
+    aciklama: 'Kullanıcının açtığı silme talebi 30 gün beklenmeden uygulanır: kişisel bilgiler ve kullanıcının yazdığı içerikler silinir, oturumlar kapanır. Yasal saklama yükümlülüğü olan kayıtlar saklanır. Bu işlem GERİ ALINAMAZ.',
+  });
+  if (!onay) return;
+  try {
+    await api(`/account-requests/${k.id}/apply-now`, { yontem: 'POST', govde: {} });
+    document.querySelector('.perde')?.remove();
+    bildir('Hesap silindi. Telefon numarası ve e-posta yeni kayıt için boşa çıktı.');
+    yenile?.();
+  } catch (e) {
+    bildir(e?.durum === 403 ? 'Bu işlem yalnız süper yönetici içindir.' : (e?.message || 'İşlem başarısız'), true);
+  }
+}
+
 /** Satıra tıklanınca: talep tarihleri ve ayrıntılar. */
-export function kapatmaDetayi(k) {
+export function kapatmaDetayi(k, { yenile } = {}) {
   const satirlar = [
     ['Hesap', kapatmaAdi(k)],
     ['Durum', kapatmaDurumu(k)],
@@ -48,7 +68,8 @@ export function kapatmaDetayi(k) {
   bilgiPenceresi(k.type === 'FREEZE' ? 'Hesap dondurma ayrıntısı' : 'Hesap silme ayrıntısı',
     alanlarListesi(satirlar),
     aciklama ? h('p', { class: 'not' }, aciklama) : null,
-    k.state !== 'DELETED' ? h('p', {}, h('a', { href: `#/kullanici/${k.userId}`, onclick: () => document.querySelector('.perde')?.remove() }, 'Kullanıcı profiline git ›')) : null);
+    k.state !== 'DELETED' ? h('p', {}, h('a', { href: `#/kullanici/${k.userId}`, onclick: () => document.querySelector('.perde')?.remove() }, 'Kullanıcı profiline git ›')) : null,
+    k.state === 'DELETION_PENDING' ? h('p', {}, h('button', { class: 'btn tehlike', onclick: () => hemenUygula(k, yenile) }, 'Talebi şimdi uygula (geri alınamaz)')) : null);
 }
 
 // ── PANEL: toplam sayılar (tüm zamanlar) + süzülebilir, sayfalı liste ──
@@ -78,7 +99,7 @@ export function kapatmaPaneli({ kompakt = false } = {}) {
     const tabloAlani = liste.length
       ? h('div', {}, h('div', { class: kompakt ? 'hk-kaydir' : 'kart' }, h('table', { class: kompakt ? 'oz-tablo' : '' },
         h('thead', {}, h('tr', {}, ['Hesap', ...(kompakt ? [] : ['İşlem']), 'Durum', 'Tarih'].map((b) => h('th', {}, b)))),
-        h('tbody', {}, liste.map((k) => h('tr', { class: 'tikla', onclick: () => kapatmaDetayi(k) },
+        h('tbody', {}, liste.map((k) => h('tr', { class: 'tikla', onclick: () => kapatmaDetayi(k, { yenile: yukle }) },
           h('td', {}, kapatmaAdi(k)), ...(kompakt ? [] : [h('td', {}, k.type === 'FREEZE' ? 'Dondurma' : 'Silme')]),
           h('td', {}, kapatmaDurumu(k)), h('td', {}, kapatmaTarihi(k))))))),
       sonGelen === SAYFA ? h('button', { class: 'btn ikincil hk-devam', onclick: async (e) => {

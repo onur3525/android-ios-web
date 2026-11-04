@@ -75,6 +75,11 @@ export const SABLONLAR = {
     sms: 'Merhaba, hesabınız HizmetCep yönetimi tarafından kalıcı olarak kapatılmıştır. İşlem nedeni: {NEDEN} Detaylı bilgi için: {DESTEK}',
     konu: 'Hesabınız kapatıldı',
   },
+  // 4 Kas: kullanıcının silme talebi uygulandı (admin "hemen uygula").
+  HESAP_SILINDI: {
+    sms: 'Merhaba, silme talebiniz üzerine HizmetCep hesabınız ve kişisel bilgileriniz silindi. Yasal saklama yükümlülüğü olan kayıtlar mevzuattaki süre boyunca saklanır. Bu işlemi siz istemediyseniz {DESTEK} adresinden bize ulaşın.',
+    konu: 'Hesabınız silindi',
+  },
   HESAP_BAN_KALDIRILDI: {
     sms: 'Merhaba, HizmetCep hesabınız üzerindeki kapatma işlemi kaldırılmıştır. Detaylı bilgi için: {DESTEK}',
     konu: 'Hesabınız yeniden açıldı',

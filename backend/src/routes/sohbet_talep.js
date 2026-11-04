@@ -16,9 +16,10 @@
 // durumu yoktur); her okuma denetim kaydına yazılır (KVKK).
 // ═══════════════════════════════════════════════════════════════
 import { randomUUID } from 'node:crypto';
-import { yetkiIste } from '../auth.js';
+import { yenidenDogrulamaIste, yetkiIste } from '../auth.js';
 import { denetimYaz } from '../audit.js';
 import { simdi, tekilIhlaliMi } from '../db.js';
+import { kullaniciyaBildir } from '../bildirim.js';
 import { dosyalariDogrula } from '../depo_dogrulama.js';
 import { govdeOzeti, idemAnahtari, idemOlustur, oncekiKayit } from '../idempotency.js';
 import { ApiHatasi, HizSiniri, hata } from '../http.js';
@@ -665,6 +666,32 @@ export function sohbetTalepRotalar(r, db) {
     return { counts: sayac, total: sayac.FROZEN + sayac.DELETION_PENDING + sayac.DELETED, items };
   });
 
+  // ── ⚠ SİLME TALEBİNİ HEMEN UYGULA (4 Kas, işletmeci kararı) ──
+  // Yalnız kullanıcının KENDİ açtığı, bekleyen silme talebi için; admin
+  // talep olmadan hesap silemez (kurallara aykırı hesap için askıya alma /
+  // kapatma vardır, kanıtı korur). 30 günlük bekleme beklenmeden, otomatik
+  // silmeyle AYNI kurallarla uygulanır (anonimleştirme, Firebase kaydı,
+  // dosyalar, 5651 kimlik arşivi). Geri alınamaz: süper yönetici + yeniden
+  // doğrulama. Kullanıcıya (doğrulanmış kanalı varsa) bilgi gider; işlem
+  // denetim kaydına yazılır (kişisel veri yazılmaz, yalnız kimlikler).
+  r.post('/admin/v1/account-requests/:id/apply-now', async (ctx) => {
+    yetkiIste(ctx.admin, 'deletion.apply_now');
+    yenidenDogrulamaIste(ctx.oturum);
+    const a = await db.prepare('SELECT * FROM account_requests WHERE id = ?').get(String(ctx.params.id ?? ''));
+    if (!a || a.type !== 'DELETION') throw hata.bulunamadi('Silme talebi bulunamadı');
+    if (a.status !== 'PENDING') throw kural('INVALID_STATE', 'Bu talep bekleyen bir silme talebi değil');
+    const u = await db.prepare('SELECT * FROM users WHERE id = ? AND deleted_at IS NULL').get(a.user_id);
+    if (!u) throw hata.bulunamadi('Hesap bulunamadı');
+    // Bilgilendirme ANONİMLEŞTİRMEDEN önce (adres sonra silinir); gönderim
+    // kaydı da silme sırasında temizlenir.
+    await kullaniciyaBildir(db, u, 'HESAP_SILINDI', {}).catch(() => {});
+    const n = await silmeTalepleriniIsle(db, { talepId: a.id });
+    if (!n) throw kural('INVALID_STATE', 'Talep bu sırada başka bir işlemle uygulandı');
+    await denetimYaz(db, { adminId: ctx.admin.id, ip: ctx.ip, islem: 'user.deletion.apply_now', hedefTur: 'user', hedefId: a.user_id, sonra: { requestId: a.id } });
+    const son = await db.prepare('SELECT completed_at FROM account_requests WHERE id = ?').get(a.id);
+    return { ok: true, completedAt: son.completed_at };
+  });
+
   r.get('/admin/v1/users/:id/legal-acceptances', async (ctx) => {
     yetkiIste(ctx.admin, 'users.read');
     return (await db.prepare('SELECT * FROM legal_acceptances WHERE user_id = ? ORDER BY accepted_at DESC').all(ctx.params.id))
@@ -693,13 +720,23 @@ export function sohbetTalepRotalar(r, db) {
  *     uygulandığının kaydı (gerekçe metni silinir)
  * Karşı tarafın KENDİ yazdığı mesajlar onun verisidir, silinmez.
  */
-export async function silmeTalepleriniIsle(db) {
+export async function silmeTalepleriniIsle(db, { talepId = null } = {}) {
   const z = simdi();
-  const bekleyen = await db.prepare(
-    `SELECT * FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING' AND scheduled_for < ?`,
-  ).all(z);
+  // 4 Kas: [talepId] verilirse (admin "hemen uygula") süresi beklenmeden
+  // YALNIZ o bekleyen talep uygulanır; kurallar aynıdır.
+  const bekleyen = talepId
+    ? await db.prepare(`SELECT * FROM account_requests WHERE id = ? AND type = 'DELETION' AND status = 'PENDING'`).all(talepId)
+    : await db.prepare(
+      `SELECT * FROM account_requests WHERE type = 'DELETION' AND status = 'PENDING' AND scheduled_for < ?`,
+    ).all(z);
+  let uygulanan = 0;
   for (const a of bekleyen) {
     await db.tx(async () => {
+      // ⚠ TEK UYGULAMA: zamanlanmış iş ile "hemen uygula" aynı anda koşarsa
+      // talep yalnız bir kez işlenir (koşullu durum değişimi).
+      const al = await db.prepare(`UPDATE account_requests SET status = 'COMPLETED', completed_at = ? WHERE id = ? AND status = 'PENDING'`).run(z, a.id);
+      if (al.changes !== 1) return;
+      uygulanan++;
       // Firebase kimlik kaydı (telefon/e-posta kopyası) da silinir — uid
       // aşağıda NULL yapılmadan önce kuyruğa yazılır (bkz. firebase_silme.js).
       const fb = await db.prepare('SELECT firebase_uid, phone, name, email, created_at FROM users WHERE id = ?').get(a.user_id);
@@ -743,10 +780,9 @@ export async function silmeTalepleriniIsle(db) {
       await oturumlariIptal(db, a.user_id, 'DELETED');
       // Oturum satırları IP ve cihaz bilgisi taşır: iptalden sonra silinir.
       await db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(a.user_id);
-      await db.prepare(`UPDATE account_requests SET status = 'COMPLETED', completed_at = ? WHERE id = ?`).run(z, a.id);
     });
   }
-  return bekleyen.length;
+  return uygulanan;
 }
 
 const KALDIRILDI = '[Hesap silindiği için içerik kaldırıldı]';
