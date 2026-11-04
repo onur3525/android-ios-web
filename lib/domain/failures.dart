@@ -120,6 +120,19 @@ class MaintenanceError extends DomainError {
   const MaintenanceError(this.message);
 }
 
+/// 4 Kas: rolün gerektirdiği profil (telefon doğrulaması, adres; hizmet
+/// verende kategori + bölge) eksik — sunucu `PROFILE_INCOMPLETE`. Ekran
+/// tamamlama formunu açar (`profilKapisi`).
+class ProfilEksikError extends InvalidStateError {
+  const ProfilEksikError(super.message);
+}
+
+/// 4 Kas: numara doğrulanmamış bir hesapta kayıtlı; gerçek sahibi SMS
+/// koduyla doğrulayarak kayda devam eder — sunucu `PHONE_CLAIM_REQUIRED`.
+class TelefonSahiplenmeError extends InvalidStateError {
+  const TelefonSahiplenmeError(super.message);
+}
+
 class ValidationError extends DomainError {
   @override
   final String message;

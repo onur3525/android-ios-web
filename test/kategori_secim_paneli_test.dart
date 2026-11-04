@@ -14,9 +14,10 @@ void main() {
   group('Ortak panel', () {
     test('KATEGORİ SEÇİMİ YAPAN ÜÇ EKRAN da AYNI paneli kullanır', () {
       // ⚠ Ayrı paneller olsaydı biri düzeltilip öteki unutulurdu.
+      // 4 Kas: kayıt ve Rol Değiştir kategori sormaz; hizmet veren
+      // kategorileri profil tamamlama ekranında seçilir.
       for (final f in [
-        'lib/screens/role_switch_screen.dart',
-        'lib/screens/register_screen.dart',
+        'lib/screens/profil_tamamlama_screen.dart',
       ]) {
         final k = _oku(f);
         expect(k.contains('KategoriSecimPaneli'), isTrue,
@@ -28,8 +29,7 @@ void main() {
       // `RefMultiSelectSheet` il/ilçe seçiminde kalabilir — orada
       // liste doğru biçimdir. Ama KATEGORİ için kullanılmamalı.
       for (final f in [
-        'lib/screens/role_switch_screen.dart',
-        'lib/screens/register_screen.dart',
+        'lib/screens/profil_tamamlama_screen.dart',
       ]) {
         final k = _oku(f);
         expect(k.contains("title: 'Hizmet Kategorileri',\n        options:"),

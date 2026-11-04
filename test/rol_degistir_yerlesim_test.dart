@@ -102,15 +102,18 @@ void main() {
   });
 
   group('ORTALAMA', () {
-    test('eksik bilgi yokken kart sayfanın ortasında', () {
-      expect(rs.contains('if (!eksikVar)'), isTrue);
+    test('kart sayfanın ortasında', () {
       expect(rs.contains('child: Center('), isTrue);
     });
 
-    test('eksik bilgi varken liste düzeni korunur', () {
-      expect(rs.contains('Tamamlanması Gerekenler'), isTrue);
-      expect(rs.contains('onPressed: _hazir ?'), isTrue,
-          reason: 'zorunlu bilgiler tamamlanmadan geçilemez');
+    // 4 Kas (kullanıcı kararı): kategori ve hizmet bölgeleri Rol
+    // Değiştir'de sorulmaz; hizmet veren paneli açılınca profil tamamlama
+    // ekranında telefon doğrulamasıyla birlikte istenir (tek form).
+    test('tamamlanacak bilgiler burada sorulmaz; panelde tamamlanır', () {
+      expect(rs.contains('Tamamlanması Gerekenler'), isFalse);
+      expect(rs.contains('KategoriSecimPaneli'), isFalse);
+      expect(File('lib/screens/jobs_screen.dart').readAsStringSync()
+          .contains('profilKapisi(context, Role.provider)'), isTrue);
     });
   });
 

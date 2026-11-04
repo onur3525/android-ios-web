@@ -17,6 +17,9 @@ class AuthApi {
     required String role,
     required String otpCode,
     String? firebaseIdToken,
+    // 4 Kas: SMS'siz kayıtta Firebase e-posta/şifre kullanıcısının belgesi
+    // (hesap ona bağlanır; e-posta ile giriş ve doğrulama korunur).
+    String? firebaseEmailToken,
     // ⚠ 15 Eki: sunucu Kullanım Sözleşmesi onayını ZORUNLU tutar; yalnız
     // gerçek `true` kabul edilir. 16 Eki: ayrı 18 yaş beyanı kaldırıldı —
     // yaş koşulu sözleşmenin 4. maddesindedir.
@@ -34,6 +37,7 @@ class AuthApi {
         if (platform != null) 'platform': platform,
         // Firebase telefon doğrulamasının kanıtı (sunucu doğrular).
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
+        if (firebaseEmailToken != null) 'firebaseEmailToken': firebaseEmailToken,
       });
 
   /// Firebase ile doğrulanmış kimlikle HizmetCep oturumu (sunucu token'ı

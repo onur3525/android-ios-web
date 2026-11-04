@@ -322,12 +322,14 @@ void main() {
     });
 
     test('19-21. onboarding tamamlanmadan publish YOK', () {
-      expect(reg.contains('customerOnboardingComplete'), isTrue,
-          reason: 'SMS OTP + e-posta + adres + sözleşme zorunlu');
+      // 4 Kas: ölçüt tek kaynaktan — hizmet alan profili (telefon SMS
+      // koduyla doğrulandı + adres); kayıt bunları almıyor.
+      expect(reg.contains('profilTamam(Role.customer)'), isTrue,
+          reason: 'telefon doğrulaması + adres zorunlu');
       final i = reg.indexOf('Future<void> _bekleyenIlaniYayinla');
       expect(i, greaterThan(0));
       final govde = reg.pencere(i, 900);
-      expect(govde.contains('!acc.customerOnboardingComplete'), isTrue);
+      expect(govde.contains('!acc.profilTamam(Role.customer)'), isTrue);
       expect(govde.contains('return;'), isTrue);
     });
 

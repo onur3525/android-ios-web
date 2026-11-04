@@ -46,7 +46,9 @@ void main() {
       final k = _oku('lib/screens/register_screen.dart');
       expect(k.contains('final listingCtl = c.read<ListingController>();'),
           isTrue);
-      expect(k.contains('final sehir = c.read<RegionController>()'), isTrue);
+      // 4 Kas: konum kayıt formundan değil tamamlanmış profilden; hesap
+      // fotoğraf döngüsünden ÖNCE okunur.
+      expect(k.contains('final hesap = c.read<AuthController>().currentAccount;'), isTrue);
       expect(k.contains('await listingCtl.publish('), isTrue);
       expect(k.contains('await c.read<ListingController>().publish('), isFalse);
     });
@@ -55,7 +57,7 @@ void main() {
       // ⚠ Bu metot fotoğraf döngüsünden SONRA çalışıyordu ve içinde
       // `c.read` vardı. Artık saf: şehir adı hazır gelir.
       final k = _oku('lib/screens/register_screen.dart');
-      expect(k.contains('String? _kayitKonumu(String varsayilanIl)'), isTrue);
+      expect(k.contains('String? _kayitKonumu(Account? hesap)'), isTrue);
       expect(k.contains('String? _kayitKonumu(BuildContext c)'), isFalse);
     });
   });

@@ -84,9 +84,10 @@ void main() {
     });
 
     test('bölge verisi RegionController üzerinden okunur', () {
+      // 4 Kas: bölge seçimi kayıt formundan profil tamamlamaya taşındı.
       for (final f in [
         'lib/screens/addresses_screen.dart',
-        'lib/screens/register_screen.dart',
+        'lib/screens/profil_tamamlama_screen.dart',
         'lib/screens/create_listing_screen.dart',
         'lib/screens/my_areas_screen.dart',
       ]) {
@@ -112,7 +113,7 @@ void main() {
       // kayıt ekranında ve adres ekranında seçilir. Bu yüzden
       // `create_listing_screen` bu kontrolden ÇIKARILDI.
       for (final f in [
-        'lib/screens/register_screen.dart',
+        'lib/screens/profil_tamamlama_screen.dart',
         'lib/screens/addresses_screen.dart',
       ]) {
         final src = read(f);

@@ -183,6 +183,16 @@ abstract final class Mappers {
       a.categories.addAll(((p['categories'] ?? const []) as List).cast<String>());
       a.serviceDistricts.addAll(((p['districts'] ?? const []) as List).cast<String>());
     }
+    // 4 Kas: rol bazlı eksik profil parçaları (boş liste = tamamlandı).
+    final eksik = j['profileMissing'];
+    if (eksik is Map) {
+      List<String> liste(Object? v) =>
+          v is List ? v.whereType<String>().toList() : const <String>[];
+      a.sunucuProfilEksikleri = {
+        Role.customer: liste(eksik['customer']),
+        Role.provider: liste(eksik['provider']),
+      };
+    }
     return a;
   }
 

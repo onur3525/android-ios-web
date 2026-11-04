@@ -17,7 +17,7 @@ Object.assign(process.env, {
 });
 
 const { simdi } = await import('../src/db.js');
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { IMZA_KOVASI_SN, imzaZamani } = await import('../src/gorsel_adresleri.js');
@@ -53,6 +53,8 @@ before(async () => {
   const k = await ham('/api/v1/auth/register', { yontem: 'POST', govde: { termsAccepted: true, aydinlatmaAccepted: true, ageConfirmed: true, phone: tel, password: 'sifre1234', name: 'Okuma Deneme', email: 'okuma@ornek.com', role: 'CUSTOMER', otpCode: globalThis.__sonOtp } });
   assert.equal(k.durum, 200);
   token = coz(k).accessToken;
+  // 4 Kas: kayıt artık profil istemiyor; bu testte profil tamamlanır (bkz. destek.js).
+  await profilTamamlaDb(db, token);
   kullaniciId = coz(await ham('/api/v1/users/me')).id;
 });
 after(async () => { sunucu?.closeAllConnections?.(); sunucu?.close(); await db?.close(); });

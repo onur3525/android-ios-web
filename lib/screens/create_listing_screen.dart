@@ -27,6 +27,7 @@ import '../ui/web_panel.dart';
 import '../data/models/pending_listing.dart';
 import '../data/controllers/pending_listing_controller.dart';
 import 'role_select_screen.dart';
+import 'profil_tamamlama_screen.dart' show profilKapisi;
 import '../core/geri.dart';
 import '../data/category_tree.dart';
 import '../domain/config.dart';
@@ -162,9 +163,25 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
     // Oturumlu kullanıcıda konum PROFİL ADRESİNDEN gelir; adım 2'de
     // tekrar sorulmaz.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         return;
+      }
+      // ── ⚠ 4 KAS: PROFİL KAPISI (kullanıcı kararı) ──
+      // İlan Oluştur'a ilk basışta telefon doğrulaması ve adres eksikse
+      // tamamlama formu açılır; tamamlanınca kullanıcı ilanına devam
+      // eder, vazgeçerse form kapanır. Adres tamamlanmış profilden gelir
+      // (önceden profilde adres yoksa ilan "…, null / İzmir" gibi bozuk
+      // konumla yayımlanabiliyordu). Sunucu aynı kapıyı ayrıca uygular.
+      if (!widget.preLogin) {
+        final tamam = await profilKapisi(context, Role.customer);
+        if (!mounted) {
+          return;
+        }
+        if (!tamam) {
+          geriGit(context);
+          return;
+        }
       }
       // ⚠ GÜVENLİ OKUMA: `ProfileController` her widget ağacında
       // bulunmayabilir (ör. yalnız bu ekranı kuran testler).

@@ -127,8 +127,10 @@ void main() {
       expect(rc.districtsOf('Yok'), isEmpty);
     });
 
+    // 4 Kas: il/ilçe/mahalle kayıt formundan çıktı; seçim profil
+    // tamamlama ekranında (`ProfilTamamlamaScreen`) yapılır.
     test('ekran sözleşmesi: İl KİLİTLİ DEĞİL, seçim alanı', () {
-      final reg = read('lib/screens/register_screen.dart');
+      final reg = read('lib/screens/profil_tamamlama_screen.dart');
       // Hard-code veya kilitli alan kalmamalı.
       expect(reg.contains('İl kilitli'), isFalse);
       expect(reg.contains('_ilSec'), isTrue);
@@ -136,27 +138,29 @@ void main() {
       // İl alanı gerçekten tıklanabilir olmalı.
       final i = reg.indexOf("label: 'İl',");
       expect(i, greaterThan(0));
-      expect(reg.pencere(i, 160).contains('onTap: () => _ilSec'), isTrue);
+      expect(reg.pencere(i, 160).contains(': _ilSec'), isTrue);
     });
 
     test('ekran sözleşmesi: il değişince ilçe+mahalle temizlenir', () {
-      final reg = read('lib/screens/register_screen.dart');
-      final i = reg.indexOf('_city = sel;');
+      final reg = read('lib/screens/profil_tamamlama_screen.dart');
+      final i = reg.indexOf('_il = s;');
       expect(i, greaterThan(0));
       final govde = reg.pencere(i, 300);
-      expect(govde.contains('_district = null;'), isTrue);
-      expect(govde.contains("_hood.text = '';"), isTrue);
-      expect(govde.contains('_provDistricts.clear();'), isTrue);
+      expect(govde.contains('_ilce = null;'), isTrue);
+      expect(govde.contains('_mahalle = null;'), isTrue);
+      expect(govde.contains('_bolgeler.clear();'), isTrue);
+      // Kayıt formunda bölge seçimi kalmadı.
+      expect(read('lib/screens/register_screen.dart').contains('_ilSec'), isFalse);
     });
 
     // ⚠ İlan akışının 2. adımında konum SORULMAZ; bölge seçimi
-    // yalnız kayıt ve adres ekranlarında yapılır.
+    // yalnız profil tamamlama ve adres ekranlarında yapılır.
     test('ekran sözleşmesi: ilçe/mahalle sorguları İLE bağlı', () {
-      // Kayıt ekranı il-duyarlı sorgu kullanır.
-      const f = 'lib/screens/register_screen.dart';
+      // Profil tamamlama ekranı il-duyarlı sorgu kullanır.
+      const f = 'lib/screens/profil_tamamlama_screen.dart';
       final s = read(f);
-      expect(s.contains('districtsOf(_city)'), isTrue, reason: f);
-      expect(s.contains('city: _city'), isTrue, reason: f);
+      expect(s.contains('districtsOf(_il)'), isTrue, reason: f);
+      expect(s.contains('city: _il'), isTrue, reason: f);
 
       // Adres ekranı da bölge verisini controller'dan alır.
       final adr = read('lib/screens/addresses_screen.dart');
@@ -221,7 +225,8 @@ void main() {
   });
 
   group('Ekran sözleşmesi — lazy provider yarışı kapatıldı', () {
-    final reg = read('lib/screens/register_screen.dart');
+    // 4 Kas: bölge seçicileri kayıt formundan profil tamamlamaya taşındı.
+    final reg = read('lib/screens/profil_tamamlama_screen.dart');
     final cre = read('lib/screens/create_listing_screen.dart');
     final adr = read('lib/screens/addresses_screen.dart');
 
@@ -249,12 +254,11 @@ void main() {
       return false;
     }
 
-    test('kayıt ekranı açılışta bölge verisini YÜKLER', () {
+    test('profil tamamlama ekranı açılışta bölge verisini YÜKLER', () {
       // `ChangeNotifierProvider` lazy'dir; ekran load tetiklemezse
       // seçim sayfası boş açılır.
-      expect(reg.contains('void didChangeDependencies()'), isTrue);
       expect(bolgeYuklemesiVar(reg), isTrue,
-          reason: 'kayıt ekranı RegionController.load() çağırmalı');
+          reason: 'profil tamamlama ekranı RegionController.load() çağırmalı');
     });
 
     test('ilan oluşturma ekranı açılışta bölge verisini YÜKLER', () {
@@ -281,10 +285,10 @@ void main() {
 
     test('zincir temizliği: ilçe değişince mahalle sıfırlanır', () {
       // ⚠ Yalnız bölge seçici İÇEREN ekranlar denetlenir.
-      final i = reg.indexOf('_district = ');
+      final i = reg.indexOf('_ilce = s;');
       expect(i, greaterThan(0));
       // Aynı setState bloğunda mahalle temizlenmeli.
-      expect(reg.pencere(i, 240).contains("_hood.text = ''"), isTrue,
+      expect(reg.pencere(i, 240).contains('_mahalle = null'), isTrue,
           reason: 'ilçe değişince mahalle temizlenmiyor');
     });
 
@@ -305,7 +309,7 @@ void main() {
 
     test('ilçe seçilmeden mahalle seçilemez', () {
       // Mahalle alanı ilçe null iken pasiftir.
-      expect(reg.contains('_district == null ? null : () => _mahalleSec'),
+      expect(reg.contains('_ilce == null || _mesgul ? null : _mahalleSec'),
           isTrue);
     });
   });

@@ -115,10 +115,14 @@ void main() {
           reason: 'numara ortak biçimlendiriciyle yerel biçimde alınır');
     });
 
-    test('il/ilçe/mahalle aynı kutu ailesi ve seçimli', () {
-      expect(src.contains('RefRegDropdown'), isTrue);
-      expect(src.contains('RegionPickerSheet'), isTrue);
+    // 4 Kas: il/ilçe/mahalle kayıt formundan profil tamamlamaya taşındı;
+    // aynı kutu ailesi ve seçim sayfası orada kullanılır.
+    test('il/ilçe/mahalle aynı kutu ailesi ve seçimli (profil tamamlama)', () {
+      final t = read('lib/screens/profil_tamamlama_screen.dart');
+      expect(t.contains('RefRegDropdown'), isTrue);
+      expect(t.contains('RegionPickerSheet'), isTrue);
       // Alt çizgili Material dropdown YOK.
+      expect(t.contains('DropdownButtonFormField'), isFalse);
       expect(src.contains('DropdownButtonFormField'), isFalse);
     });
 

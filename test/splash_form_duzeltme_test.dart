@@ -134,29 +134,29 @@ void main() {
     });
   });
 
-  group('C — Hizmet Veren: chip yok, seçim kutusu var', () {
-    final r = read('lib/screens/register_screen.dart');
+  // 4 Kas (kullanıcı kararı): kategori ve hizmet bölgeleri kayıt formundan
+  // çıktı; hizmet veren paneli açılınca profil tamamlama ekranında seçilir.
+  group('C — Hizmet Veren: chip yok, seçim kutusu var (profil tamamlama)', () {
+    final r = read('lib/screens/profil_tamamlama_screen.dart');
+    final kayit = read('lib/screens/register_screen.dart');
 
-    test('ana formda kategori/ilçe chip listesi YOK', () {
+    test('ana formda kategori/ilçe chip listesi YOK; kayıt formunda seçim yok', () {
       expect(r.contains('FilterChip'), isFalse);
       expect(r.contains('_chipsSection'), isFalse);
+      expect(kayit.contains("label: 'Hizmet Kategorileri'"), isFalse);
+      expect(kayit.contains("label: 'Hizmet Verilen İlçeler'"), isFalse);
     });
 
     test('tek seçim çubukları VAR', () {
-      expect(r.contains("label: 'Hizmet Kategorileri'"), isTrue);
-      // ⚠ "Hizmet Verilen İl" satırı KALDIRILDI (kullanıcı isteği):
-      // kişisel İl'in kilitli bir kopyasıydı; hizmet ili artık kişisel
-      // İl'in kendisi sayılır.
+      expect(r.contains("label: 'Uzmanlık Kategorileri'"), isTrue);
       expect(r.contains("label: 'Hizmet Verilen İl'"), isFalse);
       expect(r.contains("label: 'Hizmet Verilen İlçeler'"), isTrue);
-      expect(r.contains('_altAciklama(FormMesaj.kategoriSec)'), isTrue);
-      expect(r.contains('Bir veya birden fazla ilçe seçebilirsiniz.'), isTrue);
     });
 
     test('çoklu seçim sayfası açılır', () {
       expect(r.contains('RefMultiSelectSheet'), isTrue);
       expect(r.contains('_kategoriSec'), isTrue);
-      expect(r.contains('_ilceSecCoklu'), isTrue);
+      expect(r.contains('_bolgeSec'), isTrue);
     });
 
     test('sheet: arama + checkbox + TAMAM + Tüm İlçeler', () {
@@ -170,20 +170,14 @@ void main() {
     });
 
     test('seçimler state\'te korunur (initial ile geri yüklenir)', () {
-      // ⚠ KATEGORİ SEÇİMİ ARTIK ORTAK PANELDE.
-      //
-      // `RefMultiSelectSheet(initial: _cats)` yerine
-      // `KategoriSecimPaneli(baslangic: _cats)` kullanılıyor —
-      // Hizmet Kategorilerim ekranıyla aynı arama tabanlı panel.
-      expect(r.contains('KategoriSecimPaneli(baslangic: _cats)'), isTrue);
-      expect(r.contains('initial: _provDistricts'), isTrue);
+      expect(r.contains('KategoriSecimPaneli(baslangic: _kategoriler)'), isTrue);
+      expect(r.contains('initial: _bolgeler'), isTrue);
       final w = read('lib/ui/ref_widgets.dart');
       expect(w.contains('_secili = {...widget.initial}'), isTrue);
     });
 
     test('zorunluluk kuralları korunur', () {
-      expect(r.contains('FormMesaj.kategoriSec'), isTrue);
-      expect(r.contains('FormMesaj.bolgeSec'), isTrue);
+      expect(r.contains('_kategoriler.isEmpty || _bolgeler.isEmpty'), isTrue);
     });
   });
 }

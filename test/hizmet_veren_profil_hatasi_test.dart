@@ -26,13 +26,13 @@ void main() {
         reason: 'sonuç yine yok sayılıyor');
   });
 
-  test('kayıt ekranı: kısmi başarıda forma dönmez, uyarır', () {
+  // 4 Kas: kayıt formu kategori/ilçe ALMAZ (profil tamamlamada alınır);
+  // kayıt ekranı hizmet veren profilini hiç yazmaz, hata yalnız hesap
+  // açılamadıysa gösterilir.
+  test('kayıt ekranı: hizmet veren profili kayıtta gönderilmez; hesap açılamazsa uyarır', () {
     final r = _kod('lib/screens/register_screen.dart');
     expect(r.contains('if (r.error != null && r.account == null) {'), isTrue);
-    expect(r.contains('r.account != null ? r.error?.message : null'), isTrue);
-    final iUyari = r.indexOf('if (profilUyarisi != null) {');
-    final iGecis = r.indexOf('const RegisterDoneScreen()');
-    expect(iUyari, greaterThan(0));
-    expect(iGecis, greaterThan(iUyari), reason: 'uyarı geçişten ÖNCE gösterilmeli');
+    expect(r.contains('categories:'), isFalse);
+    expect(r.contains('serviceDistricts:'), isFalse);
   });
 }

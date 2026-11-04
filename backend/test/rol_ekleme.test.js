@@ -20,7 +20,7 @@ import { createSign, generateKeyPairSync } from 'node:crypto';
 
 process.env.HC_SESSIZ = '1';
 process.env.HC_TEST_OTP_KANCASI = '1';
-const { testDb } = await import('./destek.js');
+const { testDb, profilTamamlaDb } = await import('./destek.js');
 const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { testSertifikaGetiricisi } = await import('../src/firebase_token.js');
@@ -88,6 +88,8 @@ test('doğru şifre + taze telefon doğrulaması: rol eklenir, aktif rol değiş
   const ilce = (await db.prepare('SELECT name FROM districts WHERE active = TRUE ORDER BY name LIMIT 1').get()).name;
   const kat = (await db.prepare('SELECT name FROM categories WHERE active = TRUE ORDER BY sort LIMIT 1').get()).name;
   assert.equal((await istek('/api/v1/profiles/me/provider', { yontem: 'PUT', token: tk, govde: { categories: [kat], districts: [ilce] } })).durum, 200);
+  // 4 Kas: iş listesi tamamlanmış profil ister (telefon + adres + hizmet listesi).
+  await profilTamamlaDb(db, tk);
   assert.equal((await istek('/api/v1/listings/available', { yontem: 'GET', token: tk })).durum, 200);
   const tekrar = await rolEkle(tk, { firebaseIdToken: belge({ sub: 'fb-rol-1', phone_number: `+90${tel}` }) });
   assert.equal(tekrar.durum, 409);

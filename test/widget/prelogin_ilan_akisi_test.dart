@@ -76,7 +76,7 @@ void main() {
       );
 
   /// Oturum açar ve verilen rolleri tanımlar.
-  void oturumAc({required Set<Role> roller, Role? aktif}) {
+  void oturumAc({required Set<Role> roller, Role? aktif, bool profilTamam = false}) {
     repo.register(
       phone: kTestPhone,
       pass: kTestPass,
@@ -89,6 +89,12 @@ void main() {
     final acc = repo.currentAccount!;
     acc.roles.addAll(roller);
     acc.activeRole = aktif ?? roller.first;
+    // 4 Kas: İlan Oluştur profil kapısından geçer (telefon doğrulaması +
+    // adres). Gezinmeyi sınayan testler profili tamamlanmış kurar.
+    if (profilTamam) {
+      acc.address = Address(
+          id: 'addr-${acc.id}', district: 'Bornova', neighborhood: 'Erzene');
+    }
   }
 
   group('A — Giriş yolları', () {
@@ -130,7 +136,7 @@ void main() {
 
     testWidgets('oturumlu MÜŞTERİ korumalı forma gider (preLogin false)',
         (t) async {
-      oturumAc(roller: {Role.customer});
+      oturumAc(roller: {Role.customer}, profilTamam: true);
       await t.pumpWidget(app(const CategoryScreen(category: 'Su Tesisatı')));
       await t.pumpAndSettle();
       // ⚠ Satırlar kategorinin ALT HİZMETLERİDİR.
@@ -178,7 +184,7 @@ void main() {
 
     testWidgets('her İKİ role sahip kullanıcı korumalı forma gider',
         (t) async {
-      oturumAc(roller: {Role.customer, Role.provider}, aktif: Role.provider);
+      oturumAc(roller: {Role.customer, Role.provider}, aktif: Role.provider, profilTamam: true);
       await t.pumpWidget(app(const CategoryScreen(category: 'Su Tesisatı')));
       await t.pumpAndSettle();
       // ⚠ Satırlar kategorinin ALT HİZMETLERİDİR.

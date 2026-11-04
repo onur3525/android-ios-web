@@ -78,6 +78,8 @@ export async function girisKilitleriniKaldir(db, kullaniciId) {
 }
 const otpIpSiniri = new HizSiniri('otp_ip', 20, 60 * 60 * 1000);
 const girisIpSiniri = new HizSiniri('giris_ip', 30, 15 * 60 * 1000);
+// 4 Kas: kayıtta SMS kodu yok; sahte hesap yağmuruna karşı IP başına sınır.
+const kayitIpSiniri = new HizSiniri('kayit_ip', 30, 60 * 60 * 1000);
 // Rol ekleme: kullanıcı başına 15 dakikada en çok 5 deneme (şifre denemesi
 // bu uçtan sınırsız yapılamasın).
 const rolEklemeSiniri = new HizSiniri('rol_ekleme', 5, 15 * 60 * 1000);
@@ -140,7 +142,90 @@ export async function profilFotograflari(db, u) {
  * istemci hesabı bu yanıtla değiştirdiği için fotoğraf ekrandan kayboluyordu.
  */
 export async function hesapYaniti(db, u) {
-  return kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u));
+  return {
+    ...kullaniciGorunumu(u, await saglayiciProfili(db, u.id), await profilFotograflari(db, u)),
+    // 4 Kas: rol bazlı eksik profil bilgileri (boş liste = tamamlandı).
+    profileMissing: await profilEksikleri(db, u),
+  };
+}
+
+/**
+ * ── ⚠ PROFİL TAMAMLAMA — TEK KAYNAK (4 Kas, kullanıcı kararı) ──
+ * Kayıt formu yalnız ad, soyad, telefon, e-posta ve şifre alır; telefon
+ * doğrulaması ve konum (hizmet verende ayrıca kategori + bölge) sonradan,
+ * işlemin gerektirdiği anda tamamlatılır. "Tamamlandı" ayrı bir alan
+ * olarak SAKLANMAZ; her seferinde bu kurallardan hesaplanır (eskimez,
+ * bir kez tamamlanınca bir daha istenmez).
+ *   PHONE    — telefon dolu ve SMS koduyla doğrulanmış
+ *   ADDRESS  — il, ilçe, mahalle kayıtlı
+ *   SERVICES — (yalnız hizmet veren) en az bir kategori ve bir ilçe
+ */
+export async function profilEksikleri(db, u) {
+  const ortak = [];
+  if (u.phone_verified !== 1 || !u.phone) ortak.push('PHONE');
+  const a = await db.prepare('SELECT city, district, neighborhood FROM addresses WHERE user_id = ?').get(u.id);
+  if (!a || !a.city || !a.district || !a.neighborhood) ortak.push('ADDRESS');
+  const p = await saglayiciProfili(db, u.id);
+  const hizmet = p && p.categories.length && p.districts.length ? [] : ['SERVICES'];
+  return { customer: [...ortak], provider: [...ortak, ...hizmet] };
+}
+
+/** Rolün gerektirdiği profil eksikse işlem SUNUCUDA reddedilir (istemciye bırakılmaz). */
+export async function profilKapisi(db, u, rol) {
+  const eksik = (await profilEksikleri(db, u))[rol === 'PROVIDER' ? 'provider' : 'customer'];
+  if (!eksik.length) return;
+  throw new ApiHatasi(403, 'PROFILE_INCOMPLETE', rol === 'PROVIDER'
+    ? 'Devam etmek için profilinizi tamamlayın: telefon doğrulaması, adres, hizmet kategorileri ve hizmet bölgeleri.'
+    : 'Devam etmek için profilinizi tamamlayın: telefon doğrulaması ve adres bilgileri.',
+  { ayrinti: { role: rol, missing: eksik } });
+}
+
+/**
+ * ── ⚠ BİR NUMARA, BİR HESAP (4 Kas, kullanıcı kuralı) ──
+ * Numara doğrulanmış bir hesaptaysa başkası alamaz. Doğrulanmamış bir
+ * hesaptaysa (kayıtta SMS yok), numarayı SMS koduyla doğrulayan kişi
+ * gerçek sahibidir: numara eski hesaptan düşer ('' olur), o hesaba
+ * tamamlama formu yeniden gösterilir. YALNIZ kanıt doğrulandıktan sonra
+ * çağrılır.
+ */
+async function numarayiSahiplen(db, tel, kendiId) {
+  const tutan = await db.prepare('SELECT id, phone_verified FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+  if (!tutan || tutan.id === kendiId) return;
+  if (tutan.phone_verified === 1) throw hata.cakisma('Bu telefon numarası kayıtlı');
+  await db.prepare(`UPDATE users SET phone = '', phone_verified = FALSE, updated_at = ? WHERE id = ?`).run(simdi(), tutan.id);
+}
+
+/** Adres yalnız admin'in tanımladığı ve AKTİF bölgelerden (tek kaynak). */
+async function adresDogrula(db, govde) {
+  const [il, ilce, mah] = ['city', 'district', 'neighborhood'].map((k) => String(govde?.[k] ?? '').trim());
+  const gecerli = await db.prepare(
+    `SELECT 1 FROM cities c JOIN districts d ON d.city_id = c.id JOIN neighborhoods n ON n.district_id = d.id
+      WHERE c.name = ? AND d.name = ? AND n.name = ?
+        AND c.active = TRUE AND d.active = TRUE AND n.active = TRUE
+        AND c.deleted_at IS NULL AND d.deleted_at IS NULL AND n.deleted_at IS NULL`,
+  ).get(il, ilce, mah);
+  if (!gecerli) throw hata.dogrulama('Geçerli bir il, ilçe ve mahalle seçiniz');
+  return [il, ilce, mah];
+}
+
+/** Hizmet veren kategori + ilçe listeleri (tek kaynak). 4 Kas: ikisi de en az bir öğe. */
+async function hizmetListeleriniDogrula(db, kat, ilc) {
+  if (!Array.isArray(kat) || !Array.isArray(ilc) || kat.length > 200 || ilc.length > 200) throw hata.dogrulama('Geçersiz liste');
+  if (!kat.length) throw hata.dogrulama('En az bir hizmet kategorisi seçiniz');
+  if (!ilc.length) throw hata.dogrulama('En az bir hizmet bölgesi seçiniz');
+  // Kategori ya da hizmet adı katalogda AKTİF olmalı (istemci ikisini de gönderebilir).
+  for (const k of kat) {
+    const ok = await db.prepare(
+      `SELECT 1 FROM categories WHERE name = ? AND active = TRUE AND deleted_at IS NULL
+       UNION SELECT 1 FROM services s JOIN categories c ON c.id = s.category_id
+        WHERE s.name = ? AND s.active = TRUE AND s.deleted_at IS NULL AND c.active = TRUE AND c.deleted_at IS NULL`,
+    ).get(String(k), String(k));
+    if (!ok) throw hata.dogrulama(`Geçersiz hizmet: ${k}`);
+  }
+  for (const d of ilc) {
+    const ok = await db.prepare('SELECT 1 FROM districts WHERE name = ? AND active = TRUE AND deleted_at IS NULL').get(String(d));
+    if (!ok) throw hata.dogrulama(`Geçersiz ilçe: ${d}`);
+  }
 }
 
 export function kullaniciGorunumu(u, saglayici, fotograflar = null) {
@@ -215,7 +300,7 @@ async function otpTuket(db, tel, amaclar, kod) {
 }
 
 // ── Oturum ──────────────────────────────────────────────────
-async function oturumVer(db, kullaniciId, req, olay = 'LOGIN') {
+async function oturumVer(db, kullaniciId, req, olay = 'LOGIN', { rolKoru = false } = {}) {
   // DONDURULMUŞ HESAP YENİDEN GİRİŞLE ETKİNLEŞİR (uygulamadaki metin:
   // "Dilediğiniz zaman tekrar giriş yaparak hesabınızı etkinleştirebilirsiniz").
   // Oturum yalnız kimlik doğrulandıktan sonra verildiği için tek kapı burası.
@@ -225,8 +310,11 @@ async function oturumVer(db, kullaniciId, req, olay = 'LOGIN') {
   // HİZMET VEREN rolüyle açılır; isterse sonra Rol Değiştir'den geçer.
   // Tek kapı burası (telefon/şifre, Firebase girişi, kayıt). Açık oturumun
   // yenilenmesi (uygulamayı kapatıp açma) seçili rolü DEĞİŞTİRMEZ.
-  await db.prepare(`UPDATE users SET active_role = 'PROVIDER' WHERE id = ? AND active_role <> 'PROVIDER'
-                      AND (',' || roles || ',') LIKE '%,PROVIDER,%'`).run(kullaniciId);
+  // 4 Kas: kayıt formundan DİĞER rol eklendiyse seçilen rol korunur.
+  if (!rolKoru) {
+    await db.prepare(`UPDATE users SET active_role = 'PROVIDER' WHERE id = ? AND active_role <> 'PROVIDER'
+                        AND (',' || roles || ',') LIKE '%,PROVIDER,%'`).run(kullaniciId);
+  }
   const jti = randomUUID();
   const yenileme = randomBytes(32).toString('base64url');
   const z = simdi();
@@ -653,6 +741,56 @@ async function telefonKaniti(db, body, tel, amaclar, { yakinDogrulama = null } =
   return { uid: null, yuk: null };
 }
 
+/**
+ * TELEFON KANITI ↔ FIREBASE KAYDI — TEK KAYNAK (telefon değiştirme ve 4 Kas
+ * profil tamamlama aynı kuralı kullanır).
+ *
+ * Firebase'e bağlı hesapta kanıt AYNI Firebase kullanıcısından gelmeli:
+ * Google imzalı belgede `sub` = hesabın uid'si ve `phone_number` = yeni
+ * numara ise numara Firebase Auth'ta o kullanıcıya bağlanmıştır
+ * (istemci `updatePhoneNumber`). Sunucu OTP yolunda numara Firebase'e sunucu
+ * yazar; yazılamazsa yerel numara da DEĞİŞMEZ (şifredeki kuralla aynı).
+ *
+ * İstemcide Firebase oturumu yoksa (telefon + şifreyle giriş) doğrulama
+ * yeni numarayla AYRI bir Firebase kullanıcısı açar. Bu kullanıcı hiçbir
+ * HizmetCep hesabına bağlı değilse ve yalnız telefon kimliği taşıyorsa
+ * sunucu onu siler ve numarayı hesabın Firebase kaydına yazar; değilse
+ * belge reddedilir. Dönüş: ayrı Firebase kaydı var mı.
+ */
+async function firebaseTelefonKanitiniDenetle(db, u0, kanit) {
+  const ayriFirebaseKaydi = !!(kanit.yuk && u0.firebase_uid && kanit.uid !== u0.firebase_uid);
+  if (ayriFirebaseKaydi) {
+    const ret = () => new ApiHatasi(400, 'PHONE_PROOF_INVALID', 'Telefon doğrulaması bu hesaba ait değil. Yeni kod isteyin.');
+    if (!firebaseYonetimiHazir()) throw ret();
+    if (await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ?').get(kanit.uid)) throw ret();
+    let ayri;
+    try { ayri = await firebaseKullaniciBilgisi(kanit.uid); } catch { ayri = undefined; }
+    if (ayri === undefined) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
+    if (ayri && (ayri.email || ayri.saglayicilar.some((p) => p !== 'phone'))) throw ret();
+  }
+  if (kanit.yuk) await firebaseBelgesiIptalDenetimi(db, u0, kanit.yuk, { durum: 400 });
+  return ayriFirebaseKaydi;
+}
+
+async function firebaseTelefonunuYaz(u0, kanit, yeni, ayriFirebaseKaydi) {
+  const yazilamadi = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
+  if (ayriFirebaseKaydi) {
+    try {
+      await firebaseKullaniciSil(kanit.uid);
+      await firebaseTelefonAyarla(u0.firebase_uid, `+90${yeni}`);
+    } catch {
+      throw yazilamadi();
+    }
+  } else if (!kanit.yuk && u0.firebase_uid) {
+    if (!firebaseYonetimiHazir()) throw yazilamadi();
+    try {
+      await firebaseTelefonAyarla(u0.firebase_uid, `+90${yeni}`);
+    } catch {
+      throw yazilamadi();
+    }
+  }
+}
+
 export function kullaniciRotalar(r, db) {
   const korumali = (f) => async (ctx) => {
     const { u, oturum } = await kullaniciCoz(db, ctx.req);
@@ -665,26 +803,36 @@ export function kullaniciRotalar(r, db) {
   r.post('/api/v1/auth/otp/request', async (ctx) => {
     const tel = telefon(ctx.body.phone);
     const amac = String(ctx.body.purpose ?? '');
-    if (!['REGISTER', 'LOGIN', 'FORGOT', 'PHONE_CHANGE', 'ROLE_ADD'].includes(amac)) throw hata.dogrulama('Geçersiz amaç');
+    if (!['REGISTER', 'LOGIN', 'FORGOT', 'PHONE_CHANGE', 'ROLE_ADD', 'PHONE_VERIFY'].includes(amac)) throw hata.dogrulama('Geçersiz amaç');
     // Gönderim yolu hiç yoksa (üretimde sağlayıcı tanımsız + admin
     // entegrasyonu kapalı) numaraya BAKMADAN açıkça reddedilir.
     if (!(await kanalHazir(db, 'SMS'))) throw smsYok();
-    const var_ = await db.prepare('SELECT id FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+    const var_ = await db.prepare('SELECT id, phone_verified FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+    // 4 Kas: numara doğrulanmamış bir hesapta (kayıtta SMS yok) → kayıt ve
+    // profil tamamlamada GERÇEK kod gider (numarayı sahiplenme); doğrulama
+    // gerektiren giriş/şifre yollarında böyle hesap yok sayılır.
+    const dogrulanmis = !!var_ && var_.phone_verified === 1;
+    if (amac === 'PHONE_VERIFY') {
+      if (dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
+      const kod = await otpUret(db, tel, amac, ctx.ip);
+      if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = kod; // yalnız test kancası
+      return undefined;
+    }
     // ⚠ E3 (KVKK takip denetimi, 22 Eki): KAYIT için yanıt artık NÖTR —
     // önceden 409 "Bu telefon numarası kayıtlı" dönüyor, herkes numaranın
     // HizmetCep'te kayıtlı olup olmadığını öğrenebiliyordu. Numaranın
     // sahibine kod yerine "hesabınız var, giriş yapın" bilgisi gider; kayıt
     // ucu (sahiplik kanıtından SONRA) yine 409 döner.
-    if (amac === 'REGISTER' && var_) {
+    if (amac === 'REGISTER' && dogrulanmis) {
       await otpUret(db, tel, amac, ctx.ip, { sablon: 'KAYITLI_NUMARA' });
       if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = null;
       return undefined;
     }
     // PHONE_CHANGE: oturum açmış kullanıcıya özgü; açık hata korunur.
-    if (amac === 'PHONE_CHANGE' && var_) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    if (amac === 'PHONE_CHANGE' && dogrulanmis) throw hata.cakisma('Bu telefon numarası kayıtlı');
     // FORGOT/LOGIN: numara kayıtlı değilse de AYNI yanıt (kayıt bilgisi sızmaz),
     // ama SMS gönderilmez.
-    if ((amac === 'FORGOT' || amac === 'LOGIN' || amac === 'ROLE_ADD') && !var_) return undefined;
+    if ((amac === 'FORGOT' || amac === 'LOGIN' || amac === 'ROLE_ADD') && !dogrulanmis) return undefined;
     const kod = await otpUret(db, tel, amac, ctx.ip);
     if (!uretim && process.env.HC_TEST_OTP_KANCASI) globalThis.__sonOtp = kod; // yalnız test kancası
     return undefined;
@@ -692,6 +840,7 @@ export function kullaniciRotalar(r, db) {
 
   // ── KAYIT ──
   r.post('/api/v1/auth/register', async (ctx) => {
+    await kayitIpSiniri.denetle(db, ctx.ip);
     const tel = telefon(ctx.body.phone);
     const sifre = sifreKurali(ctx.body.password);
     const isim = adSoyad(ctx.body.name);
@@ -710,21 +859,69 @@ export function kullaniciRotalar(r, db) {
     // SUNUCUDA da zorunlu — veri toplanmadan önce aydınlatmanın yapıldığının
     // ispatı (KVKK m.10). Kayıt ekranı bu alanı 16 Eki'den beri gönderiyor.
     if (ctx.body.aydinlatmaAccepted !== true) throw new ApiHatasi(400, 'AYDINLATMA_REQUIRED', 'Aydınlatma Metni bilgilendirmesi zorunludur');
-    const kanit = await telefonKaniti(db, ctx.body, tel, ['REGISTER']);
-    if (kanit.uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(kanit.uid)) {
+    // ── ⚠ KAYIT İLE TELEFON DOĞRULAMASI AYRI (4 Kas, kullanıcı kararı) ──
+    // Kayıt formu SMS kodu İSTEMEZ: hesap açılır, telefon "doğrulanmamış"
+    // kaydedilir; doğrulama profil tamamlama adımında yapılır
+    // (`/profiles/me/complete`). Kanıt gönderilirse (eski uygulama sürümleri
+    // ya da numarayı sahiplenme) yine doğrulanır ve telefon doğrulanmış
+    // sayılır; GEÇERSİZ kanıt reddedilir.
+    const kanitVar = !!(ctx.body.firebaseIdToken || ctx.body.otpCode);
+    const kanit = kanitVar ? await telefonKaniti(db, ctx.body, tel, ['REGISTER']) : { uid: null, yuk: null };
+    // E-POSTA İLE GİRİŞİN KORUNMASI: SMS'siz kayıtta istemci önce Firebase'de
+    // e-posta/şifre kullanıcısını açar ve belgesini gönderir; hesap o
+    // kullanıcıya bağlanır (e-posta ile giriş ve doğrulama e-postası bu
+    // bağla çalışır). Belgedeki e-posta formdaki adresle AYNI olmalı.
+    let epostaUid = null;
+    if (!kanit.uid && ctx.body.firebaseEmailToken) {
+      const ey = await firebaseKimlikIste(ctx.body.firebaseEmailToken);
+      if (String(ey.email || '').toLowerCase() !== mail) throw new ApiHatasi(400, 'AUTH_FAILED', 'E-posta doğrulaması bu adrese ait değil');
+      epostaUid = ey.sub;
+    }
+    const baglanacakUid = kanit.uid ?? epostaUid;
+    if (baglanacakUid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(baglanacakUid)) {
       throw hata.cakisma('Bu doğrulama başka bir hesaba bağlı');
     }
-    if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel)) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    // ── ⚠ BİR NUMARA, BİR HESAP (4 Kas, kullanıcı kuralı) ──
+    // Aynı numarayla AYNI rolde ikinci kayıt olmaz. DİĞER rolde kayıt, aynı
+    // kişinin hesabına rol eklemektir: girilen şifre o hesabın şifresiyse rol
+    // eklenir (ikinci hesap açılmaz); değilse "numara kayıtlı".
+    const mevcut = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+    if (mevcut) {
+      const mevcutRoller = roller(mevcut);
+      if (!mevcutRoller.includes(rol)) {
+        // Şifre denemesi hesap başına sınırlı (rol ekleme ucuyla AYNI sınır).
+        await rolEklemeSiniri.denetle(db, mevcut.id);
+        if (await sifreDogruMu(db, mevcut, String(ctx.body.password ?? ''))) {
+          durumKapisi(mevcut);
+          await bakimGirisKapisi(db, mevcut, ctx.req);
+          await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?')
+            .run([...mevcutRoller, rol].join(','), rol, simdi(), mevcut.id);
+          return oturumYaniti(ctx, await oturumVer(db, mevcut.id, ctx.req, 'REGISTER', { rolKoru: true }));
+        }
+      }
+      // Numara doğrulanmamış bir hesapta: gerçek sahibi SMS koduyla
+      // doğrulayarak alabilir (kanıt yukarıda doğrulandı).
+      if (mevcut.phone_verified === 1 || !kanitVar) {
+        if (mevcut.phone_verified !== 1) {
+          throw new ApiHatasi(409, 'PHONE_CLAIM_REQUIRED',
+            'Bu telefon numarası doğrulanmamış bir hesapta kayıtlı. Numara sizinse SMS koduyla doğrulayarak kayda devam edebilirsiniz.');
+        }
+        throw hata.cakisma('Bu telefon numarası kayıtlı');
+      }
+    }
     if (await db.prepare('SELECT 1 FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(mail)) throw hata.cakisma('Bu e-posta adresi kayıtlı');
     const id = randomUUID();
     const z = simdi();
-    await db.prepare(
-      `INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role,
-                          status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid, age_confirmed_at)
-       VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?, ?)`,
-    ).run(id, tel, mail, isim, await sifreOzetleAsenkron(sifre),
-      kanit.yuk?.email_verified === true && String(kanit.yuk.email || '').toLowerCase() === mail ? 1 : 0,
-      rol, rol, z, z, kanit.uid, z);
+    await db.tx(async () => {
+      if (mevcut) await numarayiSahiplen(db, tel, id);
+      await db.prepare(
+        `INSERT INTO users (id, phone, email, name, password_hash, phone_verified, email_verified, roles, active_role,
+                            status, terms_accepted, failed_logins, created_at, updated_at, firebase_uid, age_confirmed_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?, ?)`,
+      ).run(id, tel, mail, isim, await sifreOzetleAsenkron(sifre), kanitVar ? 1 : 0,
+        kanit.yuk?.email_verified === true && String(kanit.yuk.email || '').toLowerCase() === mail ? 1 : 0,
+        rol, rol, z, z, baglanacakUid, z);
+    });
     // Kayıt ekranında bağlantısı verilen belgelerin (Kullanım Koşulları,
     // Gizlilik Politikası) YAYINDAKİ sürümleri onaylandı olarak kaydedilir:
     // hangi metnin onaylandığı (sürüm + SHA-256) sonradan kanıtlanabilir.
@@ -946,10 +1143,16 @@ export function kullaniciRotalar(r, db) {
     let u = await db.prepare('SELECT * FROM users WHERE firebase_uid = ? AND deleted_at IS NULL').get(yuk.sub);
     if (!u && yuk.phone_number) {
       const tel = firebaseTelefonu(yuk);
-      u = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+      // 4 Kas: yalnız DOĞRULANMIŞ numara eşleşir (kayıtta SMS yok; numarayı
+      // doğrulanmamış hesaba yazmış biri, numaranın sahibine hesabını açmamalı).
+      u = await db.prepare('SELECT * FROM users WHERE phone = ? AND phone_verified = TRUE AND deleted_at IS NULL').get(tel);
     }
+    // ── ⚠ E-POSTA EŞLEŞMESİ YALNIZ BİZDE DE DOĞRULANMIŞSA (4 Kas, güvenlik) ──
+    // Önceden hesabın e-postası bizde doğrulanmamış olsa da eşleşiyordu:
+    // kayıtta başkasının adresini yazan birinin hesabına, o adresin gerçek
+    // sahibi Firebase'de aynı adresle hesap açıp doğrulayarak girebilirdi.
     if (!u && yuk.email && yuk.email_verified === true) {
-      u = await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND deleted_at IS NULL').get(String(yuk.email).toLowerCase());
+      u = await db.prepare('SELECT * FROM users WHERE lower(email) = ? AND email_verified = TRUE AND deleted_at IS NULL').get(String(yuk.email).toLowerCase());
     }
     if (!u) throw hata.bulunamadi('Bu bilgilerle kayıtlı hesap bulunamadı');
     if (u.firebase_uid && u.firebase_uid !== yuk.sub) throw new ApiHatasi(401, 'AUTH_FAILED', 'Hesap başka bir doğrulamaya bağlı');
@@ -1003,7 +1206,8 @@ export function kullaniciRotalar(r, db) {
     const tel = telefon(ctx.body.phone);
     const yeni = sifreKurali(ctx.body.newPassword);
     await telefonKaniti(db, ctx.body, tel, ['FORGOT']);
-    const u = await db.prepare('SELECT * FROM users WHERE phone = ? AND deleted_at IS NULL').get(tel);
+    // 4 Kas: SMS ile şifre sıfırlama yalnız DOĞRULANMIŞ numarada.
+    const u = await db.prepare('SELECT * FROM users WHERE phone = ? AND phone_verified = TRUE AND deleted_at IS NULL').get(tel);
     if (!u) throw new ApiHatasi(400, 'OTP_INVALID', 'Doğrulama kodu hatalı');
     // ── ⚠ FIREBASE ŞİFRESİ DE SIFIRLANIR (15 Eki güvenlik denetimi) ──
     // Firebase'e bağlı hesapta giriş şifreyi Firebase'den doğrular
@@ -1168,47 +1372,16 @@ export function kullaniciRotalar(r, db) {
     const u0 = ctx.kullanici;
     const kanit = await telefonKaniti(db, ctx.body, yeni, ['PHONE_CHANGE']);
     // ── ⚠ FIREBASE TELEFONU DA GÜNCEL OLMALI (15 Eki güvenlik denetimi) ──
-    // Firebase'e bağlı hesapta kanıt AYNI Firebase kullanıcısından gelmeli:
-    // Google imzalı belgede `sub` = hesabın uid'si ve `phone_number` = yeni
-    // numara ise numara Firebase Auth'ta o kullanıcıya bağlanmıştır
-    // (istemci `updatePhoneNumber`). Önceden başka bir Firebase kullanıcısının
-    // belgesi de kabul ediliyordu — yerel numara değişir, Firebase'deki
-    // numara eskisi kalırdı. Sunucu OTP yolunda numara Firebase'e sunucu
-    // yazar; yazılamazsa yerel numara da DEĞİŞMEZ (şifredeki kuralla aynı).
-    //
-    // İstemcide Firebase oturumu yoksa (telefon + şifreyle giriş) doğrulama
-    // yeni numarayla AYRI bir Firebase kullanıcısı açar. Bu kullanıcı hiçbir
-    // HizmetCep hesabına bağlı değilse ve yalnız telefon kimliği taşıyorsa
-    // sunucu onu siler ve numarayı hesabın Firebase kaydına yazar; değilse
-    // belge reddedilir.
-    const ayriFirebaseKaydi = kanit.yuk && u0.firebase_uid && kanit.uid !== u0.firebase_uid;
-    if (ayriFirebaseKaydi) {
-      const ret = () => new ApiHatasi(400, 'PHONE_PROOF_INVALID', 'Telefon doğrulaması bu hesaba ait değil. Yeni kod isteyin.');
-      if (!firebaseYonetimiHazir()) throw ret();
-      if (await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ?').get(kanit.uid)) throw ret();
-      let ayri;
-      try { ayri = await firebaseKullaniciBilgisi(kanit.uid); } catch { ayri = undefined; }
-      if (ayri === undefined) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
-      if (ayri && (ayri.email || ayri.saglayicilar.some((p) => p !== 'phone'))) throw ret();
-    }
-    if (kanit.yuk) await firebaseBelgesiIptalDenetimi(db, u0, kanit.yuk, { durum: 400 });
-    if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND deleted_at IS NULL').get(yeni)) throw hata.cakisma('Bu telefon numarası kayıtlı');
-    if (ayriFirebaseKaydi) {
-      try {
-        await firebaseKullaniciSil(kanit.uid);
-        await firebaseTelefonAyarla(u0.firebase_uid, `+90${yeni}`);
-      } catch {
-        throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
-      }
-    } else if (!kanit.yuk && u0.firebase_uid) {
-      if (!firebaseYonetimiHazir()) throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
-      try {
-        await firebaseTelefonAyarla(u0.firebase_uid, `+90${yeni}`);
-      } catch {
-        throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Telefon numarası şu anda değiştirilemiyor. Lütfen daha sonra tekrar deneyin.');
-      }
-    }
-    await db.prepare('UPDATE users SET phone = ?, phone_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), ctx.kullanici.id);
+    // Kural tek kaynakta: `firebaseTelefonKanitiniDenetle` / `firebaseTelefonunuYaz`.
+    const ayriFirebaseKaydi = await firebaseTelefonKanitiniDenetle(db, u0, kanit);
+    // 4 Kas: doğrulanmış bir hesaptaki numara alınamaz; doğrulanmamış
+    // hesaptaki numara, kanıtı veren kişiye geçer (aşağıda, güncellemeden hemen önce).
+    if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND phone_verified = TRUE AND id <> ? AND deleted_at IS NULL').get(yeni, u0.id)) throw hata.cakisma('Bu telefon numarası kayıtlı');
+    await firebaseTelefonunuYaz(u0, kanit, yeni, ayriFirebaseKaydi);
+    await db.tx(async () => {
+      await numarayiSahiplen(db, yeni, ctx.kullanici.id);
+      await db.prepare('UPDATE users SET phone = ?, phone_verified = TRUE, updated_at = ? WHERE id = ?').run(yeni, simdi(), ctx.kullanici.id);
+    });
     // Diğer cihazlardaki oturumlar kapanır (bu oturum açık kalır); Firebase
     // yenileme belirteçleri de iptal edilir.
     await oturumlariIptal(db, ctx.kullanici.id, 'PHONE_CHANGED', ctx.kOturum.id);
@@ -1397,15 +1570,8 @@ export function kullaniciRotalar(r, db) {
   }));
 
   r.put('/api/v1/profiles/me/address', korumali(async (ctx) => {
-    const [il, ilce, mah] = ['city', 'district', 'neighborhood'].map((k) => String(ctx.body[k] ?? '').trim());
     // Adres YALNIZ admin'in tanımladığı ve AKTİF bölgelerden seçilebilir.
-    const gecerli = await db.prepare(
-      `SELECT 1 FROM cities c JOIN districts d ON d.city_id = c.id JOIN neighborhoods n ON n.district_id = d.id
-        WHERE c.name = ? AND d.name = ? AND n.name = ?
-          AND c.active = TRUE AND d.active = TRUE AND n.active = TRUE
-          AND c.deleted_at IS NULL AND d.deleted_at IS NULL AND n.deleted_at IS NULL`,
-    ).get(il, ilce, mah);
-    if (!gecerli) throw hata.dogrulama('Geçerli bir il, ilçe ve mahalle seçiniz');
+    const [il, ilce, mah] = await adresDogrula(db, ctx.body);
     await db.prepare(
       `INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(user_id) DO UPDATE SET city = excluded.city, district = excluded.district,
@@ -1423,26 +1589,75 @@ export function kullaniciRotalar(r, db) {
     if (!roller(ctx.kullanici).includes('PROVIDER')) throw hata.yetki('Hizmet veren rolünüz yok');
     const kat = ctx.body.categories;
     const ilc = ctx.body.districts;
-    if (!Array.isArray(kat) || !Array.isArray(ilc) || kat.length > 200 || ilc.length > 200) throw hata.dogrulama('Geçersiz liste');
-    // Kategori ya da hizmet adı katalogda AKTİF olmalı (istemci ikisini de gönderebilir).
-    for (const k of kat) {
-      const ok = await db.prepare(
-        `SELECT 1 FROM categories WHERE name = ? AND active = TRUE AND deleted_at IS NULL
-         UNION SELECT 1 FROM services s JOIN categories c ON c.id = s.category_id
-          WHERE s.name = ? AND s.active = TRUE AND s.deleted_at IS NULL AND c.active = TRUE AND c.deleted_at IS NULL`,
-      ).get(String(k), String(k));
-      if (!ok) throw hata.dogrulama(`Geçersiz hizmet: ${k}`);
-    }
-    for (const d of ilc) {
-      const ok = await db.prepare('SELECT 1 FROM districts WHERE name = ? AND active = TRUE AND deleted_at IS NULL').get(String(d));
-      if (!ok) throw hata.dogrulama(`Geçersiz ilçe: ${d}`);
-    }
+    // 4 Kas: profil boşaltılamaz (en az bir kategori ve bir ilçe).
+    await hizmetListeleriniDogrula(db, kat, ilc);
     await db.prepare(
       `INSERT INTO provider_profiles (user_id, categories_json, districts_json, updated_at) VALUES (?, ?, ?, ?)
        ON CONFLICT(user_id) DO UPDATE SET categories_json = excluded.categories_json,
          districts_json = excluded.districts_json, updated_at = excluded.updated_at`,
     ).run(ctx.kullanici.id, JSON.stringify(kat), JSON.stringify(ilc), simdi());
     return { categories: kat, districts: ilc };
+  }));
+
+  // ── ⚠ PROFİL TAMAMLAMA (4 Kas, kullanıcı kararı) ──
+  // Kayıttan sonra, işlemin gerektirdiği anda TEK formda: telefon + SMS kodu,
+  // il/ilçe/mahalle; hizmet verende ayrıca kategori + hizmet bölgeleri.
+  // Tamamlanmış parçalar yeniden istenmez; gönderilmeyen parça değişmez.
+  // ⚠ Kod (ya da Firebase kanıtı) doğrulanmadan telefon ASLA doğrulanmış
+  // sayılmaz. Doğrulanmış telefonun değişikliği ayrı akıştır (şifre ister).
+  r.post('/api/v1/profiles/me/complete', korumali(async (ctx) => {
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    const u0 = ctx.kullanici;
+    const b = ctx.body;
+    const telGeldi = b.phone !== undefined && b.phone !== null && String(b.phone).trim() !== '';
+    const tel = telGeldi ? telefon(b.phone) : (u0.phone || null);
+    const telefonDogru = u0.phone_verified === 1 && !!u0.phone;
+    if (telefonDogru && tel !== u0.phone) {
+      throw hata.dogrulama('Doğrulanmış telefon numaranızı Hesap Ayarları bölümünden değiştirebilirsiniz.');
+    }
+    let kanit = null;
+    let ayri = false;
+    if (!telefonDogru) {
+      if (!tel) throw hata.dogrulama('Telefon numarası zorunludur');
+      if (await db.prepare('SELECT 1 FROM users WHERE phone = ? AND phone_verified = TRUE AND id <> ? AND deleted_at IS NULL').get(tel, u0.id)) {
+        throw hata.cakisma('Bu telefon numarası kayıtlı');
+      }
+      kanit = await telefonKaniti(db, b, tel, ['PHONE_VERIFY']);
+      if (kanit.uid && !u0.firebase_uid && await db.prepare('SELECT 1 FROM users WHERE firebase_uid = ? AND id <> ?').get(kanit.uid, u0.id)) {
+        throw new ApiHatasi(400, 'PHONE_PROOF_INVALID', 'Telefon doğrulaması bu hesaba ait değil. Yeni kod isteyin.');
+      }
+      ayri = await firebaseTelefonKanitiniDenetle(db, u0, kanit);
+    }
+    const adres = b.address ? await adresDogrula(db, b.address) : null;
+    const hizmet = b.provider ?? null;
+    if (hizmet) {
+      if (!roller(u0).includes('PROVIDER')) throw hata.yetki('Hizmet veren rolünüz yok');
+      await hizmetListeleriniDogrula(db, hizmet.categories, hizmet.districts);
+    }
+    if (kanit) await firebaseTelefonunuYaz(u0, kanit, tel, ayri);
+    const z = simdi();
+    await db.tx(async () => {
+      if (kanit) {
+        await numarayiSahiplen(db, tel, u0.id);
+        await db.prepare('UPDATE users SET phone = ?, phone_verified = TRUE, firebase_uid = COALESCE(firebase_uid, ?), updated_at = ? WHERE id = ?')
+          .run(tel, kanit.uid, z, u0.id);
+      }
+      if (adres) {
+        await db.prepare(
+          `INSERT INTO addresses (user_id, city, district, neighborhood, updated_at) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(user_id) DO UPDATE SET city = excluded.city, district = excluded.district,
+             neighborhood = excluded.neighborhood, updated_at = excluded.updated_at`,
+        ).run(u0.id, ...adres, z);
+      }
+      if (hizmet) {
+        await db.prepare(
+          `INSERT INTO provider_profiles (user_id, categories_json, districts_json, updated_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT(user_id) DO UPDATE SET categories_json = excluded.categories_json,
+             districts_json = excluded.districts_json, updated_at = excluded.updated_at`,
+        ).run(u0.id, JSON.stringify(hizmet.categories), JSON.stringify(hizmet.districts), z);
+      }
+    });
+    return hesapYaniti(db, await db.prepare('SELECT * FROM users WHERE id = ?').get(u0.id));
   }));
 
   // HİZMET VEREN ONAYI YOK (ürün kararı): rolü olan herkes onaylıdır.

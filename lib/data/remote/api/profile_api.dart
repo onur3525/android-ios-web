@@ -90,6 +90,25 @@ class ProfileApi {
         'district': district,
         'neighborhood': neighborhood,
       });
+  /// 4 Kas: PROFİL TAMAMLAMA — telefon kanıtı (Firebase belgesi ya da
+  /// sunucu kodu), adres ve (hizmet verende) kategori + bölge tek istekte.
+  /// Gönderilmeyen parça değişmez.
+  Future<Map<String, dynamic>> profiliTamamla({
+    String? phone,
+    String? firebaseIdToken,
+    String? otpCode,
+    Map<String, String>? address,
+    List<String>? categories,
+    List<String>? districts,
+  }) =>
+      c.post('/profiles/me/complete', body: {
+        if (phone != null) 'phone': phone,
+        if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
+        if (otpCode != null) 'otpCode': otpCode,
+        if (address != null) 'address': address,
+        if (categories != null && districts != null)
+          'provider': {'categories': categories, 'districts': districts},
+      });
   Future<Map<String, dynamic>> providerProfile() => c.get('/profiles/me/provider');
   Future<Map<String, dynamic>> saveProviderProfile({
     required List<String> categories,

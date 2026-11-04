@@ -29,7 +29,7 @@ const mesajSiniri = new HizSiniri('mesaj', 60, 60 * 1000);
 const talepOlusturSiniri = new HizSiniri('teklif_talebi', 30, 60 * 60 * 1000);
 import { olaylar } from '../olaylar.js';
 import { uygulamaIciBildir } from './ilan.js';
-import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, sifreDogruMu } from './kullanici.js';
+import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, profilKapisi, sifreDogruMu } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
@@ -264,6 +264,8 @@ export function sohbetTalepRotalar(r, db) {
   r.post('/api/v1/teklif-talepleri', korumali(async (ctx) => {
     const u = ctx.kullanici;
     aktifRolIste(u, 'CUSTOMER', 'Teklif talebini yalnız hizmet alan rolüyle gönderebilirsiniz');
+    // 4 Kas: telefon doğrulaması + adres tamamlanmadan teklif istenmez (sunucu kapısı).
+    await profilKapisi(db, u, 'CUSTOMER');
     const TALEP_IDEM = { tablo: 'teklif_talepleri', sahipSutun: 'hizmet_alan_id' };
     const talepAnahtari = idemAnahtari(ctx);
     const talepOzeti = govdeOzeti({
@@ -313,6 +315,8 @@ export function sohbetTalepRotalar(r, db) {
     const t = await talepGetir(ctx.params.id, ctx.kullanici);
     if (ctx.kullanici.id !== t.saglayici_id) throw hata.yetki('Teklifi yalnız hizmet veren verebilir');
     aktifRolIste(ctx.kullanici, 'PROVIDER', 'Teklifi hizmet veren rolüyle verebilirsiniz');
+    // 4 Kas: telefon doğrulaması + dolu profil olmadan teklif verilmez.
+    await profilKapisi(db, ctx.kullanici, 'PROVIDER');
     if (t.durum !== 'BEKLEMEDE') throw kural('INVALID_STATE', 'Bu talebe teklif verilemez');
     const fiyat = ctx.body.fiyat;
     const ac = String(ctx.body.aciklama ?? '').trim();

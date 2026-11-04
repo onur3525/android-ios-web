@@ -20,9 +20,12 @@ void main() {
     expect('apiClient:'.allMatches(m).length, greaterThanOrEqualTo(2));
   });
 
-  test('02 — kayıt adresi Account.address\'e yazılır', () {
-    final r = read('lib/screens/register_screen.dart');
-    expect(r.contains('saveAddress('), isTrue);
+  // 4 Kas: adres kayıt formunda değil, profil tamamlamada alınır ve
+  // hesaba (Account.address) TEK istekte yazılır.
+  test('02 — tamamlama adresi Account.address\'e yazılır', () {
+    final r = read('lib/data/repositories/auth_repository.dart');
+    expect(r.contains('DomainError? profiliTamamla('), isTrue);
+    expect(read('lib/screens/profil_tamamlama_screen.dart').contains('adres: _adres'), isTrue);
     // Adreslerim kayıtlı değerleri preload eder.
     final a = read('lib/screens/addresses_screen.dart');
     expect(a.contains('ProfileController>().address'), isTrue);
@@ -473,14 +476,15 @@ void main() {
         reason: 'profil ekranı rol sayfasını açmalı');
 
     final r = read('lib/screens/role_switch_screen.dart');
-    // Eksik bilgiler AYNI sayfada toplanır.
-    expect(r.contains('RefMultiSelectSheet'), isTrue,
-        reason: 'kategori ve bölge seçimi sayfadan yapılmalı');
     // Rol hesaba eklenir ve aktif role geçilir.
     expect(r.contains('addRole('), isTrue);
     expect(r.contains('switchRole('), isTrue);
-    // Eksik bilgi varken geçiş düğmesi PASİFTİR.
-    expect(r.contains('onPressed: _hazir ?'), isTrue,
+    // 4 Kas: kategori ve bölge seçimi hizmet veren paneli açılınca TEK
+    // tamamlama formunda yapılır (telefon doğrulamasıyla birlikte).
+    final t = read('lib/screens/profil_tamamlama_screen.dart');
+    expect(t.contains('RefMultiSelectSheet'), isTrue,
+        reason: 'kategori ve bölge seçimi tamamlama formundan yapılmalı');
+    expect(t.contains('onPressed: _tamam ? _devam : null'), isTrue,
         reason: 'zorunlu bilgiler tamamlanmadan geçilemez');
   });
 

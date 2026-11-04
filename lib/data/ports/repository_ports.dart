@@ -114,6 +114,32 @@ abstract class AuthPort extends ChangeNotifier {
 
     /// Kayıt denemesinin kimliği — yetkiyle eşleşmek zorundadır.
     String? taslakKimligi,
+    /// 4 Kas: SMS'SİZ KAYIT — kayıt formu telefon doğrulaması istemez;
+    /// telefon doğrulanmamış kaydedilir, doğrulama profil tamamlamada.
+    bool telefonDogrulamasiz = false,
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // PROFİL TAMAMLAMA (4 Kas, kullanıcı kararı)
+  //
+  // Telefon doğrulaması + adres (hizmet verende + kategori/bölge) kayıttan
+  // SONRA, işlemin gerektirdiği anda. Kod doğrulanmadan telefon
+  // doğrulanmış sayılmaz; karar sunucunundur (API modu).
+  // ══════════════════════════════════════════════════════════════
+
+  /// Profil tamamlama için telefona doğrulama kodu gönderir.
+  Future<({String? challengeId, DomainError? error})> profilTelefonKoduGonder(
+      String telefon);
+
+  /// [challengeId] + [kod] verilirse önce telefon doğrulanır; ardından
+  /// verilen parçalar (adres, kategori + bölge) TEK istekte kaydedilir.
+  Future<DomainError?> profiliTamamla({
+    String? telefon,
+    String? challengeId,
+    String? kod,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
   });
 
   // ══════════════════════════════════════════════════════════════

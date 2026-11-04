@@ -13,6 +13,8 @@ import '../domain/teklif_talebi_asamasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import 'scanning_screen.dart';
+import 'profil_tamamlama_screen.dart' show profilKapisi;
+import '../data/models/account.dart' show Role;
 import 'teklif_istediklerim_screen.dart';
 
 /// "BUL" AKIŞI — 1. EKRAN: HİZMET VEREN BUL
@@ -115,15 +117,18 @@ class _FindProviderScreenState extends State<FindProviderScreen> {
         .isNotEmpty;
   }
 
-  void _ara() {
+  Future<void> _ara() async {
+    // ── ⚠ 4 KAS: PROFİL KAPISI (kullanıcı kararı) ──
+    // İlk Bul'da telefon doğrulaması ve adres eksikse tamamlama formu
+    // açılır; tamamlanınca arama kaldığı yerden sürer. Önceden yalnız
+    // adres denetleniyor, kullanıcı Adreslerim'e gönderiliyordu. Kural
+    // tek kaynaktan (`profilKapisi`); sunucu teklif isteğinde ayrıca uygular.
+    final tamam = await profilKapisi(context, Role.customer);
+    if (!mounted || !tamam) {
+      return;
+    }
     final adres = context.read<AuthController>().currentAccount?.address;
-    // ⚠ ÖNCEDEN: adres yoksa SESSİZCE hiçbir şey olmuyordu. Şimdi
-    // kullanıcı NEDEN ilerleyemediğini görüyor VE adres ekleme
-    // sayfasına yönlendiriliyor — sessiz uç NOKTASI kalmadı.
     if (adres == null) {
-      sysToastKural(context,
-          'Arama yapabilmek için önce profilinize bir adres eklemelisiniz.');
-      Navigator.pushNamed(context, '/profile/address');
       return;
     }
     Navigator.push<void>(

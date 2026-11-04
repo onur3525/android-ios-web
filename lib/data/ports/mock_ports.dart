@@ -100,6 +100,7 @@ class MockAuthPort extends AuthPort {
     bool emailVerified = false,
     String? kayitYetkisi,
     String? taslakKimligi,
+    bool telefonDogrulamasiz = false,
   }) async =>
       repo.register(
         phone: phone, pass: pass, role: role, otpVerified: otpVerified,
@@ -109,7 +110,47 @@ class MockAuthPort extends AuthPort {
         emailVerified: emailVerified,
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,
+        telefonDogrulamasiz: telefonDogrulamasiz,
       );
+
+  // 4 Kas: profil tamamlama — mock depo aynı kayıt kodu düzeneğini kullanır.
+  @override
+  Future<({String? challengeId, DomainError? error})> profilTelefonKoduGonder(
+      String telefon) async {
+    final r = repo.kayitKodGonder(telefon, taslakKimligi: 'profil-tamamlama');
+    return (
+      challengeId: r.challengeId.isEmpty ? null : r.challengeId,
+      error: r.challengeId.isEmpty
+          ? const ValidationError('Doğrulama kodu gönderilemedi')
+          : null,
+    );
+  }
+
+  @override
+  Future<DomainError?> profiliTamamla({
+    String? telefon,
+    String? challengeId,
+    String? kod,
+    ({String city, String district, String neighborhood})? adres,
+    Set<String>? kategoriler,
+    Set<String>? bolgeler,
+  }) async {
+    var dogrulandi = false;
+    if (challengeId != null && kod != null) {
+      final d = await repo.kayitDogrula(challengeId, kod);
+      if (d.yetki == null) {
+        return d.error ?? const ValidationError('Doğrulama kodu hatalı');
+      }
+      dogrulandi = true;
+    }
+    return repo.profiliTamamla(
+      telefon: telefon,
+      telefonDogrulandi: dogrulandi,
+      adres: adres,
+      kategoriler: kategoriler,
+      bolgeler: bolgeler,
+    );
+  }
 
   @override
   Future<({String challengeId})> kayitKodGonder(String phone,
