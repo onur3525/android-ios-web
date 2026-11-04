@@ -141,6 +141,7 @@ class ApiAuthRepository extends ChangeNotifier {
     String? firebaseIdToken,
     String? firebaseEmailToken,
     required bool termsAccepted,
+    bool ticariIleti = false,
   }) async {
     final (res, err) = await _guard(() => _auth.register(
           phone: phone, password: password, name: name,
@@ -148,6 +149,7 @@ class ApiAuthRepository extends ChangeNotifier {
           firebaseIdToken: firebaseIdToken,
           firebaseEmailToken: firebaseEmailToken,
           termsAccepted: termsAccepted,
+          marketingConsent: ticariIleti,
           platform: currentPlatform(),
         ));
     if (err != null) {
@@ -181,12 +183,14 @@ class ApiAuthRepository extends ChangeNotifier {
     required Role role,
     String? name,
     required bool termsAccepted,
+    bool ticariIleti = false,
   }) async {
     final (res, err) = await _guard(() => _auth.firebaseRegister(
           idToken: idToken,
           role: Mappers.roleApi(role),
           name: name,
           termsAccepted: termsAccepted,
+          marketingConsent: ticariIleti,
           platform: currentPlatform(),
         ));
     if (err != null) {

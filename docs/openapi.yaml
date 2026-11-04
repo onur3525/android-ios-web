@@ -436,6 +436,10 @@ paths:
       tags: [Auth]
       summary: Kayıt (Ad, Soyad, Telefon, E-posta, Şifre + adres)
       description: |
+        ⚠ 4 Kas: `marketingConsent` (isteğe bağlı, varsayılan false) ticari elektronik
+        ileti iznidir; "Duyurular ve kampanyalar" tercihini belirler ve zamanıyla
+        kaydedilir. `aydinlatmaAccepted: true` = Aydınlatma Metni gösterildi ve yurt
+        dışındaki sunucularda işlemeye açık rıza verildi.
         ⚠ Kayıt sonrası SMS doğrulaması yapılır; e-posta doğrulaması YAPILMAZ (§4).
         ⚠ 15 Eki: `termsAccepted: true` (Kullanım Koşulları + Gizlilik Politikası onayı) ve
         `ageConfirmed: true` (18 yaş beyanı; doğum tarihi toplanmaz) ZORUNLUDUR; yoksa
@@ -510,7 +514,8 @@ paths:
       summary: Google ya da Apple ile kayıt
       description: |
         Gövde — idToken (Google/Apple girişinin Firebase ID token'ı), role,
-        name, termsAccepted, aydinlatmaAccepted, platform.
+        name, termsAccepted, aydinlatmaAccepted, marketingConsent (isteğe
+        bağlı), platform.
         E-posta sağlayıcıda doğrulanmış olmalı (yoksa 400 EMAIL_REQUIRED).
         Hesap şifresiz açılır (hasPassword = false); telefon ve adres e-postalı
         kayıttaki aynı profil tamamlama adımında alınır. Bu kimliğin hesabı
@@ -755,6 +760,8 @@ paths:
       summary: Bildirim tercihleri (yalnız push'u etkiler)
       description: |
         Gövde { offer?, message?, announcement?, email? } (boolean). Yalnız gönderilen alan değişir.
+        4 Kas: announcement ("Duyurular ve kampanyalar") ticari ileti iznidir; her
+        değişikliği zamanıyla kaydedilir (marketing_consents).
         Yanıt güncel dört değer. GET /users/me yanıtında notificationPrefs olarak da döner.
       responses:
         '200': { description: Başarılı }

@@ -336,10 +336,12 @@ test('WebSocket: kullanıcı başına en çok 10 bağlantı; fazlası en eskisin
 });
 
 // ═════ BİLDİRİM TERCİHLERİ (sunucu) ═════
-test('bildirim tercihleri sunucuda: varsayılan açık, PATCH yalnız gönderilen alanı değiştirir, girişten sonra korunur', async () => {
+test('bildirim tercihleri sunucuda: işlem bildirimleri varsayılan açık, kampanya izni kapalı; PATCH yalnız gönderilen alanı değiştirir, girişten sonra korunur', async () => {
   const k = await kisi('5370000111', 'CUSTOMER');
   const baska = await kisi('5370000112', 'CUSTOMER');
-  assert.deepEqual((await istek('/api/v1/users/me', { token: k.token })).json.notificationPrefs, { offer: true, message: true, announcement: true, email: true });
+  // 4 Kas (kullanıcı kararı): "Duyurular ve kampanyalar" ticari ileti iznidir;
+  // kayıtta isteğe bağlı kutu işaretlenmedikçe KAPALI başlar.
+  assert.deepEqual((await istek('/api/v1/users/me', { token: k.token })).json.notificationPrefs, { offer: true, message: true, announcement: false, email: true });
   const r = await istek('/api/v1/profiles/me/notifications', { yontem: 'PATCH', token: k.token, govde: { offer: false, announcement: false } });
   assert.equal(r.durum, 200);
   assert.deepEqual(r.json, { offer: false, message: true, announcement: false, email: true });

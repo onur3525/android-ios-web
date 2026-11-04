@@ -104,6 +104,8 @@ class MockAuthPort extends AuthPort {
     String? kayitYetkisi,
     String? taslakKimligi,
     bool telefonDogrulamasiz = false,
+    // Bellek içi modda izin saklanmaz (bildirim tercihi yerel).
+    bool ticariIleti = false,
   }) async =>
       repo.register(
         phone: phone, pass: pass, role: role, otpVerified: otpVerified,
@@ -131,6 +133,7 @@ class MockAuthPort extends AuthPort {
     required Role rol,
     required String ad,
     required bool sozlesmeOnayi,
+    bool ticariIleti = false,
   }) async =>
       const ValidationError(_sosyalYok);
 

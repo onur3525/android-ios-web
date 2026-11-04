@@ -51,6 +51,9 @@ class KayitVerisi {
   /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
   bool aydinlatma = false;
 
+  /// 4 Kas: isteğe bağlı ticari elektronik ileti izni (varsayılan kapalı).
+  bool ticariIleti = false;
+
   /// ── SEÇİMDEN SONRA SIRADAKİ ALANA KAYDIRMA ──
   ///
   /// ⚠ İl/ilçe/mahalle satırları METİN ALANI DEĞİLDİR; `scrollPadding`
@@ -392,6 +395,11 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
         },
         onAydinlatma: (x) {
           v.aydinlatma = x;
+          _degisti();
+        },
+        ticariIleti: v.ticariIleti,
+        onTicariIleti: (x) {
+          v.ticariIleti = x;
           _degisti();
         },
       ),

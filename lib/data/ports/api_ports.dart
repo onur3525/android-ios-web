@@ -366,6 +366,7 @@ class ApiAuthPort extends AuthPort {
     String? kayitYetkisi,
     String? taslakKimligi,
     bool telefonDogrulamasiz = false,
+    bool ticariIleti = false,
   }) async {
     // ⚠ Sözleşme onayı SUNUCUDA da doğrulanır (15 Eki;
     // önceden sunucu onayı denetlemiyordu). Buradaki erken çıkış
@@ -392,6 +393,7 @@ class ApiAuthPort extends AuthPort {
         // Firebase telefon doğrulamasının kanıtı (kayitDogrula'dan).
         firebaseIdToken: kayitYetkisi,
         firebaseEmailToken: epostaBelgesi,
+        ticariIleti: ticariIleti,
         termsAccepted: termsAccepted);
     if (err != null) {
       // Az önce açılan Firebase kullanıcısı sahipsiz kalmasın.
@@ -508,9 +510,14 @@ class ApiAuthPort extends AuthPort {
     required Role rol,
     required String ad,
     required bool sozlesmeOnayi,
+    bool ticariIleti = false,
   }) =>
       repo.firebaseKayit(
-          idToken: belge, role: rol, name: ad, termsAccepted: sozlesmeOnayi);
+          idToken: belge,
+          role: rol,
+          name: ad,
+          termsAccepted: sozlesmeOnayi,
+          ticariIleti: ticariIleti);
 
   @override
   Future<({String? kanit, bool iptal, DomainError? error})>
