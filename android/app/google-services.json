@@ -12,7 +12,12 @@
           "package_name": "com.hizmetcep.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAJw5diwZbumEpM7SOFexa9ysFl6_oBbXo"
@@ -20,7 +25,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "262578778971-vralmbcac95ndp4jl78ofq8tgstgc6sk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hizmetcep.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:262578778971:android:21cd554a3ae33c500b207e",
+        "android_client_info": {
+          "package_name": "com.hizmetcep.app.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "262578778971-fjot57vnp1cmrdlhba2vqm4a1fcu322v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hizmetcep.app.debug",
+            "certificate_hash": "0f697162a00f923e361a8a3e23276037554ca459"
+          }
+        },
+        {
+          "client_id": "262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJw5diwZbumEpM7SOFexa9ysFl6_oBbXo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "262578778971-vralmbcac95ndp4jl78ofq8tgstgc6sk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hizmetcep.app"
+              }
+            }
+          ]
         }
       }
     }

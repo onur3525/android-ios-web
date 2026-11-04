@@ -36,8 +36,12 @@ void main() {
     expect(e.message, 'Kaydınızı tamamlayın');
   });
 
-  test('yapılandırılmamış platformda düğme gösterilmez', () {
-    // Derleme anında istemci kimliği verilmedi (testler): hiçbir düğme yok.
+  test('Android\'de parmak izi bayrağı kapalıyken düğme gösterilmez', () {
+    // Testler Android hedefinde koşar: mağaza SHA-1'i eklenip
+    // GOOGLE_ANDROID açılana kadar Google, Apple da yapılandırılana kadar
+    // gizli.
+    expect(SosyalGirisAyarlari.googleWebIstemciKimligi, isNotEmpty);
+    expect(SosyalGirisAyarlari.googleAndroidAcik, isFalse);
     expect(SosyalGirisAyarlari.gorunenler, isEmpty);
   });
 

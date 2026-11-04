@@ -67,6 +67,15 @@
 			<key>CFBundleURLSchemes</key>
 			<array><string>app-1-262578778971-ios-c86fad4c01cbcf890b207e</string></array>
 		</dict>
+		<!-- Google ile giriş (4 Kas): Google hesap penceresinden dönüş bu
+		     şemayla olur. Değer, iOS istemci kimliğinin (CLIENT_ID) ters
+		     çevrilmiş biçimidir (REVERSED_CLIENT_ID). Eksikse Google girişi
+		     iOS'ta uygulamayı kapatır. -->
+		<dict>
+			<key>CFBundleTypeRole</key><string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>com.googleusercontent.apps.262578778971-vralmbcac95ndp4jl78ofq8tgstgc6sk</string></array>
+		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>

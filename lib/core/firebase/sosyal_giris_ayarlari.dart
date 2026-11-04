@@ -35,10 +35,22 @@ import '../../domain/sosyal_saglayici.dart';
 class SosyalGirisAyarlari {
   SosyalGirisAyarlari._();
 
-  static const String googleWebIstemciKimligi =
-      String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-  static const String googleIosIstemciKimligi =
-      String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
+  // 4 Kas: Firebase'de Google girişi açıldı; kimlikler google-services.json
+  // (client_type 3 = web, client_type 2 = iOS) ile aynıdır.
+  static const String googleWebIstemciKimligi = String.fromEnvironment(
+      'GOOGLE_WEB_CLIENT_ID',
+      defaultValue:
+          '262578778971-vbgddv6hp0qceebgd2vpllba76qmaf4u.apps.googleusercontent.com');
+  static const String googleIosIstemciKimligi = String.fromEnvironment(
+      'GOOGLE_IOS_CLIENT_ID',
+      defaultValue:
+          '262578778971-vralmbcac95ndp4jl78ofq8tgstgc6sk.apps.googleusercontent.com');
+
+  /// ⚠ ANDROID: mağaza uygulamasının (com.hizmetcep.app) SHA-1 parmak izi
+  /// Firebase'e eklenmeden Google girişi Android'de "yapılandırma hatası"
+  /// verir. Parmak izi eklenip google-services.json yenilenince `true`.
+  static const bool googleAndroidAcik =
+      String.fromEnvironment('GOOGLE_ANDROID') == '1';
   static const bool appleAcik =
       String.fromEnvironment('APPLE_GIRIS') == '1';
 
@@ -58,7 +70,10 @@ class SosyalGirisAyarlari {
     if (_ios) {
       return googleIosIstemciKimligi.isNotEmpty;
     }
-    return kIsWeb || _android;
+    if (_android) {
+      return googleAndroidAcik;
+    }
+    return kIsWeb;
   }
 
   /// Bu platformda Apple ile giriş kullanılabilir mi (iOS yerel; web ve
