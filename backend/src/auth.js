@@ -191,6 +191,9 @@ const YETKI = {
   // yeniden deneme. Kişisel veri göstermez (kimlikler özetlenmiş).
   'deletion.queues.read': ['super_admin', 'operations'],
   'deletion.queues.retry': ['super_admin', 'operations'],
+  // 4 Kas: kullanıcının AÇTIĞI silme talebini 30 gün beklemeden uygulama
+  // (geri alınamaz) — yalnız süper yönetici, yeniden doğrulamayla.
+  'deletion.apply_now': ['super_admin'],
   'admins.manage': ['super_admin'],
   'audit.read': ['super_admin'],
 };
