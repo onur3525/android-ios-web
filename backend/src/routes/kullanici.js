@@ -175,6 +175,20 @@ async function kayitOnaylariniYaz(db, kullaniciId, platform, zaman) {
 }
 
 /**
+ * ── TİCARİ ELEKTRONİK İLETİ İZNİ — TEK KAYNAK (4 Kas, kullanıcı kararı) ──
+ * Kayıttaki isteğe bağlı kutu ve Hesap Ayarları'ndaki "Duyurular ve
+ * kampanyalar" tercihi AYNI izindir (notif_announcement). İzin önceden ve
+ * açıkça verilmedikçe kapalıdır; her değişiklik zamanı ve kaynağıyla
+ * kaydedilir (ispat). İşlem bildirimleri (teklif, mesaj) bu izne bağlı değildir.
+ */
+async function ticariIletiIzniYaz(db, kullaniciId, izin, kaynak, zaman = simdi()) {
+  await db.prepare('UPDATE users SET notif_announcement = ?, marketing_consent_at = ? WHERE id = ?')
+    .run(izin ? 1 : 0, zaman, kullaniciId);
+  await db.prepare('INSERT INTO marketing_consents (id, user_id, granted, source, created_at) VALUES (?, ?, ?, ?, ?)')
+    .run(randomUUID(), kullaniciId, izin ? 1 : 0, kaynak, zaman);
+}
+
+/**
  * ── ⚠ PROFİL TAMAMLAMA — TEK KAYNAK (4 Kas, kullanıcı kararı) ──
  * Kayıt formu yalnız ad, soyad, telefon, e-posta ve şifre alır; telefon
  * doğrulaması ve konum (hizmet verende ayrıca kategori + bölge) sonradan,
@@ -1056,6 +1070,7 @@ export function kullaniciRotalar(r, db) {
     // hangi metnin onaylandığı (sürüm + SHA-256) sonradan kanıtlanabilir.
     // Onay isteyen diğer belgeler girişteki onay akışında istenir.
     await kayitOnaylariniYaz(db, id, ctx.body.platform, z);
+    await ticariIletiIzniYaz(db, id, ctx.body.marketingConsent === true, 'REGISTER', z);
     return oturumYaniti(ctx, await oturumVer(db, id, ctx.req, 'REGISTER'));
   });
 
@@ -1124,6 +1139,7 @@ export function kullaniciRotalar(r, db) {
        VALUES (?, '', ?, ?, ?, FALSE, TRUE, ?, ?, 'ACTIVE', TRUE, 0, ?, ?, ?, ?, FALSE, ?)`,
     ).run(id, mail, isim, sifresizOzet(), rol, rol, z, z, yuk.sub, z, sosyal);
     await kayitOnaylariniYaz(db, id, ctx.body.platform, z);
+    await ticariIletiIzniYaz(db, id, ctx.body.marketingConsent === true, 'REGISTER_SOCIAL', z);
     return oturumYaniti(ctx, await oturumVer(db, id, ctx.req, 'REGISTER'));
   });
 
@@ -1505,6 +1521,10 @@ export function kullaniciRotalar(r, db) {
     }
     if (set.length) {
       await db.prepare(`UPDATE users SET ${set.join(', ')}, updated_at = ? WHERE id = ?`).run(...deger, simdi(), ctx.kullanici.id);
+    }
+    // "Duyurular ve kampanyalar" = ticari ileti izni: değiştiyse kaydı düşülür.
+    if (typeof ctx.body.announcement === 'boolean' && (ctx.kullanici.notif_announcement !== 0) !== ctx.body.announcement) {
+      await ticariIletiIzniYaz(db, ctx.kullanici.id, ctx.body.announcement, 'SETTINGS');
     }
     const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
     return kullaniciGorunumu(u).notificationPrefs;

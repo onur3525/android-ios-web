@@ -52,7 +52,12 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
   Role? _rol;
   bool _sozlesme = false;
   bool _aydinlatma = false;
+  bool _ticariIleti = false;
   bool _mesgul = false;
+
+  /// 4 Kas: ad ve soyad yalnız sağlayıcıdan gelmediyse (ya da geçersizse)
+  /// sorulur — Google adı verir, Apple bazen vermez.
+  late final bool _adGerekli;
   String? _hata;
 
   @override
@@ -69,6 +74,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
     } else if (parcalar.length == 1) {
       _ad.text = parcalar.first;
     }
+    _adGerekli = _adHatasi != null;
   }
 
   @override
@@ -99,6 +105,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
           rol: _rol!,
           ad: '${_ad.text.trim()} ${_soyad.text.trim()}',
           sozlesmeOnayi: _sozlesme && _aydinlatma,
+          ticariIleti: _ticariIleti,
         );
     if (!mounted) {
       return;
@@ -154,7 +161,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                     child: RefBackButton(onTap: () => geriGit(context)),
                   ),
                   const SizedBox(height: 6),
-                  Text('Kaydınızı Tamamlayın',
+                  Text('HizmetCep Üyelik Koşulları',
                       textAlign: TextAlign.center,
                       style: refText(
                           size: RF.s25,
@@ -163,8 +170,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                           letterSpacing: RF.lsM03)),
                   const SizedBox(height: 8),
                   Text(
-                    '${widget.saglayici.ad} hesabınızla HizmetCep\'e kaydolun. '
-                    'Şifre gerekmez; girişi ${widget.saglayici.ad} ile yaparsınız.',
+                    'Hesabınızı tamamlamak için aşağıdaki koşulları kabul edin.',
                     textAlign: TextAlign.center,
                     style: refText(
                         size: RF.s145,
@@ -174,16 +180,15 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                   ),
                   const SizedBox(height: 20),
                   if ((widget.eposta ?? '').isNotEmpty) ...[
-                    InputDecorator(
-                      decoration: _alan('E-posta'),
-                      child: Text(widget.eposta!,
-                          style: refText(
-                              size: RF.s14,
-                              weight: RF.w400,
-                              color: RC.textSoft)),
+                    Text(
+                      '${widget.saglayici.ad} hesabı: ${widget.eposta}',
+                      textAlign: TextAlign.center,
+                      style: refText(
+                          size: RF.s13, weight: RF.w500, color: RC.textSoft),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                   ],
+                  if (_adGerekli) ...[
                   TextField(
                     controller: _ad,
                     enabled: !_mesgul,
@@ -211,6 +216,8 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                             : Validators.name(_soyad.text,
                                 min: 2, label: 'soyad')),
                   ),
+                  const SizedBox(height: 4),
+                  ],
                   if (widget.rol == null) ...[
                     const SizedBox(height: 16),
                     Text('HizmetCep\'i nasıl kullanacaksınız? *',
@@ -226,6 +233,8 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                     aydinlatma: _aydinlatma,
                     onSozlesme: (v) => setState(() => _sozlesme = v),
                     onAydinlatma: (v) => setState(() => _aydinlatma = v),
+                    ticariIleti: _ticariIleti,
+                    onTicariIleti: (v) => setState(() => _ticariIleti = v),
                   ),
                   if (_hata != null) ...[
                     const SizedBox(height: 8),
@@ -237,7 +246,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                   ],
                   const SizedBox(height: 16),
                   RefPrimaryButton(
-                    'Kaydı Tamamla',
+                    'Hesabımı Oluştur',
                     busy: _mesgul,
                     onPressed: _tamam ? _kaydol : null,
                   ),

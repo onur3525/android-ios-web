@@ -86,6 +86,8 @@ class AuthController extends BaseController {
     String? taslakKimligi,
     /// 4 Kas: SMS'siz kayıt (doğrulama profil tamamlamada).
     bool telefonDogrulamasiz = false,
+    /// 4 Kas: isteğe bağlı ticari elektronik ileti izni (varsayılan kapalı).
+    bool ticariIleti = false,
   }) async {
     if (isBusy('register')) {
       return (account: null, error: const ValidationError('Kayıt işlemi sürüyor — lütfen bekleyin'));
@@ -102,6 +104,7 @@ class AuthController extends BaseController {
         kayitYetkisi: kayitYetkisi,
         taslakKimligi: taslakKimligi,
         telefonDogrulamasiz: telefonDogrulamasiz,
+        ticariIleti: ticariIleti,
       );
       return result.error;
     });
@@ -159,11 +162,16 @@ class AuthController extends BaseController {
     required Role rol,
     required String ad,
     required bool sozlesmeOnayi,
+    bool ticariIleti = false,
   }) async {
     final err = await runAction(
         'sosyalKayit',
         () => _auth.sosyalKayit(
-            belge: belge, rol: rol, ad: ad, sozlesmeOnayi: sozlesmeOnayi));
+            belge: belge,
+            rol: rol,
+            ad: ad,
+            sozlesmeOnayi: sozlesmeOnayi,
+            ticariIleti: ticariIleti));
     return err?.message;
   }
 

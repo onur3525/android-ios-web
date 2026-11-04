@@ -109,7 +109,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agree = false;
 
   /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
+  /// 4 Kas: kutu artık yurt dışındaki sunucularda işlemeye açık rıza
+  /// (aydınlatma bilgilendirmesi kutusuz bağlantı oldu).
   bool _aydinlatma = false;
+
+  /// 4 Kas: isteğe bağlı ticari elektronik ileti izni (varsayılan kapalı).
+  bool _ticariIleti = false;
 
 
   bool _busy = false;
@@ -633,6 +638,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: epostaNormalize(_email.text),
         // Sözleşme onayı domain katmanına İLETİLİR:
         // yalnız UI kontrolüne güvenilmez.
+        ticariIleti: _ticariIleti,
         termsAccepted: _agree && _aydinlatma);
     if (!mounted) {
       return;
@@ -739,6 +745,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 otpCode: otpCode,
                 name: '${_first.text.trim()} ${_last.text.trim()}',
                 email: epostaNormalize(_email.text),
+                ticariIleti: _ticariIleti,
                 termsAccepted: _agree && _aydinlatma);
             if (!otpContext.mounted) {
               return;
@@ -1414,6 +1421,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     setState(() => _aydinlatma = v);
                     _tazele();
                   },
+                  ticariIleti: _ticariIleti,
+                  onTicariIleti: (v) => setState(() => _ticariIleti = v),
                   ),
                 ),
                 const SizedBox(height: 8),

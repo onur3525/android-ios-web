@@ -118,6 +118,10 @@ abstract class AuthPort extends ChangeNotifier {
     /// 4 Kas: SMS'SİZ KAYIT — kayıt formu telefon doğrulaması istemez;
     /// telefon doğrulanmamış kaydedilir, doğrulama profil tamamlamada.
     bool telefonDogrulamasiz = false,
+
+    /// 4 Kas: isteğe bağlı ticari elektronik ileti izni ("Duyurular ve
+    /// kampanyalar"); işaretlenmezse kapalı.
+    bool ticariIleti = false,
   });
 
   // ══════════════════════════════════════════════════════════════
@@ -166,6 +170,7 @@ abstract class AuthPort extends ChangeNotifier {
     required Role rol,
     required String ad,
     required bool sozlesmeOnayi,
+    bool ticariIleti = false,
   });
 
   /// Şifresiz (Google/Apple) hesapta kritik işlem kanıtı: aynı sağlayıcıyla

@@ -827,4 +827,9 @@ async function kisiselIcerigiTemizle(db, id, eskiTelefon, z) {
   await c(`UPDATE outbound_messages SET target = '-', subject = NULL, body = ? WHERE user_id = ?`, KALDIRILDI, id);
   // Hesap taleplerinin serbest metin gerekçesi.
   await c('UPDATE account_requests SET reason = NULL WHERE user_id = ?', id);
+  // 4 Kas: ticari ileti izni hesapla birlikte sona erer; izin geçmişi
+  // (yalnız kimlik + evet/hayır + zaman) ispat için saklanır, sonuna
+  // "hesap silindi" kaydı düşülür.
+  await c('UPDATE users SET notif_announcement = FALSE, marketing_consent_at = ? WHERE id = ?', z, id);
+  await c(`INSERT INTO marketing_consents (id, user_id, granted, source, created_at) VALUES (?, ?, FALSE, 'ACCOUNT_DELETED', ?)`, randomUUID(), id, z);
 }

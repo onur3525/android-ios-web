@@ -29,6 +29,8 @@ class AuthApi {
     // gerçek `true` kabul edilir. 16 Eki: ayrı 18 yaş beyanı kaldırıldı —
     // yaş koşulu sözleşmenin 4. maddesindedir.
     required bool termsAccepted,
+    // 4 Kas: isteğe bağlı ticari elektronik ileti izni.
+    bool marketingConsent = false,
     String? platform,
   }) =>
       c.post('/auth/register', body: {
@@ -39,6 +41,7 @@ class AuthApi {
         // Kullanım Sözleşmesi VE Aydınlatma Metni işaretliyse true olur.
         // Sunucu onay kaydını bu iki belgeye yazar.
         'aydinlatmaAccepted': termsAccepted,
+        'marketingConsent': marketingConsent,
         if (platform != null) 'platform': platform,
         // Firebase telefon doğrulamasının kanıtı (sunucu doğrular).
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
@@ -58,6 +61,7 @@ class AuthApi {
     required String role,
     String? name,
     required bool termsAccepted,
+    bool marketingConsent = false,
     String? platform,
   }) =>
       c.post('/auth/firebase/register', body: {
@@ -67,6 +71,7 @@ class AuthApi {
         'termsAccepted': termsAccepted,
         // E-postalı kayıtla aynı: iki kutu da işaretliyse true.
         'aydinlatmaAccepted': termsAccepted,
+        'marketingConsent': marketingConsent,
         if (platform != null) 'platform': platform,
       });
 

@@ -1,6 +1,7 @@
 // KAYIT — ZORUNLU SÖZLEŞMELER (16 Eki, kullanıcı kararı + örnek görsel)
-//   · İki ayrı zorunlu onay, metinler görseldeki gibi: Kullanım Sözleşmesi
-//     ve Aydınlatma Metni (kırmızı yıldız + gri açıklama).
+//   · İki ayrı zorunlu onay: Kullanım Sözleşmesi ve (4 Kas) yurt dışında
+//     işlemeye açık rıza; Aydınlatma Metni kutusuz bağlantı; ticari ileti
+//     isteğe bağlı kutu.
 //   · İkisi de işaretlenmeden kayıt tamamlanmaz (iki kayıt ekranı).
 //   · Ayrı 18 yaş kutusu YOK; yaş koşulu sözleşmenin 4. maddesinde.
 import 'dart:io';
@@ -16,22 +17,43 @@ void main() {
     expect(o.contains("static const String kBaslik = 'Kullanım Sözleşmesi';"), isTrue);
     expect(o.contains("static const String kAydinlatma = 'Aydınlatma Metni';"), isTrue);
     expect(o.contains("(text: '’ni okudum ve kabul ediyorum.', onTap: null)"), isTrue);
-    // 29 Eki: ikinci kutu Gizlilik Politikası + Aydınlatma Metni; "yurt dışı
-    // sunucu" ifadesi açıkça geçer.
+    expect(o.contains("'HizmetCep’i kullanırken geçerli olan kuralları, hak ve '\n                'sorumluluklarımı içerir.'"), isTrue);
     expect(o.contains("static const String kGizlilik = 'Gizlilik Politikası';"), isTrue);
     expect(o.contains("arguments: {'slug': 'privacy', 'title': kGizlilik}"), isTrue);
+    // ── 4 Kas (kullanıcı kararı, örnek ekran) ──
+    // Aydınlatma bir BİLGİLENDİRMEDİR: kutusuz, "Aydınlatma Metnini
+    // Görüntüle" bağlantısı. Yurt dışında işlemeye açık rıza AYRI, zorunlu
+    // kutu (Gizlilik Politikası bağlantılı); "yurt dışı sunucu" ifadesi
+    // açıkça geçer. Ticari ileti kutusu isteğe bağlıdır, yıldızsız.
+    expect(o.contains("'Aydınlatma Metnini Görüntüle'"), isTrue);
+    expect(o.contains("arguments: {'slug': 'kvkk', 'title': kAydinlatma}"), isTrue);
     expect(o.contains("'amacıyla yurt dışındaki sunucularda işlenmesine yasal '"), isTrue);
-    expect(o.contains("'HizmetCep’i kullanırken geçerli olan kuralları, hak ve '\n                'sorumluluklarımı içerir.'"), isTrue);
-    // ⚠ 22 Eki (KVKK): aydınlatma bilgilendirmedir — "kabul / izin" denmez.
-    // 29 Eki (işletmeci kararı): ikinci kutu yurt dışı işlemeye AÇIK RIZA.
     expect(o.contains("'haklarım saklı kalmak kaydıyla AÇIK RIZA veriyorum.'"), isTrue);
+    expect(o.contains('’ni okudum; kişisel verilerimin'), isFalse,
+        reason: 'aydınlatma artık onay kutusunda değil');
+    // ⚠ 22 Eki (KVKK): aydınlatma için "kabul / izin" denmez.
     expect(o.contains('izin veriyorum'), isFalse);
-    expect(o.contains("'Hangi kişisel verilerimin, hangi amaçla ve hangi '\n                'hukuki sebeple işlendiğini ve haklarımı anlatır.'"), isTrue);
+    expect(o.contains("'ileti almak istiyorum. (İsteğe bağlı)'"), isTrue);
+    expect(o.contains('zorunlu: false,'), isTrue);
+    expect(o.contains('if (zorunlu)'), isTrue);
     // Web'de çerez bilgilendirmesi (onay istemez).
     expect(o.contains("arguments: {'slug': 'cookies', 'title': kCerez}"), isTrue);
     expect(o.contains("text: '  *'"), isTrue);
     expect(o.contains("arguments: {'slug': 'terms', 'title': kBaslik}"), isTrue);
-    expect(o.contains("arguments: {'slug': 'kvkk', 'title': kAydinlatma}"), isTrue);
+  });
+
+  test('ticari ileti izni üç kayıt ekranında da sunucuya gider (varsayılan kapalı)', () {
+    for (final f in const [
+      'lib/screens/register_screen.dart',
+      'lib/screens/widgets/ilan_kayit_adimi.dart',
+      'lib/screens/sosyal_kayit_screen.dart',
+    ]) {
+      expect(_oku(f).contains('onTicariIleti:'), isTrue, reason: f);
+    }
+    expect(_oku('lib/screens/register_screen.dart').contains('bool _ticariIleti = false;'), isTrue);
+    expect(_oku('lib/screens/create_listing_screen.dart').contains('ticariIleti: _kayit.ticariIleti,'), isTrue);
+    final api = _oku('lib/data/remote/api/auth_api.dart');
+    expect("'marketingConsent': marketingConsent,".allMatches(api).length, 2);
   });
 
   test('iki kayıt ekranı tek bileşeni kullanır; iki onay da zorunlu', () {

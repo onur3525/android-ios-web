@@ -356,6 +356,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         name: _kayit.adSoyad,
         email: _kayit.eposta.text.trim(),
         termsAccepted: _kayit.sozlesme && _kayit.aydinlatma,
+        ticariIleti: _kayit.ticariIleti,
       );
       if (!mounted) {
         return;
