@@ -68209,7 +68209,9 @@
       _._otomatikDogrulandi = false;
       _._sayac = 0;
       _._kilit = false;
-      _._otomatikKod = _._profil_tamamlama_screen$_zamanlayici = null;
+      _._profil_tamamlama_screen$_zamanlayici = null;
+      _._gonderimDenendi = false;
+      _._otomatikKod = _._kilitMesaji = null;
       _.___ProfilTamamlamaScreenState__telefonDogrulanmis_F = $;
       _._widget = null;
       _._debugLifecycleState = t5;
@@ -68240,8 +68242,10 @@
     _ProfilTamamlamaScreenState__kodGonder_closure: function _ProfilTamamlamaScreenState__kodGonder_closure(t0) {
       this.$this = t0;
     },
-    _ProfilTamamlamaScreenState__kodGonder_closure0: function _ProfilTamamlamaScreenState__kodGonder_closure0(t0) {
+    _ProfilTamamlamaScreenState__kodGonder_closure0: function _ProfilTamamlamaScreenState__kodGonder_closure0(t0, t1, t2) {
       this.$this = t0;
+      this.tel = t1;
+      this.r = t2;
     },
     _ProfilTamamlamaScreenState__kodGonder_closure1: function _ProfilTamamlamaScreenState__kodGonder_closure1(t0, t1) {
       this.$this = t0;
@@ -274819,7 +274823,7 @@
         return null;
       return asil.call$1(v);
     },
-    get$_kilitMesaji() {
+    get$_login_screen$_kilitMesaji() {
       var t1 = this._kilitKalan;
       return t1 > 0 ? "\xc7ok fazla hatal\u0131 deneme. " + t1 + " saniye sonra tekrar deneyin." : null;
     },
@@ -274964,13 +274968,13 @@
         t2 = A.Text$("HizmetCep hesab\u0131n\u0131za giri\u015f yaparak kald\u0131\u011f\u0131n\u0131z yerden devam edin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null),
         t3 = _this._epostaModu ? "Telefon ile Giri\u015f" : "E-posta ile Giri\u015f";
       t3 = A._setArrayType([B.SizedBox_null_6_null_null, B.Center_X5B, B.SizedBox_null_14_null_null, B.SizedBox_null_4_null_null, t1, B.SizedBox_null_8_null_null, new A.Padding(B.EdgeInsets_6_0_6_0, t2, _null), B.SizedBox_null_22_null_null, new A._GirisYoluDegistir(t3, new A._LoginScreenState__formu_closure(_this), _null), B.SizedBox_null_16_null_null], type$.JSArray_Widget);
-      if (_this.get$_kilitMesaji() == null) {
+      if (_this.get$_login_screen$_kilitMesaji() == null) {
         t1 = _this._isHatasi;
         t1 = t1 != null;
       } else
         t1 = true;
       if (t1) {
-        t1 = _this.get$_kilitMesaji();
+        t1 = _this.get$_login_screen$_kilitMesaji();
         if (t1 == null)
           t1 = _this._isHatasi;
         if (t1 == null) {
@@ -277958,7 +277962,7 @@
                 $async$goto = 1;
                 break;
               }
-              $async$self.setState$1(new A._ProfilTamamlamaScreenState__kodGonder_closure0($async$self));
+              $async$self.setState$1(new A._ProfilTamamlamaScreenState__kodGonder_closure0($async$self, tel, r));
               t1 = r._values;
               if (t1[0] == null) {
                 t2 = t1[2];
@@ -278184,13 +278188,17 @@
       return s.length <= 2 ? B.JSArray_methods.join$1(s, ", ") : A.SubListIterable$(s, 0, A.checkNotNullable(2, "count", type$.int), A._arrayInstanceType(s)._precomputed1).join$1(0, ", ") + " +" + (s.length - 2);
     },
     _kodAltSatiri$0() {
-      var _this = this, _null = null,
+      var t1, _this = this, _null = null,
         kucuk = A.refText(B.Color_BhF, _null, _null, 0, 12.5, B.FontWeight_500);
-      if (_this._kilit && _this._sayac > 0)
-        return new A.Padding(B.EdgeInsets_2_6_0_0, A.Text$("\xc7ok fazla kod istendi. " + _this.get$_sayacMetni() + " sonra tekrar deneyebilirsiniz.", _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), _null);
+      if (_this._kilit && _this._sayac > 0) {
+        t1 = _this._kilitMesaji;
+        if (t1 == null)
+          t1 = "\xc7ok fazla kod istendi.";
+        return new A.Padding(B.EdgeInsets_2_6_0_0, A.Column$(A._setArrayType([A.Text$(t1, _null, _null, _null, _null, _null, A.refText(B.Color_wuX, _null, _null, 0, 12.5, B.FontWeight_600), _null, _null), B.SizedBox_null_2_null_null, A.Text$("Kalan s\xfcre: " + _this.get$_sayacMetni(), _null, _null, _null, _null, _null, kucuk, _null, _null)], type$.JSArray_Widget), B.CrossAxisAlignment_0, _null, B.MainAxisAlignment_0, B.MainAxisSize_1), _null);
+      }
       if (_this._sayac > 0)
         return new A.Padding(B.EdgeInsets_2_6_0_0, A.Text$("Yeni kodu " + _this.get$_sayacMetni() + " sonra isteyebilirsiniz", _null, _null, _null, _null, _null, kucuk, _null, _null), _null);
-      if (!_this.get$_kodGonderildi())
+      if (!_this.get$_kodGonderildi() && !_this._gonderimDenendi)
         return B.SizedBox_null_6_null_null;
       return A.Align$(B.Alignment_m1_0, new A.RefTekrarGonder("Kodu tekrar g\xf6nder", _this._profil_tamamlama_screen$_mesgul ? _null : _this.get$_kodGonder(), 13, _null), _null, _null, _null);
     },
@@ -278303,14 +278311,21 @@
   };
   A._ProfilTamamlamaScreenState__telefonDegisti_closure.prototype = {
     call$0() {
-      var t2, t3, t4,
+      var t2, t3, t4, t5, t6,
         t1 = this.$this;
       t1._profil_tamamlama_screen$_hata = null;
+      t2 = t1._gonderilenTelefon;
+      t3 = t1._telefon;
+      t4 = t3._change_notifier$_value.text;
+      t5 = $.$get$Validators__reRakamDisi();
+      t4 = A.stringReplaceAllUnchecked(t4, t5, "");
+      t6 = $.$get$Validators__reBastakiSifir();
+      if (t2 !== B.JSString_methods.replaceFirst$2(t4, t6, ""))
+        t1._gonderimDenendi = false;
       if (t1._challengeId != null) {
         t2 = t1._gonderilenTelefon;
-        t3 = t1._telefon._change_notifier$_value.text;
-        t4 = $.$get$Validators__reRakamDisi();
-        t2 = t2 !== B.JSString_methods.replaceFirst$2(A.stringReplaceAllUnchecked(t3, t4, ""), $.$get$Validators__reBastakiSifir(), "");
+        t3 = t3._change_notifier$_value.text;
+        t2 = t2 !== B.JSString_methods.replaceFirst$2(A.stringReplaceAllUnchecked(t3, t5, ""), t6, "");
       } else
         t2 = false;
       if (t2) {
@@ -278332,7 +278347,13 @@
   };
   A._ProfilTamamlamaScreenState__kodGonder_closure0.prototype = {
     call$0() {
-      return this.$this._profil_tamamlama_screen$_mesgul = false;
+      var t2,
+        t1 = this.$this;
+      t1._profil_tamamlama_screen$_mesgul = false;
+      t1._gonderimDenendi = true;
+      t1._gonderilenTelefon = this.tel;
+      t2 = this.r._values;
+      t1._kilitMesaji = t2[3] ? t2[1] : null;
     },
     $signature: 0
   };
