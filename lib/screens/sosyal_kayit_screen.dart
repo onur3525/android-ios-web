@@ -119,12 +119,6 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
     Navigator.of(context).pop(true);
   }
 
-  InputDecoration _alan(String etiket) => InputDecoration(
-        labelText: etiket,
-        border:
-            OutlineInputBorder(borderRadius: BorderRadius.circular(RR.r13)),
-      );
-
   Widget _rolSecimi() => Row(
         children: [
           for (final r in Role.values) ...[
@@ -195,10 +189,17 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => _fSoyad.requestFocus(),
                     onChanged: (_) => setState(() => _hata = null),
-                    decoration: _alan('Ad *').copyWith(
-                        errorText: _ad.text.trim().isEmpty
-                            ? null
-                            : Validators.name(_ad.text, min: 3, label: 'ad')),
+                    // ⚠ Ortak alan görünümü (kayıt ekranıyla aynı): kırmızı
+                    // yıldız; boşken (sağlayıcı vermedi) kırmızı çerçeve.
+                    decoration: refIkonluAlanDekoru(
+                      'Ad',
+                      'assets/svg/ic_person.svg',
+                      zorunlu: true,
+                      eksik: _ad.text.trim().isEmpty,
+                      hata: _ad.text.trim().isEmpty
+                          ? null
+                          : Validators.name(_ad.text, min: 3, label: 'ad'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -209,11 +210,16 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                     textInputAction: TextInputAction.done,
                     onEditingComplete: () => FocusScope.of(context).unfocus(),
                     onChanged: (_) => setState(() => _hata = null),
-                    decoration: _alan('Soyad *').copyWith(
-                        errorText: _soyad.text.trim().isEmpty
-                            ? null
-                            : Validators.name(_soyad.text,
-                                min: 2, label: 'soyad')),
+                    decoration: refIkonluAlanDekoru(
+                      'Soyad',
+                      'assets/svg/ic_person.svg',
+                      zorunlu: true,
+                      eksik: _soyad.text.trim().isEmpty,
+                      hata: _soyad.text.trim().isEmpty
+                          ? null
+                          : Validators.name(_soyad.text,
+                              min: 2, label: 'soyad'),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   ],

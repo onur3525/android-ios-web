@@ -666,18 +666,27 @@ Widget refYerTutucu(String metin, {required bool zorunlu, double? boyut}) {
 /// Kayıt formundaki telefon/e-posta alanlarının görünümü: solda ikon,
 /// kutunun içinde SİLİK örnek biçim (ör. "5XX XXX XX XX"), zorunluysa
 /// solda kırmızı yıldız. Profil tamamlama ekranının telefon ve SMS kodu
-/// alanları bunu kullanır.
+/// alanları ile Google/Apple kayıt ekranının ad/soyad alanları bunu
+/// kullanır.
+///
+/// ── EKSİK ALAN (5 Kas, kullanıcı kararı) ──
+/// [eksik] true iken (zorunlu bilgi henüz girilmemiş; ör. Google/Apple
+/// soyadı vermedi) çerçeve hata mesajı olmadan KIRMIZI çizilir; bilgi
+/// girilince çağıran `eksik: false` verir ve çerçeve normal rengine
+/// döner. Varsayılan false: diğer ekranların görünümü değişmez.
 InputDecoration refIkonluAlanDekoru(
   String yerTutucu,
   String ikon, {
   bool zorunlu = false,
   Widget? suffix,
   String? hata,
+  bool eksik = false,
 }) {
   OutlineInputBorder cerceve(Color c) => OutlineInputBorder(
         borderRadius: BorderRadius.circular(RR.r13),
         borderSide: BorderSide(color: c, width: 1.5),
       );
+  final normal = eksik ? RC.danger : RC.borderLight;
   return InputDecoration(
     hint: refYerTutucu(yerTutucu, zorunlu: zorunlu, boyut: RF.s15),
     filled: true,
@@ -694,10 +703,10 @@ InputDecoration refIkonluAlanDekoru(
     prefixIconConstraints: const BoxConstraints(minWidth: 47, minHeight: 22),
     suffixIcon: suffix,
     suffixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 24),
-    border: cerceve(RC.borderLight),
-    enabledBorder: cerceve(RC.borderLight),
-    disabledBorder: cerceve(RC.borderLight),
-    focusedBorder: cerceve(RC.blue),
+    border: cerceve(normal),
+    enabledBorder: cerceve(normal),
+    disabledBorder: cerceve(normal),
+    focusedBorder: cerceve(eksik ? RC.danger : RC.blue),
     errorBorder: cerceve(RC.danger),
     focusedErrorBorder: cerceve(RC.danger),
     errorStyle: refText(size: RF.s115, weight: RF.w600, color: RC.danger),
