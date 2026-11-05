@@ -43,9 +43,11 @@ void main() {
     final p = _kod('lib/screens/profile_info_screen.dart');
 
     test('dört alanın da ileri tuşu tanımlı', () {
-      expect('textInputAction:'.allMatches(p).length, 4);
+      // 6 Kas: telefonun altındaki satır içi SMS kod kutusu beşinci tek
+      // satırlık alandır; o da `done` ile biter (klavye kapanır).
+      expect('textInputAction:'.allMatches(p).length, 5);
       expect('TextInputAction.next'.allMatches(p).length, 3);
-      expect('TextInputAction.done'.allMatches(p).length, 1);
+      expect('TextInputAction.done'.allMatches(p).length, 2);
     });
 
     test('geçiş sırası GÖRSEL sırayla aynı', () {

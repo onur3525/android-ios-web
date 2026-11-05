@@ -743,6 +743,9 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
                         controller: _telKod,
                         enabled: gonderildi && !_telDogrulaniyor,
                         keyboardType: TextInputType.number,
+                        // Kod kutusu: "bitti" klavyeyi kapatır (6 hanede
+                        // doğrulama zaten kendiliğinden başlar).
+                        textInputAction: TextInputAction.done,
                         autofillHints: const [AutofillHints.oneTimeCode],
                         maxLength: 6,
                         inputFormatters: [
