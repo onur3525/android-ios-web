@@ -7,6 +7,8 @@
 #   Açmak için özel anahtar gerekir (/root/hizmetcep-yedek-anahtari.txt).
 # • 14 günden eski yedekler silinir.
 set -euo pipefail
+# Çağıranın klasörüne (ör. /root) erişim olmayabilir; find buna takılmasın.
+cd /
 YEDEK=/var/backups/hizmetcep
 UYG=/opt/hizmetcep/uygulama
 SAKLA_GUN="${SAKLA_GUN:-14}"

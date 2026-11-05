@@ -11,6 +11,9 @@
 # Şema göçleri uygulama açılırken kendiliğinden çalışır.
 set -euo pipefail
 [ "$(id -u)" = "0" ] || { echo "root olarak çalıştırın" >&2; exit 1; }
+# Root'un ev klasöründe (otomatik yayında SSH oraya düşer) uygulama
+# kullanıcısı çalışamaz; her adım kök klasörden başlar.
+cd /
 UYG=/opt/hizmetcep/uygulama
 ZORLA=false
 [ "${1:-}" = "--zorla" ] && ZORLA=true
