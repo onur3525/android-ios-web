@@ -61189,7 +61189,7 @@
     Listing$(createdAt, desc, id, ilanNo, iletisimTercihi, isZamani, $location, ownerId, photoPaths, $status, title) {
       var t1 = createdAt == null,
         t2 = t1 ? new A.DateTime(Date.now(), 0, false) : createdAt;
-      return new A.Listing(id, ilanNo, ownerId, title, $location, desc, $status, photoPaths, iletisimTercihi, isZamani, t2, (t1 ? new A.DateTime(Date.now(), 0, false) : createdAt)._addMicroseconds$1(108e9));
+      return new A.Listing(id, ilanNo, ownerId, title, $location, desc, $status, photoPaths, iletisimTercihi, isZamani, t2, (t1 ? new A.DateTime(Date.now(), 0, false) : createdAt)._addMicroseconds$1(1728e8));
     },
     ListingStatus: function ListingStatus(t0, t1) {
       this.index = t0;
@@ -265464,7 +265464,7 @@
         t2.setStatus$2(t7, B.ListingStatus_1);
         t8 = B.C_Uuid.v4$0();
         t9 = Date.now();
-        B.JSArray_methods.insert$2(t6._notification_repository$_items, 0, new A.AppNotification(t8, l.ownerId, B.NotifType_5, "\u0130lan s\xfcreniz doldu", '"' + l.title + '" ilan\u0131 30 saatlik s\xfcre sonunda otomatik kapand\u0131.', t7, false, new A.DateTime(t9, 0, false)));
+        B.JSArray_methods.insert$2(t6._notification_repository$_items, 0, new A.AppNotification(t8, l.ownerId, B.NotifType_5, "\u0130lan s\xfcreniz doldu", '"' + l.title + '" ilan\u0131 48 saatlik s\xfcre sonunda otomatik kapand\u0131.', t7, false, new A.DateTime(t9, 0, false)));
         t6.notifyListeners$0();
         ++n;
       }
@@ -270776,7 +270776,7 @@
       t3 = t2.length;
       if (t3 !== 0)
         B.JSArray_methods.addAll$1(t5, A._setArrayType([B.Divider_cAy, A.Text$("Foto\u011fraflar (" + t3 + ")", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 13, B.FontWeight_800), _null, _null), B.SizedBox_null_8_null_null, A.SizedBox$(A.ListView$separated(new A._CreateListingScreenState__adim3_closure(_this, context), t2.length, _null, _null, B.Axis_0, new A._CreateListingScreenState__adim3_closure0(), false), 76, _null)], t6));
-      return A.Column$(A._setArrayType([t1, B.SizedBox_null_12_null_null, new A.RefFormCard(A.Column$(t5, B.CrossAxisAlignment_0, _null, B.MainAxisAlignment_0, B.MainAxisSize_0), 0, _null), new A.RefInfoBox(A.Text$("\u0130lan vermek \xfccretsizdir ve s\u0131n\u0131rs\u0131zd\u0131r \u2014 size hi\xe7bir \xfccret yans\u0131maz. \u0130lan\u0131n\u0131z 30 saat yay\u0131nda kal\u0131r; bu s\xfcrede hizmet verenler teklif verebilir. S\xfcre sonunda teklif se\xe7ilmezse ilan otomatik kapan\u0131r.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null)], t6), B.CrossAxisAlignment_3, _null, B.MainAxisAlignment_0, B.MainAxisSize_1);
+      return A.Column$(A._setArrayType([t1, B.SizedBox_null_12_null_null, new A.RefFormCard(A.Column$(t5, B.CrossAxisAlignment_0, _null, B.MainAxisAlignment_0, B.MainAxisSize_0), 0, _null), new A.RefInfoBox(A.Text$("\u0130lan vermek \xfccretsizdir ve s\u0131n\u0131rs\u0131zd\u0131r \u2014 size hi\xe7bir \xfccret yans\u0131maz. \u0130lan\u0131n\u0131z 48 saat yay\u0131nda kal\u0131r; bu s\xfcrede en fazla 3 hizmet veren teklif verebilir. S\xfcre sonunda teklif se\xe7ilmezse ilan otomatik kapan\u0131r.", _null, _null, _null, _null, _null, A.refText(B.Color_yKk, _null, 1.5, 0, 13.5, B.FontWeight_400), _null, _null), false, _null, _null)], t6), B.CrossAxisAlignment_3, _null, B.MainAxisAlignment_0, B.MainAxisSize_1);
     }
   };
   A._CreateListingScreenState_initState_closure.prototype = {
