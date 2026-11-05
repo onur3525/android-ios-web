@@ -474,7 +474,7 @@ paths:
       description: |
         SMS'i Firebase gönderdiğinde istemci her koddan ÖNCE bu uca sorar.
         Gövde — phone, purpose. Kural /auth/otp/request ile aynıdır (60 sn,
-        3 kod, 15 dk; 429 OTP_WAIT / OTP_LOCKED, error.details.retryAfterSec).
+        3 kod, 5 dk; 429 OTP_WAIT / OTP_LOCKED, error.details.retryAfterSec).
         Numaranın kayıtlı olup olmadığına bakılmaz. Yanıt: retryAfterSec,
         remaining.
       responses:
@@ -537,7 +537,7 @@ paths:
       description: |
         ⚠ GÖNDERİM KURALI (4 Kas, tek kaynak): iki kod arasında 60 saniye;
         bir numaraya en fazla 3 kod, üçüncüden sonra doğrulama yapılmazsa son
-        gönderimden itibaren 15 dakika yeni kod yok (429 OTP_LOCKED). 60 saniye
+        gönderimden itibaren 5 dakika yeni kod yok (429 OTP_LOCKED). 60 saniye
         dolmadan istek 429 OTP_WAIT. İkisinde de error.details.retryAfterSec.
         Doğrulama başarılı olunca sayaç sıfırlanır. Kayıtlı/kayıtsız numarada
         aynı yanıt.

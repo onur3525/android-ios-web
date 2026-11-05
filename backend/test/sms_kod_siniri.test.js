@@ -2,8 +2,8 @@
 //
 //  · İki kod arasında en az 60 saniye (OTP_WAIT, kalan saniye).
 //  · Bir numaraya en fazla 3 kod; üçüncüden sonra doğrulama yapılmazsa son
-//    gönderimden itibaren 15 dakika yeni kod yok (OTP_LOCKED, kalan süre).
-//  · 15 dakika dolunca hak yeniden 3; doğrulama başarılı olunca sıfır.
+//    gönderimden itibaren 5 dakika yeni kod yok (OTP_LOCKED, kalan süre; 5 Kas: 15 → 5 dk).
+//  · 5 dakika dolunca hak yeniden 3; doğrulama başarılı olunca sıfır.
 //  · Firebase yolu (/auth/otp/permit) ile sunucu SMS yolu (/auth/otp/request)
 //    AYNI sayacı kullanır; kayıtlı/kayıtsız numarada davranış aynı.
 import { test, before, after } from 'node:test';
@@ -41,7 +41,7 @@ before(async () => {
 });
 after(async () => { sunucu?.closeAllConnections?.(); sunucu?.close(); await db?.close(); });
 
-test('60 sn bekleme, en fazla 3 kod, sonra 15 dk kilit; süre dolunca hak yeniden 3', async () => {
+test('60 sn bekleme, en fazla 3 kod, sonra 5 dk kilit; süre dolunca hak yeniden 3', async () => {
   const tel = '5321234001';
   const a = await izin(tel);
   assert.equal(a.durum, 200, JSON.stringify(a.json));
@@ -62,13 +62,13 @@ test('60 sn bekleme, en fazla 3 kod, sonra 15 dk kilit; süre dolunca hak yenide
   assert.equal(kilit.durum, 429);
   assert.equal(kilit.json.error.code, 'OTP_LOCKED');
   const kalan = kilit.json.error.details.retryAfterSec;
-  assert.ok(kalan > 13 * 60 && kalan <= 14 * 60, `kalan ${kalan}`);
-  assert.match(kilit.json.error.message, /dakika sonra/);
+  assert.ok(kalan > 3 * 60 && kalan <= 4 * 60, `kalan ${kalan}`);
+  assert.match(kilit.json.error.message, /^Çok fazla kod istendi\. 4 dakika sonra tekrar deneyin\.$/);
 
-  await gerial(tel, 14 * 60_000);
+  await gerial(tel, 4 * 60_000);
   const yeni = await izin(tel);
   assert.equal(yeni.durum, 200);
-  assert.equal(yeni.json.remaining, 2, '15 dk sonra hak yeniden 3');
+  assert.equal(yeni.json.remaining, 2, '5 dk sonra hak yeniden 3');
 });
 
 test('Firebase izni ve sunucu SMS yolu AYNI sayacı kullanır; amaç fark etmez', async () => {
