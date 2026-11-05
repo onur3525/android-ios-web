@@ -12,7 +12,7 @@
 import http from 'k6/http';
 import { check } from 'k6';
 
-const TABAN = (__ENV.TABAN_URL || 'https://hizmetcep-backend.onrender.com').replace(/\/+$/, '');
+const TABAN = (__ENV.TABAN_URL || 'https://api.hizmetcep.com').replace(/\/+$/, '');
 const HEDEF = Math.max(10, Math.min(500, Number(__ENV.HEDEF_RPS || 500)));
 
 const kademeler = [50, 100, 250, 500].filter((k) => k <= HEDEF);

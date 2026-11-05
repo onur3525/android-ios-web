@@ -102,7 +102,17 @@ if [ ! -f "$PGTLS/server.crt" ]; then
   rm -rf "$T"   # CA anahtarı saklanmaz: yeni sertifika gerekirse betik yeniden üretir
 fi
 
-# 5 GB RAM'li sunucu için ayar (uygulama + Caddy'ye de pay bırakılır).
+# Bellek ayarı sunucunun RAM'ine göre seçilir (uygulama + Caddy'ye pay
+# bırakılır). Paket yükseltilince betiği yeniden çalıştırmak yeterli.
+BELLEK_MB=$(awk '/^MemTotal:/ {print int($2/1024)}' /proc/meminfo)
+if [ "$BELLEK_MB" -lt 3000 ]; then        # ~2 GB (Atom)
+  PG_SB=256MB; PG_EC=1GB; PG_WM=4MB; PG_MWM=64MB; PG_MAXC=40; HAVUZ=10
+elif [ "$BELLEK_MB" -lt 7000 ]; then      # 4–6 GB (Micro/Mini/Start)
+  PG_SB=$((BELLEK_MB / 4))MB; PG_EC=$((BELLEK_MB * 6 / 10))MB; PG_WM=8MB; PG_MWM=256MB; PG_MAXC=60; HAVUZ=20
+else                                      # 8 GB ve üstü
+  PG_SB=$((BELLEK_MB / 4))MB; PG_EC=$((BELLEK_MB * 7 / 10))MB; PG_WM=16MB; PG_MWM=512MB; PG_MAXC=80; HAVUZ=30
+fi
+echo "Bellek: ${BELLEK_MB} MB → shared_buffers=$PG_SB, havuz=$HAVUZ"
 cat > /etc/postgresql/$PGSURUM/main/conf.d/hizmetcep.conf <<EOF
 listen_addresses = 'localhost'
 ssl = on
@@ -110,11 +120,11 @@ ssl_cert_file = '$PGTLS/server.crt'
 ssl_key_file = '$PGTLS/server.key'
 ssl_min_protocol_version = 'TLSv1.2'
 password_encryption = scram-sha-256
-max_connections = 60
-shared_buffers = 1GB
-effective_cache_size = 3GB
-work_mem = 8MB
-maintenance_work_mem = 256MB
+max_connections = $PG_MAXC
+shared_buffers = $PG_SB
+effective_cache_size = $PG_EC
+work_mem = $PG_WM
+maintenance_work_mem = $PG_MWM
 random_page_cost = 1.1
 wal_compression = on
 checkpoint_completion_target = 0.9
@@ -151,7 +161,9 @@ ALTER ROLE hizmetcep PASSWORD '$DBPAROLA';
 EOF
   sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='hizmetcep'" | grep -q 1 \
     || sudo -u postgres createdb -O hizmetcep hizmetcep
-  umask 027
+  # ⚠ umask yalnız bu alt kabukta: sonraki adımlarda oluşan dosyalar
+  # (ör. Caddy imza anahtarı) okunamaz hâle gelmesin.
+  ( umask 027
   cat > "$ENVDOSYA" <<EOF
 # HizmetCep backend ortamı — GİZLİ. Kimseyle paylaşmayın, Git'e koymayın.
 # Değişiklikten sonra:  systemctl restart hizmetcep
@@ -159,7 +171,7 @@ NODE_ENV=production
 PORT=8080
 HC_DB_DRIVER=postgres
 HC_DATABASE_URL=postgres://hizmetcep:$DBPAROLA@localhost:5432/hizmetcep
-HC_DB_POOL=20
+HC_DB_POOL=$HAVUZ
 NODE_EXTRA_CA_CERTS=$AYAR/db-ca.pem
 HC_MASTER_KEY=$(openssl rand -base64 32)
 HC_JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')
@@ -181,15 +193,19 @@ HC_S3_SECRET_ACCESS_KEY=
 # İstemci IP ölçümü (KURULUM.md, Adım 7) yapıldıktan sonra açılır:
 # HC_TRUST_PROXY_HOPS=1
 EOF
+  )
   unset DBPAROLA
   chown root:hizmetcep "$ENVDOSYA"; chmod 0640 "$ENVDOSYA"
 fi
+# Yeniden çalıştırmada havuz boyutu belleğe göre güncellenir (sırlara dokunulmaz).
+sed -i "s/^HC_DB_POOL=.*/HC_DB_POOL=$HAVUZ/" "$ENVDOSYA"
 
 adim "8/10 Caddy (HTTPS)"
 if ! command -v caddy >/dev/null; then
   apt-get -y -q install debian-keyring debian-archive-keyring apt-transport-https
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
+  chmod 0644 /usr/share/keyrings/caddy-stable-archive-keyring.gpg /etc/apt/sources.list.d/caddy-stable.list
   apt-get update -q && apt-get -y -q install caddy
 fi
 cat > /etc/caddy/Caddyfile <<EOF
@@ -213,12 +229,12 @@ adim "9/10 systemd servisi"
 install -m 0644 "$UYG/sunucu/hizmetcep.service" /etc/systemd/system/hizmetcep.service
 systemctl daemon-reload
 systemctl enable hizmetcep >/dev/null
+systemctl is-active --quiet hizmetcep && systemctl restart hizmetcep || true
 
 adim "10/10 Günlük şifreli yedek"
 install -d -m 0700 -o hizmetcep -g hizmetcep "$YEDEK"
 if [ ! -f /root/hizmetcep-yedek-anahtari.txt ]; then
-  umask 077
-  age-keygen -o /root/hizmetcep-yedek-anahtari.txt 2>/dev/null
+  ( umask 077; age-keygen -o /root/hizmetcep-yedek-anahtari.txt 2>/dev/null )
 fi
 age-keygen -y /root/hizmetcep-yedek-anahtari.txt > "$AYAR/yedek-acik-anahtar.txt"
 chmod 0644 "$AYAR/yedek-acik-anahtar.txt"

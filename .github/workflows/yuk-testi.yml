@@ -20,7 +20,7 @@ on:
       taban_url:
         description: 'Test edilecek backend adresi'
         required: true
-        default: 'https://hizmetcep-backend.onrender.com'
+        default: 'https://api.hizmetcep.com'
       onay:
         description: 'Birebir yazın: YUKTESTI'
         required: true
