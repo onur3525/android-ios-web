@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,18 +52,41 @@ class SosyalGirisDugmeleri extends StatefulWidget {
 class _SosyalGirisDugmeleriState extends State<SosyalGirisDugmeleri> {
   SosyalSaglayici? _mesgul;
 
+  // ── ⚠ BEKLEME EKRANI (5 Kas, kullanıcı kararı) ──
+  // Google/Apple penceresinde e-posta seçildikten sonra kimlik doğrulanıp
+  // sunucuda oturum açılırken (≈1–2 sn) giriş/kayıt formu GÖRÜNMEZ:
+  // düğmeye basılınca form tam ekran bekleme görünümüyle örtülür.
+  //   · oturum açıldı → çağıranın yönlendirmesi (pushNamedAndRemoveUntil)
+  //     bekleme ekranını da kaldırır; yeni ekran bekleme ekranının
+  //     ÜSTÜNE gelir, form arada görünmez ve süre UZAMAZ;
+  //   · hesap yok → bekleme ekranı yerini doğrudan Üyelik Koşulları'na
+  //     bırakır;
+  //   · vazgeçildi/hata → bekleme ekranı kalkar, form olduğu gibi döner.
   Future<void> _devam(SosyalSaglayici s) async {
     if (_mesgul != null) {
       return;
     }
     setState(() => _mesgul = s);
+    final nav = Navigator.of(context);
+    final bekleme = _beklemeRotasi();
+    unawaited(nav.push(bekleme));
     final auth = context.read<AuthController>();
     final sonuc = await auth.sosyalGiris(s, rol: widget.rol);
+    // Yalnız hâlâ en üstteyse kaldırılır: çağıran gezindiyse (yeni ekran
+    // üstte) bekleme ekranı o gezinmeyle zaten kaldırılıyordur.
+    void beklemeyiKaldir() {
+      if (bekleme.isCurrent) {
+        nav.removeRoute(bekleme);
+      }
+    }
+
     if (!mounted) {
+      beklemeyiKaldir();
       return;
     }
     setState(() => _mesgul = null);
     if (sonuc.iptal) {
+      beklemeyiKaldir();
       return;
     }
     if (sonuc.girisYapildi) {
@@ -69,30 +94,44 @@ class _SosyalGirisDugmeleriState extends State<SosyalGirisDugmeleri> {
         sysToastErr(context, SysKind.genericError, extra: sonuc.hata);
       }
       widget.tamam(sonuc.eposta);
+      // Çağıran gezindiyse bekleme ekranı zaten kalktı; gezinmediyse kalkar.
+      beklemeyiKaldir();
       return;
     }
     final belge = sonuc.kayitBelgesi;
     if (belge == null) {
+      beklemeyiKaldir();
       sysToastErr(context, SysKind.genericError, extra: sonuc.hata);
       return;
     }
-    final kaydoldu = await Navigator.push<bool>(
-      context,
-      panelRotasi<bool>(
-        settings: const RouteSettings(name: SosyalKayitScreen.rotaAdi),
-        builder: (_) => SosyalKayitScreen(
-          belge: belge,
-          saglayici: s,
-          rol: widget.rol,
-          ad: sonuc.ad,
-          eposta: sonuc.eposta,
-        ),
+    final kayit = panelRotasi<bool>(
+      settings: const RouteSettings(name: SosyalKayitScreen.rotaAdi),
+      builder: (_) => SosyalKayitScreen(
+        belge: belge,
+        saglayici: s,
+        rol: widget.rol,
+        ad: sonuc.ad,
+        eposta: sonuc.eposta,
       ),
     );
+    if (bekleme.isCurrent) {
+      nav.replace(oldRoute: bekleme, newRoute: kayit);
+    } else {
+      unawaited(nav.push(kayit));
+    }
+    final kaydoldu = await kayit.popped;
     if (kaydoldu == true && mounted) {
       widget.tamam(sonuc.eposta);
     }
   }
+
+  /// Tam ekran, geçişsiz bekleme sayfası; geri tuşuyla kapanmaz.
+  Route<void> _beklemeRotasi() => PageRouteBuilder<void>(
+        opaque: true,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (_, __, ___) => const SosyalGirisBekleme(),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -186,4 +225,34 @@ class _SosyalDugme extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Google/Apple ile devam ederken gösterilen tam ekran bekleme görünümü:
+/// beyaz zemin, ortada HizmetCep logosu ve dönen işaret (5 Kas).
+class SosyalGirisBekleme extends StatelessWidget {
+  const SosyalGirisBekleme({super.key});
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        child: Material(
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/logo/logo_mark.png', height: 64),
+                const SizedBox(height: 12),
+                Image.asset('assets/logo/wordmark.png', height: 26),
+                const SizedBox(height: 28),
+                const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 3, color: RC.blue),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }
