@@ -4134,6 +4134,48 @@ class RefOtpBoxesState extends State<RefOtpBoxes> {
       );
 }
 
+/// ── KOD TEKRAR GÖNDERME BAĞLANTISI — TEK KAYNAK (5 Kas, kullanıcı kararı) ──
+///
+/// Solda yuvarlak ok (Flutter `Icons.refresh`), yanında mavi kalın yazı;
+/// ikon yazının rengini ve boyunu izler. Üç SMS kod yüzeyi (giriş/kayıt
+/// kod ekranı `RefResendRow`, Profilinizi Tamamlayın, üye olmadan ilan
+/// verirken SMS adımı) bunu kullanır; metinler ekranlarda olduğu gibi
+/// kalır. [onTap] null iken (işlem sürüyor) soluk çizilir ve dokunulmaz.
+class RefTekrarGonder extends StatelessWidget {
+  const RefTekrarGonder({
+    super.key,
+    required this.metin,
+    this.onTap,
+    this.boyut = RF.s13,
+  });
+
+  final String metin;
+  final VoidCallback? onTap;
+  final double boyut;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+        opacity: onTap == null ? 0.5 : 1,
+        child: RefTap(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(RR.r8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.refresh, size: boyut + 4, color: RC.blue),
+                const SizedBox(width: 6),
+                Text(metin,
+                    style: refText(
+                        size: boyut, weight: RF.w700, color: RC.blue)),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
 /// `.rg-resend` — kod tekrar gönderme satırı.
 ///
 /// ```css
@@ -4198,18 +4240,10 @@ class RefResendRow extends StatelessWidget {
                   size: RF.s125, weight: RF.w400, color: RC.textSoft),
             ),
             const SizedBox(height: 2),
-            RefTap(
+            RefTekrarGonder(
+              metin: 'Tekrar Gönder',
+              boyut: RF.s16,
               onTap: onResend,
-              borderRadius: BorderRadius.circular(RR.r8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 4, horizontal: 8),
-                child: Text(
-                  'Tekrar Gönder',
-                  style: refText(
-                      size: RF.s16, weight: RF.w700, color: RC.blue),
-                ),
-              ),
             ),
           ],
         ],

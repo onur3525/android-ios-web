@@ -286,18 +286,10 @@ class _IlanOtpAdimiState extends State<IlanOtpAdimi> {
                       ),
                     ],
                   )
-                : RefTap(
+                : RefTekrarGonder(
+                    metin: 'Kodu Tekrar Gönder',
+                    boyut: RF.s14,
                     onTap: _tekrarGonder,
-                    borderRadius: BorderRadius.circular(RR.r10),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      child: Text('Kodu Tekrar Gönder',
-                          style: refText(
-                              size: RF.s14,
-                              weight: RF.w700,
-                              color: RC.blue)),
-                    ),
                   ),
           ),
           const SizedBox(height: 18),

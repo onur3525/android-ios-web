@@ -423,10 +423,9 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     }
     return Align(
       alignment: Alignment.centerLeft,
-      child: TextButton(
-        onPressed: _mesgul ? null : _kodGonder,
-        child: Text('Kodu tekrar gönder',
-            style: refText(size: RF.s13, weight: RF.w700, color: RC.blue)),
+      child: RefTekrarGonder(
+        metin: 'Kodu tekrar gönder',
+        onTap: _mesgul ? null : _kodGonder,
       ),
     );
   }
