@@ -129,12 +129,30 @@ class _JobsScreenState extends State<JobsScreen> {
     });
   }
 
+  /// 6 Kas (kullanıcı kararı): eksik hesap hizmet veren ekranında KALMAZ.
+  /// Tamamlama formundan vazgeçilirse hesabın hizmet alan rolü varsa o role
+  /// dönülür ve hizmet alan paneli açılır. (Yalnız hizmet veren rolü olan
+  /// hesabın başka paneli yoktur; ekran sunucuda da kapalı kalır.)
   Future<void> _profiliTamamla() async {
     final tamam = await profilKapisi(context, Role.provider);
-    if (!mounted || !tamam) {
+    if (!mounted) {
       return;
     }
-    await _refresh();
+    if (tamam) {
+      await _refresh();
+      return;
+    }
+    final auth = context.read<AuthController>();
+    final me = auth.currentAccount;
+    if (me == null || !me.roles.contains(Role.customer)) {
+      return;
+    }
+    final err = await auth.switchRole(Role.customer);
+    if (!mounted || err != null) {
+      return;
+    }
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil('/customer/listings', (r) => false);
   }
 
   /// Uygun işler ve kendi tekliflerim yeniden yüklenir.
@@ -527,14 +545,8 @@ class _JobsScreenState extends State<JobsScreen> {
           // 28 Eki: masaüstünde üst boşluk ve kenarlar hizmet alanın
           // sayfa iskeletiyle (RefShell: üst 12, yanlar 14) AYNI.
           SizedBox(height: ustMenu ? 12 : 8),
-          // 4 Kas: profil tamamlanmadan iş listesi açılmaz; form
-          // kapatıldıysa buradan yeniden açılır.
-          if (!me.profilTamam(Role.provider))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-              child: RefWideButton('Profilinizi Tamamlayın',
-                  onPressed: _profiliTamamla),
-            ),
+          // 6 Kas (kullanıcı kararı): "Profilinizi Tamamlayın" düğmesi
+          // KALDIRILDI; eksik hesap bu ekrana geçemez (bkz. `_profiliTamamla`).
           // ── `.cust-tabs` — İKİ SEKME ──
           //
           // ⚠ Hizmet alan ekranıyla AYNI bileşen (`RefSegmentTabs`) ve

@@ -193,7 +193,6 @@ void main() {
       var cagri = 0;
       for (final f in const [
         'lib/screens/register_screen.dart',
-        'lib/screens/profile_info_screen.dart',
         'lib/screens/forgot_password_screen.dart',
       ]) {
         final src = _kod(f);
@@ -206,11 +205,15 @@ void main() {
       expect(_kod('lib/screens/login_screen.dart').contains('OtpScreen('),
           isFalse,
           reason: 'giriş ekranına OTP akışı geri gelmiş');
-      // ⚠ ÜÇ AKIŞ: kayıt · telefon değişikliği · hesap kurtarma.
+      // ⚠ İKİ AKIŞ AYRI KOD EKRANIYLA: kayıt · hesap kurtarma.
+      // 6 Kas: telefon değişikliği Profil Bilgilerim'de SATIR İÇİ
+      // (`ui/sms_kod_akisi.dart`); ayrı kod ekranı kullanılmaz.
       //
       // Giriş ekranı listede DEĞİL: ürün kararıyla telefonla giriş de
       // şifreyle yapılıyor, OTP giriş anahtarı değil.
-      expect(cagri, 3);
+      expect(cagri, 2);
+      expect(_kod('lib/screens/profile_info_screen.dart').contains('OtpScreen('),
+          isFalse);
     });
   });
 
@@ -265,7 +268,6 @@ void main() {
       // ⚠ GİRİŞ EKRANI ÇIKARILDI: orada OTP akışı yok.
       const beklenen = {
         'lib/screens/register_screen.dart': '.kayitKodGonder(',
-        'lib/screens/profile_info_screen.dart': '.telefonDegisimiKodGonder(',
         'lib/screens/forgot_password_screen.dart': '.hesapKurtarmaKodGonder(',
       };
       beklenen.forEach((dosya, metot) {
@@ -281,7 +283,6 @@ void main() {
     test('TÜM çağrılarda İKİ parametre de verilmiş', () {
       const dosyalar = [
         'lib/screens/register_screen.dart',
-        'lib/screens/profile_info_screen.dart',
         'lib/screens/forgot_password_screen.dart',
       ];
       for (final f in dosyalar) {
@@ -305,8 +306,6 @@ void main() {
       // engeller, dolayısıyla yeniden gönderim yeni kimliği
       // yazamaz ve doğrulama ölü challenge'a gider.
       const beklenen = {
-        'lib/screens/profile_info_screen.dart':
-            'var challengeId = ch.challengeId!;',
         'lib/screens/register_screen.dart': 'var ch = await context',
         'lib/screens/forgot_password_screen.dart': 'var ch = await context',
       };
@@ -318,8 +317,12 @@ void main() {
     test('yeni challengeId doğrulamada KULLANILIR', () {
       // challengeId sabit değil değişken olmalı; yoksa yeni kod
       // eski challenge'a gider ve hiçbir zaman çalışmaz.
+      // 6 Kas: Profil Bilgilerim'de yeni kod `SmsKodAkisi.challengeId`'ye
+      // yazılır; doğrulama her seferinde onu okur.
       expect(_kod('lib/screens/profile_info_screen.dart')
-          .contains('var challengeId = ch.challengeId!;'), isTrue);
+          .contains('final challengeId = _smsAkis.challengeId;'), isTrue);
+      expect(_kod('lib/ui/sms_kod_akisi.dart')
+          .contains('challengeId = r.challengeId;'), isTrue);
       expect(_kod('lib/screens/register_screen.dart')
           .contains('var ch = await context'), isTrue);
       expect(_kod('lib/screens/forgot_password_screen.dart')

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../data/controllers/teklif_talebi_controller.dart';
 import 'teklif_talebi_sohbet_screen.dart';
@@ -529,19 +528,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               veriVar: liste.isNotEmpty))
             HataTamEkran(hata: ctl.lastError!, onTekrar: _refresh)
           // .nt-list{gap:10px}
-          // ── ⚠ WEB: BOŞ DURUM KALAN ALANIN ORTASINDA ──
-          //
-          // Web'de metin başlığın hemen altında, üst kenarda kalıyordu.
-          // Başlığın altında kalan görünür alanın dikey ortasına alınır.
-          // Metin TEK tanım (`bosMetin`); mobilde `else` dalı önceki
-          // `Padding(vertical: 40)` düzeninin BİREBİR aynısı.
-          else if (liste.isEmpty && kIsWeb)
-            KalanAlandaOrtala(child: bosMetin)
+          // ── ⚠ BOŞ DURUM KALAN ALANIN ORTASINDA (web ve 6 Kas'tan beri
+          // mobil; ortak `KalanAlandaOrtala`). Metin TEK tanım (`bosMetin`).
           else if (liste.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: bosMetin,
-            )
+            KalanAlandaOrtala(child: bosMetin)
           else
             for (final n in cizilecek) ...[
               _BildirimKarti(

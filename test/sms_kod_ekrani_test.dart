@@ -97,7 +97,7 @@ void main() {
     });
   });
 
-  group('PROFİL BİLGİLERİM — ONAYLI TELEFONU OLMAYAN HESAP (5 Kas)', () {
+  group('PROFİL BİLGİLERİM — SATIR İÇİ TELEFON ONAYI (5-6 Kas)', () {
     final k = _kodu('lib/screens/profile_info_screen.dart');
 
     test('satır içi: Kod Gönder → kod alanı → Telefon onaylı ✓', () {
@@ -110,9 +110,20 @@ void main() {
       expect(k.contains('SmsKodAltSatiri('), isTrue);
     });
 
-    test('şifre sorusu ve ayrı kod ekranı yalnız ONAYLI numaranın değişiminde', () {
-      expect(k.contains('if (_telefonOnayli && newPhone != oldPhone) {'), isTrue);
-      expect(k.contains('if (!_telefonOnayli) {\n      return false;'), isTrue);
+    test('6 Kas: onaylı numaranın değişimi de satır içi ve şifresiz', () {
+      // "Telefon onaylı ✓" yalnız kutudaki numara hesabın onaylı numarasıyken.
+      expect(k.contains('tel == hesap.phone;'), isTrue);
+      // Onaylı hesapta PHONE_CHANGE, onaysızda PHONE_VERIFY — aynı akış.
+      expect(k.contains('gonderici: _telefonOnayli ? auth.telefonDegisimiKodGonder : null'),
+          isTrue);
+      expect(k.contains('? await auth.telefonDegisimiDogrula(challengeId, _telKod.text)'),
+          isTrue);
+      expect(k.contains(': await auth.profiliTamamla('), isTrue);
+      expect(k.contains('OtpScreen('), isFalse, reason: 'ayrı kod ekranı yok');
+      expect(k.contains('sifreIleDogrula('), isFalse, reason: 'şifre sorulmaz');
+      final a = _kodu('lib/ui/sms_kod_akisi.dart');
+      expect(a.contains('final r = await (gonderici ?? auth.profilTelefonKoduGonder)(telefon);'),
+          isTrue);
     });
   });
 }

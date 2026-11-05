@@ -198,10 +198,18 @@ class AuthController extends BaseController {
     return (yetki: r.yetki, hata: r.error?.message);
   }
 
-  Future<({String? challengeId, String? hata})> telefonDegisimiKodGonder(
-      String yeniTelefon) async {
+  /// 6 Kas: profilTelefonKoduGonder ile AYNI biçim — gönderim kuralına
+  /// takılırsa kalan süre ve kilit de döner (satır içi geri sayım).
+  Future<({String? challengeId, String? hata, int? kalanSaniye, bool kilit})>
+      telefonDegisimiKodGonder(String yeniTelefon) async {
     final r = await _auth.telefonDegisimiKodGonder(yeniTelefon);
-    return (challengeId: r.challengeId, hata: r.error?.message);
+    final e = r.error;
+    return (
+      challengeId: r.challengeId,
+      hata: e?.message,
+      kalanSaniye: e is KodSiniriError ? e.kalanSaniye : null,
+      kilit: e is KodSiniriError && e.kilit,
+    );
   }
 
   /// ⚠ Numara challenge'ın İÇİNDEN gelir; alan değeri geçilmez (Y4).

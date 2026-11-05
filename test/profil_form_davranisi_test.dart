@@ -61,10 +61,11 @@ void main() {
       }
     });
 
-    test('gönderimde kapı geçici olarak açılır, sonra kapanır', () {
-      expect(p.contains('_gonderimAninda = true;'), isTrue);
-      expect(p.contains('_gonderimAninda = false;'), isTrue);
-      expect(p.contains('bool _gonderimAninda = false;'), isTrue);
+    test('6 Kas: Kaydet formu toptan denetlemez (yalnız ad/soyad kaydedilir)', () {
+      // Düğme yalnız ad/soyad geçerli ve değişmişken aktiftir; boş telefon
+      // ya da e-posta alanı ad/soyad kaydını engellemez, kırmızıya boyanmaz.
+      expect(p.contains('_form.currentState!.validate()'), isFalse);
+      expect(p.contains('_gonderimAninda'), isFalse);
     });
   });
 
@@ -75,7 +76,6 @@ void main() {
         'String? get _soyadHata',
         'String? get _epostaHata',
         'String? get _telefonHata',
-        'bool get _formGecerli',
       ]) {
         expect(p.contains(g), isTrue, reason: g);
       }
@@ -85,16 +85,26 @@ void main() {
       // Getter'lar doğrudan Validators çağırır; FormFieldState'e
       // dokunmaz, yani ekrana kırmızı metin basmaz.
       final i = p.indexOf('String? get _adHata');
-      final govde = p.substring(i, p.indexOf('bool get _formGecerli'));
+      final govde = p.substring(i, p.indexOf('Account? get _hesap'));
       expect(govde.contains('currentState'), isFalse);
       expect(govde.contains('validate()'), isFalse);
     });
   });
 
-  group('DOĞRULAMA BİLGİ KUTULARI — ÜÇ KOŞUL', () {
-    test('e-posta kutusu boş/geçersizde GÖRÜNMEZ', () {
+  group('6 Kas (kullanıcı kararı): SADE KAYDET, BİLGİ KUTUSU YOK', () {
+    test('doğrulama bilgi kutuları kaldırıldı', () {
+      expect(p.contains('Numara doğrulanmadan telefon güncellemesi kaydedilmez.'),
+          isFalse);
+      expect(p.contains('Yeni e-posta adresinize doğrulama bağlantısı '), isFalse);
+      expect(p.contains('if (_telefonDegisti)'), isFalse);
+      expect(p.contains('_emailChanged'), isFalse,
+          reason: 'eski koşulsuz bayrak geri gelmiş');
+      expect(p.contains('_phoneChanged'), isFalse);
+    });
+
+    test('e-posta değişikliği yalnız boş değil · geçerli · farklıyken', () {
       final i = p.indexOf('bool get _epostaDegisti');
-      final govde = p.substring(i, p.indexOf('bool get _degisiklikVar'));
+      final govde = p.substring(i, p.indexOf('bool _busy = false;'));
       expect(govde.contains("_email.text.trim().isEmpty"), isTrue,
           reason: 'boş kontrolü yok');
       expect(govde.contains('_epostaHata != null'), isTrue,
@@ -102,43 +112,14 @@ void main() {
       expect(govde.contains('epostaNormalize(acc.email)'), isTrue,
           reason: 'farklılık kontrolü yok');
     });
-
-    test('telefon kutusu boş/geçersizde GÖRÜNMEZ', () {
-      final i = p.indexOf('bool get _telefonDegisti');
-      final govde = p.substring(i, p.indexOf('bool get _epostaDegisti'));
-      expect(govde.contains("_phone.text.trim().isEmpty"), isTrue);
-      expect(govde.contains('_telefonHata != null'), isTrue);
-      expect(govde.contains('!= acc.phone'), isTrue);
-    });
-
-    test('kutular yeni getter\'lara bağlı, eski bayraklar yok', () {
-      expect(p.contains('if (_epostaDegisti)'), isTrue);
-      expect(p.contains('if (_telefonDegisti)'), isTrue);
-      expect(p.contains('_emailChanged'), isFalse,
-          reason: 'eski koşulsuz bayrak geri gelmiş');
-      expect(p.contains('_phoneChanged'), isFalse);
-    });
-
-    test('iki doğrulama AYRI tutulur', () {
-      // Birinin doğrulanması ötekini doğrulanmış saymaz.
-      expect(p.contains('bool get _dogrulamaGerekli =>'), isTrue);
-      expect(p.contains('_telefonDegisti || _epostaDegisti'), isTrue);
-    });
   });
 
   group('BUTON DURUMU', () {
-    test('form geçersiz veya değişiklik yoksa PASİF', () {
-      expect(
-          p.contains(
-              'onPressed: (_formGecerli && _degisiklikVar) ? _save : null'),
-          isTrue);
-    });
-
-    test('metin değişikliğin TÜRÜNE göre seçilir', () {
-      expect(
-          p.contains(
-              "_dogrulamaGerekli ? 'Doğrula ve Kaydet' : 'Bilgileri Güncelle'"),
-          isTrue);
+    test('sade "Kaydet": yalnız ad/soyad geçerli ve değişmişken aktif', () {
+      expect(p.contains("RefNextButton(\n              'Kaydet',"), isTrue);
+      expect(p.contains('onPressed: _adSoyadDegisti ? _save : null'), isTrue);
+      expect(p.contains('Doğrula ve Kaydet'), isFalse);
+      expect(p.contains('Bilgileri Güncelle'), isFalse);
     });
 
     test('ad/soyad değişikliği butonu tazeler ama doğrulamaz', () {
@@ -148,12 +129,30 @@ void main() {
       expect(govde.contains('validate()'), isFalse);
     });
 
-    test('boşaltma geçerli değişiklik SAYILMAZ', () {
-      // `_telefonDegisti`/`_epostaDegisti` boş alanda false döner;
-      // dolayısıyla `_degisiklikVar` da bunu değişiklik saymaz.
-      expect(p.contains('bool get _degisiklikVar =>'), isTrue);
-      expect(p.contains('_adSoyadDegisti || _telefonDegisti || _epostaDegisti'),
-          isTrue);
+    test('Kaydet YALNIZ adı gönderir; e-posta/telefon akışı ve gezinme yok', () {
+      final i = p.indexOf('Future<void> _save() async {');
+      final govde = p.substring(i, p.indexOf('\n  }\n', i));
+      expect(govde.contains('updateProfile('), isTrue);
+      expect(govde.contains('epostaDegisimiBaslat'), isFalse);
+      expect(govde.contains('telefonDegisimi'), isFalse);
+      expect(govde.contains('kayittanSonra'), isFalse);
+      expect(govde.contains('sysToastOk'), isFalse);
+      expect(govde.contains('_kaydedildiGoster();'), isTrue);
+    });
+
+    test('düğmenin altında 5 sn yeşil "Kaydedildi"', () {
+      expect(p.contains('Timer(const Duration(seconds: 5), () {'), isTrue);
+      expect(p.contains("child: Text('Kaydedildi',"), isTrue);
+      expect(p.contains('color: RC.success)),'), isTrue);
+      expect(p.contains('_kaydedildiZamanlayici?.cancel();'), isTrue);
+    });
+
+    test('açılır pencere yok: şifre, Google ile devam, yeniden giriş', () {
+      expect(p.contains('sifreIleDogrula('), isFalse);
+      expect(p.contains('_epostaIcinSifre'), isFalse);
+      expect(p.contains('sosyalKimlikKaniti'), isFalse);
+      expect(p.contains('showDialog'), isFalse);
+      expect(p.contains('OtpScreen('), isFalse);
     });
   });
 
@@ -232,8 +231,9 @@ void main() {
     });
 
     test('kaydetme akışı bozulmadı', () {
-      expect(p.contains('profile.updateProfile('), isTrue);
-      expect(p.contains('OtpPurpose.phoneChange'), isTrue);
+      // 6 Kas: ad/soyad Kaydet'le, telefon satır içi SMS koduyla.
+      expect(p.contains('.updateProfile(\n        name:'), isTrue);
+      expect(p.contains('auth.telefonDegisimiDogrula('), isTrue);
     });
   });
 }

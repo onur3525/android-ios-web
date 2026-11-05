@@ -10,8 +10,8 @@ import 'ref_widgets.dart';
 /// ═══════════════════════════════════════════════════════════════
 /// TELEFON DOĞRULAMA SMS KODU — TEK KAYNAK (5 Kas, kullanıcı kararı)
 ///
-/// Profilinizi Tamamlayın ve Profil Bilgilerim (onaylı telefonu olmayan
-/// hesap) AYNI akışı kullanır: kod gönderme, 60 sn geri sayım, sayaç
+/// Profilinizi Tamamlayın ve Profil Bilgilerim (numara onayı ve 6 Kas'tan
+/// beri onaylı numaranın değişimi) AYNI akışı kullanır: kod gönderme, 60 sn geri sayım, sayaç
 /// bitince "Kodu tekrar gönder", 3 denemeden sonra 5 dk bloke ve uyarı.
 /// Gönderim kuralı sunucudadır (`smsGonderimIzni`); burada yalnız sunucunun
 /// verdiği kalan süre gösterilir.
@@ -21,6 +21,13 @@ import 'ref_widgets.dart';
 ///   gönderim başarılı olsun olmasın); sayaç bitince tekrar gönderilebilir.
 /// Numara değişince ikisi de sıfırlanır ([telefonDegisti]).
 /// ═══════════════════════════════════════════════════════════════
+/// Kod gönderen işlev — varsayılan `AuthController.profilTelefonKoduGonder`
+/// (PHONE_VERIFY); onaylı numaranın değişiminde `telefonDegisimiKodGonder`
+/// (PHONE_CHANGE). Sunucu kuralı ikisinde de aynıdır.
+typedef SmsGonderici
+    = Future<({String? challengeId, String? hata, int? kalanSaniye, bool kilit})>
+        Function(String telefon);
+
 class SmsKodAkisi extends ChangeNotifier {
   /// İki kod arasındaki bekleme — sunucu kuralıyla (60 sn) aynı.
   static const int beklemeSaniye = 60;
@@ -69,14 +76,15 @@ class SmsKodAkisi extends ChangeNotifier {
   }
 
   /// Kodu gönderir; kod gerçekten gönderildiyse `true`.
-  Future<bool> gonder(AuthController auth, String telefon) async {
+  Future<bool> gonder(AuthController auth, String telefon,
+      {SmsGonderici? gonderici}) async {
     if (gonderiliyor || sayac > 0) {
       return false;
     }
     gonderiliyor = true;
     hata = null;
     notifyListeners();
-    final r = await auth.profilTelefonKoduGonder(telefon);
+    final r = await (gonderici ?? auth.profilTelefonKoduGonder)(telefon);
     gonderiliyor = false;
     _denendi = true;
     _gonderilenTelefon = telefon;

@@ -279,9 +279,10 @@ abstract class AuthPort extends ChangeNotifier {
   /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ; bağlantı tıklanana
   /// kadar eski adres geçerlidir (iş kuralları §4).
   ///
-  /// ⚠ 21 Eki (güvenlik Y2): mevcut şifre ZORUNLU; sunucu doğrular.
+  /// 6 Kas (kullanıcı kararı): şifre İSTENMEZ; adres yalnız bağlantı
+  /// tıklanınca değişir.
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
-      {required String sifre});
+      {String? sifre});
   Future<DomainError?> mevcutEpostaDogrulamaGonder(String mevcutEposta);
 
   /// E-POSTA ONAYI EŞİTLEME (21 Eki): bağlantıya tıklanınca doğrulama

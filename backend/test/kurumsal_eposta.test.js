@@ -252,25 +252,18 @@ const mesajlar = (tel, sablon) => db.prepare(
   `SELECT * FROM outbound_messages WHERE user_id = (SELECT id FROM users WHERE phone = ?) AND template = ? ORDER BY created_at`,
 ).all(tel, sablon);
 
-test('Y2: mevcut şifre yoksa ya da yanlışsa değişiklik başlamaz — Firebase\'e gidilmez, bekleyen istek ve e-posta yok', async () => {
+test('Y2 (6 Kas, kullanıcı kararı): adres değişikliği ŞİFRE İSTEMEZ — şifresiz istekte bağlantı gönderilir, adres bağlantı tıklanana dek değişmez; kritik işlem sınırı sürer', async () => {
   const tel = '5421120012';
   const tk = await hesap(tel, { uid: 'fb-ep-12' });
   fbKullanicilar.set('fb-ep-12', { email: `e${tel}@ornek.com` });
-  cagrilar.length = 0;
-  const yok = await degisimIste(tk, { newEmail: 'hedef12@ornek.com' });
-  assert.equal(yok.durum, 400);
-  assert.equal(yok.json.error.code, 'WRONG_PASSWORD');
-  const yanlis = await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'YanlisSifre99' });
-  assert.equal(yanlis.durum, 400);
-  assert.equal(yanlis.json.error.code, 'WRONG_PASSWORD');
-  assert.equal(cagrilar.length, 0, 'şifre doğrulanmadan Firebase çağrılmamalı');
+  const r = await degisimIste(tk, { newEmail: 'hedef12@ornek.com' });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
   const u = await db.prepare('SELECT email, pending_email FROM users WHERE phone = ?').get(tel);
-  assert.equal(u.email, `e${tel}@ornek.com`);
-  assert.equal(u.pending_email, null);
-  assert.equal((await mesajlar(tel, 'EPOSTA_DEGISIKLIGI')).length, 0);
-  // Yanlış şifreler kritik işlem sınırına sayılır (kaba kuvvet): 10 denemeden sonra 429.
-  for (let i = 0; i < 8; i++) await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'YanlisSifre99' });
-  assert.equal((await degisimIste(tk, { newEmail: 'hedef12@ornek.com', currentPassword: 'GucluSifre12' })).durum, 429);
+  assert.equal(u.email, `e${tel}@ornek.com`, 'bağlantı tıklanmadan adres değişmez');
+  assert.equal(u.pending_email, 'hedef12@ornek.com');
+  // Kaba kuvvete karşı kritik işlem sınırı: 15 dakikada 10 istekten sonra 429.
+  for (let i = 0; i < 9; i++) await degisimIste(tk, { newEmail: 'hedef12@ornek.com' });
+  assert.equal((await degisimIste(tk, { newEmail: 'hedef12@ornek.com' })).durum, 429);
 });
 
 test('Y2: doğru şifreyle uçtan uca — bağlantı tıklanınca adres değişir, ESKİ adrese güvenlik bildirimi TEK kez gider (eşzamanlı ve tekrarlanan eşitleme)', async () => {

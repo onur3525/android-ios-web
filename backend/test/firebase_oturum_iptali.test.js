@@ -328,7 +328,7 @@ test('Firebase iptali başarısızsa işlem tamamlanır, yerel sınır hemen ge�
   assert.deepEqual(await kuyruk(h.tel), [], 'başarıda satır silinir');
 });
 
-test('telefon değişikliği yarıda kalırsa (istemci Firebase\'i değiştirdi, sunucu reddetti) Firebase numarası hesabın numarasına geri eşitlenir; başarıda iş boşa yazmaz', async () => {
+test('telefon değişikliği yarıda kalırsa (istemci Firebase\'i değiştirdi, sunucu reddetti) Firebase numarası hesabın numarasına geri eşitlenir; başarıda (şifresiz, 6 Kas) iş boşa yazmaz', async () => {
   const h = await hesap('5390000031', 'fb-kuyruk-2');
   const baskasi = await hesap('5390000032', 'fb-kuyruk-3');
   // İstemci updatePhoneNumber yaptı, ama numara başka hesapta kayıtlı → 409.
@@ -341,18 +341,10 @@ test('telefon değişikliği yarıda kalırsa (istemci Firebase\'i değiştirdi,
   assert.equal(fbKullanicilar.get(h.uid).phoneNumber, `+90${h.tel}`, 'Firebase numarası hesabınkine döndü');
   assert.deepEqual(await kuyruk(h.tel), []);
 
-  // Yanlış şifrede de aynı kurtarma.
-  fbKullanicilar.get(h.uid).phoneNumber = '+905390000033';
-  const y = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
-    newPhone: '5390000033', currentPassword: 'yanlis999', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000033' }) } });
-  assert.equal(y.json.error.code, 'WRONG_PASSWORD');
-  await firebaseIslemKuyrugunuIsle(db);
-  assert.equal(fbKullanicilar.get(h.uid).phoneNumber, `+90${h.tel}`);
-
   // Başarı: Firebase zaten yeni numarada; kuyruk okur, YAZMAZ.
   fbKullanicilar.get(h.uid).phoneNumber = '+905390000034';
   assert.equal((await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.a.accessToken, govde: {
-    newPhone: '5390000034', currentPassword: 'sifre1234', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000034' }) } })).durum, 200);
+    newPhone: '5390000034', firebaseIdToken: idToken({ sub: h.uid, phone_number: '+905390000034' }) } })).durum, 200);
   cagrilar.length = 0;
   await firebaseIslemKuyrugunuIsle(db);
   assert.equal(cagrilar.filter((c) => c.islem === 'update' && c.govde.phoneNumber).length, 0, 'eşit numara yeniden yazılmaz');

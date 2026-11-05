@@ -536,8 +536,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (acc == null) {
       return (rota: '/home', argRota: null, arg: null);
     }
-    final hedefRol =
-        acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+    // 6 Kas: hizmet veren bilgileri eksikse hizmet alan paneli (`acilisRolu`).
+    final hedefRol = acc.acilisRolu;
     if (acc.activeRole != hedefRol) {
       await auth.switchRole(hedefRol);
     }
@@ -592,8 +592,8 @@ class _SplashScreenState extends State<SplashScreen> {
       return null;
     }
     // ⚠ ÇİFT ROL → HİZMET VEREN.
-    final hedefRol =
-        acc.roles.contains(Role.provider) ? Role.provider : Role.customer;
+    // 6 Kas: hizmet veren bilgileri eksikse hizmet alan paneli (`acilisRolu`).
+    final hedefRol = acc.acilisRolu;
     // ⚠ KRİTİK: `RoleGuard`, hedef değil `acc.activeRole`e bakar
     // (bkz. `core/route_guard.dart`). Geçen oturumda AKTİF rol
     // farklıysa (ör. hesap hem hizmet alan hem hizmet veren ve son

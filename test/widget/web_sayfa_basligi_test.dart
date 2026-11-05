@@ -88,18 +88,16 @@ void main() {
     expect(k.contains('final Widget? tumunuOkundu'), isTrue);
   });
 
-  test('Bildirimler: boş durum web\'de kalan alanın ortasında, mobil aynen',
+  test('Bildirimler: boş durum web ve mobilde kalan alanın ortasında (6 Kas)',
       () {
     final k = oku('lib/screens/notifications_screen.dart');
     expect("'Henüz bildiriminiz yok.'".allMatches(k).length, 1,
         reason: 'boş metin TEK tanım');
-    expect(k.contains('else if (liste.isEmpty && kIsWeb)\n'
+    expect(k.contains('else if (liste.isEmpty)\n'
             '            KalanAlandaOrtala(child: bosMetin)'),
         isTrue);
-    expect(k.contains('padding: const EdgeInsets.symmetric(vertical: 40),\n'
-            '              child: bosMetin,'),
-        isTrue,
-        reason: 'mobil düzen değişmiş');
+    expect(k.contains('liste.isEmpty && kIsWeb'), isFalse,
+        reason: 'mobil ayrı (üstte) düzene dönmüş');
   });
 
   test('Sonuçlar: bilgilendirme web\'de kalan alanın ortasında, mobil aynen',
@@ -130,13 +128,18 @@ void main() {
     }
   });
 
-  test('İlanlarım ve Müşteri Yorumları: boş durum web\'de ortada, mobil aynen',
+  test('İlanlarım (web + mobil, 6 Kas) ve Müşteri Yorumları (web): boş durum ortada',
       () {
     final l = oku('lib/screens/my_listings_screen.dart');
     expect(l.contains('return KalanAlandaOrtala(altBosluk: 24, child: metin);'),
         isTrue);
     expect(l.contains('padding: const EdgeInsets.symmetric(vertical: 40),\n'
             '      child: metin,'),
+        isFalse, reason: 'mobil üstte kalan düzene dönmüş');
+    // Mobil ölçü kaydırma alanının görünen altına göre (alt menünün üstü).
+    final o = oku('lib/ui/kalan_alanda_ortala.dart');
+    expect(o.contains('if (!kIsWeb) {\n      _olcMobil(mq, ust);'), isTrue);
+    expect(o.contains('Scrollable.maybeOf(context)?.context.findRenderObject()'),
         isTrue);
     final r = oku('lib/screens/my_reviews_screen.dart');
     expect(

@@ -546,6 +546,9 @@ Future<void> main() async {
     Future<({String rota, String? argRota, Object? arg})> acilisRotasi() async {
       final acc = ports.auth.currentAccount;
       String rota;
+      // 6 Kas: eksik hizmet veren hesabı hizmet alana alındıysa kayıtlı
+      // (hizmet veren) ekrana da dönülmez.
+      var eksikSaglayici = false;
       if (acc != null) {
         // ── ⚠ YENİLEMEDE ROL KORUNUR (15 Eki) ──
         // İŞ KURALI (splash ile aynı): YENİ AÇILIŞTA çift rollü kullanıcı
@@ -554,13 +557,14 @@ Future<void> main() async {
         // da F5 yapan kullanıcı rolü değişmiş hâlde, kaldığı ekranla
         // uyuşmayan bir sayfaya düşüyordu. Sekmede kayıtlı ekran varsa bu
         // bir YENİLEMEDİR: o anki rol aynen korunur.
+        // 6 Kas: hizmet veren bilgileri eksik hesap yenilemede de hizmet
+        // veren panelinde açılmaz (`acilisRolu`, splash ile aynı kaynak).
+        eksikSaglayici = acc.activeRole == Role.provider &&
+            acc.acilisRolu != Role.provider;
         final yenileme = sekmeOku(kSekmeRota) != null &&
-            acc.roles.contains(acc.activeRole);
-        final hedefRol = yenileme
-            ? acc.activeRole
-            : (acc.roles.contains(Role.provider)
-                ? Role.provider
-                : Role.customer);
+            acc.roles.contains(acc.activeRole) &&
+            !eksikSaglayici;
+        final hedefRol = yenileme ? acc.activeRole : acc.acilisRolu;
         if (acc.activeRole != hedefRol) {
           await ports.auth.switchRole(hedefRol);
         }
@@ -577,6 +581,7 @@ Future<void> main() async {
       // 5 Kas: kayıt/doğrulama akışı ekranlarına geri dönülmez (eski
       // sürümden kalmış kayıt dahil) — başlangıç ekranı açılır.
       if (kayitli != null &&
+          !eksikSaglayici &&
           !kGeriYuklenmeyenRotalar.contains(kayitli) &&
           (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
         HizmetCepApp.geriYuklenenRota = kayitli;

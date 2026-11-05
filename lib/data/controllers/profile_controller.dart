@@ -34,8 +34,10 @@ class ProfileController extends BaseController {
   /// E-POSTA DEĞİŞİMİ — yeni adrese doğrulama bağlantısı yollanır.
   ///
   /// ⚠ Hesabın e-postası bu çağrıyla DEĞİŞMEZ (iş kuralları §4).
+  ///
+  /// 6 Kas (kullanıcı kararı): şifre İSTENMEZ; [sifre] verilmeyebilir.
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
-          {required String sifre}) =>
+          {String? sifre}) =>
       runAction('profile:email-change',
           () => _auth.epostaDegisimiBaslat(yeniEposta, sifre: sifre));
 
