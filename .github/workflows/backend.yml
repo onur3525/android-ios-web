@@ -8,9 +8,9 @@
 name: backend
 on:
   push:
-    paths: ['backend/**', 'admin/**', 'lib/data/**', '.github/workflows/backend.yml']
+    paths: ['backend/**', 'admin/**', 'lib/data/**', 'sunucu/**', '.github/workflows/backend.yml']
   pull_request:
-    paths: ['backend/**', 'admin/**', 'lib/data/**', '.github/workflows/backend.yml']
+    paths: ['backend/**', 'admin/**', 'lib/data/**', 'sunucu/**', '.github/workflows/backend.yml']
 permissions:
   contents: read
 jobs:
