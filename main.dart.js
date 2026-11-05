@@ -61853,7 +61853,7 @@
       this.$this = t0;
     },
     ApiConfig_baseUrl() {
-      return "https://hizmetcep-backend.onrender.com/api/v1";
+      return "https://api.hizmetcep.com/api/v1";
     },
     ApiConfig_mode() {
       return B.DataSourceMode_1;
