@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../domain/form_mesajlari.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
@@ -14,6 +15,7 @@ import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 import '../ui/sifre_dogrulama_paneli.dart';
+import '../ui/sms_kod_akisi.dart';
 import '../ui/web_panel.dart';
 import 'nav_actions.dart';
 import '../core/geri.dart';
@@ -69,6 +71,73 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
 
   Account? get _hesap => context.read<AuthController>().currentAccount;
 
+  /// Hesabın onaylı telefonu var mı? Yoksa numara bu ekranda satır içinde
+  /// SMS koduyla onaylanır (5 Kas); Kaydet akışı ve şifre sorusu yalnız
+  /// ONAYLI numaranın değiştirilmesi içindir.
+  bool get _telefonOnayli {
+    final a = _hesap;
+    return a != null && a.phoneVerified && a.phone.trim().isNotEmpty;
+  }
+
+  // ── 5 Kas: ONAYLI TELEFONU OLMAYAN HESAP — SATIR İÇİ SMS ONAYI ──
+  // Kutunun altında "Kod Gönder" → kod alanı açılır; 6 hane girilince numara
+  // onaylanır, alan ve bağlantı kaybolur, "Telefon onaylı ✓" kalır.
+  // Gönderme/sayaç/tekrar gönder/kilit: TEK KAYNAK (`ui/sms_kod_akisi.dart`,
+  // Profilinizi Tamamlayın ile aynı). Sunucu: /profiles/me/complete
+  // (onaylı telefonu olmayan hesap için şifre istemez).
+  final SmsKodAkisi _smsAkis = SmsKodAkisi();
+  final _telKod = TextEditingController();
+  bool _telDogrulaniyor = false;
+  String? _telKodHata;
+
+  void _smsDegisti() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _telKodGonder() async {
+    if (_telefonHata != null || _telDogrulaniyor) {
+      return;
+    }
+    final tel = Validators.phoneFmt(_phone.text);
+    setState(() => _telKodHata = null);
+    final gonderildi =
+        await _smsAkis.gonder(context.read<AuthController>(), tel);
+    if (!mounted || !gonderildi) {
+      return;
+    }
+    setState(_telKod.clear);
+  }
+
+  Future<void> _telDogrula() async {
+    final challengeId = _smsAkis.challengeId;
+    if (_telDogrulaniyor || challengeId == null) {
+      return;
+    }
+    setState(() {
+      _telDogrulaniyor = true;
+      _telKodHata = null;
+    });
+    final hata = await context.read<AuthController>().profiliTamamla(
+          telefon: Validators.phoneFmt(_phone.text),
+          challengeId: challengeId,
+          kod: _telKod.text,
+        );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _telDogrulaniyor = false;
+      _telKod.clear();
+      if (hata != null) {
+        _telKodHata = hata;
+      } else {
+        _smsAkis.durdur();
+      }
+    });
+  }
+
   bool get _adSoyadDegisti {
     final acc = _hesap;
     if (acc == null || _adHata != null || _soyadHata != null) {
@@ -89,6 +158,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   bool get _telefonDegisti {
     final acc = _hesap;
     if (acc == null || _phone.text.trim().isEmpty || _telefonHata != null) {
+      return false;
+    }
+    // 5 Kas: onaylı telefonu olmayan hesapta numara satır içinde onaylanır.
+    if (!_telefonOnayli) {
       return false;
     }
     return Validators.phoneFmt(_phone.text) != acc.phone;
@@ -270,6 +343,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   @override
   void initState() {
     super.initState();
+    _smsAkis.addListener(_smsDegisti);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _epostaOnayiniEsitle();
@@ -426,7 +500,9 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
       epostaBeklemede = true;
     }
     setState(() => _busy = false);
-    if (newPhone != oldPhone) {
+    // 5 Kas: onaylı telefonu olmayan hesapta numara satır içinde onaylanır;
+    // bu akış (şifre + ayrı kod ekranı) yalnız ONAYLI numarayı değiştirir.
+    if (_telefonOnayli && newPhone != oldPhone) {
       // ── TELEFON DEĞİŞİKLİĞİ CHALLENGE'I ──
       //
       // ⚠ MEVCUT NUMARA BU AŞAMADA DEĞİŞMEZ. Challenge YENİ numaraya
@@ -530,6 +606,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     _fSoyad.dispose();
     _fEposta.dispose();
     _fTelefon.dispose();
+    _smsAkis
+      ..removeListener(_smsDegisti)
+      ..dispose();
+    _telKod.dispose();
     _first.dispose();
     _last.dispose();
     _phone.dispose();
@@ -740,7 +820,17 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
               alanAnahtari: _telefonKey,
               focusNode: _fTelefon,
               // ⚠ `onChanged` doğrulama YAPMAZ — yalnız "numara
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) {
+                final oncedenGonderildi =
+                    _smsAkis.gonderildiMi(Validators.phoneFmt(_phone.text));
+                _smsAkis.telefonDegisti(Validators.phoneFmt(_phone.text));
+                setState(() {
+                  if (!oncedenGonderildi) {
+                    _telKod.clear();
+                    _telKodHata = null;
+                  }
+                });
+              },
               // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
                       // etikette "Telefon" yazar, kutunun içinde biçim
                       // ipucu kalır.
@@ -758,6 +848,116 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
               validator: (v) =>
                   _kural('telefon', _fTelefon, v, Validators.phone),
             ),
+
+            // ── 5 Kas: TELEFON ONAY DURUMU — telefon alanının hemen altında
+            // (e-posta durumu ile aynı görünüm). Onaylı telefonu olmayan
+            // hesapta "Kod Gönder" → kod alanı → "Telefon onaylı ✓".
+            Builder(builder: (context) {
+              final hesap = context.watch<AuthController>().currentAccount;
+              final tel = Validators.phoneFmt(_phone.text);
+              final onayliHesap = hesap != null &&
+                  hesap.phoneVerified &&
+                  hesap.phone.trim().isNotEmpty;
+              // Onaylı numara değiştiriliyorsa mevcut akış (bilgi kutusu +
+              // Kaydet) geçerlidir; durum satırı gösterilmez.
+              if (onayliHesap && tel != hesap?.phone) {
+                return const SizedBox.shrink();
+              }
+              if (onayliHesap) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(children: [
+                    const Icon(Icons.check_circle, size: 18, color: RC.success),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text('Telefon onaylı ✓',
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w500,
+                              color: RC.success)),
+                    ),
+                  ]),
+                );
+              }
+              final gecerli = _telefonHata == null;
+              final gonderildi = gecerli && _smsAkis.gonderildiMi(tel);
+              final denendi = gecerli && _smsAkis.denendiMi(tel);
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [
+                      const Icon(Icons.info_outline,
+                          size: 18, color: RC.textMuted),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text('Telefon numarası onaylanmadı',
+                            style: refText(
+                                size: RF.s135,
+                                weight: RF.w500,
+                                color: RC.textMuted)),
+                      ),
+                    ]),
+                    if (gecerli && !gonderildi && !denendi && _smsAkis.sayac == 0)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _busy || _smsAkis.gonderiliyor
+                              ? null
+                              : _telKodGonder,
+                          icon: const Icon(Icons.sms_outlined, size: 18),
+                          label: const Text('Kod Gönder'),
+                        ),
+                      ),
+                    if (gonderildi || denendi) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _telKod,
+                        enabled: gonderildi && !_telDogrulaniyor,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.oneTimeCode],
+                        maxLength: 6,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        onChanged: (v) {
+                          _smsAkis.hatayiTemizle();
+                          setState(() => _telKodHata = null);
+                          if (v.length == 6) {
+                            _telDogrula();
+                          }
+                        },
+                        decoration: refIkonluAlanDekoru(
+                          'Telefonunuza gelen 6 haneli kodu girin',
+                          'assets/svg/ic_plock.svg',
+                          hata: _telKodHata ?? _smsAkis.hata,
+                          suffix: _telDogrulaniyor
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      SmsKodAltSatiri(
+                        akis: _smsAkis,
+                        telefon: tel,
+                        onTekrar: _telKodGonder,
+                        kapali: _telDogrulaniyor,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }),
 
             // ⚠ KUTU ÜÇ KOŞULLA ÇIKAR: boş değil · geçerli · farklı.
             // Yazım sürecindeki ara değerlerde ("onur@") görünmez.

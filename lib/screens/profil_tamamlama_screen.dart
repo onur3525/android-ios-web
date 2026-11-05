@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,11 +10,11 @@ import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/region_controller.dart';
 import '../data/models/account.dart';
-import '../domain/form_mesajlari.dart';
 import '../ui/alt_panel.dart';
 import '../ui/panel_rotasi.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
+import '../ui/sms_kod_akisi.dart';
 import '../ui/web_panel.dart';
 import 'widgets/kategori_secim_paneli.dart';
 import 'widgets/region_picker.dart';
@@ -41,10 +39,6 @@ import 'widgets/region_picker.dart';
 /// sunucuya (Firebase belgesi olarak) gider; karar sunucunundur.
 /// Tamamlanınca `true` ile kapanır ve kullanıcı bastığı işleme devam eder.
 /// ═══════════════════════════════════════════════════════════════
-/// İki SMS kodu arasındaki bekleme — sunucu kuralıyla (`smsGonderimIzni`,
-/// 60 sn) ve kod ekranındaki sayaçla aynı.
-const int _kSmsBeklemeSaniye = 60;
-
 class ProfilTamamlamaScreen extends StatefulWidget {
   const ProfilTamamlamaScreen({super.key, required this.rol});
 
@@ -70,27 +64,15 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   // "SMS Kodu Gönder" → kod kutusu açılır, 60 sn geri sayım; sayım bitince
   // "Kodu tekrar gönder". 6 hane girilince (ya da Android'de SMS'ten
   // otomatik dolunca) düğme "Devam Et" olur; kod ve bilgiler TEK istekte
-  // sunucuya gider. Gönderim kuralı (60 sn / 3 kod / 15 dk) sunucudadır;
+  // sunucuya gider. Gönderim kuralı (60 sn / 3 kod / 5 dk) sunucudadır;
   // ekran yalnız kalan süreyi gösterir.
+  // 5 Kas: gönderme, sayaç, tekrar gönder ve kilit — TEK KAYNAK
+  // (`ui/sms_kod_akisi.dart`; Profil Bilgilerim de aynısını kullanır).
   final _kod = TextEditingController();
   final _fKod = FocusNode();
-  String? _challengeId;
-  String? _gonderilenTelefon;
+  final SmsKodAkisi _akis = SmsKodAkisi();
   String? _kodHata;
   bool _otomatikDogrulandi = false;
-  int _sayac = 0;
-  bool _kilit = false;
-  Timer? _zamanlayici;
-
-  /// 5 Kas (kullanıcı kararı): "SMS Kodu Gönder"e basıldıktan sonra —
-  /// kod gelsin gelmesin, gönderim başarılı olsun olmasın — kod girilip
-  /// devam edilmediği sürece sayaç bitince "Kodu tekrar gönder" çıkar.
-  /// Numara değişince sıfırlanır.
-  bool _gonderimDenendi = false;
-
-  /// 3 koddan sonraki kilitte gösterilen uyarı (sunucunun metni; dakika
-  /// sunucudaki tek kuraldan gelir).
-  String? _kilitMesaji;
   ValueListenable<({String id, String kod})?>? _otomatikKod;
 
   bool get _saglayici => widget.rol == Role.provider;
@@ -124,6 +106,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
         context.read<RegionController>().load();
       }
     });
+    _akis.addListener(_akisDegisti);
     try {
       _otomatikKod = context.read<AuthController>().otomatikSmsKodu
         ..addListener(_otomatikKodGeldi);
@@ -135,7 +118,9 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   @override
   void dispose() {
     _otomatikKod?.removeListener(_otomatikKodGeldi);
-    _zamanlayici?.cancel();
+    _akis
+      ..removeListener(_akisDegisti)
+      ..dispose();
     _telefon.dispose();
     _kod.dispose();
     _fKod.dispose();
@@ -145,7 +130,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   /// Android: telefon SMS'i yakaladı → kod kutusu kendiliğinden dolar.
   void _otomatikKodGeldi() {
     final o = _otomatikKod?.value;
-    if (!mounted || o == null || o.id != _challengeId) {
+    if (!mounted || o == null || o.id != _akis.challengeId) {
       return;
     }
     setState(() {
@@ -158,51 +143,25 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     });
   }
 
-  void _sayaciBaslat(int saniye, {required bool kilit}) {
-    _zamanlayici?.cancel();
-    setState(() {
-      _sayac = saniye;
-      _kilit = kilit;
-    });
-    _zamanlayici = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      setState(() {
-        _sayac--;
-        if (_sayac <= 0) {
-          _sayac = 0;
-          _kilit = false;
-          t.cancel();
-        }
-      });
-    });
-  }
-
-  String get _sayacMetni {
-    final dk = _sayac ~/ 60;
-    final sn = (_sayac % 60).toString().padLeft(2, '0');
-    return dk > 0 ? '$dk:$sn' : '$_sayac sn';
+  void _akisDegisti() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   bool get _kodGonderildi =>
-      _challengeId != null &&
-      _gonderilenTelefon == Validators.phoneFmt(_telefon.text);
+      _akis.gonderildiMi(Validators.phoneFmt(_telefon.text));
 
   bool get _kodGirildi =>
       _otomatikDogrulandi || RegExp(r'^\d{6}$').hasMatch(_kod.text);
 
   /// Numara değişirse gönderilmiş kod o numaraya ait değildir: sıfırlanır.
   void _telefonDegisti(String _) {
+    final oncedenGonderildi = _kodGonderildi;
+    _akis.telefonDegisti(Validators.phoneFmt(_telefon.text));
     setState(() {
       _hata = null;
-      if (_gonderilenTelefon != Validators.phoneFmt(_telefon.text)) {
-        _gonderimDenendi = false;
-      }
-      if (_challengeId != null &&
-          _gonderilenTelefon != Validators.phoneFmt(_telefon.text)) {
-        _challengeId = null;
+      if (oncedenGonderildi && !_kodGonderildi) {
         _kod.clear();
         _kodHata = null;
         _otomatikDogrulandi = false;
@@ -240,7 +199,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
 
   /// "SMS Kodu Gönder" / "Kodu tekrar gönder".
   Future<void> _kodGonder() async {
-    if (_mesgul || !_tamam || _sayac > 0) {
+    if (_mesgul || !_tamam || _akis.sayac > 0) {
       return;
     }
     final tel = Validators.phoneFmt(_telefon.text);
@@ -249,32 +208,18 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
       _hata = null;
       _kodHata = null;
     });
-    final r = await context.read<AuthController>().profilTelefonKoduGonder(tel);
+    final gonderildi = await _akis.gonder(context.read<AuthController>(), tel);
     if (!mounted) {
       return;
     }
-    setState(() {
-      _mesgul = false;
-      _gonderimDenendi = true;
-      _gonderilenTelefon = tel;
-      _kilitMesaji = r.kilit ? r.hata : null;
-    });
-    if (r.challengeId == null) {
-      if (r.kalanSaniye != null) {
-        // Bekleme ya da 5 dk kilit: kalan süre geri sayımla gösterilir.
-        _sayaciBaslat(r.kalanSaniye!, kilit: r.kilit);
-      } else {
-        setState(() => _kodHata = r.hata ?? FormMesaj.otpGonderilemedi);
-      }
+    setState(() => _mesgul = false);
+    if (!gonderildi) {
       return;
     }
     setState(() {
-      _challengeId = r.challengeId;
-      _gonderilenTelefon = tel;
       _kod.clear();
       _otomatikDogrulandi = false;
     });
-    _sayaciBaslat(_kSmsBeklemeSaniye, kilit: false);
     _fKod.requestFocus();
     // Android bazen kodu gönderim yanıtından ÖNCE yakalar: kaçmasın.
     _otomatikKodGeldi();
@@ -296,7 +241,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     });
     final hata = _telefonDogrulanmis
         ? await _kaydet()
-        : await _kaydet(challengeId: _challengeId, kod: _kod.text);
+        : await _kaydet(challengeId: _akis.challengeId, kod: _kod.text);
     if (!mounted) {
       return;
     }
@@ -313,7 +258,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
       });
       return;
     }
-    _zamanlayici?.cancel();
+    _akis.durdur();
     sysToastOk(context, 'Bilgileriniz kaydedildi');
     Navigator.of(context).pop(true);
   }
@@ -417,41 +362,6 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   String _ozet(Set<String> l) {
     final s = l.toList()..sort();
     return s.length <= 2 ? s.join(', ') : '${s.take(2).join(', ')} +${s.length - 2}';
-  }
-
-  /// Kod kutusunun altı: geri sayım, "Kodu tekrar gönder" ya da 5 dk kilit.
-  Widget _kodAltSatiri() {
-    final kucuk = refText(size: RF.s125, weight: RF.w500, color: RC.textSoft);
-    if (_kilit && _sayac > 0) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 6, left: 2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_kilitMesaji ?? 'Çok fazla kod istendi.',
-                style: refText(size: RF.s125, weight: RF.w600, color: RC.danger)),
-            const SizedBox(height: 2),
-            Text('Kalan süre: $_sayacMetni', style: kucuk),
-          ],
-        ),
-      );
-    }
-    if (_sayac > 0) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 6, left: 2),
-        child: Text('Yeni kodu $_sayacMetni sonra isteyebilirsiniz', style: kucuk),
-      );
-    }
-    if (!_kodGonderildi && !_gonderimDenendi) {
-      return const SizedBox(height: 6);
-    }
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: RefTekrarGonder(
-        metin: 'Kodu tekrar gönder',
-        onTap: _mesgul ? null : _kodGonder,
-      ),
-    );
   }
 
   @override
@@ -570,17 +480,25 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(6),
                     ],
-                    onChanged: (_) => setState(() => _kodHata = null),
+                    onChanged: (_) {
+                      _akis.hatayiTemizle();
+                      setState(() => _kodHata = null);
+                    },
                     onSubmitted: (_) => _devam(),
                     decoration: refIkonluAlanDekoru(
                       _otomatikDogrulandi
                           ? 'Numaranız otomatik doğrulandı'
                           : 'Telefonunuza gelen 6 haneli kodu girin',
                       'assets/svg/ic_plock.svg',
-                      hata: _kodHata,
+                      hata: _kodHata ?? _akis.hata,
                     ),
                   ),
-                  _kodAltSatiri(),
+                  SmsKodAltSatiri(
+                    akis: _akis,
+                    telefon: Validators.phoneFmt(_telefon.text),
+                    onTekrar: _kodGonder,
+                    kapali: _mesgul,
+                  ),
                 ],
                 if (_hata != null) ...[
                   const SizedBox(height: 8),
@@ -604,7 +522,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
                     'SMS Kodu Gönder',
                     busy: _mesgul,
                     onPressed:
-                        _tamam && !_kodGonderildi && _sayac == 0 ? _kodGonder : null,
+                        _tamam && !_kodGonderildi && _akis.sayac == 0 ? _kodGonder : null,
                   ),
               ],
             ),
