@@ -141,8 +141,9 @@ void main() {
     // kilitler.
 
     test('sözleşme kabul zorunluluğu korunur', () {
-      // 16 Eki: iki zorunlu onay (Kullanım Sözleşmesi + Aydınlatma Metni).
-      expect(src.contains('if (!_agree || !_aydinlatma)'), isTrue);
+      // 5 Kas: tek zorunlu onay Kullanım Sözleşmesi (yurt dışı açık rıza
+      // kutusu kaldırıldı; aydınlatma kutusuz bağlantı).
+      expect(src.contains('if (!_agree) {'), isTrue);
     });
   });
 

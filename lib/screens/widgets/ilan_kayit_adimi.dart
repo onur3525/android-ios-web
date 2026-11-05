@@ -48,8 +48,8 @@ class KayitVerisi {
   String? mahalle;
   bool sozlesme = false;
 
-  /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
-  bool aydinlatma = false;
+  // 5 Kas: yurt dışı açık rıza kutusu kaldırıldı — tek zorunlu onay
+  // Kullanım Sözleşmesi (`sozlesme`).
 
   /// 4 Kas: isteğe bağlı ticari elektronik ileti izni (varsayılan kapalı).
   bool ticariIleti = false;
@@ -133,7 +133,7 @@ class KayitVerisi {
   bool get alanlarGecerli => alanlar.every((id) => _hata(id) == null);
 
   /// Kayıt tamamlanabilir mi?
-  bool get tamam => alanlarGecerli && sozlesme && aydinlatma;
+  bool get tamam => alanlarGecerli && sozlesme;
 
   String? get ilkEksik =>
       alanlar.cast<String?>().firstWhere((id) => _hata(id!) != null,
@@ -388,13 +388,8 @@ class _IlanKayitAdimiState extends State<IlanKayitAdimi> {
         key: v.sozlesmeKaydirKey,
         enabled: v.alanlarGecerli,
         sozlesme: v.sozlesme,
-        aydinlatma: v.aydinlatma,
         onSozlesme: (x) {
           v.sozlesme = x;
-          _degisti();
-        },
-        onAydinlatma: (x) {
-          v.aydinlatma = x;
           _degisti();
         },
         ticariIleti: v.ticariIleti,

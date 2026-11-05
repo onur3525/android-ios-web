@@ -28,12 +28,22 @@ import 'ref_widgets.dart';
 ///   2. KVKK Aydınlatma Metni — KUTU YOK: aydınlatma bir bilgilendirmedir,
 ///      onay istemez; "Aydınlatma Metnini Görüntüle" bağlantısı.
 ///   3. Yurt dışındaki sunucularda işlemeye AÇIK RIZA — ZORUNLU, AYRI kutu
-///      (Gizlilik Politikası bağlantısıyla). [aydinlatma] alanı artık bu
+///      (Gizlilik Politikası bağlantısıyla). `aydinlatma` alanı artık bu
 ///      kutudur (adı çağıranlarla geriye uyum için korundu); sunucu
 ///      `aydinlatmaAccepted: true` değerini "aydınlatma gösterildi + açık
 ///      rıza verildi" olarak kaydeder.
 ///   4. Ticari elektronik ileti — İSTEĞE BAĞLI, işaretsiz gelir
 ///      ([ticariIleti]; geri çağrı verilmezse satır gösterilmez).
+///
+/// ── 5 Kas (işletmeci kararı): YURT DIŞI AÇIK RIZA KUTUSU KALDIRILDI ──
+///   Hizmetin açık rızaya bağlanması (paket rıza) KVKK'ya aykırıdır ve 2024
+///   değişikliğinden sonra sürekli yurt dışı aktarım açık rızaya dayanamaz:
+///   aktarımlar KVKK m.9/4 standart sözleşmeye dayanır (Gizlilik Politikası
+///   m.6). Kayıtta YALNIZ iki seçim kalır: Kullanım Sözleşmesi (zorunlu) ve
+///   ticari elektronik ileti (isteğe bağlı, kendi onay metniyle). Aydınlatma
+///   ve Gizlilik bilgilendirmedir; bağlantıyla gösterilir, onaylatılmaz.
+///   Sunucuya giden `aydinlatmaAccepted` artık "aydınlatma gösterildi"
+///   anlamındadır (sözleşme kutusuyla birlikte gönderilir).
 ///
 /// ⚠ ÜÇ KAYIT EKRANI (Kayıt Ol, İlan Ver içindeki kayıt adımı, Google/Apple
 /// ile kayıt) bu bileşeni kullanır; metin ve bağlantılar tek yerden gelir.
@@ -41,20 +51,14 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
   const KullanimSozlesmesiOnayi({
     super.key,
     required this.sozlesme,
-    required this.aydinlatma,
     required this.onSozlesme,
-    required this.onAydinlatma,
     this.ticariIleti = false,
     this.onTicariIleti,
     this.enabled = true,
   });
 
   final bool sozlesme;
-
-  /// Yurt dışındaki sunucularda işlemeye açık rıza kutusu (zorunlu).
-  final bool aydinlatma;
   final ValueChanged<bool> onSozlesme;
-  final ValueChanged<bool> onAydinlatma;
 
   /// İsteğe bağlı ticari elektronik ileti izni.
   final bool ticariIleti;
@@ -67,6 +71,7 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
   static const String kAydinlatma = 'Aydınlatma Metni';
   static const String kGizlilik = 'Gizlilik Politikası';
   static const String kCerez = 'Çerez Politikası';
+  static const String kTicariIleti = 'Ticari Elektronik İleti Onay Metni';
 
   @override
   Widget build(BuildContext context) => Column(
@@ -120,31 +125,25 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
                                 decoration: TextDecoration.underline,
                                 decorationColor: RC.blue)),
                   ),
+                  const SizedBox(height: 6),
+                  // 5 Kas: Gizlilik Politikası da bilgilendirmedir — onay
+                  // kutusu yok, bağlantıyla gösterilir.
+                  RefTap(
+                    key: const ValueKey('gizlilik-politikasi'),
+                    onTap: enabled
+                        ? () => Navigator.pushNamed(context, '/legal',
+                            arguments: {'slug': 'privacy', 'title': kGizlilik})
+                        : null,
+                    child: Text('Gizlilik Politikasını Görüntüle',
+                        style: refText(
+                                size: RF.s13, weight: RF.w600, color: RC.blue)
+                            .copyWith(
+                                decoration: TextDecoration.underline,
+                                decorationColor: RC.blue)),
+                  ),
                 ],
               ),
             ),
-          ),
-          // ── YURT DIŞI AKTARIM — AÇIK RIZA (zorunlu, ayrı kutu) ──
-          _OnaySatiri(
-            enabled: enabled,
-            value: aydinlatma,
-            onChanged: onAydinlatma,
-            parcalar: [
-              (text: 'Kişisel verilerimin ', onTap: null),
-              (
-                text: kGizlilik,
-                onTap: () => Navigator.pushNamed(context, '/legal',
-                    arguments: {'slug': 'privacy', 'title': kGizlilik}),
-              ),
-              (
-                text: '’nda belirtilen hizmet sunumu '
-                    'amacıyla yurt dışındaki sunucularda işlenmesine yasal '
-                    'haklarım saklı kalmak kaydıyla AÇIK RIZA veriyorum.',
-                onTap: null,
-              ),
-            ],
-            altYazi: 'Verilerin hangi ülkelerdeki sunucularda, hangi amaçla '
-                'işlendiği Gizlilik Politikası’nda yazar.',
           ),
           // ── TİCARİ ELEKTRONİK İLETİ (isteğe bağlı, işaretsiz) ──
           if (onTicariIleti != null)
@@ -153,12 +152,17 @@ class KullanimSozlesmesiOnayi extends StatelessWidget {
               value: ticariIleti,
               onChanged: onTicariIleti!,
               zorunlu: false,
-              parcalar: const [
+              parcalar: [
                 (
                   text: 'Kampanya, duyuru ve fırsatlardan e-posta, SMS ve '
                       'bildirim yoluyla haberdar olmak için ticari elektronik '
-                      'ileti almak istiyorum. (İsteğe bağlı)',
+                      'ileti almak istiyorum. (İsteğe bağlı) ',
                   onTap: null,
+                ),
+                (
+                  text: kTicariIleti,
+                  onTap: () => Navigator.pushNamed(context, '/legal',
+                      arguments: {'slug': 'marketing', 'title': kTicariIleti}),
                 ),
               ],
               altYazi: 'İzninizi Hesap Ayarları’ndaki “Duyurular ve '

@@ -15,9 +15,25 @@
 // Kapatmak için: HC_OTOMATIK_TOHUM=false.
 // ═══════════════════════════════════════════════════════════════
 import { tohumla } from '../scripts/seed_from_flutter.js';
+import { gocDosyalari } from './db.js';
+
+// ── YASAL METİNLER — YENİ KURULUM (5 Kas) ──
+// Yasal göçler yalnız belge kaydı VARSA yazar; yeni kurulumda göçler belge
+// kayıtlarından (bu aktarım) ÖNCE koştuğu için metinler yayımlanmıyordu.
+// Belgeler bu aktarımla ilk kez oluştuysa güncel yasal göç bir kez daha
+// çalıştırılır (sabit sürüm kimlikleriyle idempotent; panelden yayımlanmış
+// sürümlere dokunmaz).
+export const GUNCEL_YASAL_GOC = '053_yasal_yeni_surum';
 
 /** @returns {Promise<object|null>} aktarılan satır sayıları; kapalıysa/kilit başkasındaysa null */
 export async function baslangicVerisiniHazirla(db, env = process.env) {
   if (env.HC_OTOMATIK_TOHUM === 'false') return null;
-  return db.isKilidi('is:baslangic_verisi', () => tohumla(db));
+  return db.isKilidi('is:baslangic_verisi', async () => {
+    const s = await tohumla(db);
+    if (s?.belge > 0) {
+      const goc = gocDosyalari(db.surucu).find((g) => g.id === GUNCEL_YASAL_GOC);
+      if (goc) await db.exec(goc.sql);
+    }
+    return s;
+  });
 }
