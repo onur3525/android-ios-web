@@ -51,7 +51,6 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
   final _fSoyad = FocusNode();
   Role? _rol;
   bool _sozlesme = false;
-  bool _aydinlatma = false;
   bool _ticariIleti = false;
   bool _mesgul = false;
 
@@ -90,7 +89,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
       Validators.name(_soyad.text, min: 2, label: 'soyad');
 
   bool get _tamam =>
-      _adHatasi == null && _rol != null && _sozlesme && _aydinlatma && !_mesgul;
+      _adHatasi == null && _rol != null && _sozlesme && !_mesgul;
 
   Future<void> _kaydol() async {
     if (!_tamam) {
@@ -104,7 +103,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
           belge: widget.belge,
           rol: _rol!,
           ad: '${_ad.text.trim()} ${_soyad.text.trim()}',
-          sozlesmeOnayi: _sozlesme && _aydinlatma,
+          sozlesmeOnayi: _sozlesme,
           ticariIleti: _ticariIleti,
         );
     if (!mounted) {
@@ -230,9 +229,7 @@ class _SosyalKayitScreenState extends State<SosyalKayitScreen> {
                   KullanimSozlesmesiOnayi(
                     enabled: !_mesgul,
                     sozlesme: _sozlesme,
-                    aydinlatma: _aydinlatma,
                     onSozlesme: (v) => setState(() => _sozlesme = v),
-                    onAydinlatma: (v) => setState(() => _aydinlatma = v),
                     ticariIleti: _ticariIleti,
                     onTicariIleti: (v) => setState(() => _ticariIleti = v),
                   ),

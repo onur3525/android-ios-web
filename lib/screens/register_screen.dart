@@ -108,10 +108,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // istenir (hizmet alan: ilk Bul / İlan Oluştur; hizmet veren: panel).
   bool _agree = false;
 
-  /// Aydınlatma Metni onayı — ZORUNLU (16 Eki, kullanıcı kararı).
-  /// 4 Kas: kutu artık yurt dışındaki sunucularda işlemeye açık rıza
-  /// (aydınlatma bilgilendirmesi kutusuz bağlantı oldu).
-  bool _aydinlatma = false;
+  // 5 Kas: yurt dışı açık rıza kutusu kaldırıldı — tek zorunlu onay
+  // Kullanım Sözleşmesi (`_agree`); bkz. `ui/kullanim_sozlesmesi_onayi.dart`.
 
   /// 4 Kas: isteğe bağlı ticari elektronik ileti izni (varsayılan kapalı).
   bool _ticariIleti = false;
@@ -578,7 +576,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   /// Gönderim koşulu: zorunlu alanlar TAMAM **ve** sözleşme onaylı.
-  bool get _formTamam => _alanlarTamam && _agree && _aydinlatma;
+  bool get _formTamam => _alanlarTamam && _agree;
 
   /// ZORUNLU ALANLAR TAMAM MI? (sözleşme HARİÇ)
   ///
@@ -614,7 +612,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!formOk) {
       return;
     }
-    if (!_agree || !_aydinlatma) {
+    if (!_agree) {
       sysToastErr(context, SysKind.genericError,
           extra: 'Devam etmek için sözleşmeyi onaylayınız');
       return;
@@ -639,7 +637,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Sözleşme onayı domain katmanına İLETİLİR:
         // yalnız UI kontrolüne güvenilmez.
         ticariIleti: _ticariIleti,
-        termsAccepted: _agree && _aydinlatma);
+        termsAccepted: _agree);
     if (!mounted) {
       return;
     }
@@ -746,7 +744,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 name: '${_first.text.trim()} ${_last.text.trim()}',
                 email: epostaNormalize(_email.text),
                 ticariIleti: _ticariIleti,
-                termsAccepted: _agree && _aydinlatma);
+                termsAccepted: _agree);
             if (!otpContext.mounted) {
               return;
             }
@@ -1406,7 +1404,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // ⚠ Zorunlu alanlar bitmeden işaretlenemez.
                   enabled: alanlarTamam,
                   sozlesme: _agree,
-                  aydinlatma: _aydinlatma,
                   // ⚠ `_tazele()` ZORUNLU.
                   //
                   // "Devam Et" düğmesi `_formGecerli` bildirimini
@@ -1415,10 +1412,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // pasif kalıyordu — 2. adıma hiç geçilemiyordu.
                   onSozlesme: (v) {
                     setState(() => _agree = v);
-                    _tazele();
-                  },
-                  onAydinlatma: (v) {
-                    setState(() => _aydinlatma = v);
                     _tazele();
                   },
                   ticariIleti: _ticariIleti,
