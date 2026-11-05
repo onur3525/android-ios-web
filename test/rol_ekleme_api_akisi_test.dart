@@ -17,7 +17,6 @@ import 'package:hizmetcep/data/remote/api/profile_api.dart';
 import 'package:hizmetcep/data/remote/api_client.dart';
 import 'package:hizmetcep/data/remote/repositories/api_repositories.dart';
 import 'package:hizmetcep/data/repositories/auth_repository.dart';
-import 'package:hizmetcep/domain/failures.dart';
 
 import 'support/fake_backend.dart';
 import 'support/test_config.dart';
@@ -142,6 +141,7 @@ void main() {
     final a = _kod('lib/data/remote/api/auth_api.dart');
     expect(a.contains("c.post('/auth/roles/add', body: {'role': role});"),
         isTrue);
-    expect(a.contains("'password': password});"), isFalse);
+    expect(a.contains("c.post('/auth/roles/add', body: {'role': role, 'password'"),
+        isFalse);
   });
 }

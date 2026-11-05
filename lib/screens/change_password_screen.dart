@@ -39,10 +39,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   ///
   /// ⚠ Politika tek kaynaktan (`Validators.password`); ekran kendi
   /// kuralını yazmaz.
-  bool get _formGecerli =>
-      (_olustur || _cur.text.trim().isNotEmpty) &&
-      Validators.password(_new1.text) == null &&
-      _new2.text == _new1.text;
+  bool get _formGecerli => _olustur
+      ? _yeniSifreGecerli
+      : _cur.text.trim().isNotEmpty &&
+          Validators.password(_new1.text) == null &&
+          _new2.text == _new1.text;
+
+  /// Oluşturma kipinde mevcut şifre yok: yalnız yeni şifre + tekrar.
+  bool get _yeniSifreGecerli =>
+      Validators.password(_new1.text) == null && _new2.text == _new1.text;
 
   /// ── ŞİFRE OLUŞTURMA KİPİ (5 Kas, kullanıcı talebi) ──
   ///
@@ -241,7 +246,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!WebPanel.panelMi(context)) ...[
-              RefPageTitle(_baslik),
+              if (_olustur)
+                const RefPageTitle('Şifre Oluştur')
+              else
+                const RefPageTitle('Şifre Değiştir'),
               RefSubtitle(_altYazi),
             ],
 
