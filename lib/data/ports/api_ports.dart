@@ -545,13 +545,11 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<DomainError?> switchRole(Role role) => repo.switchRole(role);
 
-  /// ROL EKLEME — sunucu şifre ve YENİ telefon doğrulaması ister.
-  ///
-  /// Kod hesabın KAYITLI telefonuna Firebase ile gönderilir; dönen ID
-  /// token sunucuya kanıt olarak gider. Sunucu kanıtın telefonla, bu
-  /// oturum açıldıktan sonra ve yakın zamanda alındığını denetler.
+  /// ROL EKLEME — 5 Kas (kullanıcı kararı): sunucu kimlik doğrulaması
+  /// İSTEMEZ (şifre de Google/Apple yeniden girişi de). Yeni rolde eksik
+  /// bilgiler tamamlanmadan o rolün işlemleri zaten açılmaz.
   @override
-  bool get rolEklemeDogrulamaIster => true;
+  bool get rolEklemeDogrulamaIster => false;
 
   @override
   Future<({String? challengeId, DomainError? error})> rolEklemeKodGonder() async {
@@ -578,11 +576,9 @@ class ApiAuthPort extends AuthPort {
     String? sifre,
     String? telefonKaniti,
   }) async {
-    // 21 Eki (kullanıcı kararı): telefon/SMS doğrulaması istenmez; yalnız şifre.
-    if (sifre == null || sifre.isEmpty) {
-      return const ValidationError('Rol eklemek için şifrenizi girin.');
-    }
-    final hata = await repo.addRole(role, sifre);
+    // 5 Kas: kimlik doğrulaması istenmez; [sifre] ve [telefonKaniti]
+    // sunucuya gönderilmez (eski çağrılar için imzada duruyor).
+    final hata = await repo.addRole(role);
     if (hata != null) {
       return hata;
     }
@@ -615,6 +611,31 @@ class ApiAuthPort extends AuthPort {
   @override
   Future<DomainError?> verifyPassword(String password) =>
       repo.verifyPassword(password);
+
+  /// ŞİFRE OLUŞTURMA (Google/Apple hesabı, 5 Kas).
+  ///
+  /// Önce açık Firebase oturumunun belgesi denenir: giriş son 10 dakika
+  /// içindeyse kullanıcıya ek bir şey sorulmaz. Sunucu kanıtı eski bulursa
+  /// (WRONG_PASSWORD) aynı sağlayıcıyla yeniden doğrulatılır (tek kaynak:
+  /// `sosyalKimlikKaniti`) ve bir kez daha denenir.
+  @override
+  Future<DomainError?> sifreOlustur(String yeni) async {
+    final mevcut = await FirebaseKimlik.i.mevcutBelge();
+    if (mevcut != null) {
+      final h = await repo.sifreOlustur(yeni, mevcut);
+      if (h is! WrongPasswordError) {
+        return h;
+      }
+    }
+    final k = await sosyalKimlikKaniti();
+    if (k.iptal) {
+      return const ValidationError('Kimlik doğrulaması tamamlanmadı.');
+    }
+    if (k.error != null || k.kanit == null) {
+      return k.error ?? const ValidationError('Kimlik doğrulanamadı.');
+    }
+    return repo.sifreOlustur(yeni, k.kanit!);
+  }
 
   /// Sunucuda ayrı bir "başlat" ucu yoktur: OTP isteği bu akışı başlatır.
   @override

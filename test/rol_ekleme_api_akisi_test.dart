@@ -1,8 +1,9 @@
 // ROL EKLEME — API MODU İSTEMCİ AKIŞI
 //
-// ⚠ 21 Eki (kullanıcı kararı): telefon ve SMS kodu İSTENMEZ. Sunucu
-// sözleşmesi (backend/test/rol_ekleme.test.js): POST /auth/roles/add
-// { role, password }.
+// ⚠ 21 Eki (kullanıcı kararı): telefon ve SMS kodu İSTENMEZ.
+// ⚠ 5 Kas (kullanıcı kararı): kimlik doğrulaması da (şifre / Google-Apple
+// yeniden girişi) İSTENMEZ. Sunucu sözleşmesi
+// (backend/test/rol_ekleme.test.js): POST /auth/roles/add { role }.
 //
 // ⚠ Kaynak metni denetleyen testlerde YORUM SATIRLARI ELENİR.
 import 'dart:io';
@@ -33,22 +34,25 @@ ApiAuthPort _port(ApiClient c) =>
 
 void main() {
   group('API portu', () {
-    test('şifre ister; şifresiz istek SUNUCUYA HİÇ GİTMEZ', () async {
+    test('doğrulama istemez; şifresiz istek sunucuya gider ve rol eklenir', () async {
+      var rol = 'CUSTOMER';
       final be = FakeBackend({
-        'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+        'GET /users/me': (_) => userJson(role: rol),
         'GET /profiles/me/address': (_) => null,
+        'POST /auth/roles/add': (_) {
+          rol = 'PROVIDER';
+          return null;
+        },
       });
       final port = _port(be.client());
       await port.restoreSession();
-      expect(port.rolEklemeDogrulamaIster, isTrue);
+      expect(port.rolEklemeDogrulamaIster, isFalse);
 
-      expect(await port.addRole(Role.provider), isA<ValidationError>());
-      expect(await port.addRole(Role.provider, telefonKaniti: 'kanit'),
-          isA<ValidationError>());
-      expect(be.countOf('POST /auth/roles/add'), 0);
+      expect(await port.addRole(Role.provider), isNull);
+      expect(be.countOf('POST /auth/roles/add'), 1);
     });
 
-    test('yalnız şifre sunucuya gider; ardından hizmet veren profili yazılır',
+    test('yalnız rol sunucuya gider (şifre gönderilmez); ardından hizmet veren profili yazılır',
         () async {
       Map<String, dynamic>? gonderilen;
       Map<String, dynamic>? profil;
@@ -74,10 +78,7 @@ void main() {
           serviceDistricts: {'Bornova'},
           sifre: kTestPass);
       expect(hata, isNull);
-      expect(gonderilen, {
-        'role': 'PROVIDER',
-        'password': kTestPass,
-      });
+      expect(gonderilen, {'role': 'PROVIDER'});
       expect(gonderilen!.containsKey('otpCode'), isFalse);
       expect(profil, {
         'categories': ['Tesisat'],
@@ -121,10 +122,11 @@ void main() {
   group('Rol Değiştir ekranı', () {
     final r = _kod('lib/screens/role_switch_screen.dart');
 
-    test('API modunda yalnız şifre sorulur; telefon/SMS adımı YOK', () {
-      expect(r.contains('if (auth.rolEklemeDogrulamaIster) {'), isTrue);
-      expect(r.contains('final sifre = await _sifreAl(auth);'), isTrue);
-      expect(r.contains('.verifyPassword(ctl.text)'), isTrue);
+    test('kimlik doğrulama adımı YOK (şifre, Google/Apple, telefon/SMS)', () {
+      expect(r.contains('final ekleErr = await auth.addRole(hedef);'), isTrue);
+      expect(r.contains('_sifreAl('), isFalse);
+      expect(r.contains('verifyPassword('), isFalse);
+      expect(r.contains('sosyalIleDogrula('), isFalse);
       expect(r.contains('rolEklemeKodGonder'), isFalse);
       expect(r.contains('OtpScreen('), isFalse);
       expect(r.contains('kayıtlı telefonunuza doğrulama kodu'), isFalse);
@@ -136,11 +138,10 @@ void main() {
     });
   });
 
-  test('istemci roles/add gövdesinde yalnız rol ve şifre gönderir', () {
+  test('istemci roles/add gövdesinde yalnız rolü gönderir', () {
     final a = _kod('lib/data/remote/api/auth_api.dart');
-    expect(
-        a.contains(
-            "c.post('/auth/roles/add', body: {'role': role, 'password': password});"),
+    expect(a.contains("c.post('/auth/roles/add', body: {'role': role});"),
         isTrue);
+    expect(a.contains("'password': password});"), isFalse);
   });
 }

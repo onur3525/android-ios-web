@@ -1416,7 +1416,7 @@ export function kullaniciRotalar(r, db) {
     const u = ctx.kullanici;
     // Google/Apple hesabında değiştirilecek bir şifre yok (4 Kas).
     if (sifresizMi(u)) {
-      throw new ApiHatasi(400, 'NO_PASSWORD', 'Hesabınız Google ya da Apple ile giriş yapıyor; tanımlı bir şifreniz yok. Şifre belirlemek için giriş ekranındaki "Şifremi Unuttum" adımını kullanabilirsiniz.');
+      throw new ApiHatasi(400, 'NO_PASSWORD', 'Hesabınız Google ya da Apple ile giriş yapıyor; tanımlı bir şifreniz yok. Şifre belirlemek için Hesap Ayarları › Giriş Yöntemi › Şifre Oluştur adımını kullanabilirsiniz.');
     }
     const mevcut = String(ctx.body.currentPassword ?? '');
     if (!(await sifreDogruMu(db, u, mevcut))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
@@ -1432,6 +1432,33 @@ export function kullaniciRotalar(r, db) {
     await oturumlariIptal(db, ctx.kullanici.id, 'PASSWORD_CHANGED', ctx.kOturum.id);
     // Firebase'deki diğer cihaz oturumları da kapanır (yeni sunucu oturumu açamaz).
     await firebaseOturumlariniKapat(db, u);
+    return undefined;
+  }));
+
+  // ── GOOGLE / APPLE HESABINA ŞİFRE OLUŞTURMA (5 Kas, kullanıcı talebi) ──
+  // İsteğe bağlıdır: şifre oluşturulunca hesap Google/Apple'a EK olarak
+  // e-posta + şifreyle de girer. Kimlik kanıtı kritik işlemlerle AYNI tek
+  // kaynaktan (`kimlikKanitiDogruMu`): bu hesabın Firebase kullanıcısının son
+  // 10 dakikadaki girişi. Kanıt eskiyse WRONG_PASSWORD döner; istemci
+  // Google/Apple ile yeniden doğrulatıp tekrar dener. Şifre ÖNCE Firebase'e
+  // yazılır (giriş Firebase şifresiyle doğrulanır); yazılamazsa yerel şifre
+  // de oluşturulmaz. Oturumlar KAPATILMAZ (mevcut şifre değişmiyor).
+  r.post('/api/v1/auth/password/set', korumali(async (ctx) => {
+    await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
+    const u = ctx.kullanici;
+    if (!sifresizMi(u)) throw hata.cakisma('Hesabınızda zaten bir şifre var; Şifre Değiştir adımını kullanın.');
+    const yeni = sifreKurali(ctx.body.newPassword);
+    if (!(await kimlikKanitiDogruMu(db, u, String(ctx.body.firebaseIdToken ?? '')))) {
+      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Kimliğinizi yeniden doğrulayın.');
+    }
+    if (u.firebase_uid && u.email && config.firebaseWebApiKey) {
+      try {
+        await firebaseSifreAyarla(u.firebase_uid, yeni);
+      } catch {
+        throw new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Şifre şu anda oluşturulamıyor. Lütfen daha sonra tekrar deneyin.');
+      }
+    }
+    await db.prepare('UPDATE users SET password_hash = ?, password_set = TRUE, updated_at = ? WHERE id = ?').run(await sifreOzetleAsenkron(yeni), simdi(), u.id);
     return undefined;
   }));
 
@@ -1477,10 +1504,12 @@ export function kullaniciRotalar(r, db) {
     // denetiminden ÖNCE sayılır; çok örnekte ortak (rate_limits tablosu).
     await rolEklemeSiniri.denetle(db, ctx.kullanici.id);
     const rol = rolDogrula(ctx.body.role);
-    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.password ?? '')))) throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Şifre hatalı');
-    // ⚠ 21 Eki (kullanıcı kararı): rol eklerken telefon/SMS doğrulaması
-    // İSTENMEZ. Oturum açık + mevcut şifre + kullanıcı başına hız sınırı
-    // yeterli sayıldı. Eski uygulamaların gönderdiği kanıt/kod yok sayılır.
+    // ⚠ 5 Kas (kullanıcı kararı): rol eklerken kimlik doğrulaması İSTENMEZ
+    // (şifre de Google/Apple yeniden girişi de). Açık oturum + kullanıcı
+    // başına hız sınırı yeter; yeni rolde eksik bilgiler (telefon, SMS,
+    // adres) tamamlanmadan o rolün işlemleri zaten açılmaz. Eski
+    // uygulamaların gönderdiği şifre/kanıt/kod yok sayılır.
+    // (21 Eki kararı — telefon/SMS istenmez — aynen sürer.)
     const mevcut = roller(ctx.kullanici);
     if (mevcut.includes(rol)) throw hata.cakisma('Bu rol hesabınızda zaten var');
     await db.prepare('UPDATE users SET roles = ?, active_role = ?, updated_at = ? WHERE id = ?').run([...mevcut, rol].join(','), rol, simdi(), ctx.kullanici.id);

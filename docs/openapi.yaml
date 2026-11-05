@@ -598,6 +598,25 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/BusinessRule' }
 
+  /auth/password/set:
+    post:
+      tags: [Auth]
+      summary: Google/Apple hesabına şifre oluştur
+      description: |
+        5 Kas. İsteğe bağlı: yalnız şifresi olmayan (Google/Apple ile açılmış)
+        hesapta. Gövde { newPassword, firebaseIdToken }. Kanıt, kritik
+        işlemlerle aynı kuraldır: bu hesabın Firebase kullanıcısının son 10
+        dakikadaki girişi; değilse 400 WRONG_PASSWORD (istemci Google/Apple ile
+        yeniden doğrulatıp tekrar dener). Şifre önce Firebase'e yazılır
+        (yazılamazsa 503, yerel şifre oluşturulmaz). Oturumlar kapanmaz.
+        Hesapta zaten şifre varsa 409. Kullanıcı başına kritik işlem hız sınırı.
+      responses:
+        '204': { description: Şifre oluşturuldu }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /auth/forgot/complete:
     post:
       tags: [Auth]
@@ -644,26 +663,16 @@ paths:
       description: |
         ⚠ Rol ekleme YALNIZCA kullanıcı tarafından yapılır; Admin rol değiştiremez (§4).
 
-        Gövde { role: CUSTOMER|PROVIDER, password, firebaseIdToken } (ya da
-        eski yol: firebaseIdToken yerine sunucudan istenmiş ROLE_ADD/LOGIN
-        `otpCode`; istenmemiş kod — ör. 123456 — reddedilir).
+        Gövde { role: CUSTOMER|PROVIDER }. 5 Kas (kullanıcı kararı): kimlik
+        doğrulaması İSTENMEZ — şifre, Google/Apple yeniden girişi, telefon ya
+        da SMS kodu aranmaz; eski istemcilerin gönderdiği `password`,
+        `firebaseIdToken` ve `otpCode` alanları yok sayılır. Yeni rolde eksik
+        bilgiler (telefon, SMS, adres) tamamlanmadan o rolün işlemleri açılmaz.
         Başarıda 204; rol eklenir ve aktif rol yeni rol olur. Hizmet veren
         kategori/ilçeleri ayrıca PUT /profiles/me/provider ile kaydedilir.
 
-        Güvenlik (15 Eki):
-        - Kullanıcı başına 15 dakikada en çok 5 deneme (şifre denemesi dahil) → 429 RATE_LIMITED.
-        - firebaseIdToken: imza, proje (aud/iss), süre ve telefon numarası
-          (hesabın numarası) denetlenir; ayrıca YENİ telefon doğrulaması
-          şarttır: `firebase.sign_in_provider = phone`, `auth_time` son 10
-          dakika içinde VE bu sunucu oturumu açıldıktan en az 30 sn sonra
-          (girişte alınan belge yeniden kullanılamaz). Aksi hâlde 400
-          REAUTH_REQUIRED.
-        - Geçersiz Firebase belgesi bu uçta 400 PHONE_PROOF_INVALID döner (401
-          değil: oturum hatası değildir, istemci isteği tekrarlamaz).
-        - Hatalar: 400 WRONG_PASSWORD · 400 OTP_INVALID (numara uyuşmuyor /
-          kod yanlış) · 400 OTP_EXPIRED · 400 REAUTH_REQUIRED · 400
-          PHONE_PROOF_INVALID · 409 CONFLICT (rol zaten var) · 429 RATE_LIMITED.
-          Yanlış şifre ve geçersiz kanıt denemeleri de hız sınırından düşer.
+        - Kullanıcı başına 15 dakikada en çok 5 deneme → 429 RATE_LIMITED.
+        - Hatalar: 409 CONFLICT (rol zaten var) · 429 RATE_LIMITED.
       responses:
         '204': { description: Rol eklendi }
         '400': { $ref: '#/components/responses/BadRequest' }

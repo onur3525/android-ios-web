@@ -246,9 +246,18 @@ class ApiAuthRepository extends ChangeNotifier {
     return null;
   }
 
-  Future<DomainError?> addRole(Role role, String password) async {
-    final err = (await _guard(() => _auth.addRole(
-        role: Mappers.roleApi(role), password: password))).$2;
+  Future<DomainError?> addRole(Role role) async {
+    final err =
+        (await _guard(() => _auth.addRole(role: Mappers.roleApi(role)))).$2;
+    return err ?? await loadMe();
+  }
+
+  /// `POST /auth/password/set` — Google/Apple hesabına şifre oluşturur;
+  /// başarıda hesap yeniden okunur (`sifresiVar` = true).
+  Future<DomainError?> sifreOlustur(String yeni, String kanit) async {
+    final err = (await _guard(() =>
+            _auth.setPassword(newPassword: yeni, firebaseIdToken: kanit)))
+        .$2;
     return err ?? await loadMe();
   }
 

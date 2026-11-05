@@ -40,9 +40,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   /// ⚠ Politika tek kaynaktan (`Validators.password`); ekran kendi
   /// kuralını yazmaz.
   bool get _formGecerli =>
-      _cur.text.trim().isNotEmpty &&
+      (_olustur || _cur.text.trim().isNotEmpty) &&
       Validators.password(_new1.text) == null &&
       _new2.text == _new1.text;
+
+  /// ── ŞİFRE OLUŞTURMA KİPİ (5 Kas, kullanıcı talebi) ──
+  ///
+  /// Google/Apple ile açılmış, şifresi olmayan hesapta AYNI ekran "Şifre
+  /// Oluştur" olarak çalışır: mevcut şifre alanı yoktur, yeni şifre ve
+  /// tekrarı istenir. Kurallar ve uyarı zamanlaması tek kaynakta kalır
+  /// (`Validators.password` / `passwordRepeat`); ikinci bir form yazılmaz.
+  // `listen: false`: hem build içinde hem olay işleyicide güvenli.
+  bool get _olustur =>
+      Provider.of<AuthController>(context, listen: false)
+          .currentAccount
+          ?.sifresiVar ==
+      false;
+  String get _baslik => _olustur ? 'Şifre Oluştur' : 'Şifre Değiştir';
+  String get _altYazi => _olustur
+      ? 'Google/Apple girişinize ek olarak e-posta ve şifreyle de giriş yapabilirsiniz.'
+      : 'Hesabınızın güvenliği için güçlü bir şifre belirleyin.';
   bool _busy = false;
 
   /// Alan düzelince uyarı ANINDA kalksın — bkz. `RefTextField.alanAnahtari`.
@@ -147,19 +164,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       return;
     }
     setState(() => _busy = true);
-    final err = await context
-        .read<AuthController>()
-        .changePassword(_cur.text, _new1.text);
+    final olustur = _olustur;
+    final auth = context.read<AuthController>();
+    final err = olustur
+        ? await auth.sifreOlustur(_new1.text)
+        : await auth.changePassword(_cur.text, _new1.text);
     if (!mounted) {
       return;
     }
     setState(() => _busy = false);
     if (err != null) {
+      if (olustur) {
+        // Mevcut şifre alanı yok: hata bildirimle gösterilir.
+        sysToastErr(context, SysKind.genericError, extra: err.message);
+        return;
+      }
       setState(() => _curError = err.message);
       _form.currentState!.validate();
       return;
     }
-    sysToastOk(context, 'Şifreniz güncellendi');
+    sysToastOk(context, olustur ? 'Şifreniz oluşturuldu' : 'Şifreniz güncellendi');
     geriGit(context);
   }
 
@@ -211,15 +235,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         // yalnız panel DIŞINDA gösterilir. Geri oku da böylece
         // masaüstünde kalkar, yerini X alır.
         child: WebPanel(
-          baslik: 'Şifre Değiştir',
-          altYazi: 'Hesabınızın güvenliği için güçlü bir şifre belirleyin.',
+          baslik: _baslik,
+          altYazi: _altYazi,
           icerik: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!WebPanel.panelMi(context)) ...[
-              const RefPageTitle('Şifre Değiştir'),
-              const RefSubtitle(
-                  'Hesabınızın güvenliği için güçlü bir şifre belirleyin.'),
+              RefPageTitle(_baslik),
+              RefSubtitle(_altYazi),
             ],
 
             // .ad-card — üç şifre alanı
@@ -227,6 +250,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (!_olustur) ...[
                   RefTextField(
                     // ⚠ Zorunlu alan — yıldız kutunun içinde çizilir.
                     zorunlu: true,
@@ -263,6 +287,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   // ⚠ Etiketler kaldırılınca dikey aralık
                   // kayboldu; kayıt ekranıyla aynı değer.
                   const SizedBox(height: 12),
+                  ],
                   RefTextField(
                     // ⚠ Zorunlu alan — yıldız kutunun içinde çizilir.
                     zorunlu: true,
@@ -378,7 +403,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             // .po-next{margin-top:16px}
             const SizedBox(height: 16),
             RefNextButton(
-              'Şifreyi Güncelle',
+              _olustur ? 'Şifreyi Oluştur' : 'Şifreyi Güncelle',
               iconAsset: 'assets/svg/ic_lockw.svg',
               busy: _busy,
               // ⚠ AYNI KURAL BURADA DA: düğme, mevcut şifre girilmeden,
@@ -391,6 +416,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             //
             // Kullanıcı mevcut şifresini bilmiyorsa hesabındaki
             // e-posta/telefon üzerinden sıfırlama akışını başlatır.
+            // Oluşturma kipinde sıfırlanacak bir şifre yok.
+            if (!_olustur) ...[
             const SizedBox(height: 14),
             Center(
               child: RefTextButton(
@@ -398,6 +425,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 onPressed: _busy ? null : _sifreSifirla,
               ),
             ),
+            ],
           ],
         ),
         ),
