@@ -165,6 +165,22 @@ export async function uygulamaIciBildir(db, kullaniciId, tur, baslik, govde, ref
 // İlan sahibi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar hariç. Push
 // tercihi "Yeni teklifler" anahtarına bağlıdır (fcm.js pushIzniVar).
 const YENI_ILAN_AZAMI_ALICI = 1000;
+
+// ── ⚠ İLAN DOLDU → AÇIK UYGULAMALARA ANLIK HABER (5 Kas, kullanıcı kararı) ──
+// 3. teklif verildiği an ilan kartı, teklif vermemiş hizmet verenlerin
+// listesinden kalkmalı; ilanın içindeki kişi "Bu ilana ulaşılamıyor"
+// görmeli. Liste eşleşmeyen ilanları da gösterdiği için haber yalnız
+// eşleşenlere değil, teklif vermemiş BÜTÜN etkin hizmet verenlere gider.
+// Bildirim kaydı ve push YOKTUR: haber yalnız açık uygulamaya "listeyi
+// yenile" der (`LISTING_FULL`; istemci: lib/ui/anlik_tazeleme.dart).
+export async function ilanDolduHaberi(db, l) {
+  const alicilar = await db.prepare(
+    `SELECT u.id FROM users u WHERE u.roles LIKE '%PROVIDER%' AND u.status = 'ACTIVE' AND u.deleted_at IS NULL AND u.id <> ?
+       AND NOT EXISTS (SELECT 1 FROM offers o WHERE o.listing_id = ? AND o.provider_id = u.id)`,
+  ).all(l.owner_id, l.id);
+  for (const a of alicilar) anlikHaberEkle(a.id, 'LISTING_FULL');
+  return alicilar.length;
+}
 export async function yeniIlaniBildir(db, l) {
   const katalog = await db.prepare(
     `SELECT s.name hizmet, c.name kategori FROM services s JOIN categories c ON c.id = s.category_id
@@ -435,6 +451,7 @@ export function ilanRotalar(r, db) {
     if ((await acikTeklifSayisi(l.id)) >= ILAN_AZAMI_TEKLIF) throw teklifSiniriDoldu();
     const id = randomUUID();
     const z = simdi();
+    let doldu = false;
     try {
       await db.tx(async () => {
         // ⚠ YARIŞ: iki hizmet veren aynı anda 3. teklifi verirse ikisi de
@@ -447,6 +464,7 @@ export function ilanRotalar(r, db) {
           `INSERT INTO offers (id, listing_id, provider_id, amount_tl, note, status, idempotency_key, idem_hash, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)`,
         ).run(id, l.id, ctx.kullanici.id, tutar, not, anahtar, anahtar ? teklifOzeti : null, z, z);
+        doldu = (await acikTeklifSayisi(l.id)) >= ILAN_AZAMI_TEKLIF;
         await uygulamaIciBildir(db, l.owner_id, 'NEW_OFFER', 'Yeni teklif', `"${l.title}" ilanınıza yeni bir teklif geldi.`, l.id, 'ilan');
       });
     } catch (e) {
@@ -459,6 +477,8 @@ export function ilanRotalar(r, db) {
       }
       throw e;
     }
+    // 5 Kas: bu teklifle ilan doldu → kart diğer hizmet verenlerden anında kalksın.
+    if (doldu) await ilanDolduHaberi(db, l).catch((e) => console.error('ilan_doldu_haberi', e?.message));
     return teklifGorunumu(await db.prepare('SELECT * FROM offers WHERE id = ?').get(id));
   }));
 

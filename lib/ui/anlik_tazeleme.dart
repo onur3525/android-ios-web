@@ -67,6 +67,13 @@ class AnlikTazeleme {
     if (tur == 'TALEP_DURUM') {
       return {TazelemeIsi.talepler};
     }
+    // 5 Kas: ilan 3 teklife ulaştı → teklif vermemiş hizmet verenin
+    // "Yeni işler" listesi yenilenir; kart listeden anında kalkar, açık
+    // ilan ekranı "Bu ilana ulaşılamıyor"a döner (bkz. JobDetailScreen).
+    // Bildirim kaydı yoktur; bildirim listesi tazelenmez.
+    if (tur == 'LISTING_FULL') {
+      return rol == Role.provider ? {TazelemeIsi.yeniIsler} : <TazelemeIsi>{};
+    }
     final saglayici = rol == Role.provider;
     final s = {TazelemeIsi.bildirimler};
     switch (tur) {

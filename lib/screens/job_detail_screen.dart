@@ -4,6 +4,7 @@ import 'widgets/ilan_baslik_satiri.dart';
 import '../domain/iletisim_maskesi.dart';
 import '../domain/hizmet_alan_ozeti.dart' show hizmetAlanTamamlananIs;
 import 'widgets/is_zamani_secici.dart';
+import '../domain/failures.dart';
 import '../domain/form_mesajlari.dart';
 
 import 'package:flutter/material.dart';
@@ -44,6 +45,10 @@ import 'widgets/yanlis_taraf_kapisi.dart';
 import '../core/platform/yerel_gorsel.dart';
 import '../ui/sayfa_bildirimleri.dart';
 import '../ui/sikayet_et.dart';
+
+/// İlana erişim kalmadığında (3 teklif doldu, ilan kaldırıldı) hizmet
+/// verenin gördüğü TEK metin (5 Kas, kullanıcı kararı).
+const String kIlanaUlasilamiyor = 'Bu ilana ulaşılamıyor';
 
 /// Hizmet veren — İlan Detayı (HTML vProvListing):
 /// ilan bilgisi + teklif formu (tutar + en az 5 kelime not);
@@ -104,6 +109,11 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       final lc = context.read<ListingController>();
       if (lc.byId(widget.listingId) == null) {
         unawaited(lc.loadOne(widget.listingId));
+      } else {
+        // 5 Kas: karta basıldığı anda ilan dolmuş olabilir (3 teklif) —
+        // sunucuya sessizce yeniden sorulur; erişim yoksa ekran
+        // "Bu ilana ulaşılamıyor"a döner.
+        unawaited(lc.loadOne(widget.listingId, sessiz: true));
       }
       _loadApproval();
       // ⚠ İlan İNCELENDİ olarak işaretlenir; liste ekranında
@@ -154,6 +164,13 @@ class _JobDetailScreenState extends State<JobDetailScreen>
       return;
     }
     setState(() => _busyOffer = false);
+    // 5 Kas (kullanıcı kararı): "Teklif Ver"e basıldığı an ilan 3 teklifle
+    // dolduysa UYARI GÖSTERİLMEZ; ilan yeniden sorulur, erişim olmadığı
+    // için ekran "Bu ilana ulaşılamıyor"a döner.
+    if (err is OfferLimitReachedError) {
+      await context.read<ListingController>().loadOne(widget.listingId, sessiz: true);
+      return;
+    }
     if (err != null) {
       setState(() => _formError = err.message);
       return;
@@ -204,19 +221,23 @@ class _JobDetailScreenState extends State<JobDetailScreen>
         body: SafeArea(child: Center(child: CircularProgressIndicator())),
       );
     }
+    // ── ⚠ İLANA ULAŞILAMIYOR (5 Kas, kullanıcı kararı) ──
+    // İlan 3 teklifle dolduğunda (ya da kaldırıldığında) bu ekranın içindeki
+    // ya da karta son anda basan hizmet veren İLAN BİLGİLERİNİ GÖRMEZ:
+    // yalnız bu yazı ve geri oku. Liste kartı ayrıca anında kalkar.
     if (l == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: RC.pageBg,
         body: SafeArea(
-          child: Column(children: [
-            const Expanded(
-              child: Center(
-                child: SysEmpty(
-                    title: 'İlan bulunamadı',
-                    desc: 'Bu ilan kaldırılmış olabilir.'),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Align(alignment: Alignment.centerLeft, child: RefBackButton()),
+              Expanded(
+                child: Center(child: SysEmpty(title: kIlanaUlasilamiyor, desc: '')),
               ),
-            ),
-          ]),
+            ]),
+          ),
         ),
       );
     }
