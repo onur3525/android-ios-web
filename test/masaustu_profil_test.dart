@@ -39,6 +39,7 @@ void main() {
     final m = _oku('lib/main.dart');
     expect(m.contains('final yenileme = sekmeOku(kSekmeRota) != null'), isTrue);
     expect(m.contains('? acc.activeRole'), isTrue);
-    expect(m.contains('acc.roles.contains(Role.provider)'), isTrue);
+    // 6 Kas: hizmet veren önceliği tek kaynakta (`Account.acilisRolu`).
+    expect(m.contains(': acc.acilisRolu;'), isTrue);
   });
 }

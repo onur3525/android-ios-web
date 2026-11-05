@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/tutar_bicimi.dart';
@@ -597,15 +596,9 @@ class _BosListe extends StatelessWidget {
       textAlign: TextAlign.center,
       style: refText(size: RF.s14, weight: RF.w400, color: RC.greyLight),
     );
-    // ⚠ WEB: kalan görünür alanın dikey ortası (ortak `KalanAlandaOrtala`).
-    // Mobilde önceki `Padding(vertical: 40)` düzeni BİREBİR.
-    if (kIsWeb) {
-      return KalanAlandaOrtala(altBosluk: 24, child: metin);
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: metin,
-    );
+    // Kalan görünür alanın dikey ortası — web ve 6 Kas'tan beri mobil
+    // (ortak `KalanAlandaOrtala`).
+    return KalanAlandaOrtala(altBosluk: 24, child: metin);
   }
 }
 

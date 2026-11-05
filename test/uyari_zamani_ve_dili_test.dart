@@ -213,14 +213,12 @@ void main() {
       }
     });
 
-    test('kaydetmede tüm alanlar denetlenir', () {
-      // ⚠ SÖZLEŞME DEĞİŞTİ: kalıcı `_gonderimDenendi` bayrağı, bir kez
-      // gönderime basıldıktan sonra uyarıyı ekranda ASILI bırakıyordu.
-      // Yerine `_gonderimAninda` geldi — yalnız `validate()` süresince
-      // açık. Gönderimde tüm alanlar denetlenir, sonra odak kuralı
-      // yeniden geçerlidir.
-      expect(p.contains('if (!_gonderimAninda) {'), isTrue);
-      expect(p.contains('if (!_hepsiniDenetle()) {'), isTrue);
+    test('6 Kas: Kaydet yalnız ad/soyad; gönderimde toptan denetim yok', () {
+      // Kullanıcı kararı: Kaydet yalnız ad/soyadı kaydeder ve yalnız ikisi
+      // geçerliyken aktiftir. Gönderimde e-posta/telefon denetlenip
+      // kırmızıya boyanmaz; uyarı her zaman odak/terk kuralındadır.
+      expect(p.contains('if (_busy || !_adSoyadDegisti) {'), isTrue);
+      expect(p.contains('_hepsiniDenetle'), isFalse);
       expect(p.contains('_gonderimDenendi'), isFalse,
           reason: 'kalıcı bayrak geri gelmiş');
     });

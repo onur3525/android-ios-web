@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
+import 'profil_tamamlama_screen.dart' show profilKapisi;
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
 
@@ -122,6 +123,20 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
       if (ekleErr != null) {
         setState(() => _busy = false);
         sysToastErr(context, SysKind.genericError, extra: ekleErr.message);
+        return;
+      }
+    }
+
+    // ── 6 Kas (kullanıcı kararı): hizmet veren bilgileri eksikse önce
+    // Profilinizi Tamamlayın açılır; vazgeçilirse geçiş YAPILMAZ, hizmet
+    // alan rolünde kalınır. Kapı TEK KAYNAK (`profilKapisi`).
+    if (hedef == Role.provider) {
+      final tamam = await profilKapisi(context, Role.provider);
+      if (!mounted) {
+        return;
+      }
+      if (!tamam) {
+        setState(() => _busy = false);
         return;
       }
     }

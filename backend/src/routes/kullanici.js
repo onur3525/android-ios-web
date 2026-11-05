@@ -209,6 +209,16 @@ export async function profilEksikleri(db, u) {
   return { customer: [...ortak], provider: [...ortak, ...hizmet] };
 }
 
+/**
+ * 6 Kas (kullanıcı kararı): kaydı tamamlanmamış hizmet veren AKTİF HESAP
+ * SAYILMAZ — Bul'da görünmez, herkese açık profili yoktur, ona teklif
+ * talebi gönderilemez. Kural `profilEksikleri` ile aynı kaynaktır.
+ */
+export async function saglayiciEtkinMi(db, x) {
+  if (!String(x.roles ?? '').split(',').includes('PROVIDER')) return false;
+  return !(await profilEksikleri(db, x)).provider.length;
+}
+
 /** Rolün gerektirdiği profil eksikse işlem SUNUCUDA reddedilir (istemciye bırakılmaz). */
 export async function profilKapisi(db, u, rol) {
   const eksik = (await profilEksikleri(db, u))[rol === 'PROVIDER' ? 'provider' : 'customer'];
@@ -1628,15 +1638,11 @@ export function kullaniciRotalar(r, db) {
   }));
   async function telefonDegistir(ctx) {
     const yeni = telefon(ctx.body.newPhone);
-    // ── ⚠ YENİDEN KİMLİK DOĞRULAMA (15 Eki güvenlik denetimi, karar 2) ──
-    // Yalnız oturum + yeni numaraya gelen kod yetmez: çalınmış bir oturumla
-    // numara değiştirilip "şifremi unuttum" ile hesap ele geçirilebilirdi.
-    // Mevcut şifre, telefon kanıtı TÜKETİLMEDEN önce denetlenir (yanlış
-    // şifre kodu harcamaz). Mevcut kontroller (kanıt, benzersizlik) aynen.
+    // ── 6 Kas (kullanıcı kararı): NUMARA DEĞİŞİKLİĞİ ŞİFRE İSTEMEZ ──
+    // Yeni numaraya gelen SMS kodu yeterlidir (önceki "yeniden kimlik
+    // doğrulama" şartı kaldırıldı; bilinen risk kullanıcıya bildirildi ve
+    // kabul edildi). Hız sınırı korunur.
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
-    if (!(await kimlikKanitiDogruMu(db, ctx.kullanici, String(ctx.body.currentPassword ?? '')))) {
-      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
-    }
     const u0 = ctx.kullanici;
     const kanit = await telefonKaniti(db, ctx.body, yeni, ['PHONE_CHANGE']);
     // ── ⚠ FIREBASE TELEFONU DA GÜNCEL OLMALI (15 Eki güvenlik denetimi) ──
@@ -1717,14 +1723,14 @@ export function kullaniciRotalar(r, db) {
   }));
 
   const epostaBaglantisiGonder = async (ctx, yeni) => {
-    // Hız sınırı şifre denetiminden ÖNCE sayılır (yanlış şifreler dahil).
     await kritikIslemSiniri.denetle(db, ctx.kullanici.id);
     let u = await db.prepare('SELECT * FROM users WHERE id = ?').get(ctx.kullanici.id);
-    // ⚠ Y2: adres DEĞİŞİKLİĞİ erişim belgesiyle yetinmez; mevcut şifre
-    // SUNUCUDA (Firebase'e bağlı hesapta Firebase'de) doğrulanır.
-    if (yeni && !(await kimlikKanitiDogruMu(db, u, String(ctx.body.currentPassword ?? '')))) {
-      throw new ApiHatasi(400, 'WRONG_PASSWORD', 'Mevcut şifre hatalı');
-    }
+    // ── 6 Kas (kullanıcı kararı): ADRES DEĞİŞİKLİĞİ ŞİFRE İSTEMEZ ──
+    // Önceden (Y2) mevcut şifre ya da Google/Apple kanıtı isteniyordu.
+    // Kullanıcı kararıyla kaldırıldı: yeni adres YALNIZ yeni adrese giden
+    // bağlantı tıklanınca geçerli olur (hesaba o an işlenir). Bilinen risk:
+    // oturumu açık bir cihazı ele geçiren kişi adresi değiştirebilir;
+    // kullanıcıya açıkça bildirildi ve kabul edildi.
     // Kullanıcı bağlantıya zaten tıkladıysa yeniden e-posta gönderilmez.
     if (!yeni && !u.email_verified) {
       u = await epostaOnayiniEsitle(u);

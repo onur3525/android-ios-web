@@ -43,6 +43,9 @@ void main() {
     }
     expect(k('addresses_screen.dart').contains('_sonKaydedilen == (_district, _neighborhood)'), isTrue);
     expect(k('addresses_screen.dart').contains('SnackBar('), isFalse, reason: 'alt bildirim yok');
-    expect(k('profile_info_screen.dart').contains('kaydedildi: _kaydedildi && !_degisiklikVar'), isTrue);
+    // 6 Kas (kullanıcı kararı): Profil Bilgilerim'de düğme sade "Kaydet";
+    // başarı düğmenin ALTINDA 5 sn yeşil "Kaydedildi" yazısıyla gösterilir.
+    expect(k('profile_info_screen.dart').contains("child: Text('Kaydedildi',"), isTrue);
+    expect(k('profile_info_screen.dart').contains('Timer(const Duration(seconds: 5), () {'), isTrue);
   });
 }

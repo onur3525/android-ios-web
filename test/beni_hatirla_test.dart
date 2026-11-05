@@ -146,10 +146,9 @@ void main() {
       // açılır — gelen ilanlar 48 saatte kapanır, teklif yarışı var.
       final k = _oku('lib/screens/splash_screen.dart');
       // Önce hedef ROL seçilir (sağlayıcı öncelikli), rota ondan çıkar.
-      expect(
-          k.contains(
-              'acc.roles.contains(Role.provider) ? Role.provider : Role.customer'),
-          isTrue,
+      // 6 Kas: kural tek kaynakta (`Account.acilisRolu`; hizmet veren
+      // bilgileri eksikse hizmet alan) — bkz. test/acilis_rolu_test.dart.
+      expect(k.contains('final hedefRol = acc.acilisRolu;'), isTrue,
           reason: 'çift rolde sağlayıcı önceliği kaybolmuş');
       expect(
           k.contains(

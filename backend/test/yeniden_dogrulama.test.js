@@ -42,26 +42,23 @@ async function hesap(tel) {
   return { tel, token: r.json.accessToken };
 }
 
-test('telefon değiştirme: şifresiz/yanlış şifre reddedilir, kod harcanmaz; doğru şifreyle değişir ve diğer oturumlar kapanır', async () => {
+test('telefon değiştirme (6 Kas, kullanıcı kararı): ŞİFRE İSTENMEZ, yeni numaraya gelen SMS kodu yeter; diğer oturumlar kapanır', async () => {
   const h = await hesap('5370000001');
   // 28 Eki (tek cihaz kuralı): ikinci oturum bilgisayar web'inden (uygulamadan
   // ikinci giriş ilk cihazı kapatırdı).
   const ikinci = await istek('/api/v1/auth/login', { yontem: 'POST', basliklar: { 'X-HC-Web': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0' }, govde: { phone: h.tel, password: 'sifre1234' } });
   assert.equal(ikinci.durum, 200);
   const yeni = '5370000002';
-  const otp = await kod(yeni, 'PHONE_CHANGE');
 
-  const sifresiz = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.token, govde: { newPhone: yeni, otpCode: otp } });
-  assert.equal(sifresiz.durum, 400);
-  assert.equal(sifresiz.json.error.code, 'WRONG_PASSWORD');
-  const yanlis = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.token, govde: { newPhone: yeni, otpCode: otp, currentPassword: 'yanlis999' } });
-  assert.equal(yanlis.json.error.code, 'WRONG_PASSWORD');
+  // Kodsuz istek reddedilir: numara yalnız SMS koduyla değişir.
+  const kodsuz = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.token, govde: { newPhone: yeni } });
+  assert.notEqual(kodsuz.durum, 200);
   assert.ok(await db.prepare('SELECT 1 FROM users WHERE phone = ?').get(h.tel), 'numara değişmedi');
 
-  // Aynı kod hâlâ geçerli: yanlış şifre telefon kanıtını tüketmez.
-  const dogru = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.token, govde: { newPhone: yeni, otpCode: otp, currentPassword: 'sifre1234' } });
-  assert.equal(dogru.durum, 200, JSON.stringify(dogru.json));
-  assert.equal(dogru.json.phone, yeni);
+  const otp = await kod(yeni, 'PHONE_CHANGE');
+  const r = await istek('/api/v1/profiles/me/phone/change', { yontem: 'POST', token: h.token, govde: { newPhone: yeni, otpCode: otp } });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  assert.equal(r.json.phone, yeni);
   assert.equal((await istek('/api/v1/users/me', { token: ikinci.json.accessToken })).durum, 401, 'diğer cihaz oturumu kapandı');
   assert.equal((await istek('/api/v1/users/me', { token: h.token })).durum, 200, 'işlemi yapan oturum açık kalır');
 });

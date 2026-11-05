@@ -573,8 +573,8 @@ paths:
         Kullanıcı başına 15 dakikada en çok 10 deneme (telefon değiştirme ve
         silme talebiyle ortak sayaç); aşılırsa 429.
         ŞİFRESİZ HESAP (Google/Apple, 4 Kas): bu uçta ve şifre isteyen bütün
-        kritik işlemlerde (rol ekleme, telefon/e-posta değiştirme, silme
-        talebi) `password`/`currentPassword` alanına aynı sağlayıcıyla son 10
+        kritik işlemlerde (rol ekleme, silme talebi; telefon/e-posta
+        değiştirme 6 Kas'tan beri şifre istemez) `password`/`currentPassword` alanına aynı sağlayıcıyla son 10
         dakikada yapılmış girişin Firebase ID token'ı yazılır. Şifre
         değiştirme bu hesaplarda 400 NO_PASSWORD döner.
       responses:
@@ -803,9 +803,9 @@ paths:
       tags: [Profile]
       summary: Telefon değişimi — yeni numara + 6 haneli SMS
       description: |
-        `currentPassword` (mevcut şifre) ZORUNLU; yanlışsa 400 WRONG_PASSWORD ve
-        telefon kanıtı tüketilmez. Başarıda bu oturum dışındaki oturumlar
-        kapatılır (PHONE_CHANGED). Ortak şifre deneme sınırı: 15 dakikada 10.
+        6 Kas (kullanıcı kararı): mevcut şifre İSTENMEZ; yeni numaranın SMS
+        kanıtı yeterlidir (kritik işlem sınırı: 15 dakikada 10). Başarıda bu oturum dışındaki oturumlar
+        kapatılır (PHONE_CHANGED).
         Firebase'e bağlı hesapta `firebaseIdToken` hesabın Firebase kullanıcısına
         ait olmalı (aksi hâlde 400 PHONE_PROOF_INVALID); sunucu kodu yolunda
         numara Firebase'e sunucuca yazılır, yazılamazsa 503 ve numara değişmez.
@@ -857,9 +857,8 @@ paths:
       tags: [Profile]
       summary: Yeni e-posta adresine kurumsal "doğrula ve değiştir" e-postası
       description: |
-        Gövde `{ newEmail, currentPassword }`. 21 Eki (güvenlik Y2): mevcut
-        şifre SUNUCUDA doğrulanır (yanlışsa 400 WRONG_PASSWORD; kritik işlem
-        hız sınırına sayılır). İstek bekleyen değişiklik olarak kaydedilir;
+        Gövde `{ newEmail }`. 6 Kas (kullanıcı kararı): mevcut şifre
+        İSTENMEZ (kritik işlem hız sınırı sürer). İstek bekleyen değişiklik olarak kaydedilir;
         adres yalnız bağlantı tıklanınca ve bu bekleyen istekle (72 saat)
         eşleşirse değişir, eski adrese güvenlik bildirimi gider. Firebase'de
         sunucu dışından yapılan değişiklik hesaba işlenmez. Yeni istek
@@ -1787,6 +1786,8 @@ paths:
       description: |
         Eşleşme: hizmet verenin kendi seçtiği kategoriler kümesinde kategori ya da
         hizmet adı. Kendisi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar dönmez.
+        6 Kas: kaydı tamamlanmamış hizmet veren (onaylı telefon, adres, kategori,
+        hizmet bölgesi) dönmez; herkese açık özeti yoktur ve teklif talebi alamaz.
         GİZLİLİK: telefon, e-posta, mahalle ve açık adres DÖNMEZ. En çok 50 kayıt;
         müşterinin ilçesine hizmet verenler önde. Kullanıcı başına dakikada 60 istek.
         Kayıt: { id, name, address{city,district}|null, serviceDistricts[],

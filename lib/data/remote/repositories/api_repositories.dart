@@ -47,8 +47,8 @@ class ApiAuthRepository extends ChangeNotifier {
   ApiAuthRepository(this._client, this._auth, this._profile);
 
   /// Kurumsal doğrulama e-postası (21 Eki). `yeniEposta` verilirse yeni
-  /// adrese "doğrula ve değiştir" bağlantısı gider; bu durumda `mevcutSifre`
-  /// ZORUNLUDUR ve sunucuda doğrulanır (güvenlik Y2). Dönen `bool`: sunucu
+  /// adrese "doğrula ve değiştir" bağlantısı gider; 6 Kas'tan beri (kullanıcı
+  /// kararı) sunucu `mevcutSifre` İSTEMEZ. Dönen `bool`: sunucu
   /// e-postayı GÖNDERDİ mi (false = e-posta kanalı yok).
   Future<(bool, DomainError?)> kurumsalEpostaGonder(
       {String? yeniEposta, String? mevcutSifre}) async {

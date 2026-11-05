@@ -310,7 +310,7 @@ class MockAuthPort extends AuthPort {
   /// aynıdır.
   @override
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
-      {required String sifre}) async {
+      {String? sifre}) async {
     repo.updateProfile(email: yeniEposta);
     return null;
   }

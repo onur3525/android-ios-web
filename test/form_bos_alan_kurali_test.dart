@@ -64,7 +64,8 @@ void main() {
       for (final f in const [
         'lib/screens/change_password_screen.dart',
         'lib/screens/yeni_sifre_screen.dart',
-        'lib/screens/profile_info_screen.dart',
+        // 6 Kas: Profil Bilgilerim'de gönderim anı kapısı yok (Kaydet
+        // yalnız geçerli ad/soyadla aktif); boş-alan kapısı üstteki testte.
       ]) {
         final k = _kod(f);
         final i = k.indexOf('if (!_gonderimAninda) {');
@@ -157,12 +158,13 @@ void main() {
       expect(y.contains('onPressed: _zorunlularDolu ? _kaydet : null'), isTrue);
     });
 
-    test('profil bilgileri: geçerlilik + değişiklik şartı korunuyor', () {
+    test('profil bilgileri: geçerlilik + değişiklik şartı korunuyor (6 Kas: ad/soyad)', () {
       final p = _kod('lib/screens/profile_info_screen.dart');
-      expect(
-          p.contains(
-              'onPressed: (_formGecerli && _degisiklikVar) ? _save : null'),
-          isTrue);
+      expect(p.contains('onPressed: _adSoyadDegisti ? _save : null'), isTrue);
+      final i = p.indexOf('bool get _adSoyadDegisti');
+      final govde = p.substring(i, p.indexOf('\n  }', i));
+      expect(govde.contains('_adHata != null || _soyadHata != null'), isTrue);
+      expect(govde.contains('yeni != acc.name.trim()'), isTrue);
     });
 
     test('değer değişince düğme durumu TAZELENİR', () {

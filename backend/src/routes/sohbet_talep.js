@@ -30,7 +30,7 @@ const mesajSiniri = new HizSiniri('mesaj', 60, 60 * 1000);
 const talepOlusturSiniri = new HizSiniri('teklif_talebi', 30, 60 * 60 * 1000);
 import { olaylar } from '../olaylar.js';
 import { uygulamaIciBildir } from './ilan.js';
-import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, profilKapisi, kimlikKanitiDogruMu } from './kullanici.js';
+import { kritikIslemSiniri, kullaniciCoz, oturumlariIptal, profilKapisi, kimlikKanitiDogruMu, saglayiciEtkinMi } from './kullanici.js';
 import { hesapDosyalariniIsaretle } from '../dosya_temizligi.js';
 import { firebaseSilmeKuyrugunaEkle } from '../firebase_silme.js';
 import { yoneticiKayitlariniAnonimlestir } from '../denetim_anonimlestirme.js';
@@ -277,7 +277,8 @@ export function sohbetTalepRotalar(r, db) {
     if (oncekiTalep) return talepTam(await talepGetir(oncekiTalep.id, u));
     await talepOlusturSiniri.denetle(db, u.id);
     const s = await db.prepare(`SELECT * FROM users WHERE id = ? AND deleted_at IS NULL AND status = 'ACTIVE'`).get(String(ctx.body.saglayiciId ?? ''));
-    if (!s || !s.roles.split(',').includes('PROVIDER')) throw hata.bulunamadi('Hizmet veren bulunamadı');
+    // 6 Kas: kaydı tamamlanmamış hizmet veren etkin değildir (Bul'da da yok).
+    if (!s || !(await saglayiciEtkinMi(db, s))) throw hata.bulunamadi('Hizmet veren bulunamadı');
     if (s.id === u.id) throw kural('OWN_LISTING_OFFER', 'Kendinize teklif talebi gönderemezsiniz');
     const kategori = String(ctx.body.kategori ?? '').trim();
     const hizmet = String(ctx.body.hizmet ?? '').trim();

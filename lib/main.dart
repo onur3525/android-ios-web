@@ -546,6 +546,9 @@ Future<void> main() async {
     Future<({String rota, String? argRota, Object? arg})> acilisRotasi() async {
       final acc = ports.auth.currentAccount;
       String rota;
+      // 6 Kas: eksik hizmet veren hesabı hizmet alana alındıysa kayıtlı
+      // (hizmet veren) ekrana da dönülmez.
+      var eksikSaglayici = false;
       if (acc != null) {
         // ── ⚠ YENİLEMEDE ROL KORUNUR (15 Eki) ──
         // İŞ KURALI (splash ile aynı): YENİ AÇILIŞTA çift rollü kullanıcı
@@ -554,13 +557,14 @@ Future<void> main() async {
         // da F5 yapan kullanıcı rolü değişmiş hâlde, kaldığı ekranla
         // uyuşmayan bir sayfaya düşüyordu. Sekmede kayıtlı ekran varsa bu
         // bir YENİLEMEDİR: o anki rol aynen korunur.
+        // 6 Kas: hizmet veren bilgileri eksik hesap yenilemede de hizmet
+        // veren panelinde açılmaz (`acilisRolu`, splash ile aynı kaynak).
+        eksikSaglayici = acc.activeRole == Role.provider &&
+            acc.acilisRolu != Role.provider;
         final yenileme = sekmeOku(kSekmeRota) != null &&
-            acc.roles.contains(acc.activeRole);
-        final hedefRol = yenileme
-            ? acc.activeRole
-            : (acc.roles.contains(Role.provider)
-                ? Role.provider
-                : Role.customer);
+            acc.roles.contains(acc.activeRole) &&
+            !eksikSaglayici;
+        final hedefRol = yenileme ? acc.activeRole : acc.acilisRolu;
         if (acc.activeRole != hedefRol) {
           await ports.auth.switchRole(hedefRol);
         }
@@ -577,6 +581,7 @@ Future<void> main() async {
       // 5 Kas: kayıt/doğrulama akışı ekranlarına geri dönülmez (eski
       // sürümden kalmış kayıt dahil) — başlangıç ekranı açılır.
       if (kayitli != null &&
+          !eksikSaglayici &&
           !kGeriYuklenmeyenRotalar.contains(kayitli) &&
           (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
         HizmetCepApp.geriYuklenenRota = kayitli;
@@ -785,8 +790,10 @@ class HizmetCepApp extends StatelessWidget {
                   ? const ProfileInfoScreen()
                   : const ProfileScreen()),
 
-          '/notifications': (_) =>
-              RoleGuard(builder: (_) => const NotificationsScreen()),
+          // 6 Kas: hizmet veren rolünde bilgiler eksikse ortak uyarı.
+          '/notifications': (_) => RoleGuard(
+              eksikSaglayiciyiKapat: true,
+              builder: (_) => const NotificationsScreen()),
 
           // ── YALNIZ HİZMET VEREN ──
           // Müşteri bu adreslere derin bağlantıyla gelse bile
@@ -795,14 +802,14 @@ class HizmetCepApp extends StatelessWidget {
           // "Yeni işler" / "Kazandığım işler" sekmeleri.
           // Başarılı girişte hizmet veren buraya yönlendirilir.
           '/provider/jobs': (_) =>
-              RoleGuard.provider(builder: (_) => const JobsScreen()),
+              RoleGuard.saglayiciPaneli(builder: (_) => const JobsScreen()),
           // Aynı ekran, "Kazandığım işler" listesiyle açılır.
-          '/provider/won': (_) => RoleGuard.provider(
+          '/provider/won': (_) => RoleGuard.saglayiciPaneli(
               builder: (_) => const JobsScreen(kazandigim: true)),
-          '/provider/status': (_) =>
-              RoleGuard.provider(builder: (_) => const ProviderStatusScreen()),
+          '/provider/status': (_) => RoleGuard.saglayiciPaneli(
+              builder: (_) => const ProviderStatusScreen()),
           '/provider/reviews': (_) =>
-              RoleGuard.provider(builder: (_) => const MyReviewsScreen()),
+              RoleGuard.saglayiciPaneli(builder: (_) => const MyReviewsScreen()),
 
 
           // ── YALNIZ MÜŞTERİ ──
@@ -956,13 +963,13 @@ class HizmetCepApp extends StatelessWidget {
           if (ad == '/provider/categories') {
             return MaterialPageRoute<void>(
               settings: settings,
-              builder: (_) => RoleGuard.provider(builder: (_) => const MyCategoriesScreen()),
+              builder: (_) => RoleGuard.saglayiciPaneli(builder: (_) => const MyCategoriesScreen()),
             );
           }
           if (ad == '/provider/areas') {
             return MaterialPageRoute<void>(
               settings: settings,
-              builder: (_) => RoleGuard.provider(builder: (_) => const MyAreasScreen()),
+              builder: (_) => RoleGuard.saglayiciPaneli(builder: (_) => const MyAreasScreen()),
             );
           }
           // ── ⚠ İLAN OLUŞTURMA: WEB'DE PANEL (giriş ekranı gibi) ──
@@ -1003,7 +1010,7 @@ class HizmetCepApp extends StatelessWidget {
           if (is_ != null) {
             return MaterialPageRoute<void>(
               settings: settings,
-              builder: (_) => RoleGuard.provider(
+              builder: (_) => RoleGuard.saglayiciPaneli(
                   builder: (_) => JobDetailScreen(listingId: is_)),
             );
           }
@@ -1023,8 +1030,9 @@ class HizmetCepApp extends StatelessWidget {
           if (talep != null) {
             return MaterialPageRoute<void>(
               settings: settings,
-              builder: (_) =>
-                  RoleGuard(builder: (_) => TeklifTalebiDetayScreen(talepId: talep)),
+              builder: (_) => RoleGuard(
+                  eksikSaglayiciyiKapat: true,
+                  builder: (_) => TeklifTalebiDetayScreen(talepId: talep)),
             );
           }
 
@@ -1036,8 +1044,9 @@ class HizmetCepApp extends StatelessWidget {
           if (mesaj != null) {
             return MaterialPageRoute<void>(
               settings: settings,
-              builder: (_) =>
-                  RoleGuard(builder: (_) => ChatScreen(offerId: mesaj)),
+              builder: (_) => RoleGuard(
+                  eksikSaglayiciyiKapat: true,
+                  builder: (_) => ChatScreen(offerId: mesaj)),
             );
           }
 

@@ -66,15 +66,20 @@ void main() {
     test('kod aynı ekranda: kod kutusu, geri sayım, tekrar gönder', () {
       expect(k.contains("'Telefonunuza gelen 6 haneli kodu girin'"), isTrue);
       expect(k.contains('AutofillHints.oneTimeCode'), isTrue);
-      expect(k.contains("'Kodu tekrar gönder'"), isTrue);
-      // 5 Kas: kilitte sunucunun uyarısı ("... dakika sonra tekrar deneyin.")
-      // ve kalan süre geri sayımı.
-      expect(k.contains("Text(_kilitMesaji ?? 'Çok fazla kod istendi.',"), isTrue);
-      expect(k.contains("Text('Kalan süre: \$_sayacMetni', style: kucuk),"), isTrue);
-      // 5 Kas: gönderime basıldıktan sonra (kod gelsin gelmesin) sayaç
-      // bitince "Kodu tekrar gönder" çıkar.
-      expect(k.contains('if (!_kodGonderildi && !_gonderimDenendi) {'), isTrue);
-      expect(k.contains('_gonderimDenendi = true;'), isTrue);
+      // 5 Kas: gönderme, sayaç, tekrar gönder ve kilit TEK KAYNAKTA
+      // (`ui/sms_kod_akisi.dart`); ekran onu kullanır.
+      expect(k.contains('final SmsKodAkisi _akis = SmsKodAkisi();'), isTrue);
+      expect(k.contains('SmsKodAltSatiri('), isTrue);
+      final a = _kodu('lib/ui/sms_kod_akisi.dart');
+      expect(a.contains("metin: 'Kodu tekrar gönder',"), isTrue);
+      // Kilitte sunucunun uyarısı ("... dakika sonra tekrar deneyin.") ve
+      // kalan süre geri sayımı.
+      expect(a.contains("Text(akis.kilitMesaji ?? 'Çok fazla kod istendi.',"), isTrue);
+      expect(a.contains("Text('Kalan süre: \${akis.sayacMetni}', style: kucuk),"), isTrue);
+      // Gönderime basıldıktan sonra (kod gelsin gelmesin) sayaç bitince
+      // "Kodu tekrar gönder" çıkar.
+      expect(a.contains('if (!akis.gonderildiMi(telefon) && !akis.denendiMi(telefon)) {'), isTrue);
+      expect(a.contains('_denendi = true;'), isTrue);
       expect(k.contains('OtpScreen('), isFalse, reason: 'ayrı kod ekranına geçilmez');
     });
 
@@ -89,6 +94,36 @@ void main() {
       expect(k.contains('otomatikSmsKodu'), isTrue);
       expect(k.contains('_kod.text = o.kod;'), isTrue);
       expect(k.contains('void _telefonDegisti('), isTrue);
+    });
+  });
+
+  group('PROFİL BİLGİLERİM — SATIR İÇİ TELEFON ONAYI (5-6 Kas)', () {
+    final k = _kodu('lib/screens/profile_info_screen.dart');
+
+    test('satır içi: Kod Gönder → kod alanı → Telefon onaylı ✓', () {
+      expect(k.contains("label: const Text('Kod Gönder'),"), isTrue);
+      expect(k.contains("'Telefonunuza gelen 6 haneli kodu girin'"), isTrue);
+      expect(k.contains("Text('Telefon onaylı ✓',"), isTrue);
+      expect(k.contains("Text('Telefon numarası onaylanmadı',"), isTrue);
+      expect(k.contains('if (v.length == 6) {\n                            _telDogrula();'), isTrue);
+      expect(k.contains('final SmsKodAkisi _smsAkis = SmsKodAkisi();'), isTrue);
+      expect(k.contains('SmsKodAltSatiri('), isTrue);
+    });
+
+    test('6 Kas: onaylı numaranın değişimi de satır içi ve şifresiz', () {
+      // "Telefon onaylı ✓" yalnız kutudaki numara hesabın onaylı numarasıyken.
+      expect(k.contains('tel == hesap.phone;'), isTrue);
+      // Onaylı hesapta PHONE_CHANGE, onaysızda PHONE_VERIFY — aynı akış.
+      expect(k.contains('gonderici: _telefonOnayli ? auth.telefonDegisimiKodGonder : null'),
+          isTrue);
+      expect(k.contains('? await auth.telefonDegisimiDogrula(challengeId, _telKod.text)'),
+          isTrue);
+      expect(k.contains(': await auth.profiliTamamla('), isTrue);
+      expect(k.contains('OtpScreen('), isFalse, reason: 'ayrı kod ekranı yok');
+      expect(k.contains('sifreIleDogrula('), isFalse, reason: 'şifre sorulmaz');
+      final a = _kodu('lib/ui/sms_kod_akisi.dart');
+      expect(a.contains('final r = await (gonderici ?? auth.profilTelefonKoduGonder)(telefon);'),
+          isTrue);
     });
   });
 }

@@ -290,6 +290,22 @@ class Account {
 
   bool profilTamam(Role rol) => profilEksikleri(rol).isEmpty;
 
+  /// ── AÇILIŞ ROLÜ — TEK KAYNAK (6 Kas, kullanıcı kararı) ──
+  ///
+  /// Çift rollü hesap hizmet veren panelinde açılır; ama hizmet veren
+  /// bilgileri EKSİKSE hizmet alan panelinde açılır (eksik hesap hizmet
+  /// veren ekranına geçemez). Yalnız hizmet veren rolü olan hesabın başka
+  /// paneli yoktur: hizmet veren panelinde tamamlama formu açılır.
+  Role get acilisRolu {
+    if (!roles.contains(Role.provider)) {
+      return Role.customer;
+    }
+    if (profilTamam(Role.provider) || !roles.contains(Role.customer)) {
+      return Role.provider;
+    }
+    return Role.customer;
+  }
+
   /// Aktif role göre kayıt tamamlanmış mı?
   bool get onboardingComplete => activeRole == Role.provider
       ? providerOnboardingComplete

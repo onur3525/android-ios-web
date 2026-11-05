@@ -681,10 +681,10 @@ class ApiAuthPort extends AuthPort {
       'E-posta gönderimi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.');
 
   @override
-  /// Yeni adrese "doğrula ve değiştir" bağlantısı. ⚠ Y2: mevcut şifre
-  /// sunucuda doğrulanır; adres yalnız bağlantı tıklanınca değişir.
+  /// Yeni adrese "doğrula ve değiştir" bağlantısı. 6 Kas: şifre istenmez;
+  /// adres yalnız bağlantı tıklanınca değişir.
   Future<DomainError?> epostaDegisimiBaslat(String yeniEposta,
-      {required String sifre}) async {
+      {String? sifre}) async {
     final (gonderildi, err) = await repo.kurumsalEpostaGonder(
         yeniEposta: yeniEposta, mevcutSifre: sifre);
     if (err != null) {

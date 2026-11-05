@@ -170,11 +170,25 @@ void main() {
     expect(h!.message, 'Mevcut şifre hatalı');
   });
 
-  test('21 Eki (Y2): Profil Bilgilerim e-posta değişikliğinden önce şifre ister', () {
+  test('6 Kas (kullanıcı kararı): Profil Bilgilerim e-posta değişikliğinde şifre SORMAZ', () {
     final s = _kod('lib/screens/profile_info_screen.dart');
-    expect('await _epostaIcinSifre()'.allMatches(s).length, 2);
-    expect(s.contains('sifre: sifre,'), isTrue);
-    expect(s.contains('sifre: epostaSifresi'), isTrue);
+    expect(s.contains('_epostaIcinSifre'), isFalse);
+    expect(s.contains('sifreIleDogrula('), isFalse);
+    expect(s.contains('.epostaDegisimiBaslat(epostaNormalize(_email.text));'), isTrue);
+    // Bağlantı tıklanınca ekrana dönülünce eşitlenir → "E-posta onaylı ✓".
+    expect(s.contains("onayli ? 'E-posta onaylı ✓' : 'E-posta adresi onaylanmadı'"), isTrue);
+  });
+
+  test('6 Kas: şifresiz e-posta değişim isteği sunucuya gider', () async {
+    final be = FakeBackend({
+      'GET /users/me': (_) => userJson(role: 'CUSTOMER'),
+      'GET /profiles/me/address': (_) => null,
+      'POST /profiles/me/email/change-request': (_) => {'sent': true},
+    });
+    final port = _port(be.client());
+    await port.restoreSession();
+    expect(await port.epostaDegisimiBaslat('yeni@ornek.com'), isNull);
+    expect(be.countOf('POST /profiles/me/email/change-request'), 1);
   });
 
 }

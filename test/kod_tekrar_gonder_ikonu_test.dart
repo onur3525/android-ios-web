@@ -38,7 +38,8 @@ void main() {
 
   test('üç SMS kod yüzeyi ortak bileşeni kullanır', () {
     expect(_kod('lib/ui/ref_widgets.dart').contains("RefTekrarGonder(\n              metin: 'Tekrar Gönder',"), isTrue);
-    expect(_kod('lib/screens/profil_tamamlama_screen.dart').contains("RefTekrarGonder(\n        metin: 'Kodu tekrar gönder',"), isTrue);
+    // 5 Kas: Profilinizi Tamamlayın ve Profil Bilgilerim ortak SMS akışını kullanır.
+    expect(_kod('lib/ui/sms_kod_akisi.dart').contains("RefTekrarGonder(\n        metin: 'Kodu tekrar gönder',"), isTrue);
     expect(_kod('lib/screens/widgets/ilan_otp_adimi.dart').contains("RefTekrarGonder(\n                    metin: 'Kodu Tekrar Gönder',"), isTrue);
   });
 }

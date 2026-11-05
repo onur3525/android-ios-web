@@ -1,5 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../domain/form_mesajlari.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/sys_state.dart';
 import '../core/telefon_bicimi.dart';
@@ -8,19 +10,24 @@ import '../core/ad_bicimi.dart';
 import '../core/validators.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/controllers/profile_controller.dart';
-import 'otp_screen.dart';
 import 'widgets/eposta_gonderildi_kutusu.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import '../ui/sifre_dogrulama_paneli.dart';
+import '../ui/sms_kod_akisi.dart';
 import '../ui/web_panel.dart';
 import 'nav_actions.dart';
-import '../core/geri.dart';
-import '../ui/panel_rotasi.dart';
 
-/// Profil Bilgileri (HTML pinfo): ad, e-posta, profil fotoğrafı;
-/// telefon değişikliği SMS DOĞRULAMALI (OTP ekranı yeniden kullanılır).
+/// Profil Bilgileri (HTML pinfo): ad, soyad, e-posta, telefon.
+///
+/// 6 Kas (kullanıcı kararı) — SADE EKRAN:
+/// · "Kaydet" YALNIZ ad/soyadı kaydeder; düğmenin altında 5 sn yeşil
+///   "Kaydedildi" görünüp kaybolur. Açılır pencere (şifre, Google ile devam,
+///   yeniden giriş) YOKTUR.
+/// · E-posta: yeni adrese bağlantı gider; tıklanınca adres değişir ve
+///   "E-posta onaylı ✓" görünür (ekrana dönülünce eşitlenir).
+/// · Telefon: kutunun altında "Kod Gönder" → kod alanı → "Telefon onaylı ✓"
+///   (onaylı numaranın değişimi de aynı satır içi akışla, şifresiz).
 class ProfileInfoScreen extends StatefulWidget {
   const ProfileInfoScreen({super.key});
   @override
@@ -60,14 +67,84 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   String? get _epostaHata => Validators.email(_email.text);
   String? get _telefonHata => Validators.phone(_phone.text);
 
-  /// Formun TAMAMI kurallara uygun mu? (hata gösterimiyle ilgisi yok)
-  bool get _formGecerli =>
-      _adHata == null &&
-      _soyadHata == null &&
-      _epostaHata == null &&
-      _telefonHata == null;
-
   Account? get _hesap => context.read<AuthController>().currentAccount;
+
+  /// Hesabın onaylı telefonu var mı? Varsa yeni numara PHONE_CHANGE koduyla
+  /// değişir (`telefonDegisimi*`), yoksa numara PHONE_VERIFY koduyla
+  /// onaylanır (`profiliTamamla`). İkisi de satır içi ve şifresizdir.
+  bool get _telefonOnayli {
+    final a = _hesap;
+    return a != null && a.phoneVerified && a.phone.trim().isNotEmpty;
+  }
+
+  // ── TELEFON — SATIR İÇİ SMS ONAYI ──
+  // Kutunun altında "Kod Gönder" → kod alanı açılır; 6 hane girilince numara
+  // onaylanır, alan ve bağlantı kaybolur, "Telefon onaylı ✓" kalır.
+  // Gönderme/sayaç/tekrar gönder/kilit: TEK KAYNAK (`ui/sms_kod_akisi.dart`,
+  // Profilinizi Tamamlayın ile aynı).
+  final SmsKodAkisi _smsAkis = SmsKodAkisi();
+  final _telKod = TextEditingController();
+  bool _telDogrulaniyor = false;
+  String? _telKodHata;
+
+  void _smsDegisti() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _telKodGonder() async {
+    if (_telefonHata != null || _telDogrulaniyor) {
+      return;
+    }
+    final tel = Validators.phoneFmt(_phone.text);
+    setState(() => _telKodHata = null);
+    final auth = context.read<AuthController>();
+    final gonderildi = await _smsAkis.gonder(auth, tel,
+        gonderici: _telefonOnayli ? auth.telefonDegisimiKodGonder : null);
+    if (!mounted || !gonderildi) {
+      return;
+    }
+    setState(_telKod.clear);
+  }
+
+  Future<void> _telDogrula() async {
+    final challengeId = _smsAkis.challengeId;
+    if (_telDogrulaniyor || challengeId == null) {
+      return;
+    }
+    setState(() {
+      _telDogrulaniyor = true;
+      _telKodHata = null;
+    });
+    final auth = context.read<AuthController>();
+    // Onaylı numara değişiyorsa kod YENİ numaranın sahipliğini kanıtlar
+    // (sunucu: /profiles/me/phone/change, şifresiz — 6 Kas).
+    final hata = _telefonOnayli
+        ? await auth.telefonDegisimiDogrula(challengeId, _telKod.text)
+        : await auth.profiliTamamla(
+            telefon: Validators.phoneFmt(_phone.text),
+            challengeId: challengeId,
+            kod: _telKod.text,
+          );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _telDogrulaniyor = false;
+      _telKod.clear();
+      if (hata != null) {
+        _telKodHata = hata;
+      } else {
+        _smsAkis.durdur();
+        // Alan güncel hesap numarasından doldurulur.
+        final guncel = auth.currentAccount;
+        if (guncel != null) {
+          _phone.text = Validators.phoneLocal(guncel.phone);
+        }
+      }
+    });
+  }
 
   bool get _adSoyadDegisti {
     final acc = _hesap;
@@ -76,22 +153,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     }
     final yeni = '${_first.text.trim()} ${_last.text.trim()}'.trim();
     return yeni != acc.name.trim();
-  }
-
-  /// TELEFON GEÇERLİ BİÇİMDE DEĞİŞTİ Mİ?
-  ///
-  /// ⚠ ÜÇ KOŞUL BİRLİKTE: boş DEĞİL · GEÇERLİ · kayıtlıdan FARKLI.
-  ///
-  /// Eskiden yalnız "farklı mı" bakılıyordu. Alan boşaltıldığında da
-  /// "farklı" çıkıyor, bu yüzden doğrulama bilgi kutusu boş alanda
-  /// bile görünüyordu. Boşaltma bir doğrulama gerektiren değişiklik
-  /// DEĞİLDİR.
-  bool get _telefonDegisti {
-    final acc = _hesap;
-    if (acc == null || _phone.text.trim().isEmpty || _telefonHata != null) {
-      return false;
-    }
-    return Validators.phoneFmt(_phone.text) != acc.phone;
   }
 
   /// E-POSTA GEÇERLİ BİÇİMDE DEĞİŞTİ Mİ?
@@ -110,19 +171,21 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     return epostaNormalize(_email.text) != epostaNormalize(acc.email);
   }
 
-  /// Kaydedilecek GEÇERLİ bir değişiklik var mı?
-  bool get _degisiklikVar =>
-      _adSoyadDegisti || _telefonDegisti || _epostaDegisti;
-
-  /// ⚠ İKİ DOĞRULAMA AYRIDIR: telefon SMS ile, e-posta bağlantı ile
-  /// doğrulanır. Birinin doğrulanması ötekini doğrulanmış SAYMAZ.
-  bool get _dogrulamaGerekli => _telefonDegisti || _epostaDegisti;
-
   bool _busy = false;
-  // 28 Eki: son kayıt başarılı oldu mu? Değişiklik kalmadıysa düğme
-  // "✓ Kaydedildi" gösterir (bkz. core/kaydedildi.dart). Bekleyen e-posta
-  // değişikliği "değişiklik" sayıldığından o durumda gösterilmez.
+
+  /// 6 Kas: kayıt başarılıysa düğmenin altında 5 sn yeşil "Kaydedildi".
   bool _kaydedildi = false;
+  Timer? _kaydedildiZamanlayici;
+
+  void _kaydedildiGoster() {
+    _kaydedildiZamanlayici?.cancel();
+    setState(() => _kaydedildi = true);
+    _kaydedildiZamanlayici = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() => _kaydedildi = false);
+      }
+    });
+  }
 
   /// ── ⚠ E-POSTA GÖNDERİM DURUMU — ALANIN ALTINDA KALICI YAZI (21 Eki) ──
   ///
@@ -173,48 +236,24 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   /// odakta DEĞİLKEN görünür.
   final Set<String> _terkEdilen = {};
 
-  /// ⚠ YALNIZ `validate()` ÇAĞRISI SÜRESİNCE AÇIK.
-  ///
-  /// Eski hâlde bunun yerine kalıcı bir `_gonderimDenendi` bayrağı
-  /// vardı ve bir kez kaydetmeye basıldıktan sonra BİR DAHA
-  /// KAPANMIYORDU: kullanıcı alanı düzeltmek için içine girip yazsa
-  /// bile kırmızı uyarı ekranda ASILI KALIYORDU.
-  ///
-  /// Gönderim anında odak kuralı atlanmalıdır (yoksa o sırada odakta
-  /// olan alan denetlenmeden geçer), ama gönderimden SONRA normal
-  /// kural yeniden geçerlidir.
-  bool _gonderimAninda = false;
-
+  /// 6 Kas: Kaydet yalnız ad/soyadı kaydeder ve yalnız ikisi geçerliyken
+  /// aktiftir (`_adSoyadDegisti`); gönderimde ayrıca form denetimi yoktur.
+  /// Uyarı her zaman odak/terk kuralından geçer.
   String? _kural(
       String alan, FocusNode odak, String? v, String? Function(String?) asil) {
-    if (!_gonderimAninda) {
-      if (odak.hasFocus) {
-        return null;
-      }
-      if (!_terkEdilen.contains(alan)) {
-        return null;
-      }
-      // ⚠ BOŞ ALAN UYARI ÜRETMEZ.
-      //
-      // Kullanıcı bir alanı doldurup silerse ekranda uyarı KALMAZ.
-      // Zorunluluk gönderim anında denetlenir; ama düğme zaten boş
-      // alan varken PASİF olduğu için gönderim denenemez.
-      if ((v ?? '').trim().isEmpty) {
-        return null;
-      }
+    if (odak.hasFocus) {
+      return null;
+    }
+    if (!_terkEdilen.contains(alan)) {
+      return null;
+    }
+    // ⚠ BOŞ ALAN UYARI ÜRETMEZ.
+    //
+    // Kullanıcı bir alanı doldurup silerse ekranda uyarı KALMAZ.
+    if ((v ?? '').trim().isEmpty) {
+      return null;
     }
     return asil(v);
-  }
-
-  /// Gönderimde tüm alanları denetler; uyarıların kalıcı olmaması için
-  /// alanları "terk edilmiş" sayar ve odak kuralını geri açar.
-  bool _hepsiniDenetle() {
-    _terkEdilen.addAll(const ['ad', 'soyad', 'eposta', 'telefon']);
-    _gonderimAninda = true;
-    final ok = _form.currentState!.validate();
-    _gonderimAninda = false;
-    setState(() {});
-    return ok;
   }
 
   void _adOdak() {
@@ -270,6 +309,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
   @override
   void initState() {
     super.initState();
+    _smsAkis.addListener(_smsDegisti);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _epostaOnayiniEsitle();
@@ -342,22 +382,14 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     setState(() => _epostaGonderildi = true);
   }
 
-  /// ⚠ 21 Eki (güvenlik Y2): e-posta değişikliği mevcut şifreyi ister;
-  /// şifreyi SUNUCU doğrular (panel yalnız alır). İptal edilirse null.
-  Future<String?> _epostaIcinSifre() => sifreIleDogrula(context,
-      aciklama: 'E-posta adresinizi değiştirmeden önce güvenlik için '
-          'şifrenizi girin.',
-      renk: RC.blue);
-
+  /// 6 Kas (kullanıcı kararı): yeni adrese bağlantı ŞİFRESİZ gönderilir;
+  /// adres yalnız bağlantı tıklanınca değişir (bkz. `_epostaOnayiniEsitle`).
   Future<void> _yeniEpostaDogrulamaGonder() async {
     if (_busy || !_epostaDegisti || _epostaHata != null) return;
-    final sifre = await _epostaIcinSifre();
-    if (sifre == null || !mounted) return;
     setState(() => _busy = true);
-    final err = await context.read<ProfileController>().epostaDegisimiBaslat(
-          epostaNormalize(_email.text),
-          sifre: sifre,
-        );
+    final err = await context
+        .read<ProfileController>()
+        .epostaDegisimiBaslat(epostaNormalize(_email.text));
     if (!mounted) return;
     setState(() => _busy = false);
     if (err != null) {
@@ -367,162 +399,35 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     setState(() => _epostaGonderildi = true);
   }
 
+  /// KAYDET — YALNIZ AD/SOYAD (6 Kas).
+  ///
+  /// ⚠ E-posta ve telefon bu çağrıda GÖNDERİLMEZ: e-posta bağlantıyla,
+  /// telefon SMS koduyla kendi satırında değişir. Ekranda kalınır.
   Future<void> _save() async {
-    if (_busy) {
-      return;
-    }
-    // Kaydetme denendi: tüm alanlar denetlenir.
-    if (!_hepsiniDenetle()) {
+    if (_busy || !_adSoyadDegisti) {
       return;
     }
     setState(() {
       _busy = true;
       _kaydedildi = false;
     });
-    final auth = context.read<AuthController>();
-    final profile = context.read<ProfileController>();
-    final newPhone = Validators.phoneFmt(_phone.text);
-    final oldPhone = auth.currentAccount!.phone;
-    // ── AD/SOYAD ──
-    //
-    // ⚠ E-POSTA BU ÇAĞRIDA GÖNDERİLMEZ. İş kuralları §4:
-    // "E-posta değişimi doğrulama bağlantısıyla yapılır." Profil
-    // güncelleme ucundan yollamak doğrulamayı atlatmak olurdu.
-    final err = await profile.updateProfile(
+    final err = await context.read<ProfileController>().updateProfile(
         name: '${_first.text.trim()} ${_last.text.trim()}'.trim());
     if (!mounted) {
       return;
     }
+    setState(() => _busy = false);
     if (err != null) {
-      setState(() => _busy = false);
       sysToastErr(context, SysKind.genericError, extra: err.message);
       return;
     }
-
-    // ── E-POSTA DEĞİŞİMİ — DOĞRULAMA BAĞLANTISI ──
-    //
-    // ⚠ Hesabın e-postası BURADA DEĞİŞMEZ: sunucu yeni adrese
-    // bağlantı yollar, adres ancak tıklanınca yürürlüğe girer.
-    // Kullanıcıya "güncellendi" demek yanlış olurdu.
-    var epostaBeklemede = false;
-    String? epostaSifresi;
-    if (_epostaDegisti) {
-      epostaSifresi = await _epostaIcinSifre();
-      if (epostaSifresi == null || !mounted) {
-        if (mounted) setState(() => _busy = false);
-        return;
-      }
-      final e = await profile.epostaDegisimiBaslat(
-          epostaNormalize(_email.text),
-          sifre: epostaSifresi);
-      if (!mounted) {
-        return;
-      }
-      if (e != null) {
-        setState(() => _busy = false);
-        sysToastErr(context, SysKind.genericError, extra: e.message);
-        return;
-      }
-      epostaBeklemede = true;
-    }
-    setState(() => _busy = false);
-    if (newPhone != oldPhone) {
-      // ── TELEFON DEĞİŞİKLİĞİ CHALLENGE'I ──
-      //
-      // ⚠ MEVCUT NUMARA BU AŞAMADA DEĞİŞMEZ. Challenge YENİ numaraya
-      // bağlanır; doğrulama başarılı olduğunda benzersizlik yeniden
-      // denetlenir ve bağlama tek adımda yapılır (Y6).
-      //
-      // ⚠ YENİDEN KİMLİK DOĞRULAMA (güvenlik denetimi, karar 2): kod
-      // gönderilmeden önce mevcut şifre sorulur; sunucu da doğrular.
-      // Aynı kaydetmede e-posta için şifre zaten alındıysa yeniden sorulmaz
-      // (sunucu her işlemde ayrıca doğrular).
-      final sifre = epostaSifresi ??
-          await sifreIleDogrula(context,
-              aciklama: 'Telefon numaranızı değiştirmeden önce güvenlik için '
-                  'şifrenizi girin.',
-              renk: RC.blue);
-      if (sifre == null || !mounted) {
-        return;
-      }
-      final ch = await context
-          .read<AuthController>()
-          .telefonDegisimiKodGonder(newPhone);
-      if (!mounted) {
-        return;
-      }
-      if (ch.hata != null || ch.challengeId == null) {
-        sysToastErr(context, SysKind.genericError,
-            extra: ch.hata ?? FormMesaj.otpGonderilemedi);
-        return;
-      }
-      var challengeId = ch.challengeId!;
-      Navigator.push(
-        context,
-        panelRotasi<void>(
-          // ⚠ AD YALNIZ ÖLÇÜ İÇİN: web kabuğu içerik genişliğini rota
-          // adından seçer; adsız rota tanınmıyordu. Gezinme davranışı
-          // DEĞİŞMEZ.
-          settings: const RouteSettings(name: '/dogrulama'),
-          builder: (_) => OtpScreen(
-            phone: newPhone,
-            purpose: OtpPurpose.phoneChange,
-            // ⚠ EKRAN KODU DOĞRULAMAZ. Numara da buradan geçmez —
-            // challenge'ın içinden gelir (Y4): kullanıcı alanı
-            dogrula: (kod) => context
-                .read<AuthController>()
-                .telefonDegisimiDogrula(challengeId, kod,
-                    mevcutSifre: sifre),
-            // ⚠ AKIŞA ÖZEL: yeni DEĞİŞİKLİK challenge'ı üretilir.
-            yenidenGonder: () async {
-              final y = await context
-                  .read<AuthController>()
-                  .telefonDegisimiKodGonder(newPhone);
-              if (y.hata != null || y.challengeId == null) {
-                return y.hata ?? FormMesaj.otpGonderilemedi;
-              }
-              challengeId = y.challengeId!;
-              return null;
-            },
-            onVerified: (c, _) {
-              // ⚠ EKRAN GERÇEK DURUMDAN TAZELENİR.
-              //
-              // Alan, kullanıcının yazdığı metinden değil GÜNCEL
-              // hesap durumundan doldurulur: challenge'la doğrulanan
-              // numara ile ekranda görünen numara arasında fark
-              // kalmaz (kullanıcı yazımı boşluklu/0'lı olabilir).
-              final guncel = context.read<AuthController>().currentAccount;
-              if (guncel != null && mounted) {
-                _phone.text = Validators.phoneLocal(guncel.phone);
-              }
-              sysToastOk(c, 'Telefon numaranız güncellendi');
-              // 28 Eki: yalnız doğrulama ekranı kapanır; profil ekranında
-              // kalınır ve düğme "✓ Kaydedildi" gösterir (kullanıcı kendi
-              // çıkmadan otomatik çıkılmaz — bkz. kayittanSonra).
-              Navigator.pop(c);
-              if (mounted) {
-                setState(() => _kaydedildi = true);
-              }
-            },
-          ),
-        ),
-      );
-    } else {
-      setState(() => _kaydedildi = true);
-      sysToastOk(
-          context,
-          epostaBeklemede
-              ? 'Yeni e-posta adresinize doğrulama bağlantısı gönderildi. '
-                  'Bağlantıya tıklayana kadar mevcut adresiniz geçerlidir.'
-              : 'Profil bilgileriniz güncellendi');
-      // ⚠ WEB'DE AYNI SAYFADA KALINIR; mobilde önceki geri dönüş aynen.
-      kayittanSonra(context, () => geriGit(context));
-    }
+    _kaydedildiGoster();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _kaydedildiZamanlayici?.cancel();
     _email.dispose();
     _fAd.removeListener(_adOdak);
     _fSoyad.removeListener(_soyadOdak);
@@ -530,6 +435,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     _fSoyad.dispose();
     _fEposta.dispose();
     _fTelefon.dispose();
+    _smsAkis
+      ..removeListener(_smsDegisti)
+      ..dispose();
+    _telKod.dispose();
     _first.dispose();
     _last.dispose();
     _phone.dispose();
@@ -740,7 +649,17 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
               alanAnahtari: _telefonKey,
               focusNode: _fTelefon,
               // ⚠ `onChanged` doğrulama YAPMAZ — yalnız "numara
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) {
+                final oncedenGonderildi =
+                    _smsAkis.gonderildiMi(Validators.phoneFmt(_phone.text));
+                _smsAkis.telefonDegisti(Validators.phoneFmt(_phone.text));
+                setState(() {
+                  if (!oncedenGonderildi) {
+                    _telKod.clear();
+                    _telKodHata = null;
+                  }
+                });
+              },
               // ⚠ "5XX XXX XX XX" BİÇİM ÖRNEĞİDİR, alan adı değil:
                       // etikette "Telefon" yazar, kutunun içinde biçim
                       // ipucu kalır.
@@ -759,56 +678,137 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
                   _kural('telefon', _fTelefon, v, Validators.phone),
             ),
 
-            // ⚠ KUTU ÜÇ KOŞULLA ÇIKAR: boş değil · geçerli · farklı.
-            // Yazım sürecindeki ara değerlerde ("onur@") görünmez.
-            if (_epostaDegisti)
-              RefInfoBox(
-                mavi: true,
-                margin: const EdgeInsets.only(top: 14),
-                child: Text(
-                  'Yeni e-posta adresinize doğrulama bağlantısı '
-                  'gönderilir. Doğrulanana kadar bildirim ve hesap '
-                  'kurtarma iletileri ESKİ adresinize gider.',
-                  style: refText(
-                    size: RF.s135,
-                    weight: RF.w400,
-                    color: RC.textDark,
-                    height: RF.lh150,
-                  ),
+            // ── 5 Kas: TELEFON ONAY DURUMU — telefon alanının hemen altında
+            // (e-posta durumu ile aynı görünüm). Onaylı telefonu olmayan
+            // hesapta "Kod Gönder" → kod alanı → "Telefon onaylı ✓".
+            Builder(builder: (context) {
+              final hesap = context.watch<AuthController>().currentAccount;
+              final tel = Validators.phoneFmt(_phone.text);
+              // Kutudaki numara hesabın ONAYLI numarasıysa "Telefon onaylı ✓";
+              // başka bir numara yazıldıysa satır içi kod akışı (6 Kas).
+              final onayli = hesap != null &&
+                  hesap.phoneVerified &&
+                  hesap.phone.trim().isNotEmpty &&
+                  tel == hesap.phone;
+              if (onayli) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(children: [
+                    const Icon(Icons.check_circle, size: 18, color: RC.success),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text('Telefon onaylı ✓',
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w500,
+                              color: RC.success)),
+                    ),
+                  ]),
+                );
+              }
+              final gecerli = _telefonHata == null;
+              final gonderildi = gecerli && _smsAkis.gonderildiMi(tel);
+              final denendi = gecerli && _smsAkis.denendiMi(tel);
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [
+                      const Icon(Icons.info_outline,
+                          size: 18, color: RC.textMuted),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text('Telefon numarası onaylanmadı',
+                            style: refText(
+                                size: RF.s135,
+                                weight: RF.w500,
+                                color: RC.textMuted)),
+                      ),
+                    ]),
+                    if (gecerli && !gonderildi && !denendi && _smsAkis.sayac == 0)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _busy || _smsAkis.gonderiliyor
+                              ? null
+                              : _telKodGonder,
+                          icon: const Icon(Icons.sms_outlined, size: 18),
+                          label: const Text('Kod Gönder'),
+                        ),
+                      ),
+                    if (gonderildi || denendi) ...[
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _telKod,
+                        enabled: gonderildi && !_telDogrulaniyor,
+                        keyboardType: TextInputType.number,
+                        // Kod kutusu: "bitti" klavyeyi kapatır (6 hanede
+                        // doğrulama zaten kendiliğinden başlar).
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.oneTimeCode],
+                        maxLength: 6,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        onChanged: (v) {
+                          _smsAkis.hatayiTemizle();
+                          setState(() => _telKodHata = null);
+                          if (v.length == 6) {
+                            _telDogrula();
+                          }
+                        },
+                        decoration: refIkonluAlanDekoru(
+                          'Telefonunuza gelen 6 haneli kodu girin',
+                          'assets/svg/ic_plock.svg',
+                          hata: _telKodHata ?? _smsAkis.hata,
+                          suffix: _telDogrulaniyor
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      SmsKodAltSatiri(
+                        akis: _smsAkis,
+                        telefon: tel,
+                        onTekrar: _telKodGonder,
+                        kapali: _telDogrulaniyor,
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-
-            // ⚠ Aynı üç koşul telefonda da geçerlidir.
-            if (_telefonDegisti)
-              RefInfoBox(
-                mavi: true,
-                margin: const EdgeInsets.only(top: 14),
-                child: Text(
-                  'Numara doğrulanmadan telefon güncellemesi kaydedilmez.',
-                  style: refText(
-                    size: RF.s135,
-                    weight: RF.w400,
-                    color: RC.textDark,
-                    height: RF.lh150,
-                  ),
-                ),
-              ),
+              );
+            }),
 
             const SizedBox(height: 16),
-            // ── BUTON DURUMU ──
-            //
-            // ⚠ PASİF: hiç değişiklik yoksa VEYA formda eksik/geçersiz
-            // zorunlu alan varsa. Eskiden buton her hâlde aktifti;
-            // kullanıcı yarım formla basıp hata alıyordu.
-            //
-            // ⚠ METİN: doğrulama gerektiren bir değişiklik (telefon
-            // veya e-posta) varsa "Doğrula ve Kaydet", yalnız ad/soyad
+            // ── 6 Kas: SADE "Kaydet" — yalnız ad/soyad değişip geçerliyse
+            // aktif; başarıda altında 5 sn yeşil "Kaydedildi".
             RefNextButton(
-              _dogrulamaGerekli ? 'Doğrula ve Kaydet' : 'Bilgileri Güncelle',
-              iconAsset: 'assets/svg/ic_pen.svg',
+              'Kaydet',
               busy: _busy,
-              kaydedildi: _kaydedildi && !_degisiklikVar,
-              onPressed: (_formGecerli && _degisiklikVar) ? _save : null,
+              onPressed: _adSoyadDegisti ? _save : null,
+            ),
+            SizedBox(
+              height: 28,
+              child: _kaydedildi
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text('Kaydedildi',
+                          textAlign: TextAlign.center,
+                          style: refText(
+                              size: RF.s135,
+                              weight: RF.w600,
+                              color: RC.success)),
+                    )
+                  : null,
             ),
           ],
         ),
