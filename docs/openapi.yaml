@@ -1786,6 +1786,8 @@ paths:
       description: |
         Eşleşme: hizmet verenin kendi seçtiği kategoriler kümesinde kategori ya da
         hizmet adı. Kendisi, askıdaki/banlı/dondurulmuş/silinmiş hesaplar dönmez.
+        6 Kas: kaydı tamamlanmamış hizmet veren (onaylı telefon, adres, kategori,
+        hizmet bölgesi) dönmez; herkese açık özeti yoktur ve teklif talebi alamaz.
         GİZLİLİK: telefon, e-posta, mahalle ve açık adres DÖNMEZ. En çok 50 kayıt;
         müşterinin ilçesine hizmet verenler önde. Kullanıcı başına dakikada 60 istek.
         Kayıt: { id, name, address{city,district}|null, serviceDistricts[],

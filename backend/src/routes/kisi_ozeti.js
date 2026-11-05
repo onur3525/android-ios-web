@@ -19,7 +19,8 @@
 //     yalnız iletişim açıkken (teklif verilmiş ve süresi dolmamış) VE
 //     hizmet alan "telefonumu göster" seçtiyse. Hizmet verenin telefonu
 //     hizmet alana iletişim açıkken görünür (`talepIletisimAcikMi`).
-//   · HİZMET VEREN (Bul): etkin her hizmet veren, oturum açmış herkese ad,
+//   · HİZMET VEREN (Bul): etkin (kaydı tamamlanmış — 6 Kas) her hizmet
+//     veren, oturum açmış herkese ad,
 //     il/ilçe, fotoğraf ve iş sayısıyla görünür (/providers/search ile aynı:
 //     telefon ve mahalle YOK).
 //   · YORUM YAZARI: yayımlanmış yorumun yazarı kısa adla ("Ad S.") görünür.
@@ -32,7 +33,7 @@ import { simdi } from '../db.js';
 import { imzaliGorselAdresi } from '../depo_dogrulama.js';
 import { depolamaAyari } from '../entegrasyon.js';
 import { HizSiniri, hata } from '../http.js';
-import { kullaniciCoz } from './kullanici.js';
+import { kullaniciCoz, saglayiciEtkinMi } from './kullanici.js';
 import { talepSureleriniIsle } from './sohbet_talep.js';
 
 const ozetSiniri = new HizSiniri('kisi_ozeti', 1200, 15 * 60 * 1000);
@@ -145,7 +146,8 @@ async function gorunurluk(db, u, x) {
     }
   }
   // 5) Etkin hizmet veren: herkese açık profil (Bul ile aynı alanlar).
-  if (x.roles.split(',').includes('PROVIDER') && x.status === 'ACTIVE' && !x.frozen_at) {
+  // 6 Kas: kaydı tamamlanmamış hizmet veren etkin sayılmaz (`saglayiciEtkinMi`).
+  if (x.status === 'ACTIVE' && !x.frozen_at && await saglayiciEtkinMi(db, x)) {
     saglayici = true;
     yukselt(AD_TAM);
   }

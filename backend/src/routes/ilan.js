@@ -631,12 +631,19 @@ export function ilanRotalar(r, db) {
       `SELECT u.id, u.name, u.roles, u.photo_provider_ref, a.city, a.district, p.categories_json, p.districts_json
          FROM users u JOIN provider_profiles p ON p.user_id = u.id LEFT JOIN addresses a ON a.user_id = u.id
         WHERE u.deleted_at IS NULL AND u.status = 'ACTIVE' AND u.frozen_at IS NULL AND u.id <> ? AND (${kosul})
+          AND u.phone_verified = TRUE AND u.phone <> ''
+          AND a.city <> '' AND a.district <> '' AND a.neighborhood <> ''
         LIMIT 500`,
     ).all(ctx.kullanici.id, ...adaylar.map((x) => `%${kacir(JSON.stringify(x))}%`));
+    // 6 Kas (kullanıcı kararı): kaydı tamamlanmamış hizmet veren Bul'da
+    // GÖRÜNMEZ. Koşullar `profilEksikleri` ile aynı: onaylı telefon (sorguda),
+    // il/ilçe/mahalle (sorguda), en az bir kategori ve bir hizmet bölgesi.
     const uygun = satir.filter((x) => {
       if (!x.roles.split(',').includes('PROVIDER')) return false;
       let k = [];
-      try { k = JSON.parse(x.categories_json); } catch { return false; }
+      let b = [];
+      try { k = JSON.parse(x.categories_json); b = JSON.parse(x.districts_json); } catch { return false; }
+      if (!Array.isArray(b) || !b.length) return false;
       return Array.isArray(k) && adaylar.some((a) => k.includes(a));
     });
     if (!uygun.length) return [];

@@ -209,6 +209,16 @@ export async function profilEksikleri(db, u) {
   return { customer: [...ortak], provider: [...ortak, ...hizmet] };
 }
 
+/**
+ * 6 Kas (kullanıcı kararı): kaydı tamamlanmamış hizmet veren AKTİF HESAP
+ * SAYILMAZ — Bul'da görünmez, herkese açık profili yoktur, ona teklif
+ * talebi gönderilemez. Kural `profilEksikleri` ile aynı kaynaktır.
+ */
+export async function saglayiciEtkinMi(db, x) {
+  if (!String(x.roles ?? '').split(',').includes('PROVIDER')) return false;
+  return !(await profilEksikleri(db, x)).provider.length;
+}
+
 /** Rolün gerektirdiği profil eksikse işlem SUNUCUDA reddedilir (istemciye bırakılmaz). */
 export async function profilKapisi(db, u, rol) {
   const eksik = (await profilEksikleri(db, u))[rol === 'PROVIDER' ? 'provider' : 'customer'];

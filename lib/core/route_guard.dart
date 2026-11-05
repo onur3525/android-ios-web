@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
+import '../screens/widgets/saglayici_profil_kapisi.dart';
 import 'sys_state.dart';
 import 'geri.dart';
 
@@ -21,15 +22,32 @@ class RoleGuard extends StatelessWidget {
   final Role? requires;
   final WidgetBuilder builder;
 
-  const RoleGuard({super.key, required this.builder, this.requires});
+  /// 6 Kas (kullanıcı kararı): aktif rol hizmet veren ve hizmet veren
+  /// bilgileri EKSİKSE ekran yerine ortak uyarı (`SaglayiciProfilKapisi`)
+  /// çizilir. Hizmet alan rolünde etkisi yoktur.
+  final bool eksikSaglayiciyiKapat;
+
+  const RoleGuard({
+    super.key,
+    required this.builder,
+    this.requires,
+    this.eksikSaglayiciyiKapat = false,
+  });
 
   /// Yalnız hizmet verenin görebileceği ekranlar.
   const RoleGuard.provider({super.key, required this.builder})
-      : requires = Role.provider;
+      : requires = Role.provider,
+        eksikSaglayiciyiKapat = false;
+
+  /// Hizmet veren PANELİ ekranları: rol kapısı + eksik hizmet veren kapısı.
+  const RoleGuard.saglayiciPaneli({super.key, required this.builder})
+      : requires = Role.provider,
+        eksikSaglayiciyiKapat = true;
 
   /// Yalnız müşterinin görebileceği ekranlar.
   const RoleGuard.customer({super.key, required this.builder})
-      : requires = Role.customer;
+      : requires = Role.customer,
+        eksikSaglayiciyiKapat = false;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +95,13 @@ class RoleGuard extends StatelessWidget {
           ),
         ),
       );
+    }
+
+    // ── 6 Kas: kaydı tamamlanmamış hizmet veren panelde gezinemez ──
+    if (eksikSaglayiciyiKapat &&
+        acc.activeRole == Role.provider &&
+        !acc.profilTamam(Role.provider)) {
+      return const SaglayiciProfilKapisi();
     }
 
     return builder(context);

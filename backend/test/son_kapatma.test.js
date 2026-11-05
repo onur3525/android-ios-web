@@ -438,3 +438,33 @@ test('admin kullanıcı detayı dondurulmuş hesabı gösterir', async () => {
   assert.equal(r.status, 'ACTIVE');
   assert.ok(r.frozenAt, 'dondurma admin\'de görünür');
 });
+
+// ═════ 6 Kas (kullanıcı kararı): KAYDI TAMAMLANMAMIŞ HİZMET VEREN AKTİF HESAP SAYILMAZ ═════
+test('kaydı eksik hizmet veren: Bul\'da görünmez, herkese açık özeti yok, teklif talebi gönderilemez; tamamlanınca görünür', async () => {
+  const alan = await kisi('5387000091', 'CUSTOMER');
+  const tam = await kisi('5387000092', 'PROVIDER', { kategoriler: [HIZ] });
+  const telsiz = await kisi('5387000093', 'PROVIDER', { kategoriler: [HIZ] });
+  const adressiz = await kisi('5387000094', 'PROVIDER', { kategoriler: [HIZ] });
+  const bolgesiz = await kisi('5387000095', 'PROVIDER', { kategoriler: [HIZ], ilceler: [] }).catch(() => null);
+  await db.prepare('UPDATE users SET phone_verified = FALSE WHERE id = ?').run(telsiz.id);
+  await db.prepare('DELETE FROM addresses WHERE user_id = ?').run(adressiz.id);
+  const eksikler = [telsiz.id, adressiz.id];
+  if (bolgesiz) {
+    await db.prepare(`UPDATE provider_profiles SET districts_json = '[]' WHERE user_id = ?`).run(bolgesiz.id);
+    eksikler.push(bolgesiz.id);
+  }
+  const ara = async () => (await istek(`/api/v1/providers/search?service=${encodeURIComponent(HIZ)}`, { token: alan.token })).json.map((x) => x.id);
+  const bulunan = await ara();
+  assert.ok(bulunan.includes(tam.id), 'tamamlanmış hizmet veren görünür');
+  for (const id of eksikler) assert.ok(!bulunan.includes(id), `eksik hesap Bul'da: ${id}`);
+  // Herkese açık özet yok (başka ilişki yok → 404); tamamlanmış hizmet verenin var.
+  assert.equal((await istek(`/api/v1/users/${tam.id}/summary`, { token: alan.token })).durum, 200);
+  for (const id of eksikler) assert.equal((await istek(`/api/v1/users/${id}/summary`, { token: alan.token })).durum, 404, id);
+  // Teklif talebi gönderilemez.
+  const talep = (id) => istek('/api/v1/teklif-talepleri', { yontem: 'POST', token: alan.token, govde: { saglayiciId: id, kategori: KAT, hizmet: HIZ, aciklama: 'banyo bataryası değişecek lütfen', iletisimTercihi: 'yalnizMesaj' } });
+  assert.equal((await talep(telsiz.id)).durum, 404);
+  // Tamamlanınca (telefon onaylı) görünür ve talep alır.
+  await db.prepare('UPDATE users SET phone_verified = TRUE WHERE id = ?').run(telsiz.id);
+  assert.ok((await ara()).includes(telsiz.id));
+  assert.equal((await talep(telsiz.id)).durum, 200);
+});
