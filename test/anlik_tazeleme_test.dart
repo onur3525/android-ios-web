@@ -154,8 +154,9 @@ void main() {
       final repo = ApiListingRepository(api);
       await repo.loadMine();
       expect(_kod('lib/data/remote/repositories/api_repositories.dart')
-          .split('_listeImzasi = null;').length - 1, 3,
-          reason: 'tek ilan yükleme, ekleme ve silme imzayı sıfırlamalı');
+          .split('_listeImzasi = null;').length - 1, 4,
+          reason: 'tek ilan yükleme, erişimi kalmayan ilanı bırakma (404, 5 Kas), '
+              'ekleme ve silme imzayı sıfırlamalı');
     });
 
     test('teklif deposu: aynı /offers/my yanıtı haber vermez', () async {
