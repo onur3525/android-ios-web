@@ -504,6 +504,18 @@ class ApiListingRepository extends ChangeNotifier {
   /// Tek ilan — detay ekranı ve işlem sonrası tazeleme için.
   Future<DomainError?> loadOne(String id) async {
     final (res, err) = await _guard(() => _api.byId(id));
+    if (err is NotFoundError) {
+      // 5 Kas: ilana artık erişim yok (ör. 3 teklif doldu, kaldırıldı) →
+      // yerel kopya da bırakılır; liste kartı kalkar, detay ekranı
+      // "Bu ilana ulaşılamıyor" gösterir.
+      final once = _cache.length;
+      _cache.removeWhere((l) => l.id == id);
+      if (_cache.length != once) {
+        _listeImzasi = null;
+        notifyListeners();
+      }
+      return err;
+    }
     if (err != null) {
       return err;
     }

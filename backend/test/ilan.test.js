@@ -14,6 +14,8 @@ const { uygulamaKur } = await import('../src/server.js');
 const { tohumla } = await import('../scripts/seed_from_flutter.js');
 const { base32Uret, sifreOzetle, sirSifrele, totpUret } = await import('../src/auth.js');
 const { suresiDolanlariIsle } = await import('../src/routes/ilan.js');
+const { olaylar } = await import('../src/olaylar.js');
+const { ANLIK_HABER_KANALI, anlikHaberleriYayinla } = await import('../src/anlik_haber.js');
 
 let db, sunucu, taban, adminCerez, hizmet, musteri, usta, usta2;
 
@@ -224,8 +226,22 @@ test('5 Kas: ilan en fazla 3 teklif alır; dolunca teklif vermeyene görünmez',
     assert.equal(t.durum, 200, JSON.stringify(t.json));
   }
   assert.equal(await gorunur(usta4), true, '2 teklifte hâlâ görünür');
-  const t3 = await istek('/api/v1/offers', { yontem: 'POST', token: usta3.token, govde: { listingId: id, amountTl: 1000, note: '' } });
+  await anlikHaberleriYayinla();
+  const haberler = [];
+  const dinle = ({ h } = {}) => haberler.push(...(h ?? []));
+  olaylar.on(ANLIK_HABER_KANALI, dinle);
+  let t3;
+  try {
+    t3 = await istek('/api/v1/offers', { yontem: 'POST', token: usta3.token, govde: { listingId: id, amountTl: 1000, note: '' } });
+    await anlikHaberleriYayinla();
+  } finally {
+    olaylar.off(ANLIK_HABER_KANALI, dinle);
+  }
   assert.equal(t3.durum, 200, JSON.stringify(t3.json));
+  // 3. teklif: teklif vermemiş hizmet verene LISTING_FULL; teklif verenlere ve sahibine değil.
+  const doldu = new Set(haberler.filter(([, tur]) => tur === 'LISTING_FULL').map(([k]) => k));
+  assert.ok(doldu.has(usta4.id), JSON.stringify(haberler));
+  for (const u of [usta, usta2, usta3, musteri]) assert.equal(doldu.has(u.id), false);
   // 3 teklif doldu: 4. hizmet veren listede ve detayda göremez, teklif veremez.
   assert.equal(await gorunur(usta4), false);
   assert.equal((await istek(`/api/v1/listings/${id}`, { token: usta4.token })).durum, 404);
