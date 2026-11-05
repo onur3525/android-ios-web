@@ -1618,9 +1618,11 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
           RefInfoBox(
             child: Text(
               'İlan vermek ücretsizdir ve sınırsızdır — size hiçbir ücret '
-              'yansımaz. İlanınız 30 saat yayında kalır; bu sürede hizmet '
-              'verenler teklif verebilir. Süre sonunda teklif seçilmezse '
-              'ilan otomatik kapanır.',
+              'yansımaz. İlanınız ${DomainConfig.listingLifetime.inHours} '
+              'saat yayında kalır; bu sürede en fazla '
+              '${DomainConfig.ilanBasinaMaxTeklif} hizmet veren teklif '
+              'verebilir. Süre sonunda teklif seçilmezse ilan otomatik '
+              'kapanır.',
               style: refText(
                 size: RF.s135,
                 weight: RF.w400,

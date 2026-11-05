@@ -34,7 +34,8 @@ info:
     - E-posta hiçbir zaman karşı tarafa gösterilmez.
     - Yalnızca Hizmet Alan, Hizmet Veren'i 1-5 yıldız ve yorumla değerlendirir.
     - Her ilan için yalnızca 1 değerlendirme; kullanıcı silemez/değiştiremez.
-    - İlan aktif süresi 30 saattir.
+    - İlan aktif süresi 48 saattir.
+    - Bir ilan en fazla 3 açık teklif alır; dolunca teklif vermemiş hizmet verenlere listelenmez ve detayı 404 döner.
     - Platform iki taraf için de ücretsizdir; ödeme/bakiye yoktur.
 
 servers:
@@ -154,12 +155,12 @@ components:
 
         # ── TEKLİF ──
         - OFFER_ALREADY_EXISTS
-        - OFFER_LIMIT_REACHED      # aynı ilana ikinci teklif (§1)
+        - OFFER_LIMIT_REACHED      # ilan 3 açık teklife ulaştı (422)
         - DUPLICATE_OFFER           # aynı anlam — eski ad
         - OWN_LISTING_OFFER         # kendi ilanına teklif verilemez
 
         # ── İLAN ──
-        - LISTING_EXPIRED           # 30 saat doldu (§12)
+        - LISTING_EXPIRED           # 48 saat doldu (§12)
         - LISTING_REMOVED           # admin kaldırdı (§13)
         - LISTING_CLOSED            # teklif kabul etmiyor (genel)
 
@@ -292,7 +293,7 @@ components:
         expiresAt:
           type: string
           format: date-time
-          description: ⚠ createdAt + 30 saat (§1, §12).
+          description: ⚠ createdAt + 48 saat (§1, §12).
         offerCount: { type: integer }
         selectedOfferId: { type: [string, 'null'] }
         owner: { $ref: '#/components/schemas/PartyPublic' }
@@ -971,7 +972,7 @@ paths:
       tags: [Profile]
       summary: Hesabı dondur
       description: |
-        ⚠ Dondurma mevcut ilanların 30 saatini DURDURMAZ ve blokeleri iade ETMEZ (§19).
+        ⚠ Dondurma mevcut ilanların 48 saatini DURDURMAZ ve blokeleri iade ETMEZ (§19).
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       responses:
         '200': { description: Başarılı }
@@ -1036,7 +1037,7 @@ paths:
       tags: [Listings]
       summary: İlan oluştur
       description: |
-        ⚠ 1 ilan = 1 kategori/hizmet (§1). Oluşturulan ilan 30 saat aktiftir; süre `expiresAt` alanından takip edilir — istemci saatinden DEĞİL.
+        ⚠ 1 ilan = 1 kategori/hizmet (§1). Oluşturulan ilan 48 saat aktiftir; süre `expiresAt` alanından takip edilir — istemci saatinden DEĞİL.
         Yeni ilan, kategorisi (doğrudan eşleşme) ve hizmet bölgesi eşleşen
         hizmet verenlere `NEW_LISTING` bildirimi (uygulama içi + push, hedef
         `is`) üretir (15 Eki). Aynı anahtarla tekrar bildirim üretmez.

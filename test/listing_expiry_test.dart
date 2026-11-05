@@ -36,31 +36,31 @@ void main() {
   // kaldığında üretilen her ilan "süresi dolmuş" sayılır; teklif
   // oluşmaz, bloke edilmez ve `myOfferFor` null döner.
   //
-  // 1 saat önce yayınlanmış varsayılır: ilan hâlâ açıktır (30 saatlik
-  // ömrün 31 saati kalmıştır) ve süre dolumu testleri t0'a göre
+  // 1 saat önce yayınlanmış varsayılır: ilan hâlâ açıktır (48 saatlik
+  // ömrün 47 saati kalmıştır) ve süre dolumu testleri t0'a göre
   // hesaplandığı için deterministik kalır.
   final t0 = DateTime.now().subtract(const Duration(hours: 1)); // yayın anı
   Listing ilan() => listings.create(
       ownerId: cust, title: 'Kombi Bakımı', location: 'Konak, İzmir',
       desc: 'Kombi bakımı yapılacak beş kelime tamam', createdAt: t0);
 
-  test('expiresAt = createdAt + 30 saat', () async {
+  test('expiresAt = createdAt + 48 saat', () async {
     final l = ilan();
-    expect(l.expiresAt, t0.add(const Duration(hours: 30)));
-    expect(DomainConfig.listingLifetime, const Duration(hours: 30));
+    expect(l.expiresAt, t0.add(const Duration(hours: 48)));
+    expect(DomainConfig.listingLifetime, const Duration(hours: 48));
   });
 
-  // ⚠ Yaşam süresi 30 SAAT: sınırın hemen altı 29:59'dur.
-  test('29 saat 59 dakikada ilan OPEN kalır', () async {
+  // ⚠ Yaşam süresi 48 SAAT: sınırın hemen altı 47:59'dur.
+  test('47 saat 59 dakikada ilan OPEN kalır', () async {
     final l = ilan();
-    final n = expiry.sweep(now: t0.add(const Duration(hours: 29, minutes: 59)));
+    final n = expiry.sweep(now: t0.add(const Duration(hours: 47, minutes: 59)));
     expect(n, 0);
     expect(l.status, ListingStatus.active);
   });
 
-  test('30 saatte EXPIRED olur ve Açık listesinden çıkar / Süresi Dolan filtresine girer', () async {
+  test('48 saatte EXPIRED olur ve Açık listesinden çıkar / Süresi Dolan filtresine girer', () async {
     final l = ilan();
-    final n = expiry.sweep(now: t0.add(const Duration(hours: 30)));
+    final n = expiry.sweep(now: t0.add(const Duration(hours: 48)));
     expect(n, 1);
     expect(l.status, ListingStatus.expired);
     // ⚠ Açık sekmesi: YAŞAYAN ve teklif seçilmemiş ilanlar (§24).
@@ -76,8 +76,8 @@ void main() {
   test('aynı ilan için süre dolma işlemi BİR KEZ çalışır', () async {
     final l = ilan();
     await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 900, note: 'n');
-    expect(expiry.sweep(now: t0.add(const Duration(hours: 30))), 1);
-    expect(expiry.sweep(now: t0.add(const Duration(hours: 50))), 0); // tekrar işlenmez
+    expect(expiry.sweep(now: t0.add(const Duration(hours: 48))), 1);
+    expect(expiry.sweep(now: t0.add(const Duration(hours: 70))), 0); // tekrar işlenmez
     expect(l.status, ListingStatus.expired);
   });
 
@@ -85,7 +85,7 @@ void main() {
     final l = listings.create(
         ownerId: cust, title: 'Boya', location: 'Konak, İzmir',
         desc: 'Boya işi var evet beş kelime',
-        createdAt: DateTime.now().subtract(const Duration(hours: 33)));
+        createdAt: DateTime.now().subtract(const Duration(hours: 51)));
     // Durum hâlâ open (servis henüz koşmadı) — saat kuralı yine de engeller
     expect(await offerCtl.placeOffer(listingId: l.id, providerId: p1, amount: 1, note: 'n'),
         isA<ListingClosedError>());

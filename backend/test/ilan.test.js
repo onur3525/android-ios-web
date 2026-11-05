@@ -80,7 +80,7 @@ test('ilan: yalnız hizmet alan, katalogdaki hizmetle; numara 10458231\'den baş
   assert.equal(r.durum, 200, JSON.stringify(r.json));
   assert.equal(r.json.ilanNo, '10458231');
   assert.equal(r.json.status, 'ACTIVE');
-  assert.equal(Date.parse(r.json.expiresAt) - Date.parse(r.json.createdAt), 30 * 3600 * 1000);
+  assert.equal(Date.parse(r.json.expiresAt) - Date.parse(r.json.createdAt), 48 * 3600 * 1000);
   ilan = r.json;
 });
 
@@ -174,7 +174,7 @@ test('hizmet veren yorumları: imleçli sayfalama, geçersiz limit/cursor 400', 
   await db.prepare('DELETE FROM reviews WHERE provider_id = ?').run(usta2.id);
 });
 
-test('süre dolumu: 30 saat sonra kapanır, teklif verilemez, sahibine bir kez bildirim', async () => {
+test('süre dolumu: 48 saat sonra kapanır, teklif verilemez, sahibine bir kez bildirim', async () => {
   const r = await istek('/api/v1/listings', { yontem: 'POST', token: musteri.token, govde: { title: hizmet, location: 'Bornova', description: 'boya badana işi var' } });
   await db.prepare('UPDATE listings SET expires_at = ? WHERE id = ?').run('2000-01-01T00:00:00.000Z', r.json.id);
   await suresiDolanlariIsle(db);
@@ -207,4 +207,44 @@ test('admin yorum kaldırma → kullanıcı listesinden düşer; duyuru herkese 
   assert.equal(d.json.recipients, 2);
   const b = (await istek('/api/v1/notifications', { token: usta.token })).json.find((n) => n.type === 'ANNOUNCEMENT');
   assert.equal(b.title, 'Bakım');
+});
+
+// ⚠ Sona konuldu: yeni hizmet veren hesapları açar; önceki testlerdeki
+// alıcı sayılarını (duyuru) etkilemesin.
+test('5 Kas: ilan en fazla 3 teklif alır; dolunca teklif vermeyene görünmez', async () => {
+  const usta3 = await kullaniciOlustur('5300000013', 'PROVIDER');
+  const usta4 = await kullaniciOlustur('5300000014', 'PROVIDER');
+  const r = await istek('/api/v1/listings', { yontem: 'POST', token: musteri.token, govde: { title: hizmet, location: 'Buca', description: 'üç teklif sınırı denemesi' } });
+  assert.equal(r.durum, 200, JSON.stringify(r.json));
+  const id = r.json.id;
+  const gorunur = async (u) => (await istek('/api/v1/listings/available', { token: u.token })).json.some((l) => l.id === id);
+  assert.equal(await gorunur(usta4), true, 'boş ilan herkese görünür');
+  for (const u of [usta, usta2]) {
+    const t = await istek('/api/v1/offers', { yontem: 'POST', token: u.token, govde: { listingId: id, amountTl: 1000, note: '' } });
+    assert.equal(t.durum, 200, JSON.stringify(t.json));
+  }
+  assert.equal(await gorunur(usta4), true, '2 teklifte hâlâ görünür');
+  const t3 = await istek('/api/v1/offers', { yontem: 'POST', token: usta3.token, govde: { listingId: id, amountTl: 1000, note: '' } });
+  assert.equal(t3.durum, 200, JSON.stringify(t3.json));
+  // 3 teklif doldu: 4. hizmet veren listede ve detayda göremez, teklif veremez.
+  assert.equal(await gorunur(usta4), false);
+  assert.equal((await istek(`/api/v1/listings/${id}`, { token: usta4.token })).durum, 404);
+  const t4 = await istek('/api/v1/offers', { yontem: 'POST', token: usta4.token, govde: { listingId: id, amountTl: 900, note: '' } });
+  assert.equal(t4.durum, 422);
+  assert.equal(t4.json.error.code, 'OFFER_LIMIT_REACHED');
+  assert.equal(Number((await db.prepare('SELECT COUNT(*) AS n FROM offers WHERE listing_id = ?').get(id)).n), 3);
+  // Teklif veren hizmet veren ilanı görmeye devam eder; ilan sahibi 3 teklifi görür.
+  assert.equal(await gorunur(usta3), true);
+  assert.equal((await istek(`/api/v1/listings/${id}`, { token: usta3.token })).durum, 200);
+  assert.equal((await istek(`/api/v1/listings/${id}`, { token: musteri.token })).json.offers.length, 3);
+});
+
+test('5 Kas: eşzamanlı son teklifler — 3 sınırı aşılmaz', async () => {
+  const ustalar = [];
+  for (let i = 0; i < 5; i++) ustalar.push(await kullaniciOlustur(`53000000${20 + i}`, 'PROVIDER'));
+  const r = await istek('/api/v1/listings', { yontem: 'POST', token: musteri.token, govde: { title: hizmet, location: 'Bayraklı', description: 'eşzamanlı teklif yarışı denemesi' } });
+  const sonuc = await Promise.all(ustalar.map((u) => istek('/api/v1/offers', { yontem: 'POST', token: u.token, govde: { listingId: r.json.id, amountTl: 1000, note: '' } })));
+  assert.equal(sonuc.filter((x) => x.durum === 200).length, 3, JSON.stringify(sonuc.map((x) => x.durum)));
+  assert.equal(sonuc.filter((x) => x.json?.error?.code === 'OFFER_LIMIT_REACHED').length, 2);
+  assert.equal(Number((await db.prepare('SELECT COUNT(*) AS n FROM offers WHERE listing_id = ?').get(r.json.id)).n), 3);
 });

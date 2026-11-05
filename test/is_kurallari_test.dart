@@ -40,8 +40,8 @@ void main() {
   });
 
   group('İlan yaşam süresi', () {
-    test('30 SAAT', () {
-      expect(DomainConfig.listingLifetime, const Duration(hours: 30));
+    test('48 SAAT (5 Kas)', () {
+      expect(DomainConfig.listingLifetime, const Duration(hours: 48));
     });
 
     test('kaynakta 32 saat kalıntısı YOK', () {

@@ -18,7 +18,7 @@ enum NotifType {
   teklifVerildi,         // Teklif geldi (hizmet alana)
   teklifSecildi,         // Teklif kabul edildi, iş aktif (hizmet verene)
   teklifReddedildi,      // Teklif reddedildi (hizmet verene)
-  teklifSuresiDoldu,     // 30 saat doldu (hizmet verene)
+  teklifSuresiDoldu,     // ilanın süresi (48 saat) doldu (hizmet verene)
   teklifIsiTamamlandi,   // İş tamamlandı işaretlendi (hizmet alana)
   teklifYeniMesaj,       // Teklif talebi sohbetinde yeni mesaj (karşı tarafa)
   talepSaglayiciReddetti, // Hizmet veren talebi reddetti (hizmet alana · 22 Eki)

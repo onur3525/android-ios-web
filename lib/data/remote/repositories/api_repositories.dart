@@ -408,7 +408,7 @@ class ApiAuthRepository extends ChangeNotifier {
   }
 }
 
-/// İlanlar — 30 saat kuralı, durum makinesi ve iade kuralları SUNUCUDA.
+/// İlanlar — 48 saat kuralı, durum makinesi ve iade kuralları SUNUCUDA.
 class ApiListingRepository extends ChangeNotifier {
   final ListingApi _api;
   ApiListingRepository(this._api);

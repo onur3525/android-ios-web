@@ -2,7 +2,7 @@ import '../api_client.dart';
 import '../../models/listing.dart';
 import '../../models/teklif_talebi.dart' show IletisimTercihi;
 
-/// /listings uçları — 30 saat kuralı ve durum makinesi SUNUCUDA işler.
+/// /listings uçları — 48 saat kuralı ve durum makinesi SUNUCUDA işler.
 class ListingApi {
   final ApiClient c;
   ListingApi(this.c);

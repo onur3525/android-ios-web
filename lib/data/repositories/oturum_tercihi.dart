@@ -112,5 +112,5 @@ class OturumTercihi {
 /// varsa uygulama HİZMET VEREN rolüyle açılır.
 ///
 /// Sebep: hizmet veren tarafı zamana duyarlıdır — gelen iş ilanları
-/// 30 saat içinde kapanır ve teklif yarışı vardır. Hizmet alan tarafı
+/// 48 saat içinde kapanır ve teklif yarışı vardır. Hizmet alan tarafı
 const bool kCiftRoldeSaglayiciOncelikli = true;
