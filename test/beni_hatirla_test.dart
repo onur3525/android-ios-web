@@ -143,7 +143,7 @@ void main() {
 
     test('ÇİFT ROLDE HİZMET VEREN önceliklidir', () {
       // ⚠ İŞ KURALI: iki rolü olan kullanıcı hizmet veren panelinde
-      // açılır — gelen ilanlar 30 saatte kapanır, teklif yarışı var.
+      // açılır — gelen ilanlar 48 saatte kapanır, teklif yarışı var.
       final k = _oku('lib/screens/splash_screen.dart');
       // Önce hedef ROL seçilir (sağlayıcı öncelikli), rota ondan çıkar.
       expect(

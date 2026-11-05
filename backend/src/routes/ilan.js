@@ -3,9 +3,10 @@
 //
 // İş kuralları Flutter mock katmanıyla (mock_ports.dart) aynıdır ve
 // burada SUNUCUDA zorlanır (istemci değiştirilse de atlanamaz):
-//   · İlan yalnız hizmet alan rolüyle; ömür 30 saat; numara 10458231'den artar.
+//   · İlan yalnız hizmet alan rolüyle; ömür 48 saat; numara 10458231'den artar.
 //   · Teklif yalnız hizmet veren rolüyle; kendi ilanına teklif yok;
-//     ilan başına hizmet veren tek teklif; yalnız açık ve süresi dolmamış ilana.
+//     ilan başına hizmet veren tek teklif; yalnız açık ve süresi dolmamış ilana;
+//     bir ilan en fazla 3 açık teklif alır, dolunca teklif vermeyenlerden gizlenir.
 //   · Seçimi yalnız ilan sahibi yapar; seçilince diğer teklifler kapanır.
 //   · İletişim ÜCRETSİZ; yalnız teklifin iki tarafı açar/görür.
 //   · Değerlendirme yalnız ilan sahibi, seçilmiş teklif için, teklif başına bir.
@@ -37,7 +38,19 @@ import { fcmEtkin, pushTetikle } from '../fcm.js';
 import { dosyalariBagla } from './depolama_entegrasyon.js';
 import { sonSunucuHatalari, yoneticiGuvenlikOlaylari } from '../sistem_izleme.js';
 
-export const ILAN_OMRU_MS = 30 * 60 * 60 * 1000;
+// 5 Kas (kullanıcı kararı): ilan ömrü 30 → 48 saat. İstemci karşılığı:
+// lib/domain/config.dart `DomainConfig.listingLifetime`.
+export const ILAN_OMRU_MS = 48 * 60 * 60 * 1000;
+// 5 Kas (kullanıcı kararı): bir ilana EN FAZLA 3 hizmet veren teklif verir;
+// 3 açık teklif olunca ilan teklif vermemiş hizmet verenlerin listesinden
+// ve detayından kalkar. İstemci karşılığı: `DomainConfig.ilanBasinaMaxTeklif`.
+// Sözleşme: docs/openapi.yaml POST /offers → 422 OFFER_LIMIT_REACHED.
+export const ILAN_AZAMI_TEKLIF = 3;
+const teklifSiniriDoldu = () => new ApiHatasi(422, 'OFFER_LIMIT_REACHED', 'Bu ilan yeterli sayıda teklif aldı');
+// Açık teklif sayısı `ILAN_AZAMI_TEKLIF`'e ulaşmamış ya da bu hizmet verenin
+// zaten teklif verdiği ilan (SQL parçası; `listings` tablosu üzerinde).
+const TEKLIFE_ACIK_YA_DA_KENDI = `((SELECT COUNT(*) FROM offers o WHERE o.listing_id = listings.id AND o.status = 'ACTIVE') < ${ILAN_AZAMI_TEKLIF}
+    OR EXISTS (SELECT 1 FROM offers k WHERE k.listing_id = listings.id AND k.provider_id = ?))`;
 const kural = (kod, mesaj) => new ApiHatasi(409, kod, mesaj);
 
 /**
@@ -222,6 +235,9 @@ export function ilanRotalar(r, db) {
     if (!l) throw hata.bulunamadi('İlan bulunamadı');
     return l;
   };
+  const acikTeklifSayisi = async (ilanId) => Number(
+    (await db.prepare(`SELECT COUNT(*) AS n FROM offers WHERE listing_id = ? AND status = 'ACTIVE'`).get(ilanId)).n,
+  );
 
   // ── İLAN ──
   r.post('/api/v1/listings', korumali(async (ctx) => {
@@ -297,8 +313,9 @@ export function ilanRotalar(r, db) {
     // 4 Kas: profil (telefon, adres, kategori, bölge) tamamlanmadan iş listesi açılmaz.
     await profilKapisi(db, ctx.kullanici, 'PROVIDER');
     await suresiDolanlariIsle(db);
-    const kosul = [`status = 'ACTIVE'`, 'selected_offer_id IS NULL', 'expires_at > ?', 'owner_id <> ?'];
-    const p = [simdi(), ctx.kullanici.id];
+    // 5 Kas: 3 açık teklifi dolan ilan, teklif vermemiş hizmet verene görünmez.
+    const kosul = [`status = 'ACTIVE'`, 'selected_offer_id IS NULL', 'expires_at > ?', 'owner_id <> ?', TEKLIFE_ACIK_YA_DA_KENDI];
+    const p = [simdi(), ctx.kullanici.id, ctx.kullanici.id];
     const kat = ctx.query.get('category');
     const ilce = ctx.query.get('district');
     if (kat) { kosul.push('title = ?'); p.push(kat); }
@@ -350,7 +367,9 @@ export function ilanRotalar(r, db) {
     // Hizmet veren: açık ilanı görür; teklif verdiği ilanı her durumda görür.
     if (u.roles.split(',').includes('PROVIDER')) {
       const teklifi = await db.prepare('SELECT 1 FROM offers WHERE listing_id = ? AND provider_id = ?').get(l.id, u.id);
-      if (teklifi || (l.status === 'ACTIVE' && !l.selected_offer_id)) return ilanGorunumu(l);
+      if (teklifi) return ilanGorunumu(l);
+      // 5 Kas: 3 açık teklifi dolan ilan teklif vermemiş hizmet verene görünmez.
+      if (l.status === 'ACTIVE' && !l.selected_offer_id && (await acikTeklifSayisi(l.id)) < ILAN_AZAMI_TEKLIF) return ilanGorunumu(l);
     }
     throw hata.bulunamadi('İlan bulunamadı');
   }));
@@ -413,10 +432,17 @@ export function ilanRotalar(r, db) {
     if (await db.prepare('SELECT 1 FROM offers WHERE listing_id = ? AND provider_id = ?').get(l.id, ctx.kullanici.id)) {
       throw kural('DUPLICATE_OFFER', 'Bu ilana zaten teklif verdiniz');
     }
+    if ((await acikTeklifSayisi(l.id)) >= ILAN_AZAMI_TEKLIF) throw teklifSiniriDoldu();
     const id = randomUUID();
     const z = simdi();
     try {
       await db.tx(async () => {
+        // ⚠ YARIŞ: iki hizmet veren aynı anda 3. teklifi verirse ikisi de
+        // ön denetimi geçebilir. İlan satırı bu işlemde kilitlenir
+        // (PostgreSQL satır kilidi; SQLite işlemleri zaten sıralı), sayım
+        // kilitten SONRA yeniden yapılır — 4. teklif hiçbir koşulda yazılmaz.
+        await db.prepare('UPDATE listings SET updated_at = updated_at WHERE id = ?').run(l.id);
+        if ((await acikTeklifSayisi(l.id)) >= ILAN_AZAMI_TEKLIF) throw teklifSiniriDoldu();
         await db.prepare(
           `INSERT INTO offers (id, listing_id, provider_id, amount_tl, note, status, idempotency_key, idem_hash, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)`,

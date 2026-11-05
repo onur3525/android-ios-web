@@ -756,7 +756,7 @@ class MockOfferPort extends OfferPort {
   /// ── ⚠ `expired` İLE `closed` AYRIMI (§24) ──
   ///
   /// Sözleşme iki ayrı durum tanımlıyor ve anlamları farklı:
-  ///   · `expired` → ilanın 30 saati DOLDUĞU için kapanan teklif
+  ///   · `expired` → ilanın 48 saati DOLDUĞU için kapanan teklif
   ///   · `closed`  → başka bir sistemsel neden (ilan silindi, admin
   ///     kaldırdı, rakip teklif seçildi)
   ///

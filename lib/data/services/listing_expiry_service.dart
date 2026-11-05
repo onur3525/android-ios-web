@@ -1,3 +1,4 @@
+import '../../domain/config.dart';
 import '../../domain/listing_state_machine.dart';
 import '../models/offer.dart';
 import '../models/listing.dart';
@@ -8,7 +9,7 @@ import '../repositories/notification_repository.dart';
 
 /// İLAN SÜRESİ KURALI — sistem servisi (UI geri sayımından bağımsız).
 ///
-/// 30 saati dolan ve hâlâ OPEN olan ilanları EXPIRED durumuna taşır;
+/// 48 saati dolan ve hâlâ OPEN olan ilanları EXPIRED durumuna taşır;
 /// iletişimi açılmamış tüm teklif blokelerini sahiplerine iade eder
 /// (tüketilmiş ücretler ASLA iade edilmez — teklif kuralı).
 ///
@@ -21,7 +22,7 @@ class ListingExpiryService {
   final MockOfferPort _offerPort;
   final NotificationRepository? _notifs;
 
-  /// YALNIZ MOCK MOD: API modunda 30 saat kuralını sunucudaki zamanlayıcı
+  /// YALNIZ MOCK MOD: API modunda 48 saat kuralını sunucudaki zamanlayıcı
   /// işler; bu servis kurulmaz.
   ListingExpiryService(this._listings, this._offerPort,
       {NotificationRepository? notifications})
@@ -39,7 +40,7 @@ class ListingExpiryService {
       // Tekil `expire` ve backend işi (`selected_offer_id IS NULL`) aynı
       // kuralı uygular; toplu tarama da aynı tek kaynak yardımcıyı kullanır.
       if (l.isTamamlanmisIs) continue;
-      if (t.isBefore(l.expiresAt)) continue;        // 31s59dk → hâlâ açık
+      if (t.isBefore(l.expiresAt)) continue;        // süre dolmadı → hâlâ açık
       if (!ListingStateMachine.canTransition(
           l.status, ListingStatus.expired)) continue;
       _offerPort.cancelAllForListing(l.id,
@@ -48,7 +49,9 @@ class ListingExpiryService {
       _notifs?.push(
           userId: l.ownerId, type: NotifType.listingExpired, refId: l.id,
           title: 'İlan süreniz doldu',
-          body: '"${l.title}" ilanı 30 saatlik süre sonunda otomatik kapandı.');
+          body: '"${l.title}" ilanı '
+              '${DomainConfig.listingLifetime.inHours} saatlik süre sonunda '
+              'otomatik kapandı.');
       n++;
     }
     return n;

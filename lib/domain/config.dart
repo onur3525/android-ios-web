@@ -21,6 +21,10 @@ abstract final class DomainConfig {
   /// ⚠ Bu bir ÜCRET ya da hizmet veren kotası DEĞİLDİR: ilan sahibi
   /// yönetilebilir sayıda teklif görsün diye konmuş ürün kuralıdır.
   /// Hizmet verenin kaç ilana teklif verebileceği SINIRSIZDIR.
+  ///
+  /// 5 Kas (kullanıcı kararı): sınır sunucuda da zorlanır
+  /// (backend/src/routes/ilan.js `ILAN_AZAMI_TEKLIF`); 3 açık teklif olunca
+  /// ilan, teklif vermemiş hizmet verenlerin listesinden ve detayından kalkar.
   static const int ilanBasinaMaxTeklif = 3;
 
 
@@ -89,9 +93,12 @@ abstract final class DomainConfig {
       'HizmetCep ile İzmir\'de güvenilir ustalara ücretsiz ilan verin, '
       'dakikalar içinde teklif alın! İndirmek için: $paylasimAdresi';
 
-  /// İlan yayın süresi: her ilan yayınlandığı andan itibaren 30 SAAT aktiftir
+  /// İlan yayın süresi: her ilan yayınlandığı andan itibaren 48 SAAT aktiftir
   /// (expiresAt = createdAt + listingLifetime).
-  static const Duration listingLifetime = Duration(hours: 30);
+  ///
+  /// 5 Kas (kullanıcı kararı): 30 → 48 saat. Sunucu karşılığı:
+  /// backend/src/routes/ilan.js `ILAN_OMRU_MS` (asıl kural sunucuda).
+  static const Duration listingLifetime = Duration(hours: 48);
 
   /// HİZMET BÖLGESİ OTOMATİK GENİŞLEME EŞİĞİ
   ///

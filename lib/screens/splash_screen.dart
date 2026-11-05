@@ -402,7 +402,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // basmadan, hiçbir bilgi girmeden.
       //
       // ⚠ ÇİFT ROLLÜ HESAPTA HİZMET VEREN ÖNCELİKLİ: gelen iş
-      // ilanları 30 saat içinde kapanır ve teklif yarışı vardır;
+      // ilanları 48 saat içinde kapanır ve teklif yarışı vardır;
       // hizmet alan tarafı bekleyebilir.
       //
       // Oturum yoksa kural işlemez ve normal karşılama açılır —

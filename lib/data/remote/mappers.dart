@@ -75,7 +75,7 @@ abstract final class Mappers {
   /// ⚠ `WITHDRAWN` ve `CANCELLED` NİHAİ SÖZLEŞMEDE YOKTUR. Geçiş
   /// döneminde sunucu gönderirse `closed`a eşlenir — ikisi de
   /// "sistemsel kapanış" anlamına gelir. `expired` ile
-  /// KARIŞTIRILMAZ: o yalnız 30 saat dolumu içindir.
+  /// KARIŞTIRILMAZ: o yalnız 48 saat dolumu içindir.
   ///
   /// ⚠ BACKEND'E NOT: eski iki değer sunucudan kalktığında bu satır
   /// da kaldırılmalıdır.

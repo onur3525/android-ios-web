@@ -797,7 +797,7 @@ class ApiListingPort extends ListingPort {
     return (listing: l, error: err);
   }
 
-  /// Süre dolumu SUNUCUDA (30 saat zamanlayıcısı) işlenir; istemci tetiklemez.
+  /// Süre dolumu SUNUCUDA (48 saat zamanlayıcısı) işlenir; istemci tetiklemez.
   @override
   Future<DomainError?> expire(String listingId, {required String actorId}) async =>
       const InvalidStateError('Süre dolumu sunucu tarafından yönetilir');

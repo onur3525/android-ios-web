@@ -25,7 +25,7 @@ enum ListingStatus {
   /// ilanın kendisi ACTIVE kalır — tamamlanmışlık ayrı alandadır.
   active,
 
-  /// 30 saat doldu; yeni teklif ve yeni iletişim açma yapılamaz.
+  /// 48 saat doldu; yeni teklif ve yeni iletişim açma yapılamaz.
   expired,
 
   /// Kullanıcı kendi ilanını sildi.

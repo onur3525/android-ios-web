@@ -152,7 +152,7 @@ void main() {
       final l2 = listings.create(
           ownerId: cust, title: 'Klima', location: 'Konak, İzmir',
           desc: 'Klima montajı lazım beş kelime',
-          createdAt: DateTime.now().subtract(const Duration(hours: 40)));
+          createdAt: DateTime.now().subtract(const Duration(hours: 50)));
       expiry.sweep();
       expect(
           notifs
