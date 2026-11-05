@@ -157,18 +157,53 @@ onayla yapılır). Ardından:
 
 ---
 
+## Adım 10 — Otomatik yayın (bir kez)
+
+Bu adımdan sonra main dalına birleştirilen her değişiklik, backend
+testleri geçince sunucuya **kendiliğinden** yüklenir (Render'daki gibi).
+Test başarısızsa yayın yapılmaz; yeni sürüm açılmazsa sunucu önceki
+sürüme kendiliğinden döner ve GitHub size e-posta gönderir.
+
+1. Termius'ta önce sunucuyu güncelleyin, sonra anahtarı üretin:
+
+   ```
+   bash /opt/hizmetcep/uygulama/sunucu/guncelle.sh
+   bash /opt/hizmetcep/uygulama/sunucu/yayin_anahtari_kur.sh
+   ```
+
+2. Ekrana iki değer yazılır. GitHub'da depo › **Settings** ›
+   **Secrets and variables** › **Actions** › **New repository secret**
+   ile iki gizli ekleyin:
+   - `HC_SUNUCU_SSH_ANAHTARI` → uzun tek satır
+   - `HC_SUNUCU_KIMLIGI` → `api.hizmetcep.com ssh-ed25519 …` satırı
+
+   Bu değerleri kimseyle (sohbet dahil) paylaşmayın; ekran görüntüsü
+   göndermeyin.
+
+3. Deneme: GitHub › **Actions** › **sunucu-yayin** › **Run workflow**.
+   Yeşil biterse kurulum tamamdır.
+
+Anahtar sunucuda yalnız `guncelle.sh`'yi çalıştırabilir; kabuk açamaz,
+dosya okuyamaz. İptal etmek için GitHub'daki gizliyi silmek ya da
+sunucuda `sed -i '/ hizmetcep-github-yayin$/d' /root/.ssh/authorized_keys`
+yeterlidir.
+
+---
+
 ## Günlük işler
 
 | İş | Komut |
 |---|---|
-| Yeni sürümü yayınla | `bash /opt/hizmetcep/uygulama/sunucu/guncelle.sh` |
+| Yeni sürümü yayınla | Otomatik (Adım 10). Elle: `bash /opt/hizmetcep/uygulama/sunucu/guncelle.sh` |
+| Değişiklik olmasa da yeniden kur | `bash /opt/hizmetcep/uygulama/sunucu/guncelle.sh --zorla` |
 | Durum | `systemctl status hizmetcep caddy postgresql --no-pager` |
 | Son günlükler | `journalctl -u hizmetcep -n 100 --no-pager` |
 | Yeniden başlat | `systemctl restart hizmetcep` |
 | Disk doluluğu | `df -h /` |
 
-Güncelleme betiği önce yedek alır, uygulama 60 saniyede hazır olmazsa
-günlükleri ve geri dönüş komutunu yazar.
+Güncelleme betiği değişiklik yoksa hiçbir şey yapmaz; varsa önce yedek
+alır, uygulama 60 saniyede hazır olmazsa günlükleri yazar ve önceki
+sürüme kendiliğinden döner.
 
 **Kesinti bildirimi:** uptimerobot.com'da ücretsiz hesap açın →
 *New monitor* → HTTP(s) → `https://api.hizmetcep.com/readyz` → 5 dakika →

@@ -1,0 +1,91 @@
+# ═══════════════════════════════════════════════════════════════
+# HizmetCep — SUNUCUYA OTOMATİK YAYIN (api.hizmetcep.com)
+#
+# Ne zaman çalışır?
+#   • main dalına birleştirilen bir değişikliğin "backend" testleri
+#     (SQLite + PostgreSQL) BAŞARIYLA bittiğinde. Test başarısızsa yayın
+#     yapılmaz. Birleştirme olmadan (yalnız dalda/PR'da) hiçbir şey
+#     sunucuya gitmez.
+#   • Elle: Actions › sunucu-yayin › Run workflow.
+#
+# Nasıl? Kısıtlı bir SSH anahtarıyla sunucuya bağlanır; anahtar sunucuda
+# YALNIZ sunucu/guncelle.sh'yi çalıştırabilir (yayin_anahtari_kur.sh).
+# guncelle.sh yedek alır, kodu çeker, yeniden başlatır, sağlığı denetler;
+# açılmazsa önceki sürüme kendiliğinden döner ve bu iş KIRMIZI biter
+# (GitHub e-posta ile bildirir).
+#
+# Gerekli gizliler (Settings › Secrets and variables › Actions):
+#   HC_SUNUCU_SSH_ANAHTARI  — yayin_anahtari_kur.sh çıktısındaki tek satır
+#   HC_SUNUCU_KIMLIGI       — aynı çıktıdaki sunucu kimliği satırı
+# Gizliler yoksa iş uyarı yazıp geçer (yayın yapılmaz).
+# ═══════════════════════════════════════════════════════════════
+name: sunucu-yayin
+on:
+  workflow_run:
+    workflows: [backend]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: sunucu-yayin
+  cancel-in-progress: false
+jobs:
+  yayin:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Gizliler var mı?
+        id: gizli
+        env:
+          ANAHTAR: ${{ secrets.HC_SUNUCU_SSH_ANAHTARI }}
+          KIMLIK: ${{ secrets.HC_SUNUCU_KIMLIGI }}
+        run: |
+          if [ -z "$ANAHTAR" ] || [ -z "$KIMLIK" ]; then
+            echo "::warning::HC_SUNUCU_SSH_ANAHTARI / HC_SUNUCU_KIMLIGI tanımlı değil; yayın atlandı (sunucu/KURULUM.md › Otomatik yayın)."
+            echo "var=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "var=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Yayınlanacak sürüm
+        if: steps.gizli.outputs.var == 'true'
+        id: surum
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Yayınlanacak: ${SHA:0:7}"
+
+      - name: Sunucuya yayınla
+        if: steps.gizli.outputs.var == 'true'
+        env:
+          ANAHTAR: ${{ secrets.HC_SUNUCU_SSH_ANAHTARI }}
+          KIMLIK: ${{ secrets.HC_SUNUCU_KIMLIGI }}
+          SHA: ${{ steps.surum.outputs.sha }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 ~/.ssh
+          umask 077
+          printf '%s' "$ANAHTAR" | base64 -d > ~/.ssh/yayin
+          printf '%s\n' "$KIMLIK" > ~/.ssh/known_hosts
+          # Sunucudaki anahtar kısıtı komutu yok sayar ve guncelle.sh'yi
+          # çalıştırır; gönderilen sürüm kimliği yalnız karşılaştırma içindir.
+          ssh -i ~/.ssh/yayin \
+              -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o IdentitiesOnly=yes \
+              -o ServerAliveInterval=30 \
+              -o ConnectTimeout=20 \
+              root@api.hizmetcep.com "$SHA"
+
+      - name: Anahtarı sil
+        if: always()
+        run: rm -f ~/.ssh/yayin
