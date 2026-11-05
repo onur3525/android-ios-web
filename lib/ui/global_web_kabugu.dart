@@ -9,6 +9,8 @@ import 'ref_tokens.dart';
 import 'ref_widgets.dart';
 import 'web_kenar_cubugu.dart';
 import '../screens/nav_actions.dart';
+import '../screens/profil_tamamlama_screen.dart' show ProfilTamamlamaScreen;
+import '../screens/sosyal_kayit_screen.dart' show SosyalKayitScreen;
 import '../data/models/account.dart';
 import '../data/controllers/auth_controller.dart';
 import 'package:provider/provider.dart';
@@ -306,6 +308,23 @@ class GlobalWebKabugu extends StatelessWidget {
 /// ═══════════════════════════════════════════════════════════════
 /// Sekme deposunda açık ekranın anahtarı (yalnız web).
 const String kSekmeRota = 'hc.sekme.rota';
+
+/// ── ⚠ YENİLEMEDE GERİ DÖNÜLMEYEN EKRANLAR — TEK KAYNAK (5 Kas) ──
+///
+/// Kayıt/doğrulama akışının ekranları önceki adımdan gelen ve yalnız
+/// bellekte duran bilgiye (Google kimliği, SMS kodu kaydı) muhtaçtır;
+/// tek başına kurulamaz. Chrome sekmeyi geri açınca bunlara dönülmeye
+/// çalışılıyor ve "Sayfa bulunamadı" çıkıyordu (kullanıcı bulgusu).
+/// Bu adlar sekme deposuna YAZILMAZ; eski sürümden kalmış bir kayıt
+/// varsa açılışta YOK SAYILIR (bkz. main.dart `acilisRotasi`).
+/// ('/baglaniyor' geçici bekleme ekranı ayrıca denetlenir; bkz. `_yaz`.)
+const Set<String> kGeriYuklenmeyenRotalar = {
+  SosyalKayitScreen.rotaAdi,
+  ProfilTamamlamaScreen.rotaAdi,
+  '/kayit',
+  '/dogrulama',
+  '/sifremi-unuttum',
+};
 const String kSekmeRotaArg = 'hc.sekme.rota.arg';
 
 class AktifRota extends NavigatorObserver {
@@ -335,6 +354,7 @@ class AktifRota extends NavigatorObserver {
         yeni != null &&
         yeni.startsWith('/') &&
         yeni != '/' &&
+        !kGeriYuklenmeyenRotalar.contains(yeni) &&
         yeni != '/baglaniyor') {
       // Argüman (ör. yasal metnin slug/başlığı) JSON'a çevrilebiliyorsa
       // birlikte saklanır; çevrilemiyorsa (nesne argüman) rota YAZILMAZ —

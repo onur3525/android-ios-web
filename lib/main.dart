@@ -574,8 +574,13 @@ Future<void> main() async {
       // ekran; oturumsuzsa yalnız oturum gerektirmeyen ekranlar. Rota
       // yine onGenerateRoute + RoleGuard'dan geçer (yetki atlanamaz).
       final kayitli = sekmeOku(kSekmeRota);
+      // 5 Kas: kayıt/doğrulama akışı ekranlarına geri dönülmez (eski
+      // sürümden kalmış kayıt dahil) — başlangıç ekranı açılır.
       if (kayitli != null &&
+          !kGeriYuklenmeyenRotalar.contains(kayitli) &&
           (acc != null || _kOturumsuzAcilabilir.any(kayitli.startsWith))) {
+        HizmetCepApp.geriYuklenenRota = kayitli;
+        HizmetCepApp.yedekRota = rota;
         final argHam = sekmeOku(kSekmeRotaArg);
         if (argHam == null) {
           return (rota: kayitli, argRota: null, arg: null);
@@ -1060,11 +1065,32 @@ class HizmetCepApp extends StatelessWidget {
         //
         // ⚠ `onGenerateRoute`tan SONRA: o, tanıdığı adresleri zaten
         // karşılar; 404 yalnız geriye kalan için devreye girer.
-        onUnknownRoute: (settings) => MaterialPageRoute<void>(
-          settings: settings,
-          builder: (_) => const BulunamadiScreen(),
-        ),
+        //
+        // ⚠ 5 Kas: kaldığı ekrana dönülürken (sekme geri açıldı/yenilendi)
+        // o ekran kurulamazsa 404 GÖSTERİLMEZ; başlangıç ekranına (rol
+        // ekranı ya da ana sayfa) geçilir. Elle yazılan yanlış adres yine 404.
+        onUnknownRoute: (settings) {
+          final yedek = yedekRota;
+          if (settings.name != null &&
+              settings.name == geriYuklenenRota &&
+              yedek != null) {
+            geriYuklenenRota = null;
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => _BaslangicaDon(yedek),
+            );
+          }
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => const BulunamadiScreen(),
+          );
+        },
       );
+
+  /// Açılışta geri dönülmeye çalışılan (sekmede saklı) ekran ve o
+  /// kurulamazsa açılacak başlangıç ekranı (yalnız web; bkz. main()).
+  static String? geriYuklenenRota;
+  static String? yedekRota;
 
   /// `/ilan/abc` gibi bir adresten kimliği çıkarır; eşleşmezse `null`.
   ///
@@ -1187,4 +1213,38 @@ class MockDepolar {
       }
     });
   }
+}
+
+/// Geri dönülecek ekran kurulamadığında ilk karede başlangıç ekranına
+/// geçer: yığında önceki ekran varsa yalnız bu kapanır, yoksa başlangıç
+/// ekranı yerine açılır (5 Kas).
+class _BaslangicaDon extends StatefulWidget {
+  const _BaslangicaDon(this.hedef);
+
+  final String hedef;
+
+  @override
+  State<_BaslangicaDon> createState() => _BaslangicaDonState();
+}
+
+class _BaslangicaDonState extends State<_BaslangicaDon> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final nav = Navigator.of(context);
+      if (nav.canPop()) {
+        nav.pop();
+      } else {
+        nav.pushReplacementNamed(widget.hedef);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      const ColoredBox(color: Colors.white, child: SizedBox.expand());
 }
