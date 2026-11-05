@@ -71272,14 +71272,15 @@
         return A.Text$(metin, _null, 1, B.TextOverflow_2, _null, _null, gri, _null, _null);
       return A.RichText$(_null, _null, 1, B.TextOverflow_2, _null, _null, true, _null, A.TextSpan$0(A._setArrayType([A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, A.refText(B.Color_Df4, _null, _null, 0, t1 ? 14.5 : boyut, B.FontWeight_700), "* "), A.TextSpan$0(_null, _null, _null, _null, _null, _null, _null, _null, _null, _null, metin)], type$.JSArray_InlineSpan), _null, _null, _null, _null, _null, _null, _null, _null, gri, _null), B.TextAlign_4, _null, _null, B._LinearTextScaler_1, B.TextWidthBasis_0);
     },
-    refIkonluAlanDekoru(yerTutucu, ikon, hata, suffix, zorunlu) {
+    refIkonluAlanDekoru(yerTutucu, ikon, eksik, hata, suffix, zorunlu) {
       var _null = null,
         t1 = new A.refIkonluAlanDekoru_cerceve(),
+        normal = eksik ? B.Color_wuX : B.Color_ZWy,
         t2 = A.refYerTutucu(yerTutucu, 15, zorunlu),
-        t3 = t1.call$1(B.Color_ZWy),
-        t4 = t1.call$1(B.Color_ZWy),
-        t5 = t1.call$1(B.Color_ZWy),
-        t6 = t1.call$1(B.Color_Dun),
+        t3 = t1.call$1(normal),
+        t4 = t1.call$1(normal),
+        t5 = t1.call$1(normal),
+        t6 = t1.call$1(eksik ? B.Color_wuX : B.Color_Dun),
         t7 = t1.call$1(B.Color_wuX);
       t1 = t1.call$1(B.Color_wuX);
       return A.InputDecoration$(_null, t3, _null, B.EdgeInsets_15_14_15_14, _null, _null, "", t5, true, t4, _null, t7, 2, A.refText(B.Color_wuX, _null, _null, 0, 11.5, B.FontWeight_600), hata, B.Color_wst, true, _null, _null, _null, _null, t6, t1, _null, _null, _null, _null, t2, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, _null, _null, _null, true, true, false, _null, new A.Padding(B.EdgeInsets_15_0_12_0, new A.RefSvg(ikon, 20, B.Color_5AO, _null), _null), _null, B.BoxConstraints_vXB, _null, _null, _null, _null, suffix, _null, B.BoxConstraints_NQn, _null, _null, _null);
@@ -277986,7 +277987,7 @@
       t5 = A.Text$(t5, _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null);
       t6 = !t1;
       t7 = t6 && !_this._profil_tamamlama_screen$_mesgul;
-      t7 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this._telefon, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru("5XX XXX XX XX", "assets/svg/ic_phone.svg", _null, t1 ? B.Tooltip_wkk : _null, true), B.DragStartBehavior_1, true, _null, true, t7, false, _null, B.Type_EditableText_O5i, _null, _null, B.List_TelefonBicimlendirici, _null, B.TextInputType_2_false_false, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, _this.get$_telefonDegisti(), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, B.TextInputAction_2, _null, _null);
+      t7 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this._telefon, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru("5XX XXX XX XX", "assets/svg/ic_phone.svg", false, _null, t1 ? B.Tooltip_wkk : _null, true), B.DragStartBehavior_1, true, _null, true, t7, false, _null, B.Type_EditableText_O5i, _null, _null, B.List_TelefonBicimlendirici, _null, B.TextInputType_2_false_false, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, _this.get$_telefonDegisti(), _null, _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, B.TextInputAction_2, _null, _null);
       t8 = _this._il;
       t1 = _this._profil_tamamlama_screen$_mesgul;
       t9 = A.RefRegDropdown$("assets/svg/ic_pin.svg", "\u0130l", t1 ? _null : _this.get$_ilSec(), t8);
@@ -278007,7 +278008,7 @@
         t1 = _this.get$_kodGonderildi() && !_this._profil_tamamlama_screen$_mesgul && !_this._otomatikDogrulandi;
         t3 = A._setArrayType([$.$get$FilteringTextInputFormatter_digitsOnly(), A.LengthLimitingTextInputFormatter$(6, _null)], type$.JSArray_TextInputFormatter);
         t4 = _this._otomatikDogrulandi ? "Numaran\u0131z otomatik do\u011fruland\u0131" : "Telefonunuza gelen 6 haneli kodu girin";
-        B.JSArray_methods.addAll$1(t12, A._setArrayType([B.SizedBox_null_4_null_null, A.TextField$(_null, B.List_oneTimeCode, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this._kod, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru(t4, "assets/svg/ic_plock.svg", _this._kodHata, _null, false), B.DragStartBehavior_1, true, _null, true, t1, false, _this._fKod, B.Type_EditableText_O5i, _null, _null, t3, _null, B.TextInputType_2_false_false, _null, 6, _null, 1, _null, _null, false, "\u2022", _null, new A._ProfilTamamlamaScreenState_build_closure0(_this), _null, new A._ProfilTamamlamaScreenState_build_closure1(_this), _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, B.TextInputAction_2, _null, _null), _this._kodAltSatiri$0()], t8));
+        B.JSArray_methods.addAll$1(t12, A._setArrayType([B.SizedBox_null_4_null_null, A.TextField$(_null, B.List_oneTimeCode, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), _this._kod, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru(t4, "assets/svg/ic_plock.svg", false, _this._kodHata, _null, false), B.DragStartBehavior_1, true, _null, true, t1, false, _this._fKod, B.Type_EditableText_O5i, _null, _null, t3, _null, B.TextInputType_2_false_false, _null, 6, _null, 1, _null, _null, false, "\u2022", _null, new A._ProfilTamamlamaScreenState_build_closure0(_this), _null, new A._ProfilTamamlamaScreenState_build_closure1(_this), _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_30, _null, B.TextInputAction_2, _null, _null), _this._kodAltSatiri$0()], t8));
       }
       t1 = _this._profil_tamamlama_screen$_hata;
       if (t1 != null)
@@ -282214,6 +282215,7 @@
     },
     build$1(context) {
       var t6, t7, t8, _this = this, _null = null,
+        _s24_ = "assets/svg/ic_person.svg",
         t1 = A.WebPanel_panelMi(context) ? B.Color_Edl : B.Color_wst,
         t2 = type$.JSArray_Widget,
         t3 = A._setArrayType([A.Align$(B.Alignment_m1_0, new A.RefBackButton(new A._SosyalKayitScreenState_build_closure(context), false, _null), _null, _null, _null), B.SizedBox_null_6_null_null, A.Text$("HizmetCep \xdcyelik Ko\u015fullar\u0131", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, -0.3, 25, B.FontWeight_700), B.TextAlign_2, _null), B.SizedBox_null_8_null_null, A.Text$("Hesab\u0131n\u0131z\u0131 tamamlamak i\xe7in a\u015fa\u011f\u0131daki ko\u015fullar\u0131 kabul edin.", _null, _null, _null, _null, _null, A.refText(B.Color_BhF, _null, 1.45, 0, 14.5, B.FontWeight_400), B.TextAlign_2, _null), B.SizedBox_null_20_null_null], t2),
@@ -282226,14 +282228,14 @@
       if (t4) {
         t4 = _this._sosyal_kayit_screen$_ad;
         t5 = _this._sosyal_kayit_screen$_mesgul;
-        t6 = A.InputDecoration$(_null, new A.OutlineInputBorder(4, A.BorderRadius$circular(13), B.BorderSide_ViT), _null, _null, _null, _null, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, "Ad *", true, true, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null);
-        t7 = t4._change_notifier$_value.text;
-        t4 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t4, _null, _null, _null, _null, _null, 2, t6.copyWith$1$errorText(B.JSString_methods.trim$0(t7).length === 0 ? _null : A.Validators_name(t7, "ad", 3)), B.DragStartBehavior_1, true, _null, true, !t5, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._SosyalKayitScreenState_build_closure0(_this), new A._SosyalKayitScreenState_build_closure1(_this), _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_00, _null, B.TextInputAction_6, _null, _null);
+        t6 = t4._change_notifier$_value.text;
+        t7 = B.JSString_methods.trim$0(t6).length === 0;
+        t4 = A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t4, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru("Ad", _s24_, t7, t7 ? _null : A.Validators_name(t6, "ad", 3), _null, true), B.DragStartBehavior_1, true, _null, true, !t5, false, _null, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._SosyalKayitScreenState_build_closure0(_this), new A._SosyalKayitScreenState_build_closure1(_this), _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_00, _null, B.TextInputAction_6, _null, _null);
         t5 = _this._soyad;
         t6 = _this._sosyal_kayit_screen$_mesgul;
-        t7 = A.InputDecoration$(_null, new A.OutlineInputBorder(4, A.BorderRadius$circular(13), B.BorderSide_ViT), _null, _null, _null, _null, _null, _null, true, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, "Soyad *", true, true, false, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null);
-        t8 = t5._change_notifier$_value.text;
-        B.JSArray_methods.addAll$1(t3, A._setArrayType([t4, B.SizedBox_null_12_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t5, _null, _null, _null, _null, _null, 2, t7.copyWith$1$errorText(B.JSString_methods.trim$0(t8).length === 0 ? _null : A.Validators_name(t8, "soyad", 2)), B.DragStartBehavior_1, true, _null, true, !t6, false, _this._fSoyad, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._SosyalKayitScreenState_build_closure2(_this), new A._SosyalKayitScreenState_build_closure3(context), _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_00, _null, B.TextInputAction_2, _null, _null), B.SizedBox_null_4_null_null], t2));
+        t7 = t5._change_notifier$_value.text;
+        t8 = B.JSString_methods.trim$0(t7).length === 0;
+        B.JSArray_methods.addAll$1(t3, A._setArrayType([t4, B.SizedBox_null_12_null_null, A.TextField$(_null, B.List_empty0, false, _null, true, B.Clip_1, _null, A.text_field_TextField__defaultContextMenuBuilder$closure(), t5, _null, _null, _null, _null, _null, 2, A.refIkonluAlanDekoru("Soyad", _s24_, t8, t8 ? _null : A.Validators_name(t7, "soyad", 2), _null, true), B.DragStartBehavior_1, true, _null, true, !t6, false, _this._fSoyad, B.Type_EditableText_O5i, _null, _null, _null, _null, _null, _null, _null, _null, 1, _null, _null, false, "\u2022", _null, new A._SosyalKayitScreenState_build_closure2(_this), new A._SosyalKayitScreenState_build_closure3(context), _null, _null, false, _null, _null, false, _null, true, _null, B.EdgeInsets_20_20_20_20, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, _null, true, B.TextAlign_4, _null, B.TextCapitalization_00, _null, B.TextInputAction_2, _null, _null), B.SizedBox_null_4_null_null], t2));
       }
       if (_this._widget.rol == null)
         B.JSArray_methods.addAll$1(t3, A._setArrayType([B.SizedBox_null_16_null_null, A.Text$("HizmetCep'i nas\u0131l kullanacaks\u0131n\u0131z? *", _null, _null, _null, _null, _null, A.refText(B.Color_MXH, _null, _null, 0, 14, B.FontWeight_700), _null, _null), B.SizedBox_null_8_null_null, _this._rolSecimi$0()], t2));
@@ -314385,7 +314387,6 @@
     B.BorderSide_EW2 = new A.BorderSide(B.Color_Dun, 1.4, B.BorderStyle_1, -1);
     B.Color_ZWy = new A.Color(1, 0.9058823529411765, 0.9176470588235294, 0.9372549019607843, B.ColorSpace_0);
     B.BorderSide_OnW = new A.BorderSide(B.Color_ZWy, 1.5, B.BorderStyle_1, -1);
-    B.BorderSide_ViT = new A.BorderSide(B.Color_vnR, 1, B.BorderStyle_1, -1);
     B.Color_Edl = new A.Color(0, 0, 0, 0, B.ColorSpace_0);
     B.BorderSide_WQi = new A.BorderSide(B.Color_Edl, 1, B.BorderStyle_1, -1);
     B.Color_wuX = new A.Color(1, 0.8980392156862745, 0.27058823529411763, 0.17254901960784313, B.ColorSpace_0);
@@ -321495,6 +321496,7 @@
     B.UnauthorizedError_kQn = new A.UnauthorizedError("De\u011ferlendirmeyi yaln\u0131zca talebi g\xf6nderen yapabilir");
     B.UnauthorizedError_sHr = new A.UnauthorizedError("\u0130leti\u015fimi yaln\u0131zca teklifin sahibi veya ilan sahibi a\xe7abilir");
     B.UnauthorizedError_xlJ = new A.UnauthorizedError("De\u011ferlendirmeyi yaln\u0131zca ilan sahibi yapabilir");
+    B.BorderSide_ViT = new A.BorderSide(B.Color_vnR, 1, B.BorderStyle_1, -1);
     B.UnderlineInputBorder_x70 = new A.UnderlineInputBorder(B.BorderRadius_POr, B.BorderSide_ViT);
     B.UndoDirection_0 = new A.UndoDirection(0, "undo");
     B.UndoDirection_1 = new A.UndoDirection(1, "redo");
