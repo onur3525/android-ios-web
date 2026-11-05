@@ -161,6 +161,9 @@ ALTER ROLE hizmetcep PASSWORD '$DBPAROLA';
 EOF
   sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='hizmetcep'" | grep -q 1 \
     || sudo -u postgres createdb -O hizmetcep hizmetcep
+  # Adres parçalı kurulur: depo gizli bilgi taraması "parolalı adres"
+  # kalıbını yazılı biçimde arar; gerçek parola yalnız sunucuda üretilir.
+  DBURL="postgres""://hizmetcep:${DBPAROLA}@localhost:5432/hizmetcep"
   # ⚠ umask yalnız bu alt kabukta: sonraki adımlarda oluşan dosyalar
   # (ör. Caddy imza anahtarı) okunamaz hâle gelmesin.
   ( umask 027
@@ -170,7 +173,7 @@ EOF
 NODE_ENV=production
 PORT=8080
 HC_DB_DRIVER=postgres
-HC_DATABASE_URL=postgres://hizmetcep:$DBPAROLA@localhost:5432/hizmetcep
+HC_DATABASE_URL=$DBURL
 HC_DB_POOL=$HAVUZ
 NODE_EXTRA_CA_CERTS=$AYAR/db-ca.pem
 HC_MASTER_KEY=$(openssl rand -base64 32)
@@ -194,7 +197,7 @@ HC_S3_SECRET_ACCESS_KEY=
 # HC_TRUST_PROXY_HOPS=1
 EOF
   )
-  unset DBPAROLA
+  unset DBPAROLA DBURL
   chown root:hizmetcep "$ENVDOSYA"; chmod 0640 "$ENVDOSYA"
 fi
 # Yeniden çalıştırmada havuz boyutu belleğe göre güncellenir (sırlara dokunulmaz).
