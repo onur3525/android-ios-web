@@ -271,6 +271,10 @@ class AuthController extends BaseController {
   Future<DomainError?> changePassword(String current, String next) =>
       runAction('changePassword', () => _auth.changePassword(current, next));
 
+  /// Google/Apple hesabına şifre oluşturur (isteğe bağlı, 5 Kas).
+  Future<DomainError?> sifreOlustur(String yeni) =>
+      runAction('sifreOlustur', () => _auth.sifreOlustur(yeni));
+
   /// Kritik işlem öncesi şifre doğrulaması (hesap silme).
   Future<DomainError?> verifyPassword(String password) =>
       runAction('verifyPassword', () => _auth.verifyPassword(password));

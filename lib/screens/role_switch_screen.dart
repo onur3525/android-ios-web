@@ -6,7 +6,6 @@ import '../data/controllers/auth_controller.dart';
 import '../data/models/account.dart';
 import '../ui/ref_tokens.dart';
 import '../ui/ref_widgets.dart';
-import '../ui/sifre_dogrulama_paneli.dart' show sosyalIleDogrula;
 
 /// ROL DEĞİŞTİR
 ///
@@ -113,27 +112,10 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
     final acc = auth.currentAccount;
 
     if (acc != null && !_rolVar(acc, hedef)) {
-      // ⚠ API MODU: sunucu rol eklemeden önce şifre ve kayıtlı telefona
-      // gönderilen YENİ bir SMS doğrulaması ister. Mock modda gerekmez.
-      String? sifre;
-      String? kanit;
-      if (auth.rolEklemeDogrulamaIster) {
-        final d = await _rolEklemeDogrula(auth, acc.phone);
-        if (!mounted) {
-          return;
-        }
-        if (d == null) {
-          setState(() => _busy = false);
-          return;
-        }
-        sifre = d.sifre;
-        kanit = d.kanit;
-      }
-      final ekleErr = await auth.addRole(
-        hedef,
-        sifre: sifre,
-        telefonKaniti: kanit,
-      );
+      // ⚠ 5 Kas (kullanıcı kararı): rol eklerken kimlik doğrulaması
+      // (şifre / Google-Apple yeniden girişi) İSTENMEZ. Yeni rolde eksik
+      // bilgiler tamamlanmadan o rolün işlemleri zaten açılmaz.
+      final ekleErr = await auth.addRole(hedef);
       if (!mounted) {
         return;
       }
@@ -163,116 +145,6 @@ class _RoleSwitchScreenState extends State<RoleSwitchScreen> {
       hedef == Role.provider ? '/provider/jobs' : '/customer/listings',
       (r) => false,
     );
-  }
-
-  /// ROL EKLEME DOĞRULAMASI (yalnız API modu).
-  ///
-  /// ⚠ 21 Eki (kullanıcı kararı): telefon numarası ve SMS kodu
-  /// İSTENMEZ. Yalnız şifre sorulur (sunucuda doğrulanır); vazgeçilirse
-  /// `null`.
-  Future<({String sifre, String? kanit})?> _rolEklemeDogrula(
-      AuthController auth, String telefon) async {
-    final sifre = await _sifreAl(auth);
-    if (sifre == null || !mounted) {
-      return null;
-    }
-    return (sifre: sifre, kanit: null);
-  }
-
-  /// Şifre paneli — şifre sunucuda doğrulanır (`verifyPassword`);
-  /// doğruysa panel kapanır ve şifre döner. Ekran şifreyi SAKLAMAZ.
-  Future<String?> _sifreAl(AuthController auth) async {
-    // 4 Kas: Google/Apple ile açılmış şifresiz hesap → aynı sağlayıcıyla
-    // yeniden giriş (tek kaynak: `sosyalIleDogrula`).
-    if (auth.currentAccount?.sifresiVar == false) {
-      return sosyalIleDogrula(context,
-          aciklama: 'Hesabınıza yeni rol eklemek için kimliğinizi doğrulayın.',
-          renk: RC.blue);
-    }
-    final ctl = TextEditingController();
-    final hataNot = ValueNotifier<String?>(null);
-    final doluNot = ValueNotifier<bool>(false);
-    final mesgulNot = ValueNotifier<bool>(false);
-    String? dogrulanan;
-    try {
-      await RefBottomSheet.goster<void>(
-        context,
-        title: 'Kimliğinizi Doğrulayın',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Hesabınıza yeni rol eklemek için şifrenizi girin.',
-              style: refText(
-                  size: RF.s135,
-                  weight: RF.w400,
-                  color: RC.textDark,
-                  height: RF.lh155),
-            ),
-            const SizedBox(height: 14),
-            ValueListenableBuilder<String?>(
-              valueListenable: hataNot,
-              builder: (_, hata, __) => TextField(
-                controller: ctl,
-                obscureText: true,
-                textCapitalization: TextCapitalization.none,
-                autofocus: true,
-                onChanged: (_) {
-                  if (hataNot.value != null) {
-                    hataNot.value = null;
-                  }
-                  doluNot.value = ctl.text.trim().isNotEmpty;
-                },
-                decoration: InputDecoration(
-                  hintText: 'Şifreniz',
-                  errorText: hata,
-                  errorMaxLines: 2,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Builder(
-              builder: (c) => ValueListenableBuilder<bool>(
-                valueListenable: doluNot,
-                builder: (_, dolu, __) => ValueListenableBuilder<bool>(
-                  valueListenable: mesgulNot,
-                  builder: (_, mesgul, __) => RefPrimaryButton(
-                    'Devam Et',
-                    busy: mesgul,
-                    onPressed: !dolu || mesgul
-                        ? null
-                        : () async {
-                            mesgulNot.value = true;
-                            final err = await auth.verifyPassword(ctl.text);
-                            mesgulNot.value = false;
-                            if (err != null) {
-                              hataNot.value = err.message;
-                              return;
-                            }
-                            dogrulanan = ctl.text;
-                            if (c.mounted) {
-                              Navigator.of(c).pop();
-                            }
-                          },
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      // Panel kapanma animasyonu bitene kadar dinleyiciler ağaçta
-      // kalabilir; bırakma bir sonraki kareye ertelenir.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ctl.dispose();
-        hataNot.dispose();
-        doluNot.dispose();
-        mesgulNot.dispose();
-      });
-    }
-    return dogrulanan;
   }
 }
 

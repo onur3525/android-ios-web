@@ -94,10 +94,20 @@ class AuthApi {
         if (firebaseIdToken != null) 'firebaseIdToken': firebaseIdToken,
       });
 
-  /// Rol ekleme: yalnız şifre. 21 Eki (kullanıcı kararı): telefon/SMS
-  /// doğrulaması İSTENMEZ.
-  Future<void> addRole({required String role, required String password}) =>
-      c.post('/auth/roles/add', body: {'role': role, 'password': password});
+  /// Rol ekleme: yalnız rol. 5 Kas (kullanıcı kararı): kimlik doğrulaması
+  /// (şifre / Google-Apple yeniden girişi) İSTENMEZ; 21 Eki: telefon/SMS de
+  /// istenmez.
+  Future<void> addRole({required String role}) =>
+      c.post('/auth/roles/add', body: {'role': role});
+
+  /// Google/Apple hesabına şifre oluşturma (5 Kas). [firebaseIdToken]: bu
+  /// hesabın son 10 dakikadaki girişinin Firebase belgesi.
+  Future<void> setPassword(
+          {required String newPassword, required String firebaseIdToken}) =>
+      c.post('/auth/password/set', body: {
+        'newPassword': newPassword,
+        'firebaseIdToken': firebaseIdToken,
+      });
 
   Future<List<dynamic>> sessions() => c.getList('/auth/sessions');
   Future<void> revokeSession(String jti) => c.post('/auth/sessions/$jti/revoke');

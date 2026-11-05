@@ -257,6 +257,11 @@ abstract class AuthPort extends ChangeNotifier {
   /// üç dokunuşla kapatılabilirdi.
   ///
   Future<DomainError?> verifyPassword(String password);
+
+  /// Google/Apple ile açılmış (şifresiz) hesaba şifre oluşturur (5 Kas).
+  /// İsteğe bağlıdır; yalnız API modunda anlamlıdır.
+  Future<DomainError?> sifreOlustur(String yeni) async =>
+      const ValidationError('Şifre oluşturma bu modda kullanılamaz.');
   /// E-POSTA İLE ŞİFRE YENİLEME BAĞLANTISI İSTEĞİ (ana yol).
   ///
   /// ⚠ K5: hesap bulunsa da bulunmasa da AYNI nötr sonuç.

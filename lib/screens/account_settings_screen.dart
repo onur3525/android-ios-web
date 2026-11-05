@@ -408,6 +408,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const _Bolum('Güvenlik'),
                   // 4 Kas: Google/Apple ile açılmış hesabın değiştirilecek
                   // şifresi yok; giriş yöntemi bilgisi gösterilir.
+                  // 5 Kas: kart isteğe bağlı "Şifre Oluştur" ekranını açar
+                  // (aynı şifre ekranı, oluşturma kipinde).
                   if (_sosyalGirisAdi case final ad?)
                     _SatirKart(
                       ikon: 'assets/svg/ic_plock.svg',
@@ -415,8 +417,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       renk: RC.blue,
                       baslik: 'Giriş Yöntemi',
                       aciklama:
-                          '$ad ile giriş yapıyorsunuz; hesabınızın şifresi yok.',
-                      onTap: null,
+                          '$ad ile giriş yapıyorsunuz. Dilerseniz şifre de oluşturabilirsiniz.',
+                      onTap: _busy
+                          ? null
+                          : () => Navigator.pushNamed(context, '/profile/password'),
                     )
                   else
                   _SatirKart(

@@ -305,6 +305,17 @@ class FirebaseKimlik {
     }
   }
 
+  /// Açık Firebase oturumunun kimlik belgesi; oturum yoksa `null`.
+  /// Belgedeki giriş zamanı (auth_time) yenilemeyle değişmez: sunucu
+  /// "son 10 dakikadaki giriş" kuralını buna göre denetler.
+  Future<String?> mevcutBelge() async {
+    try {
+      return await (await _auth())?.currentUser?.getIdToken();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Telefonla kurtarma sonrası Firebase şifresini de günceller (iki kaynak
   /// ayrışmasın). Firebase kullanıcısında e-posta/şifre yoksa bir şey yapmaz.
   Future<void> sifreGuncelle(String yeniSifre) async {

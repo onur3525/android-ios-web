@@ -95,16 +95,21 @@ test('doğru şifre + taze telefon doğrulaması: rol eklenir, aktif rol değiş
   assert.equal(tekrar.durum, 409);
 });
 
-test('21 Eki: telefon/SMS doğrulaması İSTENMEZ; yalnız şifre — yanlış şifre reddedilir', async () => {
+test('5 Kas: kimlik doğrulaması İSTENMEZ — şifresiz ya da yanlış şifreyle de rol eklenir', async () => {
   const tel = '5421110002';
   const tk = await hizmetAlan(tel);
-  const a = await rolEkle(tk, { password: 'YanlisSifre99' });
-  assert.equal(a.durum, 400); assert.equal(a.json.error.code, 'WRONG_PASSWORD');
-  assert.equal((await roller(tel)).roles, 'CUSTOMER');
-  // Kanıt ve kod gönderilmeden, doğru şifreyle rol eklenir.
-  const b = await rolEkle(tk, {});
-  assert.equal(b.durum, 204, JSON.stringify(b.json));
+  // Gövdede şifre hiç yok: rol eklenir (telefon/SMS de istenmez — 21 Eki).
+  const a = await istek('/api/v1/auth/roles/add', { token: tk, govde: { role: 'PROVIDER' } });
+  assert.equal(a.durum, 204, JSON.stringify(a.json));
   assert.equal((await roller(tel)).roles, 'CUSTOMER,PROVIDER');
+  // Eski uygulamanın gönderdiği yanlış şifre de engellemez.
+  const tel2 = '5421110007';
+  const tk2 = await hizmetAlan(tel2);
+  const b = await rolEkle(tk2, { password: 'YanlisSifre99' });
+  assert.equal(b.durum, 204, JSON.stringify(b.json));
+  assert.equal((await roller(tel2)).roles, 'CUSTOMER,PROVIDER');
+  // Oturumsuz istek yine reddedilir.
+  assert.equal((await istek('/api/v1/auth/roles/add', { govde: { role: 'PROVIDER' } })).durum, 401);
 });
 
 test('21 Eki: eski uygulamanın gönderdiği telefon kanıtı/kodu yok sayılır (geçersiz olsa da engellemez)', async () => {
@@ -115,16 +120,18 @@ test('21 Eki: eski uygulamanın gönderdiği telefon kanıtı/kodu yok sayılır
   assert.equal(r.durum, 204, JSON.stringify(r.json));
 });
 
-test('kullanıcı başına hız sınırı: 15 dk içinde 6. deneme 429 (doğru şifreyle bile)', async () => {
+test('kullanıcı başına hız sınırı: 15 dk içinde 6. deneme 429', async () => {
   const tel = '5421110004';
   const tk = await hizmetAlan(tel);
-  for (let i = 0; i < 5; i++) {
-    assert.equal((await rolEkle(tk, { password: `Yanlis${i}Sifre9` })).durum, 400);
+  // İlk deneme rolü ekler; sonrakiler "zaten var" (409) — hepsi sayılır.
+  assert.equal((await rolEkle(tk, {})).durum, 204);
+  for (let i = 0; i < 4; i++) {
+    assert.equal((await rolEkle(tk, {})).durum, 409);
   }
   const r = await rolEkle(tk, {});
   assert.equal(r.durum, 429);
   assert.equal(r.json.error.code, 'RATE_LIMITED');
-  assert.equal((await roller(tel)).roles, 'CUSTOMER');
+  assert.equal((await roller(tel)).roles, 'CUSTOMER,PROVIDER');
   // 429 oturumu kapatmaz.
   assert.equal((await istek('/api/v1/users/me', { yontem: 'GET', token: tk })).durum, 200);
   // Sınır kullanıcıya özeldir: başka kullanıcı etkilenmez.

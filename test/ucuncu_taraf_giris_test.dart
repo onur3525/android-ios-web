@@ -93,8 +93,10 @@ void main() {
       final k = _kodu('lib/ui/sifre_dogrulama_paneli.dart');
       expect(k.contains('sifresiVar == false'), isTrue);
       expect(k.contains('sosyalKimlikKaniti()'), isTrue);
+      // 5 Kas (kullanıcı kararı): rol eklemede kimlik doğrulaması YOK.
       final r = _kodu('lib/screens/role_switch_screen.dart');
-      expect(r.contains('sosyalIleDogrula('), isTrue);
+      expect(r.contains('sosyalIleDogrula('), isFalse);
+      expect(r.contains('verifyPassword('), isFalse);
     });
   });
 

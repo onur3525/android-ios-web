@@ -164,13 +164,11 @@ test('şifresiz hesapta kritik işlem: yalnız aynı kullanıcının son 10 daki
   assert.equal((await dogrula(google('g-baskasi', 'kritik@gmail.com'))).durum, 400, 'başka kullanıcının belgesi geçmez');
   assert.equal((await dogrula(google('g-kritik', 'kritik@gmail.com', {}, { once: 11 * 60 }))).durum, 400, 'eski giriş geçmez');
   assert.ok((await dogrula(google('g-kritik', 'kritik@gmail.com'))).durum < 300);
-  // Rol ekleme ve silme talebi de AYNI kanıtla.
+  // 5 Kas: rol ekleme kimlik kanıtı İSTEMEZ (şifresiz hesapta da).
   await temizle();
-  const rol = await istek('/api/v1/auth/roles/add', { yontem: 'POST', token: t, govde: { role: 'PROVIDER', password: 'tahmin' } });
-  assert.equal(rol.durum, 400);
-  await temizle();
-  const rol2 = await istek('/api/v1/auth/roles/add', { yontem: 'POST', token: t, govde: { role: 'PROVIDER', password: google('g-kritik', 'kritik@gmail.com') } });
-  assert.ok(rol2.durum < 300, JSON.stringify(rol2.json));
+  const rol = await istek('/api/v1/auth/roles/add', { yontem: 'POST', token: t, govde: { role: 'PROVIDER' } });
+  assert.ok(rol.durum < 300, JSON.stringify(rol.json));
+  // Silme talebi ise AYNI kanıtı ister.
   await temizle();
   const silme = await istek('/api/v1/profiles/me/deletion-request', { yontem: 'POST', token: t, govde: { password: 'tahmin' } });
   assert.equal(silme.durum, 400);
@@ -238,4 +236,31 @@ test('051 göçü iki veritabanında aynı', async () => {
   const { readFileSync } = await import('node:fs');
   const oku = (d) => readFileSync(new URL(`../migrations/${d}/051_sosyal_giris.sql`, import.meta.url), 'utf8');
   assert.equal(oku('postgres'), oku('sqlite'));
+});
+
+test('5 Kas: Google/Apple hesabına şifre oluşturma — taze kanıtla; sonra e-posta + şifreyle giriş; ikinci kez 409', async () => {
+  const t = (await sosyalKayit(google('g-sifre', 'sifre-olustur@gmail.com'))).json.accessToken;
+  const olustur = async (govde) => { await temizle(); return istek('/api/v1/auth/password/set', { yontem: 'POST', token: t, govde }); };
+  // Kanıtsız, başkasının ya da eski girişin belgesi geçmez.
+  assert.equal((await olustur({ newPassword: 'YeniSifre123' })).json.error.code, 'WRONG_PASSWORD');
+  assert.equal((await olustur({ newPassword: 'YeniSifre123', firebaseIdToken: google('g-baskasi', 'sifre-olustur@gmail.com') })).durum, 400);
+  assert.equal((await olustur({ newPassword: 'YeniSifre123', firebaseIdToken: google('g-sifre', 'sifre-olustur@gmail.com', {}, { once: 11 * 60 }) })).durum, 400);
+  // Şifre kuralı aynı (zayıf şifre reddedilir).
+  assert.equal((await olustur({ newPassword: '123', firebaseIdToken: google('g-sifre', 'sifre-olustur@gmail.com') })).durum, 400);
+  assert.equal((await ben(t)).json.hasPassword, false);
+  // Taze kanıtla oluşturulur; oturum kapanmaz.
+  const r = await olustur({ newPassword: 'YeniSifre123', firebaseIdToken: google('g-sifre', 'sifre-olustur@gmail.com') });
+  assert.equal(r.durum, 204, JSON.stringify(r.json));
+  const u = (await ben(t)).json;
+  assert.equal(u.hasPassword, true);
+  assert.equal(u.socialProvider, 'google.com', 'giriş yöntemi bilgisi korunur');
+  // Hesap artık şifreli: kritik işlem kanıtı da şifre olur (Firebase
+  // belgesi yerine). Şifre doğru → geçer, yanlış → reddedilir.
+  await temizle();
+  assert.ok((await istek('/api/v1/auth/verify-password', { yontem: 'POST', token: t, govde: { password: 'YeniSifre123' } })).durum < 300);
+  await temizle();
+  assert.equal((await istek('/api/v1/auth/verify-password', { yontem: 'POST', token: t, govde: { password: 'YanlisSifre99' } })).durum, 400);
+  // İkinci kez oluşturulamaz (Şifre Değiştir kullanılır).
+  const tekrar = await olustur({ newPassword: 'BaskaSifre456', firebaseIdToken: google('g-sifre', 'sifre-olustur@gmail.com') });
+  assert.equal(tekrar.durum, 409);
 });
