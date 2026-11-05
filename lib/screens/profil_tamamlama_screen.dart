@@ -81,6 +81,16 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   int _sayac = 0;
   bool _kilit = false;
   Timer? _zamanlayici;
+
+  /// 5 Kas (kullanıcı kararı): "SMS Kodu Gönder"e basıldıktan sonra —
+  /// kod gelsin gelmesin, gönderim başarılı olsun olmasın — kod girilip
+  /// devam edilmediği sürece sayaç bitince "Kodu tekrar gönder" çıkar.
+  /// Numara değişince sıfırlanır.
+  bool _gonderimDenendi = false;
+
+  /// 3 koddan sonraki kilitte gösterilen uyarı (sunucunun metni; dakika
+  /// sunucudaki tek kuraldan gelir).
+  String? _kilitMesaji;
   ValueListenable<({String id, String kod})?>? _otomatikKod;
 
   bool get _saglayici => widget.rol == Role.provider;
@@ -187,6 +197,9 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
   void _telefonDegisti(String _) {
     setState(() {
       _hata = null;
+      if (_gonderilenTelefon != Validators.phoneFmt(_telefon.text)) {
+        _gonderimDenendi = false;
+      }
       if (_challengeId != null &&
           _gonderilenTelefon != Validators.phoneFmt(_telefon.text)) {
         _challengeId = null;
@@ -240,10 +253,15 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     if (!mounted) {
       return;
     }
-    setState(() => _mesgul = false);
+    setState(() {
+      _mesgul = false;
+      _gonderimDenendi = true;
+      _gonderilenTelefon = tel;
+      _kilitMesaji = r.kilit ? r.hata : null;
+    });
     if (r.challengeId == null) {
       if (r.kalanSaniye != null) {
-        // Bekleme ya da 15 dk kilit: kalan süre geri sayımla gösterilir.
+        // Bekleme ya da 5 dk kilit: kalan süre geri sayımla gösterilir.
         _sayaciBaslat(r.kalanSaniye!, kilit: r.kilit);
       } else {
         setState(() => _kodHata = r.hata ?? FormMesaj.otpGonderilemedi);
@@ -401,15 +419,21 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
     return s.length <= 2 ? s.join(', ') : '${s.take(2).join(', ')} +${s.length - 2}';
   }
 
-  /// Kod kutusunun altı: geri sayım, "Kodu tekrar gönder" ya da 15 dk kilit.
+  /// Kod kutusunun altı: geri sayım, "Kodu tekrar gönder" ya da 5 dk kilit.
   Widget _kodAltSatiri() {
     final kucuk = refText(size: RF.s125, weight: RF.w500, color: RC.textSoft);
     if (_kilit && _sayac > 0) {
       return Padding(
         padding: const EdgeInsets.only(top: 6, left: 2),
-        child: Text(
-            'Çok fazla kod istendi. $_sayacMetni sonra tekrar deneyebilirsiniz.',
-            style: refText(size: RF.s125, weight: RF.w600, color: RC.danger)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_kilitMesaji ?? 'Çok fazla kod istendi.',
+                style: refText(size: RF.s125, weight: RF.w600, color: RC.danger)),
+            const SizedBox(height: 2),
+            Text('Kalan süre: $_sayacMetni', style: kucuk),
+          ],
+        ),
       );
     }
     if (_sayac > 0) {
@@ -418,7 +442,7 @@ class _ProfilTamamlamaScreenState extends State<ProfilTamamlamaScreen> {
         child: Text('Yeni kodu $_sayacMetni sonra isteyebilirsiniz', style: kucuk),
       );
     }
-    if (!_kodGonderildi) {
+    if (!_kodGonderildi && !_gonderimDenendi) {
       return const SizedBox(height: 6);
     }
     return Align(

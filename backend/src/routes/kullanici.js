@@ -294,8 +294,9 @@ const smsYok = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama ko
 // giriş, şifremi unuttum, telefon değiştirme, rol ekleme) aynı kural:
 //   · İki kod arasında en az 60 saniye (istemcide geri sayım).
 //   · Bir numaraya en fazla 3 kod; üçüncüden sonra doğrulama yapılmazsa
-//     son gönderimden itibaren 15 dakika yeni kod yok.
-//   · Doğrulama başarılı olunca sayaç sıfırlanır; 15 dakika hiç kod
+//     son gönderimden itibaren 5 dakika yeni kod yok (5 Kas: 15 → 5 dk,
+//     kullanıcı kararı).
+//   · Doğrulama başarılı olunca sayaç sıfırlanır; 5 dakika hiç kod
 //     istenmezse de sıfırlanır.
 // Sayaç sunucuda tutulur (rate_limits, anahtar `sms:<numara>`): uygulamayı
 // kapatıp açmak ya da sayfayı yenilemek sıfırlamaz. SMS'i Firebase
@@ -304,7 +305,7 @@ const smsYok = () => new ApiHatasi(503, 'EXTERNAL_SERVICE_ERROR', 'Doğrulama ko
 // kullanır. Kayıtlı/kayıtsız numarada davranış AYNIDIR (bilgi sızmaz).
 const SMS_BEKLEME_MS = 60_000;
 const SMS_TUR_SINIRI = 3;
-const SMS_KILIT_MS = 15 * 60_000;
+const SMS_KILIT_MS = 5 * 60_000;
 const smsAnahtari = (tel) => `sms:${tel}`;
 const sn = (ms) => Math.max(1, Math.ceil(ms / 1000));
 
@@ -318,7 +319,7 @@ export async function smsGonderimIzni(db, tel, ip) {
   if (adet >= SMS_TUR_SINIRI) {
     const kalan = son + SMS_KILIT_MS - an;
     throw new ApiHatasi(429, 'OTP_LOCKED',
-      `Çok fazla kod istendi. ${Math.ceil(kalan / 60_000)} dakika sonra tekrar deneyebilirsiniz.`,
+      `Çok fazla kod istendi. ${Math.ceil(kalan / 60_000)} dakika sonra tekrar deneyin.`,
       { ayrinti: { retryAfterSec: sn(kalan) } });
   }
   if (adet > 0 && an - son < SMS_BEKLEME_MS) {

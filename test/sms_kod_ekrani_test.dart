@@ -18,12 +18,12 @@ void main() {
       final kilit = mapErrorBody(429, {
         'error': {
           'code': 'OTP_LOCKED',
-          'message': 'Çok fazla kod istendi. 14 dakika sonra tekrar deneyebilirsiniz.',
-          'details': {'retryAfterSec': 812},
+          'message': 'Çok fazla kod istendi. 4 dakika sonra tekrar deneyin.',
+          'details': {'retryAfterSec': 239},
         }
       });
       expect(kilit, isA<KodSiniriError>());
-      expect((kilit as KodSiniriError).kalanSaniye, 812);
+      expect((kilit as KodSiniriError).kalanSaniye, 239);
       expect(kilit.kilit, isTrue);
 
       final bekle = mapErrorBody(429, {
@@ -67,7 +67,14 @@ void main() {
       expect(k.contains("'Telefonunuza gelen 6 haneli kodu girin'"), isTrue);
       expect(k.contains('AutofillHints.oneTimeCode'), isTrue);
       expect(k.contains("'Kodu tekrar gönder'"), isTrue);
-      expect(k.contains('sonra tekrar deneyebilirsiniz'), isTrue);
+      // 5 Kas: kilitte sunucunun uyarısı ("... dakika sonra tekrar deneyin.")
+      // ve kalan süre geri sayımı.
+      expect(k.contains("Text(_kilitMesaji ?? 'Çok fazla kod istendi.',"), isTrue);
+      expect(k.contains("Text('Kalan süre: \$_sayacMetni', style: kucuk),"), isTrue);
+      // 5 Kas: gönderime basıldıktan sonra (kod gelsin gelmesin) sayaç
+      // bitince "Kodu tekrar gönder" çıkar.
+      expect(k.contains('if (!_kodGonderildi && !_gonderimDenendi) {'), isTrue);
+      expect(k.contains('_gonderimDenendi = true;'), isTrue);
       expect(k.contains('OtpScreen('), isFalse, reason: 'ayrı kod ekranına geçilmez');
     });
 

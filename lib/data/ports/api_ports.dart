@@ -216,7 +216,7 @@ class ApiAuthPort extends AuthPort {
 
   /// ── ⚠ SMS KODU GÖNDERİMİ — TEK KAYNAK (4 Kas) ──
   /// Firebase'den kod istenmeden ÖNCE sunucudan izin alınır: iki kod arası
-  /// 60 sn, bir numaraya en fazla 3 kod, sonra 15 dakika kilit (sayaç
+  /// 60 sn, bir numaraya en fazla 3 kod, sonra 5 dakika kilit (sayaç
   /// sunucuda). İzin yoksa kod istenmez; hata kalan süreyi taşır
   /// (`KodSiniriError`). Kodun gönderildiği HER akış buradan geçer.
   Future<({String? id, DomainError? error})> _firebaseKodGonder(

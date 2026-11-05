@@ -137,13 +137,13 @@ class TelefonSahiplenmeError extends InvalidStateError {
 /// kayıt ekranı açılır (ad, rol, sözleşme onayı) — sunucu
 /// `SOCIAL_SIGNUP_REQUIRED`.
 /// 4 Kas: SMS kodu gönderim kuralı — iki kod arası 60 sn (`OTP_WAIT`) ya da
-/// 3 koddan sonra 15 dakikalık kilit (`OTP_LOCKED`). [kalanSaniye] ekranda
+/// 3 koddan sonra 5 dakikalık kilit (`OTP_LOCKED`). [kalanSaniye] ekranda
 /// geri sayım için sunucudan gelir.
 class KodSiniriError extends InvalidStateError {
   const KodSiniriError(super.message, {required this.kalanSaniye, required this.kilit});
   final int kalanSaniye;
 
-  /// `true` = 15 dakikalık kilit; `false` = 60 saniyelik bekleme.
+  /// `true` = 5 dakikalık kilit; `false` = 60 saniyelik bekleme.
   final bool kilit;
 }
 
