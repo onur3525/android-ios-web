@@ -15,7 +15,7 @@
 import http from 'k6/http';
 import { check } from 'k6';
 
-const TABAN = (__ENV.TABAN_URL || 'https://hizmetcep-backend.onrender.com').replace(/\/+$/, '');
+const TABAN = (__ENV.TABAN_URL || 'https://api.hizmetcep.com').replace(/\/+$/, '');
 const SEVIYELER = String(__ENV.SEVIYELER || '250,300,350,400,450,500')
   .split(',').map((s) => Number(s.trim())).filter((n) => n >= 10 && n <= 1000);
 const SURE_SN = Math.max(10, Number(__ENV.SURE_SN || 120));

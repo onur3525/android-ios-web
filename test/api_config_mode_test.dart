@@ -96,7 +96,7 @@ void main() {
       expect(komut!.contains('--dart-define=DATA_SOURCE=api'), isTrue);
       expect(
           komut.contains(
-              '--dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1'),
+              '--dart-define=API_BASE_URL=https://api.hizmetcep.com/api/v1'),
           isTrue);
       expect(komut.contains('--debug'), isTrue);
       expect(yaml.contains('DATA_SOURCE=mock'), isFalse,
@@ -106,7 +106,7 @@ void main() {
           reason: 'CI APK\'sı mock veriyle paketleniyor');
       expect(
           ci.contains(
-              'flutter build apk --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://hizmetcep-backend.onrender.com/api/v1'),
+              'flutter build apk --debug --dart-define=DATA_SOURCE=api --dart-define=API_BASE_URL=https://api.hizmetcep.com/api/v1'),
           isTrue);
     });
   });
