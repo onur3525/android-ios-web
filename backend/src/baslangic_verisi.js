@@ -24,6 +24,9 @@ import { gocDosyalari } from './db.js';
 // çalıştırılır (sabit sürüm kimlikleriyle idempotent; panelden yayımlanmış
 // sürümlere dokunmaz).
 export const GUNCEL_YASAL_GOC = '053_yasal_yeni_surum';
+// 6 Kas: 054 yalnız terms/kvkk/privacy'yi günceller; 053 (marketing, cookies)
+// ÖNCE, ardından 054 sırayla çalışır.
+export const GUNCEL_YASAL_GOCLER = [GUNCEL_YASAL_GOC, '054_yasal_sistem_uyumu'];
 
 /** @returns {Promise<object|null>} aktarılan satır sayıları; kapalıysa/kilit başkasındaysa null */
 export async function baslangicVerisiniHazirla(db, env = process.env) {
@@ -31,8 +34,10 @@ export async function baslangicVerisiniHazirla(db, env = process.env) {
   return db.isKilidi('is:baslangic_verisi', async () => {
     const s = await tohumla(db);
     if (s?.belge > 0) {
-      const goc = gocDosyalari(db.surucu).find((g) => g.id === GUNCEL_YASAL_GOC);
-      if (goc) await db.exec(goc.sql);
+      for (const ad of GUNCEL_YASAL_GOCLER) {
+        const goc = gocDosyalari(db.surucu).find((g) => g.id === ad);
+        if (goc) await db.exec(goc.sql);
+      }
     }
     return s;
   });
