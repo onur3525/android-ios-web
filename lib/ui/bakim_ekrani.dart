@@ -14,8 +14,21 @@ import '../core/bakim_durumu.dart';
 import 'gezgin.dart';
 import 'ref_tokens.dart';
 
+// 6 Kas (kullanıcı kararı): "Lütfen daha sonra tekrar deneyin" yerine
+// "Sizin için çalışıyoruz."; cümleler ALT ALTA çizilir (`bakimMesajSatirlari`).
 const String kVarsayilanBakimMesaji =
-    'HizmetCep kısa süreli bakımda. Lütfen daha sonra tekrar deneyin.';
+    'HizmetCep kısa süreli bakımda. Sizin için çalışıyoruz.';
+
+/// Bakım mesajını cümle cümle satırlara böler (6 Kas, kullanıcı kararı).
+///
+/// Sunucu mesajdaki satır sonlarını tek boşluğa indirdiği için alt alta
+/// düzen İSTEMCİDE kurulur: her cümle (". ", "! ", "? " sonrası) ayrı
+/// satıra yazılır. Admin'in yazdığı her mesaja aynı kural uygulanır.
+String bakimMesajSatirlari(String mesaj) => mesaj
+    .trim()
+    .split(RegExp(r'(?<=[.!?])\s+'))
+    .where((s) => s.isNotEmpty)
+    .join('\n');
 
 /// ISO zamanı yerel "gg.aa.yyyy ss:dd" biçimine çevirir; çözülemezse null.
 String? bakimBitisMetni(String? iso) {
@@ -35,13 +48,14 @@ class BakimEkrani extends StatefulWidget {
     super.key,
     this.mesaj,
     this.bitis,
-    required this.onYenile,
     this.onGiris,
   });
 
+  // 6 Kas (kullanıcı kararı): "Tekrar Dene" düğmesi KALDIRILDI. Durum
+  // kendiliğinden yenilenir (60 sn'de bir, uygulama öne gelince, 503
+  // yanıtında); bakım bitince ekran kendiliğinden kalkar.
   final String? mesaj;
   final String? bitis;
-  final VoidCallback onYenile;
 
   /// Gizli giriş kapısı (032): logoya 2 sn basılı tutunca çağrılır. Ekran
   /// görsel olarak değişmez; yalnız admin'in listesindeki hesaplar bakımda
@@ -126,15 +140,17 @@ class _BakimEkraniState extends State<BakimEkrani>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    mesaj,
+                    bakimMesajSatirlari(mesaj),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 15, height: 1.45, color: RC.textSoft),
                   ),
                   if (bitis != null) ...[
                     const SizedBox(height: 12),
+                    // 6 Kas (kullanıcı kararı): "Tahmini bitiş", tarih ve
+                    // saat ALT ALTA (yan yana değil).
                     Text(
-                      'Tahmini bitiş: $bitis',
+                      'Tahmini bitiş\n${bitis.replaceFirst(' ', '\n')}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                           fontSize: 14,
@@ -142,11 +158,6 @@ class _BakimEkraniState extends State<BakimEkrani>
                           color: RC.text),
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  OutlinedButton(
-                    onPressed: widget.onYenile,
-                    child: const Text('Tekrar Dene'),
-                  ),
                 ],
               ),
             ),
@@ -203,7 +214,6 @@ class BakimKapisi extends StatelessWidget {
               child: BakimEkrani(
                 mesaj: d.mesaj,
                 bitis: d.bitis,
-                onYenile: () => unawaited(d.kontrolEt()),
                 // Kapı YALNIZ tanınmış test cihazında (sunucu kararı).
                 onGiris: !d.testCihazi ? null : () {
                   final nav = gezginAnahtari.currentState;

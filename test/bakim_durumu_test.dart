@@ -70,7 +70,7 @@ void main() {
   testWidgets('032: gizli giriş kapısı logoya 2 sn basılı tutunca açılır', (t) async {
     var acildi = 0;
     await t.pumpWidget(MaterialApp(
-      home: BakimEkrani(onYenile: () {}, onGiris: () => acildi++),
+      home: BakimEkrani(onGiris: () => acildi++),
     ));
     final kapi = find.byKey(const ValueKey('bakim-giris-kapisi'));
     expect(kapi, findsOneWidget);
@@ -104,7 +104,7 @@ void main() {
     BakimDurumu.i.girisAc();
     await t.pump();
     expect(find.text('Bakımdayız'), findsNothing);
-    await t.pumpWidget(MaterialApp(home: BakimEkrani(onYenile: () {})));
+    await t.pumpWidget(const MaterialApp(home: BakimEkrani()));
     expect(find.byKey(const ValueKey('bakim-giris-kapisi')), findsNothing);
   });
 
@@ -118,10 +118,46 @@ void main() {
     await t.pump();
     expect(find.text('Bakımdayız'), findsOneWidget);
     expect(find.text('Planlı bakım çalışması'), findsOneWidget);
-    expect(find.text('Tekrar Dene'), findsOneWidget);
+    // 6 Kas (kullanıcı kararı): bakım ekranında "Tekrar Dene" düğmesi yok.
+    expect(find.text('Tekrar Dene'), findsNothing);
     BakimDurumu.i.uygula({'active': false});
     await t.pump();
     expect(find.text('Bakımdayız'), findsNothing);
     expect(find.text('ana ekran'), findsOneWidget);
+  });
+
+  // 6 Kas (kullanıcı kararı): varsayılan mesaj ve alt alta düzen.
+  test('varsayılan mesaj "Sizin için çalışıyoruz" ile biter, eski cümle yok', () {
+    expect(kVarsayilanBakimMesaji,
+        'HizmetCep kısa süreli bakımda. Sizin için çalışıyoruz.');
+    expect(kVarsayilanBakimMesaji.contains('Lütfen daha sonra tekrar deneyin'),
+        isFalse);
+  });
+
+  test('cümleler alt alta: her cümle ayrı satır', () {
+    expect(bakimMesajSatirlari(kVarsayilanBakimMesaji),
+        'HizmetCep kısa süreli bakımda.\nSizin için çalışıyoruz.');
+    expect(bakimMesajSatirlari('Planlı bakım çalışması'),
+        'Planlı bakım çalışması');
+    expect(bakimMesajSatirlari('  Bakım var!  Az kaldı?  Teşekkürler.  '),
+        'Bakım var!\nAz kaldı?\nTeşekkürler.');
+  });
+
+  testWidgets('bakım ekranında varsayılan mesaj iki satır olarak çizilir', (t) async {
+    await t.pumpWidget(const MaterialApp(home: BakimEkrani()));
+    expect(find.text('HizmetCep kısa süreli bakımda.\nSizin için çalışıyoruz.'),
+        findsOneWidget);
+  });
+
+  testWidgets('tahmini bitiş: başlık, tarih ve saat alt alta', (t) async {
+    await t.pumpWidget(const MaterialApp(
+        home: BakimEkrani(bitis: '2026-10-23T03:00:00.000Z')));
+    final z = DateTime.utc(2026, 10, 23, 3).toLocal();
+    String iki(int n) => n.toString().padLeft(2, '0');
+    expect(
+        find.text('Tahmini bitiş\n${iki(z.day)}.${iki(z.month)}.${z.year}\n'
+            '${iki(z.hour)}:${iki(z.minute)}'),
+        findsOneWidget);
+    expect(find.textContaining('Tahmini bitiş:'), findsNothing);
   });
 }

@@ -860,7 +860,6 @@ class BootBlockedScreen extends StatelessWidget {
                   return BakimEkrani(
                     mesaj: result.maintenanceMessage,
                     bitis: result.maintenanceEndAt,
-                    onYenile: onRetry,
                   );
                 }(),
               BootDecision.forceUpdate => SysState(
