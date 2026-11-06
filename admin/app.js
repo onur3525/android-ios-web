@@ -593,7 +593,7 @@ SAYFALAR.ayarlar = async () => {
 function bakimKarti(b) {
   const ac = async () => {
     const d = await form('Bakım modunu aç', [
-      { ad: 'message', etiket: 'Kullanıcılara gösterilecek mesaj (5–500 karakter)', tur: 'textarea', zorunlu: true, deger: 'HizmetCep kısa süreli bakımda. Lütfen daha sonra tekrar deneyin.' },
+      { ad: 'message', etiket: 'Kullanıcılara gösterilecek mesaj (5–500 karakter)', tur: 'textarea', zorunlu: true, deger: 'HizmetCep kısa süreli bakımda. Sizin için çalışıyoruz.' },
       { ad: 'endAt', etiket: 'Tahmini bitiş (isteğe bağlı)', tur: 'datetime-local' },
     ], 'Bakımı başlat', { tehlike: true, aciklama: 'Android, iOS ve web uygulamasının BÜTÜN ekranlarında HizmetCep logolu bakım ekranı görünür; kullanıcılar işlem yapamaz. Yönetim paneli çalışmaya devam eder.' });
     if (!d) return;

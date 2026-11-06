@@ -125,4 +125,27 @@ void main() {
     expect(find.text('Bakımdayız'), findsNothing);
     expect(find.text('ana ekran'), findsOneWidget);
   });
+
+  // 6 Kas (kullanıcı kararı): varsayılan mesaj ve alt alta düzen.
+  test('varsayılan mesaj "Sizin için çalışıyoruz" ile biter, eski cümle yok', () {
+    expect(kVarsayilanBakimMesaji,
+        'HizmetCep kısa süreli bakımda. Sizin için çalışıyoruz.');
+    expect(kVarsayilanBakimMesaji.contains('Lütfen daha sonra tekrar deneyin'),
+        isFalse);
+  });
+
+  test('cümleler alt alta: her cümle ayrı satır', () {
+    expect(bakimMesajSatirlari(kVarsayilanBakimMesaji),
+        'HizmetCep kısa süreli bakımda.\nSizin için çalışıyoruz.');
+    expect(bakimMesajSatirlari('Planlı bakım çalışması'),
+        'Planlı bakım çalışması');
+    expect(bakimMesajSatirlari('  Bakım var!  Az kaldı?  Teşekkürler.  '),
+        'Bakım var!\nAz kaldı?\nTeşekkürler.');
+  });
+
+  testWidgets('bakım ekranında varsayılan mesaj iki satır olarak çizilir', (t) async {
+    await t.pumpWidget(const MaterialApp(home: BakimEkrani()));
+    expect(find.text('HizmetCep kısa süreli bakımda.\nSizin için çalışıyoruz.'),
+        findsOneWidget);
+  });
 }

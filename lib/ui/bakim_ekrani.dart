@@ -14,8 +14,21 @@ import '../core/bakim_durumu.dart';
 import 'gezgin.dart';
 import 'ref_tokens.dart';
 
+// 6 Kas (kullanıcı kararı): "Lütfen daha sonra tekrar deneyin" yerine
+// "Sizin için çalışıyoruz."; cümleler ALT ALTA çizilir (`bakimMesajSatirlari`).
 const String kVarsayilanBakimMesaji =
-    'HizmetCep kısa süreli bakımda. Lütfen daha sonra tekrar deneyin.';
+    'HizmetCep kısa süreli bakımda. Sizin için çalışıyoruz.';
+
+/// Bakım mesajını cümle cümle satırlara böler (6 Kas, kullanıcı kararı).
+///
+/// Sunucu mesajdaki satır sonlarını tek boşluğa indirdiği için alt alta
+/// düzen İSTEMCİDE kurulur: her cümle (". ", "! ", "? " sonrası) ayrı
+/// satıra yazılır. Admin'in yazdığı her mesaja aynı kural uygulanır.
+String bakimMesajSatirlari(String mesaj) => mesaj
+    .trim()
+    .split(RegExp(r'(?<=[.!?])\s+'))
+    .where((s) => s.isNotEmpty)
+    .join('\n');
 
 /// ISO zamanı yerel "gg.aa.yyyy ss:dd" biçimine çevirir; çözülemezse null.
 String? bakimBitisMetni(String? iso) {
@@ -127,7 +140,7 @@ class _BakimEkraniState extends State<BakimEkrani>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    mesaj,
+                    bakimMesajSatirlari(mesaj),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 15, height: 1.45, color: RC.textSoft),
