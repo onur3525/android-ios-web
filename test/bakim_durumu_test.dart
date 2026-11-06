@@ -148,4 +148,16 @@ void main() {
     expect(find.text('HizmetCep kısa süreli bakımda.\nSizin için çalışıyoruz.'),
         findsOneWidget);
   });
+
+  testWidgets('tahmini bitiş: başlık, tarih ve saat alt alta', (t) async {
+    await t.pumpWidget(const MaterialApp(
+        home: BakimEkrani(bitis: '2026-10-23T03:00:00.000Z')));
+    final z = DateTime.utc(2026, 10, 23, 3).toLocal();
+    String iki(int n) => n.toString().padLeft(2, '0');
+    expect(
+        find.text('Tahmini bitiş\n${iki(z.day)}.${iki(z.month)}.${z.year}\n'
+            '${iki(z.hour)}:${iki(z.minute)}'),
+        findsOneWidget);
+    expect(find.textContaining('Tahmini bitiş:'), findsNothing);
+  });
 }

@@ -147,8 +147,10 @@ class _BakimEkraniState extends State<BakimEkrani>
                   ),
                   if (bitis != null) ...[
                     const SizedBox(height: 12),
+                    // 6 Kas (kullanıcı kararı): "Tahmini bitiş", tarih ve
+                    // saat ALT ALTA (yan yana değil).
                     Text(
-                      'Tahmini bitiş: $bitis',
+                      'Tahmini bitiş\n${bitis.replaceFirst(' ', '\n')}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                           fontSize: 14,
