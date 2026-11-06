@@ -654,12 +654,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (ApiConfig.useRealApi) {
       final api = ConfigApi(client!);
       // ⚠ 22 Eki: bakım izlemesi açılış sorgusunun SONUCUNDAN BAĞIMSIZ
-      // başlar. Eskiden yalnız sorgu başarılıysa başlıyordu: sunucu yavaş
-      // uyanıp sorgu kısa bütçeyi aşınca izleme hiç kurulmuyor, bakım
-      // açılınca ne bakım ekranı çıkıyor ne de 503 "MAINTENANCE" yanıtı
-      // ekranı açabiliyordu (kullanıcı uygulamada gezinmeye devam ediyordu).
-      BakimDurumu.i
-          .baslat(() => api.app(platform: currentPlatform()));
+      // başlar. 6 Kas: izleme artık `main.dart`ta (tek başlangıç noktası,
+      // web dahil) kurulur; burada yalnız ilk değer uygulanır.
       try {
         BootLog.olay('CONFIG_CHECK_START');
         // ⚠ KISA BÜTÇE: fail-safe'ten önce bitmeli (beyaz ekran yok).

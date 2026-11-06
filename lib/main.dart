@@ -26,6 +26,9 @@ import 'screens/baglaniyor_screen.dart';
 import 'screens/provider_status_screen.dart';
 import 'core/offline_banner.dart';
 import 'core/boot_log.dart';
+import 'core/bakim_durumu.dart';
+import 'core/boot.dart' show currentPlatform;
+import 'data/remote/api/config_api.dart';
 import 'core/theme.dart';
 import 'core/yonlendirme.dart';
 import 'data/controllers/auth_controller.dart';
@@ -365,6 +368,21 @@ Future<void> main() async {
     onSessionExpired: () =>
         navKey.currentState?.pushNamedAndRemoveUntil('/home', (route) => false),
   );
+
+  // ── BAKIM İZLEMESİ — TEK BAŞLANGIÇ NOKTASI (6 Kas, kullanıcı bulgusu) ──
+  // İzleme eskiden splash'te başlıyordu; web splash'i atladığı için web'de
+  // hiç başlamıyor, bakım ekranı çıkmıyordu. Artık her platformda BURADA,
+  // web açılışındaki oturum isteklerinden ÖNCE kurulur: 60 sn'de bir ve
+  // uygulama öne gelince sorulur, sunucunun 503 "MAINTENANCE" yanıtı da
+  // hemen sordurur. Mobilde ilk değeri yine splash'in açılış sorgusu verir
+  // (davranış aynı); web'de ilk soru hemen sorulur.
+  if (ApiConfig.useRealApi) {
+    final bakimApi = ConfigApi(ports.apiClient);
+    BakimDurumu.i.baslat(() => bakimApi.app(platform: currentPlatform()));
+    if (kIsWeb) {
+      unawaited(BakimDurumu.i.kontrolEt());
+    }
+  }
 
   // ── ⚠ "DOĞRUDAN TEKLİF İSTE" — TEK ÖRNEKLEME ──
   //
