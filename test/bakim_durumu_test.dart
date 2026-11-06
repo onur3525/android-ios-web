@@ -70,7 +70,7 @@ void main() {
   testWidgets('032: gizli giriş kapısı logoya 2 sn basılı tutunca açılır', (t) async {
     var acildi = 0;
     await t.pumpWidget(MaterialApp(
-      home: BakimEkrani(onYenile: () {}, onGiris: () => acildi++),
+      home: BakimEkrani(onGiris: () => acildi++),
     ));
     final kapi = find.byKey(const ValueKey('bakim-giris-kapisi'));
     expect(kapi, findsOneWidget);
@@ -104,7 +104,7 @@ void main() {
     BakimDurumu.i.girisAc();
     await t.pump();
     expect(find.text('Bakımdayız'), findsNothing);
-    await t.pumpWidget(MaterialApp(home: BakimEkrani(onYenile: () {})));
+    await t.pumpWidget(const MaterialApp(home: BakimEkrani()));
     expect(find.byKey(const ValueKey('bakim-giris-kapisi')), findsNothing);
   });
 
@@ -118,7 +118,8 @@ void main() {
     await t.pump();
     expect(find.text('Bakımdayız'), findsOneWidget);
     expect(find.text('Planlı bakım çalışması'), findsOneWidget);
-    expect(find.text('Tekrar Dene'), findsOneWidget);
+    // 6 Kas (kullanıcı kararı): bakım ekranında "Tekrar Dene" düğmesi yok.
+    expect(find.text('Tekrar Dene'), findsNothing);
     BakimDurumu.i.uygula({'active': false});
     await t.pump();
     expect(find.text('Bakımdayız'), findsNothing);
