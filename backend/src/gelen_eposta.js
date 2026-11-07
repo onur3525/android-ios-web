@@ -168,7 +168,7 @@ export async function gelenEpostaWebhook(db, req, res) {
   try { olay = JSON.parse(ham); } catch { return yaz(400, { error: 'INVALID_JSON' }); }
   try {
     const s = await gelenEpostayiIsle(db, olay, e);
-    return yaz(200, { ok: true, result: s.durum });
+    return yaz(200, { ok: true, result: s.durum, ...(s.neden ? { reason: s.neden } : {}) });
   } catch (h) {
     // Geçici hata (Resend API'sine ulaşılamadı vb.): 500 → Resend yeniden dener.
     console.error('gelen e-posta işlenemedi:', h?.message);
