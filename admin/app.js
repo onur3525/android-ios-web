@@ -870,13 +870,14 @@ SAYFALAR.entegrasyonlar = async () => {
       { ad: 'type', etiket: 'Tür', tur: 'select', deger: 'SMS', secenekler: [['SMS', 'SMS (HTTPS köprü)'], ['EMAIL_RESEND', 'E-posta (Resend — kurumsal tasarım)'], ['EMAIL', 'E-posta (HTTPS köprü)'], ['STORAGE', 'Dosya depolama (S3 uyumlu)']] },
       { ad: 'url', etiket: 'SMS/E-posta köprü: adres (https)' },
       { ad: 'from', etiket: 'Resend: gönderen (ör. HizmetCep <bildirim@hizmetcep.com>)' },
+      { ad: 'inboundTo', etiket: 'Resend: gelen e-posta alıcısı', deger: 'destek@hizmetcep.com' },
       { ad: 'endpoint', etiket: 'Depolama: uç nokta (https)' },
       { ad: 'bucket', etiket: 'Depolama: kova' }, { ad: 'region', etiket: 'Depolama: bölge (ör. auto, eu-central-1)' }], 'Ekle');
     if (!d) return;
     const govde = d.type === 'STORAGE'
       ? { type: 'STORAGE', provider: 's3', config: { endpoint: d.endpoint, bucket: d.bucket, region: d.region } }
       : d.type === 'EMAIL_RESEND'
-        ? { type: 'EMAIL', provider: 'resend', config: { from: d.from } }
+        ? { type: 'EMAIL', provider: 'resend', config: { from: d.from, inboundTo: d.inboundTo } }
         : { type: d.type, provider: 'webhook', config: { url: d.url } };
     if (await guvenli(() => api('/integrations', { yontem: 'POST', govde }))) { bildir('Eklendi (pasif). Gizli anahtarı girip etkinleştirin.'); yenile(); }
   };
@@ -892,6 +893,13 @@ SAYFALAR.entegrasyonlar = async () => {
     const d = await form('Gelen e-posta imza anahtarı', [{ ad: 'webhookSecret', etiket: 'Resend › Webhooks › email.received › Signing secret (whsec_…)', tur: 'password', zorunlu: true }], 'Kaydet',
       { aciklama: 'Destek adresine gelen e-postaların Gelen Talepler\'e düşmesi için. Değer şifreli saklanır ve bir daha gösterilmez.' });
     if (d && await guvenli(() => api(`/integrations/${x.id}/inbound-secret`, { yontem: 'PUT', govde: d }))) { bildir('Kaydedildi'); yenile(); }
+  };
+  // Resend Receiving: gelen e-postaların kurumsal alıcı adresi.
+  const gelenAdresi = async (x) => {
+    const d = await form('Gelen e-posta adresi', [
+      { ad: 'inboundTo', etiket: 'Gelen e-posta alıcısı', tur: 'email', zorunlu: true, deger: x.config.inboundTo ?? 'destek@hizmetcep.com' },
+    ], 'Kaydet', { aciklama: 'Kullanıcıların destek e-postası göndereceği adres. Gelen iletiler webhook üzerinden Gelen Talepler’e kaydedilir.' });
+    if (d && await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'PATCH', govde: { config: { from: x.config.from, inboundTo: d.inboundTo } } }))) { bildir('Gelen adres kaydedildi'); yenile(); }
   };
   const etkin = async (x) => { if (await guvenli(() => api(`/integrations/${x.id}`, { yontem: 'PATCH', govde: { active: !x.active } }))) { bildir('Güncellendi'); yenile(); } };
   const test = async (x) => { const r = await guvenli(() => api(`/integrations/${x.id}/test`, { yontem: 'POST', govde: {} })); if (r) { bildir(`${r.ok ? 'Başarılı' : 'Başarısız'}: ${r.message}`, !r.ok); yenile(); } };
@@ -924,7 +932,7 @@ SAYFALAR.entegrasyonlar = async () => {
       { baslik: 'Durum', deger: (x) => rozet(x.active ? 'aktif' : 'pasif') },
       { baslik: 'Son test', deger: (x) => (x.lastTestAt ? `${x.lastTestOk ? '✓' : '✗'} ${x.lastTestMessage}` : '—') },
       { baslik: '', deger: (x) => h('span', {}, superMi ? h('button', { class: 'btn ikincil', onclick: () => sir(x) }, 'Anahtar') : null, ' ',
-        superMi && x.provider === 'resend' ? [h('button', { class: 'btn ikincil', onclick: () => gelenAnahtar(x) }, 'Gelen e-posta anahtarı'), ' '] : null,
+        superMi && x.provider === 'resend' ? [h('button', { class: 'btn ikincil', onclick: () => gelenAdresi(x) }, 'Gelen adres'), ' ', h('button', { class: 'btn ikincil', onclick: () => gelenAnahtar(x) }, 'Gelen e-posta anahtarı'), ' '] : null,
         h('button', { class: 'btn ikincil', onclick: () => test(x) }, 'Test'), ' ', h('button', { class: 'btn', onclick: () => etkin(x) }, x.active ? 'Pasifleştir' : 'Etkinleştir'), ' ',
         h('button', { class: 'btn tehlike', onclick: () => sil(x) }, 'Kaldır')) }], liste),
     yedekBolumu);
