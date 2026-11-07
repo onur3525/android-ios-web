@@ -106,6 +106,13 @@ test('destek e-postası talep açar; webhook tekrarı ikinci kayıt açmaz; kay�
   assert.equal((await talep(k.data.email_id)).user_id, uid, 'gönderen kayıtlı kullanıcıysa bağlanır');
 });
 
+test('yalnız yapılandırılmış destek alıcısına gelen e-posta talep açar', async () => {
+  const o = eposta();
+  o.data.to = ['baska@hizmetcep.com'];
+  assert.equal((await webhook(o)).json.result, 'yok-sayildi');
+  assert.equal(await talep(o.data.email_id), undefined);
+});
+
 test('otomatik yanıtlar ve kendi gönderen adresimiz kayda girmez', async () => {
   for (const o of [
     eposta({ from: 'MAILER-DAEMON@ornek.com' }),
