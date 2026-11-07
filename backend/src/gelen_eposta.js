@@ -105,6 +105,14 @@ export async function gelenEpostayiIsle(db, olay, entegrasyon) {
   if (r.status < 200 || r.status > 299 || !r.json) throw new Error(`resend alınan e-posta ${r.status}`);
   const e = r.json;
 
+  // Yalnız tanımlı destek alıcısına gelen iletileri Gelen Talepler'e al.
+  // Resend'in e.to alanı yoksa webhook olayındaki alıcı listesi kullanılır.
+  const hedefAlici = String(entegrasyon.config?.inboundTo ?? 'destek@hizmetcep.com').trim().toLowerCase();
+  const alicilarHam = e.to ?? olay.data?.to;
+  const alicilar = (Array.isArray(alicilarHam) ? alicilarHam : alicilarHam ? [alicilarHam] : [])
+    .map(adresAyikla).filter(Boolean);
+  if (alicilar.length && !alicilar.includes(hedefAlici)) return { durum: 'yok-sayildi', neden: 'alıcı' };
+
   const kimden = adresAyikla(e.from ?? olay.data.from);
   if (!kimden) return { durum: 'yok-sayildi', neden: 'gönderen' };
   const kendi = adresAyikla(entegrasyon.config?.from);
