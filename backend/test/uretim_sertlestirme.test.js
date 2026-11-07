@@ -610,7 +610,7 @@ test('21 Eki: Resend e-posta entegrasyonu — gönderen biçimi denetlenir, adre
   assert.equal((await istek('/admin/v1/integrations', { yontem: 'POST', govde: { type: 'SMS', provider: 'resend', config: { from: 'HizmetCep <bildirim@hizmetcep.com>' } } })).durum, 400);
   const e = await istek('/admin/v1/integrations', { yontem: 'POST', govde: { type: 'EMAIL', provider: 'resend', config: { from: 'HizmetCep <bildirim@hizmetcep.com>', url: 'https://kotu.ornek.com/' } } });
   assert.equal(e.durum, 200, JSON.stringify(e.json));
-  assert.deepEqual(e.json.config, { url: 'https://api.resend.com/emails', from: 'HizmetCep <bildirim@hizmetcep.com>' });
+  assert.deepEqual(e.json.config, { url: 'https://api.resend.com/emails', from: 'HizmetCep <bildirim@hizmetcep.com>', inboundTo: 'destek@hizmetcep.com' });
   assert.equal(e.json.provider, 'resend');
   await istek(`/admin/v1/integrations/${e.json.id}`, { yontem: 'DELETE', govde: { reason: 'test kaydı' } });
 });
