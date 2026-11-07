@@ -88,7 +88,7 @@ function ayarDogrula(tur, config, saglayici) {
     const from = String(config.from ?? '').trim();
     if (!GONDEREN.test(from)) throw hata.dogrulama('Gönderen "HizmetCep <bildirim@alanadiniz.com>" biçiminde olmalıdır');
     const inboundTo = String(config.inboundTo ?? 'destek@hizmetcep.com').trim().toLowerCase();
-    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(inboundTo)) throw hata.dogrulama('Gelen e-posta alıcısı geçerli bir e-posta adresi olmalıdır');
+    if (!/^[^@\s]+@[^\s@]+\.[^\s@]+$/.test(inboundTo)) throw hata.dogrulama('Gelen e-posta alıcısı geçerli bir e-posta adresi olmalıdır');
     // Giden gönderen ve gelen destek alıcısı ayrı ayarlardır.
     return { url: RESEND_ADRESI, from, inboundTo };
   }
